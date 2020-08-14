@@ -1,4 +1,4 @@
-﻿package com.hurlant.crypto.prng
+package com.hurlant.crypto.prng
 {
     import flash.utils.ByteArray;
 
@@ -12,5 +12,5 @@
         function toString():String;
 
     }
-}//package com.hurlant.crypto.prng
+} com.hurlant.crypto.prng
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.types.shortcut
+package com.ankamagames.berilia.types.shortcut
 {
     public class ShortcutCategory 
     {
@@ -18,13 +18,13 @@
         public static function create(name:String, description:String):ShortcutCategory
         {
             var sc:ShortcutCategory = _caterogies[name];
-            if (!(sc))
+            if (!sc)
             {
-                sc = new (ShortcutCategory)(name, description);
+                sc = new ShortcutCategory(name, description);
             }
             else
             {
-                if (!(_caterogies[name].description))
+                if (!_caterogies[name].description)
                 {
                     _caterogies[name]._description = description;
                 };
@@ -50,5 +50,5 @@
 
 
     }
-}//package com.ankamagames.berilia.types.shortcut
+} com.ankamagames.berilia.types.shortcut
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.enums
+package com.ankamagames.dofus.network.enums
 {
     public class ChatChannelsMultiEnum 
     {
@@ -14,8 +14,9 @@
         public static const CHANNEL_ADMIN:uint = 8;
         public static const CHANNEL_ADS:uint = 12;
         public static const CHANNEL_ARENA:uint = 13;
+        public static const CHANNEL_COMMUNITY:uint = 14;
 
 
     }
-}//package com.ankamagames.dofus.network.enums
+} com.ankamagames.dofus.network.enums
 

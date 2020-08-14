@@ -1,24 +1,35 @@
-﻿package com.ankamagames.dofus.logic.common.managers
+package com.ankamagames.dofus.logic.common.managers
 {
+    import com.ankamagames.jerakine.logger.Logger;
+    import com.ankamagames.jerakine.logger.Log;
+    import flash.utils.getQualifiedClassName;
     import flash.display.MovieClip;
     import flash.utils.Timer;
     import flash.utils.Dictionary;
     import com.ankamagames.berilia.types.graphic.UiRootContainer;
     import flash.display.DisplayObject;
     import flash.geom.Rectangle;
+    import com.ankamagames.berilia.components.Grid;
     import com.ankamagames.berilia.Berilia;
     import flash.display.DisplayObjectContainer;
+    import com.ankamagames.berilia.managers.KernelEventsManager;
+    import com.ankamagames.dofus.misc.lists.HookList;
+    import flash.events.TimerEvent;
     import flash.geom.Point;
     import com.ankamagames.dofus.logic.game.common.managers.PlayedCharacterManager;
     import com.ankamagames.jerakine.types.enums.DirectionsEnum;
-    import flash.events.TimerEvent;
     import flash.events.Event;
+    import com.ankamagames.atouin.Atouin;
 
     public class HyperlinkDisplayArrowManager 
     {
 
+        protected static const _log:Logger = Log.getLogger(getQualifiedClassName(HyperlinkDisplayArrowManager));
         private static const ARROW_CLIP:Class = HyperlinkDisplayArrowManager_ARROW_CLIP;
         private static var _arrowClip:MovieClip;
+        private static var _arrowStartX:int;
+        private static var _arrowStartY:int;
+        private static var _arrowStrata:int;
         private static var _arrowTimer:Timer;
         private static var _displayLastArrow:Boolean = false;
         private static var _lastArrowX:int;
@@ -27,15 +38,45 @@
         private static var _lastStrata:int;
         private static var _lastReverse:int;
         private static var _arrowPositions:Dictionary = new Dictionary();
+        private static var _arrowUiProperties:UiArrowProperties;
 
+
+        public static function getArrowClip():MovieClip
+        {
+            return (_arrowClip);
+        }
+
+        public static function getArrowStartX():int
+        {
+            return (_arrowStartX);
+        }
+
+        public static function getArrowStartY():int
+        {
+            return (_arrowStartY);
+        }
+
+        public static function getArrowStrata():int
+        {
+            return (_arrowStrata);
+        }
+
+        public static function getArrowUiProperties():UiArrowProperties
+        {
+            return (_arrowUiProperties);
+        }
 
         public static function showArrow(uiName:String, componentName:String, pos:int=0, reverse:int=0, strata:int=5, loop:int=0):MovieClip
         {
             var uirc:UiRootContainer;
+            var components:Array;
             var displayObject:DisplayObject;
-            var rect:Rectangle;
             var id:String;
+            var rect:Rectangle;
+            var gd:Grid;
+            var i:int;
             var arrow:MovieClip = getArrow((loop == 1));
+            _arrowStrata = strata;
             var container:DisplayObjectContainer = (Berilia.getInstance().docMain.getChildAt(strata) as DisplayObjectContainer);
             container.addChild(arrow);
             if (isNaN(Number(uiName)))
@@ -43,11 +84,39 @@
                 uirc = Berilia.getInstance().getUi(uiName);
                 if (uirc)
                 {
-                    displayObject = uirc.getElement(componentName);
+                    components = componentName.split("|");
+                    displayObject = uirc.getElement(components[0]);
                     if (((displayObject) && (displayObject.visible)))
                     {
-                        rect = displayObject.getRect(container);
-                        id = ((uiName + "_") + componentName);
+                        _arrowUiProperties = new UiArrowProperties(uiName, componentName, pos, reverse, strata, loop);
+                        id = uiName;
+                        if (components.length == 1)
+                        {
+                            rect = displayObject.getRect(container);
+                            id = (id + ("_" + components[0]));
+                        }
+                        else
+                        {
+                            gd = (displayObject as Grid);
+                            i = 0;
+                            while (i < gd.dataProvider.length)
+                            {
+                                if ((((gd.dataProvider[i]) && (gd.dataProvider[i].hasOwnProperty(components[1]))) && (gd.dataProvider[i][components[1]] == components[2])))
+                                {
+                                    rect = (gd.slots[i] as DisplayObject).getRect(container);
+                                    break;
+                                };
+                                i++;
+                            };
+                            if (!rect)
+                            {
+                                _log.error((((((("The arrow can't be displayed : no data with " + components[1]) + " = ") + components[2]) + " in ") + components[0]) + "."));
+                                container.removeChild(arrow);
+                                KernelEventsManager.getInstance().processCallback(HookList.DisplayUiArrow, _arrowUiProperties);
+                                return (null);
+                            };
+                            KernelEventsManager.getInstance().processCallback(HookList.DisplayUiArrow, _arrowUiProperties);
+                        };
                         if (_arrowPositions[id])
                         {
                             arrow.x = _arrowPositions[id].x;
@@ -56,6 +125,12 @@
                         else
                         {
                             place(_arrowClip, rect, pos);
+                        };
+                        if (loop)
+                        {
+                            _arrowTimer = new Timer(20);
+                            _arrowTimer.addEventListener(TimerEvent.TIMER, loopArrow);
+                            _arrowTimer.start();
                         };
                     };
                 };
@@ -83,6 +158,7 @@
         public static function showAbsoluteArrow(targetRect:Rectangle, pos:int=0, reverse:int=0, strata:int=5, loop:int=0):MovieClip
         {
             var arrow:MovieClip = getArrow((loop == 1));
+            _arrowStrata = strata;
             DisplayObjectContainer(Berilia.getInstance().docMain.getChildAt(strata)).addChild(arrow);
             place(arrow, targetRect, pos);
             if (reverse == 1)
@@ -106,15 +182,16 @@
             _arrowPositions[((pUiName + "_") + pComponentName)] = pPosition;
         }
 
-        public static function showMapTransition(mapId:int, shapeOrientation:int, position:int, reverse:int=0, strata:int=5, loop:int=0):MovieClip
+        public static function showMapTransition(mapId:Number, shapeOrientation:int, position:int, reverse:int=0, strata:int=5, loop:int=0):MovieClip
         {
             var arrow:MovieClip;
             var x:uint;
             var y:uint;
             var orientation:uint;
-            if ((((mapId == -1)) || ((mapId == PlayedCharacterManager.getInstance().currentMap.mapId))))
+            if (((mapId == -1) || (mapId == PlayedCharacterManager.getInstance().currentMap.mapId)))
             {
                 arrow = getArrow((loop == 1));
+                _arrowStrata = strata;
                 DisplayObjectContainer(Berilia.getInstance().docMain.getChildAt(strata)).addChild(arrow);
                 switch (shapeOrientation)
                 {
@@ -158,11 +235,64 @@
             return (null);
         }
 
-        public static function destroyArrow(E:Event=null):void
+        public static function loopArrow(e:TimerEvent=null):void
         {
-            if (E)
+            var uirc:UiRootContainer;
+            var components:Array;
+            var displayObject:DisplayObject;
+            var id:String;
+            var rect:Rectangle;
+            var gd:Grid;
+            var i:int;
+            if (e)
             {
-                E.currentTarget.removeEventListener(TimerEvent.TIMER, destroyArrow);
+                uirc = Berilia.getInstance().getUi(_arrowUiProperties.uiName);
+                if (uirc)
+                {
+                    components = _arrowUiProperties.componentName.split("|");
+                    displayObject = uirc.getElement(components[0]);
+                    if (((displayObject) && (displayObject.visible)))
+                    {
+                        id = _arrowUiProperties.uiName;
+                        if (components.length == 1)
+                        {
+                            rect = displayObject.getRect((_arrowClip.parent as DisplayObjectContainer));
+                            id = (id + ("_" + components[0]));
+                        }
+                        else
+                        {
+                            gd = (displayObject as Grid);
+                            i = 0;
+                            while (i < gd.dataProvider.length)
+                            {
+                                if ((((gd.dataProvider[i]) && (gd.dataProvider[i].hasOwnProperty(components[1]))) && (gd.dataProvider[i][components[1]] == components[2])))
+                                {
+                                    rect = (gd.slots[i] as DisplayObject).getRect((_arrowClip.parent as DisplayObjectContainer));
+                                    break;
+                                };
+                                i++;
+                            };
+                        };
+                    };
+                };
+                place(_arrowClip, rect, _arrowUiProperties.pos);
+                if (_arrowUiProperties.loop)
+                {
+                    _displayLastArrow = true;
+                    _lastArrowX = _arrowClip.x;
+                    _lastArrowY = _arrowClip.y;
+                    _lastArrowPos = _arrowUiProperties.pos;
+                    _lastStrata = _arrowUiProperties.strata;
+                    _lastReverse = _arrowClip.scaleX;
+                };
+            };
+        }
+
+        public static function destroyArrow(e:Event=null):void
+        {
+            if (e)
+            {
+                e.currentTarget.removeEventListener(TimerEvent.TIMER, destroyArrow);
                 if (_displayLastArrow)
                 {
                     (Berilia.getInstance().docMain.getChildAt(_lastStrata) as DisplayObjectContainer).addChild(_arrowClip);
@@ -183,6 +313,16 @@
                     _arrowClip.parent.removeChild(_arrowClip);
                 };
             };
+            if (((((_arrowUiProperties) && (_arrowUiProperties.loop)) && (_arrowTimer)) && (_arrowTimer.hasEventListener(TimerEvent.TIMER))))
+            {
+                _arrowTimer.removeEventListener(TimerEvent.TIMER, loopArrow);
+            };
+            if (_arrowTimer)
+            {
+                _arrowTimer.reset();
+                _arrowTimer = null;
+            };
+            _arrowUiProperties = null;
         }
 
         private static function getArrow(loop:Boolean=false):MovieClip
@@ -202,6 +342,7 @@
                 if (_arrowTimer)
                 {
                     _arrowTimer.reset();
+                    _arrowTimer = null;
                 };
             }
             else
@@ -212,7 +353,7 @@
                 }
                 else
                 {
-                    _arrowTimer = new Timer(2000, 1);
+                    _arrowTimer = new Timer(5000, 1);
                     _arrowTimer.addEventListener(TimerEvent.TIMER, destroyArrow);
                 };
                 _arrowTimer.start();
@@ -222,91 +363,95 @@
 
         public static function place(arrow:MovieClip, rect:Rectangle, pos:int):void
         {
-            if (pos == 0)
+            var newPos:Point;
+            if (rect)
             {
-                arrow.scaleX = 1;
-                arrow.scaleY = 1;
-                arrow.x = int(rect.x);
-                arrow.y = int(rect.y);
-            }
-            else
-            {
-                if (pos == 1)
+                if (pos == 0)
                 {
                     arrow.scaleX = 1;
                     arrow.scaleY = 1;
-                    arrow.x = int((rect.x + (rect.width / 2)));
+                    arrow.x = int(rect.x);
                     arrow.y = int(rect.y);
                 }
                 else
                 {
-                    if (pos == 2)
+                    if (pos == 1)
                     {
-                        arrow.scaleX = -1;
+                        arrow.scaleX = 1;
                         arrow.scaleY = 1;
-                        arrow.x = int((rect.x + rect.width));
+                        arrow.x = int((rect.x + (rect.width / 2)));
                         arrow.y = int(rect.y);
                     }
                     else
                     {
-                        if (pos == 3)
+                        if (pos == 2)
                         {
-                            arrow.scaleX = 1;
+                            arrow.scaleX = -1;
                             arrow.scaleY = 1;
-                            arrow.x = int(rect.x);
-                            arrow.y = int((rect.y + (rect.height / 2)));
+                            arrow.x = int((rect.x + rect.width));
+                            arrow.y = int(rect.y);
                         }
                         else
                         {
-                            if (pos == 4)
+                            if (pos == 3)
                             {
                                 arrow.scaleX = 1;
                                 arrow.scaleY = 1;
-                                arrow.x = int((rect.x + (rect.width / 2)));
+                                arrow.x = int(rect.x);
                                 arrow.y = int((rect.y + (rect.height / 2)));
                             }
                             else
                             {
-                                if (pos == 5)
+                                if (pos == 4)
                                 {
-                                    arrow.scaleX = -1;
+                                    arrow.scaleX = 1;
                                     arrow.scaleY = 1;
-                                    arrow.x = int((rect.x + rect.width));
+                                    arrow.x = int((rect.x + (rect.width / 2)));
                                     arrow.y = int((rect.y + (rect.height / 2)));
                                 }
                                 else
                                 {
-                                    if (pos == 6)
+                                    if (pos == 5)
                                     {
-                                        arrow.scaleX = 1;
-                                        arrow.scaleY = -1;
-                                        arrow.x = int(rect.x);
-                                        arrow.y = int((rect.y + rect.height));
+                                        arrow.scaleX = -1;
+                                        arrow.scaleY = 1;
+                                        arrow.x = int((rect.x + rect.width));
+                                        arrow.y = int((rect.y + (rect.height / 2)));
                                     }
                                     else
                                     {
-                                        if (pos == 7)
+                                        if (pos == 6)
                                         {
                                             arrow.scaleX = 1;
                                             arrow.scaleY = -1;
-                                            arrow.x = int((rect.x + (rect.width / 2)));
+                                            arrow.x = int(rect.x);
                                             arrow.y = int((rect.y + rect.height));
                                         }
                                         else
                                         {
-                                            if (pos == 8)
+                                            if (pos == 7)
                                             {
+                                                arrow.scaleX = 1;
                                                 arrow.scaleY = -1;
-                                                arrow.scaleX = -1;
-                                                arrow.x = int((rect.x + rect.width));
+                                                arrow.x = int((rect.x + (rect.width / 2)));
                                                 arrow.y = int((rect.y + rect.height));
                                             }
                                             else
                                             {
-                                                arrow.scaleX = 1;
-                                                arrow.scaleY = 1;
-                                                arrow.x = int(rect.x);
-                                                arrow.y = int(rect.y);
+                                                if (pos == 8)
+                                                {
+                                                    arrow.scaleY = -1;
+                                                    arrow.scaleX = -1;
+                                                    arrow.x = int((rect.x + rect.width));
+                                                    arrow.y = int((rect.y + rect.height));
+                                                }
+                                                else
+                                                {
+                                                    arrow.scaleX = 1;
+                                                    arrow.scaleY = 1;
+                                                    arrow.x = int(rect.x);
+                                                    arrow.y = int(rect.y);
+                                                };
                                             };
                                         };
                                     };
@@ -315,10 +460,41 @@
                         };
                     };
                 };
+                _arrowStartX = arrow.x;
+                _arrowStartY = arrow.y;
+                if (_arrowStrata != 5)
+                {
+                    newPos = Atouin.getInstance().rootContainer.localToGlobal(new Point(_arrowStartX, _arrowStartY));
+                    arrow.x = newPos.x;
+                    arrow.y = newPos.y;
+                };
             };
         }
 
 
     }
-}//package com.ankamagames.dofus.logic.common.managers
+} com.ankamagames.dofus.logic.common.managers
+
+class UiArrowProperties 
+{
+
+    public var uiName:String;
+    public var componentName:String;
+    public var pos:int;
+    public var reverse:int;
+    public var strata:int;
+    public var loop:int;
+
+    public function UiArrowProperties(pUiName:String, pComponentName:String, pPos:int, pReverse:int, pStrata:int, pLoop:int)
+    {
+        this.uiName = pUiName;
+        this.componentName = pComponentName;
+        this.pos = pPos;
+        this.reverse = pReverse;
+        this.strata = pStrata;
+        this.loop = pLoop;
+    }
+
+}
+
 

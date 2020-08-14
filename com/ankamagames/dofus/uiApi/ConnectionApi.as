@@ -1,49 +1,52 @@
-﻿package com.ankamagames.dofus.uiApi
+package com.ankamagames.dofus.uiApi
 {
     import com.ankamagames.berilia.interfaces.IApi;
+    import com.ankamagames.jerakine.logger.Logger;
+    import com.ankamagames.jerakine.logger.Log;
+    import flash.utils.getQualifiedClassName;
     import com.ankamagames.dofus.kernel.Kernel;
     import com.ankamagames.dofus.logic.connection.frames.ServerSelectionFrame;
     import __AS3__.vec.Vector;
     import com.ankamagames.dofus.network.types.connection.GameServerInformations;
-    import com.ankamagames.dofus.logic.connection.managers.GuestModeManager;
     import com.ankamagames.dofus.logic.game.approach.frames.GameServerApproachFrame;
     import com.ankamagames.dofus.logic.common.managers.PlayerManager;
     import com.ankamagames.dofus.datacenter.servers.Server;
-    import com.ankamagames.dofus.network.enums.ServerStatusEnum;
+    import com.ankamagames.dofus.internalDatacenter.servers.ServerWrapper;
     import com.ankamagames.dofus.BuildInfos;
     import com.ankamagames.dofus.network.enums.BuildTypeEnum;
+    import com.ankamagames.dofus.internalDatacenter.DataEnum;
+    import com.ankamagames.dofus.network.enums.ServerCompletionEnum;
+    import com.ankamagames.dofus.network.enums.ServerStatusEnum;
+    import __AS3__.vec.*;
 
-    [Trusted]
     [InstanciedApi]
     public class ConnectionApi implements IApi 
     {
 
+        protected static const _log:Logger = Log.getLogger(getQualifiedClassName(ConnectionApi));
+
 
         private function get serverSelectionFrame():ServerSelectionFrame
         {
-            return ((Kernel.getWorker().getFrame(ServerSelectionFrame) as ServerSelectionFrame));
+            return (Kernel.getWorker().getFrame(ServerSelectionFrame) as ServerSelectionFrame);
         }
 
-        [Untrusted]
         public function getUsedServers():Vector.<GameServerInformations>
         {
             return (this.serverSelectionFrame.usedServers);
         }
 
-        [Untrusted]
         public function getServers():Vector.<GameServerInformations>
         {
             return (this.serverSelectionFrame.servers);
         }
 
-        [Untrusted]
-        public function hasGuestAccount():Boolean
+        public function getAvailableSlotsByServerType():Array
         {
-            return (GuestModeManager.getInstance().hasGuestAccount());
+            return (this.serverSelectionFrame.availableSlotsByServerType);
         }
 
-        [Untrusted]
-        public function isCharacterWaitingForChange(id:int):Boolean
+        public function isCharacterWaitingForChange(id:Number):Boolean
         {
             var serverApproachFrame:GameServerApproachFrame = (Kernel.getWorker().getFrame(GameServerApproachFrame) as GameServerApproachFrame);
             if (serverApproachFrame)
@@ -53,80 +56,95 @@
             return (false);
         }
 
-        [Untrusted]
         public function allowAutoConnectCharacter(allow:Boolean):void
         {
             PlayerManager.getInstance().allowAutoConnectCharacter = allow;
             PlayerManager.getInstance().autoConnectOfASpecificCharacterId = -1;
         }
 
-        [Untrusted]
-        public function getAutochosenServer():GameServerInformations
+        public function getAutoChosenServer(serverTypeId:int):GameServerInformations
         {
-            var commuServeur:GameServerInformations;
-            var currServer:Object;
-            var internationalServer:GameServerInformations;
-            var currServerI:Object;
-            var firstPop:int;
-            var server:GameServerInformations;
-            var data:Object;
-            var availableServers:Array = new Array();
-            var serversList:Array = new Array();
-            var playerCommuId:int = PlayerManager.getInstance().communityId;
-            for each (commuServeur in this.serverSelectionFrame.servers)
+            var server:Server;
+            var serverInfo:GameServerInformations;
+            var availableServers:Array;
+            var playerCommunityServers:Vector.<ServerWrapper> = new Vector.<ServerWrapper>();
+            var fallbackServers:Vector.<ServerWrapper> = new Vector.<ServerWrapper>();
+            var isReleaseBuild:* = (BuildInfos.BUILD_TYPE == BuildTypeEnum.RELEASE);
+            var playerCommunityId:int = PlayerManager.getInstance().communityId;
+            for each (serverInfo in this.serverSelectionFrame.servers)
             {
-                currServer = Server.getServerById(commuServeur.id);
-                if (currServer)
+                server = Server.getServerById(serverInfo.id);
+                if (!server)
                 {
-                    if ((((currServer.communityId == playerCommuId)) || ((((((playerCommuId == 1)) || ((playerCommuId == 2)))) && ((((currServer.communityId == 1)) || ((currServer.communityId == 2))))))))
-                    {
-                        serversList.push(commuServeur);
-                    };
-                };
-            };
-            if (serversList.length == 0)
-            {
-                for each (internationalServer in this.serverSelectionFrame.servers)
+                    _log.warn(("Missing Server data for serverId " + serverInfo.id));
+                }
+                else
                 {
-                    currServerI = Server.getServerById(internationalServer.id);
-                    if (((currServerI) && ((currServerI.communityId == 2))))
+                    if (((isReleaseBuild) && (!(server.name.indexOf("Test") == -1))))
                     {
-                        serversList.push(internationalServer);
-                    };
-                };
-            };
-            serversList.sortOn("completion", Array.NUMERIC);
-            if (serversList.length > 0)
-            {
-                firstPop = -1;
-                for each (server in serversList)
-                {
-                    if ((((((BuildInfos.BUILD_TYPE == BuildTypeEnum.RELEASE)) && ((server.id == 36)))) && ((server.status == ServerStatusEnum.ONLINE))))
+                        _log.warn((("Ignoring server " + server.name) + " as it's a test server"));
+                    }
+                    else
                     {
-                        return (server);
-                    };
-                    data = Server.getServerById(server.id);
-                    if ((((server.status == ServerStatusEnum.ONLINE)) && ((firstPop == -1))))
-                    {
-                        firstPop = server.completion;
-                    };
-                    if (((((!((firstPop == -1))) && ((data.population.id == firstPop)))) && ((server.status == ServerStatusEnum.ONLINE))))
-                    {
-                        if (((!((BuildInfos.BUILD_TYPE == BuildTypeEnum.RELEASE))) || ((data.name.indexOf("Test") == -1))))
+                        if (((server.gameTypeId == serverTypeId) && (this.serverIsOnlineAndNotFull(serverInfo))))
                         {
-                            availableServers.push(server);
+                            if (((server.communityId == playerCommunityId) || ((server.communityId == DataEnum.SERVER_COMMUNITY_ENGLISH_SPEAKING) && (playerCommunityId == DataEnum.SERVER_COMMUNITY_INTERNATIONAL_ALL_EXCEPT_FRENCH))))
+                            {
+                                playerCommunityServers.push(ServerWrapper.create(server, serverInfo));
+                            }
+                            else
+                            {
+                                if (server.communityId == DataEnum.SERVER_COMMUNITY_INTERNATIONAL_ALL_EXCEPT_FRENCH)
+                                {
+                                    fallbackServers.push(ServerWrapper.create(server, serverInfo));
+                                };
+                            };
                         };
                     };
                 };
-                if (availableServers.length > 0)
-                {
-                    return (availableServers[Math.floor((Math.random() * availableServers.length))]);
-                };
+            };
+            availableServers = this.getLowestPopulationServers(playerCommunityServers);
+            if (availableServers.length == 0)
+            {
+                availableServers = this.getLowestPopulationServers(fallbackServers);
+            };
+            if (availableServers.length > 0)
+            {
+                return (availableServers[Math.floor((Math.random() * availableServers.length))]);
             };
             return (null);
         }
 
+        private function getLowestPopulationServers(serversList:Vector.<ServerWrapper>):Array
+        {
+            var lowestPopulation:int;
+            var serverWrapper:ServerWrapper;
+            var lowestPopulationServers:Array = new Array();
+            if (serversList.length > 0)
+            {
+                serversList.sort(ServerWrapper.sortByPopulation);
+                lowestPopulation = serversList[0].server.population.id;
+                for each (serverWrapper in serversList)
+                {
+                    if (serverWrapper.server.population.id == lowestPopulation)
+                    {
+                        lowestPopulationServers.push(serverWrapper.serverInfo);
+                    }
+                    else
+                    {
+                        break;
+                    };
+                };
+            };
+            return (lowestPopulationServers);
+        }
+
+        private function serverIsOnlineAndNotFull(serverInfo:GameServerInformations):Boolean
+        {
+            return ((((serverInfo.isSelectable) && (serverInfo.status == ServerStatusEnum.ONLINE)) && (serverInfo.charactersCount < serverInfo.charactersSlots)) && (serverInfo.completion <= ServerCompletionEnum.COMPLETION_HIGH));
+        }
+
 
     }
-}//package com.ankamagames.dofus.uiApi
+} com.ankamagames.dofus.uiApi
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.logger.targets
+package com.ankamagames.jerakine.logger.targets
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.LogEvent;
@@ -13,5 +13,5 @@
         function onLog(_arg_1:LogEvent):void;
 
     }
-}//package com.ankamagames.jerakine.logger.targets
+} com.ankamagames.jerakine.logger.targets
 

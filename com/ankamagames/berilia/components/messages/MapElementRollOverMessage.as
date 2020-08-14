@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.components.messages
+package com.ankamagames.berilia.components.messages
 {
     import com.ankamagames.berilia.types.data.MapElement;
     import com.ankamagames.berilia.types.graphic.GraphicContainer;
@@ -22,5 +22,5 @@
 
 
     }
-}//package com.ankamagames.berilia.components.messages
+} com.ankamagames.berilia.components.messages
 

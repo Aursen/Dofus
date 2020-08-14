@@ -1,9 +1,11 @@
-﻿package com.ankamagames.dofus.console.debug
+package com.ankamagames.dofus.console.debug
 {
     import com.ankamagames.jerakine.console.ConsoleInstructionHandler;
     import com.ankamagames.dofus.BuildInfos;
     import com.ankamagames.dofus.network.Metadata;
-    import com.ankamagames.dofus.misc.BuildTypeParser;
+    import by.blooddy.crypto.MD5;
+    import com.ankamagames.dofus.Constants;
+    import flash.utils.ByteArray;
     import com.ankamagames.jerakine.console.ConsoleHandler;
 
     public class VersionInstructionHandler implements ConsoleInstructionHandler 
@@ -17,11 +19,8 @@
                 case "version":
                     switch (args[0])
                     {
-                        case "revision":
-                            console.output(("Build revision : " + BuildInfos.BUILD_REVISION));
-                            break;
-                        case "patch":
-                            console.output(("Build patch : " + BuildInfos.BUILD_PATCH));
+                        case "number":
+                            console.output(("Build number : " + BuildInfos.VERSION.toString()));
                             break;
                         case "date":
                             console.output(("Build date     : " + BuildInfos.BUILD_DATE));
@@ -29,13 +28,17 @@
                         case "protocol":
                             console.output((((("Protocol       : " + Metadata.PROTOCOL_BUILD) + " (") + Metadata.PROTOCOL_DATE) + ")"));
                             break;
+                        case "visionneuse":
+                            console.output(("Visioneuse md5 : " + MD5.hashBytes((new Constants.BOOK_READER_APP() as ByteArray))));
+                            break;
                         case undefined:
-                            console.output((((("DOFUS v" + BuildInfos.BUILD_VERSION) + " (") + BuildTypeParser.getTypeName(BuildInfos.BUILD_TYPE)) + ")"));
+                            console.output((((("DOFUS v" + BuildInfos.VERSION) + " (") + BuildInfos.buildTypeName) + ")"));
+                            console.output(("MD5 visionneuse : " + MD5.hashBytes((new Constants.BOOK_READER_APP() as ByteArray))));
                             break;
                         default:
                             console.output(("Unknown argument : " + args[0]));
                     };
-                    return;
+                    break;
             };
         }
 
@@ -46,15 +49,20 @@
                 case "version":
                     return ("Get the client version.");
             };
-            return ((("No help for command '" + cmd) + "'"));
+            return (("No help for command '" + cmd) + "'");
         }
 
         public function getParamPossibilities(cmd:String, paramIndex:uint=0, currentParams:Array=null):Array
         {
+            switch (cmd)
+            {
+                case "version":
+                    return (["revision", "build", "date", "protocol", "visionneuse"]);
+            };
             return ([]);
         }
 
 
     }
-}//package com.ankamagames.dofus.console.debug
+} com.ankamagames.dofus.console.debug
 

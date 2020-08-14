@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.misc.utils
+package com.ankamagames.dofus.misc.utils
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
@@ -45,7 +45,7 @@
             var c:String;
             var lectureType:Boolean;
             var lectureId:Boolean;
-            var type:String = "";
+            var _local_6:String = "";
             var id:String = "";
             var s:String = "";
             var i:uint;
@@ -60,7 +60,7 @@
                 {
                     if (c == replace)
                     {
-                        if (((((i + 1) < txt.length)) && ((txt.charAt((i + 1)) == replace))))
+                        if ((((i + 1) < txt.length) && (txt.charAt((i + 1)) == replace)))
                         {
                             lectureId = false;
                             lectureType = false;
@@ -75,7 +75,7 @@
                 };
                 if (lectureType)
                 {
-                    type = (type + c);
+                    _local_6 = (_local_6 + c);
                 }
                 else
                 {
@@ -89,29 +89,29 @@
                             }
                             else
                             {
-                                s = (s + processReplace(type, id, params));
-                                type = "";
+                                s = (s + processReplace(_local_6, id, params));
+                                _local_6 = "";
                                 id = ("" + c);
                             };
                         }
                         else
                         {
-                            if ((((c >= "0")) && ((c <= "9"))))
+                            if (((c >= "0") && (c <= "9")))
                             {
                                 id = (id + c);
                                 if ((i + 1) == txt.length)
                                 {
                                     lectureId = false;
-                                    s = (s + processReplace(type, id, params));
-                                    type = "";
+                                    s = (s + processReplace(_local_6, id, params));
+                                    _local_6 = "";
                                     id = "";
                                 };
                             }
                             else
                             {
                                 lectureId = false;
-                                s = (s + processReplace(type, id, params));
-                                type = "";
+                                s = (s + processReplace(_local_6, id, params));
+                                _local_6 = "";
                                 id = "";
                                 s = (s + c);
                             };
@@ -121,8 +121,8 @@
                     {
                         if (id != "")
                         {
-                            s = (s + processReplace(type, id, params));
-                            type = "";
+                            s = (s + processReplace(_local_6, id, params));
+                            _local_6 = "";
                             id = "";
                         };
                         s = (s + c);
@@ -133,327 +133,335 @@
             return (s);
         }
 
-        private static function processReplace(type:String, id:String, params:Array):String
+        private static function processReplace(_arg_1:String, id:String, params:Array):String
         {
             var nid:int;
-            var _local_6:Item;
-            var _local_7:ItemType;
-            var _local_8:Job;
-            var _local_9:Quest;
-            var _local_10:Achievement;
-            var _local_11:Title;
-            var _local_12:Ornament;
-            var _local_13:Spell;
-            var _local_14:SpellState;
-            var _local_15:Breed;
-            var _local_16:Area;
-            var _local_17:SubArea;
-            var _local_18:MapPosition;
-            var _local_19:Emoticon;
-            var _local_20:Monster;
-            var _local_21:MonsterRace;
-            var _local_22:MonsterSuperRace;
-            var _local_23:Challenge;
-            var _local_24:AlignmentSide;
-            var _local_25:Array;
-            var _local_26:Dungeon;
-            var _local_27:Date;
-            var _local_28:uint;
-            var _local_29:Companion;
+            var item:Item;
+            var itemType:ItemType;
+            var job:Job;
+            var quest:Quest;
+            var achievement:Achievement;
+            var title:Title;
+            var ornament:Ornament;
+            var spell:Spell;
+            var spellState:SpellState;
+            var breed:Breed;
+            var area:Area;
+            var subArea:SubArea;
+            var map:MapPosition;
+            var emote:Emoticon;
+            var monster:Monster;
+            var monsterRace:MonsterRace;
+            var monsterSuperRace:MonsterSuperRace;
+            var challenge:Challenge;
+            var alignmentSide:AlignmentSide;
+            var stats:Array;
+            var dungeon:Dungeon;
+            var time:Date;
+            var timeToDisplay:int;
+            var companion:Companion;
             var itemw:ItemWrapper;
             var newString:String = "";
             nid = (int(Number(id.substr(1))) - 1);
-            if (type == "")
+            if (_arg_1 == "")
             {
                 newString = params[nid];
             }
             else
             {
-                switch (type)
+                switch (_arg_1)
                 {
                     case "$item":
-                        _local_6 = Item.getItemById(params[nid]);
-                        if (_local_6)
+                        item = Item.getItemById(params[nid]);
+                        if (item)
                         {
                             itemw = ItemWrapper.create(0, 0, params[nid], 0, null, false);
                             newString = HyperlinkItemManager.newChatItem(itemw);
                         }
                         else
                         {
-                            _log.error((((type + " ") + params[nid]) + " introuvable"));
+                            _log.error((((_arg_1 + " ") + params[nid]) + " introuvable"));
                             newString = "";
                         };
                         break;
                     case "$itemType":
-                        _local_7 = ItemType.getItemTypeById(params[nid]);
-                        if (_local_7)
+                        itemType = ItemType.getItemTypeById(params[nid]);
+                        if (itemType)
                         {
-                            newString = _local_7.name;
+                            newString = itemType.name;
                         }
                         else
                         {
-                            _log.error((((type + " ") + params[nid]) + " introuvable"));
+                            _log.error((((_arg_1 + " ") + params[nid]) + " introuvable"));
                             newString = "";
                         };
                         break;
                     case "$quantity":
-                        newString = StringUtils.formateIntToString(int(params[nid]));
+                        newString = StringUtils.formateIntToString(Math.floor(params[nid]));
                         break;
                     case "$job":
-                        _local_8 = Job.getJobById(params[nid]);
-                        if (_local_8)
+                        job = Job.getJobById(params[nid]);
+                        if (job)
                         {
-                            newString = _local_8.name;
+                            newString = job.name;
                         }
                         else
                         {
-                            _log.error((((type + " ") + params[nid]) + " introuvable"));
+                            _log.error((((_arg_1 + " ") + params[nid]) + " introuvable"));
                             newString = "";
                         };
                         break;
                     case "$quest":
-                        _local_9 = Quest.getQuestById(params[nid]);
-                        if (_local_9)
+                        quest = Quest.getQuestById(params[nid]);
+                        if (quest)
                         {
-                            newString = HyperlinkShowQuestManager.addQuest(_local_9.id);
+                            newString = HyperlinkShowQuestManager.addQuest(quest.id);
                         }
                         else
                         {
-                            _log.error((((type + " ") + params[nid]) + " introuvable"));
+                            _log.error((((_arg_1 + " ") + params[nid]) + " introuvable"));
                             newString = "";
                         };
                         break;
                     case "$achievement":
-                        _local_10 = Achievement.getAchievementById(params[nid]);
-                        if (_local_10)
+                        achievement = Achievement.getAchievementById(params[nid]);
+                        if (achievement)
                         {
-                            newString = HyperlinkShowAchievementManager.addAchievement(_local_10.id);
+                            newString = HyperlinkShowAchievementManager.addAchievement(achievement.id);
                         }
                         else
                         {
-                            _log.error((((type + " ") + params[nid]) + " introuvable"));
+                            _log.error((((_arg_1 + " ") + params[nid]) + " introuvable"));
                             newString = "";
                         };
                         break;
                     case "$title":
-                        _local_11 = Title.getTitleById(params[nid]);
-                        if (_local_11)
+                        title = Title.getTitleById(params[nid]);
+                        if (title)
                         {
-                            newString = HyperlinkShowTitleManager.addTitle(_local_11.id);
+                            newString = HyperlinkShowTitleManager.addTitle(title.id);
                         }
                         else
                         {
-                            _log.error((((type + " ") + params[nid]) + " introuvable"));
+                            _log.error((((_arg_1 + " ") + params[nid]) + " introuvable"));
                             newString = "";
                         };
                         break;
                     case "$ornament":
-                        _local_12 = Ornament.getOrnamentById(params[nid]);
-                        if (_local_12)
+                        ornament = Ornament.getOrnamentById(params[nid]);
+                        if (ornament)
                         {
-                            newString = HyperlinkShowOrnamentManager.addOrnament(_local_12.id);
+                            newString = HyperlinkShowOrnamentManager.addOrnament(ornament.id);
                         }
                         else
                         {
-                            _log.error((((type + " ") + params[nid]) + " introuvable"));
+                            _log.error((((_arg_1 + " ") + params[nid]) + " introuvable"));
                             newString = "";
                         };
                         break;
                     case "$spell":
-                        _local_13 = Spell.getSpellById(params[nid]);
-                        if (_local_13)
+                        spell = Spell.getSpellById(params[nid]);
+                        if (spell)
                         {
-                            newString = _local_13.name;
+                            newString = spell.name;
                         }
                         else
                         {
-                            _log.error((((type + " ") + params[nid]) + " introuvable"));
+                            _log.error((((_arg_1 + " ") + params[nid]) + " introuvable"));
                             newString = "";
                         };
                         break;
                     case "$spellState":
-                        _local_14 = SpellState.getSpellStateById(params[nid]);
-                        if (_local_14)
+                        spellState = SpellState.getSpellStateById(params[nid]);
+                        if (spellState)
                         {
-                            newString = _local_14.name;
+                            newString = spellState.name;
                         }
                         else
                         {
-                            _log.error((((type + " ") + params[nid]) + " introuvable"));
+                            _log.error((((_arg_1 + " ") + params[nid]) + " introuvable"));
                             newString = "";
                         };
                         break;
                     case "$breed":
-                        _local_15 = Breed.getBreedById(params[nid]);
-                        if (_local_15)
+                        breed = Breed.getBreedById(params[nid]);
+                        if (breed)
                         {
-                            newString = _local_15.shortName;
+                            newString = breed.shortName;
                         }
                         else
                         {
-                            _log.error((((type + " ") + params[nid]) + " introuvable"));
+                            _log.error((((_arg_1 + " ") + params[nid]) + " introuvable"));
                             newString = "";
                         };
                         break;
                     case "$area":
-                        _local_16 = Area.getAreaById(params[nid]);
-                        if (_local_16)
+                        area = Area.getAreaById(params[nid]);
+                        if (area)
                         {
-                            newString = _local_16.name;
+                            newString = area.name;
                         }
                         else
                         {
-                            _log.error((((type + " ") + params[nid]) + " introuvable"));
+                            _log.error((((_arg_1 + " ") + params[nid]) + " introuvable"));
                             newString = "";
                         };
                         break;
                     case "$subarea":
-                        _local_17 = SubArea.getSubAreaById(params[nid]);
-                        if (_local_17)
+                        subArea = SubArea.getSubAreaById(params[nid]);
+                        if (subArea)
                         {
                             newString = (("{subArea," + params[nid]) + "}");
                         }
                         else
                         {
-                            _log.error((((type + " ") + params[nid]) + " introuvable"));
+                            _log.error((((_arg_1 + " ") + params[nid]) + " introuvable"));
                             newString = "";
                         };
                         break;
                     case "$map":
-                        _local_18 = MapPosition.getMapPositionById(params[nid]);
-                        if (_local_18)
+                        map = MapPosition.getMapPositionById(params[nid]);
+                        if (map)
                         {
-                            if (_local_18.name)
+                            if (map.name)
                             {
-                                newString = _local_18.name;
+                                newString = map.name;
                             }
                             else
                             {
-                                newString = (((((("{map," + int(_local_18.posX)) + ",") + int(_local_18.posY)) + ",") + int(_local_18.worldMap)) + "}");
+                                newString = (((((("{map," + int(map.posX)) + ",") + int(map.posY)) + ",") + int(map.worldMap)) + "}");
                             };
                         }
                         else
                         {
-                            _log.error((((type + " ") + params[nid]) + " introuvable"));
+                            _log.error((((_arg_1 + " ") + params[nid]) + " introuvable"));
                             newString = "";
                         };
                         break;
                     case "$emote":
-                        _local_19 = Emoticon.getEmoticonById(params[nid]);
-                        if (_local_19)
+                        emote = Emoticon.getEmoticonById(params[nid]);
+                        if (emote)
                         {
-                            newString = _local_19.name;
+                            newString = emote.name;
                         }
                         else
                         {
-                            _log.error((((type + " ") + params[nid]) + " introuvable"));
+                            _log.error((((_arg_1 + " ") + params[nid]) + " introuvable"));
                             newString = "";
                         };
                         break;
                     case "$monster":
-                        _local_20 = Monster.getMonsterById(params[nid]);
-                        if (_local_20)
+                        monster = Monster.getMonsterById(params[nid]);
+                        if (monster)
                         {
-                            newString = _local_20.name;
+                            newString = monster.name;
                         }
                         else
                         {
-                            _log.error((((type + " ") + params[nid]) + " introuvable"));
+                            _log.error((((_arg_1 + " ") + params[nid]) + " introuvable"));
                             newString = "";
                         };
                         break;
                     case "$monsterRace":
-                        _local_21 = MonsterRace.getMonsterRaceById(params[nid]);
-                        if (_local_21)
+                        monsterRace = MonsterRace.getMonsterRaceById(params[nid]);
+                        if (monsterRace)
                         {
-                            newString = _local_21.name;
+                            newString = monsterRace.name;
                         }
                         else
                         {
-                            _log.error((((type + " ") + params[nid]) + " introuvable"));
+                            _log.error((((_arg_1 + " ") + params[nid]) + " introuvable"));
                             newString = "";
                         };
                         break;
                     case "$monsterSuperRace":
-                        _local_22 = MonsterSuperRace.getMonsterSuperRaceById(params[nid]);
-                        if (_local_22)
+                        monsterSuperRace = MonsterSuperRace.getMonsterSuperRaceById(params[nid]);
+                        if (monsterSuperRace)
                         {
-                            newString = _local_22.name;
+                            newString = monsterSuperRace.name;
                         }
                         else
                         {
-                            _log.error((((type + " ") + params[nid]) + " introuvable"));
+                            _log.error((((_arg_1 + " ") + params[nid]) + " introuvable"));
                             newString = "";
                         };
                         break;
                     case "$challenge":
-                        _local_23 = Challenge.getChallengeById(params[nid]);
-                        if (_local_23)
+                        challenge = Challenge.getChallengeById(params[nid]);
+                        if (challenge)
                         {
-                            newString = _local_23.name;
+                            newString = challenge.name;
                         }
                         else
                         {
-                            _log.error((((type + " ") + params[nid]) + " introuvable"));
+                            _log.error((((_arg_1 + " ") + params[nid]) + " introuvable"));
                             newString = "";
                         };
                         break;
                     case "$alignment":
-                        _local_24 = AlignmentSide.getAlignmentSideById(params[nid]);
-                        if (_local_24)
+                        alignmentSide = AlignmentSide.getAlignmentSideById(params[nid]);
+                        if (alignmentSide)
                         {
-                            newString = _local_24.name;
+                            newString = alignmentSide.name;
                         }
                         else
                         {
-                            _log.error((((type + " ") + params[nid]) + " introuvable"));
+                            _log.error((((_arg_1 + " ") + params[nid]) + " introuvable"));
                             newString = "";
                         };
                         break;
                     case "$stat":
-                        _local_25 = I18n.getUiText("ui.item.characteristics").split(",");
-                        if (_local_25[params[nid]])
+                        stats = I18n.getUiText("ui.item.characteristics").split(",");
+                        if (stats[params[nid]])
                         {
-                            newString = _local_25[params[nid]];
+                            newString = stats[params[nid]];
                         }
                         else
                         {
-                            _log.error((((type + " ") + params[nid]) + " introuvable"));
+                            _log.error((((_arg_1 + " ") + params[nid]) + " introuvable"));
                             newString = "";
                         };
                         break;
                     case "$dungeon":
-                        _local_26 = Dungeon.getDungeonById(params[nid]);
-                        if (_local_26)
+                        dungeon = Dungeon.getDungeonById(params[nid]);
+                        if (dungeon)
                         {
-                            newString = _local_26.name;
+                            newString = dungeon.name;
                         }
                         else
                         {
-                            _log.error((((type + " ") + params[nid]) + " introuvable"));
+                            _log.error((((_arg_1 + " ") + params[nid]) + " introuvable"));
                             newString = "";
                         };
                         break;
                     case "$time":
-                        _local_27 = new Date();
-                        _local_28 = ((params[nid] * 1000) - _local_27.time);
-                        newString = TimeManager.getInstance().getDuration(_local_28);
+                        time = new Date();
+                        timeToDisplay = ((params[nid] * 1000) - time.time);
+                        if (timeToDisplay < 0)
+                        {
+                            timeToDisplay = 0;
+                        };
+                        newString = TimeManager.getInstance().getDuration(timeToDisplay, false, true);
+                        break;
+                    case "$date":
+                        newString = ((TimeManager.getInstance().formatDateIRL((params[nid] * 1000), true, false) + " ") + TimeManager.getInstance().formatClock((params[nid] * 1000), false, true));
                         break;
                     case "$companion":
                     case "$sidekick":
-                        _local_29 = Companion.getCompanionById(params[nid]);
-                        if (_local_29)
+                        companion = Companion.getCompanionById(params[nid]);
+                        if (companion)
                         {
-                            newString = _local_29.name;
+                            newString = companion.name;
                         }
                         else
                         {
-                            _log.error((((type + " ") + params[nid]) + " introuvable"));
+                            _log.error((((_arg_1 + " ") + params[nid]) + " introuvable"));
                             newString = "";
                         };
                         break;
-                    default:
-                        trace((("Error ! The parameter type (" + type) + ") is unknown."));
+                    case "$breach":
+                        newString = ((I18n.getUiText("ui.breach.roomNumber", [params[nid].room]) + ", ") + I18n.getUiText("ui.breach.floor", [params[nid].floor]));
+                        break;
                 };
             };
             return (newString);
@@ -461,5 +469,5 @@
 
 
     }
-}//package com.ankamagames.dofus.misc.utils
+} com.ankamagames.dofus.misc.utils
 

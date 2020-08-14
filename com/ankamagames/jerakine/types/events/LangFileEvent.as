@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.types.events
+package com.ankamagames.jerakine.types.events
 {
     import flash.events.Event;
 
@@ -11,9 +11,9 @@
         private var _sUrl:String;
         private var _sUrlProvider:String;
 
-        public function LangFileEvent(type:String, bubbles:Boolean=false, cancelable:Boolean=false, sUrl:String=null, sUrlProvider:String=null)
+        public function LangFileEvent(_arg_1:String, bubbles:Boolean=false, cancelable:Boolean=false, sUrl:String=null, sUrlProvider:String=null)
         {
-            super(type, bubbles, cancelable);
+            super(_arg_1, bubbles, cancelable);
             this._sUrl = sUrl;
             this._sUrlProvider = sUrlProvider;
         }
@@ -35,5 +35,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.types.events
+} com.ankamagames.jerakine.types.events
 

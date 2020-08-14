@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.types.zones
+package com.ankamagames.jerakine.types.zones
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
@@ -7,6 +7,7 @@
     import __AS3__.vec.Vector;
     import com.ankamagames.jerakine.types.positions.MapPoint;
     import com.ankamagames.jerakine.types.enums.DirectionsEnum;
+    import mapTools.MapTools;
     import __AS3__.vec.*;
 
     public class HalfLozenge implements IZone 
@@ -58,13 +59,12 @@
 
         public function get surface():uint
         {
-            return (((this._radius * 2) + 1));
+            return ((this._radius * 2) + 1);
         }
 
         public function getCells(cellId:uint=0):Vector.<uint>
         {
             var i:int;
-            var j:int;
             var aCells:Vector.<uint> = new Vector.<uint>();
             var origin:MapPoint = MapPoint.fromCellId(cellId);
             var x:int = origin.x;
@@ -73,8 +73,6 @@
             {
                 aCells.push(cellId);
             };
-            var inc:int = 1;
-            var step:uint;
             i = 1;
             while (i <= this._radius)
             {
@@ -104,13 +102,13 @@
 
         private function addCell(x:int, y:int, cellMap:Vector.<uint>):void
         {
-            if ((((this._dataMapProvider == null)) || (this._dataMapProvider.pointMov(x, y))))
+            if (((this._dataMapProvider == null) || (this._dataMapProvider.pointMov(x, y))))
             {
-                cellMap.push(MapPoint.fromCoords(x, y).cellId);
+                cellMap.push(MapTools.getCellIdByCoord(x, y));
             };
         }
 
 
     }
-}//package com.ankamagames.jerakine.types.zones
+} com.ankamagames.jerakine.types.zones
 

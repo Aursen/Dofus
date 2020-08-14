@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.types.entities
+package com.ankamagames.dofus.types.entities
 {
     import com.ankamagames.tiphon.types.ISubEntityBehavior;
     import com.ankamagames.tiphon.display.TiphonSprite;
@@ -22,13 +22,15 @@
         private var _parentData:BehaviorData;
         private var _animation:String;
         private var _direction:int;
+        private var _finishMoveAnim:String;
+        private var _emoteAnim:String;
 
 
         public function updateFromParentEntity(target:TiphonSprite, parentData:BehaviorData):void
         {
             var modifier:IAnimationModifier;
-            var _local_4:Boolean;
-            var _local_5:CastingSpell;
+            var isAttack:Boolean;
+            var cs:CastingSpell;
             var effects:Vector.<EffectInstanceDice>;
             var effect:EffectInstanceDice;
             this._subentity = target;
@@ -51,14 +53,13 @@
                 case (this._parentData.animation == AnimationEnum.ANIM_COURSE):
                     this._animation = AnimationEnum.ANIM_STATIQUE;
                     break;
-                case !((this._parentData.animation.indexOf("AnimEmoteRest") == -1)):
-                case !((this._parentData.animation.indexOf("AnimEmoteSit") == -1)):
-                case !((this._parentData.animation.indexOf("AnimEmoteRest") == -1)):
-                case !((this._parentData.animation.indexOf("AnimEmoteOups") == -1)):
-                case !((this._parentData.animation.indexOf("AnimEmoteShit") == -1)):
+                case (!(this._parentData.animation.indexOf("AnimEmoteRest") == -1)):
+                case (!(this._parentData.animation.indexOf("AnimEmoteSit") == -1)):
+                case (!(this._parentData.animation.indexOf("AnimEmoteOups") == -1)):
+                case (!(this._parentData.animation.indexOf("AnimEmoteShit") == -1)):
                     this._animation = AnimationEnum.ANIM_STATIQUE;
                     break;
-                case !((this._parentData.animation.indexOf("AnimArme") == -1)):
+                case (!(this._parentData.animation.indexOf("AnimArme") == -1)):
                     if (this._parentData.animation == "AnimArme0")
                     {
                         this._animation = AnimationEnum.ANIM_STATIQUE;
@@ -68,36 +69,40 @@
                         this._parentData.animation = AnimationEnum.ANIM_STATIQUE;
                     };
                     break;
-                case !((this._parentData.animation.indexOf("AnimAttaque") == -1)):
+                case (!(this._parentData.animation.indexOf("AnimAttaque400") == -1)):
+                    this._finishMoveAnim = this._parentData.animation;
+                case ((!(this._parentData.animation.indexOf("AnimAttaque100") == -1)) && (this._parentData.animation.length == 16)):
+                    this._emoteAnim = this._parentData.animation;
+                case (!(this._parentData.animation.indexOf("AnimAttaque") == -1)):
                     this._parentData.animation = AnimationEnum.ANIM_STATIQUE;
-                    _local_5 = FightSequenceFrame.lastCastingSpell;
-                    if (_local_5)
+                    cs = FightSequenceFrame.lastCastingSpell;
+                    if (((cs) && (cs.spellRank)))
                     {
-                        effects = _local_5.spellRank.effects;
+                        effects = cs.spellRank.effects;
                         if (effects)
                         {
                             for each (effect in effects)
                             {
                                 if (effect.category == 2)
                                 {
-                                    _local_4 = true;
+                                    isAttack = true;
                                     break;
                                 };
                             };
                         };
                     };
-                    this._animation = ("AnimAttaque" + ((_local_4) ? 1 : 0));
+                    this._animation = ("AnimAttaque" + ((isAttack) ? 1 : 0));
                     break;
-                case !((this._parentData.animation.indexOf("AnimCueillir") == -1)):
-                case !((this._parentData.animation.indexOf("AnimFaucher") == -1)):
-                case !((this._parentData.animation.indexOf("AnimPioche") == -1)):
-                case !((this._parentData.animation.indexOf("AnimHache") == -1)):
-                case !((this._parentData.animation.indexOf("AnimPeche") == -1)):
-                case !((this._parentData.animation.indexOf("AnimConsulter") == -1)):
+                case (!(this._parentData.animation.indexOf("AnimCueillir") == -1)):
+                case (!(this._parentData.animation.indexOf("AnimFaucher") == -1)):
+                case (!(this._parentData.animation.indexOf("AnimPioche") == -1)):
+                case (!(this._parentData.animation.indexOf("AnimHache") == -1)):
+                case (!(this._parentData.animation.indexOf("AnimPeche") == -1)):
+                case (!(this._parentData.animation.indexOf("AnimConsulter") == -1)):
                     this._parentData.animation = AnimationEnum.ANIM_STATIQUE;
                     break;
             };
-            if (((!((this._parentData.animation.indexOf("AnimEmote") == -1))) && (!(Tiphon.skullLibrary.hasAnim(this._parentData.parent.look.getBone(), this._parentData.animation)))))
+            if (((!(this._parentData.animation.indexOf("AnimEmote") == -1)) && (!(Tiphon.skullLibrary.hasAnim(this._parentData.parent.look.getBone(), this._parentData.animation)))))
             {
                 this._parentData.animation = AnimationEnum.ANIM_STATIQUE;
             };
@@ -120,12 +125,28 @@
             this._parentData.parent.removeEventListener(TiphonEvent.RENDER_FATHER_SUCCEED, this.onFatherRendered);
             var rpEntitiesFrame:RoleplayEntitiesFrame = (Kernel.getWorker().getFrame(RoleplayEntitiesFrame) as RoleplayEntitiesFrame);
             var currentEmoticon:Emoticon = ((rpEntitiesFrame) ? Emoticon.getEmoticonById(rpEntitiesFrame.currentEmoticon) : null);
-            if (((((currentEmoticon) && (currentEmoticon.persistancy))) && ((this._parentData.animation == AnimationEnum.ANIM_STATIQUE))))
+            if (((this._finishMoveAnim) && (!(this._animation.indexOf("AnimAttaque") == -1))))
             {
-                emoticonAnim = currentEmoticon.getAnimName(this._subentity.look);
-                if (this._subentity.getAnimation() == emoticonAnim.replace("_", "_Statique_"))
+                this._animation = this._finishMoveAnim;
+                this._finishMoveAnim = null;
+            }
+            else
+            {
+                if (((this._emoteAnim) && (!(this._animation.indexOf("AnimAttaque") == -1))))
                 {
-                    this._animation = this._subentity.getAnimation();
+                    this._animation = this._emoteAnim;
+                    this._emoteAnim = null;
+                }
+                else
+                {
+                    if ((((currentEmoticon) && (currentEmoticon.persistancy)) && (this._parentData.animation == AnimationEnum.ANIM_STATIQUE)))
+                    {
+                        emoticonAnim = currentEmoticon.getAnimName(this._subentity.look);
+                        if (this._subentity.getAnimation() == emoticonAnim.replace("_", "_Statique_"))
+                        {
+                            this._animation = this._subentity.getAnimation();
+                        };
+                    };
                 };
             };
             this._subentity.setAnimationAndDirection(this._animation, this._direction);
@@ -133,5 +154,5 @@
 
 
     }
-}//package com.ankamagames.dofus.types.entities
+} com.ankamagames.dofus.types.entities
 

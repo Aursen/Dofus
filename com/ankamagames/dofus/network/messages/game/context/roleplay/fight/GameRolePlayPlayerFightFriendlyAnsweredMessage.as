@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.context.roleplay.fight
+package com.ankamagames.dofus.network.messages.game.context.roleplay.fight
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,17 +6,17 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class GameRolePlayPlayerFightFriendlyAnsweredMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 5733;
 
         private var _isInitialized:Boolean = false;
-        public var fightId:int = 0;
-        public var sourceId:uint = 0;
-        public var targetId:uint = 0;
+        public var fightId:uint = 0;
+        public var sourceId:Number = 0;
+        public var targetId:Number = 0;
         public var accept:Boolean = false;
 
 
@@ -30,7 +30,7 @@
             return (5733);
         }
 
-        public function initGameRolePlayPlayerFightFriendlyAnsweredMessage(fightId:int=0, sourceId:uint=0, targetId:uint=0, accept:Boolean=false):GameRolePlayPlayerFightFriendlyAnsweredMessage
+        public function initGameRolePlayPlayerFightFriendlyAnsweredMessage(fightId:uint=0, sourceId:Number=0, targetId:Number=0, accept:Boolean=false):GameRolePlayPlayerFightFriendlyAnsweredMessage
         {
             this.fightId = fightId;
             this.sourceId = sourceId;
@@ -61,6 +61,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_GameRolePlayPlayerFightFriendlyAnsweredMessage(output);
@@ -68,17 +76,21 @@
 
         public function serializeAs_GameRolePlayPlayerFightFriendlyAnsweredMessage(output:ICustomDataOutput):void
         {
-            output.writeInt(this.fightId);
-            if (this.sourceId < 0)
+            if (this.fightId < 0)
+            {
+                throw (new Error((("Forbidden value (" + this.fightId) + ") on element fightId.")));
+            };
+            output.writeVarShort(this.fightId);
+            if (((this.sourceId < 0) || (this.sourceId > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.sourceId) + ") on element sourceId.")));
             };
-            output.writeVarInt(this.sourceId);
-            if (this.targetId < 0)
+            output.writeVarLong(this.sourceId);
+            if (((this.targetId < 0) || (this.targetId > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.targetId) + ") on element targetId.")));
             };
-            output.writeVarInt(this.targetId);
+            output.writeVarLong(this.targetId);
             output.writeBoolean(this.accept);
         }
 
@@ -89,21 +101,58 @@
 
         public function deserializeAs_GameRolePlayPlayerFightFriendlyAnsweredMessage(input:ICustomDataInput):void
         {
-            this.fightId = input.readInt();
-            this.sourceId = input.readVarUhInt();
-            if (this.sourceId < 0)
+            this._fightIdFunc(input);
+            this._sourceIdFunc(input);
+            this._targetIdFunc(input);
+            this._acceptFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GameRolePlayPlayerFightFriendlyAnsweredMessage(tree);
+        }
+
+        public function deserializeAsyncAs_GameRolePlayPlayerFightFriendlyAnsweredMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._fightIdFunc);
+            tree.addChild(this._sourceIdFunc);
+            tree.addChild(this._targetIdFunc);
+            tree.addChild(this._acceptFunc);
+        }
+
+        private function _fightIdFunc(input:ICustomDataInput):void
+        {
+            this.fightId = input.readVarUhShort();
+            if (this.fightId < 0)
+            {
+                throw (new Error((("Forbidden value (" + this.fightId) + ") on element of GameRolePlayPlayerFightFriendlyAnsweredMessage.fightId.")));
+            };
+        }
+
+        private function _sourceIdFunc(input:ICustomDataInput):void
+        {
+            this.sourceId = input.readVarUhLong();
+            if (((this.sourceId < 0) || (this.sourceId > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.sourceId) + ") on element of GameRolePlayPlayerFightFriendlyAnsweredMessage.sourceId.")));
             };
-            this.targetId = input.readVarUhInt();
-            if (this.targetId < 0)
+        }
+
+        private function _targetIdFunc(input:ICustomDataInput):void
+        {
+            this.targetId = input.readVarUhLong();
+            if (((this.targetId < 0) || (this.targetId > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.targetId) + ") on element of GameRolePlayPlayerFightFriendlyAnsweredMessage.targetId.")));
             };
+        }
+
+        private function _acceptFunc(input:ICustomDataInput):void
+        {
             this.accept = input.readBoolean();
         }
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.context.roleplay.fight
+} com.ankamagames.dofus.network.messages.game.context.roleplay.fight
 

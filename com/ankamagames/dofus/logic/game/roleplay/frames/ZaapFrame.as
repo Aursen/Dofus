@@ -1,15 +1,19 @@
-﻿package com.ankamagames.dofus.logic.game.roleplay.frames
+package com.ankamagames.dofus.logic.game.roleplay.frames
 {
     import com.ankamagames.jerakine.messages.Frame;
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
-    import com.ankamagames.dofus.network.messages.game.interactive.zaap.ZaapListMessage;
-    import com.ankamagames.dofus.network.messages.game.interactive.zaap.TeleportDestinationsListMessage;
+    import com.ankamagames.dofus.network.messages.game.interactive.zaap.ZaapDestinationsMessage;
+    import com.ankamagames.dofus.network.messages.game.interactive.zaap.TeleportDestinationsMessage;
+    import com.ankamagames.dofus.logic.game.roleplay.actions.TeleportRequestAction;
+    import com.ankamagames.dofus.logic.game.roleplay.actions.ZaapRespawnSaveRequestAction;
+    import com.ankamagames.dofus.network.messages.game.interactive.zaap.ZaapRespawnSaveRequestMessage;
+    import com.ankamagames.dofus.network.messages.game.interactive.zaap.ZaapRespawnUpdatedMessage;
+    import com.ankamagames.dofus.network.messages.game.dialog.LeaveDialogMessage;
+    import com.ankamagames.dofus.network.types.game.interactive.zaap.TeleportDestination;
     import __AS3__.vec.Vector;
     import com.ankamagames.dofus.datacenter.world.Hint;
-    import com.ankamagames.dofus.logic.game.roleplay.actions.TeleportRequestAction;
-    import com.ankamagames.dofus.network.messages.game.dialog.LeaveDialogMessage;
     import com.ankamagames.dofus.network.messages.game.interactive.zaap.TeleportRequestMessage;
     import com.ankamagames.dofus.internalDatacenter.taxi.TeleportDestinationWrapper;
     import com.ankamagames.berilia.managers.KernelEventsManager;
@@ -35,10 +39,11 @@
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(NpcDialogFrame));
 
         private var _priority:int = 0;
-        private var _spawnMapId:uint;
+        private var _spawnMapId:Number;
+        private var _zaapsList:Array;
 
 
-        public function get spawnMapId():uint
+        public function get spawnMapId():Number
         {
             return (this._spawnMapId);
         }
@@ -55,63 +60,66 @@
 
         public function pushed():Boolean
         {
+            this._zaapsList = new Array();
             return (true);
         }
 
         public function process(msg:Message):Boolean
         {
-            var _local_2:ZaapListMessage;
-            var _local_3:Array;
-            var _local_4:TeleportDestinationsListMessage;
-            var _local_5:Array;
-            var _local_6:Vector.<Hint>;
-            var _local_7:Hint;
-            var _local_8:TeleportRequestAction;
-            var _local_9:LeaveDialogMessage;
-            var i:int;
+            var zdmsg:ZaapDestinationsMessage;
+            var tdmsg:TeleportDestinationsMessage;
+            var destinations:Array;
+            var tra:TeleportRequestAction;
+            var zrsra:ZaapRespawnSaveRequestAction;
+            var zrsrmsg:ZaapRespawnSaveRequestMessage;
+            var zrumsg:ZaapRespawnUpdatedMessage;
+            var ldm:LeaveDialogMessage;
+            var dest:TeleportDestination;
+            var hints:Vector.<Hint>;
+            var hint:Hint;
             var trmsg:TeleportRequestMessage;
+            var zaap:TeleportDestinationWrapper;
             switch (true)
             {
-                case (msg is ZaapListMessage):
-                    _local_2 = (msg as ZaapListMessage);
-                    _local_3 = new Array();
-                    i = 0;
-                    while (i < _local_2.mapIds.length)
+                case (msg is ZaapDestinationsMessage):
+                    zdmsg = (msg as ZaapDestinationsMessage);
+                    this._zaapsList = [];
+                    for each (dest in zdmsg.destinations)
                     {
-                        _local_3.push(new TeleportDestinationWrapper(_local_2.teleporterType, _local_2.mapIds[i], _local_2.subAreaIds[i], _local_2.destTeleporterType[i], _local_2.costs[i], (_local_2.spawnMapId == _local_2.mapIds[i])));
-                        i++;
+                        this._zaapsList.push(new TeleportDestinationWrapper(zdmsg.type, dest.mapId, dest.subAreaId, dest.type, dest.level, dest.cost, (zdmsg.spawnMapId == dest.mapId)));
                     };
-                    this._spawnMapId = _local_2.spawnMapId;
-                    KernelEventsManager.getInstance().processCallback(RoleplayHookList.TeleportDestinationList, _local_3, TeleporterTypeEnum.TELEPORTER_ZAAP);
+                    this._spawnMapId = zdmsg.spawnMapId;
+                    KernelEventsManager.getInstance().processCallback(RoleplayHookList.TeleportDestinationList, this._zaapsList, ((zdmsg.type == TeleporterTypeEnum.TELEPORTER_HAVENBAG) ? TeleporterTypeEnum.TELEPORTER_HAVENBAG : TeleporterTypeEnum.TELEPORTER_ZAAP));
                     return (true);
-                case (msg is TeleportDestinationsListMessage):
-                    _local_4 = (msg as TeleportDestinationsListMessage);
-                    _local_5 = new Array();
-                    i = 0;
-                    while (i < _local_4.mapIds.length)
+                case (msg is TeleportDestinationsMessage):
+                    tdmsg = (msg as TeleportDestinationsMessage);
+                    destinations = [];
+                    if (tdmsg.type == TeleporterTypeEnum.TELEPORTER_SUBWAY)
                     {
-                        if (_local_4.teleporterType == TeleporterTypeEnum.TELEPORTER_SUBWAY)
+                        for each (dest in tdmsg.destinations)
                         {
-                            _local_6 = TeleportDestinationWrapper.getHintsFromMapId(_local_4.mapIds[i]);
-                            for each (_local_7 in _local_6)
+                            hints = TeleportDestinationWrapper.getHintsFromMapId(dest.mapId);
+                            for each (hint in hints)
                             {
-                                _local_5.push(new TeleportDestinationWrapper(_local_4.teleporterType, _local_4.mapIds[i], _local_4.subAreaIds[i], TeleporterTypeEnum.TELEPORTER_SUBWAY, _local_4.costs[i], false, _local_7));
+                                destinations.push(new TeleportDestinationWrapper(tdmsg.type, dest.mapId, dest.subAreaId, TeleporterTypeEnum.TELEPORTER_SUBWAY, dest.level, dest.cost, false, hint));
                             };
-                        }
-                        else
-                        {
-                            _local_5.push(new TeleportDestinationWrapper(_local_4.teleporterType, _local_4.mapIds[i], _local_4.subAreaIds[i], _local_4.destTeleporterType[i], _local_4.costs[i]));
                         };
-                        i++;
+                    }
+                    else
+                    {
+                        for each (dest in tdmsg.destinations)
+                        {
+                            destinations.push(new TeleportDestinationWrapper(tdmsg.type, dest.mapId, dest.subAreaId, dest.type, dest.level, dest.cost));
+                        };
                     };
-                    KernelEventsManager.getInstance().processCallback(RoleplayHookList.TeleportDestinationList, _local_5, _local_4.teleporterType);
+                    KernelEventsManager.getInstance().processCallback(RoleplayHookList.TeleportDestinationList, destinations, tdmsg.type);
                     return (true);
                 case (msg is TeleportRequestAction):
-                    _local_8 = (msg as TeleportRequestAction);
-                    if (_local_8.cost <= PlayedCharacterManager.getInstance().characteristics.kamas)
+                    tra = (msg as TeleportRequestAction);
+                    if (tra.cost <= PlayedCharacterManager.getInstance().characteristics.kamas)
                     {
                         trmsg = new TeleportRequestMessage();
-                        trmsg.initTeleportRequestMessage(_local_8.teleportType, _local_8.mapId);
+                        trmsg.initTeleportRequestMessage(tra.sourceType, tra.destinationType, tra.mapId);
                         ConnectionsHandler.getConnection().send(trmsg);
                     }
                     else
@@ -119,12 +127,27 @@
                         KernelEventsManager.getInstance().processCallback(ChatHookList.TextInformation, I18n.getUiText("ui.popup.not_enough_rich"), ChatFrame.RED_CHANNEL_ID, TimeManager.getInstance().getTimestamp());
                     };
                     return (true);
+                case (msg is ZaapRespawnSaveRequestAction):
+                    zrsra = (msg as ZaapRespawnSaveRequestAction);
+                    zrsrmsg = new ZaapRespawnSaveRequestMessage();
+                    zrsrmsg.initZaapRespawnSaveRequestMessage();
+                    ConnectionsHandler.getConnection().send(zrsrmsg);
+                    return (true);
+                case (msg is ZaapRespawnUpdatedMessage):
+                    zrumsg = (msg as ZaapRespawnUpdatedMessage);
+                    for each (zaap in this._zaapsList)
+                    {
+                        zaap.spawn = (zaap.mapId == zrumsg.mapId);
+                    };
+                    this._spawnMapId = zrumsg.mapId;
+                    KernelEventsManager.getInstance().processCallback(RoleplayHookList.TeleportDestinationList, this._zaapsList, TeleporterTypeEnum.TELEPORTER_ZAAP);
+                    return (true);
                 case (msg is LeaveDialogRequestAction):
                     ConnectionsHandler.getConnection().send(new LeaveDialogRequestMessage());
                     return (true);
                 case (msg is LeaveDialogMessage):
-                    _local_9 = (msg as LeaveDialogMessage);
-                    if (_local_9.dialogType == DialogTypeEnum.DIALOG_TELEPORTER)
+                    ldm = (msg as LeaveDialogMessage);
+                    if (ldm.dialogType == DialogTypeEnum.DIALOG_TELEPORTER)
                     {
                         Kernel.getWorker().process(ChangeWorldInteractionAction.create(true));
                         Kernel.getWorker().removeFrame(this);
@@ -142,5 +165,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.roleplay.frames
+} com.ankamagames.dofus.logic.game.roleplay.frames
 

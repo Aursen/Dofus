@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.managers
+package com.ankamagames.berilia.managers
 {
     import flash.events.EventDispatcher;
     import flash.utils.Dictionary;
@@ -81,17 +81,17 @@
         {
             var uiRenderer:PoolableUiRenderer;
             var sId:String = uiData.file;
-            if (!(sId))
+            if (!sId)
             {
                 sId = uiData.name;
             };
             if (BeriliaConstants.USE_UI_CACHE)
             {
-                if ((uiData.module is PreCompiledUiModule))
+                if (((uiData.module is PreCompiledUiModule) && (checkCache)))
                 {
                     this._aCache[sId] = PreCompiledUiModule(uiData.module).getDefinition(uiData);
                 };
-                if (((!((this._aCache[sId] == null))) && (this._aCache[sId].useCache)))
+                if (((!(this._aCache[sId] == null)) && (this._aCache[sId].useCache)))
                 {
                     this._lastRenderStart = getTimer();
                     uiRenderer = (PoolsManager.getInstance().getUiRendererPool().checkOut() as PoolableUiRenderer);
@@ -101,7 +101,7 @@
                     uiRenderer.uiRender(this._aCache[sId], this._aCache[sId].name, spContainer, oProperties);
                     return;
                 };
-                if (((((this._aRendering[sId]) && (!(this._aCache[sId])))) && (checkCache)))
+                if ((((this._aRendering[sId]) && (!(this._aCache[sId]))) && (checkCache)))
                 {
                     this._aRendering[sId].push(new RenderQueueItem(uiData, spContainer, oProperties));
                     return;
@@ -111,7 +111,7 @@
             {
                 this._aCache = new Array();
             };
-            if (((((!(this._aCache[sId])) || (((this._aCache[sId]) && (this._aCache[sId].useCache))))) && (checkCache)))
+            if ((((!(this._aCache[sId])) || ((this._aCache[sId]) && (this._aCache[sId].useCache))) && (checkCache)))
             {
                 this._aRendering[sId] = new Array();
             };
@@ -143,12 +143,14 @@
             TemplateManager.getInstance().init();
             StoreDataManager.getInstance().setData(BeriliaConstants.DATASTORE_UI_VERSION, DATASTORE_CATEGORY_VERSION, this._aVersion);
             StoreDataManager.getInstance().setData(BeriliaConstants.DATASTORE_UI_DEFINITION, DATASTORE_CATEGORY_CACHE, this._aCache);
+            CssManager.clear(true);
         }
 
         public function clearCacheFromId(id:String):void
         {
             delete this._aCache[id];
             delete this._aVersion[id];
+            TemplateManager.getInstance().init();
             StoreDataManager.getInstance().setData(BeriliaConstants.DATASTORE_UI_VERSION, DATASTORE_CATEGORY_VERSION, this._aVersion);
             StoreDataManager.getInstance().setData(BeriliaConstants.DATASTORE_UI_DEFINITION, DATASTORE_CATEGORY_CACHE, this._aCache);
         }
@@ -214,7 +216,7 @@
         private function processWaitingUi(sId:String, checkCache:Boolean=true):void
         {
             var currentUi:RenderQueueItem;
-            if (!(this._aRendering[sId]))
+            if (!this._aRendering[sId])
             {
                 return;
             };
@@ -229,15 +231,26 @@
 
         private function onUiRender(e:UiRenderEvent):void
         {
+            var renderTime:Number;
             var uiDef:UiDefinition = e.uiRenderer.uiDefinition;
-            if (((((((((!((e.uiTarget.uiData.module is PreCompiledUiModule))) && (uiDef))) && (uiDef.useCache))) && (!(this._aCache[uiDef.name])))) && (BeriliaConstants.USE_UI_CACHE)))
+            if ((((((!(e.uiTarget.uiData.module is PreCompiledUiModule)) && (uiDef)) && (uiDef.useCache)) && (!(this._aCache[uiDef.name]))) && (BeriliaConstants.USE_UI_CACHE)))
             {
                 this._aCache[uiDef.name] = uiDef;
                 StoreDataManager.getInstance().setData(BeriliaConstants.DATASTORE_UI_DEFINITION, DATASTORE_CATEGORY_CACHE, this._aCache);
             };
             if (uiDef)
             {
-                _log.info((((((((((uiDef.name + " rendered in ") + (getTimer() - this._lastRenderStart)) + " ms (parsing: ") + e.uiRenderer.parsingTime) + " ms, build: ") + e.uiRenderer.buildTime) + " ms, script:") + e.uiRenderer.scriptTime) + " ms )"));
+                renderTime = (getTimer() - this._lastRenderStart);
+                _log.info(((((((((((uiDef.name + " rendered in ") + renderTime) + " ms ") + "(parsing: ") + e.uiRenderer.parsingTime) + " ms, build: ") + e.uiRenderer.buildTime) + " ms, script:") + e.uiRenderer.scriptTime) + " ms )"));
+                if (UiPerformanceManager.getInstance().statsEnabled)
+                {
+                    UiPerformanceManager.getInstance().saveUiLoadStats(uiDef.name, {
+                        "renderTime":renderTime,
+                        "parsingTime":e.uiRenderer.parsingTime,
+                        "buildTime":e.uiRenderer.buildTime,
+                        "scriptTime":e.uiRenderer.scriptTime
+                    });
+                };
             };
             PoolsManager.getInstance().getUiRendererPool().checkIn((e.uiRenderer as PoolableUiRenderer));
             dispatchEvent(new UiRenderEvent(UiRenderEvent.UIRenderComplete, e.bubbles, e.cancelable, e.uiTarget, e.uiRenderer));
@@ -249,7 +262,7 @@
 
 
     }
-}//package com.ankamagames.berilia.managers
+} com.ankamagames.berilia.managers
 
 import com.ankamagames.berilia.types.graphic.UiRootContainer;
 import com.ankamagames.berilia.types.data.UiData;
@@ -259,7 +272,7 @@ class RenderQueueItem
 {
 
     public var container:UiRootContainer;
-    public var properties;
+    public var properties:*;
     public var uiData:UiData;
 
     public function RenderQueueItem(uiData:UiData, cont:UiRootContainer, prop:*)
@@ -271,4 +284,5 @@ class RenderQueueItem
     }
 
 }
+
 

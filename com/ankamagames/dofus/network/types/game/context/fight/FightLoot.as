@@ -1,7 +1,8 @@
-﻿package com.ankamagames.dofus.network.types.game.context.fight
+package com.ankamagames.dofus.network.types.game.context.fight
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import __AS3__.vec.Vector;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
     import __AS3__.vec.*;
@@ -11,21 +12,17 @@
 
         public static const protocolId:uint = 41;
 
-        public var objects:Vector.<uint>;
-        public var kamas:uint = 0;
+        public var objects:Vector.<uint> = new Vector.<uint>();
+        public var kamas:Number = 0;
+        private var _objectstree:FuncTree;
 
-        public function FightLoot()
-        {
-            this.objects = new Vector.<uint>();
-            super();
-        }
 
         public function getTypeId():uint
         {
             return (41);
         }
 
-        public function initFightLoot(objects:Vector.<uint>=null, kamas:uint=0):FightLoot
+        public function initFightLoot(objects:Vector.<uint>=null, kamas:Number=0):FightLoot
         {
             this.objects = objects;
             this.kamas = kamas;
@@ -53,14 +50,14 @@
                 {
                     throw (new Error((("Forbidden value (" + this.objects[_i1]) + ") on element 1 (starting at 1) of objects.")));
                 };
-                output.writeVarShort(this.objects[_i1]);
+                output.writeVarInt(this.objects[_i1]);
                 _i1++;
             };
-            if (this.kamas < 0)
+            if (((this.kamas < 0) || (this.kamas > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.kamas) + ") on element kamas.")));
             };
-            output.writeVarInt(this.kamas);
+            output.writeVarLong(this.kamas);
         }
 
         public function deserialize(input:ICustomDataInput):void
@@ -75,7 +72,7 @@
             var _i1:uint;
             while (_i1 < _objectsLen)
             {
-                _val1 = input.readVarUhShort();
+                _val1 = input.readVarUhInt();
                 if (_val1 < 0)
                 {
                     throw (new Error((("Forbidden value (" + _val1) + ") on elements of objects.")));
@@ -83,8 +80,45 @@
                 this.objects.push(_val1);
                 _i1++;
             };
-            this.kamas = input.readVarUhInt();
-            if (this.kamas < 0)
+            this._kamasFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_FightLoot(tree);
+        }
+
+        public function deserializeAsyncAs_FightLoot(tree:FuncTree):void
+        {
+            this._objectstree = tree.addChild(this._objectstreeFunc);
+            tree.addChild(this._kamasFunc);
+        }
+
+        private function _objectstreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._objectstree.addChild(this._objectsFunc);
+                i++;
+            };
+        }
+
+        private function _objectsFunc(input:ICustomDataInput):void
+        {
+            var _val:uint = input.readVarUhInt();
+            if (_val < 0)
+            {
+                throw (new Error((("Forbidden value (" + _val) + ") on elements of objects.")));
+            };
+            this.objects.push(_val);
+        }
+
+        private function _kamasFunc(input:ICustomDataInput):void
+        {
+            this.kamas = input.readVarUhLong();
+            if (((this.kamas < 0) || (this.kamas > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.kamas) + ") on element of FightLoot.kamas.")));
             };
@@ -92,5 +126,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.context.fight
+} com.ankamagames.dofus.network.types.game.context.fight
 

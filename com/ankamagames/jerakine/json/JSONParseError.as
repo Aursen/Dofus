@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.json
+package com.ankamagames.jerakine.json
 {
     public class JSONParseError extends Error 
     {
@@ -26,5 +26,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.json
+} com.ankamagames.jerakine.json
 

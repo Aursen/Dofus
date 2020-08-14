@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.enum
+package com.ankamagames.jerakine.enum
 {
     public class WebBrowserEnum 
     {
@@ -14,5 +14,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.enum
+} com.ankamagames.jerakine.enum
 

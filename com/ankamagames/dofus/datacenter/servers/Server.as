@@ -1,9 +1,10 @@
-﻿package com.ankamagames.dofus.datacenter.servers
+package com.ankamagames.dofus.datacenter.servers
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
+    import com.ankamagames.dofus.types.IdAccessors;
     import __AS3__.vec.Vector;
     import com.ankamagames.jerakine.data.GameData;
     import com.ankamagames.jerakine.data.I18n;
@@ -13,6 +14,7 @@
 
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(Server));
         public static const MODULE:String = "Servers";
+        public static var idAccessors:IdAccessors = new IdAccessors(getServerById, getServers);
 
         public var id:int;
         public var nameId:uint;
@@ -23,6 +25,7 @@
         public var gameTypeId:uint;
         public var communityId:int;
         public var restrictedToLanguages:Vector.<String>;
+        public var monoAccount:Boolean;
         private var _name:String;
         private var _comment:String;
         private var _gameType:ServerGameType;
@@ -32,7 +35,7 @@
 
         public static function getServerById(id:int):Server
         {
-            return ((GameData.getObject(MODULE, id) as Server));
+            return (GameData.getObject(MODULE, id) as Server);
         }
 
         public static function getServers():Array
@@ -43,7 +46,7 @@
 
         public function get name():String
         {
-            if (!(this._name))
+            if (!this._name)
             {
                 this._name = I18n.getText(this.nameId);
             };
@@ -52,7 +55,7 @@
 
         public function get comment():String
         {
-            if (!(this._comment))
+            if (!this._comment)
             {
                 this._comment = I18n.getText(this.commentId);
             };
@@ -61,7 +64,7 @@
 
         public function get gameType():ServerGameType
         {
-            if (((!(this._gameType)) || (!((this._gameType.id == this.gameTypeId)))))
+            if (((!(this._gameType)) || (!(this._gameType.id == this.gameTypeId))))
             {
                 this._gameType = ServerGameType.getServerGameTypeById(this.gameTypeId);
             };
@@ -70,7 +73,7 @@
 
         public function get community():ServerCommunity
         {
-            if (((!(this._community)) || (!((this._community.id == this.communityId)))))
+            if (((!(this._community)) || (!(this._community.id == this.communityId))))
             {
                 this._community = ServerCommunity.getServerCommunityById(this.communityId);
             };
@@ -79,7 +82,7 @@
 
         public function get population():ServerPopulation
         {
-            if (!(this._population))
+            if (!this._population)
             {
                 this._population = ServerPopulation.getServerPopulationById(this.populationId);
             };
@@ -88,5 +91,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.servers
+} com.ankamagames.dofus.datacenter.servers
 

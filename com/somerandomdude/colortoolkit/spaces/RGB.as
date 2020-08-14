@@ -1,4 +1,4 @@
-﻿package com.somerandomdude.colortoolkit.spaces
+package com.somerandomdude.colortoolkit.spaces
 {
     import com.somerandomdude.colortoolkit.CoreColor;
 
@@ -79,14 +79,14 @@
 
         private function RGBToHex(r:int, g:int, b:int):int
         {
-            var cR:int = (Math.round(r) << 16);
-            var cG:int = (Math.round(g) << 8);
+            var cR:* = (Math.round(r) << 16);
+            var cG:* = (Math.round(g) << 8);
             var cB:int = Math.round(b);
-            var rgb:int = ((cR | cG) | cB);
+            var rgb:* = ((cR | cG) | cB);
             return (rgb);
         }
 
 
     }
-}//package com.somerandomdude.colortoolkit.spaces
+} com.somerandomdude.colortoolkit.spaces
 

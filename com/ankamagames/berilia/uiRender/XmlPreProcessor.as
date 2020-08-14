@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.uiRender
+package com.ankamagames.berilia.uiRender
 {
     import flash.events.EventDispatcher;
     import com.ankamagames.jerakine.logger.Logger;
@@ -12,6 +12,7 @@
     import com.ankamagames.berilia.enums.XmlTagsEnum;
     import com.ankamagames.berilia.enums.XmlAttributesEnum;
     import com.ankamagames.jerakine.managers.LangManager;
+    import com.ankamagames.jerakine.utils.files.FileUtils;
     import com.ankamagames.berilia.types.template.TemplateParam;
 
     public class XmlPreProcessor extends EventDispatcher 
@@ -35,10 +36,10 @@
 
         public function processTemplate():void
         {
-            this._aImportFile = new Array();
+            this._aImportFile = [];
             TemplateManager.getInstance().addEventListener(TemplateLoadedEvent.EVENT_TEMPLATE_LOADED, this.onTemplateLoaded);
             this.matchImport(this._xDoc.firstChild);
-            if (!(this._aImportFile.length))
+            if (!this._aImportFile.length)
             {
                 dispatchEvent(new PreProcessEndEvent(this));
                 TemplateManager.getInstance().removeEventListener(TemplateLoadedEvent.EVENT_TEMPLATE_LOADED, this.onTemplateLoaded);
@@ -87,69 +88,78 @@
             };
         }
 
-        private function replaceTemplateCall(node:XMLNode):Boolean
+        private function replaceTemplateCall(node:XMLNode, depthRecursion:int=0):Boolean
         {
             var currNode:XMLNode;
             var currVarNode:XMLNode;
             var templateNode:XMLNode;
             var insertedNode:XMLNode;
+            var childNodes:Array;
             var j:uint;
             var s:String;
             var n:uint;
-            var aTmp:Array;
             var sFileName:String;
             var aTemplateVar:Array;
-            var replace:Boolean;
+            var currAttributes:Object;
             var content:String;
             var varNode:XMLNode;
             var bRes:Boolean;
+            if (depthRecursion > 128)
+            {
+                _log.error(("replaceTemplateCall : Recursion depth is too high :" + depthRecursion));
+                return (bRes);
+            };
             var i:uint;
             while (i < node.childNodes.length)
             {
                 currNode = node.childNodes[i];
-                replace = false;
                 j = 0;
                 while (j < this._aImportFile.length)
                 {
-                    aTmp = this._aImportFile[j].split("/");
-                    sFileName = aTmp[(aTmp.length - 1)];
-                    if (sFileName.toUpperCase() == (currNode.nodeName + ".xml").toUpperCase())
+                    if (this._aImportFile[j].indexOf(currNode.nodeName) == -1)
                     {
-                        aTemplateVar = new Array();
-                        for (s in currNode.attributes)
+                    }
+                    else
+                    {
+                        sFileName = FileUtils.getFileStartName(this._aImportFile[j]);
+                        if (sFileName == currNode.nodeName)
                         {
-                            aTemplateVar[s] = new TemplateParam(s, currNode.attributes[s]);
-                        };
-                        n = 0;
-                        while (n < currNode.childNodes.length)
-                        {
-                            currVarNode = currNode.childNodes[n];
-                            content = "";
-                            for each (varNode in currVarNode.childNodes)
+                            aTemplateVar = [];
+                            currAttributes = currNode.attributes;
+                            for (s in currAttributes)
                             {
-                                content = (content + varNode);
+                                aTemplateVar[s] = new TemplateParam(s, currAttributes[s]);
                             };
-                            aTemplateVar[currVarNode.nodeName] = new TemplateParam(currVarNode.nodeName, content);
-                            n++;
+                            childNodes = currNode.childNodes;
+                            n = 0;
+                            while (n < childNodes.length)
+                            {
+                                currVarNode = childNodes[n];
+                                content = "";
+                                for each (varNode in currVarNode.childNodes)
+                                {
+                                    content = (content + varNode);
+                                };
+                                aTemplateVar[currVarNode.nodeName] = new TemplateParam(currVarNode.nodeName, content);
+                                n++;
+                            };
+                            templateNode = TemplateManager.getInstance().getTemplate(sFileName).makeTemplate(aTemplateVar);
+                            childNodes = templateNode.firstChild.childNodes;
+                            n = 0;
+                            while (n < childNodes.length)
+                            {
+                                insertedNode = childNodes[n].cloneNode(true);
+                                currNode.parentNode.insertBefore(insertedNode, currNode);
+                                n++;
+                            };
+                            currNode.removeNode();
+                            currNode = node.childNodes[i];
+                            bRes = true;
                         };
-                        templateNode = TemplateManager.getInstance().getTemplate(sFileName).makeTemplate(aTemplateVar);
-                        n = 0;
-                        while (n < templateNode.firstChild.childNodes.length)
-                        {
-                            insertedNode = templateNode.firstChild.childNodes[n].cloneNode(true);
-                            currNode.parentNode.insertBefore(insertedNode, currNode);
-                            n++;
-                        };
-                        currNode.removeNode();
-                        replace = true;
-                        bRes = replace;
                     };
                     j++;
                 };
-                if (!(replace))
-                {
-                    bRes = ((this.replaceTemplateCall(currNode)) || (bRes));
-                };
+                bRes = ((this.replaceTemplateCall(currNode, (depthRecursion + 1))) || (bRes));
                 i++;
             };
             return (bRes);
@@ -174,5 +184,5 @@
 
 
     }
-}//package com.ankamagames.berilia.uiRender
+} com.ankamagames.berilia.uiRender
 

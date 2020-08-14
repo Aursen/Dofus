@@ -1,7 +1,8 @@
-﻿package com.ankamagames.dofus.network.types.game.prism
+package com.ankamagames.dofus.network.types.game.prism
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.dofus.network.types.game.context.roleplay.AllianceInformations;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
 
@@ -10,13 +11,9 @@
 
         public static const protocolId:uint = 427;
 
-        public var alliance:AllianceInformations;
+        public var alliance:AllianceInformations = new AllianceInformations();
+        private var _alliancetree:FuncTree;
 
-        public function AlliancePrismInformation()
-        {
-            this.alliance = new AllianceInformations();
-            super();
-        }
 
         override public function getTypeId():uint
         {
@@ -59,7 +56,24 @@
             this.alliance.deserialize(input);
         }
 
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_AlliancePrismInformation(tree);
+        }
+
+        public function deserializeAsyncAs_AlliancePrismInformation(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            this._alliancetree = tree.addChild(this._alliancetreeFunc);
+        }
+
+        private function _alliancetreeFunc(input:ICustomDataInput):void
+        {
+            this.alliance = new AllianceInformations();
+            this.alliance.deserializeAsync(this._alliancetree);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.types.game.prism
+} com.ankamagames.dofus.network.types.game.prism
 

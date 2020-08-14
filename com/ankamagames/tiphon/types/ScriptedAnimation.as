@@ -1,4 +1,4 @@
-﻿package com.ankamagames.tiphon.types
+package com.ankamagames.tiphon.types
 {
     import com.ankamagames.tiphon.display.TiphonAnimation;
     import flash.utils.Dictionary;
@@ -8,6 +8,8 @@
     import com.ankamagames.tiphon.events.TiphonEvent;
     import com.ankamagames.tiphon.engine.TiphonFpsManager;
     import com.ankamagames.jerakine.utils.display.FpsControler;
+    import com.ankamagames.tiphon.display.TiphonSprite;
+    import flash.display.DisplayObject;
 
     public class ScriptedAnimation extends TiphonAnimation 
     {
@@ -27,20 +29,23 @@
         public var SHOT:String;
         public var END:String;
         public var destroyed:Boolean = false;
-        private var events:Array;
-        private var anims:Array;
+        private var events:Array = [];
+        private var anims:Array = [];
+        private var _displayInfoSprite:Dictionary = new Dictionary(true);
         private var _lastFrame:int = -1;
         public var bone:int;
         public var animationName:String;
         public var direction:int;
-        public var inCache:Boolean = false;
 
         public function ScriptedAnimation()
         {
+            this.setDisplayInfoSprite();
+            this.init();
+        }
+
+        public function init():void
+        {
             var animationName:String;
-            this.events = [];
-            this.anims = [];
-            super();
             spriteHandler = currentSpriteHandler;
             MEMORY_LOG[this] = 1;
             if (spriteHandler != null)
@@ -65,18 +70,18 @@
 
         public function playEventAtFrame(frame:int):void
         {
-            if (((!(this.destroyed)) && (!((frame == this._lastFrame)))))
+            if (((!(this.destroyed)) && (!(frame == this._lastFrame))))
             {
                 if (currentLabel == PLAYER_STOP)
                 {
                     stop();
                     FpsControler.uncontrolFps(this);
                 };
-                if (!(this.destroyed))
+                if (((!(this.destroyed)) && (!((spriteHandler as TiphonSprite).destroyed))))
                 {
                     spriteHandler.tiphonEventManager.dispatchEvents(frame);
                 };
-                if (((((!(this.destroyed)) && ((totalFrames > 1)))) && ((frame == totalFrames))))
+                if ((((!(this.destroyed)) && (totalFrames > 1)) && (frame == totalFrames)))
                 {
                     spriteHandler.onAnimationEvent(TiphonEvent.ANIMATION_END);
                 };
@@ -84,9 +89,55 @@
             };
         }
 
+        public function setDisplayInfoSprite():void
+        {
+            var child:DisplayObject;
+            this._displayInfoSprite = new Dictionary(true);
+            var numChild:int = this.numChildren;
+            var i:int;
+            while (i < numChild)
+            {
+                child = this.getChildAt(i);
+                if (child)
+                {
+                    this._displayInfoSprite[getQualifiedClassName(child)] = child;
+                };
+                i++;
+            };
+        }
+
+        public function getDisplayInfoSprite(infoSpriteName:String):DisplayObject
+        {
+            var key:String;
+            if (infoSpriteName.indexOf("timeline") != -1)
+            {
+                for (key in this._displayInfoSprite)
+                {
+                    if (key.indexOf("timeline") != -1)
+                    {
+                        return (this._displayInfoSprite[key]);
+                    };
+                };
+            }
+            else
+            {
+                if (infoSpriteName.indexOf("turnstart") != -1)
+                {
+                    for (key in this._displayInfoSprite)
+                    {
+                        if (key.indexOf("turnstart") != -1)
+                        {
+                            return (this._displayInfoSprite[key]);
+                        };
+                    };
+                };
+            };
+            return (this._displayInfoSprite[infoSpriteName]);
+        }
+
         public function destroy():void
         {
-            if (!(this.destroyed))
+            if (!this.destroyed)
             {
                 this.destroyed = true;
                 this.events = null;
@@ -101,26 +152,17 @@
 
         public function setAnimation(... args):void
         {
-            trace("setAnimation", args);
         }
 
         public function event(... args):void
         {
-            trace("event", args);
         }
 
         public function help():void
         {
-            trace("Fonctions utilisables : ");
-            trace("\t\t- setAnimation([nom_anim])");
-            trace("\t\t- event([nom])");
-            trace("");
-            trace("Events :");
-            trace("\t\t- SHOT : la cible du sort est touché");
-            trace("\t\t- END : l'animation est finie");
         }
 
 
     }
-}//package com.ankamagames.tiphon.types
+} com.ankamagames.tiphon.types
 

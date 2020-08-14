@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.managers
+package com.ankamagames.berilia.managers
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
@@ -14,12 +14,10 @@
         private static var _self:UIEventManager;
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(UIEventManager));
 
-        private var _dInstanceIndex:Dictionary;
+        private var _dInstanceIndex:Dictionary = new Dictionary(true);
 
         public function UIEventManager()
         {
-            this._dInstanceIndex = new Dictionary(true);
-            super();
             if (_self != null)
             {
                 throw (new BeriliaError("UIEventManager is a singleton and should not be instanciated directly."));
@@ -48,7 +46,7 @@
 
         public function isRegisteredInstance(target:DisplayObject, msg:*=null):Boolean
         {
-            return (((this._dInstanceIndex[target]) && (this._dInstanceIndex[target].events[getQualifiedClassName(msg)])));
+            return ((this._dInstanceIndex[target]) && (this._dInstanceIndex[target].events[getQualifiedClassName(msg)]));
         }
 
         public function removeInstance(instance:*):void
@@ -58,5 +56,5 @@
 
 
     }
-}//package com.ankamagames.berilia.managers
+} com.ankamagames.berilia.managers
 

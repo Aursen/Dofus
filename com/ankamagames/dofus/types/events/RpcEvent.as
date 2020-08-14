@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.types.events
+package com.ankamagames.dofus.types.events
 {
     import flash.events.Event;
 
@@ -11,9 +11,9 @@
         private var _result:Object;
         private var _method:String;
 
-        public function RpcEvent(type:String, method:String, result:Object=null)
+        public function RpcEvent(_arg_1:String, method:String, result:Object=null)
         {
-            super(type, false, false);
+            super(_arg_1, false, false);
             this._result = result;
             this._method = method;
         }
@@ -30,5 +30,5 @@
 
 
     }
-}//package com.ankamagames.dofus.types.events
+} com.ankamagames.dofus.types.events
 

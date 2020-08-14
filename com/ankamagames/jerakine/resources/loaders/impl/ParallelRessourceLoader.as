@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.resources.loaders.impl
+package com.ankamagames.jerakine.resources.loaders.impl
 {
     import com.ankamagames.jerakine.resources.loaders.AbstractRessourceLoader;
     import com.ankamagames.jerakine.resources.loaders.IResourceLoader;
@@ -49,6 +49,7 @@
             var mustStartLoading:Boolean;
             if (this._uris != null)
             {
+                _filesTotal = (_filesTotal - this._uris.length);
                 for each (uri in newUris)
                 {
                     this._uris.push({
@@ -117,7 +118,7 @@
             while (i < starterLoop)
             {
                 loadData = this._uris.shift();
-                if (!(checkCache(loadData.uri)))
+                if (!checkCache(loadData.uri))
                 {
                     p = ProtocolFactory.getProtocol(loadData.uri);
                     this._loadDictionnary[loadData.uri] = p;
@@ -156,5 +157,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.resources.loaders.impl
+} com.ankamagames.jerakine.resources.loaders.impl
 

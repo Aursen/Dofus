@@ -1,6 +1,7 @@
-﻿package com.ankamagames.dofus.datacenter.effects
+package com.ankamagames.dofus.datacenter.effects
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
+    import com.ankamagames.dofus.types.IdAccessors;
     import com.ankamagames.jerakine.data.GameData;
     import com.ankamagames.jerakine.data.I18n;
 
@@ -8,6 +9,7 @@
     {
 
         public static const MODULE:String = "Effects";
+        public static var idAccessors:IdAccessors = new IdAccessors(getEffectById, null);
 
         public var id:int;
         public var descriptionId:uint;
@@ -20,6 +22,7 @@
         public var forceMinMax:Boolean;
         public var boost:Boolean;
         public var active:Boolean;
+        public var oppositeId:int;
         public var theoreticalDescriptionId:uint;
         public var theoreticalPattern:uint;
         public var showInSet:Boolean;
@@ -33,13 +36,13 @@
 
         public static function getEffectById(id:uint):Effect
         {
-            return ((GameData.getObject(MODULE, id) as Effect));
+            return (GameData.getObject(MODULE, id) as Effect);
         }
 
 
         public function get description():String
         {
-            if (!(this._description))
+            if (!this._description)
             {
                 this._description = I18n.getText(this.descriptionId);
             };
@@ -48,7 +51,7 @@
 
         public function get theoreticalDescription():String
         {
-            if (!(this._theoricDescription))
+            if (!this._theoricDescription)
             {
                 this._theoricDescription = I18n.getText(this.theoreticalDescriptionId);
             };
@@ -57,5 +60,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.effects
+} com.ankamagames.dofus.datacenter.effects
 

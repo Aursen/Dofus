@@ -1,121 +1,58 @@
-﻿package com.ankamagames.tiphon.engine
+package com.ankamagames.tiphon.engine
 {
+    import com.ankamagames.jerakine.newCache.ICache;
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
-    import flash.utils.Dictionary;
     import __AS3__.vec.Vector;
     import com.ankamagames.tiphon.types.cache.SpriteCacheInfo;
-    import com.ankamagames.tiphon.types.cache.AnimCache;
-    import com.ankamagames.jerakine.types.Callback;
+    import com.ankamagames.jerakine.types.events.PropertyChangeEvent;
+    import com.ankamagames.jerakine.newCache.garbage.LfruCache;
+    import com.ankamagames.tiphon.display.TiphonSprite;
+    import flash.utils.getTimer;
+    import com.ankamagames.jerakine.managers.PerformanceManager;
     import com.ankamagames.jerakine.utils.display.StageShareManager;
     import flash.events.Event;
-    import com.ankamagames.tiphon.display.TiphonSprite;
-    import com.ankamagames.tiphon.types.look.TiphonEntityLook;
+    import com.ankamagames.tiphon.types.cache.AnimCache;
     import com.ankamagames.tiphon.types.ScriptedAnimation;
     import com.ankamagames.jerakine.types.Swl;
     import com.ankamagames.tiphon.types.TiphonUtility;
-    import flash.utils.getTimer;
-    import com.ankamagames.jerakine.managers.PerformanceManager;
     import __AS3__.vec.*;
 
     public class TiphonCacheManager 
     {
 
+        public static var _cache:ICache;
         private static const _log:Logger = Log.getLogger(getQualifiedClassName(TiphonCacheManager));
-        public static const _cacheList:Dictionary = new Dictionary();
+        private static var _self:TiphonCacheManager;
+        private static var PRIVILEGE_BOUNDS_CACHE:uint = 10;
+        private static var UNPRIVILEGE_BOUNDS_CACHE:uint = 40;
+        private static const MIN_FREQUENCY_CACHE:uint = 10;
         private static const _spritesListToRender:Vector.<SpriteCacheInfo> = new Vector.<SpriteCacheInfo>();
         private static var _processing:Boolean = false;
         private static var _lastRender:int = 0;
         private static var _waitRender:int = 0;
 
+        public function TiphonCacheManager()
+        {
+            Tiphon.getInstance().options.addEventListener(PropertyChangeEvent.PROPERTY_CHANGED, this.onOptionChange);
+        }
+
+        public static function getInstance():TiphonCacheManager
+        {
+            if (!_self)
+            {
+                _self = new (TiphonCacheManager)();
+                init();
+            };
+            return (_self);
+        }
 
         public static function init():void
         {
-            var bone:int;
-            var k:int;
-            var anim:String;
-            var pokemonBones:Array = new Array(15, 16, 17, 18, 22, 34, 36, 38, 40, 12, 13, 14);
-            var animList:Array = new Array("AnimStatique", "AnimMarche", "AnimCourse");
-            var i:int = -1;
-            var num:int = pokemonBones.length;
-            var numAnim:int = animList.length;
-            while (++i < num)
-            {
-                bone = pokemonBones[i];
-                k = -1;
-                while (++k < numAnim)
-                {
-                    anim = animList[k];
-                    _cacheList[((bone + "_") + anim)] = new AnimCache();
-                    Tiphon.skullLibrary.askResource(bone, anim, new Callback(checkRessourceState), new Callback(onRenderFail));
-                };
-            };
-        }
-
-        public static function addSpriteToRender(sprite:TiphonSprite, look:TiphonEntityLook):void
-        {
-            _spritesListToRender.push(new SpriteCacheInfo(sprite, look));
-            if (!(_processing))
-            {
-                StageShareManager.stage.addEventListener(Event.ENTER_FRAME, onEnterFrame);
-            };
-        }
-
-        public static function hasCache(bone:int, anim:String):Boolean
-        {
-            if (_cacheList[((bone + "_") + anim)])
-            {
-                return (true);
-            };
-            return (false);
-        }
-
-        public static function pushScriptedAnimation(scriptedAnimation:ScriptedAnimation):void
-        {
-            var animCache:AnimCache = _cacheList[((scriptedAnimation.bone + "_") + scriptedAnimation.animationName)];
-            if (animCache)
-            {
-                animCache.pushAnimation(scriptedAnimation, scriptedAnimation.direction);
-            };
-        }
-
-        public static function getScriptedAnimation(bone:int, anim:String, direction:int):ScriptedAnimation
-        {
-            var scriptedAnimation:ScriptedAnimation;
-            var _local_6:Class;
-            var _local_7:Swl;
-            var _local_8:String;
-            var animCache:AnimCache = _cacheList[((bone + "_") + anim)];
-            if (animCache)
-            {
-                scriptedAnimation = animCache.getAnimation(direction);
-                if (scriptedAnimation)
-                {
-                    return (scriptedAnimation);
-                };
-                _local_7 = Tiphon.skullLibrary.getResourceById(bone, anim);
-                _local_8 = ((anim + "_") + direction);
-                if (_local_7.hasDefinition(_local_8))
-                {
-                    _local_6 = (_local_7.getDefinition(_local_8) as Class);
-                }
-                else
-                {
-                    _local_8 = ((anim + "_") + TiphonUtility.getFlipDirection(direction));
-                    if (_local_7.hasDefinition(_local_8))
-                    {
-                        _local_6 = (_local_7.getDefinition(_local_8) as Class);
-                    };
-                };
-                scriptedAnimation = (new (_local_6)() as ScriptedAnimation);
-                scriptedAnimation.bone = bone;
-                scriptedAnimation.animationName = anim;
-                scriptedAnimation.direction = direction;
-                scriptedAnimation.inCache = true;
-                return (scriptedAnimation);
-            };
-            return (null);
+            PRIVILEGE_BOUNDS_CACHE = (int(Tiphon.getInstance().options.getOption("animationsInCache")) / 5);
+            UNPRIVILEGE_BOUNDS_CACHE = (int(Tiphon.getInstance().options.getOption("animationsInCache")) - PRIVILEGE_BOUNDS_CACHE);
+            _cache = new LfruCache(PRIVILEGE_BOUNDS_CACHE, UNPRIVILEGE_BOUNDS_CACHE, MIN_FREQUENCY_CACHE);
         }
 
         private static function onEnterFrame(e:Event):void
@@ -174,6 +111,90 @@
         }
 
 
+        public function hasCache(anim:String, lookCode:String):Boolean
+        {
+            return (_cache.contains((lookCode + anim)));
+        }
+
+        public function pushScriptedAnimation(scriptedAnimation:ScriptedAnimation, lookCode:String):void
+        {
+            var animCache:AnimCache = _cache.peek((lookCode + scriptedAnimation.animationName));
+            if (animCache)
+            {
+                animCache.pushAnimation(scriptedAnimation, scriptedAnimation.direction);
+            }
+            else
+            {
+                _cache.store((lookCode + scriptedAnimation.animationName), new AnimCache());
+                _cache.peek((lookCode + scriptedAnimation.animationName)).pushAnimation(scriptedAnimation, scriptedAnimation.direction);
+            };
+        }
+
+        public function getScriptedAnimation(bone:int, anim:String, direction:int, lookCode:String):ScriptedAnimation
+        {
+            var scriptedAnimation:ScriptedAnimation;
+            var animClass:Class;
+            var flipped:Boolean;
+            var lib:Swl;
+            var fullAnimName:String;
+            var animCache:AnimCache = _cache.peek((lookCode + anim));
+            if (animCache)
+            {
+                scriptedAnimation = animCache.getAnimation(direction);
+                if (scriptedAnimation)
+                {
+                    if (scriptedAnimation.scaleX < 0)
+                    {
+                        scriptedAnimation.scaleX = (scriptedAnimation.scaleX * -1);
+                    };
+                    return (scriptedAnimation);
+                };
+                lib = Tiphon.skullLibrary.getResourceById(bone, anim);
+                fullAnimName = ((anim + "_") + direction);
+                if (lib.hasDefinition(fullAnimName))
+                {
+                    animClass = (lib.getDefinition(fullAnimName) as Class);
+                }
+                else
+                {
+                    fullAnimName = ((anim + "_") + TiphonUtility.getFlipDirection(direction));
+                    if (lib.hasDefinition(fullAnimName))
+                    {
+                        animClass = (lib.getDefinition(fullAnimName) as Class);
+                        flipped = true;
+                    };
+                };
+                scriptedAnimation = (new (animClass)() as ScriptedAnimation);
+                scriptedAnimation.bone = bone;
+                scriptedAnimation.animationName = anim;
+                scriptedAnimation.direction = direction;
+                return (scriptedAnimation);
+            };
+            return (null);
+        }
+
+        private function onOptionChange(e:PropertyChangeEvent):void
+        {
+            var useAnimationCache:Boolean;
+            if (e.propertyName == "useAnimationCache")
+            {
+                useAnimationCache = e.propertyValue;
+                if (!useAnimationCache)
+                {
+                    _cache.destroy();
+                };
+            }
+            else
+            {
+                if (e.propertyName == "animationsInCache")
+                {
+                    _cache.destroy();
+                    init();
+                };
+            };
+        }
+
+
     }
-}//package com.ankamagames.tiphon.engine
+} com.ankamagames.tiphon.engine
 

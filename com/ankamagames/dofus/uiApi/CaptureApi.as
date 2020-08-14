@@ -1,47 +1,61 @@
-﻿package com.ankamagames.dofus.uiApi
+package com.ankamagames.dofus.uiApi
 {
     import com.ankamagames.berilia.interfaces.IApi;
+    import flash.utils.Dictionary;
+    import com.ankamagames.jerakine.logger.Logger;
+    import com.ankamagames.jerakine.logger.Log;
+    import flash.utils.getQualifiedClassName;
     import com.ankamagames.jerakine.utils.display.StageShareManager;
     import flash.geom.Rectangle;
     import flash.display.BitmapData;
     import com.ankamagames.atouin.Atouin;
     import com.ankamagames.atouin.AtouinConstants;
-    import com.ankamagames.berilia.managers.SecureCenter;
     import flash.display.DisplayObject;
-    import mx.graphics.codec.JPEGEncoder;
+    import by.blooddy.crypto.image.JPEGEncoder;
     import flash.utils.ByteArray;
-    import com.ankamagames.jerakine.utils.system.AirScanner;
     import flash.filesystem.File;
-    import mx.graphics.codec.PNGEncoder;
+    import by.blooddy.crypto.Base64;
     import flash.geom.Matrix;
 
     public class CaptureApi implements IApi 
     {
 
+        public static var MEMORY_LOG:Dictionary = new Dictionary(true);
+        protected static const _log:Logger = Log.getLogger(getQualifiedClassName(CaptureApi));
+        private static var _instance:CaptureApi;
 
-        [Untrusted]
-        [NoBoxing]
-        [NoReplaceInFakeClass]
-        public static function getScreen(rect:Rectangle=null, scale:Number=1):BitmapData
+        public function CaptureApi()
         {
-            return (capture(StageShareManager.stage, rect, new Rectangle(0, 0, StageShareManager.startWidth, StageShareManager.startHeight), scale));
+            MEMORY_LOG[this] = 1;
+            _instance = this;
         }
 
-        [Untrusted]
-        [NoBoxing]
-        [NoReplaceInFakeClass]
-        public static function getBattleField(rect:Rectangle=null, scale:Number=1):BitmapData
+        public static function getInstance():CaptureApi
         {
-            return (capture(Atouin.getInstance().worldContainer, rect, new Rectangle(0, 0, (AtouinConstants.CELL_WIDTH * AtouinConstants.MAP_WIDTH), (AtouinConstants.CELL_HEIGHT * AtouinConstants.MAP_HEIGHT)), scale));
+            if (!_instance)
+            {
+                _instance = new (CaptureApi)();
+            };
+            return (_instance);
         }
 
-        [Untrusted]
+
         [NoBoxing]
-        [NoReplaceInFakeClass]
-        public static function getFromTarget(target:Object, rect:Rectangle=null, scale:Number=1, transparent:Boolean=false):BitmapData
+        public function getScreen(rect:Rectangle=null, scale:Number=1):BitmapData
         {
-            target = SecureCenter.unsecure(target);
-            if (((!(target)) || (!((target is DisplayObject)))))
+            return (this.capture(StageShareManager.stage, rect, StageShareManager.stageVisibleBounds, scale));
+        }
+
+        [NoBoxing]
+        public function getBattleField(rect:Rectangle=null, scale:Number=1):BitmapData
+        {
+            return (this.capture(Atouin.getInstance().worldContainer, rect, new Rectangle(-(Atouin.getInstance().worldContainer.x), 0, (StageShareManager.startWidth - (Atouin.getInstance().worldContainer.x * 2)), ((AtouinConstants.CELL_HEIGHT * AtouinConstants.MAP_HEIGHT) + 15)), scale));
+        }
+
+        [NoBoxing]
+        public function getFromTarget(target:Object, rect:Rectangle=null, scale:Number=1, transparent:Boolean=false):BitmapData
+        {
+            if (((!(target)) || (!(target is DisplayObject))))
             {
                 return (null);
             };
@@ -51,41 +65,53 @@
             {
                 return (null);
             };
-            return (capture(dObj, rect, bounds, scale, transparent));
+            return (this.capture(dObj, rect, bounds, scale, transparent));
         }
 
-        [Untrusted]
         [NoBoxing]
-        [NoReplaceInFakeClass]
-        public static function jpegEncode(img:BitmapData, quality:uint=80, askForSave:Boolean=true, fileName:String="image.jpg"):ByteArray
+        public function jpegEncode(img:BitmapData, quality:uint=80, askForSave:Boolean=true, fileName:String="image.jpg"):ByteArray
         {
-            var encodedImg:ByteArray = new JPEGEncoder(quality).encode(img);
-            if (((askForSave) && (AirScanner.hasAir())))
+            var encodedImg:ByteArray = JPEGEncoder.encode(img, quality);
+            if (askForSave)
             {
                 File.desktopDirectory.save(encodedImg, fileName);
             };
             return (encodedImg);
         }
 
-        [Untrusted]
         [NoBoxing]
-        [NoReplaceInFakeClass]
-        public static function pngEncode(img:BitmapData, askForSave:Boolean=true, fileName:String="image.png"):ByteArray
+        public function pngEncode(img:BitmapData, askForSave:Boolean=true, fileName:String="image.png"):ByteArray
         {
-            var encodedImg:ByteArray = new PNGEncoder().encode(img);
-            if (((askForSave) && (AirScanner.hasAir())))
+            var encodedImg:ByteArray = PNGEncoder2.encode(img);
+            if (askForSave)
             {
                 File.desktopDirectory.save(encodedImg, fileName);
             };
             return (encodedImg);
         }
 
-        private static function capture(target:DisplayObject, rect:Rectangle, maxRect:Rectangle, scale:Number=1, transparent:Boolean=false):BitmapData
+        [NoBoxing]
+        public function getScreenAsJpgCompressedBase64(rect:Rectangle=null, scale:Number=1, quality:uint=80):String
+        {
+            var ba:ByteArray;
+            var base64Image:String = "";
+            var maxRect:Rectangle = StageShareManager.stageVisibleBounds;
+            var bd:BitmapData = this.capture(StageShareManager.stage, rect, maxRect, scale);
+            if (bd)
+            {
+                ba = JPEGEncoder.encode(bd, quality);
+                base64Image = Base64.encode(ba);
+                ba.clear();
+            };
+            return (base64Image);
+        }
+
+        private function capture(target:DisplayObject, rect:Rectangle, maxRect:Rectangle, scale:Number=1, transparent:Boolean=false):BitmapData
         {
             var rect2:Rectangle;
             var matrix:Matrix;
             var data:BitmapData;
-            if (!(rect))
+            if (!rect)
             {
                 rect2 = maxRect;
             }
@@ -107,5 +133,5 @@
 
 
     }
-}//package com.ankamagames.dofus.uiApi
+} com.ankamagames.dofus.uiApi
 

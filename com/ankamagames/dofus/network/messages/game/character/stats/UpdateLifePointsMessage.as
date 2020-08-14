@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.character.stats
+package com.ankamagames.dofus.network.messages.game.character.stats
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class UpdateLifePointsMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -55,6 +55,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_UpdateLifePointsMessage(output);
@@ -81,11 +89,32 @@
 
         public function deserializeAs_UpdateLifePointsMessage(input:ICustomDataInput):void
         {
+            this._lifePointsFunc(input);
+            this._maxLifePointsFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_UpdateLifePointsMessage(tree);
+        }
+
+        public function deserializeAsyncAs_UpdateLifePointsMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._lifePointsFunc);
+            tree.addChild(this._maxLifePointsFunc);
+        }
+
+        private function _lifePointsFunc(input:ICustomDataInput):void
+        {
             this.lifePoints = input.readVarUhInt();
             if (this.lifePoints < 0)
             {
                 throw (new Error((("Forbidden value (" + this.lifePoints) + ") on element of UpdateLifePointsMessage.lifePoints.")));
             };
+        }
+
+        private function _maxLifePointsFunc(input:ICustomDataInput):void
+        {
             this.maxLifePoints = input.readVarUhInt();
             if (this.maxLifePoints < 0)
             {
@@ -95,5 +124,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.character.stats
+} com.ankamagames.dofus.network.messages.game.character.stats
 

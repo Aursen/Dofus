@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.datacenter.monsters
+package com.ankamagames.dofus.datacenter.monsters
 {
     import com.ankamagames.dofus.types.data.AnimFunData;
 
@@ -7,5 +7,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.monsters
+} com.ankamagames.dofus.datacenter.monsters
 

@@ -1,22 +1,27 @@
-﻿package com.ankamagames.dofus.console.moduleLogger
+package com.ankamagames.dofus.console.moduleLogger
 {
     import flash.display.Sprite;
     import flash.utils.Dictionary;
     import flash.display.Shape;
-    import flash.text.TextField;
     import flash.display.MovieClip;
     import flash.events.MouseEvent;
-    import flash.text.TextFieldAutoSize;
-    import flash.text.TextFormat;
     import flash.filters.GlowFilter;
     import flash.geom.ColorTransform;
+    import com.ankamagames.berilia.Berilia;
+    import com.ankamagames.berilia.types.event.UiRenderEvent;
+    import com.ankamagames.berilia.managers.TooltipManager;
+    import com.ankamagames.berilia.types.data.TextTooltipInfo;
+    import com.ankamagames.berilia.managers.UiModuleManager;
 
     public final class ConsoleIcon extends Sprite 
     {
 
         private static const I_CANCEL:Class = ConsoleIcon_I_CANCEL;
+        private static const I_CANCEL_HOVER:Class = ConsoleIcon_I_CANCEL_HOVER;
         private static const I_DISK:Class = ConsoleIcon_I_DISK;
+        private static const I_DISK_HOVER:Class = ConsoleIcon_I_DISK_HOVER;
         private static const I_LIST:Class = ConsoleIcon_I_LIST;
+        private static const I_LIST_HOVER:Class = ConsoleIcon_I_LIST_HOVER;
         private static const I_BOOK:Class = ConsoleIcon_I_BOOK;
         private static const I_TERMINAL:Class = ConsoleIcon_I_TERMINAL;
         private static const I_SCREEN:Class = ConsoleIcon_I_SCREEN;
@@ -39,19 +44,26 @@
         private static const I_CAMERA_ZOOM_OUT:Class = ConsoleIcon_I_CAMERA_ZOOM_OUT;
         private static const I_RESET_WORLD:Class = ConsoleIcon_I_RESET_WORLD;
         private static const I_AUTO_RESET:Class = ConsoleIcon_I_AUTO_RESET;
+        private static const I_RELOAD:Class = ConsoleIcon_I_RELOAD;
         private static const _assets:Dictionary = new Dictionary();
 
         private var _enabled:Boolean = true;
         private var _toggled:Boolean = false;
         private var _icon:Sprite;
+        private var _iconHover:Sprite;
+        private var _iconList:ConsoleIconList;
         private var _cross:Shape;
         private var _size:int;
-        private var _toolTip:TextField;
+        private var _tooltipName:String;
+        private var _tooltipText:String;
 
         {
             _assets["cancel"] = I_CANCEL;
+            _assets["cancel_Hover"] = I_CANCEL_HOVER;
             _assets["disk"] = I_DISK;
+            _assets["disk_Hover"] = I_DISK_HOVER;
             _assets["list"] = I_LIST;
+            _assets["list_Hover"] = I_LIST_HOVER;
             _assets["book"] = I_BOOK;
             _assets["terminal"] = I_TERMINAL;
             _assets["screen"] = I_SCREEN;
@@ -71,16 +83,25 @@
             _assets["cameraAutoFollow"] = I_CAMERA_AUTOFOLLOW;
             _assets["cameraZoomIn"] = I_CAMERA_ZOOM_IN;
             _assets["cameraZoomOut"] = I_CAMERA_ZOOM_OUT;
+            _assets["reload"] = I_RELOAD;
             _assets["resetWorld"] = I_RESET_WORLD;
             _assets["autoReset"] = I_AUTO_RESET;
         }
 
-        public function ConsoleIcon(name:String, size:int=16, toolTip:String="")
+        public function ConsoleIcon(name:String, size:int=16, toolTip:String="", iconList:ConsoleIconList=null)
         {
             this._size = size;
             if (_assets[name])
             {
                 this._icon = new (_assets[name])();
+                if (_assets[(name + "_Hover")])
+                {
+                    this._iconHover = new (_assets[(name + "_Hover")])();
+                    this._iconHover.width = this._size;
+                    this._iconHover.height = this._size;
+                    this._iconHover.visible = false;
+                    addChild(this._iconHover);
+                };
             }
             else
             {
@@ -93,6 +114,11 @@
             this._icon.width = this._size;
             this._icon.height = this._size;
             addChild(this._icon);
+            this._iconList = iconList;
+            if (iconList)
+            {
+                iconList.addIcon(this);
+            };
             mouseChildren = false;
             useHandCursor = true;
             buttonMode = true;
@@ -100,13 +126,8 @@
             addEventListener(MouseEvent.MOUSE_OUT, this.onRollOut);
             if (toolTip.length > 0)
             {
-                this._toolTip = new TextField();
-                this._toolTip.text = toolTip;
-                this._toolTip.background = true;
-                this._toolTip.backgroundColor = 16776389;
-                this._toolTip.autoSize = TextFieldAutoSize.LEFT;
-                this._toolTip.visible = false;
-                this._toolTip.setTextFormat(new TextFormat("Arial"));
+                this._tooltipName = ("console_" + name);
+                this._tooltipText = toolTip;
             };
         }
 
@@ -119,7 +140,7 @@
         {
             var IconClass:Class;
             this._toggled = value;
-            if (((!((this._icon.name.toLowerCase().indexOf("record") == -1))) || (!((this._icon.name.toLowerCase().indexOf("pause") == -1)))))
+            if (((!(this._icon.name.toLowerCase().indexOf("record") == -1)) || (!(this._icon.name.toLowerCase().indexOf("pause") == -1))))
             {
                 IconClass = ((this._toggled) ? I_PAUSE : I_RECORD);
                 removeChild(this._icon);
@@ -164,7 +185,7 @@
         {
             if (value)
             {
-                if (!(this._cross))
+                if (!this._cross)
                 {
                     this._cross = new Shape();
                     this._cross.graphics.lineStyle(2, 14492194);
@@ -190,36 +211,59 @@
             this._icon.transform.colorTransform = color;
         }
 
+        private function showTooltip():void
+        {
+            Berilia.getInstance().addEventListener(UiRenderEvent.UIRenderComplete, this.onUiLoaded);
+            TooltipManager.show(new TextTooltipInfo(this._tooltipText), this, UiModuleManager.getInstance().getModule("Ankama_Console"), false, this._tooltipName);
+        }
+
+        private function onUiLoaded(e:UiRenderEvent):void
+        {
+            if (e.uiTarget.name == ("tooltip_" + this._tooltipName))
+            {
+                Berilia.getInstance().removeEventListener(UiRenderEvent.UIRenderComplete, this.onUiLoaded);
+                e.uiTarget.x = ((x + width) + 5);
+                e.uiTarget.y = y;
+                parent.addChild(e.uiTarget);
+            };
+        }
+
         private function onRollOver(e:MouseEvent):void
         {
-            transform.colorTransform = new ColorTransform(1.4, 1.4, 1.4);
-            if (this._toolTip)
+            if (this._iconHover)
             {
-                if (!(this._toolTip.parent))
-                {
-                    stage.addChild(this._toolTip);
-                };
-                this._toolTip.x = (e.stageX + 10);
-                this._toolTip.y = (e.stageY + 20);
-                if ((this._toolTip.x + this._toolTip.width) > stage.stageWidth)
-                {
-                    this._toolTip.x = (stage.stageWidth - this._toolTip.width);
-                };
-                this._toolTip.visible = true;
+                this._iconHover.visible = true;
+                this._icon.visible = false;
+            }
+            else
+            {
+                transform.colorTransform = new ColorTransform(1.4, 1.4, 1.4);
+            };
+            if (this._tooltipName)
+            {
+                this.showTooltip();
             };
         }
 
         private function onRollOut(e:MouseEvent):void
         {
-            transform.colorTransform = new ColorTransform(1, 1, 1);
-            this.enabled = this._enabled;
-            if (this._toolTip)
+            if (this._iconHover)
             {
-                this._toolTip.visible = false;
+                this._icon.visible = true;
+                this._iconHover.visible = false;
+            }
+            else
+            {
+                transform.colorTransform = new ColorTransform(1, 1, 1);
+            };
+            this.enabled = this._enabled;
+            if (this._tooltipName)
+            {
+                TooltipManager.hide(this._tooltipName);
             };
         }
 
 
     }
-}//package com.ankamagames.dofus.console.moduleLogger
+} com.ankamagames.dofus.console.moduleLogger
 

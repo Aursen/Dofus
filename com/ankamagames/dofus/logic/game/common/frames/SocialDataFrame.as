@@ -1,9 +1,9 @@
-﻿package com.ankamagames.dofus.logic.game.common.frames
+package com.ankamagames.dofus.logic.game.common.frames
 {
     import com.ankamagames.jerakine.messages.RegisteringFrame;
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
-    import avmplus.getQualifiedClassName;
+    import flash.utils.getQualifiedClassName;
     import com.ankamagames.jerakine.types.Uri;
     import __AS3__.vec.Vector;
     import com.ankamagames.dofus.internalDatacenter.guild.AllianceWrapper;
@@ -21,9 +21,9 @@
     import com.ankamagames.dofus.network.messages.game.guild.GuildListMessage;
     import com.ankamagames.dofus.network.messages.game.alliance.AllianceVersatileInfoListMessage;
     import com.ankamagames.dofus.network.messages.game.alliance.AllianceListMessage;
-    import com.ankamagames.jerakine.types.enums.Priority;
-    import com.ankamagames.dofus.logic.game.common.actions.alliance.AllianceListRequestAction;
     import com.ankamagames.dofus.logic.game.common.actions.guild.GuildListRequestAction;
+    import com.ankamagames.dofus.logic.game.common.actions.alliance.AllianceListRequestAction;
+    import com.ankamagames.jerakine.types.enums.Priority;
     import flash.utils.getTimer;
     import com.ankamagames.dofus.network.types.game.social.AllianceFactSheetInformations;
     import com.ankamagames.dofus.network.types.game.social.AllianceVersatileInformations;
@@ -39,14 +39,14 @@
 
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(SocialDataFrame));
         private static const LOCAL_URL:String = "http://gameservers-www-exports.dofus2.lan/";
-        private static const ONLINE_URL:String = "http://dl.ak.ankama.com/games/dofus2/game-export/";
+        private static const ONLINE_URL:String = "https://dofus2.cdn.ankama.com/game-export/";
 
         private var _urlAllianceList:Uri;
         private var _urlAllianceVersatileList:Uri;
         private var _urlGuildList:Uri;
         private var _urlGuildVersatileList:Uri;
-        private var _allianceList:Vector.<AllianceWrapper>;
-        private var _guildList:Vector.<GuildWrapper>;
+        private var _allianceList:Vector.<AllianceWrapper> = new Vector.<AllianceWrapper>();
+        private var _guildList:Vector.<GuildWrapper> = new Vector.<GuildWrapper>();
         private var _waitStaticAllianceInfo:Boolean;
         private var _waitVersatileAllianceInfo:Boolean;
         private var _waitStaticGuildInfo:Boolean;
@@ -60,11 +60,10 @@
             var signedData:ByteArray;
             var signature:Signature;
             var signatureIsValid:Boolean;
-            this._guildList = new Vector.<GuildWrapper>();
             super();
             AllianceWrapper.clearCache();
             var serverId:int = PlayerManager.getInstance().server.id;
-            var base_url:String = (((BuildInfos.BUILD_TYPE >= BuildTypeEnum.TESTING)) ? LOCAL_URL : ONLINE_URL);
+            var base_url:String = ((BuildInfos.BUILD_TYPE >= BuildTypeEnum.TESTING) ? LOCAL_URL : ONLINE_URL);
             var configGameExport:String = XmlConfig.getInstance().getEntry("config.gameExport");
             if (configGameExport)
             {
@@ -113,6 +112,8 @@
             ConnectionsHandler.getHttpConnection().resetTime(this._urlAllianceVersatileList);
             ConnectionsHandler.getHttpConnection().resetTime(this._urlGuildList);
             ConnectionsHandler.getHttpConnection().resetTime(this._urlGuildVersatileList);
+            this.onGuildListRequest(new GuildListRequestAction());
+            this.onAllianceListRequest(new AllianceListRequestAction());
         }
 
         override public function get priority():int
@@ -211,7 +212,7 @@
                 }
                 else
                 {
-                    if (((allianceFrame.hasAlliance) && ((list[i].allianceId == allianceFrame.alliance.allianceId))))
+                    if (((allianceFrame.hasAlliance) && (list[i].allianceId == allianceFrame.alliance.allianceId)))
                     {
                         alliance = allianceFrame.alliance.clone();
                         alliance.nbGuilds = list[i].nbGuilds;
@@ -230,7 +231,6 @@
 
         private function onGuildListMessage(m:GuildListMessage):Boolean
         {
-            var ts:uint = getTimer();
             this._guildList = new Vector.<GuildWrapper>();
             var len:uint = m.guilds.length;
             var list:Vector.<GuildInformations> = m.guilds;
@@ -271,7 +271,7 @@
                 }
                 else
                 {
-                    if (((socialFrame.hasGuild) && ((list[i].guildId == socialFrame.guild.guildId))))
+                    if (((socialFrame.hasGuild) && (list[i].guildId == socialFrame.guild.guildId)))
                     {
                         guild = socialFrame.guild.clone();
                         guild.level = list[i].guildLevel;
@@ -299,7 +299,7 @@
             {
                 GuildWrapper.updateRef(gw.guildId, gw);
             };
-            KernelEventsManager.getInstance().processCallback(SocialHookList.GuildList, this._guildList, isUpdate, (((this._guildList == null)) || (isError)));
+            KernelEventsManager.getInstance().processCallback(SocialHookList.GuildList, this._guildList, isUpdate, ((this._guildList == null) || (isError)));
         }
 
         private function dispatchAllianceList(isUpdate:Boolean=false, isError:Boolean=false):void
@@ -313,7 +313,7 @@
             {
                 AllianceWrapper.updateRef(aw.allianceId, aw);
             };
-            KernelEventsManager.getInstance().processCallback(SocialHookList.AllianceList, this._allianceList, isUpdate, (((this._allianceList == null)) || (isError)));
+            KernelEventsManager.getInstance().processCallback(SocialHookList.AllianceList, this._allianceList, isUpdate, ((this._allianceList == null) || (isError)));
         }
 
         private function onAllianceIoError():void
@@ -346,5 +346,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.frames
+} com.ankamagames.dofus.logic.game.common.frames
 

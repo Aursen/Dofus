@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.basic
+package com.ankamagames.dofus.network.messages.game.basic
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class BasicWhoIsRequestMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -47,12 +47,24 @@
         {
             var data:ByteArray = new ByteArray();
             this.serialize(new CustomDataWrapper(data));
+            if (HASH_FUNCTION != null)
+            {
+                HASH_FUNCTION(data);
+            };
             writePacket(output, this.getMessageId(), data);
         }
 
         override public function unpack(input:ICustomDataInput, length:uint):void
         {
             this.deserialize(input);
+        }
+
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
         }
 
         public function serialize(output:ICustomDataOutput):void
@@ -73,11 +85,32 @@
 
         public function deserializeAs_BasicWhoIsRequestMessage(input:ICustomDataInput):void
         {
+            this._verboseFunc(input);
+            this._searchFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_BasicWhoIsRequestMessage(tree);
+        }
+
+        public function deserializeAsyncAs_BasicWhoIsRequestMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._verboseFunc);
+            tree.addChild(this._searchFunc);
+        }
+
+        private function _verboseFunc(input:ICustomDataInput):void
+        {
             this.verbose = input.readBoolean();
+        }
+
+        private function _searchFunc(input:ICustomDataInput):void
+        {
             this.search = input.readUTF();
         }
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.basic
+} com.ankamagames.dofus.network.messages.game.basic
 

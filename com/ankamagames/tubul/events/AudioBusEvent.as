@@ -1,4 +1,4 @@
-﻿package com.ankamagames.tubul.events
+package com.ankamagames.tubul.events
 {
     import flash.events.Event;
     import com.ankamagames.tubul.interfaces.ISound;
@@ -11,9 +11,9 @@
 
         public var sound:ISound;
 
-        public function AudioBusEvent(type:String, bubbles:Boolean=false, cancelable:Boolean=false)
+        public function AudioBusEvent(_arg_1:String, bubbles:Boolean=false, cancelable:Boolean=false)
         {
-            super(type, bubbles, cancelable);
+            super(_arg_1, bubbles, cancelable);
         }
 
         override public function clone():Event
@@ -25,5 +25,5 @@
 
 
     }
-}//package com.ankamagames.tubul.events
+} com.ankamagames.tubul.events
 

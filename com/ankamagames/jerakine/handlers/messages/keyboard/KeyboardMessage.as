@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.handlers.messages.keyboard
+package com.ankamagames.jerakine.handlers.messages.keyboard
 {
     import com.ankamagames.jerakine.handlers.messages.HumanInputMessage;
     import flash.display.InteractiveObject;
@@ -10,11 +10,11 @@
 
         public static function create(target:InteractiveObject, keyboardEvent:KeyboardEvent, instance:KeyboardMessage=null):KeyboardMessage
         {
-            if (!(instance))
+            if (!instance)
             {
                 instance = new (KeyboardMessage)();
             };
-            return ((HumanInputMessage.create(target, keyboardEvent, instance) as KeyboardMessage));
+            return (HumanInputMessage.create(target, keyboardEvent, instance) as KeyboardMessage);
         }
 
 
@@ -25,5 +25,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.handlers.messages.keyboard
+} com.ankamagames.jerakine.handlers.messages.keyboard
 

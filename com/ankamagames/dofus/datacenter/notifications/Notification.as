@@ -1,9 +1,10 @@
-﻿package com.ankamagames.dofus.datacenter.notifications
+package com.ankamagames.dofus.datacenter.notifications
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
+    import com.ankamagames.dofus.types.IdAccessors;
     import com.ankamagames.jerakine.data.GameData;
     import com.ankamagames.jerakine.data.I18n;
 
@@ -12,6 +13,7 @@
 
         public static const MODULE:String = "Notifications";
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(Notification));
+        public static var idAccessors:IdAccessors = new IdAccessors(getNotificationById, getNotifications);
 
         public var id:int;
         public var titleId:uint;
@@ -25,7 +27,7 @@
 
         public static function getNotificationById(id:int):Notification
         {
-            return ((GameData.getObject(MODULE, id) as Notification));
+            return (GameData.getObject(MODULE, id) as Notification);
         }
 
         public static function getNotifications():Array
@@ -36,7 +38,7 @@
 
         public function get title():String
         {
-            if (!(this._title))
+            if (!this._title)
             {
                 this._title = I18n.getText(this.titleId);
             };
@@ -45,7 +47,7 @@
 
         public function get message():String
         {
-            if (!(this._message))
+            if (!this._message)
             {
                 this._message = I18n.getText(this.messageId);
             };
@@ -54,5 +56,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.notifications
+} com.ankamagames.dofus.datacenter.notifications
 

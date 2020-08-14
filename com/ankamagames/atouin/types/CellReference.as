@@ -1,9 +1,8 @@
-﻿package com.ankamagames.atouin.types
+package com.ankamagames.atouin.types
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
-    import flash.display.Sprite;
     import flash.display.DisplayObject;
     import com.ankamagames.jerakine.pools.PoolsManager;
     import com.ankamagames.jerakine.pools.PoolableRectangle;
@@ -27,7 +26,6 @@
         public var mov:Boolean;
         public var isDisabled:Boolean = false;
         public var rendered:Boolean = false;
-        public var heightestDecor:Sprite;
         public var gfxId:Array;
 
         public function CellReference(nId:uint)
@@ -91,7 +89,7 @@
             };
             PoolsManager.getInstance().getRectanglePool().checkIn(boundRect);
             PoolsManager.getInstance().getRectanglePool().checkIn(rectangle);
-            return ((rectangle as Rectangle));
+            return (rectangle as Rectangle);
         }
 
         public function getAvgColor():uint
@@ -114,10 +112,10 @@
             red = (red / len);
             green = (green / len);
             blue = (blue / len);
-            return ((((red << 16) | (green << 8)) | blue));
+            return (((red << 16) | (green << 8)) | blue);
         }
 
 
     }
-}//package com.ankamagames.atouin.types
+} com.ankamagames.atouin.types
 

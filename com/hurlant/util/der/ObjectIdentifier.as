@@ -1,4 +1,4 @@
-﻿package com.hurlant.util.der
+package com.hurlant.util.der
 {
     import flash.net.registerClassAlias;
     import flash.utils.ByteArray;
@@ -14,9 +14,9 @@
             registerClassAlias("com.hurlant.util.der.ObjectIdentifier", ObjectIdentifier);
         }
 
-        public function ObjectIdentifier(type:uint=0, length:uint=0, b:*=null)
+        public function ObjectIdentifier(_arg_1:uint=0, length:uint=0, b:*=null)
         {
-            this.type = type;
+            this.type = _arg_1;
             this.len = length;
             if ((b is ByteArray))
             {
@@ -51,8 +51,8 @@
             while (b.bytesAvailable > 0)
             {
                 o = b.readUnsignedByte();
-                last = ((o & 128) == 0);
-                o = (o & 127);
+                last = ((o & 0x80) == 0);
+                o = (o & 0x7F);
                 v = ((v * 128) + o);
                 if (last)
                 {
@@ -90,25 +90,25 @@
                 {
                     if (v < (128 * 128))
                     {
-                        tmp.push(((v >> 7) | 128));
-                        tmp.push((v & 127));
+                        tmp.push(((v >> 7) | 0x80));
+                        tmp.push((v & 0x7F));
                     }
                     else
                     {
                         if (v < ((128 * 128) * 128))
                         {
-                            tmp.push(((v >> 14) | 128));
-                            tmp.push((((v >> 7) & 127) | 128));
-                            tmp.push((v & 127));
+                            tmp.push(((v >> 14) | 0x80));
+                            tmp.push((((v >> 7) & 0x7F) | 0x80));
+                            tmp.push((v & 0x7F));
                         }
                         else
                         {
                             if (v < (((128 * 128) * 128) * 128))
                             {
-                                tmp.push(((v >> 21) | 128));
-                                tmp.push((((v >> 14) & 127) | 128));
-                                tmp.push((((v >> 7) & 127) | 128));
-                                tmp.push((v & 127));
+                                tmp.push(((v >> 21) | 0x80));
+                                tmp.push((((v >> 14) & 0x7F) | 0x80));
+                                tmp.push((((v >> 7) & 0x7F) | 0x80));
+                                tmp.push((v & 0x7F));
                             }
                             else
                             {
@@ -138,15 +138,15 @@
 
         public function toString():String
         {
-            return ((DER.indent + this.oid.join(".")));
+            return (DER.indent + this.oid.join("."));
         }
 
         public function dump():String
         {
-            return ((((((("OID[" + this.type) + "][") + this.len) + "][") + this.toString()) + "]"));
+            return (((((("OID[" + this.type) + "][") + this.len) + "][") + this.toString()) + "]");
         }
 
 
     }
-}//package com.hurlant.util.der
+} com.hurlant.util.der
 

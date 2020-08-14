@@ -1,9 +1,9 @@
-﻿package com.ankamagames.dofus.logic.game.common.misc.inventoryView
+package com.ankamagames.dofus.logic.game.common.misc.inventoryView
 {
     import flash.utils.Dictionary;
     import com.ankamagames.dofus.logic.game.common.misc.IStorageView;
-    import com.ankamagames.dofus.internalDatacenter.jobs.RecipeWithSkill;
     import com.ankamagames.dofus.datacenter.jobs.Recipe;
+    import com.ankamagames.dofus.internalDatacenter.DataEnum;
     import com.ankamagames.dofus.logic.game.common.misc.HookLock;
     import com.ankamagames.dofus.internalDatacenter.items.ItemWrapper;
     import com.ankamagames.dofus.logic.game.common.managers.StorageOptionManager;
@@ -15,28 +15,28 @@
 
         private var _ingredients:Dictionary;
         private var _skillId:int;
-        private var _slotCount:int;
+        private var _jobLevel:int;
         private var _parent:IStorageView;
 
-        public function StorageCraftFilterView(hookLock:HookLock, parentView:IStorageView, skillId:int, slotCount:int):void
+        public function StorageCraftFilterView(hookLock:HookLock, parentView:IStorageView, skillId:int, jobLevel:int):void
         {
-            var recipe:RecipeWithSkill;
+            var recipe:Recipe;
             var selected:Boolean;
             var id:int;
             super(hookLock);
-            var recipies:Array = Recipe.getAllRecipesForSkillId(skillId, slotCount);
+            var recipies:Array = Recipe.getAllRecipesForSkillId(skillId, jobLevel);
             this._ingredients = new Dictionary();
             for each (recipe in recipies)
             {
                 selected = false;
-                for each (id in recipe.recipe.ingredientIds)
+                for each (id in recipe.ingredientIds)
                 {
                     this._ingredients[id] = true;
                 };
             };
-            this._ingredients[7508] = true;
+            this._ingredients[DataEnum.ITEM_GID_SIGNATURE_RUNE] = true;
             this._skillId = skillId;
-            this._slotCount = slotCount;
+            this._jobLevel = jobLevel;
             this._parent = parentView;
         }
 
@@ -47,7 +47,7 @@
 
         override public function isListening(item:ItemWrapper):Boolean
         {
-            return (((this._parent.isListening(item)) && (this._ingredients.hasOwnProperty(item.objectGID))));
+            return ((this._parent.isListening(item)) && (this._ingredients.hasOwnProperty(item.objectGID)));
         }
 
         override public function updateView():void
@@ -71,5 +71,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.misc.inventoryView
+} com.ankamagames.dofus.logic.game.common.misc.inventoryView
 

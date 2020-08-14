@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia
+package com.ankamagames.berilia
 {
     public interface FinalizableUIComponent extends UIComponent 
     {
@@ -8,5 +8,5 @@
         function finalize():void;
 
     }
-}//package com.ankamagames.berilia
+} com.ankamagames.berilia
 

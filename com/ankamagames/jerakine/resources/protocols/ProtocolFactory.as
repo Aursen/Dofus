@@ -1,13 +1,9 @@
-﻿package com.ankamagames.jerakine.resources.protocols
+package com.ankamagames.jerakine.resources.protocols
 {
     import flash.utils.Dictionary;
     import com.ankamagames.jerakine.resources.protocols.impl.HttpProtocol;
-    import com.ankamagames.jerakine.resources.protocols.impl.HttpCacheProtocol;
-    import com.ankamagames.jerakine.utils.system.AirScanner;
     import com.ankamagames.jerakine.resources.protocols.impl.FileProtocol;
-    import com.ankamagames.jerakine.resources.protocols.impl.FileFlashProtocol;
     import com.ankamagames.jerakine.resources.protocols.impl.ZipProtocol;
-    import com.ankamagames.jerakine.resources.protocols.impl.UpdaterProtocol;
     import com.ankamagames.jerakine.resources.protocols.impl.PakProtocol2;
     import com.ankamagames.jerakine.resources.protocols.impl.PakProtocol;
     import com.ankamagames.jerakine.resources.ResourceError;
@@ -28,18 +24,10 @@
                 case "http":
                 case "https":
                     return (new HttpProtocol());
-                case "httpc":
-                    return (new HttpCacheProtocol());
                 case "file":
-                    if (AirScanner.hasAir())
-                    {
-                        return (new FileProtocol());
-                    };
-                    return (new FileFlashProtocol());
+                    return (new FileProtocol());
                 case "zip":
                     return (new ZipProtocol());
-                case "upd":
-                    return (new UpdaterProtocol());
                 case "pak":
                 case "pak2":
                 case "d2p":
@@ -51,7 +39,7 @@
             if (customProtocol)
             {
                 cp = new (customProtocol)();
-                if (!((cp is IProtocol)))
+                if (!(cp is IProtocol))
                 {
                     throw (new ResourceError((("Registered custom protocol for extension " + uri.protocol) + " isn't an IProtocol class.")));
                 };
@@ -72,5 +60,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.resources.protocols
+} com.ankamagames.jerakine.resources.protocols
 

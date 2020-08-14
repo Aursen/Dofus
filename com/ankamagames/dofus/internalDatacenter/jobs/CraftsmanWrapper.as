@@ -1,32 +1,27 @@
-﻿package com.ankamagames.dofus.internalDatacenter.jobs
+package com.ankamagames.dofus.internalDatacenter.jobs
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.dofus.network.types.game.character.status.PlayerStatusExtended;
-    import com.ankamagames.dofus.datacenter.jobs.Job;
-    import com.ankamagames.dofus.network.enums.CrafterDirectoryParamBitEnum;
     import com.ankamagames.dofus.network.types.game.context.roleplay.job.JobCrafterDirectoryListEntry;
 
     public class CraftsmanWrapper implements IDataCenter 
     {
 
-        public var playerId:int;
+        public var playerId:Number;
         public var playerName:String;
         public var alignmentSide:int;
         public var breed:int;
         public var sex:Boolean;
         public var isInWorkshop:Boolean = false;
-        public var mapId:int;
+        public var mapId:Number;
         public var subAreaId:int;
         public var worldPos:String;
         public var statusId:int;
         public var awayMessage:String;
         public var jobId:int;
         public var jobLevel:int;
-        public var minSlots:int;
-        public var specialization:Boolean;
-        public var notFree:Boolean;
-        public var notFreeExceptOnFail:Boolean;
-        public var resourcesRequired:Boolean;
+        public var minLevelCraft:int;
+        public var freeCraft:Boolean;
 
 
         public static function create(informations:JobCrafterDirectoryListEntry):CraftsmanWrapper
@@ -48,15 +43,12 @@
             };
             obj.jobId = informations.jobInfo.jobId;
             obj.jobLevel = informations.jobInfo.jobLevel;
-            obj.minSlots = informations.jobInfo.minSlots;
-            obj.specialization = (Job.getJobById(informations.jobInfo.jobId).specializationOfId > 0);
-            obj.notFree = !(((informations.jobInfo.userDefinedParams & CrafterDirectoryParamBitEnum.CRAFT_OPTION_NOT_FREE) == 0));
-            obj.notFreeExceptOnFail = !(((informations.jobInfo.userDefinedParams & CrafterDirectoryParamBitEnum.CRAFT_OPTION_NOT_FREE_EXCEPT_ON_FAIL) == 0));
-            obj.resourcesRequired = !(((informations.jobInfo.userDefinedParams & CrafterDirectoryParamBitEnum.CRAFT_OPTION_RESOURCES_REQUIRED) == 0));
+            obj.minLevelCraft = informations.jobInfo.minLevel;
+            obj.freeCraft = informations.jobInfo.free;
             return (obj);
         }
 
 
     }
-}//package com.ankamagames.dofus.internalDatacenter.jobs
+} com.ankamagames.dofus.internalDatacenter.jobs
 

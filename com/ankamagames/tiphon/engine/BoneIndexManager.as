@@ -1,4 +1,4 @@
-﻿package com.ankamagames.tiphon.engine
+package com.ankamagames.tiphon.engine
 {
     import flash.events.EventDispatcher;
     import com.ankamagames.jerakine.logger.Logger;
@@ -25,15 +25,12 @@
         private static var _self:BoneIndexManager;
 
         private var _loader:IResourceLoader;
-        private var _index:Dictionary;
-        private var _transitions:Dictionary;
+        private var _index:Dictionary = new Dictionary();
+        private var _transitions:Dictionary = new Dictionary();
         private var _animNameModifier:Function;
 
         public function BoneIndexManager()
         {
-            this._index = new Dictionary();
-            this._transitions = new Dictionary();
-            super();
             if (_self)
             {
                 throw (new SingletonError());
@@ -42,7 +39,7 @@
 
         public static function getInstance():BoneIndexManager
         {
-            if (!(_self))
+            if (!_self)
             {
                 _self = new (BoneIndexManager)();
             };
@@ -65,7 +62,7 @@
 
         public function addTransition(boneId:uint, startAnim:String, endAnim:String, direction:uint, transitionalAnim:String):void
         {
-            if (!(this._transitions[boneId]))
+            if (!this._transitions[boneId])
             {
                 this._transitions[boneId] = new Dictionary();
             };
@@ -79,7 +76,8 @@
                 startAnim = this._animNameModifier(boneId, startAnim);
                 endAnim = this._animNameModifier(boneId, endAnim);
             };
-            return (((this._transitions[boneId]) && (((!((this._transitions[boneId][((((startAnim + "_") + endAnim) + "_") + direction)] == null))) || (!((this._transitions[boneId][((((startAnim + "_") + endAnim) + "_") + TiphonUtility.getFlipDirection(direction))] == null)))))));
+            var transition:* = (((startAnim + "_") + endAnim) + "_");
+            return ((this._transitions[boneId]) && ((!(this._transitions[boneId][(transition + direction)] == null)) || (!(this._transitions[boneId][(transition + TiphonUtility.getFlipDirection(direction))] == null))));
         }
 
         public function getTransition(boneId:uint, startAnim:String, endAnim:String, direction:uint):String
@@ -89,15 +87,17 @@
                 startAnim = this._animNameModifier(boneId, startAnim);
                 endAnim = this._animNameModifier(boneId, endAnim);
             };
-            if (!(this._transitions[boneId]))
+            if (!this._transitions[boneId])
             {
                 return (null);
             };
-            if (this._transitions[boneId][((((startAnim + "_") + endAnim) + "_") + direction)])
+            var transition:* = (((startAnim + "_") + endAnim) + "_");
+            var transitionAndDirection:String = (transition + direction);
+            if (this._transitions[boneId][transitionAndDirection])
             {
-                return (this._transitions[boneId][((((startAnim + "_") + endAnim) + "_") + direction)]);
+                return (this._transitions[boneId][transitionAndDirection]);
             };
-            return (this._transitions[boneId][((((startAnim + "_") + endAnim) + "_") + TiphonUtility.getFlipDirection(direction))]);
+            return (this._transitions[boneId][(transition + TiphonUtility.getFlipDirection(direction))]);
         }
 
         public function getBoneFile(boneId:uint, animName:String):Uri
@@ -109,9 +109,19 @@
             return (new Uri((TiphonConstants.SWF_SKULL_PATH + this._index[boneId][animName])));
         }
 
-        public function hasAnim(boneId:uint, animName:String, direction:int):Boolean
+        public function hasAnim(boneId:uint, animName:String, direction:int=0):Boolean
         {
-            return (((this._index[boneId]) && (this._index[boneId][animName])));
+            if (!this._index[boneId])
+            {
+                _log.error((("Le bone " + boneId) + " ne possède aucune animation"));
+                return (false);
+            };
+            if (!this._index[boneId][animName])
+            {
+                _log.error(((("Le bone " + boneId) + " ne possède aucune animation nommée ") + animName));
+                return (false);
+            };
+            return (true);
         }
 
         public function hasCustomBone(boneId:uint):Boolean
@@ -123,7 +133,7 @@
         {
             var anim:String;
             var animationsList:Dictionary = this._index[boneId];
-            if (!(animationsList))
+            if (!animationsList)
             {
                 return (null);
             };
@@ -133,6 +143,11 @@
                 list.push(anim);
             };
             return (list);
+        }
+
+        public function getAllCustomAnimationDictionary(boneId:int):Dictionary
+        {
+            return (this._index[boneId]);
         }
 
         private function onXmlLoaded(e:ResourceLoadedEvent):void
@@ -145,7 +160,7 @@
             var folder:String = FileUtils.getFilePath(e.uri.uri);
             var xml:XML = (e.resource as XML);
             var subXml:Array = new Array();
-            for each (group in xml..group)
+            for each (group in xml.child("group"))
             {
                 uri = new Uri((((folder + "/") + group.@id.toString()) + ".xml"));
                 uri.tag = parseInt(group.@id.toString());
@@ -161,16 +176,20 @@
             var animClass:XML;
             var animInfo:Array;
             var xml:XML = (e.resource as XML);
-            for each (file in xml..file)
+            for each (file in xml.child("file"))
             {
-                for each (animClass in file..resource)
+                for each (animClass in file.child("resource"))
                 {
                     className = animClass.@name.toString();
                     if (className.indexOf("Anim") != -1)
                     {
-                        if (!(this._index[e.uri.tag]))
+                        if (!this._index[e.uri.tag])
                         {
                             this._index[e.uri.tag] = new Dictionary();
+                        };
+                        if (this._index[e.uri.tag][className])
+                        {
+                            _log.error(((((((("Already existing anim '" + className) + "' for bone ") + e.uri.tag) + " in ") + this._index[e.uri.tag][className]) + ", will be overwritten with ") + file.@name.toString()));
                         };
                         this._index[e.uri.tag][className] = file.@name.toString();
                         if (className.indexOf("_to_") != -1)
@@ -196,5 +215,5 @@
 
 
     }
-}//package com.ankamagames.tiphon.engine
+} com.ankamagames.tiphon.engine
 

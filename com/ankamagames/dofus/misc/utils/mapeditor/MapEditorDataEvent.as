@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.misc.utils.mapeditor
+package com.ankamagames.dofus.misc.utils.mapeditor
 {
     import flash.events.Event;
 
@@ -9,12 +9,12 @@
 
         public var data:MapEditorMessage;
 
-        public function MapEditorDataEvent(type:String, data:MapEditorMessage)
+        public function MapEditorDataEvent(_arg_1:String, data:MapEditorMessage)
         {
-            super(type, false, false);
+            super(_arg_1, false, false);
             this.data = data;
         }
 
     }
-}//package com.ankamagames.dofus.misc.utils.mapeditor
+} com.ankamagames.dofus.misc.utils.mapeditor
 

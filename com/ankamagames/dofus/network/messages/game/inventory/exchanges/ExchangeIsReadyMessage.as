@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.inventory.exchanges
+package com.ankamagames.dofus.network.messages.game.inventory.exchanges
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,15 +6,15 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class ExchangeIsReadyMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 5509;
 
         private var _isInitialized:Boolean = false;
-        public var id:uint = 0;
+        public var id:Number = 0;
         public var ready:Boolean = false;
 
 
@@ -28,7 +28,7 @@
             return (5509);
         }
 
-        public function initExchangeIsReadyMessage(id:uint=0, ready:Boolean=false):ExchangeIsReadyMessage
+        public function initExchangeIsReadyMessage(id:Number=0, ready:Boolean=false):ExchangeIsReadyMessage
         {
             this.id = id;
             this.ready = ready;
@@ -55,6 +55,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_ExchangeIsReadyMessage(output);
@@ -62,11 +70,11 @@
 
         public function serializeAs_ExchangeIsReadyMessage(output:ICustomDataOutput):void
         {
-            if (this.id < 0)
+            if (((this.id < -9007199254740992) || (this.id > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.id) + ") on element id.")));
             };
-            output.writeVarInt(this.id);
+            output.writeDouble(this.id);
             output.writeBoolean(this.ready);
         }
 
@@ -77,15 +85,36 @@
 
         public function deserializeAs_ExchangeIsReadyMessage(input:ICustomDataInput):void
         {
-            this.id = input.readVarUhInt();
-            if (this.id < 0)
+            this._idFunc(input);
+            this._readyFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_ExchangeIsReadyMessage(tree);
+        }
+
+        public function deserializeAsyncAs_ExchangeIsReadyMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._idFunc);
+            tree.addChild(this._readyFunc);
+        }
+
+        private function _idFunc(input:ICustomDataInput):void
+        {
+            this.id = input.readDouble();
+            if (((this.id < -9007199254740992) || (this.id > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.id) + ") on element of ExchangeIsReadyMessage.id.")));
             };
+        }
+
+        private function _readyFunc(input:ICustomDataInput):void
+        {
             this.ready = input.readBoolean();
         }
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.inventory.exchanges
+} com.ankamagames.dofus.network.messages.game.inventory.exchanges
 

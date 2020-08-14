@@ -1,9 +1,8 @@
-﻿package com.ankamagames.dofus.datacenter.items.criterion
+package com.ankamagames.dofus.datacenter.items.criterion
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.dofus.kernel.Kernel;
     import com.ankamagames.dofus.logic.game.common.frames.QuestFrame;
-    import __AS3__.vec.Vector;
     import com.ankamagames.dofus.datacenter.quest.Achievement;
     import com.ankamagames.jerakine.data.I18n;
 
@@ -18,7 +17,7 @@
         override public function get isRespected():Boolean
         {
             var id:int;
-            var achievementFinishedList:Vector.<uint> = (Kernel.getWorker().getFrame(QuestFrame) as QuestFrame).finishedAchievementsIds;
+            var achievementFinishedList:Array = (Kernel.getWorker().getFrame(QuestFrame) as QuestFrame).finishedAccountAchievementIds;
             for each (id in achievementFinishedList)
             {
                 if (id == _criterionValue)
@@ -31,7 +30,7 @@
 
         override public function get text():String
         {
-            var readableValue:String = ((" '" + Achievement.getAchievementById(_criterionValue).name) + "'");
+            var readableValue:* = ((" '" + Achievement.getAchievementById(_criterionValue).name) + "'");
             var readableCriterion:String = I18n.getUiText("ui.tooltip.unlockAchievement", [readableValue]);
             if (_operator.text == ItemCriterionOperator.DIFFERENT)
             {
@@ -49,7 +48,7 @@
         override protected function getCriterion():int
         {
             var id:int;
-            var achievementFinishedList:Vector.<uint> = (Kernel.getWorker().getFrame(QuestFrame) as QuestFrame).finishedAchievementsIds;
+            var achievementFinishedList:Array = (Kernel.getWorker().getFrame(QuestFrame) as QuestFrame).finishedAccountAchievementIds;
             for each (id in achievementFinishedList)
             {
                 if (id == _criterionValue)
@@ -62,5 +61,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.items.criterion
+} com.ankamagames.dofus.datacenter.items.criterion
 

@@ -1,4 +1,4 @@
-﻿package com.hurlant.crypto.symmetric
+package com.hurlant.crypto.symmetric
 {
     import flash.utils.ByteArray;
     import com.hurlant.crypto.prng.Random;
@@ -25,7 +25,7 @@
             a.writeUnsignedInt(parseInt(K.substr(16, 8), 16));
             a.writeUnsignedInt(parseInt(K.substr(24, 8), 16));
             a.position = 0;
-            return (new (XTeaKey)(a));
+            return (new XTeaKey(a));
         }
 
 
@@ -45,9 +45,9 @@
             i = 0;
             while (i < this.NUM_ROUNDS)
             {
-                v0 = (v0 + ((((v1 << 4) ^ (v1 >> 5)) + v1) ^ (sum + this.k[(sum & 3)])));
+                v0 = (v0 + ((((v1 << 4) ^ (v1 >> 5)) + v1) ^ (sum + this.k[(sum & 0x03)])));
                 sum = (sum + delta);
-                v1 = (v1 + ((((v0 << 4) ^ (v0 >> 5)) + v0) ^ (sum + this.k[((sum >> 11) & 3)])));
+                v1 = (v1 + ((((v0 << 4) ^ (v0 >> 5)) + v0) ^ (sum + this.k[((sum >> 11) & 0x03)])));
                 i++;
             };
             block.position = (block.position - 8);
@@ -66,9 +66,9 @@
             i = 0;
             while (i < this.NUM_ROUNDS)
             {
-                v1 = (v1 - ((((v0 << 4) ^ (v0 >> 5)) + v0) ^ (sum + this.k[((sum >> 11) & 3)])));
+                v1 = (v1 - ((((v0 << 4) ^ (v0 >> 5)) + v0) ^ (sum + this.k[((sum >> 11) & 0x03)])));
                 sum = (sum - delta);
-                v0 = (v0 - ((((v1 << 4) ^ (v1 >> 5)) + v1) ^ (sum + this.k[(sum & 3)])));
+                v0 = (v0 - ((((v1 << 4) ^ (v1 >> 5)) + v1) ^ (sum + this.k[(sum & 0x03)])));
                 i++;
             };
             block.position = (block.position - 8);
@@ -97,5 +97,5 @@
 
 
     }
-}//package com.hurlant.crypto.symmetric
+} com.hurlant.crypto.symmetric
 

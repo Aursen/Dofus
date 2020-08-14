@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.fight.steps
+package com.ankamagames.dofus.logic.game.fight.steps
 {
     import com.ankamagames.jerakine.sequencer.AbstractSequencable;
     import com.ankamagames.jerakine.sequencer.ISequencer;
@@ -13,30 +13,30 @@
     import com.ankamagames.dofus.logic.game.common.managers.PlayedCharacterManager;
     import com.ankamagames.jerakine.sequencer.SerialSequencer;
     import com.ankamagames.tiphon.display.TiphonSprite;
+    import com.ankamagames.dofus.types.sequences.AddGfxEntityStep;
     import com.ankamagames.tiphon.sequence.PlayAnimationStep;
     import com.ankamagames.dofus.types.enums.AnimationEnum;
     import com.ankamagames.jerakine.sequencer.CallbackStep;
     import com.ankamagames.jerakine.types.Callback;
     import com.ankamagames.jerakine.types.events.SequencerEvent;
+    import __AS3__.vec.Vector;
     import com.ankamagames.dofus.network.enums.SubEntityBindingPointCategoryEnum;
     import flash.display.DisplayObjectContainer;
     import flash.events.Event;
     import com.ankamagames.dofus.logic.game.fight.fightEvents.FightEventsHelper;
     import com.ankamagames.dofus.logic.game.fight.types.FightEventEnum;
-    import com.ankamagames.dofus.logic.game.fight.frames.FightSpellCastFrame;
-    import com.ankamagames.dofus.logic.game.fight.frames.FightTurnFrame;
 
     public class FightDeathStep extends AbstractSequencable implements IFightStep 
     {
 
-        private var _entityId:int;
+        private var _entityId:Number;
         private var _deathSubSequence:ISequencer;
         private var _naturalDeath:Boolean;
         private var _targetName:String;
         private var _needToWarn:Boolean = true;
         private var _timeOut:Boolean = false;
 
-        public function FightDeathStep(entityId:int, naturalDeath:Boolean=true)
+        public function FightDeathStep(entityId:Number, naturalDeath:Boolean=true)
         {
             this._entityId = entityId;
             this._naturalDeath = naturalDeath;
@@ -56,15 +56,16 @@
             return ("death");
         }
 
-        public function get entityId():int
+        public function get entityId():Number
         {
             return (this._entityId);
         }
 
         override public function start():void
         {
+            var waitAnimation:Boolean;
             var dyingEntity:IEntity = DofusEntities.getEntity(this._entityId);
-            if (!(dyingEntity))
+            if (!dyingEntity)
             {
                 _log.warn((("Unable to play death of an unexisting fighter " + this._entityId) + "."));
                 this._needToWarn = true;
@@ -89,11 +90,27 @@
             this._deathSubSequence = new SerialSequencer(FightBattleFrame.FIGHT_SEQUENCER_NAME);
             if ((dyingEntity is TiphonSprite))
             {
-                this._deathSubSequence.addStep(new PlayAnimationStep((dyingEntity as TiphonSprite), AnimationEnum.ANIM_MORT));
+                if (((fightBattleFrame) && (fightBattleFrame.deathPlayingNumber > 1)))
+                {
+                    this._deathSubSequence.addStep(new AddGfxEntityStep(3182, fighterInfos.disposition.cellId));
+                }
+                else
+                {
+                    this._deathSubSequence.addStep(new PlayAnimationStep((dyingEntity as TiphonSprite), AnimationEnum.ANIM_MORT, true, false));
+                };
                 this._deathSubSequence.addStep(new CallbackStep(new Callback(this.onAnimEnd, dyingEntity)));
             };
             this._deathSubSequence.addStep(new CallbackStep(new Callback(this.manualRollOut, this._entityId)));
-            this._deathSubSequence.addStep(new FightDestroyEntityStep(dyingEntity));
+            var dyingEntitySprite:TiphonSprite = (dyingEntity as TiphonSprite);
+            if ((((!(dyingEntitySprite)) || (!(dyingEntitySprite.parentSprite))) || (!(dyingEntitySprite.parentSprite.carriedEntity == dyingEntitySprite))))
+            {
+                waitAnimation = true;
+                if (fighterInfos.disposition.cellId == -1)
+                {
+                    waitAnimation = false;
+                };
+                this._deathSubSequence.addStep(new FightDestroyEntityStep(dyingEntity, waitAnimation));
+            };
             this._deathSubSequence.addEventListener(SequencerEvent.SEQUENCE_TIMEOUT, this.deathTimeOut);
             this._deathSubSequence.addEventListener(SequencerEvent.SEQUENCE_END, this.deathFinished);
             this._deathSubSequence.start();
@@ -108,7 +125,12 @@
             super.clear();
         }
 
-        private function manualRollOut(fighterId:int):void
+        public function get targets():Vector.<Number>
+        {
+            return (new <Number>[this._entityId]);
+        }
+
+        private function manualRollOut(fighterId:Number):void
         {
             var fightContextFrame:FightContextFrame;
             if (FightContextFrame.fighterEntityTooltipId == fighterId)
@@ -162,16 +184,10 @@
                     FightEventsHelper.sendFightEvent(FightEventEnum.FIGHTER_LEAVE, [this._entityId, this._targetName], this._entityId, castingSpellId, this._timeOut);
                 };
             };
-            FightSpellCastFrame.updateRangeAndTarget();
-            var ftf:FightTurnFrame = (Kernel.getWorker().getFrame(FightTurnFrame) as FightTurnFrame);
-            if (((ftf) && (ftf.myTurn)))
-            {
-                ftf.updatePath();
-            };
             executeCallbacks();
         }
 
 
     }
-}//package com.ankamagames.dofus.logic.game.fight.steps
+} com.ankamagames.dofus.logic.game.fight.steps
 

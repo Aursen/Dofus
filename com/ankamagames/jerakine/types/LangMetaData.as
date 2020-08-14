@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.types
+package com.ankamagames.jerakine.types
 {
     import com.ankamagames.jerakine.utils.files.FileUtils;
 
@@ -9,53 +9,65 @@
         public var loadAllFile:Boolean = false;
         public var clearAllFile:Boolean = false;
         public var clearOnlyNotUpToDate:Boolean = true;
-        public var clearFile:Array;
+        public var clearFile:Array = new Array();
 
-        public function LangMetaData()
-        {
-            this.clearFile = new Array();
-            super();
-        }
 
         public static function fromXml(sXml:String, sUrlProvider:String, checkFunction:Function):LangMetaData
         {
             var file:XML;
+            var fileName:String;
+            var fileString:String;
             var xml:XML = new XML(sXml);
             var metaData:LangMetaData = new (LangMetaData)();
             var bHaveVersionData:Boolean;
-            if (xml..filesActions..clearOnlyNotUpToDate.toString() == "true")
+            var filesActions:XMLList = xml.child("filesActions");
+            var clearOnlyNotUpToDate:String = filesActions.child("clearOnlyNotUpToDate").toString();
+            if (clearOnlyNotUpToDate == "true")
             {
                 metaData.clearOnlyNotUpToDate = true;
-            };
-            if (xml..filesActions..clearOnlyNotUpToDate.toString() == "false")
+            }
+            else
             {
-                metaData.clearOnlyNotUpToDate = false;
-            };
-            if (xml..filesActions..loadAllFile.toString() == "true")
-            {
-                metaData.loadAllFile = true;
-            };
-            if (xml..filesActions..loadAllFile.toString() == "false")
-            {
-                metaData.loadAllFile = false;
-            };
-            if (xml..filesActions..clearAllFile.toString() == "true")
-            {
-                metaData.clearAllFile = true;
-            };
-            if (xml..filesActions..clearAllFile.toString() == "false")
-            {
-                metaData.clearAllFile = false;
-            };
-            for each (file in xml..filesVersions..file)
-            {
-                bHaveVersionData = true;
-                if (((((metaData.clearAllFile) || (!(metaData.clearOnlyNotUpToDate)))) || (!(checkFunction(((FileUtils.getFileStartName(sUrlProvider) + ".") + file..@name), file.toString())))))
+                if (clearOnlyNotUpToDate == "false")
                 {
-                    metaData.addFile(file..@name, file.toString());
+                    metaData.clearOnlyNotUpToDate = false;
                 };
             };
-            if (!(bHaveVersionData))
+            var LoadAllFile:String = filesActions.child("loadAllFile").toString();
+            if (LoadAllFile == "true")
+            {
+                metaData.loadAllFile = true;
+            }
+            else
+            {
+                if (LoadAllFile == "false")
+                {
+                    metaData.loadAllFile = false;
+                };
+            };
+            var ClearAllFile:String = filesActions.child("clearAllFile").toString();
+            if (ClearAllFile == "true")
+            {
+                metaData.clearAllFile = true;
+            }
+            else
+            {
+                if (ClearAllFile == "false")
+                {
+                    metaData.clearAllFile = false;
+                };
+            };
+            for each (file in xml.child("filesVersions").child("file"))
+            {
+                bHaveVersionData = true;
+                fileName = file.@name;
+                fileString = file.toString();
+                if ((((metaData.clearAllFile) || (!(metaData.clearOnlyNotUpToDate))) || (!(checkFunction(((FileUtils.getFileStartName(sUrlProvider) + ".") + fileName), fileString)))))
+                {
+                    metaData.addFile(fileName, fileString);
+                };
+            };
+            if (!bHaveVersionData)
             {
                 metaData.loadAllFile = true;
             };
@@ -76,5 +88,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.types
+} com.ankamagames.jerakine.types
 

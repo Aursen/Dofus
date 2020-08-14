@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.common.managers
+package com.ankamagames.dofus.logic.common.managers
 {
     import com.ankamagames.dofus.datacenter.world.SubArea;
     import com.ankamagames.berilia.managers.KernelEventsManager;
@@ -26,5 +26,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.common.managers
+} com.ankamagames.dofus.logic.common.managers
 

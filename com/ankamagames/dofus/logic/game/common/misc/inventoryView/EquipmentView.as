@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.common.misc.inventoryView
+package com.ankamagames.dofus.logic.game.common.misc.inventoryView
 {
     import com.ankamagames.dofus.logic.game.common.misc.IInventoryView;
     import com.ankamagames.jerakine.logger.Logger;
@@ -18,14 +18,12 @@
 
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(EquipmentView));
 
-        private var _content:Vector.<ItemWrapper>;
+        private var _content:Vector.<ItemWrapper> = new Vector.<ItemWrapper>(62);
         private var _hookLock:HookLock;
         private var _initializing:Boolean;
 
         public function EquipmentView(hookLock:HookLock)
         {
-            this._content = new Vector.<ItemWrapper>(62);
-            super();
             this._hookLock = hookLock;
         }
 
@@ -63,7 +61,7 @@
                 PlayedCharacterManager.getInstance().currentWeapon = (item as WeaponWrapper);
                 this._hookLock.addHook(InventoryHookList.WeaponUpdate, []);
             };
-            if (!(this._initializing))
+            if (!this._initializing)
             {
                 this._hookLock.addHook(InventoryHookList.EquipmentObjectMove, [item, -1]);
             };
@@ -96,7 +94,7 @@
 
         public function isListening(item:ItemWrapper):Boolean
         {
-            return ((item.position <= 61));
+            return (item.position <= 61);
         }
 
         public function updateView():void
@@ -109,5 +107,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.misc.inventoryView
+} com.ankamagames.dofus.logic.game.common.misc.inventoryView
 

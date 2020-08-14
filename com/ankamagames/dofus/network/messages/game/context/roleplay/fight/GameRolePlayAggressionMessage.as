@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.context.roleplay.fight
+package com.ankamagames.dofus.network.messages.game.context.roleplay.fight
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,16 +6,16 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class GameRolePlayAggressionMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 6073;
 
         private var _isInitialized:Boolean = false;
-        public var attackerId:uint = 0;
-        public var defenderId:uint = 0;
+        public var attackerId:Number = 0;
+        public var defenderId:Number = 0;
 
 
         override public function get isInitialized():Boolean
@@ -28,7 +28,7 @@
             return (6073);
         }
 
-        public function initGameRolePlayAggressionMessage(attackerId:uint=0, defenderId:uint=0):GameRolePlayAggressionMessage
+        public function initGameRolePlayAggressionMessage(attackerId:Number=0, defenderId:Number=0):GameRolePlayAggressionMessage
         {
             this.attackerId = attackerId;
             this.defenderId = defenderId;
@@ -55,6 +55,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_GameRolePlayAggressionMessage(output);
@@ -62,16 +70,16 @@
 
         public function serializeAs_GameRolePlayAggressionMessage(output:ICustomDataOutput):void
         {
-            if (this.attackerId < 0)
+            if (((this.attackerId < 0) || (this.attackerId > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.attackerId) + ") on element attackerId.")));
             };
-            output.writeVarInt(this.attackerId);
-            if (this.defenderId < 0)
+            output.writeVarLong(this.attackerId);
+            if (((this.defenderId < 0) || (this.defenderId > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.defenderId) + ") on element defenderId.")));
             };
-            output.writeVarInt(this.defenderId);
+            output.writeVarLong(this.defenderId);
         }
 
         public function deserialize(input:ICustomDataInput):void
@@ -81,13 +89,34 @@
 
         public function deserializeAs_GameRolePlayAggressionMessage(input:ICustomDataInput):void
         {
-            this.attackerId = input.readVarUhInt();
-            if (this.attackerId < 0)
+            this._attackerIdFunc(input);
+            this._defenderIdFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GameRolePlayAggressionMessage(tree);
+        }
+
+        public function deserializeAsyncAs_GameRolePlayAggressionMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._attackerIdFunc);
+            tree.addChild(this._defenderIdFunc);
+        }
+
+        private function _attackerIdFunc(input:ICustomDataInput):void
+        {
+            this.attackerId = input.readVarUhLong();
+            if (((this.attackerId < 0) || (this.attackerId > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.attackerId) + ") on element of GameRolePlayAggressionMessage.attackerId.")));
             };
-            this.defenderId = input.readVarUhInt();
-            if (this.defenderId < 0)
+        }
+
+        private function _defenderIdFunc(input:ICustomDataInput):void
+        {
+            this.defenderId = input.readVarUhLong();
+            if (((this.defenderId < 0) || (this.defenderId > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.defenderId) + ") on element of GameRolePlayAggressionMessage.defenderId.")));
             };
@@ -95,5 +124,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.context.roleplay.fight
+} com.ankamagames.dofus.network.messages.game.context.roleplay.fight
 

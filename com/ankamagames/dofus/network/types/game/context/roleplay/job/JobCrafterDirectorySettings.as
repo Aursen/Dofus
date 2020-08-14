@@ -1,8 +1,9 @@
-﻿package com.ankamagames.dofus.network.types.game.context.roleplay.job
+package com.ankamagames.dofus.network.types.game.context.roleplay.job
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
     public class JobCrafterDirectorySettings implements INetworkType 
     {
@@ -10,8 +11,8 @@
         public static const protocolId:uint = 97;
 
         public var jobId:uint = 0;
-        public var minSlot:uint = 0;
-        public var userDefinedParams:uint = 0;
+        public var minLevel:uint = 0;
+        public var free:Boolean = false;
 
 
         public function getTypeId():uint
@@ -19,19 +20,19 @@
             return (97);
         }
 
-        public function initJobCrafterDirectorySettings(jobId:uint=0, minSlot:uint=0, userDefinedParams:uint=0):JobCrafterDirectorySettings
+        public function initJobCrafterDirectorySettings(jobId:uint=0, minLevel:uint=0, free:Boolean=false):JobCrafterDirectorySettings
         {
             this.jobId = jobId;
-            this.minSlot = minSlot;
-            this.userDefinedParams = userDefinedParams;
+            this.minLevel = minLevel;
+            this.free = free;
             return (this);
         }
 
         public function reset():void
         {
             this.jobId = 0;
-            this.minSlot = 0;
-            this.userDefinedParams = 0;
+            this.minLevel = 0;
+            this.free = false;
         }
 
         public function serialize(output:ICustomDataOutput):void
@@ -46,16 +47,12 @@
                 throw (new Error((("Forbidden value (" + this.jobId) + ") on element jobId.")));
             };
             output.writeByte(this.jobId);
-            if ((((this.minSlot < 0)) || ((this.minSlot > 9))))
+            if (((this.minLevel < 0) || (this.minLevel > 0xFF)))
             {
-                throw (new Error((("Forbidden value (" + this.minSlot) + ") on element minSlot.")));
+                throw (new Error((("Forbidden value (" + this.minLevel) + ") on element minLevel.")));
             };
-            output.writeByte(this.minSlot);
-            if (this.userDefinedParams < 0)
-            {
-                throw (new Error((("Forbidden value (" + this.userDefinedParams) + ") on element userDefinedParams.")));
-            };
-            output.writeByte(this.userDefinedParams);
+            output.writeByte(this.minLevel);
+            output.writeBoolean(this.free);
         }
 
         public function deserialize(input:ICustomDataInput):void
@@ -65,24 +62,47 @@
 
         public function deserializeAs_JobCrafterDirectorySettings(input:ICustomDataInput):void
         {
+            this._jobIdFunc(input);
+            this._minLevelFunc(input);
+            this._freeFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_JobCrafterDirectorySettings(tree);
+        }
+
+        public function deserializeAsyncAs_JobCrafterDirectorySettings(tree:FuncTree):void
+        {
+            tree.addChild(this._jobIdFunc);
+            tree.addChild(this._minLevelFunc);
+            tree.addChild(this._freeFunc);
+        }
+
+        private function _jobIdFunc(input:ICustomDataInput):void
+        {
             this.jobId = input.readByte();
             if (this.jobId < 0)
             {
                 throw (new Error((("Forbidden value (" + this.jobId) + ") on element of JobCrafterDirectorySettings.jobId.")));
             };
-            this.minSlot = input.readByte();
-            if ((((this.minSlot < 0)) || ((this.minSlot > 9))))
+        }
+
+        private function _minLevelFunc(input:ICustomDataInput):void
+        {
+            this.minLevel = input.readUnsignedByte();
+            if (((this.minLevel < 0) || (this.minLevel > 0xFF)))
             {
-                throw (new Error((("Forbidden value (" + this.minSlot) + ") on element of JobCrafterDirectorySettings.minSlot.")));
+                throw (new Error((("Forbidden value (" + this.minLevel) + ") on element of JobCrafterDirectorySettings.minLevel.")));
             };
-            this.userDefinedParams = input.readByte();
-            if (this.userDefinedParams < 0)
-            {
-                throw (new Error((("Forbidden value (" + this.userDefinedParams) + ") on element of JobCrafterDirectorySettings.userDefinedParams.")));
-            };
+        }
+
+        private function _freeFunc(input:ICustomDataInput):void
+        {
+            this.free = input.readBoolean();
         }
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.context.roleplay.job
+} com.ankamagames.dofus.network.types.game.context.roleplay.job
 

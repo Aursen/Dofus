@@ -1,6 +1,9 @@
-﻿package com.ankamagames.dofus.console.chat
+package com.ankamagames.dofus.console.chat
 {
     import com.ankamagames.jerakine.console.ConsoleInstructionHandler;
+    import com.ankamagames.jerakine.logger.Logger;
+    import com.ankamagames.jerakine.logger.Log;
+    import flash.utils.getQualifiedClassName;
     import com.ankamagames.dofus.network.messages.game.basic.BasicWhoAmIRequestMessage;
     import com.ankamagames.dofus.network.messages.game.basic.BasicWhoIsRequestMessage;
     import com.ankamagames.dofus.network.ProtocolConstantsEnum;
@@ -10,6 +13,7 @@
     import com.ankamagames.dofus.logic.game.common.managers.PlayedCharacterManager;
     import com.ankamagames.atouin.managers.EntitiesManager;
     import com.ankamagames.dofus.logic.game.common.managers.TimeManager;
+    import com.ankamagames.dofus.logic.game.common.managers.CharacterDisplacementManager;
     import com.ankamagames.jerakine.console.ConsoleHandler;
     import com.ankamagames.dofus.BuildInfos;
     import flash.system.Capabilities;
@@ -17,15 +21,23 @@
     public class InfoInstructionHandler implements ConsoleInstructionHandler 
     {
 
+        protected static const _log:Logger = Log.getLogger(getQualifiedClassName(InfoInstructionHandler));
+
 
         public function handle(console:ConsoleHandler, cmd:String, args:Array):void
         {
-            var _local_4:String;
-            var _local_5:BasicWhoAmIRequestMessage;
-            var _local_6:String;
-            var _local_7:String;
-            var _local_8:String;
-            var _local_9:Date;
+            var search:String;
+            var bwai:BasicWhoAmIRequestMessage;
+            var currentMap:String;
+            var mapGenericId:Number;
+            var mapId:Number;
+            var formattedMapId:String;
+            var currentCell:String;
+            var date:Date;
+            var coord1:String;
+            var coord2:String;
+            var mapX:int;
+            var mapY:int;
             var bwrm:BasicWhoIsRequestMessage;
             switch (cmd)
             {
@@ -34,44 +46,73 @@
                     {
                         return;
                     };
-                    _local_4 = args.shift();
-                    if ((((_local_4.length >= 1)) && ((_local_4.length <= ProtocolConstantsEnum.MAX_PLAYER_OR_ACCOUNT_NAME_LEN))))
+                    search = args.shift();
+                    if (((search.length >= 1) && (search.length <= ProtocolConstantsEnum.MAX_PLAYER_OR_ACCOUNT_NAME_LEN)))
                     {
                         bwrm = new BasicWhoIsRequestMessage();
-                        bwrm.initBasicWhoIsRequestMessage(true, _local_4);
+                        bwrm.initBasicWhoIsRequestMessage(true, search);
                         ConnectionsHandler.getConnection().send(bwrm);
                     };
-                    return;
+                    break;
                 case "version":
                     console.output(this.getVersion());
-                    return;
+                    break;
                 case "about":
                     console.output(this.getVersion());
-                    return;
+                    break;
                 case "whoami":
-                    _local_5 = new BasicWhoAmIRequestMessage();
-                    _local_5.initBasicWhoAmIRequestMessage(true);
-                    ConnectionsHandler.getConnection().send(_local_5);
-                    return;
+                    bwai = new BasicWhoAmIRequestMessage();
+                    bwai.initBasicWhoAmIRequestMessage(true);
+                    ConnectionsHandler.getConnection().send(bwai);
+                    break;
                 case "mapid":
-                    _local_6 = ((MapDisplayManager.getInstance().currentMapPoint.x + "/") + MapDisplayManager.getInstance().currentMapPoint.y);
-                    _local_7 = MapDisplayManager.getInstance().currentMapPoint.mapId.toString();
-                    console.output(I18n.getUiText("ui.chat.console.currentMap", [((((PlayedCharacterManager.getInstance().currentMap.outdoorX + "/") + PlayedCharacterManager.getInstance().currentMap.outdoorY) + ", ") + _local_6), _local_7]));
-                    return;
+                    currentMap = ((MapDisplayManager.getInstance().currentMapPoint.x + "/") + MapDisplayManager.getInstance().currentMapPoint.y);
+                    mapGenericId = MapDisplayManager.getInstance().currentMapPoint.mapId;
+                    mapId = MapDisplayManager.getInstance().mapInstanceId;
+                    if (mapId > 0)
+                    {
+                        formattedMapId = (((mapId + " (model ") + mapGenericId) + ")");
+                    }
+                    else
+                    {
+                        formattedMapId = mapGenericId.toString();
+                    };
+                    console.output(I18n.getUiText("ui.chat.console.currentMap", [((((PlayedCharacterManager.getInstance().currentMap.outdoorX + "/") + PlayedCharacterManager.getInstance().currentMap.outdoorY) + ", ") + currentMap), formattedMapId]));
+                    break;
                 case "cellid":
-                    _local_8 = EntitiesManager.getInstance().getEntity(PlayedCharacterManager.getInstance().id).position.cellId.toString();
-                    console.output(I18n.getUiText("ui.console.chat.currentCell", [_local_8]));
-                    return;
+                    currentCell = EntitiesManager.getInstance().getEntity(PlayedCharacterManager.getInstance().id).position.cellId.toString();
+                    console.output(I18n.getUiText("ui.console.chat.currentCell", [currentCell]));
+                    break;
                 case "time":
-                    _local_9 = new Date();
+                    date = new Date();
                     console.output(((TimeManager.getInstance().formatDateIG(0) + " - ") + TimeManager.getInstance().formatClock(0, false)));
-                    return;
+                    break;
+                case "travel":
+                    if (((args.length > 2) || (args.length < 1)))
+                    {
+                        return;
+                    };
+                    coord1 = (args[0] as String);
+                    if (args[1])
+                    {
+                        coord2 = (args[1] as String);
+                    }
+                    else
+                    {
+                        args = coord1.split(",");
+                        coord1 = args[0];
+                        coord2 = args[1];
+                    };
+                    mapX = int(coord1);
+                    mapY = int(coord2);
+                    CharacterDisplacementManager.getInstance().autoTravel(mapX, mapY);
+                    break;
             };
         }
 
         private function getVersion():String
         {
-            return (((((((((("----------------------------------------------\n" + "DOFUS CLIENT v ") + BuildInfos.BUILD_VERSION) + "\n") + "(c) ANKAMA GAMES (") + BuildInfos.BUILD_DATE) + ") \n") + "Flash player ") + Capabilities.version) + "\n----------------------------------------------"));
+            return ((((((((("----------------------------------------------\n" + "DOFUS CLIENT v ") + BuildInfos.VERSION) + "\n") + "(c) ANKAMA GAMES (") + BuildInfos.BUILD_DATE) + ") \n") + "Flash player ") + Capabilities.version) + "\n----------------------------------------------");
         }
 
         public function getHelp(cmd:String):String
@@ -103,5 +144,5 @@
 
 
     }
-}//package com.ankamagames.dofus.console.chat
+} com.ankamagames.dofus.console.chat
 

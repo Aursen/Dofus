@@ -1,9 +1,10 @@
-﻿package com.ankamagames.dofus.network.types.game.context.fight
+package com.ankamagames.dofus.network.types.game.context.fight
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.utils.BooleanByteWrapper;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
     public class FightTeamLightInformations extends AbstractFightTeamInformations implements INetworkType 
     {
@@ -24,7 +25,7 @@
             return (115);
         }
 
-        public function initFightTeamLightInformations(teamId:uint=2, leaderId:int=0, teamSide:int=0, teamTypeId:uint=0, nbWaves:uint=0, teamMembersCount:uint=0, meanLevel:uint=0, hasFriend:Boolean=false, hasGuildMember:Boolean=false, hasAllianceMember:Boolean=false, hasGroupMember:Boolean=false, hasMyTaxCollector:Boolean=false):FightTeamLightInformations
+        public function initFightTeamLightInformations(teamId:uint=2, leaderId:Number=0, teamSide:int=0, teamTypeId:uint=0, nbWaves:uint=0, teamMembersCount:uint=0, meanLevel:uint=0, hasFriend:Boolean=false, hasGuildMember:Boolean=false, hasAllianceMember:Boolean=false, hasGroupMember:Boolean=false, hasMyTaxCollector:Boolean=false):FightTeamLightInformations
         {
             super.initAbstractFightTeamInformations(teamId, leaderId, teamSide, teamTypeId, nbWaves);
             this.teamMembersCount = teamMembersCount;
@@ -84,17 +85,45 @@
         public function deserializeAs_FightTeamLightInformations(input:ICustomDataInput):void
         {
             super.deserialize(input);
+            this.deserializeByteBoxes(input);
+            this._teamMembersCountFunc(input);
+            this._meanLevelFunc(input);
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_FightTeamLightInformations(tree);
+        }
+
+        public function deserializeAsyncAs_FightTeamLightInformations(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this.deserializeByteBoxes);
+            tree.addChild(this._teamMembersCountFunc);
+            tree.addChild(this._meanLevelFunc);
+        }
+
+        private function deserializeByteBoxes(input:ICustomDataInput):void
+        {
             var _box0:uint = input.readByte();
             this.hasFriend = BooleanByteWrapper.getFlag(_box0, 0);
             this.hasGuildMember = BooleanByteWrapper.getFlag(_box0, 1);
             this.hasAllianceMember = BooleanByteWrapper.getFlag(_box0, 2);
             this.hasGroupMember = BooleanByteWrapper.getFlag(_box0, 3);
             this.hasMyTaxCollector = BooleanByteWrapper.getFlag(_box0, 4);
+        }
+
+        private function _teamMembersCountFunc(input:ICustomDataInput):void
+        {
             this.teamMembersCount = input.readByte();
             if (this.teamMembersCount < 0)
             {
                 throw (new Error((("Forbidden value (" + this.teamMembersCount) + ") on element of FightTeamLightInformations.teamMembersCount.")));
             };
+        }
+
+        private function _meanLevelFunc(input:ICustomDataInput):void
+        {
             this.meanLevel = input.readVarUhInt();
             if (this.meanLevel < 0)
             {
@@ -104,5 +133,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.context.fight
+} com.ankamagames.dofus.network.types.game.context.fight
 

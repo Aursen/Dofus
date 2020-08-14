@@ -1,4 +1,4 @@
-﻿package com.ankamagames.tubul.interfaces
+package com.ankamagames.tubul.interfaces
 {
     import __AS3__.vec.Vector;
     import com.ankamagames.tubul.types.VolumeFadeEffect;
@@ -17,5 +17,5 @@
         function applyDynamicMix(_arg_1:VolumeFadeEffect, _arg_2:uint, _arg_3:VolumeFadeEffect):void;
 
     }
-}//package com.ankamagames.tubul.interfaces
+} com.ankamagames.tubul.interfaces
 

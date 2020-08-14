@@ -1,4 +1,4 @@
-﻿package com.somerandomdude.colortoolkit
+package com.somerandomdude.colortoolkit
 {
     import com.somerandomdude.colortoolkit.spaces.Lab;
     import com.somerandomdude.colortoolkit.spaces.Gray;
@@ -73,5 +73,5 @@
 
 
     }
-}//package com.somerandomdude.colortoolkit
+} com.somerandomdude.colortoolkit
 

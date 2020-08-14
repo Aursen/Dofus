@@ -1,19 +1,18 @@
-﻿package com.ankamagames.dofus.network.types.game.social
+package com.ankamagames.dofus.network.types.game.social
 {
     import com.ankamagames.dofus.network.types.game.context.roleplay.GuildInformations;
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.dofus.network.types.game.guild.GuildEmblem;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class GuildFactSheetInformations extends GuildInformations implements INetworkType 
     {
 
         public static const protocolId:uint = 424;
 
-        public var leaderId:uint = 0;
-        public var guildLevel:uint = 0;
+        public var leaderId:Number = 0;
         public var nbMembers:uint = 0;
 
 
@@ -22,11 +21,10 @@
             return (424);
         }
 
-        public function initGuildFactSheetInformations(guildId:uint=0, guildName:String="", guildEmblem:GuildEmblem=null, leaderId:uint=0, guildLevel:uint=0, nbMembers:uint=0):GuildFactSheetInformations
+        public function initGuildFactSheetInformations(guildId:uint=0, guildName:String="", guildLevel:uint=0, guildEmblem:GuildEmblem=null, leaderId:Number=0, nbMembers:uint=0):GuildFactSheetInformations
         {
-            super.initGuildInformations(guildId, guildName, guildEmblem);
+            super.initGuildInformations(guildId, guildName, guildLevel, guildEmblem);
             this.leaderId = leaderId;
-            this.guildLevel = guildLevel;
             this.nbMembers = nbMembers;
             return (this);
         }
@@ -35,7 +33,6 @@
         {
             super.reset();
             this.leaderId = 0;
-            this.guildLevel = 0;
             this.nbMembers = 0;
         }
 
@@ -47,16 +44,11 @@
         public function serializeAs_GuildFactSheetInformations(output:ICustomDataOutput):void
         {
             super.serializeAs_GuildInformations(output);
-            if (this.leaderId < 0)
+            if (((this.leaderId < 0) || (this.leaderId > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.leaderId) + ") on element leaderId.")));
             };
-            output.writeVarInt(this.leaderId);
-            if ((((this.guildLevel < 0)) || ((this.guildLevel > 0xFF))))
-            {
-                throw (new Error((("Forbidden value (" + this.guildLevel) + ") on element guildLevel.")));
-            };
-            output.writeByte(this.guildLevel);
+            output.writeVarLong(this.leaderId);
             if (this.nbMembers < 0)
             {
                 throw (new Error((("Forbidden value (" + this.nbMembers) + ") on element nbMembers.")));
@@ -72,16 +64,33 @@
         public function deserializeAs_GuildFactSheetInformations(input:ICustomDataInput):void
         {
             super.deserialize(input);
-            this.leaderId = input.readVarUhInt();
-            if (this.leaderId < 0)
+            this._leaderIdFunc(input);
+            this._nbMembersFunc(input);
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GuildFactSheetInformations(tree);
+        }
+
+        public function deserializeAsyncAs_GuildFactSheetInformations(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._leaderIdFunc);
+            tree.addChild(this._nbMembersFunc);
+        }
+
+        private function _leaderIdFunc(input:ICustomDataInput):void
+        {
+            this.leaderId = input.readVarUhLong();
+            if (((this.leaderId < 0) || (this.leaderId > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.leaderId) + ") on element of GuildFactSheetInformations.leaderId.")));
             };
-            this.guildLevel = input.readUnsignedByte();
-            if ((((this.guildLevel < 0)) || ((this.guildLevel > 0xFF))))
-            {
-                throw (new Error((("Forbidden value (" + this.guildLevel) + ") on element of GuildFactSheetInformations.guildLevel.")));
-            };
+        }
+
+        private function _nbMembersFunc(input:ICustomDataInput):void
+        {
             this.nbMembers = input.readVarUhShort();
             if (this.nbMembers < 0)
             {
@@ -91,5 +100,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.social
+} com.ankamagames.dofus.network.types.game.social
 

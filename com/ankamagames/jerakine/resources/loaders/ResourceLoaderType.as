@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.resources.loaders
+package com.ankamagames.jerakine.resources.loaders
 {
     public class ResourceLoaderType 
     {
@@ -9,5 +9,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.resources.loaders
+} com.ankamagames.jerakine.resources.loaders
 

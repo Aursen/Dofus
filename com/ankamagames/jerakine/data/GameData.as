@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.data
+package com.ankamagames.jerakine.data
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
@@ -22,7 +22,7 @@
 
         public static function addOverride(moduleId:String, keyId:int, newKeyId:uint):void
         {
-            if (!(_overrides[moduleId]))
+            if (!_overrides[moduleId])
             {
                 _overrides[moduleId] = [];
             };
@@ -32,28 +32,28 @@
         public static function getObject(moduleId:String, keyId:int):Object
         {
             var o:Object;
-            var _local_4:WeakReference;
+            var wr:WeakReference;
             if (((_overrides[moduleId]) && (_overrides[moduleId][keyId])))
             {
                 keyId = _overrides[moduleId][keyId];
             };
-            if (!(_directObjectCaches[moduleId]))
+            if (!_directObjectCaches[moduleId])
             {
                 _directObjectCaches[moduleId] = new Dictionary();
             }
             else
             {
-                _local_4 = _directObjectCaches[moduleId][keyId];
-                if (_local_4)
+                wr = _directObjectCaches[moduleId][keyId];
+                if (wr)
                 {
-                    o = _local_4.object;
+                    o = wr.object;
                     if (o)
                     {
                         return (o);
                     };
                 };
             };
-            if (!(_objectCaches[moduleId]))
+            if (!_objectCaches[moduleId])
             {
                 _objectCaches[moduleId] = new Cache((GameDataFileAccessor.getInstance().getCount(moduleId) * CACHE_SIZE_RATIO), new LruGarbageCollector());
             }
@@ -89,5 +89,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.data
+} com.ankamagames.jerakine.data
 

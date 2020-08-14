@@ -1,39 +1,35 @@
-﻿package com.ankamagames.dofus.network.types.game.actions.fight
+package com.ankamagames.dofus.network.types.game.actions.fight
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import __AS3__.vec.Vector;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
     import __AS3__.vec.*;
 
-    [Trusted]
     public class GameActionMark implements INetworkType 
     {
 
         public static const protocolId:uint = 351;
 
-        public var markAuthorId:int = 0;
+        public var markAuthorId:Number = 0;
         public var markTeamId:uint = 2;
         public var markSpellId:uint = 0;
-        public var markSpellLevel:uint = 0;
+        public var markSpellLevel:int = 0;
         public var markId:int = 0;
         public var markType:int = 0;
         public var markimpactCell:int = 0;
-        public var cells:Vector.<GameActionMarkedCell>;
+        public var cells:Vector.<GameActionMarkedCell> = new Vector.<GameActionMarkedCell>();
         public var active:Boolean = false;
+        private var _cellstree:FuncTree;
 
-        public function GameActionMark()
-        {
-            this.cells = new Vector.<GameActionMarkedCell>();
-            super();
-        }
 
         public function getTypeId():uint
         {
             return (351);
         }
 
-        public function initGameActionMark(markAuthorId:int=0, markTeamId:uint=2, markSpellId:uint=0, markSpellLevel:uint=0, markId:int=0, markType:int=0, markimpactCell:int=0, cells:Vector.<GameActionMarkedCell>=null, active:Boolean=false):GameActionMark
+        public function initGameActionMark(markAuthorId:Number=0, markTeamId:uint=2, markSpellId:uint=0, markSpellLevel:int=0, markId:int=0, markType:int=0, markimpactCell:int=0, cells:Vector.<GameActionMarkedCell>=null, active:Boolean=false):GameActionMark
         {
             this.markAuthorId = markAuthorId;
             this.markTeamId = markTeamId;
@@ -67,21 +63,25 @@
 
         public function serializeAs_GameActionMark(output:ICustomDataOutput):void
         {
-            output.writeInt(this.markAuthorId);
+            if (((this.markAuthorId < -9007199254740992) || (this.markAuthorId > 9007199254740992)))
+            {
+                throw (new Error((("Forbidden value (" + this.markAuthorId) + ") on element markAuthorId.")));
+            };
+            output.writeDouble(this.markAuthorId);
             output.writeByte(this.markTeamId);
             if (this.markSpellId < 0)
             {
                 throw (new Error((("Forbidden value (" + this.markSpellId) + ") on element markSpellId.")));
             };
             output.writeInt(this.markSpellId);
-            if ((((this.markSpellLevel < 1)) || ((this.markSpellLevel > 6))))
+            if (((this.markSpellLevel < 1) || (this.markSpellLevel > 200)))
             {
                 throw (new Error((("Forbidden value (" + this.markSpellLevel) + ") on element markSpellLevel.")));
             };
-            output.writeByte(this.markSpellLevel);
+            output.writeShort(this.markSpellLevel);
             output.writeShort(this.markId);
             output.writeByte(this.markType);
-            if ((((this.markimpactCell < -1)) || ((this.markimpactCell > 559))))
+            if (((this.markimpactCell < -1) || (this.markimpactCell > 559)))
             {
                 throw (new Error((("Forbidden value (" + this.markimpactCell) + ") on element markimpactCell.")));
             };
@@ -104,29 +104,13 @@
         public function deserializeAs_GameActionMark(input:ICustomDataInput):void
         {
             var _item8:GameActionMarkedCell;
-            this.markAuthorId = input.readInt();
-            this.markTeamId = input.readByte();
-            if (this.markTeamId < 0)
-            {
-                throw (new Error((("Forbidden value (" + this.markTeamId) + ") on element of GameActionMark.markTeamId.")));
-            };
-            this.markSpellId = input.readInt();
-            if (this.markSpellId < 0)
-            {
-                throw (new Error((("Forbidden value (" + this.markSpellId) + ") on element of GameActionMark.markSpellId.")));
-            };
-            this.markSpellLevel = input.readByte();
-            if ((((this.markSpellLevel < 1)) || ((this.markSpellLevel > 6))))
-            {
-                throw (new Error((("Forbidden value (" + this.markSpellLevel) + ") on element of GameActionMark.markSpellLevel.")));
-            };
-            this.markId = input.readShort();
-            this.markType = input.readByte();
-            this.markimpactCell = input.readShort();
-            if ((((this.markimpactCell < -1)) || ((this.markimpactCell > 559))))
-            {
-                throw (new Error((("Forbidden value (" + this.markimpactCell) + ") on element of GameActionMark.markimpactCell.")));
-            };
+            this._markAuthorIdFunc(input);
+            this._markTeamIdFunc(input);
+            this._markSpellIdFunc(input);
+            this._markSpellLevelFunc(input);
+            this._markIdFunc(input);
+            this._markTypeFunc(input);
+            this._markimpactCellFunc(input);
             var _cellsLen:uint = input.readUnsignedShort();
             var _i8:uint;
             while (_i8 < _cellsLen)
@@ -136,10 +120,106 @@
                 this.cells.push(_item8);
                 _i8++;
             };
+            this._activeFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GameActionMark(tree);
+        }
+
+        public function deserializeAsyncAs_GameActionMark(tree:FuncTree):void
+        {
+            tree.addChild(this._markAuthorIdFunc);
+            tree.addChild(this._markTeamIdFunc);
+            tree.addChild(this._markSpellIdFunc);
+            tree.addChild(this._markSpellLevelFunc);
+            tree.addChild(this._markIdFunc);
+            tree.addChild(this._markTypeFunc);
+            tree.addChild(this._markimpactCellFunc);
+            this._cellstree = tree.addChild(this._cellstreeFunc);
+            tree.addChild(this._activeFunc);
+        }
+
+        private function _markAuthorIdFunc(input:ICustomDataInput):void
+        {
+            this.markAuthorId = input.readDouble();
+            if (((this.markAuthorId < -9007199254740992) || (this.markAuthorId > 9007199254740992)))
+            {
+                throw (new Error((("Forbidden value (" + this.markAuthorId) + ") on element of GameActionMark.markAuthorId.")));
+            };
+        }
+
+        private function _markTeamIdFunc(input:ICustomDataInput):void
+        {
+            this.markTeamId = input.readByte();
+            if (this.markTeamId < 0)
+            {
+                throw (new Error((("Forbidden value (" + this.markTeamId) + ") on element of GameActionMark.markTeamId.")));
+            };
+        }
+
+        private function _markSpellIdFunc(input:ICustomDataInput):void
+        {
+            this.markSpellId = input.readInt();
+            if (this.markSpellId < 0)
+            {
+                throw (new Error((("Forbidden value (" + this.markSpellId) + ") on element of GameActionMark.markSpellId.")));
+            };
+        }
+
+        private function _markSpellLevelFunc(input:ICustomDataInput):void
+        {
+            this.markSpellLevel = input.readShort();
+            if (((this.markSpellLevel < 1) || (this.markSpellLevel > 200)))
+            {
+                throw (new Error((("Forbidden value (" + this.markSpellLevel) + ") on element of GameActionMark.markSpellLevel.")));
+            };
+        }
+
+        private function _markIdFunc(input:ICustomDataInput):void
+        {
+            this.markId = input.readShort();
+        }
+
+        private function _markTypeFunc(input:ICustomDataInput):void
+        {
+            this.markType = input.readByte();
+        }
+
+        private function _markimpactCellFunc(input:ICustomDataInput):void
+        {
+            this.markimpactCell = input.readShort();
+            if (((this.markimpactCell < -1) || (this.markimpactCell > 559)))
+            {
+                throw (new Error((("Forbidden value (" + this.markimpactCell) + ") on element of GameActionMark.markimpactCell.")));
+            };
+        }
+
+        private function _cellstreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._cellstree.addChild(this._cellsFunc);
+                i++;
+            };
+        }
+
+        private function _cellsFunc(input:ICustomDataInput):void
+        {
+            var _item:GameActionMarkedCell = new GameActionMarkedCell();
+            _item.deserialize(input);
+            this.cells.push(_item);
+        }
+
+        private function _activeFunc(input:ICustomDataInput):void
+        {
             this.active = input.readBoolean();
         }
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.actions.fight
+} com.ankamagames.dofus.network.types.game.actions.fight
 

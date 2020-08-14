@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.console.moduleLogger
+package com.ankamagames.dofus.console.moduleLogger
 {
     import flash.display.Sprite;
     import flash.text.TextField;
@@ -116,5 +116,5 @@
 
 
     }
-}//package com.ankamagames.dofus.console.moduleLogger
+} com.ankamagames.dofus.console.moduleLogger
 

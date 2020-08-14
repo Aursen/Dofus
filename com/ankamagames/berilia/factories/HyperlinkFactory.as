@@ -1,5 +1,8 @@
-﻿package com.ankamagames.berilia.factories
+package com.ankamagames.berilia.factories
 {
+    import com.ankamagames.jerakine.logger.Logger;
+    import com.ankamagames.jerakine.logger.Log;
+    import flash.utils.getQualifiedClassName;
     import flash.utils.Dictionary;
     import flash.text.StyleSheet;
     import flash.utils.Timer;
@@ -9,6 +12,7 @@
     import com.ankamagames.berilia.events.LinkInteractionEvent;
     import com.ankamagames.berilia.managers.HtmlManager;
     import com.ankamagames.jerakine.data.XmlConfig;
+    import flash.utils.getTimer;
     import com.ankamagames.jerakine.utils.display.FrameIdManager;
     import com.ankamagames.jerakine.utils.display.StageShareManager;
     import com.ankamagames.berilia.frames.ShortcutsFrame;
@@ -19,6 +23,7 @@
     public class HyperlinkFactory 
     {
 
+        protected static const _log:Logger = Log.getLogger(getQualifiedClassName(HyperlinkFactory));
         private static var LEFT:String = "{";
         private static var RIGHT:String = "}";
         private static var SEPARATOR:String = "::";
@@ -29,28 +34,30 @@
         private static var PROTOCOL_ROLL_OVER:Dictionary = new Dictionary();
         private static var staticStyleSheet:StyleSheet;
         public static var lastClickEventFrame:uint;
+        private static var _clickTimerDuration:Number = 0;
+        private static var _shiftClickTimerDuration:Number = 0;
         private static var _rollOverTimer:Timer;
         private static var _rollOverData:String;
 
 
         public static function protocolIsRegister(protocolName:String):Boolean
         {
-            return (((PROTOCOL[protocolName]) ? true : false));
+            return ((PROTOCOL[protocolName]) ? true : false);
         }
 
         public static function textProtocolIsRegister(protocolName:String):Boolean
         {
-            return (((PROTOCOL_TEXT[protocolName]) ? true : false));
+            return ((PROTOCOL_TEXT[protocolName]) ? true : false);
         }
 
         public static function shiftProtocolIsRegister(protocolName:String):Boolean
         {
-            return (((PROTOCOL_SHIFT[protocolName]) ? true : false));
+            return ((PROTOCOL_SHIFT[protocolName]) ? true : false);
         }
 
         public static function boldProtocolIsRegister(protocolName:String):Boolean
         {
-            return (((PROTOCOL_BOLD[protocolName]) ? true : false));
+            return ((PROTOCOL_BOLD[protocolName]) ? true : false);
         }
 
         public static function createTextClickHandler(component:EventDispatcher, styleSheet:Boolean=false):void
@@ -83,6 +90,7 @@
             var leftBlock:String;
             var rightBlock:String;
             var middleBlock:String;
+            var text:String;
             var linkInfo:Array;
             var param:String;
             var paramList:Array;
@@ -92,10 +100,14 @@
             var i:int;
             var nbParams:int;
             var p:String;
+            var mainFunction:Function;
             var getTextFunction:Function;
-            var text:String;
             var customStyleSheet:Boolean;
             var styleSheet:StyleSheet;
+            if (!string)
+            {
+                return ("");
+            };
             var currentText:String = string;
             while (true)
             {
@@ -120,28 +132,40 @@
                     {
                         linkColor = p.split(":")[1];
                         paramList.splice(i, 1);
-                        i--;
-                        nbParams--;
+                        i = (i - 1);
+                        nbParams = (nbParams - 1);
                     };
                     if (p.indexOf("hoverColor") != -1)
                     {
                         hoverColor = p.split(":")[1];
                         paramList.splice(i, 1);
-                        i--;
-                        nbParams--;
+                        i = (i - 1);
+                        nbParams = (nbParams - 1);
                     };
-                    i++;
+                    i = (i + 1);
                 };
-                if (((linkColor) || (hoverColor)))
+                if ((((linkColor) || (hoverColor)) && (paramList.length)))
                 {
                     param = ((protocolName + ",") + paramList.join(","));
+                };
+                mainFunction = PROTOCOL[protocolName];
+                if (((!(mainFunction == null)) && (!(mainFunction.length == paramList.length))))
+                {
                 };
                 if (linkInfo.length == 1)
                 {
                     getTextFunction = PROTOCOL_TEXT[protocolName];
                     if (getTextFunction != null)
                     {
-                        linkInfo.push(getTextFunction.apply(getTextFunction, paramList));
+                        try
+                        {
+                            linkInfo.push(getTextFunction.apply(getTextFunction, paramList));
+                        }
+                        catch(e:Error)
+                        {
+                            _log.error(("Invalid link : " + string));
+                            return (string);
+                        };
                     };
                 };
                 if (htmlMode)
@@ -157,19 +181,19 @@
                     if (textField)
                     {
                         customStyleSheet = ((linkColor) || (hoverColor));
-                        if (!(linkColor))
+                        if (!linkColor)
                         {
                             linkColor = XmlConfig.getInstance().getEntry("colors.hyperlink.link");
                             linkColor = linkColor.replace("0x", "#");
                         };
-                        if (!(hoverColor))
+                        if (!hoverColor)
                         {
                             hoverColor = XmlConfig.getInstance().getEntry("colors.hyperlink.hover");
                             hoverColor = hoverColor.replace("0x", "#");
                         };
-                        if (!(customStyleSheet))
+                        if (!customStyleSheet)
                         {
-                            if (!(staticStyleSheet))
+                            if (!staticStyleSheet)
                             {
                                 staticStyleSheet = new StyleSheet();
                             };
@@ -189,7 +213,8 @@
                 }
                 else
                 {
-                    currentText = ((leftBlock + linkInfo[1]) + rightBlock);
+                    text = ((linkInfo.length == 2) ? linkInfo[1] : "");
+                    currentText = ((leftBlock + text) + rightBlock);
                 };
             };
             return (currentText);
@@ -218,13 +243,25 @@
 
         public static function processClick(event:TextEvent):void
         {
+            var ret:Boolean;
             var shiftCallBack:Function;
-            var _local_4:Function;
+            var callBack:Function;
+            var currentTime:int = getTimer();
             lastClickEventFrame = FrameIdManager.frameId;
             StageShareManager.stage.focus = StageShareManager.stage;
             var param:Array = event.text.split(",");
             if (ShortcutsFrame.shiftKey)
             {
+                ret = ((currentTime - _shiftClickTimerDuration) > 100);
+                _shiftClickTimerDuration = currentTime;
+                if (!ret)
+                {
+                    return;
+                };
+                if ((((event.target.parent) && (event.target.parent.hasOwnProperty("shiftClickActivated"))) && (!(event.target.parent.shiftClickActivated))))
+                {
+                    return;
+                };
                 shiftCallBack = PROTOCOL_SHIFT[param[0]];
                 if (shiftCallBack == null)
                 {
@@ -233,15 +270,35 @@
                 else
                 {
                     param.shift();
-                    shiftCallBack.apply(null, param);
+                    try
+                    {
+                        shiftCallBack.apply(null, param);
+                    }
+                    catch(e:Error)
+                    {
+                        _log.error(("Invalid link: " + event.text));
+                    };
                 };
             }
             else
             {
-                _local_4 = PROTOCOL[param.shift()];
-                if (_local_4 != null)
+                ret = ((currentTime - _clickTimerDuration) > 100);
+                _clickTimerDuration = currentTime;
+                if (!ret)
                 {
-                    _local_4.apply(null, param);
+                    return;
+                };
+                callBack = PROTOCOL[param.shift()];
+                if (callBack != null)
+                {
+                    try
+                    {
+                        callBack.apply(null, param);
+                    }
+                    catch(e:Error)
+                    {
+                        _log.error(("Invalid link: " + event.text));
+                    };
                 };
             };
         }
@@ -250,7 +307,7 @@
         {
             if (_rollOverTimer == null)
             {
-                _rollOverTimer = new Timer(800, 1);
+                _rollOverTimer = new Timer(400, 1);
                 _rollOverTimer.addEventListener(TimerEvent.TIMER_COMPLETE, onRollOverTimerComplete);
             }
             else
@@ -282,11 +339,18 @@
             var callback:Function = PROTOCOL_ROLL_OVER[param.shift()];
             if (callback != null)
             {
-                callback.apply(null, param);
+                try
+                {
+                    callback.apply(null, param);
+                }
+                catch(e:Error)
+                {
+                    _log.error("Invalid link");
+                };
             };
         }
 
 
     }
-}//package com.ankamagames.berilia.factories
+} com.ankamagames.berilia.factories
 

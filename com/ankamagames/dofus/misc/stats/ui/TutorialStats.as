@@ -1,388 +1,368 @@
-﻿package com.ankamagames.dofus.misc.stats.ui
+package com.ankamagames.dofus.misc.stats.ui
 {
+    import com.ankamagames.dofus.misc.stats.IHookStats;
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
     import com.ankamagames.dofus.misc.stats.StatsAction;
-    import com.ankamagames.berilia.types.graphic.UiRootContainer;
-    import com.ankamagames.jerakine.handlers.messages.mouse.MouseClickMessage;
-    import com.ankamagames.dofus.logic.game.common.actions.quest.QuestInfosRequestAction;
-    import com.ankamagames.dofus.logic.game.common.actions.OpenInventoryAction;
-    import com.ankamagames.berilia.components.messages.SelectItemMessage;
-    import com.ankamagames.berilia.components.Grid;
-    import com.ankamagames.dofus.logic.game.common.actions.quest.GuidedModeQuitRequestAction;
-    import com.ankamagames.dofus.network.enums.StatisticTypeEnum;
-    import com.ankamagames.berilia.enums.SelectMethodEnum;
-    import com.ankamagames.dofus.internalDatacenter.items.ItemWrapper;
-    import com.ankamagames.dofus.logic.game.fight.actions.GameFightReadyAction;
-    import com.ankamagames.dofus.logic.game.fight.actions.GameFightSpellCastAction;
-    import com.ankamagames.dofus.logic.game.common.actions.GameContextQuitAction;
-    import com.ankamagames.dofus.logic.game.roleplay.actions.NpcDialogReplyAction;
-    import com.ankamagames.jerakine.messages.Message;
-    import com.ankamagames.berilia.api.ReadOnlyObject;
-    import com.ankamagames.dofus.logic.game.common.frames.QuestFrame;
+    import flash.utils.Dictionary;
     import com.ankamagames.dofus.datacenter.quest.Quest;
-    import com.ankamagames.dofus.kernel.Kernel;
+    import com.ankamagames.dofus.misc.stats.StatisticsManager;
+    import com.ankamagames.dofus.logic.common.managers.PlayerManager;
+    import com.ankamagames.dofus.logic.game.common.managers.PlayedCharacterManager;
+    import com.ankamagames.berilia.types.graphic.UiRootContainer;
+    import com.ankamagames.dofus.logic.game.common.actions.OpenInventoryAction;
+    import com.ankamagames.dofus.network.messages.game.context.GameMapMovementMessage;
+    import com.ankamagames.dofus.network.messages.game.actions.fight.GameActionFightSpellCastMessage;
+    import com.ankamagames.dofus.network.messages.game.context.roleplay.MapComplementaryInformationsDataMessage;
+    import com.ankamagames.dofus.network.messages.game.context.roleplay.quest.QuestValidatedMessage;
+    import com.ankamagames.dofus.logic.game.common.actions.quest.GuidedModeQuitRequestAction;
+    import com.ankamagames.dofus.network.messages.game.context.fight.GameFightStartingMessage;
+    import com.ankamagames.dofus.logic.game.fight.actions.GameFightReadyAction;
+    import com.ankamagames.dofus.logic.game.common.managers.InventoryManager;
+    import com.ankamagames.dofus.internalDatacenter.items.ShortcutWrapper;
+    import com.ankamagames.dofus.internalDatacenter.spells.SpellWrapper;
+    import com.ankamagames.jerakine.messages.Message;
+    import com.ankamagames.dofus.internalDatacenter.items.ItemWrapper;
+    import __AS3__.vec.Vector;
+    import com.ankamagames.dofus.logic.game.roleplay.frames.RoleplayEntitiesFrame;
+    import com.ankamagames.dofus.network.types.game.context.GameContextActorInformations;
     import com.ankamagames.dofus.misc.lists.QuestHookList;
+    import com.ankamagames.dofus.network.enums.CharacterInventoryPositionEnum;
     import com.ankamagames.dofus.misc.lists.InventoryHookList;
     import com.ankamagames.berilia.utils.BeriliaHookList;
-    import com.ankamagames.dofus.logic.game.common.managers.PlayedCharacterManager;
     import com.ankamagames.dofus.misc.lists.FightHookList;
-    import com.ankamagames.dofus.misc.lists.TriggerHookList;
-    import com.ankamagames.dofus.misc.lists.CustomUiHookList;
-    import com.ankamagames.dofus.misc.lists.RoleplayHookList;
+    import com.ankamagames.dofus.types.entities.AnimatedCharacter;
+    import com.ankamagames.dofus.kernel.Kernel;
+    import com.ankamagames.dofus.network.types.game.context.roleplay.GameRolePlayNpcInformations;
+    import com.ankamagames.dofus.misc.lists.HookList;
     import com.ankamagames.berilia.types.data.Hook;
+    import com.ankamagames.dofus.misc.utils.HaapiKeyManager;
 
-    public class TutorialStats implements IUiStats 
+    public class TutorialStats implements IUiStats, IHookStats 
     {
 
         private static const _log:Logger = Log.getLogger(getQualifiedClassName(TutorialStats));
         private static const START_QUEST_ID:uint = 489;
+        public static const ARRIVES_ON_TUTORIAL_EVENT_ID:uint = 8;
+        private static const TUTORIAL_STEP_VALIDATION_EVENT_ID:uint = 9;
+        private static const LEAVES_TUTORIAL_EVENT_ID:uint = 10;
+        private static const STEP_DETAIL:String = "stepDetail";
+        private static const FOLLOW_INSTRUCTIONS:String = "followInstructions";
+        private static const TUTORIAL_STEP_PLAYER_MOVE:uint = 500;
+        private static const TUTORIAL_STEP_CLICK_ON_JORIS:uint = 600;
+        private static const TUTORIAL_STEP_TALK_TO_NPC:uint = 700;
+        private static const TUTORIAL_STEP_OPEN_INVENTORY:uint = 800;
+        private static const TUTORIAL_STEP_EQUIP_RING:uint = 900;
+        private static const TUTORIAL_STEP_CLOSE_INVENTORY:uint = 1000;
+        private static const TUTORIAL_STEP_CHANGE_MAP:uint = 1100;
+        private static const TUTORIAL_STEP_START_FIGHT:uint = 1200;
+        private static const TUTORIAL_STEP_FIGHT_START_POSITION:uint = 1300;
+        private static const TUTORIAL_STEP_FIGHT_MOVE:uint = 1400;
+        private static const TUTORIAL_STEP_FIGHT_USE_SPELL:uint = 1500;
+        private static const TUTORIAL_STEP_FIGHT_END_TURN:uint = 1600;
+        private static const TUTORIAL_STEP_FIGHT_WIN:uint = 1700;
+        private static const TUTORIAL_STEP_FIGHT_CLOSE_FIGHTEND_UI:uint = 1800;
+        private static const TUTORIAL_STEP_CLICK_ON_JORIS_2:uint = 1900;
+        private static const TUTORIAL_STEP_START_QUEST:uint = 2000;
+        private static const TUTORIAL_STEP_OPEN_INVENTORY_2:uint = 2100;
+        private static const TUTORIAL_STEP_EQUIP_FIRST_ITEM:uint = 2200;
+        private static const TUTORIAL_STEP_EQUIP_ALL_ITEMS:uint = 2300;
+        private static const TUTORIAL_STEP_CLOSE_INVENTORY_2:uint = 2400;
+        private static const TUTORIAL_STEP_CHANGE_MAP_2:uint = 2500;
+        private static const TUTORIAL_STEP_START_FIGHT_2:uint = 2600;
+        private static const TUTORIAL_STEP_FIGHT_WIN_2:uint = 2700;
+        private static const TUTORIAL_STEP_FIGHT_CLOSE_FIGHTEND_UI_2:uint = 2800;
+        private static const TUTORIAL_STEP_CLICK_ON_JORIS_3:uint = 2900;
+        private static const TUTORIAL_STEP_END_BASE_TUTORIAL:uint = 3000;
+        private static const FIGHT_MOVE_TARGET_CELLS:Object = {
+            "171":185,
+            "214":229,
+            "243":258
+        };
 
-        private var _init:Boolean;
         private var _arrivalAction:StatsAction;
         private var _quitAction:StatsAction;
+        private var _currentStep:uint;
+        private var _currentFightId:int;
+        private var _stepInfos:Dictionary = new Dictionary(true);
+        private var _quest:Quest;
+        private var _fightPosition:Number;
 
         public function TutorialStats(pUi:UiRootContainer)
         {
-            if (!(pUi.getElement("ctr_joinTutorial").visible))
+            var firstTutorialCharacter:* = StatisticsManager.getInstance().getData(("firstTutorialCharacter-" + PlayerManager.getInstance().accountId));
+            if (firstTutorialCharacter == null)
             {
-                this.initTutorial();
+                this._arrivalAction = StatsAction.get(ARRIVES_ON_TUTORIAL_EVENT_ID);
+                this._arrivalAction.setParam("account_id", PlayerManager.getInstance().accountId);
+                this._arrivalAction.setParam("server_id", PlayerManager.getInstance().server.id);
+                this._arrivalAction.setParam("character_id", PlayedCharacterManager.getInstance().extractedServerCharacterIdFromInterserverCharacterId);
+                this._arrivalAction.setParam("step_id", 400);
+                this._arrivalAction.start();
+                this._arrivalAction.send();
+                StatisticsManager.getInstance().setData(("firstTutorialCharacter-" + PlayerManager.getInstance().accountId), PlayedCharacterManager.getInstance().infos.id);
+            }
+            else
+            {
+                if (PlayedCharacterManager.getInstance().infos.id != firstTutorialCharacter)
+                {
+                    StatisticsManager.getInstance().removeStats("tutorial");
+                    return;
+                };
             };
+            this._quitAction = StatsAction.get(LEAVES_TUTORIAL_EVENT_ID);
+            this._quitAction.setParam("account_id", PlayerManager.getInstance().accountId);
+            this._quitAction.setParam("server_id", PlayerManager.getInstance().server.id);
+            this._quitAction.start();
+            this._quest = Quest.getQuestById(START_QUEST_ID);
         }
 
-        public function process(pMessage:Message):void
+        public function process(pMessage:Message, pArgs:Array=null):void
         {
-            var _local_2:MouseClickMessage;
-            var _local_3:QuestInfosRequestAction;
-            var _local_4:OpenInventoryAction;
-            var _local_5:SelectItemMessage;
-            var grid:Grid;
+            var oiaction:OpenInventoryAction;
+            var gmmmsg:GameMapMovementMessage;
+            var gafscmsg:GameActionFightSpellCastMessage;
+            var mcidmsg:MapComplementaryInformationsDataMessage;
+            var qvmsg:QuestValidatedMessage;
+            var spells:Array;
             switch (true)
             {
-                case (pMessage is MouseClickMessage):
-                    _local_2 = (pMessage as MouseClickMessage);
-                    switch (_local_2.target.name)
-                    {
-                        case "btn_continue":
-                        case "btn_closePopup":
-                            this.getStepAction(1042).restart();
-                            break;
-                    };
-                    return;
-                case (pMessage is QuestInfosRequestAction):
-                    _local_3 = (pMessage as QuestInfosRequestAction);
-                    if (_local_3.questId == START_QUEST_ID)
-                    {
-                        this.initTutorial();
-                    };
-                    return;
                 case (pMessage is GuidedModeQuitRequestAction):
-                    if (this._quitAction)
-                    {
-                        this._quitAction.updateTimestamp();
-                        this._quitAction.send();
-                    };
-                    this._init = false;
-                    return;
+                    this._quitAction.setParam("step_id", this._currentStep);
+                    this._quitAction.send();
+                    break;
                 case (pMessage is OpenInventoryAction):
-                    _local_4 = (pMessage as OpenInventoryAction);
-                    if ((((_local_4.behavior == "bag")) && (StatsAction.exists(StatisticTypeEnum.STEP0820_CLIC_BAG))))
+                    oiaction = (pMessage as OpenInventoryAction);
+                    if (oiaction.behavior == "bag")
                     {
-                        StatsAction.get(StatisticTypeEnum.STEP0820_CLIC_BAG).send();
-                        StatsAction.get(StatisticTypeEnum.STEP0840_CLIC_RING).start();
-                    };
-                    return;
-                case (pMessage is SelectItemMessage):
-                    _local_5 = (pMessage as SelectItemMessage);
-                    if ((_local_5.target is Grid))
-                    {
-                        grid = (_local_5.target as Grid);
-                        if ((((((((grid.selectedItem is ItemWrapper)) && (!((_local_5.selectMethod == SelectMethodEnum.AUTO))))) && ((grid.selectedItem.objectGID == 10785)))) && (StatsAction.exists(StatisticTypeEnum.STEP0840_CLIC_RING))))
+                        if (this._currentStep == TUTORIAL_STEP_TALK_TO_NPC)
                         {
-                            StatsAction.get(StatisticTypeEnum.STEP0840_CLIC_RING).send();
-                            StatsAction.get(StatisticTypeEnum.STEP0860_EQUIP_RING).start();
+                            this.sendStepValidation(TUTORIAL_STEP_OPEN_INVENTORY);
+                        }
+                        else
+                        {
+                            if (this._currentStep == TUTORIAL_STEP_START_QUEST)
+                            {
+                                this.sendStepValidation(TUTORIAL_STEP_OPEN_INVENTORY_2);
+                            };
                         };
                     };
-                    return;
+                    break;
+                case (pMessage is GameFightStartingMessage):
+                    this._currentFightId = (pMessage as GameFightStartingMessage).fightId;
+                    break;
                 case (pMessage is GameFightReadyAction):
-                    if (StatsAction.exists(StatisticTypeEnum.STEP1160_CLIC_READY))
+                    if (this._currentStep == TUTORIAL_STEP_START_FIGHT)
                     {
-                        StatsAction.get(StatisticTypeEnum.STEP1160_CLIC_READY).send();
+                        this.setStepInfo(TUTORIAL_STEP_FIGHT_START_POSITION, STEP_DETAIL, 1);
                     };
-                    return;
-                case (pMessage is GameFightSpellCastAction):
-                    if (StatsAction.exists(StatisticTypeEnum.STEP1930_CHOSE_SPELL))
+                    break;
+                case (pMessage is GameMapMovementMessage):
+                    gmmmsg = (pMessage as GameMapMovementMessage);
+                    if (gmmmsg.actorId == PlayedCharacterManager.getInstance().id)
                     {
-                        StatsAction.get(StatisticTypeEnum.STEP1930_CHOSE_SPELL).send();
-                        StatsAction.get(StatisticTypeEnum.STEP1960_USE_SPELL).start();
+                        if (this._currentStep == TUTORIAL_STEP_FIGHT_START_POSITION)
+                        {
+                            if (FIGHT_MOVE_TARGET_CELLS[this._fightPosition] == gmmmsg.keyMovements[(gmmmsg.keyMovements.length - 1)])
+                            {
+                                this.setStepInfo(TUTORIAL_STEP_FIGHT_MOVE, FOLLOW_INSTRUCTIONS, true);
+                            };
+                        }
+                        else
+                        {
+                            if (this._currentStep == TUTORIAL_STEP_FIGHT_USE_SPELL)
+                            {
+                                this.setStepInfo(TUTORIAL_STEP_FIGHT_END_TURN, FOLLOW_INSTRUCTIONS, false);
+                            };
+                        };
                     };
-                    return;
-                case (pMessage is GameContextQuitAction):
-                    if (StatsAction.exists(StatisticTypeEnum.STEP2100_TUTO10_WIN_FIGHT))
+                    break;
+                case (pMessage is GameActionFightSpellCastMessage):
+                    gafscmsg = (pMessage as GameActionFightSpellCastMessage);
+                    if (this._currentStep == TUTORIAL_STEP_FIGHT_MOVE)
                     {
-                        StatsAction.get(StatisticTypeEnum.STEP2050_TUTO10_LOSE_FIGHT).start();
-                        StatsAction.get(StatisticTypeEnum.STEP2050_TUTO10_LOSE_FIGHT).send();
-                    };
-                    return;
-                case (pMessage is NpcDialogReplyAction):
-                    if (StatsAction.exists(StatisticTypeEnum.STEP2260_ACCEPT_MISSION))
-                    {
-                        StatsAction.get(StatisticTypeEnum.STEP2260_ACCEPT_MISSION).send();
+                        spells = InventoryManager.getInstance().shortcutBarSpells;
+                        if ((((spells) && (spells.length > 2)) && (gafscmsg.spellId == ((spells[1] as ShortcutWrapper).realItem as SpellWrapper).id)))
+                        {
+                            this.setStepInfo(TUTORIAL_STEP_FIGHT_USE_SPELL, FOLLOW_INSTRUCTIONS, true);
+                        };
                     }
                     else
                     {
-                        if (StatsAction.exists(StatisticTypeEnum.STEP2640_END_DIALOG))
+                        if (this._currentStep == TUTORIAL_STEP_FIGHT_USE_SPELL)
                         {
-                            StatsAction.get(StatisticTypeEnum.STEP2640_END_DIALOG).send();
+                            this.setStepInfo(TUTORIAL_STEP_FIGHT_END_TURN, FOLLOW_INSTRUCTIONS, false);
                         };
                     };
-                    return;
+                    break;
+                case (pMessage is MapComplementaryInformationsDataMessage):
+                    mcidmsg = (pMessage as MapComplementaryInformationsDataMessage);
+                    if ((((mcidmsg.mapId == 152307712) && (this._currentStep >= TUTORIAL_STEP_EQUIP_ALL_ITEMS)) && (this._currentStep < TUTORIAL_STEP_CHANGE_MAP_2)))
+                    {
+                        this.sendStepValidation(TUTORIAL_STEP_CHANGE_MAP_2);
+                    };
+                    break;
+                case (pMessage is QuestValidatedMessage):
+                    qvmsg = (pMessage as QuestValidatedMessage);
+                    if ((((qvmsg.questId == START_QUEST_ID) && (this._currentStep >= TUTORIAL_STEP_FIGHT_WIN_2)) && (this._currentStep < TUTORIAL_STEP_END_BASE_TUTORIAL)))
+                    {
+                        this.sendStepValidation(TUTORIAL_STEP_END_BASE_TUTORIAL);
+                    };
+                    break;
             };
         }
 
         public function onHook(pHook:Hook, pArgs:Array):void
         {
-            var _local_3:uint;
-            var _local_4:ItemWrapper;
-            var _local_5:ReadOnlyObject;
-            var questFrame:QuestFrame;
-            var currentQuestInfo:Object;
-            var quest:Quest;
-            var count:uint;
-            var i:int;
-            var nbSteps:uint;
-            var nextStepId:uint;
+            var item:ItemWrapper;
+            var obj:*;
+            var stepId:uint;
+            var items:Vector.<ItemWrapper>;
+            var nbItems:uint;
+            var itemw:ItemWrapper;
+            var entitiesFrame:RoleplayEntitiesFrame;
+            var infos:GameContextActorInformations;
+            var step:uint;
             switch (pHook.name)
             {
-                case QuestHookList.QuestInfosUpdated.name:
-                    if ((((pArgs[0] == START_QUEST_ID)) && ((pArgs[1] == true))))
-                    {
-                        questFrame = (Kernel.getWorker().getFrame(QuestFrame) as QuestFrame);
-                        currentQuestInfo = questFrame.getQuestInformations(START_QUEST_ID);
-                        this.getStepAction(currentQuestInfo.stepId).start();
-                        this.startSubSteps(currentQuestInfo.stepId);
-                    };
-                    return;
                 case QuestHookList.QuestStepValidated.name:
-                    _local_3 = pArgs[1];
                     if (pArgs[0] == START_QUEST_ID)
                     {
-                        this.getStepAction(_local_3).send();
-                        if (_local_3 == 1046)
+                        stepId = this.getStepEventId(pArgs[1]);
+                        if (stepId > this._currentStep)
                         {
-                            this.getStepAction(1051).start();
-                        };
-                        if (_local_3 == 1060)
-                        {
-                            StatsAction.get(StatisticTypeEnum.STEP2350_EXIT_BAG).start();
-                        };
-                        quest = Quest.getQuestById(pArgs[0]);
-                        nbSteps = quest.stepIds.length;
-                        i = 0;
-                        while (i < nbSteps)
-                        {
-                            if (quest.stepIds[i] == _local_3)
+                            switch (stepId)
                             {
-                                break;
+                                case TUTORIAL_STEP_START_FIGHT:
+                                case TUTORIAL_STEP_FIGHT_MOVE:
+                                case TUTORIAL_STEP_FIGHT_USE_SPELL:
+                                case TUTORIAL_STEP_FIGHT_END_TURN:
+                                case TUTORIAL_STEP_FIGHT_WIN:
+                                case TUTORIAL_STEP_START_FIGHT_2:
+                                case TUTORIAL_STEP_FIGHT_WIN_2:
+                                    this.setStepInfo(stepId, STEP_DETAIL, this._currentFightId);
+                                    break;
                             };
-                            i++;
-                        };
-                        if ((i + 1) < nbSteps)
-                        {
-                            nextStepId = quest.stepIds[(i + 1)];
-                            this.getStepAction(nextStepId).start();
-                            this.startSubSteps(nextStepId);
+                            if (((stepId == TUTORIAL_STEP_FIGHT_END_TURN) && (!(this._stepInfos[TUTORIAL_STEP_FIGHT_END_TURN].hasOwnProperty(FOLLOW_INSTRUCTIONS)))))
+                            {
+                                this.setStepInfo(TUTORIAL_STEP_FIGHT_END_TURN, FOLLOW_INSTRUCTIONS, true);
+                            };
+                            this.sendStepValidation(stepId, (((this._stepInfos[stepId]) && (this._stepInfos[stepId].hasOwnProperty(STEP_DETAIL))) ? this._stepInfos[stepId].stepDetail : null), (((this._stepInfos[stepId]) && (this._stepInfos[stepId].hasOwnProperty(FOLLOW_INSTRUCTIONS))) ? this._stepInfos[stepId].followInstructions : null));
                         };
                     };
-                    return;
-                case QuestHookList.QuestValidated.name:
-                    if (pArgs[0] == START_QUEST_ID)
-                    {
-                        this.getStepAction(1059).send();
-                    };
-                    return;
+                    break;
                 case InventoryHookList.EquipmentObjectMove.name:
-                    _local_4 = pArgs[0];
-                    if (((((_local_4) && ((_local_4.objectGID == 10785)))) && (StatsAction.exists(StatisticTypeEnum.STEP0860_EQUIP_RING))))
+                    item = pArgs[0];
+                    if (item)
                     {
-                        StatsAction.get(StatisticTypeEnum.STEP0860_EQUIP_RING).send();
-                        StatsAction.get(StatisticTypeEnum.STEP0860_EXIT_BAG).start();
+                        if (((item.objectGID == 10785) && (this._currentStep == TUTORIAL_STEP_OPEN_INVENTORY)))
+                        {
+                            this.sendStepValidation(TUTORIAL_STEP_EQUIP_RING);
+                        }
+                        else
+                        {
+                            if (this._currentStep == TUTORIAL_STEP_OPEN_INVENTORY_2)
+                            {
+                                this.sendStepValidation(TUTORIAL_STEP_EQUIP_FIRST_ITEM);
+                            }
+                            else
+                            {
+                                if (this._currentStep == TUTORIAL_STEP_EQUIP_FIRST_ITEM)
+                                {
+                                    items = InventoryManager.getInstance().inventory.getView("equipment").content;
+                                    nbItems = 0;
+                                    for each (itemw in items)
+                                    {
+                                        if (((itemw) && ((((((((itemw.position == CharacterInventoryPositionEnum.INVENTORY_POSITION_RING_LEFT) || (itemw.position == CharacterInventoryPositionEnum.INVENTORY_POSITION_RING_RIGHT)) || (itemw.position == CharacterInventoryPositionEnum.ACCESSORY_POSITION_AMULET)) || (itemw.position == CharacterInventoryPositionEnum.ACCESSORY_POSITION_WEAPON)) || (itemw.position == CharacterInventoryPositionEnum.ACCESSORY_POSITION_BELT)) || (itemw.position == CharacterInventoryPositionEnum.ACCESSORY_POSITION_BOOTS)) || (itemw.position == CharacterInventoryPositionEnum.ACCESSORY_POSITION_CAPE)) || (itemw.position == CharacterInventoryPositionEnum.ACCESSORY_POSITION_SHIELD))))
+                                        {
+                                            nbItems++;
+                                        };
+                                    };
+                                    if (nbItems == 7)
+                                    {
+                                        this.sendStepValidation(TUTORIAL_STEP_EQUIP_ALL_ITEMS);
+                                    };
+                                };
+                            };
+                        };
                     };
-                    return;
+                    break;
                 case BeriliaHookList.UiUnloaded.name:
-                    if (pArgs[0] == "storage")
+                    if (((pArgs[0] == "storage") && (this._currentStep == TUTORIAL_STEP_EQUIP_ALL_ITEMS)))
                     {
-                        if (StatsAction.exists(StatisticTypeEnum.STEP0860_EXIT_BAG))
+                        this.sendStepValidation(TUTORIAL_STEP_CLOSE_INVENTORY_2);
+                    }
+                    else
+                    {
+                        if (pArgs[0] == "fightResultSimple")
                         {
-                            StatsAction.get(StatisticTypeEnum.STEP0860_EXIT_BAG).send();
-                        }
-                        else
-                        {
-                            if (StatsAction.exists(StatisticTypeEnum.STEP2350_EXIT_BAG))
+                            if (this._currentStep == TUTORIAL_STEP_FIGHT_WIN)
                             {
-                                StatsAction.get(StatisticTypeEnum.STEP2350_EXIT_BAG).send();
+                                this.sendStepValidation(TUTORIAL_STEP_FIGHT_CLOSE_FIGHTEND_UI);
+                            }
+                            else
+                            {
+                                if (this._currentStep == TUTORIAL_STEP_FIGHT_WIN_2)
+                                {
+                                    this.sendStepValidation(TUTORIAL_STEP_FIGHT_CLOSE_FIGHTEND_UI_2);
+                                };
                             };
                         };
                     };
-                    return;
+                    break;
                 case FightHookList.GameEntityDisposition.name:
-                    if (pArgs[0] == PlayedCharacterManager.getInstance().id)
+                    if (((pArgs[0] == PlayedCharacterManager.getInstance().id) && (this._currentStep == TUTORIAL_STEP_START_FIGHT)))
                     {
-                        if (StatsAction.exists(StatisticTypeEnum.STEP1130_CHOSE_POSITION))
+                        if (!isNaN(this._fightPosition))
                         {
-                            StatsAction.get(StatisticTypeEnum.STEP1130_CHOSE_POSITION).send();
-                            StatsAction.get(StatisticTypeEnum.STEP1160_CLIC_READY).start();
-                        }
-                        else
-                        {
-                            if (StatsAction.exists(StatisticTypeEnum.STEP1100_TUTO6_CHOSE_START_POSITION))
-                            {
-                                StatsAction.get(StatisticTypeEnum.STEP1130_CHOSE_POSITION).start();
-                                StatsAction.get(StatisticTypeEnum.STEP1130_CHOSE_POSITION).send();
-                            };
+                            this.setStepInfo(TUTORIAL_STEP_FIGHT_START_POSITION, FOLLOW_INSTRUCTIONS, true);
                         };
+                        this._fightPosition = pArgs[1];
                     };
-                    return;
-                case TriggerHookList.FightSpellCast.name:
-                    if (StatsAction.exists(StatisticTypeEnum.STEP1960_USE_SPELL))
-                    {
-                        StatsAction.get(StatisticTypeEnum.STEP1960_USE_SPELL).send();
-                    };
-                    return;
-                case CustomUiHookList.OpeningContextMenu.name:
-                    if (((!((pArgs[0].makerName == "player"))) && (StatsAction.exists(StatisticTypeEnum.STEP2220_CLIC_YAKASI))))
-                    {
-                        StatsAction.get(StatisticTypeEnum.STEP2220_CLIC_YAKASI).send();
-                        StatsAction.get(StatisticTypeEnum.STEP2240_TALK_YAKASI).start();
-                    }
-                    else
-                    {
-                        if (((!((pArgs[0].makerName == "player"))) && (StatsAction.exists(StatisticTypeEnum.STEP2620_CLIC_YAKASI))))
-                        {
-                            StatsAction.get(StatisticTypeEnum.STEP2620_CLIC_YAKASI).send();
-                            StatsAction.get(StatisticTypeEnum.STEP2640_END_DIALOG).start();
-                        };
-                    };
-                    return;
-                case RoleplayHookList.NpcDialogCreation.name:
-                    if (StatsAction.exists(StatisticTypeEnum.STEP2240_TALK_YAKASI))
-                    {
-                        StatsAction.get(StatisticTypeEnum.STEP2240_TALK_YAKASI).send();
-                        StatsAction.get(StatisticTypeEnum.STEP2260_ACCEPT_MISSION).start();
-                    };
-                    return;
+                    break;
                 case BeriliaHookList.MouseClick.name:
-                    _local_5 = (pArgs[0] as ReadOnlyObject);
-                    if (((((_local_5) && ((_local_5.simplyfiedQualifiedClassName == "FrustumShape")))) && (StatsAction.exists(StatisticTypeEnum.STEP2430_GO_TO_NEXT_MAP))))
+                    obj = pArgs[0];
+                    if (((obj) && (obj is AnimatedCharacter)))
                     {
-                        StatsAction.get(StatisticTypeEnum.STEP2430_GO_TO_NEXT_MAP).send();
-                        StatsAction.get(StatisticTypeEnum.STEP2460_CLIC_MONSTER).start();
-                    }
-                    else
-                    {
-                        if (((((_local_5) && ((_local_5.simplyfiedQualifiedClassName == "AnimatedCharacter")))) && (!((pArgs[0].id == PlayedCharacterManager.getInstance().id)))))
+                        entitiesFrame = (Kernel.getWorker().getFrame(RoleplayEntitiesFrame) as RoleplayEntitiesFrame);
+                        if (entitiesFrame)
                         {
-                            if (StatsAction.exists(StatisticTypeEnum.STEP2460_CLIC_MONSTER))
+                            infos = (entitiesFrame.getEntityInfos(obj.id) as GameContextActorInformations);
+                            if ((((infos) && (infos is GameRolePlayNpcInformations)) && ((infos as GameRolePlayNpcInformations).npcId == 2897)))
                             {
-                                StatsAction.get(StatisticTypeEnum.STEP2460_CLIC_MONSTER).send();
+                                if (this._currentStep == TUTORIAL_STEP_PLAYER_MOVE)
+                                {
+                                    this.sendStepValidation(TUTORIAL_STEP_CLICK_ON_JORIS);
+                                }
+                                else
+                                {
+                                    if (((this._currentStep >= TUTORIAL_STEP_FIGHT_WIN) && (this._currentStep < TUTORIAL_STEP_CLICK_ON_JORIS_2)))
+                                    {
+                                        this.sendStepValidation(TUTORIAL_STEP_CLICK_ON_JORIS_2);
+                                    }
+                                    else
+                                    {
+                                        if (((this._currentStep >= TUTORIAL_STEP_FIGHT_WIN_2) && (this._currentStep < TUTORIAL_STEP_CLICK_ON_JORIS_3)))
+                                        {
+                                            this.sendStepValidation(TUTORIAL_STEP_CLICK_ON_JORIS_3);
+                                        };
+                                    };
+                                };
                             };
                         };
                     };
-                    return;
-            };
-        }
-
-        private function initTutorial():void
-        {
-            if (!(this._init))
-            {
-                this._arrivalAction = StatsAction.get(StatisticTypeEnum.STEP0500_ARRIVES_ON_TUTORIAL);
-                this._arrivalAction.start();
-                this._arrivalAction.send();
-                this._quitAction = StatsAction.get(StatisticTypeEnum.STEP0550_QUITS_TUTORIAL);
-                this._quitAction.start();
-                this.getStepAction(1059).start();
-                this._init = true;
-            };
-        }
-
-        private function getStepAction(pStepId:uint):StatsAction
-        {
-            var action:StatsAction;
-            switch (pStepId)
-            {
-                case 1042:
-                    action = StatsAction.get(StatisticTypeEnum.STEP0600_TUTO1_MOVE_MAP, true);
                     break;
-                case 1043:
-                    action = StatsAction.get(StatisticTypeEnum.STEP0700_TUTO2_TALK_TO_YAKASI, true);
+                case HookList.TutorialStep.name:
+                    if (pArgs[0] > 1)
+                    {
+                        step = this.getStepEventId(this._quest.steps[(pArgs[0] - 2)].id);
+                        if (step > this._currentStep)
+                        {
+                            this._currentStep = step;
+                        };
+                    };
                     break;
-                case 1044:
-                    action = StatsAction.get(StatisticTypeEnum.STEP0800_TUTO3_EQUIP_RING, true);
-                    break;
-                case 1045:
-                    action = StatsAction.get(StatisticTypeEnum.STEP0900_TUTO4_CHANGE_MAP, true);
-                    break;
-                case 1046:
-                    action = StatsAction.get(StatisticTypeEnum.STEP1000_TUTO5_START_FIRST_FIGHT, true);
-                    break;
-                case 1047:
-                    action = StatsAction.get(StatisticTypeEnum.STEP1100_TUTO6_CHOSE_START_POSITION, true);
-                    break;
-                case 1048:
-                    action = StatsAction.get(StatisticTypeEnum.STEP1200_TUTO7_MOVE_IN_FIGHT, true);
-                    break;
-                case 1049:
-                    action = StatsAction.get(StatisticTypeEnum.STEP1900_TUTO8_USE_SPELL, true);
-                    break;
-                case 1050:
-                    action = StatsAction.get(StatisticTypeEnum.STEP2000_TUTO9_END_TURN, true);
-                    break;
-                case 1051:
-                    action = StatsAction.get(StatisticTypeEnum.STEP2100_TUTO10_WIN_FIGHT, true);
-                    break;
-                case 1052:
-                    action = StatsAction.get(StatisticTypeEnum.STEP2200_TUTO11_START_FIRST_QUEST, true);
-                    break;
-                case 1060:
-                    action = StatsAction.get(StatisticTypeEnum.STEP2300_TUTO12_EQUIP_SET, true);
-                    break;
-                case 1053:
-                    action = StatsAction.get(StatisticTypeEnum.STEP2400_TUTO13_LETS_KILL_MONSTER, true);
-                    break;
-                case 1061:
-                    action = StatsAction.get(StatisticTypeEnum.STEP2500_TUTO14_END_SECOND_FIGHT, true);
-                    break;
-                case 1059:
-                    action = StatsAction.get(StatisticTypeEnum.STEP2600_TUTO15_END_TUTO, true);
-                    break;
-            };
-            return (action);
-        }
-
-        private function startSubSteps(pStepId:uint):void
-        {
-            switch (pStepId)
-            {
-                case 1044:
-                    StatsAction.get(StatisticTypeEnum.STEP0820_CLIC_BAG).start();
-                    return;
-                case 1047:
-                    StatsAction.get(StatisticTypeEnum.STEP1130_CHOSE_POSITION).start();
-                    return;
-                case 1049:
-                    StatsAction.get(StatisticTypeEnum.STEP1930_CHOSE_SPELL).start();
-                    return;
-                case 1052:
-                    StatsAction.get(StatisticTypeEnum.STEP2220_CLIC_YAKASI).start();
-                    return;
-                case 1053:
-                    StatsAction.get(StatisticTypeEnum.STEP2430_GO_TO_NEXT_MAP).start();
-                    return;
-                case 1059:
-                    StatsAction.get(StatisticTypeEnum.STEP2620_CLIC_YAKASI).start();
-                    return;
             };
         }
 
@@ -390,7 +370,87 @@
         {
         }
 
+        private function sendStepValidation(pStep:uint, pStepDetail:*=null, pFollowInstructions:*=null):void
+        {
+            var stepAction:StatsAction = new StatsAction(TUTORIAL_STEP_VALIDATION_EVENT_ID);
+            stepAction.user = StatsAction.getUserId();
+            stepAction.gameSessionId = HaapiKeyManager.getInstance().getGameSessionId();
+            stepAction.setParam("account_id", PlayerManager.getInstance().accountId);
+            stepAction.setParam("server_id", PlayerManager.getInstance().server.id);
+            stepAction.setParam("character_id", PlayedCharacterManager.getInstance().extractedServerCharacterIdFromInterserverCharacterId);
+            stepAction.setParam("map_id", PlayedCharacterManager.getInstance().currentMap.mapId);
+            stepAction.setParam("character_level", PlayedCharacterManager.getInstance().infos.level);
+            stepAction.setParam("step_id", pStep);
+            stepAction.setParam("step_detail", pStepDetail);
+            stepAction.setParam("follow_instructions", pFollowInstructions);
+            stepAction.send();
+            this._currentStep = pStep;
+        }
+
+        private function getStepEventId(pQuestStep:uint):uint
+        {
+            var stepId:uint;
+            switch (pQuestStep)
+            {
+                case 1042:
+                    stepId = TUTORIAL_STEP_PLAYER_MOVE;
+                    break;
+                case 1043:
+                    stepId = TUTORIAL_STEP_TALK_TO_NPC;
+                    break;
+                case 1044:
+                    stepId = TUTORIAL_STEP_CLOSE_INVENTORY;
+                    break;
+                case 1045:
+                    stepId = TUTORIAL_STEP_CHANGE_MAP;
+                    break;
+                case 1046:
+                    stepId = TUTORIAL_STEP_START_FIGHT;
+                    break;
+                case 1047:
+                    stepId = TUTORIAL_STEP_FIGHT_START_POSITION;
+                    break;
+                case 1048:
+                    stepId = TUTORIAL_STEP_FIGHT_MOVE;
+                    break;
+                case 1049:
+                    stepId = TUTORIAL_STEP_FIGHT_USE_SPELL;
+                    break;
+                case 1050:
+                    stepId = TUTORIAL_STEP_FIGHT_END_TURN;
+                    break;
+                case 1051:
+                    stepId = TUTORIAL_STEP_FIGHT_WIN;
+                    break;
+                case 1052:
+                    stepId = TUTORIAL_STEP_START_QUEST;
+                    break;
+                case 1053:
+                    stepId = TUTORIAL_STEP_START_FIGHT_2;
+                    break;
+                case 1059:
+                    stepId = TUTORIAL_STEP_END_BASE_TUTORIAL;
+                    break;
+                case 1060:
+                    stepId = TUTORIAL_STEP_EQUIP_ALL_ITEMS;
+                    break;
+                case 1061:
+                    stepId = TUTORIAL_STEP_FIGHT_WIN_2;
+                    break;
+            };
+            return (stepId);
+        }
+
+        private function setStepInfo(pStep:uint, pPropertyName:String, pValue:*):void
+        {
+            if (!this._stepInfos[pStep])
+            {
+                this._stepInfos[pStep] = new Object();
+            };
+            this._stepInfos[pStep][pPropertyName] = pValue;
+        }
+
 
     }
-}//package com.ankamagames.dofus.misc.stats.ui
+} com.ankamagames.dofus.misc.stats.ui
 

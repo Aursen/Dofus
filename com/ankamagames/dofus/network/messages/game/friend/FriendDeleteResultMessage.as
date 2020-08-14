@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.friend
+package com.ankamagames.dofus.network.messages.game.friend
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class FriendDeleteResultMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -55,6 +55,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_FriendDeleteResultMessage(output);
@@ -73,11 +81,32 @@
 
         public function deserializeAs_FriendDeleteResultMessage(input:ICustomDataInput):void
         {
+            this._successFunc(input);
+            this._nameFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_FriendDeleteResultMessage(tree);
+        }
+
+        public function deserializeAsyncAs_FriendDeleteResultMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._successFunc);
+            tree.addChild(this._nameFunc);
+        }
+
+        private function _successFunc(input:ICustomDataInput):void
+        {
             this.success = input.readBoolean();
+        }
+
+        private function _nameFunc(input:ICustomDataInput):void
+        {
             this.name = input.readUTF();
         }
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.friend
+} com.ankamagames.dofus.network.messages.game.friend
 

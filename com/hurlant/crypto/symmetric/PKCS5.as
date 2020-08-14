@@ -1,4 +1,4 @@
-﻿package com.hurlant.crypto.symmetric
+package com.hurlant.crypto.symmetric
 {
     import flash.utils.ByteArray;
 
@@ -52,5 +52,5 @@
 
 
     }
-}//package com.hurlant.crypto.symmetric
+} com.hurlant.crypto.symmetric
 

@@ -1,4 +1,4 @@
-﻿package com.hurlant.crypto.rsa
+package com.hurlant.crypto.rsa
 {
     import com.hurlant.math.BigInteger;
     import com.hurlant.crypto.prng.Random;
@@ -30,22 +30,22 @@
             this.dmp1 = DP;
             this.dmq1 = DQ;
             this.coeff = C;
-            this.canEncrypt = ((!((this.n == null))) && (!((this.e == 0))));
-            this.canDecrypt = ((this.canEncrypt) && (!((this.d == null))));
+            this.canEncrypt = ((!(this.n == null)) && (!(this.e == 0)));
+            this.canDecrypt = ((this.canEncrypt) && (!(this.d == null)));
         }
 
         public static function parsePublicKey(N:String, E:String):RSAKey
         {
-            return (new (RSAKey)(new BigInteger(N, 16, true), parseInt(E, 16)));
+            return (new RSAKey(new BigInteger(N, 16, true), parseInt(E, 16)));
         }
 
         public static function parsePrivateKey(N:String, E:String, D:String, P:String=null, Q:String=null, DMP1:String=null, DMQ1:String=null, IQMP:String=null):RSAKey
         {
             if (P == null)
             {
-                return (new (RSAKey)(new BigInteger(N, 16, true), parseInt(E, 16), new BigInteger(D, 16, true)));
+                return (new RSAKey(new BigInteger(N, 16, true), parseInt(E, 16), new BigInteger(D, 16, true)));
             };
-            return (new (RSAKey)(new BigInteger(N, 16, true), parseInt(E, 16), new BigInteger(D, 16, true), new BigInteger(P, 16, true), new BigInteger(Q, 16, true), new BigInteger(DMP1, 16, true), new BigInteger(DMQ1, 16, true), new BigInteger(IQMP, 16, true)));
+            return (new RSAKey(new BigInteger(N, 16, true), parseInt(E, 16), new BigInteger(D, 16, true), new BigInteger(P, 16, true), new BigInteger(Q, 16, true), new BigInteger(DMP1, 16, true), new BigInteger(DMQ1, 16, true), new BigInteger(IQMP, 16, true)));
         }
 
         public static function generate(B:uint, E:String):RSAKey
@@ -56,7 +56,7 @@
             var t:BigInteger;
             var rng:Random = new Random();
             var qs:uint = (B >> 1);
-            var key:RSAKey = new (RSAKey)(null, 0, null);
+            var key:RSAKey = new RSAKey(null, 0, null);
             key.e = parseInt(E, 16);
             var ee:BigInteger = new BigInteger(E, 16, true);
             while (true)
@@ -64,12 +64,12 @@
                 while (true)
                 {
                     key.p = bigRandom((B - qs), rng);
-                    if ((((key.p.subtract(BigInteger.ONE).gcd(ee).compareTo(BigInteger.ONE) == 0)) && (key.p.isProbablePrime(10)))) break;
+                    if (((key.p.subtract(BigInteger.ONE).gcd(ee).compareTo(BigInteger.ONE) == 0) && (key.p.isProbablePrime(10)))) break;
                 };
                 while (true)
                 {
                     key.q = bigRandom(qs, rng);
-                    if ((((key.q.subtract(BigInteger.ONE).gcd(ee).compareTo(BigInteger.ONE) == 0)) && (key.q.isProbablePrime(10)))) break;
+                    if (((key.q.subtract(BigInteger.ONE).gcd(ee).compareTo(BigInteger.ONE) == 0) && (key.q.isProbablePrime(10)))) break;
                 };
                 if (key.p.compareTo(key.q) <= 0)
                 {
@@ -110,7 +110,7 @@
 
         public function getBlockSize():uint
         {
-            return (((this.n.bitLength() + 7) / 8));
+            return ((this.n.bitLength() + 7) / 8);
         }
 
         public function dispose():void
@@ -191,7 +191,7 @@
             };
         }
 
-        private function pkcs1pad(src:ByteArray, end:int, n:uint, type:uint=2):ByteArray
+        private function pkcs1pad(src:ByteArray, end:int, n:uint, _arg_4:uint=2):ByteArray
         {
             var rng:Random;
             var x:int;
@@ -200,14 +200,14 @@
             end = Math.min(end, src.length, ((p + n) - 11));
             src.position = end;
             var i:int = (end - 1);
-            while ((((i >= p)) && ((n > 11))))
+            while (((i >= p) && (n > 11)))
             {
-                var _local_10 = --n;
+                var _local_10:* = --n;
                 out[_local_10] = src[i--];
             };
             _local_10 = --n;
             out[_local_10] = 0;
-            if (type == 2)
+            if (_arg_4 == 2)
             {
                 rng = new Random();
                 x = 0;
@@ -217,7 +217,7 @@
                     {
                         x = rng.nextByte();
                     } while (x == 0);
-                    var _local_11 = --n;
+                    var _local_11:* = --n;
                     out[_local_11] = x;
                 };
             }
@@ -230,25 +230,25 @@
                 };
             };
             _local_11 = --n;
-            out[_local_11] = type;
-            var _local_12 = --n;
+            out[_local_11] = _arg_4;
+            var _local_12:* = --n;
             out[_local_12] = 0;
             return (out);
         }
 
-        private function pkcs1unpad(src:BigInteger, n:uint, type:uint=2):ByteArray
+        private function pkcs1unpad(src:BigInteger, n:uint, _arg_3:uint=2):ByteArray
         {
             var b:ByteArray = src.toByteArray();
             var out:ByteArray = new ByteArray();
             b.position = 0;
             var i:int;
-            while ((((i < b.length)) && ((b[i] == 0))))
+            while (((i < b.length) && (b[i] == 0)))
             {
                 i++;
             };
-            if (((!(((b.length - i) == (n - 1)))) || (!((b[i] == type)))))
+            if (((!((b.length - i) == (n - 1))) || (!(b[i] == _arg_3))))
             {
-                trace(((((("PKCS#1 unpad: i=" + i) + ", expected b[i]==") + type) + ", got b[i]=") + b[i].toString(16)));
+                trace(((((("PKCS#1 unpad: i=" + i) + ", expected b[i]==") + _arg_3) + ", got b[i]=") + b[i].toString(16)));
                 return (null);
             };
             i++;
@@ -268,12 +268,12 @@
             return (out);
         }
 
-        public function rawpad(src:ByteArray, end:int, n:uint, type:uint=0):ByteArray
+        public function rawpad(src:ByteArray, end:int, n:uint, _arg_4:uint=0):ByteArray
         {
             return (src);
         }
 
-        public function rawunpad(src:BigInteger, n:uint, type:uint=0):ByteArray
+        public function rawunpad(src:BigInteger, n:uint, _arg_3:uint=0):ByteArray
         {
             return (src.toByteArray());
         }
@@ -285,11 +285,11 @@
 
         public function dump():String
         {
-            var s:String = ((((("N=" + this.n.toString(16)) + "\n") + "E=") + this.e.toString(16)) + "\n");
+            var s:* = ((((("N=" + this.n.toString(16)) + "\n") + "E=") + this.e.toString(16)) + "\n");
             if (this.canDecrypt)
             {
                 s = (s + (("D=" + this.d.toString(16)) + "\n"));
-                if (((!((this.p == null))) && (!((this.q == null)))))
+                if (((!(this.p == null)) && (!(this.q == null))))
                 {
                     s = (s + (("P=" + this.p.toString(16)) + "\n"));
                     s = (s + (("Q=" + this.q.toString(16)) + "\n"));
@@ -308,7 +308,7 @@
 
         protected function doPrivate2(x:BigInteger):BigInteger
         {
-            if ((((this.p == null)) && ((this.q == null))))
+            if (((this.p == null) && (this.q == null)))
             {
                 return (x.modPow(this.d, this.n));
             };
@@ -324,7 +324,7 @@
 
         protected function doPrivate(x:BigInteger):BigInteger
         {
-            if ((((this.p == null)) || ((this.q == null))))
+            if (((this.p == null) || (this.q == null)))
             {
                 return (x.modPow(this.d, this.n));
             };
@@ -339,5 +339,5 @@
 
 
     }
-}//package com.hurlant.crypto.rsa
+} com.hurlant.crypto.rsa
 

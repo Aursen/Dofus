@@ -1,4 +1,4 @@
-﻿package com.ankamagames.atouin.data.elements.subtypes
+package com.ankamagames.atouin.data.elements.subtypes
 {
     public class BoundingBoxGraphicalElementData extends NormalGraphicalElementData 
     {
@@ -9,5 +9,5 @@
         }
 
     }
-}//package com.ankamagames.atouin.data.elements.subtypes
+} com.ankamagames.atouin.data.elements.subtypes
 

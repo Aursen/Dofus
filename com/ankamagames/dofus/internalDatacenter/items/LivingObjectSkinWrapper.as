@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.internalDatacenter.items
+package com.ankamagames.dofus.internalDatacenter.items
 {
     import com.ankamagames.jerakine.interfaces.ISlotData;
     import com.ankamagames.jerakine.logger.Logger;
@@ -78,9 +78,9 @@
 
         public function get backGroundIconUri():Uri
         {
-            if (!(this._backGroundIconUri))
+            if (!this._backGroundIconUri)
             {
-                this._backGroundIconUri = new Uri(XmlConfig.getInstance().getEntry("config.ui.skin").concat("bitmap/emptySlot.png"));
+                this._backGroundIconUri = new Uri(XmlConfig.getInstance().getEntry("config.ui.skin").concat("texture/slot/emptySlot.png"));
             };
             return (this._backGroundIconUri);
         }
@@ -108,15 +108,22 @@
             if (update)
             {
                 iconId = LivingObjectSkinJntMood.getLivingObjectSkin(this._id, this._mood, this._skin);
-                if (pngMode)
+                if (iconId >= 0)
                 {
-                    this._pngMode = true;
-                    this._uri = new Uri(XmlConfig.getInstance().getEntry("config.gfx.path.item.bitmap").concat(iconId).concat(".png"));
+                    if (pngMode)
+                    {
+                        this._pngMode = true;
+                        this._uri = new Uri(XmlConfig.getInstance().getEntry("config.gfx.path.item.bitmap").concat(iconId).concat(".png"));
+                    }
+                    else
+                    {
+                        this._pngMode = false;
+                        this._uri = new Uri(XmlConfig.getInstance().getEntry("config.gfx.path.item.vector").concat(iconId).concat(".swf"));
+                    };
                 }
                 else
                 {
-                    this._pngMode = false;
-                    this._uri = new Uri(XmlConfig.getInstance().getEntry("config.gfx.path.item.vector").concat(iconId).concat(".swf"));
+                    this._uri = null;
                 };
             };
             return (this._uri);
@@ -161,5 +168,5 @@
 
 
     }
-}//package com.ankamagames.dofus.internalDatacenter.items
+} com.ankamagames.dofus.internalDatacenter.items
 

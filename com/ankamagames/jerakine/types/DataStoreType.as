@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.types
+package com.ankamagames.jerakine.types
 {
     import com.ankamagames.jerakine.utils.errors.JerakineError;
 
@@ -22,7 +22,7 @@
             this._bPersistant = bPersistant;
             if (bPersistant)
             {
-                if (!(isNaN(nLocation)))
+                if (!isNaN(nLocation))
                 {
                     this._nLocation = nLocation;
                 }
@@ -30,7 +30,7 @@
                 {
                     throw (new JerakineError("When DataStoreType is a persistant data, arg 'nLocation' must be defined."));
                 };
-                if (!(isNaN(nBind)))
+                if (!isNaN(nBind))
                 {
                     this._nBind = nBind;
                 }
@@ -91,5 +91,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.types
+} com.ankamagames.jerakine.types
 

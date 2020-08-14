@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.console
+package com.ankamagames.jerakine.console
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
@@ -37,7 +37,7 @@
             var inputArray:Array = input.split(" ");
             var cmd:String = inputArray[0];
             inputArray.splice(0, 1);
-            if (((inputArray.length) && ((inputArray[(inputArray.length - 1)].length == 0))))
+            if (((inputArray.length) && (inputArray[(inputArray.length - 1)].length == 0)))
             {
                 inputArray.pop();
             };
@@ -46,5 +46,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.console
+} com.ankamagames.jerakine.console
 

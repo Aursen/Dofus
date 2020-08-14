@@ -1,8 +1,7 @@
-﻿package com.ankamagames.dofus.logic.game.common.misc.stackedMessages
+package com.ankamagames.dofus.logic.game.common.misc.stackedMessages
 {
     import com.ankamagames.atouin.messages.AdjacentMapClickMessage;
     import com.ankamagames.jerakine.types.positions.MapPoint;
-    import com.ankamagames.jerakine.utils.system.AirScanner;
     import com.ankamagames.berilia.frames.ShortcutsFrame;
     import com.ankamagames.jerakine.utils.system.SystemManager;
     import com.ankamagames.jerakine.enum.OperatingSystem;
@@ -28,12 +27,12 @@
         {
             var cellId:uint;
             var walkingId:String;
-            if ((((pendingMessage == null)) && ((pMsgToProcess is AdjacentMapClickMessage))))
+            if (((pendingMessage == null) && (pMsgToProcess is AdjacentMapClickMessage)))
             {
                 pendingMessage = pMsgToProcess;
                 cellId = (pendingMessage as AdjacentMapClickMessage).cellId;
                 position = MapPoint.fromCellId(cellId);
-                this.forceWalk = ((AirScanner.isStreamingVersion()) ? false : (((OptionManager.getOptionManager("dofus")["enableForceWalk"] == true)) && (((ShortcutsFrame.ctrlKeyDown) || ((((SystemManager.getSingleton().os == OperatingSystem.MAC_OS)) && (ShortcutsFrame.altKeyDown)))))));
+                this.forceWalk = ((OptionManager.getOptionManager("dofus").getOption("enableForceWalk") == true) && ((ShortcutsFrame.ctrlKeyDown) || ((SystemManager.getSingleton().os == OperatingSystem.MAC_OS) && (ShortcutsFrame.altKeyDown))));
                 walkingId = ((this.forceWalk) ? "_WALK" : "");
                 if (CellUtil.isLeftCol(cellId))
                 {
@@ -64,7 +63,7 @@
 
         override public function processOutputMessage(pMsgToProcess:Message, pMode:String):Boolean
         {
-            return (false);
+            return (true);
         }
 
         override public function copy():AbstractBehavior
@@ -86,5 +85,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.misc.stackedMessages
+} com.ankamagames.dofus.logic.game.common.misc.stackedMessages
 

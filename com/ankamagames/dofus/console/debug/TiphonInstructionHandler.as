@@ -1,13 +1,17 @@
-﻿package com.ankamagames.dofus.console.debug
+package com.ankamagames.dofus.console.debug
 {
     import com.ankamagames.jerakine.console.ConsoleInstructionHandler;
     import flash.utils.Dictionary;
+    import com.ankamagames.tiphon.types.look.TiphonEntityLook;
     import com.ankamagames.dofus.network.messages.authorized.AdminQuietCommandMessage;
+    import com.ankamagames.jerakine.entities.interfaces.IEntity;
     import com.ankamagames.dofus.logic.game.common.misc.DofusEntities;
     import com.ankamagames.dofus.logic.game.common.managers.PlayedCharacterManager;
     import com.ankamagames.tiphon.display.TiphonSprite;
     import com.ankamagames.dofus.logic.common.managers.PlayerManager;
     import com.ankamagames.dofus.kernel.net.ConnectionsHandler;
+    import com.ankamagames.atouin.managers.EntitiesManager;
+    import com.ankamagames.jerakine.managers.OptionManager;
     import com.ankamagames.jerakine.console.ConsoleHandler;
     import com.ankamagames.dofus.datacenter.monsters.Monster;
     import com.ankamagames.dofus.datacenter.npcs.Npc;
@@ -21,8 +25,11 @@
 
         public function handle(console:ConsoleHandler, cmd:String, args:Array):void
         {
-            var _local_4:String;
+            var monsterName:String;
+            var searchBonesId:uint;
+            var look:TiphonEntityLook;
             var aqcmsg:AdminQuietCommandMessage;
+            var entity:IEntity;
             switch (cmd)
             {
                 case "additem":
@@ -31,24 +38,42 @@
                         console.output("need 1 parameter (item ID)");
                     };
                     (DofusEntities.getEntity(PlayedCharacterManager.getInstance().id) as TiphonSprite).look.addSkin(parseInt(args[0]));
-                    return;
+                    break;
                 case "looklike":
-                    if (!(_monsters))
+                    if (!_monsters)
                     {
                         this.parseMonster();
                     };
-                    _local_4 = args.join(" ").toLowerCase().split(" {npc}").join("").split(" {monster}").join("");
-                    if (_monsters[_local_4])
+                    monsterName = args.join(" ").toLowerCase().split(" {npc}").join("").split(" {monster}").join("");
+                    if (_monsters[monsterName])
                     {
-                        console.output(("look like " + _monsters[_local_4]));
+                        console.output(("look like " + _monsters[monsterName]));
                         aqcmsg = new AdminQuietCommandMessage();
-                        aqcmsg.initAdminQuietCommandMessage(("look * " + _monsters[_local_4]));
+                        aqcmsg.initAdminQuietCommandMessage(("look * " + _monsters[monsterName]));
                         if (PlayerManager.getInstance().hasRights)
                         {
                             ConnectionsHandler.getConnection().send(aqcmsg);
                         };
                     };
-                    return;
+                    break;
+                case "relook":
+                    if (args.length != 2)
+                    {
+                        console.output("need 2 parameters : target bones ID and new look");
+                    };
+                    searchBonesId = parseInt(args[0]);
+                    look = TiphonEntityLook.fromString(args[1]);
+                    for each (entity in EntitiesManager.getInstance().entities)
+                    {
+                        if (((entity is TiphonSprite) && (TiphonSprite(entity).look.getBone() == searchBonesId)))
+                        {
+                            TiphonSprite(entity).look.updateFrom(look);
+                        };
+                    };
+                    break;
+                case "castshadow":
+                    OptionManager.getOptionManager("dofus").setOption("shadowCharacter", (!(OptionManager.getOptionManager("dofus").getOption("shadowCharacter"))));
+                    break;
             };
         }
 
@@ -58,34 +83,45 @@
             {
                 case "looklike":
                     return ("look a npc or monster, param is monser's or pnc's name, you can use autocompletion");
+                case "relook":
+                    return ("Change the look of all entities currently displayed that have a specific boneId");
             };
             return (null);
         }
 
         public function getParamPossibilities(cmd:String, paramIndex:uint=0, currentParams:Array=null):Array
         {
-            var _local_4:Array;
-            var _local_5:String;
+            var searchTerm:String;
             var name:String;
+            var entity:IEntity;
+            var result:Array = [];
             switch (cmd)
             {
                 case "looklike":
-                    if (!(_monsters))
+                    if (!_monsters)
                     {
                         this.parseMonster();
                     };
-                    _local_4 = [];
-                    _local_5 = currentParams.join(" ").toLowerCase();
+                    searchTerm = currentParams.join(" ").toLowerCase();
                     for each (name in _monsterNameList)
                     {
-                        if (name.indexOf(_local_5) != -1)
+                        if (name.indexOf(searchTerm) != -1)
                         {
-                            _local_4.push(name);
+                            result.push(name);
                         };
                     };
-                    return (_local_4);
+                    break;
+                case "relook":
+                    for each (entity in EntitiesManager.getInstance().entities)
+                    {
+                        if (((entity is TiphonSprite) && (result.indexOf(TiphonSprite(entity).look.getBone()) == -1)))
+                        {
+                            result.push(TiphonSprite(entity).look.getBone());
+                        };
+                    };
+                    break;
             };
-            return ([]);
+            return (result);
         }
 
         private function parseMonster():void
@@ -110,5 +146,5 @@
 
 
     }
-}//package com.ankamagames.dofus.console.debug
+} com.ankamagames.dofus.console.debug
 

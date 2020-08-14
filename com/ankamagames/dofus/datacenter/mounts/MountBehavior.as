@@ -1,6 +1,7 @@
-﻿package com.ankamagames.dofus.datacenter.mounts
+package com.ankamagames.dofus.datacenter.mounts
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
+    import com.ankamagames.dofus.types.IdAccessors;
     import com.ankamagames.jerakine.data.GameData;
     import com.ankamagames.jerakine.data.I18n;
 
@@ -8,6 +9,7 @@
     {
 
         public static const MODULE:String = "MountBehaviors";
+        public static var idAccessors:IdAccessors = new IdAccessors(getMountBehaviorById, getMountBehaviors);
 
         public var id:uint;
         public var nameId:uint;
@@ -18,7 +20,7 @@
 
         public static function getMountBehaviorById(id:uint):MountBehavior
         {
-            return ((GameData.getObject(MODULE, id) as MountBehavior));
+            return (GameData.getObject(MODULE, id) as MountBehavior);
         }
 
         public static function getMountBehaviors():Array
@@ -29,7 +31,7 @@
 
         public function get name():String
         {
-            if (!(this._name))
+            if (!this._name)
             {
                 this._name = I18n.getText(this.nameId);
             };
@@ -38,7 +40,7 @@
 
         public function get description():String
         {
-            if (!(this._description))
+            if (!this._description)
             {
                 this._description = I18n.getText(this.descriptionId);
             };
@@ -47,5 +49,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.mounts
+} com.ankamagames.dofus.datacenter.mounts
 

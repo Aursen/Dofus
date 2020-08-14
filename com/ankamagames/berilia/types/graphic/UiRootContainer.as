@@ -1,83 +1,103 @@
-﻿package com.ankamagames.berilia.types.graphic
+package com.ankamagames.berilia.types.graphic
 {
-    import flash.utils.Dictionary;
+    import com.ankamagames.berilia.UIComponent;
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
-    import flash.display.Stage;
+    import flash.utils.Dictionary;
     import flash.display.Sprite;
-    import flash.utils.Timer;
+    import flash.geom.Point;
     import com.ankamagames.berilia.types.data.UiData;
     import com.ankamagames.berilia.types.data.UiModule;
     import flash.display.DisplayObjectContainer;
+    import com.ankamagames.jerakine.pools.PoolsManager;
+    import com.ankamagames.jerakine.pools.PoolablePoint;
+    import com.ankamagames.jerakine.utils.display.StageShareManager;
+    import flash.display.Stage;
     import com.ankamagames.berilia.FinalizableUIComponent;
+    import com.ankamagames.jerakine.utils.errors.Result;
     import com.ankamagames.jerakine.types.Callback;
-    import flash.utils.getTimer;
     import com.ankamagames.jerakine.utils.benchmark.monitoring.FpsManager;
+    import flash.utils.getTimer;
     import com.ankamagames.jerakine.managers.ErrorManager;
     import com.ankamagames.berilia.types.event.UiRenderEvent;
     import com.ankamagames.berilia.Berilia;
+    import flash.geom.Rectangle;
     import com.ankamagames.berilia.utils.errors.BeriliaError;
     import com.ankamagames.berilia.types.data.RadioGroup;
     import com.ankamagames.berilia.managers.SecureCenter;
     import flash.errors.IllegalOperationError;
     import com.ankamagames.jerakine.utils.misc.CallWithParameters;
-    import com.ankamagames.jerakine.utils.display.StageShareManager;
-    import flash.geom.Point;
+    import com.ankamagames.berilia.types.data.UISnapshot;
+    import com.ankamagames.jerakine.managers.StoreDataManager;
+    import com.ankamagames.berilia.BeriliaConstants;
+    import com.ankamagames.berilia.components.MapViewer;
     import flash.display.DisplayObject;
     import com.ankamagames.berilia.enums.LocationTypeEnum;
+    import flash.events.NativeWindowBoundsEvent;
+    import flash.events.FullScreenEvent;
     import com.ankamagames.berilia.types.LocationEnum;
-    import com.ankamagames.berilia.managers.UiRenderManager;
-    import flash.events.TimerEvent;
+    import flash.events.Event;
 
-    public class UiRootContainer extends GraphicContainer 
+    public class UiRootContainer extends GraphicContainer implements UIComponent 
     {
 
-        public static var MEMORY_LOG:Dictionary = new Dictionary(true);
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(UiRootContainer));
 
+        private var _magneticElements:Dictionary;
         private var _aNamedElements:Array;
         private var _bUsedCustomSize:Boolean = false;
-        private var _stage:Stage;
         private var _root:Sprite;
         private var _aGraphicLocationStack:Array;
         private var _aSizeStack:Array;
         private var _aGraphicElementIndex:Array;
-        private var _aPositionnedElement:Array;
         private var _linkedUi:Array;
         private var _aPostFinalizeElement:Array;
         private var _aFinalizeElements:Array;
-        private var _uiDefinitionUpdateTimer:Timer;
+        private var pModificator_offset:Point;
         private var _rendering:Boolean = false;
         private var _ready:Boolean;
         private var _waitingFctCall:Array;
-        private var _properties;
-        private var _wasVisible:Boolean;
-        private var _lock:Boolean = true;
+        private var _properties:*;
+        internal var _lock:Boolean = true;
         private var _renderAsk:Boolean = false;
-        private var _isNotFinalized:Boolean = true;
+        private var _isFinalized:Boolean = false;
         private var _tempVisible:Boolean = true;
         private var _uiData:UiData;
-        public var uiClass;
+        private var _scriptTime:Number;
+        internal var _dragControllers:Dictionary = new Dictionary();
+        private var _resizeListening:Boolean = false;
+        private var _lastVisibleStageX:Number = 0;
+        private var _stageAddedWidth:Number = 0;
+        public var windowOwner:ExternalUi;
+        public var uiClass:*;
         public var uiModule:UiModule;
         public var strata:int;
         public var depth:int;
         public var scalable:Boolean = true;
         public var modal:Boolean = false;
         private var _modalContainer:GraphicContainer;
+        private var _fullscreen:Boolean = false;
         public var giveFocus:Boolean = true;
         public var modalIndex:uint = 0;
-        public var radioGroup:Array;
+        public var radioGroup:Array = new Array();
         public var cached:Boolean = false;
         public var hideAfterLoading:Boolean = false;
         public var transmitFocus:Boolean = true;
+        public var setOnTopOnClick:Boolean = true;
+        public var setOnTopBeforeMe:Array = [];
+        public var setOnTopAfterMe:Array = [];
         public var constants:Array;
         public var tempHolder:DisplayObjectContainer;
+        public var restoreSnapshotAfterLoading:Boolean;
+        public var parentUiRoot:UiRootContainer = null;
+        public var childUiRoot:UiRootContainer = null;
+        public var subHintContainer:GraphicContainer;
 
         public function UiRootContainer(stage:Stage, uiData:UiData, root:Sprite=null)
         {
-            this._stage = stage;
             this._root = root;
+            this._magneticElements = new Dictionary(true);
             this._aNamedElements = new Array();
             this._aSizeStack = new Array();
             this._linkedUi = new Array();
@@ -89,12 +109,34 @@
             this._waitingFctCall = new Array();
             this.radioGroup = new Array();
             super.visible = false;
-            MEMORY_LOG[this] = 1;
+            this.pModificator_offset = (PoolsManager.getInstance().getPointPool().checkOut() as PoolablePoint);
+            this._lastVisibleStageX = StageShareManager.stageVisibleBounds.x;
+        }
+
+        public function get fullscreen():Boolean
+        {
+            return (this._fullscreen);
+        }
+
+        public function set fullscreen(value:Boolean):void
+        {
+            if (this._fullscreen == value)
+            {
+                return;
+            };
+            this._fullscreen = value;
+            this.listenResize(this._fullscreen);
+            this.onResize();
+        }
+
+        public function get properties():*
+        {
+            return (this._properties);
         }
 
         public function set properties(o:*):void
         {
-            if (!(this._properties))
+            if (!this._properties)
             {
                 this._properties = o;
             };
@@ -107,11 +149,8 @@
 
         override public function set visible(value:Boolean):void
         {
-            if (this._isNotFinalized)
-            {
-                this._tempVisible = value;
-            }
-            else
+            this._tempVisible = value;
+            if (this._isFinalized)
             {
                 super.visible = value;
             };
@@ -179,7 +218,7 @@
 
         public function set showModalContainer(val:Boolean):void
         {
-            if (((this.modal) && (!((this._modalContainer == null)))))
+            if (((this.modal) && (!(this._modalContainer == null))))
             {
                 this._modalContainer.visible = val;
             };
@@ -188,6 +227,32 @@
         public function get uiData():UiData
         {
             return (this._uiData);
+        }
+
+        public function get scriptTime():Number
+        {
+            return (this._scriptTime);
+        }
+
+        public function get childIndex():int
+        {
+            return (parent.getChildIndex(this));
+        }
+
+        public function set childIndex(pChildIndex:int):void
+        {
+            parent.setChildIndex(this, pChildIndex);
+        }
+
+        public function get magneticElements():Array
+        {
+            var elem:*;
+            var elements:Array = new Array();
+            for (elem in this._magneticElements)
+            {
+                elements.push(elem);
+            };
+            return (elements);
         }
 
         public function addElement(sName:String, oElement:Object):void
@@ -202,6 +267,10 @@
 
         public function getElement(sName:String):GraphicContainer
         {
+            if (((!(this._aNamedElements[sName])) && (sName == name)))
+            {
+                return (this);
+            };
             return (this._aNamedElements[sName]);
         }
 
@@ -210,7 +279,17 @@
             return (this._aNamedElements);
         }
 
-        public function getConstant(name:String)
+        public function registerHintContainer(oElement:Object):void
+        {
+            this.subHintContainer = (oElement as GraphicContainer);
+        }
+
+        public function getHintContainer():GraphicContainer
+        {
+            return (this.subHintContainer);
+        }
+
+        public function getConstant(name:String):*
         {
             return (this.constants[name]);
         }
@@ -219,6 +298,7 @@
         {
             var elem:FinalizableUIComponent;
             var t:int;
+            var result:Result;
             var cb:Callback;
             if (((!(this._lock)) || (this._rendering)))
             {
@@ -226,7 +306,7 @@
             };
             for each (elem in this._aFinalizeElements)
             {
-                if (!(elem.finalized))
+                if (!elem.finalized)
                 {
                     return;
                 };
@@ -234,26 +314,27 @@
             this._lock = false;
             this.render();
             this._ready = true;
-            if (this.tempHolder)
+            if (((this.tempHolder) && (this.tempHolder.parent)))
             {
-                if (!(this.hideAfterLoading))
+                if (!this.hideAfterLoading)
                 {
                     this.tempHolder.parent.addChildAt(this, this.tempHolder.parent.getChildIndex(this.tempHolder));
                 };
                 this.tempHolder.parent.removeChild(this.tempHolder);
-                this.tempHolder = null;
             };
-            this._isNotFinalized = false;
+            this.tempHolder = null;
+            this._isFinalized = true;
             var destroyNow:Boolean;
             if (((this.uiClass) && (this.uiClass.hasOwnProperty("main"))))
             {
                 this._rendering = true;
-                t = getTimer();
                 FpsManager.getInstance().startTracking("hook", 7108545);
-                ErrorManager.tryFunction(this.uiClass["main"], [this._properties], (((("Une erreur est survenue lors de l'exécution de la fonction main de l'interface " + name) + " (") + getQualifiedClassName(this.uiClass)) + ")"));
+                t = getTimer();
+                result = ErrorManager.tryFunction(this.uiClass["main"], [this._properties], (((("Une erreur est survenue lors de l'exécution de la fonction main de l'interface " + name) + " (") + getQualifiedClassName(this.uiClass)) + ")"));
+                this._scriptTime = (getTimer() - t);
                 FpsManager.getInstance().stopTracking("hook");
                 this._rendering = false;
-                if (ErrorManager.lastTryFunctionHasException)
+                if (!result.success)
                 {
                     destroyNow = true;
                 }
@@ -269,15 +350,29 @@
                 {
                     cb.exec();
                 };
-                this._waitingFctCall = null;
+                this._waitingFctCall.length = 0;
             };
             dispatchEvent(new UiRenderEvent(UiRenderEvent.UIRenderComplete, false, false, this));
-            this.visible = this._tempVisible;
+            if (((this._properties) && (this._properties.hasOwnProperty("visible"))))
+            {
+                this.visible = this._properties.visible;
+            }
+            else
+            {
+                this.visible = this._tempVisible;
+            };
             if (destroyNow)
             {
                 _log.error((("UI " + name) + " has encountered an exception and must be unloaded."));
-                _log.warn(("" + ErrorManager.lastExceptionStacktrace));
+                _log.warn(result.stackTrace);
                 Berilia.getInstance().unloadUi(name);
+            }
+            else
+            {
+                if (this.restoreSnapshotAfterLoading)
+                {
+                    this.restoreSnapshot();
+                };
             };
         }
 
@@ -285,7 +380,10 @@
         {
             var i:int;
             var ge:GraphicElement;
+            var dragControler:*;
             var pfc:FinalizableUIComponent;
+            var stageVisibleBounds:Rectangle;
+            var dc:DragControler;
             this._renderAsk = true;
             var wasReady:Boolean = this._ready;
             this._ready = false;
@@ -293,9 +391,13 @@
             {
                 return;
             };
-            var t1:uint = getTimer();
+            if (this.fullscreen)
+            {
+                stageVisibleBounds = StageShareManager.stageVisibleBounds;
+                x = stageVisibleBounds.x;
+                y = stageVisibleBounds.y;
+            };
             this._rendering = true;
-            this._aPositionnedElement = new Array();
             this.zSort(this._aSizeStack);
             this.processSize();
             i = 0;
@@ -312,30 +414,55 @@
             {
                 if (this._aGraphicLocationStack[i] != null)
                 {
-                    if (!(this._aGraphicLocationStack[i].render))
+                    if (!this._aGraphicLocationStack[i].render)
                     {
                         ge = this._aGraphicLocationStack[i];
-                        if (!(ge.sprite.dynamicPosition))
+                        if (!ge.sprite.dynamicPosition)
                         {
-                            this.processLocation(this._aGraphicLocationStack[i]);
+                            this.processLocation(this._aGraphicLocationStack[i], true);
                         };
                     };
                 };
                 i++;
+            };
+            for (dragControler in this._dragControllers)
+            {
+                dc = DragControler(dragControler);
+                if (dc.restrictionFunction != null)
+                {
+                    dc.restrictionFunction.call();
+                }
+                else
+                {
+                    dc.restrictPosition();
+                };
             };
             this.updateLinkedUi();
             for each (pfc in this._aPostFinalizeElement)
             {
                 pfc.finalize();
             };
-            this._aPositionnedElement = new Array();
             this._rendering = false;
             this._ready = wasReady;
+            if (((this.uiClass) && (Object(this.uiClass).hasOwnProperty("renderUpdate"))))
+            {
+                this.uiClass.renderUpdate();
+            };
+        }
+
+        public function registerMagneticElement(gc:GraphicContainer):void
+        {
+            this._magneticElements[gc] = true;
+        }
+
+        public function removeMagneticElement(gc:GraphicContainer):void
+        {
+            delete this._magneticElements[gc];
         }
 
         public function registerId(sName:String, geReference:GraphicElement):void
         {
-            if (((!((this._aGraphicElementIndex[sName] == null))) && (!((this._aGraphicElementIndex[sName] == undefined)))))
+            if (((!(this._aGraphicElementIndex[sName] == null)) && (!(this._aGraphicElementIndex[sName] == undefined))))
             {
                 throw (new BeriliaError((sName + " name is already used")));
             };
@@ -366,7 +493,7 @@
             while (i < this._aGraphicLocationStack.length)
             {
                 ge = this._aGraphicLocationStack[i];
-                if (((!((ge == null))) && ((ge.sprite.name == sName))))
+                if (((!(ge == null)) && (ge.sprite.name == sName)))
                 {
                     delete this._aGraphicLocationStack[i];
                     break;
@@ -376,10 +503,10 @@
             i = 0;
             while (i < this._aSizeStack.length)
             {
-                if (((!((this._aSizeStack[i] == null))) && ((this._aSizeStack[i].name == sName))))
+                if (((!(this._aSizeStack[i] == null)) && (this._aSizeStack[i].name == sName)))
                 {
                     delete this._aSizeStack[i];
-                    return;
+                    break;
                 };
                 i++;
             };
@@ -387,6 +514,10 @@
 
         public function addDynamicSizeElement(geReference:GraphicElement):void
         {
+            if (!geReference)
+            {
+                return;
+            };
             var i:uint;
             while (i < this._aSizeStack.length)
             {
@@ -404,7 +535,7 @@
             var i:uint;
             while (i < this._aGraphicLocationStack.length)
             {
-                if (((!((this._aGraphicLocationStack[i] == null))) && ((this._aGraphicLocationStack[i].sprite.name == ge.sprite.name))))
+                if (((!(this._aGraphicLocationStack[i] == null)) && (this._aGraphicLocationStack[i].sprite.name == ge.sprite.name)))
                 {
                     return;
                 };
@@ -420,12 +551,33 @@
 
         public function addFinalizeElement(fc:FinalizableUIComponent):void
         {
+            if (!this._aFinalizeElements)
+            {
+                _log.error(((("_aFinalizeElements NULL, on ne peut pas push " + (fc as GraphicContainer).name) + "  pour ") + name));
+                return;
+            };
             this._aFinalizeElements.push(fc);
+        }
+
+        public function resetSizeAndPosition():void
+        {
+            if (this.fullscreen)
+            {
+                this.listenResize(true);
+            }
+            else
+            {
+                this.listenResize(false);
+            };
         }
 
         public function addRadioGroup(groupName:String):RadioGroup
         {
-            if (!(this.radioGroup[groupName]))
+            if (!this.radioGroup)
+            {
+                this.radioGroup = new Array();
+            };
+            if (!this.radioGroup[groupName])
             {
                 this.radioGroup[groupName] = new RadioGroup(groupName);
             };
@@ -434,6 +586,10 @@
 
         public function getRadioGroup(name:String):RadioGroup
         {
+            if (!this.radioGroup)
+            {
+                return (null);
+            };
             return (this.radioGroup[name]);
         }
 
@@ -482,23 +638,19 @@
             };
         }
 
-        public function destroyUi(accesKey:Object):void
+        public function destroyUi():void
         {
             var r:RadioGroup;
             var num:int;
             var i:int;
             var component:GraphicContainer;
-            if (accesKey !== SecureCenter.ACCESS_KEY)
-            {
-                throw (new IllegalOperationError());
-            };
             for each (r in this.radioGroup)
             {
                 RadioGroup(r).destroy();
             };
             this.radioGroup = null;
-            this._stage = null;
             this._root = null;
+            this._magneticElements = new Dictionary(true);
             this._aNamedElements = new Array();
             this._aSizeStack = new Array();
             this._linkedUi = new Array();
@@ -516,85 +668,247 @@
                     i++;
                 };
             };
+            if (this.windowOwner)
+            {
+                this.windowOwner.destroy();
+            };
             this._aFinalizeElements = null;
+            PoolsManager.getInstance().getPointPool().checkIn((this.pModificator_offset as PoolablePoint));
+        }
+
+        public function makeSnapshot():void
+        {
+            var snapshot:UISnapshot;
+            var tabName:String;
+            var rg:RadioGroup = this.getRadioGroup("tabHGroup");
+            if (((rg) && (rg.selectedItem)))
+            {
+                snapshot = new UISnapshot();
+                tabName = (rg.selectedItem as GraphicContainer).customUnicName;
+                if (tabName.indexOf("::") != -1)
+                {
+                    tabName = tabName.split("::")[1];
+                };
+                snapshot.lastHorizontalTabName = tabName;
+            };
+            if (snapshot)
+            {
+                StoreDataManager.getInstance().setData(BeriliaConstants.DATASTORE_UI_SNAPSHOT, (getQualifiedClassName(this.uiClass) + "_snapshot"), snapshot);
+            };
+        }
+
+        public function setOnTop():void
+        {
+            parent.addChild(this);
+        }
+
+        private function restoreSnapshot():void
+        {
+            var lastTab:ButtonContainer;
+            var snapshot:UISnapshot = StoreDataManager.getInstance().getData(BeriliaConstants.DATASTORE_UI_SNAPSHOT, (getQualifiedClassName(this.uiClass) + "_snapshot"));
+            if (snapshot)
+            {
+                if (snapshot.lastHorizontalTabName)
+                {
+                    lastTab = (this.getElement(snapshot.lastHorizontalTabName) as ButtonContainer);
+                    if ((((((lastTab) && (lastTab.visible)) && (!(lastTab.selected))) && (!(lastTab.softDisabled))) && (!(lastTab.disabled))))
+                    {
+                        lastTab.selected = true;
+                        this.uiClass.onRelease(this.uiClass[snapshot.lastHorizontalTabName]);
+                    }
+                    else
+                    {
+                        if ((((this.uiClass) && ("hintsApi" in this.uiClass)) && ("currentTabName" in this.uiClass)))
+                        {
+                            this.uiClass.hintsApi.uiTutoTabLaunch();
+                        };
+                    };
+                };
+            }
+            else
+            {
+                if ((((this.uiClass) && ("hintsApi" in this.uiClass)) && ("currentTabName" in this.uiClass)))
+                {
+                    this.uiClass.hintsApi.uiTutoTabLaunch();
+                };
+            };
         }
 
         private function isRegisteredId(sName:String):Boolean
         {
-            return (!((this._aGraphicElementIndex[sName] == null)));
+            return (!(this._aGraphicElementIndex[sName] == null));
         }
 
         private function processSize():void
         {
             var ge:GraphicElement;
+            var newWidth:Number;
+            var newHeight:Number;
+            var p:Point;
             var i:uint;
             while (i < this._aSizeStack.length)
             {
                 ge = this._aSizeStack[i];
                 if (ge != null)
                 {
-                    if (((!(isNaN(ge.size.x))) && ((ge.size.xUnit == GraphicSize.SIZE_PRC))))
+                    newWidth = NaN;
+                    newHeight = NaN;
+                    p = ge.sprite.getSavedDimension();
+                    if (p)
                     {
-                        if (((((ge.sprite) && (ge.sprite.parent))) && ((ge.sprite.parent.parent is UiRootContainer))))
+                        this.listenResize(true);
+                        newWidth = p.x;
+                        newHeight = p.y;
+                    }
+                    else
+                    {
+                        if (((!(isNaN(ge.size.x))) && (ge.size.xUnit == GraphicSize.SIZE_PRC)))
                         {
-                            ge.sprite.width = int((ge.size.x * StageShareManager.startWidth));
-                        }
-                        else
-                        {
-                            if (GraphicContainer(ge.sprite).getParent())
+                            if ((((ge.sprite) && (ge.sprite.parent)) && (ge.sprite.parent.parent is UiRootContainer)))
                             {
-                                ge.sprite.width = int((ge.size.x * GraphicContainer(ge.sprite).getParent().width));
+                                if (this.fullscreen)
+                                {
+                                    newWidth = int((ge.size.x * StageShareManager.stageVisibleBounds.width));
+                                }
+                                else
+                                {
+                                    newWidth = int((ge.size.x * StageShareManager.startWidth));
+                                };
+                            }
+                            else
+                            {
+                                if (GraphicContainer(ge.sprite).getParent())
+                                {
+                                    newWidth = int((ge.size.x * GraphicContainer(ge.sprite).getParent().width));
+                                };
+                            };
+                        };
+                        if (((!(isNaN(ge.size.y))) && (ge.size.yUnit == GraphicSize.SIZE_PRC)))
+                        {
+                            if ((((ge.sprite) && (ge.sprite.parent)) && (ge.sprite.parent.parent is UiRootContainer)))
+                            {
+                                if (this.fullscreen)
+                                {
+                                    newHeight = int((ge.size.y * StageShareManager.stageVisibleBounds.height));
+                                }
+                                else
+                                {
+                                    newHeight = int((ge.size.y * StageShareManager.startHeight));
+                                };
+                            }
+                            else
+                            {
+                                if (GraphicContainer(ge.sprite).getParent())
+                                {
+                                    newHeight = int((ge.size.y * GraphicContainer(ge.sprite).getParent().height));
+                                };
                             };
                         };
                     };
-                    if (((!(isNaN(ge.size.y))) && ((ge.size.yUnit == GraphicSize.SIZE_PRC))))
+                    if (((isNaN(newWidth)) || (isNaN(newHeight))))
                     {
-                        if (((((ge.sprite) && (ge.sprite.parent))) && ((ge.sprite.parent.parent is UiRootContainer))))
+                        if (!isNaN(newWidth))
                         {
-                            ge.sprite.height = int((ge.size.y * StageShareManager.startHeight));
-                        }
-                        else
-                        {
-                            if (GraphicContainer(ge.sprite).getParent())
-                            {
-                                ge.sprite.height = int((ge.size.y * GraphicContainer(ge.sprite).getParent().height));
-                            };
+                            ge.sprite.width = newWidth;
                         };
+                        if (!isNaN(newHeight))
+                        {
+                            ge.sprite.height = newHeight;
+                        };
+                    }
+                    else
+                    {
+                        ge.sprite.finalized = false;
+                        ge.sprite.width = newWidth;
+                        ge.sprite.finalized = true;
+                        ge.sprite.height = newHeight;
                     };
                 };
                 i++;
             };
         }
 
-        public function processLocation(geElem:GraphicElement):void
+        public function processLocation(geElem:GraphicElement, fromRender:Boolean=false):void
         {
             var ptTopLeftCorner:Point;
             var ptBottomRightCorner:Point;
+            var width:Number;
+            var height:Number;
+            if (!fromRender)
+            {
+                this._stageAddedWidth = 0;
+            };
+            var ptNewPos:Point = (PoolsManager.getInstance().getPointPool().checkOut() as PoolablePoint);
+            var p:Point = geElem.sprite.getSavedPosition();
+            if (p)
+            {
+                if (((!(geElem.sprite.dragController)) || (geElem.sprite._dragController.savePosition)))
+                {
+                    this.listenResize(true);
+                    if (this.fullscreen)
+                    {
+                        if (p.x > (StageShareManager.startWidth / 2))
+                        {
+                            ptNewPos.x = ((p.x - StageShareManager.stageVisibleBounds.x) + this._stageAddedWidth);
+                        }
+                        else
+                        {
+                            ptNewPos.x = ((p.x - StageShareManager.stageVisibleBounds.x) - this._stageAddedWidth);
+                        };
+                        ptNewPos.y = p.y;
+                        if (((geElem.sprite) && (ptNewPos)))
+                        {
+                            geElem.sprite.xNoCache = ptNewPos.x;
+                            geElem.sprite.yNoCache = ptNewPos.y;
+                        }
+                        else
+                        {
+                            geElem.sprite.xNoCache = p.x;
+                            geElem.sprite.yNoCache = p.y;
+                        };
+                    }
+                    else
+                    {
+                        geElem.sprite.xNoCache = p.x;
+                        geElem.sprite.yNoCache = p.y;
+                    };
+                    return;
+                };
+            };
             var startValueX:Number = geElem.sprite.x;
             var startValueY:Number = geElem.sprite.y;
-            var startOffsetX:Number = geElem.location.getOffsetX();
-            var startOffsetY:Number = geElem.location.getOffsetY();
-            geElem.sprite.x = 0;
-            geElem.sprite.y = 0;
-            geElem.location.setOffsetX(startOffsetX);
-            geElem.location.setOffsetY(startOffsetY);
+            geElem.sprite.xNoCache = 0;
+            geElem.sprite.yNoCache = 0;
             if (geElem.locations.length > 1)
             {
-                geElem.sprite.width = 0;
-                geElem.sprite.height = 0;
-                ptTopLeftCorner = this.getLocation(new Point(geElem.sprite.x, geElem.sprite.y), geElem.locations[0], geElem.sprite);
-                ptBottomRightCorner = this.getLocation(new Point(geElem.sprite.x, geElem.sprite.y), geElem.locations[1], geElem.sprite);
+                ptTopLeftCorner = (PoolsManager.getInstance().getPointPool().checkOut() as PoolablePoint).renew(geElem.sprite.x, geElem.sprite.y);
+                ptTopLeftCorner = this.getLocation(ptTopLeftCorner, geElem.locations[0], geElem.sprite);
+                ptBottomRightCorner = (PoolsManager.getInstance().getPointPool().checkOut() as PoolablePoint).renew(geElem.sprite.x, geElem.sprite.y);
+                ptBottomRightCorner = this.getLocation(ptBottomRightCorner, geElem.locations[1], geElem.sprite);
                 if (((ptTopLeftCorner) && (ptBottomRightCorner)))
                 {
-                    geElem.sprite.width = Math.floor(Math.abs((ptBottomRightCorner.x - ptTopLeftCorner.x)));
-                    geElem.sprite.height = Math.floor(Math.abs((ptBottomRightCorner.y - ptTopLeftCorner.y)));
+                    width = Math.floor(Math.abs((ptBottomRightCorner.x - ptTopLeftCorner.x)));
+                    height = Math.floor(Math.abs((ptBottomRightCorner.y - ptTopLeftCorner.y)));
+                    if ((geElem.sprite is MapViewer))
+                    {
+                        (geElem.sprite as MapViewer).setSize(width, height);
+                    }
+                    else
+                    {
+                        geElem.sprite.width = width;
+                        geElem.sprite.height = height;
+                    };
                 }
                 else
                 {
                     _log.error(((("Erreur de positionement dans " + name) + " avec ") + geElem.name));
                 };
+                PoolsManager.getInstance().getPointPool().checkIn((ptTopLeftCorner as PoolablePoint));
+                PoolsManager.getInstance().getPointPool().checkIn((ptBottomRightCorner as PoolablePoint));
             };
-            var ptNewPos:Point = this.getLocation(new Point(geElem.sprite.x, geElem.sprite.y), geElem.location, geElem.sprite);
+            ptNewPos.x = geElem.sprite.x;
+            ptNewPos.y = geElem.sprite.y;
+            ptNewPos = this.getLocation(ptNewPos, geElem.location, geElem.sprite);
             if (((geElem.sprite) && (ptNewPos)))
             {
                 geElem.sprite.x = ptNewPos.x;
@@ -606,20 +920,20 @@
                 geElem.sprite.y = startValueY;
                 _log.error(((("Erreur dans " + name) + " avec ") + geElem.name));
             };
+            PoolsManager.getInstance().getPointPool().checkIn((ptNewPos as PoolablePoint));
         }
 
         private function getLocation(ptStart:Point, glLocation:GraphicLocation, doTarget:DisplayObject):Point
         {
             var doRelative:DisplayObject;
             var ref:DisplayObject;
+            var pTarget:Point;
+            var pRef:Point;
             var uiTarget:Array;
             var ui:UiRootContainer;
-            var pModificator:Point = new Point();
-            var pRef:Point = new Point();
-            var pTarget:Point = new Point();
-            if ((((glLocation.offsetXType == LocationTypeEnum.LOCATION_TYPE_RELATIVE)) || ((glLocation.offsetYType == LocationTypeEnum.LOCATION_TYPE_RELATIVE))))
+            var pModificator:Point = (PoolsManager.getInstance().getPointPool().checkOut() as PoolablePoint);
+            if (((glLocation.offsetXType == LocationTypeEnum.LOCATION_TYPE_RELATIVE) || (glLocation.offsetYType == LocationTypeEnum.LOCATION_TYPE_RELATIVE)))
             {
-                pRef = doTarget.localToGlobal(new Point(doTarget.x, doTarget.y));
                 switch (glLocation.getRelativeTo())
                 {
                     case GraphicLocation.REF_PARENT:
@@ -636,11 +950,14 @@
                     ptStart.y = (ptStart.y + pModificator.y);
                 };
             };
-            if ((((glLocation.offsetXType == LocationTypeEnum.LOCATION_TYPE_ABSOLUTE)) || ((glLocation.offsetYType == LocationTypeEnum.LOCATION_TYPE_ABSOLUTE))))
+            if (((glLocation.offsetXType == LocationTypeEnum.LOCATION_TYPE_ABSOLUTE) || (glLocation.offsetYType == LocationTypeEnum.LOCATION_TYPE_ABSOLUTE)))
             {
+                pTarget = (PoolsManager.getInstance().getPointPool().checkOut() as PoolablePoint);
                 pModificator.x = 0;
                 pModificator.y = 0;
-                pRef = doTarget.localToGlobal(new Point(doTarget.x, doTarget.y));
+                pRef = (PoolsManager.getInstance().getPointPool().checkOut() as PoolablePoint);
+                (pRef as PoolablePoint).renew(doTarget.x, doTarget.y);
+                pRef = doTarget.localToGlobal(pRef);
                 switch (glLocation.getRelativeTo())
                 {
                     case GraphicLocation.REF_PARENT:
@@ -648,14 +965,12 @@
                         pModificator.y = glLocation.getOffsetY();
                         break;
                     case GraphicLocation.REF_SCREEN:
-                        pTarget = doTarget.localToGlobal(new Point(doTarget.x, doTarget.y));
-                        pModificator.x = (glLocation.getOffsetX() - pTarget.x);
-                        pModificator.y = (glLocation.getOffsetY() - pTarget.y);
+                        pModificator.x = (glLocation.getOffsetX() - pRef.x);
+                        pModificator.y = (glLocation.getOffsetY() - pRef.y);
                         break;
                     case GraphicLocation.REF_TOP:
-                        pTarget = new Point(x, y);
-                        pModificator.x = (glLocation.getOffsetX() + (pTarget.x - pRef.x));
-                        pModificator.y = (glLocation.getOffsetY() + (pTarget.y - pRef.y));
+                        pModificator.x = (glLocation.getOffsetX() + (x - pRef.x));
+                        pModificator.y = (glLocation.getOffsetY() + (y - pRef.y));
                         break;
                     default:
                         if (this.isRegisteredId(glLocation.getRelativeTo()))
@@ -676,18 +991,17 @@
                                 {
                                     uiTarget = glLocation.getRelativeTo().split(".");
                                     ui = Berilia.getInstance().getUi(uiTarget[0]);
-                                    if (!(ui))
+                                    if (!ui)
                                     {
                                         _log.warn((((((("[Warning] UI " + uiTarget[0]) + " does not exist (found ") + glLocation.getRelativeTo()) + " in ") + name) + ")"));
                                         return (null);
                                     };
-                                    if (!(ui.getElementById(uiTarget[1])))
+                                    if (!ui.getElementById(uiTarget[1]))
                                     {
                                         _log.warn((((((((("[Warning] UI " + uiTarget[0]) + " does not contain element [") + uiTarget[1]) + "] (found ") + glLocation.getRelativeTo()) + " in ") + name) + ")"));
                                         return (null);
                                     };
                                     ref = ui.getElementById(uiTarget[1]).sprite;
-                                    pRef = doTarget.localToGlobal(new Point(doTarget.x, doTarget.y));
                                     GraphicContainer(ref).getUi().addLinkedUi(name);
                                 }
                                 else
@@ -697,7 +1011,8 @@
                                 };
                             };
                         };
-                        pTarget = doTarget.localToGlobal(new Point(ref.x, ref.y));
+                        (pTarget as PoolablePoint).renew(ref.x, ref.y);
+                        pTarget = doTarget.localToGlobal(pTarget);
                         pModificator.x = (glLocation.getOffsetX() + (pTarget.x - pRef.x));
                         pModificator.y = (glLocation.getOffsetY() + (pTarget.y - pRef.y));
                 };
@@ -709,8 +1024,11 @@
                 {
                     ptStart.y = (ptStart.y + pModificator.y);
                 };
+                PoolsManager.getInstance().getPointPool().checkIn((pModificator as PoolablePoint));
+                PoolsManager.getInstance().getPointPool().checkIn((pRef as PoolablePoint));
+                PoolsManager.getInstance().getPointPool().checkIn((pTarget as PoolablePoint));
             };
-            pModificator = this.getOffsetModificator(glLocation.getPoint(), doTarget);
+            pModificator = this.getOffsetModificator(glLocation.getPoint(), doTarget, this.pModificator_offset);
             ptStart.x = (ptStart.x - pModificator.x);
             ptStart.y = (ptStart.y - pModificator.y);
             switch (glLocation.getRelativeTo())
@@ -734,51 +1052,89 @@
                         _log.warn((("[Warning] Wrong relative position : " + doRelative.name) + " refer to himself"));
                     };
             };
-            pModificator = this.getOffsetModificator(glLocation.getRelativePoint(), doRelative);
+            pModificator = this.getOffsetModificator(glLocation.getRelativePoint(), doRelative, this.pModificator_offset);
             ptStart.x = (ptStart.x + pModificator.x);
             ptStart.y = (ptStart.y + pModificator.y);
             return (ptStart);
         }
 
-        private function getOffsetModificator(nPoint:uint, doTarget:DisplayObject):Point
+        protected function listenResize(listen:Boolean):void
         {
-            var nWidth:uint = (((((doTarget == null)) || ((doTarget is UiRootContainer)))) ? StageShareManager.startWidth : doTarget.width);
-            var nHeight:uint = (((((doTarget == null)) || ((doTarget is UiRootContainer)))) ? StageShareManager.startHeight : doTarget.height);
-            var pModificator:Point = new Point(0, 0);
+            if (this._resizeListening == listen)
+            {
+                return;
+            };
+            if (listen)
+            {
+                StageShareManager.stage.nativeWindow.addEventListener(NativeWindowBoundsEvent.RESIZE, this.onResize, false, 0, true);
+                StageShareManager.stage.addEventListener(FullScreenEvent.FULL_SCREEN, this.onResize, false, 0, true);
+            }
+            else
+            {
+                StageShareManager.stage.nativeWindow.removeEventListener(NativeWindowBoundsEvent.RESIZE, this.onResize);
+                StageShareManager.stage.removeEventListener(FullScreenEvent.FULL_SCREEN, this.onResize);
+            };
+            this._resizeListening = listen;
+        }
+
+        private function getOffsetModificator(nPoint:uint, doTarget:DisplayObject, offsetModificator:Point):Point
+        {
+            var nWidth:uint;
+            var nHeight:uint;
+            if (((doTarget == null) || (doTarget is UiRootContainer)))
+            {
+                if (this._fullscreen)
+                {
+                    nWidth = Math.abs(StageShareManager.stageVisibleBounds.width);
+                    nHeight = Math.abs(StageShareManager.stageVisibleBounds.height);
+                }
+                else
+                {
+                    nWidth = Math.abs(StageShareManager.startWidth);
+                    nHeight = Math.abs(StageShareManager.startHeight);
+                };
+            }
+            else
+            {
+                nWidth = Math.abs(doTarget.width);
+                nHeight = Math.abs(doTarget.height);
+            };
+            offsetModificator.x = 0;
+            offsetModificator.y = 0;
             switch (nPoint)
             {
                 case LocationEnum.POINT_TOPLEFT:
                     break;
                 case LocationEnum.POINT_TOP:
-                    pModificator.x = (nWidth / 2);
+                    offsetModificator.x = (nWidth / 2);
                     break;
                 case LocationEnum.POINT_TOPRIGHT:
-                    pModificator.x = nWidth;
+                    offsetModificator.x = nWidth;
                     break;
                 case LocationEnum.POINT_LEFT:
-                    pModificator.y = (nWidth / 2);
+                    offsetModificator.y = (nWidth / 2);
                     break;
                 case LocationEnum.POINT_CENTER:
-                    pModificator.x = (nWidth / 2);
-                    pModificator.y = (nHeight / 2);
+                    offsetModificator.x = (nWidth / 2);
+                    offsetModificator.y = (nHeight / 2);
                     break;
                 case LocationEnum.POINT_RIGHT:
-                    pModificator.x = nWidth;
-                    pModificator.y = (nHeight / 2);
+                    offsetModificator.x = nWidth;
+                    offsetModificator.y = (nHeight / 2);
                     break;
                 case LocationEnum.POINT_BOTTOMLEFT:
-                    pModificator.y = nHeight;
+                    offsetModificator.y = nHeight;
                     break;
                 case LocationEnum.POINT_BOTTOM:
-                    pModificator.x = (nWidth / 2);
-                    pModificator.y = nHeight;
+                    offsetModificator.x = (nWidth / 2);
+                    offsetModificator.y = nHeight;
                     break;
                 case LocationEnum.POINT_BOTTOMRIGHT:
-                    pModificator.x = nWidth;
-                    pModificator.y = nHeight;
+                    offsetModificator.x = nWidth;
+                    offsetModificator.y = nHeight;
                     break;
             };
-            return (pModificator);
+            return (offsetModificator);
         }
 
         private function zSort(aSort:Array):Boolean
@@ -808,7 +1164,7 @@
                                 gl = ge.locations[j];
                                 if (aSort[k] != null)
                                 {
-                                    if (((((!((gl.getRelativeTo().charAt(0) == "$"))) && ((gl.getRelativeTo() == aSort[k].sprite.name)))) || ((((gl.getRelativeTo() == GraphicLocation.REF_PARENT)) && ((aSort[k].sprite == ge.sprite.getParent()))))))
+                                    if ((((!(gl.getRelativeTo().charAt(0) == "$")) && (gl.getRelativeTo() == aSort[k].sprite.name)) || ((gl.getRelativeTo() == GraphicLocation.REF_PARENT) && (aSort[k].sprite == ge.sprite.getParent()))))
                                     {
                                         bSwap = true;
                                         bChange = true;
@@ -828,14 +1184,17 @@
             return (bSwap);
         }
 
-        private function onDefinitionUpdateTimer(e:TimerEvent):void
+        protected function onResize(event:Event=null):void
         {
-            UiRenderManager.getInstance().updateCachedUiDefinition();
-            this._uiDefinitionUpdateTimer.removeEventListener(TimerEvent.TIMER, this.onDefinitionUpdateTimer);
-            this._uiDefinitionUpdateTimer = null;
+            if (this._lock == false)
+            {
+                this.render();
+            };
+            this._stageAddedWidth = (this._stageAddedWidth + (this._lastVisibleStageX - StageShareManager.stageVisibleBounds.x));
+            this._lastVisibleStageX = StageShareManager.stageVisibleBounds.x;
         }
 
 
     }
-}//package com.ankamagames.berilia.types.graphic
+} com.ankamagames.berilia.types.graphic
 

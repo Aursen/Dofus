@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.kernel.sound.manager
+package com.ankamagames.dofus.kernel.sound.manager
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
@@ -11,15 +11,9 @@
     import com.ankamagames.atouin.data.map.elements.BasicElement;
     import com.ankamagames.atouin.data.map.elements.SoundElement;
     import com.ankamagames.atouin.data.map.Map;
-    import com.ankamagames.jerakine.types.Uri;
     import com.ankamagames.dofus.kernel.sound.utils.SoundUtil;
-    import com.ankamagames.dofus.kernel.sound.SoundManager;
-    import com.ankamagames.tubul.factory.SoundFactory;
-    import com.ankamagames.tubul.enum.EnumSoundType;
-    import com.ankamagames.tubul.types.sounds.LocalizedSound;
-    import com.ankamagames.tubul.types.SoundSilence;
-    import com.ankamagames.tubul.Tubul;
     import com.ankamagames.dofus.kernel.sound.type.SoundDofus;
+    import com.ankamagames.tubul.types.SoundSilence;
     import __AS3__.vec.*;
 
     public class LocalizedSoundsManager 
@@ -71,37 +65,18 @@
         {
             var lms:LocalizedMapSound;
             var busId:uint;
-            var soundPath:String;
-            var soundUri:Uri;
             var localizedSound:ISound;
             for each (lms in this._localizedSounds)
             {
                 busId = SoundUtil.getBusIdBySoundId(lms.soundId);
-                soundPath = SoundUtil.getConfigEntryByBusId(busId);
-                soundUri = new Uri(((soundPath + lms.soundId) + ".mp3"));
-                if ((SoundManager.getInstance().manager is ClassicSoundManager))
-                {
-                    localizedSound = SoundFactory.getSound(EnumSoundType.LOCALIZED_SOUND, soundUri);
-                    localizedSound.busId = busId;
-                    (localizedSound as LocalizedSound).saturationRange = lms.saturationRange;
-                    (localizedSound as LocalizedSound).silence = new SoundSilence(lms.silenceMin, lms.silenceMax);
-                    (localizedSound as LocalizedSound).range = lms.range;
-                    (localizedSound as LocalizedSound).volumeMax = lms.volumeMax;
-                    (localizedSound as LocalizedSound).position = lms.position;
-                    (localizedSound as LocalizedSound).updateObserverPosition(Tubul.getInstance().earPosition);
-                    SoundManager.getInstance().manager.playSound(localizedSound);
-                };
-                if ((SoundManager.getInstance().manager is RegSoundManager))
-                {
-                    localizedSound = new SoundDofus(lms.soundId);
-                    localizedSound.busId = busId;
-                    (localizedSound as SoundDofus).saturationRange = lms.saturationRange;
-                    (localizedSound as SoundDofus).silence = new SoundSilence(lms.silenceMin, lms.silenceMax);
-                    (localizedSound as SoundDofus).range = lms.range;
-                    (localizedSound as SoundDofus).volumeMax = lms.volumeMax;
-                    (localizedSound as SoundDofus).position = lms.position;
-                    localizedSound.play();
-                };
+                localizedSound = new SoundDofus(lms.soundId);
+                localizedSound.busId = busId;
+                (localizedSound as SoundDofus).saturationRange = lms.saturationRange;
+                (localizedSound as SoundDofus).silence = new SoundSilence(lms.silenceMin, lms.silenceMax);
+                (localizedSound as SoundDofus).range = lms.range;
+                (localizedSound as SoundDofus).volumeMax = lms.volumeMax;
+                (localizedSound as SoundDofus).position = lms.position;
+                localizedSound.play();
                 this._sounds.push(localizedSound);
             };
         }
@@ -125,5 +100,5 @@
 
 
     }
-}//package com.ankamagames.dofus.kernel.sound.manager
+} com.ankamagames.dofus.kernel.sound.manager
 

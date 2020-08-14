@@ -1,8 +1,7 @@
-﻿package com.ankamagames.berilia.factories
+package com.ankamagames.berilia.factories
 {
     import flash.utils.getQualifiedClassName;
     import com.ankamagames.berilia.types.tooltip.Tooltip;
-    import com.ankamagames.berilia.managers.SecureCenter;
     import com.ankamagames.berilia.types.tooltip.EmptyTooltip;
     import com.ankamagames.berilia.managers.TooltipManager;
 
@@ -25,12 +24,18 @@
 
         public static function existRegisterMaker(makerName:String):Boolean
         {
-            return (((_registeredMaker[makerName]) ? true : false));
+            return ((_registeredMaker[makerName]) ? true : false);
+        }
+
+        public static function getMakerInstance(makerName:String):Object
+        {
+            var ttData:TooltipData = _registeredMaker[makerName];
+            return ((ttData) ? new (ttData.maker)() : null);
         }
 
         public static function existMakerAssoc(dataClass:*):Boolean
         {
-            return (((_makerAssoc[getQualifiedClassName(dataClass)]) ? true : false));
+            return ((_makerAssoc[getQualifiedClassName(dataClass)]) ? true : false);
         }
 
         public static function unregister(dataType:Class, maker:Class):void
@@ -46,7 +51,7 @@
             var maker:*;
             var tt:Tooltip;
             var toolt:Object;
-            if (!(makerName))
+            if (!makerName)
             {
                 makerName = _makerAssoc[getQualifiedClassName(data)];
             };
@@ -54,7 +59,7 @@
             if (td)
             {
                 maker = new (td.maker)();
-                toolt = maker.createTooltip(SecureCenter.secure(data), makerParam);
+                toolt = maker.createTooltip(data, makerParam);
                 if (toolt == "")
                 {
                     tt = new EmptyTooltip();
@@ -81,7 +86,7 @@
 
 
     }
-}//package com.ankamagames.berilia.factories
+} com.ankamagames.berilia.factories
 
 class TooltipData 
 {
@@ -96,4 +101,5 @@ class TooltipData
     }
 
 }
+
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.tubul.events.LoadingSound
+package com.ankamagames.tubul.events.LoadingSound
 {
     import flash.events.Event;
 
@@ -9,11 +9,11 @@
         public static const LOADING_FAILED:String = "loading_failed";
         public static const ON_PROGRESS:String = "on_progress";
 
-        public var data;
+        public var data:*;
 
-        public function LoadingSoundEvent(type:String, bubbles:Boolean=false, cancelable:Boolean=false)
+        public function LoadingSoundEvent(_arg_1:String, bubbles:Boolean=false, cancelable:Boolean=false)
         {
-            super(type, bubbles, cancelable);
+            super(_arg_1, bubbles, cancelable);
         }
 
         override public function clone():Event
@@ -25,5 +25,5 @@
 
 
     }
-}//package com.ankamagames.tubul.events.LoadingSound
+} com.ankamagames.tubul.events.LoadingSound
 

@@ -1,8 +1,9 @@
-﻿package com.ankamagames.dofus.network.types.game.context.roleplay
+package com.ankamagames.dofus.network.types.game.context.roleplay
 {
     import com.ankamagames.jerakine.network.INetworkType;
-    import com.ankamagames.dofus.network.types.game.look.EntityLook;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import com.ankamagames.dofus.network.types.game.context.EntityDispositionInformations;
+    import com.ankamagames.dofus.network.types.game.look.EntityLook;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
     import com.ankamagames.dofus.network.ProtocolTypeManager;
@@ -12,23 +13,19 @@
 
         public static const protocolId:uint = 159;
 
-        public var humanoidInfo:HumanInformations;
+        public var humanoidInfo:HumanInformations = new HumanInformations();
         public var accountId:uint = 0;
+        private var _humanoidInfotree:FuncTree;
 
-        public function GameRolePlayHumanoidInformations()
-        {
-            this.humanoidInfo = new HumanInformations();
-            super();
-        }
 
         override public function getTypeId():uint
         {
             return (159);
         }
 
-        public function initGameRolePlayHumanoidInformations(contextualId:int=0, look:EntityLook=null, disposition:EntityDispositionInformations=null, name:String="", humanoidInfo:HumanInformations=null, accountId:uint=0):GameRolePlayHumanoidInformations
+        public function initGameRolePlayHumanoidInformations(contextualId:Number=0, disposition:EntityDispositionInformations=null, look:EntityLook=null, name:String="", humanoidInfo:HumanInformations=null, accountId:uint=0):GameRolePlayHumanoidInformations
         {
-            super.initGameRolePlayNamedActorInformations(contextualId, look, disposition, name);
+            super.initGameRolePlayNamedActorInformations(contextualId, disposition, look, name);
             this.humanoidInfo = humanoidInfo;
             this.accountId = accountId;
             return (this);
@@ -68,6 +65,30 @@
             var _id1:uint = input.readUnsignedShort();
             this.humanoidInfo = ProtocolTypeManager.getInstance(HumanInformations, _id1);
             this.humanoidInfo.deserialize(input);
+            this._accountIdFunc(input);
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GameRolePlayHumanoidInformations(tree);
+        }
+
+        public function deserializeAsyncAs_GameRolePlayHumanoidInformations(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            this._humanoidInfotree = tree.addChild(this._humanoidInfotreeFunc);
+            tree.addChild(this._accountIdFunc);
+        }
+
+        private function _humanoidInfotreeFunc(input:ICustomDataInput):void
+        {
+            var _id:uint = input.readUnsignedShort();
+            this.humanoidInfo = ProtocolTypeManager.getInstance(HumanInformations, _id);
+            this.humanoidInfo.deserializeAsync(this._humanoidInfotree);
+        }
+
+        private function _accountIdFunc(input:ICustomDataInput):void
+        {
             this.accountId = input.readInt();
             if (this.accountId < 0)
             {
@@ -77,5 +98,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.context.roleplay
+} com.ankamagames.dofus.network.types.game.context.roleplay
 

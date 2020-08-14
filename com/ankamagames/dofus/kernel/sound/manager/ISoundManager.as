@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.kernel.sound.manager
+package com.ankamagames.dofus.kernel.sound.manager
 {
     import com.ankamagames.tubul.interfaces.ILocalizedSoundListener;
     import com.ankamagames.jerakine.interfaces.IInterfaceListener;
@@ -14,12 +14,11 @@
         function set soundDirectoryExist(_arg_1:Boolean):void;
         function get soundDirectoryExist():Boolean;
         function get soundIsActivate():Boolean;
-        function retriveXMLSounds():void;
         function retriveRollOffPresets():void;
         function setSubArea(_arg_1:Map=null):void;
         function playSound(_arg_1:ISound, _arg_2:Boolean=false, _arg_3:int=-1):ISound;
-        function playFightMusic():void;
-        function prepareFightMusic():void;
+        function upFightMusicVolume():void;
+        function playFightMusic(_arg_1:Boolean=false):void;
         function stopFightMusic():void;
         function applyDynamicMix(_arg_1:VolumeFadeEffect, _arg_2:uint, _arg_3:VolumeFadeEffect):void;
         function playIntroMusic(_arg_1:Boolean=true):void;
@@ -38,7 +37,11 @@
         function playPlaylist():void;
         function stopPlaylist():void;
         function resetPlaylist():void;
+        function playStopableSound(_arg_1:String):void;
+        function stopStopableSound(_arg_1:String):void;
+        function stopAllStopableSounds():void;
+        function endOfSound(_arg_1:int):void;
 
     }
-}//package com.ankamagames.dofus.kernel.sound.manager
+} com.ankamagames.dofus.kernel.sound.manager
 

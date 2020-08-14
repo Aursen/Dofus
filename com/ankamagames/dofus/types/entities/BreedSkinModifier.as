@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.types.entities
+package com.ankamagames.dofus.types.entities
 {
     import com.ankamagames.tiphon.types.ISkinModifier;
     import com.ankamagames.tiphon.types.Skin;
@@ -10,26 +10,34 @@
 
         public function getModifiedSkin(skin:Skin, requestedPart:String, look:TiphonEntityLook):String
         {
+            var name:String;
+            var id:String;
             var newPart:String;
-            if (((((((!(look)) || (!(look.skins)))) || (!(requestedPart)))) || (!(skin))))
+            var i:int;
+            if (((((!(look)) || (!(look.skins))) || (!(requestedPart))) || (!(skin))))
             {
                 return (requestedPart);
             };
-            var partInfo:Array = requestedPart.split("_");
-            var i:int = (look.skins.length - 1);
-            while (i >= 0)
+            var separatorIndex:int = requestedPart.indexOf("_");
+            if (separatorIndex != -1)
             {
-                newPart = ((((partInfo[0] + "_") + look.skins[i]) + "_") + partInfo[1]);
-                if (skin.getPart(newPart) != null)
+                name = requestedPart.substring(0, (separatorIndex + 1));
+                id = requestedPart.substring(separatorIndex);
+                i = (look.skins.length - 1);
+                while (i >= 0)
                 {
-                    return (newPart);
+                    newPart = ((name + look.skins[i]) + id);
+                    if (skin.getPart(newPart) != null)
+                    {
+                        return (newPart);
+                    };
+                    i--;
                 };
-                i--;
             };
             return (requestedPart);
         }
 
 
     }
-}//package com.ankamagames.dofus.types.entities
+} com.ankamagames.dofus.types.entities
 

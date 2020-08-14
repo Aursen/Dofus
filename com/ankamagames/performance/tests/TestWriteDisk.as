@@ -1,4 +1,4 @@
-﻿package com.ankamagames.performance.tests
+package com.ankamagames.performance.tests
 {
     import com.ankamagames.performance.IBenchmarkTest;
     import com.ankamagames.jerakine.types.CustomSharedObject;
@@ -34,7 +34,7 @@
                 startTime = getTimer();
                 cso.data.content = fullFileContent;
                 cso.flush();
-                if (!(_results))
+                if (!_results)
                 {
                     _results = [];
                 };
@@ -70,12 +70,12 @@
                     i++;
                 };
                 averageTime = (averageTime / _results.length);
-                return (("writeDiskTest:" + averageTime.toString()));
+                return ("writeDiskTest:" + averageTime.toString());
             };
             return ("writeDiskTest:none");
         }
 
 
     }
-}//package com.ankamagames.performance.tests
+} com.ankamagames.performance.tests
 

@@ -1,12 +1,12 @@
-﻿package com.ankamagames.dofus.network.messages.game.context.roleplay.party
+package com.ankamagames.dofus.network.messages.game.context.roleplay.party
 {
     import com.ankamagames.jerakine.network.INetworkMessage;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class PartyRestrictedMessage extends AbstractPartyMessage implements INetworkMessage 
     {
 
@@ -18,7 +18,7 @@
 
         override public function get isInitialized():Boolean
         {
-            return (((super.isInitialized) && (this._isInitialized)));
+            return ((super.isInitialized) && (this._isInitialized));
         }
 
         override public function getMessageId():uint
@@ -53,6 +53,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         override public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_PartyRestrictedMessage(output);
@@ -72,10 +80,26 @@
         public function deserializeAs_PartyRestrictedMessage(input:ICustomDataInput):void
         {
             super.deserialize(input);
+            this._restrictedFunc(input);
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_PartyRestrictedMessage(tree);
+        }
+
+        public function deserializeAsyncAs_PartyRestrictedMessage(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._restrictedFunc);
+        }
+
+        private function _restrictedFunc(input:ICustomDataInput):void
+        {
             this.restricted = input.readBoolean();
         }
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.context.roleplay.party
+} com.ankamagames.dofus.network.messages.game.context.roleplay.party
 

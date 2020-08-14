@@ -1,12 +1,12 @@
-﻿package com.ankamagames.berilia.types.uiDefinition
+package com.ankamagames.berilia.types.uiDefinition
 {
     public class PropertyElement 
     {
 
         public var name:String;
-        public var value;
+        public var value:*;
 
 
     }
-}//package com.ankamagames.berilia.types.uiDefinition
+} com.ankamagames.berilia.types.uiDefinition
 

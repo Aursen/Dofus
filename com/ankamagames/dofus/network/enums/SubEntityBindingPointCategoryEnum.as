@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.enums
+package com.ankamagames.dofus.network.enums
 {
     public class SubEntityBindingPointCategoryEnum 
     {
@@ -11,8 +11,9 @@
         public static const HOOK_POINT_CATEGORY_MERCHANT_BAG:uint = 5;
         public static const HOOK_POINT_CATEGORY_BASE_FOREGROUND:uint = 6;
         public static const HOOK_POINT_CATEGORY_PET_FOLLOWER:uint = 7;
+        public static const HOOK_POINT_CATEGORY_UNDERWATER_BUBBLES:uint = 8;
 
 
     }
-}//package com.ankamagames.dofus.network.enums
+} com.ankamagames.dofus.network.enums
 

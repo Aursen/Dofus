@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.initialization
+package com.ankamagames.dofus.network.messages.game.initialization
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class ServerExperienceModificatorMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -52,6 +52,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_ServerExperienceModificatorMessage(output);
@@ -73,6 +81,21 @@
 
         public function deserializeAs_ServerExperienceModificatorMessage(input:ICustomDataInput):void
         {
+            this._experiencePercentFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_ServerExperienceModificatorMessage(tree);
+        }
+
+        public function deserializeAsyncAs_ServerExperienceModificatorMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._experiencePercentFunc);
+        }
+
+        private function _experiencePercentFunc(input:ICustomDataInput):void
+        {
             this.experiencePercent = input.readVarUhShort();
             if (this.experiencePercent < 0)
             {
@@ -82,5 +105,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.initialization
+} com.ankamagames.dofus.network.messages.game.initialization
 

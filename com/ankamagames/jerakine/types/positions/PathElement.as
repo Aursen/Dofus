@@ -1,20 +1,20 @@
-﻿package com.ankamagames.jerakine.types.positions
+package com.ankamagames.jerakine.types.positions
 {
     public class PathElement 
     {
 
-        private var _oStep:MapPoint;
+        public var step:MapPoint;
         private var _nOrientation:uint;
 
         public function PathElement(step:MapPoint=null, orientation:uint=0)
         {
-            if (!(step))
+            if (!step)
             {
-                this._oStep = new MapPoint();
+                this.step = new MapPoint();
             }
             else
             {
-                this._oStep = step;
+                this.step = step;
             };
             this._nOrientation = orientation;
         }
@@ -29,27 +29,17 @@
             this._nOrientation = nValue;
         }
 
-        public function get step():MapPoint
-        {
-            return (this._oStep);
-        }
-
-        public function set step(nValue:MapPoint):void
-        {
-            this._oStep = nValue;
-        }
-
         public function get cellId():uint
         {
-            return (this._oStep.cellId);
+            return (this.step.cellId);
         }
 
         public function toString():String
         {
-            return ((((((((("[PathElement(cellId:" + this.cellId) + ", x:") + this._oStep.x) + ", y:") + this._oStep.y) + ", orientation:") + this._nOrientation) + ")]"));
+            return (((((((("[PathElement(cellId:" + this.cellId) + ", x:") + this.step.x) + ", y:") + this.step.y) + ", orientation:") + this._nOrientation) + ")]");
         }
 
 
     }
-}//package com.ankamagames.jerakine.types.positions
+} com.ankamagames.jerakine.types.positions
 

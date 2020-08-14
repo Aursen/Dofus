@@ -1,10 +1,10 @@
-﻿package com.ankamagames.dofus.network.types.game.data.items.effects
+package com.ankamagames.dofus.network.types.game.data.items.effects
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class ObjectEffectCreature extends ObjectEffect implements INetworkType 
     {
 
@@ -54,6 +54,22 @@
         public function deserializeAs_ObjectEffectCreature(input:ICustomDataInput):void
         {
             super.deserialize(input);
+            this._monsterFamilyIdFunc(input);
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_ObjectEffectCreature(tree);
+        }
+
+        public function deserializeAsyncAs_ObjectEffectCreature(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._monsterFamilyIdFunc);
+        }
+
+        private function _monsterFamilyIdFunc(input:ICustomDataInput):void
+        {
             this.monsterFamilyId = input.readVarUhShort();
             if (this.monsterFamilyId < 0)
             {
@@ -63,5 +79,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.data.items.effects
+} com.ankamagames.dofus.network.types.game.data.items.effects
 

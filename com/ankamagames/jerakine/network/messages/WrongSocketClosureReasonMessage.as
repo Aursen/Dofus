@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.network.messages
+package com.ankamagames.jerakine.network.messages
 {
     import com.ankamagames.jerakine.messages.Message;
 
@@ -26,5 +26,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.network.messages
+} com.ankamagames.jerakine.network.messages
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.interfaces
+package com.ankamagames.jerakine.interfaces
 {
     import com.ankamagames.jerakine.types.Uri;
 
@@ -18,5 +18,5 @@
         function removeHolder(_arg_1:ISlotDataHolder):void;
 
     }
-}//package com.ankamagames.jerakine.interfaces
+} com.ankamagames.jerakine.interfaces
 

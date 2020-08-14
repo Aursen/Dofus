@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.context.roleplay.paddock
+package com.ankamagames.dofus.network.messages.game.context.roleplay.paddock
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class PaddockSellBuyDialogMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -16,7 +16,7 @@
         private var _isInitialized:Boolean = false;
         public var bsell:Boolean = false;
         public var ownerId:uint = 0;
-        public var price:uint = 0;
+        public var price:Number = 0;
 
 
         override public function get isInitialized():Boolean
@@ -29,7 +29,7 @@
             return (6018);
         }
 
-        public function initPaddockSellBuyDialogMessage(bsell:Boolean=false, ownerId:uint=0, price:uint=0):PaddockSellBuyDialogMessage
+        public function initPaddockSellBuyDialogMessage(bsell:Boolean=false, ownerId:uint=0, price:Number=0):PaddockSellBuyDialogMessage
         {
             this.bsell = bsell;
             this.ownerId = ownerId;
@@ -58,6 +58,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_PaddockSellBuyDialogMessage(output);
@@ -71,11 +79,11 @@
                 throw (new Error((("Forbidden value (" + this.ownerId) + ") on element ownerId.")));
             };
             output.writeVarInt(this.ownerId);
-            if (this.price < 0)
+            if (((this.price < 0) || (this.price > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.price) + ") on element price.")));
             };
-            output.writeVarInt(this.price);
+            output.writeVarLong(this.price);
         }
 
         public function deserialize(input:ICustomDataInput):void
@@ -85,14 +93,41 @@
 
         public function deserializeAs_PaddockSellBuyDialogMessage(input:ICustomDataInput):void
         {
+            this._bsellFunc(input);
+            this._ownerIdFunc(input);
+            this._priceFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_PaddockSellBuyDialogMessage(tree);
+        }
+
+        public function deserializeAsyncAs_PaddockSellBuyDialogMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._bsellFunc);
+            tree.addChild(this._ownerIdFunc);
+            tree.addChild(this._priceFunc);
+        }
+
+        private function _bsellFunc(input:ICustomDataInput):void
+        {
             this.bsell = input.readBoolean();
+        }
+
+        private function _ownerIdFunc(input:ICustomDataInput):void
+        {
             this.ownerId = input.readVarUhInt();
             if (this.ownerId < 0)
             {
                 throw (new Error((("Forbidden value (" + this.ownerId) + ") on element of PaddockSellBuyDialogMessage.ownerId.")));
             };
-            this.price = input.readVarUhInt();
-            if (this.price < 0)
+        }
+
+        private function _priceFunc(input:ICustomDataInput):void
+        {
+            this.price = input.readVarUhLong();
+            if (((this.price < 0) || (this.price > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.price) + ") on element of PaddockSellBuyDialogMessage.price.")));
             };
@@ -100,5 +135,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.context.roleplay.paddock
+} com.ankamagames.dofus.network.messages.game.context.roleplay.paddock
 

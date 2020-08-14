@@ -1,12 +1,12 @@
-﻿package com.ankamagames.dofus.network.messages.game.actions.fight
+package com.ankamagames.dofus.network.messages.game.actions.fight
 {
     import com.ankamagames.jerakine.network.INetworkMessage;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class GameActionFightTriggerEffectMessage extends GameActionFightDispellEffectMessage implements INetworkMessage 
     {
 
@@ -17,7 +17,7 @@
 
         override public function get isInitialized():Boolean
         {
-            return (((super.isInitialized) && (this._isInitialized)));
+            return ((super.isInitialized) && (this._isInitialized));
         }
 
         override public function getMessageId():uint
@@ -25,9 +25,9 @@
             return (6147);
         }
 
-        public function initGameActionFightTriggerEffectMessage(actionId:uint=0, sourceId:int=0, targetId:int=0, boostUID:uint=0):GameActionFightTriggerEffectMessage
+        public function initGameActionFightTriggerEffectMessage(actionId:uint=0, sourceId:Number=0, targetId:Number=0, verboseCast:Boolean=false, boostUID:uint=0):GameActionFightTriggerEffectMessage
         {
-            super.initGameActionFightDispellEffectMessage(actionId, sourceId, targetId, boostUID);
+            super.initGameActionFightDispellEffectMessage(actionId, sourceId, targetId, verboseCast, boostUID);
             this._isInitialized = true;
             return (this);
         }
@@ -50,6 +50,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         override public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_GameActionFightTriggerEffectMessage(output);
@@ -70,7 +78,17 @@
             super.deserialize(input);
         }
 
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GameActionFightTriggerEffectMessage(tree);
+        }
+
+        public function deserializeAsyncAs_GameActionFightTriggerEffectMessage(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.actions.fight
+} com.ankamagames.dofus.network.messages.game.actions.fight
 

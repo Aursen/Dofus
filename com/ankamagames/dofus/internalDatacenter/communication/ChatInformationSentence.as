@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.internalDatacenter.communication
+package com.ankamagames.dofus.internalDatacenter.communication
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.jerakine.data.I18n;
@@ -34,5 +34,5 @@
 
 
     }
-}//package com.ankamagames.dofus.internalDatacenter.communication
+} com.ankamagames.dofus.internalDatacenter.communication
 

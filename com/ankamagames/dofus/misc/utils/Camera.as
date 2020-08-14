@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.misc.utils
+package com.ankamagames.dofus.misc.utils
 {
     import com.ankamagames.jerakine.utils.display.StageShareManager;
     import com.ankamagames.atouin.AtouinConstants;
@@ -113,8 +113,8 @@
 
         public function zoomOnPos(pTargetZoom:Number, pTargetX:Number, pTargetY:Number):void
         {
-            var _local_4:Number;
-            var _local_5:Number;
+            var finalX:Number;
+            var finalY:Number;
             if (pTargetZoom <= MIN_SCALE)
             {
                 this._container.scaleX = MIN_SCALE;
@@ -129,40 +129,40 @@
                 MapDisplayManager.getInstance().cacheAsBitmapEnabled(false);
                 this._container.scaleX = pTargetZoom;
                 this._container.scaleY = pTargetZoom;
-                _local_4 = ((-(pTargetX) * pTargetZoom) + CENTER_X);
-                _local_5 = ((-(pTargetY) * pTargetZoom) + CENTER_Y);
+                finalX = ((-(pTargetX) * pTargetZoom) + CENTER_X);
+                finalY = ((-(pTargetY) * pTargetZoom) + CENTER_Y);
                 if (((LASTCELL_X - pTargetX) * pTargetZoom) < (LASTCELL_X / 2))
                 {
-                    _local_4 = (_local_4 + (CENTER_X - ((0x0500 - pTargetX) * pTargetZoom)));
-                    if (_local_4 < (-(pTargetX) * pTargetZoom))
+                    finalX = (finalX + (CENTER_X - ((0x0500 - pTargetX) * pTargetZoom)));
+                    if (finalX < (-(pTargetX) * pTargetZoom))
                     {
-                        _local_4 = ((-(pTargetX) * pTargetZoom) + CENTER_X);
+                        finalX = ((-(pTargetX) * pTargetZoom) + CENTER_X);
                     };
                 }
                 else
                 {
                     if (pTargetX < (CENTER_X / pTargetZoom))
                     {
-                        _local_4 = 0;
+                        finalX = 0;
                     };
                 };
                 if (((LASTCELL_Y - pTargetY) * pTargetZoom) < (LASTCELL_Y / 2))
                 {
-                    _local_5 = (_local_5 + (CENTER_Y - ((874 - pTargetY) * pTargetZoom)));
-                    if (_local_5 < (-(pTargetY) * pTargetZoom))
+                    finalY = (finalY + (CENTER_Y - ((874 - pTargetY) * pTargetZoom)));
+                    if (finalY < (-(pTargetY) * pTargetZoom))
                     {
-                        _local_5 = ((-(pTargetY) * pTargetZoom) + CENTER_Y);
+                        finalY = ((-(pTargetY) * pTargetZoom) + CENTER_Y);
                     };
                 }
                 else
                 {
                     if (pTargetY < (CENTER_Y / pTargetZoom))
                     {
-                        _local_5 = 0;
+                        finalY = 0;
                     };
                 };
-                this._container.x = _local_4;
-                this._container.y = _local_5;
+                this._container.x = finalX;
+                this._container.y = finalY;
                 Atouin.getInstance().currentZoom = pTargetZoom;
             };
             this._x = pTargetX;
@@ -181,5 +181,5 @@
 
 
     }
-}//package com.ankamagames.dofus.misc.utils
+} com.ankamagames.dofus.misc.utils
 

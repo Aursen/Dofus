@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.utils.web
+package com.ankamagames.berilia.utils.web
 {
     public class MimeTypeHelper 
     {
@@ -663,5 +663,5 @@
 
 
     }
-}//package com.ankamagames.berilia.utils.web
+} com.ankamagames.berilia.utils.web
 

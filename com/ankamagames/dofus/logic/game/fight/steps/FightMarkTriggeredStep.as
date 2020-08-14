@@ -1,25 +1,21 @@
-﻿package com.ankamagames.dofus.logic.game.fight.steps
+package com.ankamagames.dofus.logic.game.fight.steps
 {
     import com.ankamagames.jerakine.sequencer.AbstractSequencable;
     import com.ankamagames.dofus.logic.game.fight.managers.MarkedCellsManager;
     import com.ankamagames.dofus.logic.game.fight.types.MarkInstance;
     import com.ankamagames.dofus.logic.game.fight.types.FightEventEnum;
-    import com.ankamagames.dofus.network.enums.GameActionMarkTypeEnum;
+    import tools.enumeration.GameActionMarkTypeEnum;
     import com.ankamagames.dofus.logic.game.fight.fightEvents.FightEventsHelper;
-    import com.ankamagames.atouin.managers.EntitiesManager;
-    import com.ankamagames.dofus.types.entities.Projectile;
-    import com.ankamagames.tiphon.types.look.TiphonEntityLook;
-    import com.ankamagames.atouin.enums.PlacementStrataEnums;
-    import com.ankamagames.tiphon.events.TiphonEvent;
+    import __AS3__.vec.Vector;
 
     public class FightMarkTriggeredStep extends AbstractSequencable implements IFightStep 
     {
 
-        private var _fighterId:int;
-        private var _casterId:int;
+        private var _fighterId:Number;
+        private var _casterId:Number;
         private var _markId:int;
 
-        public function FightMarkTriggeredStep(fighterId:int, casterId:int, markId:int)
+        public function FightMarkTriggeredStep(fighterId:Number, casterId:Number, markId:int)
         {
             this._fighterId = fighterId;
             this._casterId = casterId;
@@ -34,7 +30,7 @@
         override public function start():void
         {
             var mi:MarkInstance = MarkedCellsManager.getInstance().getMarkDatas(this._markId);
-            if (!(mi))
+            if (!mi)
             {
                 _log.error((("Trying to trigger an unknown mark (" + this._markId) + "). Aborting."));
                 executeCallbacks();
@@ -44,11 +40,9 @@
             switch (mi.markType)
             {
                 case GameActionMarkTypeEnum.GLYPH:
-                    this.addProjectile(1016);
                     evt = FightEventEnum.FIGHTER_TRIGGERED_GLYPH;
                     break;
                 case GameActionMarkTypeEnum.TRAP:
-                    this.addProjectile(1017);
                     evt = FightEventEnum.FIGHTER_TRIGGERED_TRAP;
                     break;
                 case GameActionMarkTypeEnum.PORTAL:
@@ -61,26 +55,12 @@
             executeCallbacks();
         }
 
-        private function addProjectile(gfxId:int):void
+        public function get targets():Vector.<Number>
         {
-            var id:int = EntitiesManager.getInstance().getFreeEntityId();
-            var entity:Projectile = new Projectile(id, TiphonEntityLook.fromString((("{" + gfxId) + "}")), true);
-            entity.init();
-            if (MarkedCellsManager.getInstance().getGlyph(this._markId) == null)
-            {
-                return;
-            };
-            entity.position = MarkedCellsManager.getInstance().getGlyph(this._markId).position;
-            entity.display(PlacementStrataEnums.STRATA_AREA);
-            entity.addEventListener(TiphonEvent.ANIMATION_END, this.removeProjectile);
-        }
-
-        private function removeProjectile(event:TiphonEvent):void
-        {
-            (event.target as Projectile).remove();
+            return (new <Number>[this._fighterId]);
         }
 
 
     }
-}//package com.ankamagames.dofus.logic.game.fight.steps
+} com.ankamagames.dofus.logic.game.fight.steps
 

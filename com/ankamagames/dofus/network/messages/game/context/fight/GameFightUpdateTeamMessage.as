@@ -1,14 +1,14 @@
-﻿package com.ankamagames.dofus.network.messages.game.context.fight
+package com.ankamagames.dofus.network.messages.game.context.fight
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
     import com.ankamagames.dofus.network.types.game.context.fight.FightTeamInformations;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
 
-    [Trusted]
     public class GameFightUpdateTeamMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -16,13 +16,9 @@
 
         private var _isInitialized:Boolean = false;
         public var fightId:uint = 0;
-        public var team:FightTeamInformations;
+        public var team:FightTeamInformations = new FightTeamInformations();
+        private var _teamtree:FuncTree;
 
-        public function GameFightUpdateTeamMessage()
-        {
-            this.team = new FightTeamInformations();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
@@ -61,6 +57,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_GameFightUpdateTeamMessage(output);
@@ -72,7 +76,7 @@
             {
                 throw (new Error((("Forbidden value (" + this.fightId) + ") on element fightId.")));
             };
-            output.writeShort(this.fightId);
+            output.writeVarShort(this.fightId);
             this.team.serializeAs_FightTeamInformations(output);
         }
 
@@ -83,16 +87,38 @@
 
         public function deserializeAs_GameFightUpdateTeamMessage(input:ICustomDataInput):void
         {
-            this.fightId = input.readShort();
-            if (this.fightId < 0)
-            {
-                throw (new Error((("Forbidden value (" + this.fightId) + ") on element of GameFightUpdateTeamMessage.fightId.")));
-            };
+            this._fightIdFunc(input);
             this.team = new FightTeamInformations();
             this.team.deserialize(input);
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GameFightUpdateTeamMessage(tree);
+        }
+
+        public function deserializeAsyncAs_GameFightUpdateTeamMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._fightIdFunc);
+            this._teamtree = tree.addChild(this._teamtreeFunc);
+        }
+
+        private function _fightIdFunc(input:ICustomDataInput):void
+        {
+            this.fightId = input.readVarUhShort();
+            if (this.fightId < 0)
+            {
+                throw (new Error((("Forbidden value (" + this.fightId) + ") on element of GameFightUpdateTeamMessage.fightId.")));
+            };
+        }
+
+        private function _teamtreeFunc(input:ICustomDataInput):void
+        {
+            this.team = new FightTeamInformations();
+            this.team.deserializeAsync(this._teamtree);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.context.fight
+} com.ankamagames.dofus.network.messages.game.context.fight
 

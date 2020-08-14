@@ -1,14 +1,16 @@
-﻿package com.ankamagames.dofus.console.moduleLUA
+package com.ankamagames.dofus.console.moduleLUA
 {
     import flash.text.StyleSheet;
     import flash.display.NativeWindow;
     import flash.display.Sprite;
     import flash.text.TextField;
-    import com.ankamagames.dofus.console.moduleLogger.TextFieldScrollBar;
+    import com.ankamagames.berilia.components.Label;
+    import com.ankamagames.berilia.components.TextFieldScrollBar;
     import com.ankamagames.dofus.console.moduleLogger.TextFieldOldScrollBarH;
     import com.ankamagames.dofus.misc.utils.frames.LuaScriptRecorderFrame;
     import __AS3__.vec.Vector;
     import com.ankamagames.jerakine.lua.LuaPlayer;
+    import flash.filesystem.File;
     import flash.display.NativeWindowInitOptions;
     import flash.events.Event;
     import flash.events.NativeWindowBoundsEvent;
@@ -23,10 +25,9 @@
     import com.ankamagames.atouin.AtouinConstants;
     import com.ankamagames.jerakine.script.ScriptsManager;
     import com.ankamagames.jerakine.lua.LuaPlayerEvent;
-    import flash.filesystem.File;
-    import flash.net.FileFilter;
     import flash.filesystem.FileStream;
     import flash.filesystem.FileMode;
+    import flash.net.FileFilter;
     import com.ankamagames.dofus.logic.game.roleplay.frames.RoleplayContextFrame;
     import com.ankamagames.dofus.network.types.game.interactive.InteractiveElement;
     import com.ankamagames.atouin.types.SpriteWrapper;
@@ -64,10 +65,11 @@
         private static const BTN_STOP:int = _btnID++;
         private static const BTN_AUTO_RESET:int = _btnID++;
         private static const BTN_RESET_WORLD:int = _btnID++;
+        private static const BTN_RELOAD:int = _btnID++;
         private static const BTN_OPEN:int = _btnID++;
         private static const BTN_EXPORT:int = _btnID++;
-        private static const btnIcons:Array = ["record", "waitAuto", "wait", "moveDefault", "moveWalk", "moveRun", "moveTeleport", "moveSlide", "cameraAutoFollow", "cameraZoomIn", "cameraZoomOut", "play", "stop", "autoReset", "resetWorld", "open", "save"];
-        private static const btnToolTips:Array = ["Start/Pause recording", "Record automatically 'wait' commands", "Start/Stop command 'wait'", "Set movement mode to game default", "Set movement mode to walk", "Set movement mode to run", "Set movement mode to teleport", "Set movement mode to slide", "Start/Stop camera from following automatically the player", "Camera zoom in", "Camera zoom out", "Play script", "Stop recording", "Toggle reset of the map at the end of a script being played", "Reset map", "Load script", "Stop and export the script"];
+        private static const btnIcons:Array = ["record", "waitAuto", "wait", "moveDefault", "moveWalk", "moveRun", "moveTeleport", "moveSlide", "cameraAutoFollow", "cameraZoomIn", "cameraZoomOut", "play", "stop", "autoReset", "resetWorld", "reload", "open", "save"];
+        private static const btnToolTips:Array = ["Start/Pause recording", "Record automatically 'wait' commands", "Start/Stop command 'wait'", "Set movement mode to game default", "Set movement mode to walk", "Set movement mode to run", "Set movement mode to teleport", "Set movement mode to slide", "Start/Stop camera from following automatically the player", "Camera zoom in", "Camera zoom out", "Play script", "Stop recording", "Toggle reset of the map at the end of a script being played", "Reset map", "Reload current script", "Load script", "Stop and export the script"];
         public static const CONSOLE_STYLE:StyleSheet = new StyleSheet();
         private static var _self:ConsoleLUA;
 
@@ -75,16 +77,17 @@
         private var _iconList:Sprite;
         private var _btns:Array;
         private var _zoomState:TextField;
-        private var _textField:TextField;
+        private var _textContainer:Label;
         private var _scrollBar:TextFieldScrollBar;
         private var _scrollBarH:TextFieldOldScrollBarH;
         private var _backGround:Sprite;
         private var _frame:LuaScriptRecorderFrame;
-        private var _lines:Vector.<String>;
+        private var _lines:Vector.<String> = new Vector.<String>();
         private var _recording:Boolean = false;
         private var _waitStart:Number = -1;
         private var _loadedScript:String;
         private var _luaPlayer:LuaPlayer;
+        private var _file:File;
 
         {
             CONSOLE_STYLE.setStyle(".red", {"color":"#FF0000"});
@@ -97,8 +100,6 @@
 
         public function ConsoleLUA()
         {
-            this._lines = new Vector.<String>();
-            super();
             if (_self)
             {
                 throw (new Error());
@@ -107,7 +108,7 @@
 
         public static function getInstance():ConsoleLUA
         {
-            if (!(_self))
+            if (!_self)
             {
                 _self = new (ConsoleLUA)();
             };
@@ -118,7 +119,7 @@
         private function createWindow():void
         {
             var options:NativeWindowInitOptions;
-            if (!(this._window))
+            if (!this._window)
             {
                 options = new NativeWindowInitOptions();
                 options.resizable = true;
@@ -139,18 +140,19 @@
         private function createUI():void
         {
             this._backGround = new Sprite();
-            this._textField = new TextField();
-            this._textField.multiline = true;
-            this._textField.wordWrap = false;
-            this._textField.mouseWheelEnabled = false;
-            this._scrollBar = new TextFieldScrollBar(this._textField, this._lines, 10, SCROLL_BG_COLOR, SCROLL_COLOR);
-            this._scrollBarH = new TextFieldOldScrollBarH(this._textField, 5, SCROLL_BG_COLOR, SCROLL_COLOR);
+            this._textContainer = new Label();
+            this._textContainer.multiline = true;
+            this._textContainer.wordWrap = false;
+            this._textContainer.textfield.mouseWheelEnabled = false;
+            this._scrollBar = new TextFieldScrollBar();
+            this._scrollBar.initProperties(this._textContainer, this._lines, 10, SCROLL_BG_COLOR, SCROLL_COLOR);
+            this._scrollBarH = new TextFieldOldScrollBarH(this._textContainer.textfield, 5, SCROLL_BG_COLOR, SCROLL_COLOR);
             var textFormat:TextFormat = new TextFormat();
             textFormat.font = "Courier New";
             textFormat.size = 16;
             textFormat.color = OUTPUT_COLOR;
-            this._textField.defaultTextFormat = textFormat;
-            this._textField.styleSheet = CONSOLE_STYLE;
+            this._textContainer.textfield.defaultTextFormat = textFormat;
+            this._textContainer.setStyleSheet(CONSOLE_STYLE);
             var posX:int;
             this._iconList = new Sprite();
             this._iconList.doubleClickEnabled = true;
@@ -163,7 +165,7 @@
                 this._btns[i].x = posX;
                 this._iconList.addChild(this._btns[i]);
                 posX = (posX + (ICON_SIZE + ICON_INTERVAL));
-                if ((((i == BTN_TIMER_AUTO)) || ((i == BTN_MOVE_SLIDE))))
+                if (((i == BTN_TIMER_AUTO) || (i == BTN_MOVE_SLIDE)))
                 {
                     posX = (posX + ICON_INTERVAL_BREAK);
                 };
@@ -177,6 +179,7 @@
                     this._zoomState.defaultTextFormat = textFormat;
                     this._zoomState.x = posX;
                     this._zoomState.text = "x1";
+                    this._zoomState.width = (this._zoomState.width - 10);
                     this._iconList.addChild(this._zoomState);
                     posX = (posX + (this._zoomState.width + ICON_INTERVAL_BREAK));
                 };
@@ -197,7 +200,8 @@
             this._btns[BTN_STOP].addEventListener(MouseEvent.CLICK, this.stopRecord);
             this._btns[BTN_AUTO_RESET].addEventListener(MouseEvent.CLICK, this.toggleAutoReset);
             this._btns[BTN_RESET_WORLD].addEventListener(MouseEvent.CLICK, this.resetWorld);
-            this._btns[BTN_OPEN].addEventListener(MouseEvent.CLICK, this.loadScript);
+            this._btns[BTN_RELOAD].addEventListener(MouseEvent.CLICK, this.reloadScript);
+            this._btns[BTN_OPEN].addEventListener(MouseEvent.CLICK, this.loadScriptFromFile);
             this._btns[BTN_EXPORT].addEventListener(MouseEvent.CLICK, this.export);
             this._btns[BTN_MOVE_DEFAULT].name = ("moveBtn" + LuaMoveEnum.MOVE_DEFAULT);
             this._btns[BTN_MOVE_WALK].name = ("moveBtn" + LuaMoveEnum.MOVE_WALK);
@@ -205,11 +209,13 @@
             this._btns[BTN_MOVE_TELEPORT].name = ("moveBtn" + LuaMoveEnum.MOVE_TELEPORT);
             this._btns[BTN_MOVE_SLIDE].name = ("moveBtn" + LuaMoveEnum.MOVE_SLIDE);
             this._window.addEventListener(NativeWindowDisplayStateEvent.DISPLAY_STATE_CHANGE, this.onResize);
-            this._window.stage.addChild(this._backGround);
-            this._window.stage.addChild(this._textField);
-            this._window.stage.addChild(this._scrollBar);
-            this._window.stage.addChild(this._scrollBarH);
-            this._window.stage.addChild(this._iconList);
+            var uiContainer:Sprite = new Sprite();
+            this._window.stage.addChild(uiContainer);
+            uiContainer.addChild(this._backGround);
+            uiContainer.addChild(this._textContainer);
+            uiContainer.addChild(this._scrollBar);
+            uiContainer.addChild(this._scrollBarH);
+            uiContainer.addChild(this._iconList);
             this.enableButtons(true, [BTN_RECORD]);
             this._btns[BTN_MOVE_DEFAULT].toggled = true;
             this._btns[BTN_TIMER_AUTO].toggled = true;
@@ -221,14 +227,14 @@
             var pausingRecording:Boolean;
             try
             {
-                this._recording = !(this._recording);
+                this._recording = (!(this._recording));
                 this._btns[BTN_RECORD].toggled = this._recording;
                 pausingRecording = false;
-                if (!(this._frame))
+                if (!this._frame)
                 {
                     this.clearConsole();
                     this._frame = new LuaScriptRecorderFrame();
-                    if (!(Kernel.getWorker().contains(LuaScriptRecorderFrame)))
+                    if (!Kernel.getWorker().contains(LuaScriptRecorderFrame))
                     {
                         Kernel.getWorker().addFrame(this._frame);
                     };
@@ -236,7 +242,7 @@
                 }
                 else
                 {
-                    if (!(this._frame.running))
+                    if (!this._frame.running)
                     {
                         this.clearConsole();
                         this._frame.start(this._btns[BTN_TIMER_AUTO].toggled);
@@ -266,7 +272,7 @@
                 };
                 if (pausingRecording)
                 {
-                    this._frame.pause = !(this._recording);
+                    this._frame.pause = (!(this._recording));
                 };
             }
             catch(error:Error)
@@ -277,7 +283,7 @@
 
         protected function setAutoTimer(event:MouseEvent):void
         {
-            event.target.toggled = !(event.target.toggled);
+            event.target.toggled = (!(event.target.toggled));
         }
 
         protected function toggleTimer(event:MouseEvent):void
@@ -307,7 +313,7 @@
 
         protected function toggleCameraAutoFollow(event:MouseEvent):void
         {
-            event.target.toggled = !(event.target.toggled);
+            event.target.toggled = (!(event.target.toggled));
             this._frame.autoFollowCam(event.target.toggled);
         }
 
@@ -341,7 +347,7 @@
             var script:String;
             try
             {
-                if (!(this._luaPlayer))
+                if (!this._luaPlayer)
                 {
                     this._luaPlayer = (ScriptsManager.getInstance().getPlayer(ScriptsManager.LUA_PLAYER) as LuaPlayer);
                     this._luaPlayer.addEventListener(LuaPlayerEvent.PLAY_COMPLETE, this.onScriptCompleted);
@@ -382,7 +388,40 @@
             this.enableButtons(true, [BTN_RECORD, BTN_PLAY]);
         }
 
-        protected function loadScript(event:MouseEvent):void
+        private function loadScript(file:File):void
+        {
+            this.clearConsole();
+            if (!file)
+            {
+                this.log("No file !!!");
+                return;
+            };
+            if (this._file == file)
+            {
+                this.log(("Reloading script " + file.name));
+            }
+            else
+            {
+                this.log(("Loading script " + file.name));
+            };
+            var stream:FileStream = new FileStream();
+            stream.open(file, FileMode.READ);
+            this._loadedScript = stream.readUTFBytes(stream.bytesAvailable);
+            if (this._frame)
+            {
+                this._frame.luaScript = this._loadedScript;
+            };
+            stream.close();
+            this.log((("Script '" + file.name) + "' loaded."));
+            this.printLine(this._loadedScript);
+        }
+
+        protected function reloadScript(event:MouseEvent):void
+        {
+            this.loadScript(this._file);
+        }
+
+        protected function loadScriptFromFile(event:MouseEvent):void
         {
             var file:File;
             file = File.documentsDirectory;
@@ -390,17 +429,8 @@
             file.addEventListener(Event.SELECT, function (event:Event):void
             {
                 stopRecord(null);
-                clearConsole();
-                var stream:FileStream = new FileStream();
-                stream.open(file, FileMode.READ);
-                _loadedScript = stream.readUTFBytes(stream.bytesAvailable);
-                if (_frame)
-                {
-                    _frame.luaScript = _loadedScript;
-                };
-                stream.close();
-                printLine((("<span class='gray'>> Script '" + file.name) + "' loaded.</span>"), false);
-                printLine(_loadedScript);
+                loadScript(file);
+                _file = file;
                 _btns[BTN_PLAY].enabled = true;
             });
         }
@@ -408,7 +438,7 @@
         protected function export(event:MouseEvent):void
         {
             var file:File;
-            if (!(this._frame))
+            if (!this._frame)
             {
                 return;
             };
@@ -461,16 +491,16 @@
 
         protected function toggleAutoReset(event:MouseEvent):void
         {
-            event.target.toggled = !(event.target.toggled);
+            event.target.toggled = (!(event.target.toggled));
             if (this._luaPlayer)
             {
-                this._luaPlayer.resetOnComplete = !(this._luaPlayer.resetOnComplete);
+                this._luaPlayer.resetOnComplete = (!(this._luaPlayer.resetOnComplete));
             };
         }
 
         protected function unlockBtns(event:MouseEvent):void
         {
-            if (!(this._iconList.mouseChildren))
+            if (!this._iconList.mouseChildren)
             {
                 this._iconList.mouseChildren = true;
                 this._iconList.alpha = 1;
@@ -479,12 +509,12 @@
 
         public function toggleDisplay():void
         {
-            if (!(this._window))
+            if (!this._window)
             {
                 this.createWindow();
                 return;
             };
-            this._window.visible = !(this._window.visible);
+            this._window.visible = (!(this._window.visible));
             if (this._window.visible)
             {
                 this._window.orderToFront();
@@ -497,7 +527,7 @@
             {
                 return;
             };
-            if (!(this._window))
+            if (!this._window)
             {
                 this.createWindow();
             };
@@ -511,6 +541,20 @@
             {
                 this._window.close();
             };
+        }
+
+        private function logScript(script:String):void
+        {
+            this.printLine("############################");
+            this.printLine("########## Script ##########");
+            this.printLine("############################");
+            this.printLine(script);
+            this.printLine("############################");
+        }
+
+        private function log(text:String):void
+        {
+            this.printLine((("<span class='gray'>> " + text) + "</span>"), false);
         }
 
         public function printLine(text:String, needHighlight:Boolean=true):void
@@ -567,23 +611,10 @@
                 this._iconList.x = 10;
                 this._iconList.y = 3;
             };
-            this._textField.y = OPTIONS_HEIGHT;
-            this._textField.width = (this._window.stage.stageWidth - TextFieldScrollBar.WIDTH);
-            this._textField.height = ((this._window.stage.stageHeight - this._textField.y) - SCROLLBAR_SIZE);
-            this._textField.scrollV = 0;
-            var text:String = "";
-            var i:int;
-            while (i < 200)
-            {
-                text = (text + "o\n");
-                i++;
-            };
-            this._textField.text = text;
-            var numLines:int = (this._textField.numLines - this._textField.maxScrollV);
-            this._textField.text = "";
+            this._textContainer.y = OPTIONS_HEIGHT;
+            this._scrollBar.resize(this._window.stage.stageWidth, ((this._window.stage.stageHeight - OPTIONS_HEIGHT) - SCROLLBAR_SIZE));
+            this._scrollBar.updateScrolling();
             this._scrollBar.addEventListener(Event.CHANGE, this.onScrollVChange);
-            this._scrollBar.scrollAtEnd();
-            this._scrollBar.resize(numLines);
             this._scrollBarH.resize();
         }
 
@@ -610,13 +641,13 @@
                 }
                 else
                 {
-                    if ((((i >= BTN_MOVE_DEFAULT)) && ((i <= BTN_CAMERA_ZOOM_OUT))))
+                    if (((i >= BTN_MOVE_DEFAULT) && (i <= BTN_CAMERA_ZOOM_OUT)))
                     {
                         this._btns[i].enabled = this._btns[BTN_TIMER].enabled;
                     }
                     else
                     {
-                        this._btns[i].enabled = !(enabled);
+                        this._btns[i].enabled = (!(enabled));
                     };
                 };
                 i++;
@@ -625,12 +656,12 @@
             if (((this._frame) && (this._frame.running)))
             {
                 this._btns[BTN_TIMER_AUTO].enabled = false;
-                if (!(this._btns[BTN_PLAY].toggled))
+                if (!this._btns[BTN_PLAY].toggled)
                 {
-                    this._btns[BTN_TIMER].enabled = !(this._btns[BTN_TIMER_AUTO].toggled);
+                    this._btns[BTN_TIMER].enabled = (!(this._btns[BTN_TIMER_AUTO].toggled));
                 };
             };
-            if (((((this._frame) && (this._frame.running))) && (this._recording)))
+            if ((((this._frame) && (this._frame.running)) && (this._recording)))
             {
                 this._btns[BTN_CAMERA_ZOOM_IN].enabled = (this.getZoomValue() < AtouinConstants.MAX_ZOOM);
                 this._btns[BTN_CAMERA_ZOOM_OUT].enabled = (this.getZoomValue() > 1);
@@ -644,5 +675,5 @@
 
 
     }
-}//package com.ankamagames.dofus.console.moduleLUA
+} com.ankamagames.dofus.console.moduleLUA
 

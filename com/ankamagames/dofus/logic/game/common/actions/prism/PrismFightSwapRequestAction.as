@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.common.actions.prism
+package com.ankamagames.dofus.logic.game.common.actions.prism
 {
     import com.ankamagames.jerakine.handlers.messages.Action;
 
@@ -6,10 +6,10 @@
     {
 
         public var subAreaId:uint;
-        public var targetId:uint;
+        public var targetId:Number;
 
 
-        public static function create(subAreaId:uint, targetId:uint):PrismFightSwapRequestAction
+        public static function create(subAreaId:uint, targetId:Number):PrismFightSwapRequestAction
         {
             var action:PrismFightSwapRequestAction = new (PrismFightSwapRequestAction)();
             action.targetId = targetId;
@@ -19,5 +19,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.actions.prism
+} com.ankamagames.dofus.logic.game.common.actions.prism
 

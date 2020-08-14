@@ -1,15 +1,15 @@
-﻿package com.ankamagames.jerakine.network.utils.types
+package com.ankamagames.jerakine.network.utils.types
 {
     public class Binary64 
     {
 
-        static const CHAR_CODE_0:uint = "0".charCodeAt();
-        static const CHAR_CODE_9:uint = "9".charCodeAt();
-        static const CHAR_CODE_A:uint = "a".charCodeAt();
-        static const CHAR_CODE_Z:uint = "z".charCodeAt();
+        internal static const CHAR_CODE_0:uint = "0".charCodeAt();
+        internal static const CHAR_CODE_9:uint = "9".charCodeAt();
+        internal static const CHAR_CODE_A:uint = "a".charCodeAt();
+        internal static const CHAR_CODE_Z:uint = "z".charCodeAt();
 
         public var low:uint;
-        var internalHigh:uint;
+        internal var internalHigh:uint;
 
         public function Binary64(low:uint=0, high:uint=0)
         {
@@ -17,7 +17,7 @@
             this.internalHigh = high;
         }
 
-        final function div(n:uint):uint
+        final internal function div(n:uint):uint
         {
             var modHigh:uint;
             modHigh = (this.internalHigh % n);
@@ -29,7 +29,7 @@
             return (mod);
         }
 
-        final function mul(n:uint):void
+        final internal function mul(n:uint):void
         {
             var newLow:Number = (Number(this.low) * n);
             this.internalHigh = (this.internalHigh * n);
@@ -37,20 +37,20 @@
             this.low = (this.low * n);
         }
 
-        final function add(n:uint):void
+        final internal function add(n:uint):void
         {
             var newLow:Number = (Number(this.low) + n);
             this.internalHigh = (this.internalHigh + uint((newLow / 4294967296)));
             this.low = newLow;
         }
 
-        final function bitwiseNot():void
+        final internal function bitwiseNot():void
         {
-            this.low = ~(this.low);
-            this.internalHigh = ~(this.internalHigh);
+            this.low = (~(this.low));
+            this.internalHigh = (~(this.internalHigh));
         }
 
 
     }
-}//package com.ankamagames.jerakine.network.utils.types
+} com.ankamagames.jerakine.network.utils.types
 

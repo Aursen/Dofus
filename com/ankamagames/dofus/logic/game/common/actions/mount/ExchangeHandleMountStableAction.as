@@ -1,23 +1,23 @@
-﻿package com.ankamagames.dofus.logic.game.common.actions.mount
+package com.ankamagames.dofus.logic.game.common.actions.mount
 {
     import com.ankamagames.jerakine.handlers.messages.Action;
 
     public class ExchangeHandleMountStableAction implements Action 
     {
 
-        public var rideId:uint;
+        public var ridesId:Array;
         public var actionType:int;
 
 
-        public static function create(actionType:uint, mountId:uint):ExchangeHandleMountStableAction
+        public static function create(actionType:uint, mountsId:Array):ExchangeHandleMountStableAction
         {
             var act:ExchangeHandleMountStableAction = new (ExchangeHandleMountStableAction)();
             act.actionType = actionType;
-            act.rideId = mountId;
+            act.ridesId = mountsId;
             return (act);
         }
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.actions.mount
+} com.ankamagames.dofus.logic.game.common.actions.mount
 

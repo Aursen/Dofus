@@ -1,11 +1,10 @@
-﻿package com.ankamagames.jerakine.map
+package com.ankamagames.jerakine.map
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
     import com.ankamagames.jerakine.types.positions.MapPoint;
     import __AS3__.vec.Vector;
-    import com.ankamagames.jerakine.utils.display.Dofus1Line;
     import com.ankamagames.jerakine.utils.display.Dofus2Line;
     import __AS3__.vec.*;
 
@@ -18,7 +17,7 @@
         public static function getCell(mapData:IDataMapProvider, range:Vector.<uint>, refPosition:MapPoint):Vector.<uint>
         {
             var i:uint;
-            var line:*;
+            var line:Array;
             var los:Boolean;
             var currentPoint:String;
             var p:MapPoint;
@@ -42,19 +41,12 @@
             while (i < orderedCell.length)
             {
                 p = MapPoint(orderedCell[i].p);
-                if (((((!((tested[((p.x + "_") + p.y)] == null))) && (!(((refPosition.x + refPosition.y) == (p.x + p.y)))))) && (!(((refPosition.x - refPosition.y) == (p.x - p.y))))))
+                if ((((!(tested[((p.x + "_") + p.y)] == null)) && (!((refPosition.x + refPosition.y) == (p.x + p.y)))) && (!((refPosition.x - refPosition.y) == (p.x - p.y)))))
                 {
                 }
                 else
                 {
-                    if (Dofus1Line.useDofus2Line)
-                    {
-                        line = Dofus2Line.getLine(refPosition.cellId, p.cellId);
-                    }
-                    else
-                    {
-                        line = Dofus1Line.getLine(refPosition.x, refPosition.y, 0, p.x, p.y, 0);
-                    };
+                    line = Dofus2Line.getLine(refPosition.cellId, p.cellId);
                     if (line.length == 0)
                     {
                         result.push(p.cellId);
@@ -66,18 +58,18 @@
                         while (j < line.length)
                         {
                             currentPoint = ((Math.floor(line[j].x) + "_") + Math.floor(line[j].y));
-                            if (!(MapPoint.isInMap(line[j].x, line[j].y)))
+                            if (!MapPoint.isInMap(line[j].x, line[j].y))
                             {
                             }
                             else
                             {
-                                if ((((j > 0)) && (mapData.hasEntity(Math.floor(line[(j - 1)].x), Math.floor(line[(j - 1)].y)))))
+                                if (((j > 0) && (mapData.hasEntity(Math.floor(line[(j - 1)].x), Math.floor(line[(j - 1)].y), true))))
                                 {
                                     los = false;
                                 }
                                 else
                                 {
-                                    if (((((line[j].x + line[j].y) == (refPosition.x + refPosition.y))) || (((line[j].x - line[j].y) == (refPosition.x - refPosition.y)))))
+                                    if ((((line[j].x + line[j].y) == (refPosition.x + refPosition.y)) || ((line[j].x - line[j].y) == (refPosition.x - refPosition.y))))
                                     {
                                         los = ((los) && (mapData.pointLos(Math.floor(line[j].x), Math.floor(line[j].y), true)));
                                     }
@@ -116,5 +108,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.map
+} com.ankamagames.jerakine.map
 

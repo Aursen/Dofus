@@ -1,23 +1,19 @@
-﻿package com.ankamagames.dofus.network.types.game.context.roleplay
+package com.ankamagames.dofus.network.types.game.context.roleplay
 {
     import com.ankamagames.jerakine.network.INetworkType;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
 
-    [Trusted]
     public class HumanOptionAlliance extends HumanOption implements INetworkType 
     {
 
         public static const protocolId:uint = 425;
 
-        public var allianceInformations:AllianceInformations;
+        public var allianceInformations:AllianceInformations = new AllianceInformations();
         public var aggressable:uint = 0;
+        private var _allianceInformationstree:FuncTree;
 
-        public function HumanOptionAlliance()
-        {
-            this.allianceInformations = new AllianceInformations();
-            super();
-        }
 
         override public function getTypeId():uint
         {
@@ -58,6 +54,29 @@
             super.deserialize(input);
             this.allianceInformations = new AllianceInformations();
             this.allianceInformations.deserialize(input);
+            this._aggressableFunc(input);
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_HumanOptionAlliance(tree);
+        }
+
+        public function deserializeAsyncAs_HumanOptionAlliance(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            this._allianceInformationstree = tree.addChild(this._allianceInformationstreeFunc);
+            tree.addChild(this._aggressableFunc);
+        }
+
+        private function _allianceInformationstreeFunc(input:ICustomDataInput):void
+        {
+            this.allianceInformations = new AllianceInformations();
+            this.allianceInformations.deserializeAsync(this._allianceInformationstree);
+        }
+
+        private function _aggressableFunc(input:ICustomDataInput):void
+        {
             this.aggressable = input.readByte();
             if (this.aggressable < 0)
             {
@@ -67,5 +86,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.context.roleplay
+} com.ankamagames.dofus.network.types.game.context.roleplay
 

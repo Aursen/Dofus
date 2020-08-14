@@ -1,6 +1,7 @@
-﻿package com.ankamagames.dofus.logic.game.fight.steps
+package com.ankamagames.dofus.logic.game.fight.steps
 {
     import com.ankamagames.dofus.logic.game.fight.steps.abstract.AbstractStatContextualStep;
+    import com.ankamagames.dofus.network.enums.GameContextEnum;
     import com.ankamagames.dofus.logic.game.common.misc.DofusEntities;
     import com.ankamagames.dofus.types.entities.AnimatedCharacter;
     import com.ankamagames.tiphon.events.TiphonEvent;
@@ -20,13 +21,13 @@
         private static const BLOCKING:Boolean = false;
 
         private var _intValue:int;
-        private var _actionId:int;
+        private var _elementId:int;
 
-        public function FightShieldPointsVariationStep(entityId:int, value:int, actionId:int)
+        public function FightShieldPointsVariationStep(entityId:Number, value:int, elementId:int)
         {
-            super(COLOR, value.toString(), entityId, BLOCKING);
+            super(COLOR, value.toString(), entityId, GameContextEnum.FIGHT, BLOCKING);
             this._intValue = value;
-            this._actionId = actionId;
+            this._elementId = elementId;
             _virtual = false;
         }
 
@@ -55,7 +56,7 @@
                 return;
             };
             var fighterInfos:GameFightFighterInformations = (FightEntitiesFrame.getCurrentInstance().getEntityInfos(_targetId) as GameFightFighterInformations);
-            if (!(fighterInfos))
+            if (!fighterInfos)
             {
                 super.executeCallbacks();
                 return;
@@ -73,10 +74,13 @@
             };
             TooltipManager.updateContent(ttCacheName, ttName, fighterInfos);
             fighterInfos.stats.shieldPoints = previousShieldPoints;
-            TooltipManager.updatePosition(ttCacheName, ttName, target.absoluteBounds, LocationEnum.POINT_BOTTOM, LocationEnum.POINT_TOP, 0, true, true, target.position.cellId);
+            if (target)
+            {
+                TooltipManager.updatePosition(ttCacheName, ttName, target.absoluteBounds, LocationEnum.POINT_BOTTOM, LocationEnum.POINT_TOP, 0, true, true, target.position.cellId);
+            };
             if (this._intValue < 0)
             {
-                FightEventsHelper.sendFightEvent(FightEventEnum.FIGHTER_SHIELD_LOSS, [_targetId, Math.abs(this._intValue), this._actionId], _targetId, castingSpellId);
+                FightEventsHelper.sendFightEvent(FightEventEnum.FIGHTER_SHIELD_LOSS, [_targetId, Math.abs(this._intValue), this._elementId], _targetId, castingSpellId);
             }
             else
             {
@@ -97,5 +101,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.fight.steps
+} com.ankamagames.dofus.logic.game.fight.steps
 

@@ -1,8 +1,8 @@
-﻿package com.somerandomdude.colortoolkit.schemes
+package com.somerandomdude.colortoolkit.schemes
 {
     public interface IColorScheme 
     {
 
     }
-}//package com.somerandomdude.colortoolkit.schemes
+} com.somerandomdude.colortoolkit.schemes
 

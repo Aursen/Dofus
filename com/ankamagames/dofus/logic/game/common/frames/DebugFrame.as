@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.common.frames
+package com.ankamagames.dofus.logic.game.common.frames
 {
     import com.ankamagames.jerakine.messages.Frame;
     import com.ankamagames.jerakine.logger.Logger;
@@ -17,7 +17,7 @@
     import com.ankamagames.atouin.managers.SelectionManager;
     import com.ankamagames.atouin.types.Selection;
     import com.ankamagames.atouin.renderers.ZoneDARenderer;
-    import com.ankamagames.jerakine.types.Color;
+    import com.ankamagames.jerakine.types.ARGBColor;
     import com.ankamagames.jerakine.types.zones.Custom;
     import __AS3__.vec.*;
 
@@ -27,13 +27,8 @@
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(DebugFrame));
 
         private var _sName:String;
-        private var _aZones:Array;
+        private var _aZones:Array = new Array();
 
-        public function DebugFrame()
-        {
-            this._aZones = new Array();
-            super();
-        }
 
         public function get priority():int
         {
@@ -42,37 +37,37 @@
 
         public function process(msg:Message):Boolean
         {
-            var _local_2:DebugHighlightCellsMessage;
-            var _local_3:uint;
-            var _local_4:Vector.<uint>;
-            var _local_5:Vector.<uint>;
-            var _local_6:DebugInClientMessage;
+            var dhcmsg:DebugHighlightCellsMessage;
+            var cellId:uint;
+            var foregroundCells:Vector.<uint>;
+            var normalCells:Vector.<uint>;
+            var dicmsg:DebugInClientMessage;
             switch (true)
             {
                 case (msg is DebugHighlightCellsMessage):
-                    _local_2 = (msg as DebugHighlightCellsMessage);
-                    this._sName = ((("debug_zone" + _local_2.color) + "_") + Math.round((Math.random() * 10000)));
-                    _local_4 = new Vector.<uint>(0);
-                    _local_5 = new Vector.<uint>(0);
-                    for each (_local_3 in _local_2.cells)
+                    dhcmsg = (msg as DebugHighlightCellsMessage);
+                    this._sName = ((("debug_zone" + dhcmsg.color) + "_") + Math.round((Math.random() * 10000)));
+                    foregroundCells = new Vector.<uint>(0);
+                    normalCells = new Vector.<uint>(0);
+                    for each (cellId in dhcmsg.cells)
                     {
-                        if (MapDisplayManager.getInstance().renderer.isCellUnderFixture(_local_3))
+                        if (MapDisplayManager.getInstance().renderer.isCellUnderFixture(cellId))
                         {
-                            _local_4.push(_local_3);
+                            foregroundCells.push(cellId);
                         }
                         else
                         {
-                            _local_5.push(_local_3);
+                            normalCells.push(cellId);
                         };
                     };
-                    if (_local_4.length > 0)
+                    if (foregroundCells.length > 0)
                     {
-                        this.displayZone((this._sName + "_foreground"), _local_4, _local_2.color, PlacementStrataEnums.STRATA_FOREGROUND);
+                        this.displayZone((this._sName + "_foreground"), foregroundCells, dhcmsg.color, PlacementStrataEnums.STRATA_FOREGROUND);
                         this._aZones.push((this._sName + "_foreground"));
                     };
-                    if (_local_5.length > 0)
+                    if (normalCells.length > 0)
                     {
-                        this.displayZone(this._sName, _local_5, _local_2.color, PlacementStrataEnums.STRATA_MOVEMENT);
+                        this.displayZone(this._sName, normalCells, dhcmsg.color, PlacementStrataEnums.STRATA_MOVEMENT);
                         this._aZones.push(this._sName);
                     };
                     return (true);
@@ -82,26 +77,26 @@
                     this.clear();
                     return (false);
                 case (msg is DebugInClientMessage):
-                    _local_6 = (msg as DebugInClientMessage);
-                    switch (_local_6.level)
+                    dicmsg = (msg as DebugInClientMessage);
+                    switch (dicmsg.level)
                     {
                         case DebugLevelEnum.LEVEL_DEBUG:
-                            _log.debug(_local_6.message);
+                            _log.debug(dicmsg.message);
                             break;
                         case DebugLevelEnum.LEVEL_ERROR:
-                            _log.error(_local_6.message);
+                            _log.error(dicmsg.message);
                             break;
                         case DebugLevelEnum.LEVEL_FATAL:
-                            _log.fatal(_local_6.message);
+                            _log.fatal(dicmsg.message);
                             break;
                         case DebugLevelEnum.LEVEL_INFO:
-                            _log.info(_local_6.message);
+                            _log.info(dicmsg.message);
                             break;
                         case DebugLevelEnum.LEVEL_TRACE:
-                            _log.trace(_local_6.message);
+                            _log.trace(dicmsg.message);
                             break;
                         case DebugLevelEnum.LEVEL_WARN:
-                            _log.warn(_local_6.message);
+                            _log.warn(dicmsg.message);
                             break;
                     };
                     return (true);
@@ -128,11 +123,11 @@
             };
         }
 
-        private function displayZone(name:String, cells:Vector.<uint>, color:uint, pStrata:uint):void
+        private function displayZone(name:String, cells:Vector.<uint>, color:Number, pStrata:uint):void
         {
             var s:Selection = new Selection();
             s.renderer = new ZoneDARenderer(pStrata);
-            s.color = new Color(color);
+            s.color = new ARGBColor(color);
             s.zone = new Custom(cells);
             SelectionManager.getInstance().addSelection(s, name);
             SelectionManager.getInstance().update(name);
@@ -140,5 +135,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.frames
+} com.ankamagames.dofus.logic.game.common.frames
 

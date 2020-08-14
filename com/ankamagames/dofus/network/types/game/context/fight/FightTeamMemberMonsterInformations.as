@@ -1,8 +1,9 @@
-﻿package com.ankamagames.dofus.network.types.game.context.fight
+package com.ankamagames.dofus.network.types.game.context.fight
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
     public class FightTeamMemberMonsterInformations extends FightTeamMemberInformations implements INetworkType 
     {
@@ -18,7 +19,7 @@
             return (6);
         }
 
-        public function initFightTeamMemberMonsterInformations(id:int=0, monsterId:int=0, grade:uint=0):FightTeamMemberMonsterInformations
+        public function initFightTeamMemberMonsterInformations(id:Number=0, monsterId:int=0, grade:uint=0):FightTeamMemberMonsterInformations
         {
             super.initFightTeamMemberInformations(id);
             this.monsterId = monsterId;
@@ -57,7 +58,29 @@
         public function deserializeAs_FightTeamMemberMonsterInformations(input:ICustomDataInput):void
         {
             super.deserialize(input);
+            this._monsterIdFunc(input);
+            this._gradeFunc(input);
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_FightTeamMemberMonsterInformations(tree);
+        }
+
+        public function deserializeAsyncAs_FightTeamMemberMonsterInformations(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._monsterIdFunc);
+            tree.addChild(this._gradeFunc);
+        }
+
+        private function _monsterIdFunc(input:ICustomDataInput):void
+        {
             this.monsterId = input.readInt();
+        }
+
+        private function _gradeFunc(input:ICustomDataInput):void
+        {
             this.grade = input.readByte();
             if (this.grade < 0)
             {
@@ -67,5 +90,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.context.fight
+} com.ankamagames.dofus.network.types.game.context.fight
 

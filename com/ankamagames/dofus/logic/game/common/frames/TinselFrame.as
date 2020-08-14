@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.common.frames
+package com.ankamagames.dofus.logic.game.common.frames
 {
     import com.ankamagames.jerakine.messages.Frame;
     import com.ankamagames.jerakine.logger.Logger;
@@ -82,100 +82,100 @@
 
         public function process(msg:Message):Boolean
         {
-            var _local_2:TitlesAndOrnamentsListRequestMessage;
-            var _local_3:TitlesAndOrnamentsListMessage;
-            var _local_4:TitleGainedMessage;
-            var _local_5:String;
-            var _local_6:TitleLostMessage;
-            var _local_7:int;
-            var _local_8:OrnamentGainedMessage;
-            var _local_9:String;
-            var _local_10:TitleSelectRequestAction;
-            var _local_11:TitleSelectRequestMessage;
-            var _local_12:TitleSelectedMessage;
-            var _local_13:TitleSelectErrorMessage;
-            var _local_14:OrnamentSelectRequestAction;
-            var _local_15:OrnamentSelectRequestMessage;
-            var _local_16:OrnamentSelectedMessage;
-            var _local_17:OrnamentSelectErrorMessage;
+            var taolrmsg:TitlesAndOrnamentsListRequestMessage;
+            var taolmsg:TitlesAndOrnamentsListMessage;
+            var tgmsg:TitleGainedMessage;
+            var infot:String;
+            var tlmsg:TitleLostMessage;
+            var indexToDelete:int;
+            var ogmsg:OrnamentGainedMessage;
+            var infoo:String;
+            var tsra:TitleSelectRequestAction;
+            var tsrmsg:TitleSelectRequestMessage;
+            var tsmsg:TitleSelectedMessage;
+            var tsemsg:TitleSelectErrorMessage;
+            var osra:OrnamentSelectRequestAction;
+            var osrmsg:OrnamentSelectRequestMessage;
+            var osmsg:OrnamentSelectedMessage;
+            var osemsg:OrnamentSelectErrorMessage;
             var id:int;
             switch (true)
             {
                 case (msg is TitlesAndOrnamentsListRequestAction):
-                    _local_2 = new TitlesAndOrnamentsListRequestMessage();
-                    _local_2.initTitlesAndOrnamentsListRequestMessage();
-                    ConnectionsHandler.getConnection().send(_local_2);
+                    taolrmsg = new TitlesAndOrnamentsListRequestMessage();
+                    taolrmsg.initTitlesAndOrnamentsListRequestMessage();
+                    ConnectionsHandler.getConnection().send(taolrmsg);
                     return (true);
                 case (msg is TitlesAndOrnamentsListMessage):
-                    _local_3 = (msg as TitlesAndOrnamentsListMessage);
+                    taolmsg = (msg as TitlesAndOrnamentsListMessage);
                     this._titlesOrnamentsAskedBefore = true;
-                    this._knownTitles = _local_3.titles;
-                    this._knownOrnaments = _local_3.ornaments;
-                    this._currentTitle = _local_3.activeTitle;
-                    this._currentOrnament = _local_3.activeOrnament;
+                    this._knownTitles = taolmsg.titles;
+                    this._knownOrnaments = taolmsg.ornaments;
+                    this._currentTitle = taolmsg.activeTitle;
+                    this._currentOrnament = taolmsg.activeOrnament;
                     KernelEventsManager.getInstance().processCallback(QuestHookList.TitlesListUpdated, this._knownTitles);
                     KernelEventsManager.getInstance().processCallback(QuestHookList.OrnamentsListUpdated, this._knownOrnaments);
                     return (true);
                 case (msg is TitleGainedMessage):
-                    _local_4 = (msg as TitleGainedMessage);
-                    this._knownTitles.push(_local_4.titleId);
-                    _local_5 = ParamsDecoder.applyParams(I18n.getUiText("ui.ornament.titleUnlockWithLink"), [_local_4.titleId]);
-                    KernelEventsManager.getInstance().processCallback(ChatHookList.TextInformation, _local_5, ChatActivableChannelsEnum.PSEUDO_CHANNEL_INFO, TimeManager.getInstance().getTimestamp());
+                    tgmsg = (msg as TitleGainedMessage);
+                    this._knownTitles.push(tgmsg.titleId);
+                    infot = ParamsDecoder.applyParams(I18n.getUiText("ui.ornament.titleUnlockWithLink"), [tgmsg.titleId]);
+                    KernelEventsManager.getInstance().processCallback(ChatHookList.TextInformation, infot, ChatActivableChannelsEnum.PSEUDO_CHANNEL_INFO, TimeManager.getInstance().getTimestamp());
                     KernelEventsManager.getInstance().processCallback(QuestHookList.TitlesListUpdated, this._knownTitles);
                     return (true);
                 case (msg is TitleLostMessage):
-                    _local_6 = (msg as TitleLostMessage);
-                    _local_7 = 0;
+                    tlmsg = (msg as TitleLostMessage);
+                    indexToDelete = 0;
                     for each (id in this._knownTitles)
                     {
-                        if (id == _local_6.titleId)
+                        if (id == tlmsg.titleId)
                         {
                             break;
                         };
-                        _local_7++;
+                        indexToDelete++;
                     };
-                    this._knownTitles.splice(_local_7, 1);
-                    if (this._currentTitle == _local_6.titleId)
+                    this._knownTitles.splice(indexToDelete, 1);
+                    if (this._currentTitle == tlmsg.titleId)
                     {
                         this._currentTitle = 0;
                     };
                     KernelEventsManager.getInstance().processCallback(QuestHookList.TitlesListUpdated, this._knownTitles);
                     return (true);
                 case (msg is OrnamentGainedMessage):
-                    _local_8 = (msg as OrnamentGainedMessage);
-                    this._knownOrnaments.push(_local_8.ornamentId);
-                    _local_9 = ParamsDecoder.applyParams(I18n.getUiText("ui.ornament.ornamentUnlockWithLink"), [_local_8.ornamentId]);
-                    KernelEventsManager.getInstance().processCallback(ChatHookList.TextInformation, _local_9, ChatActivableChannelsEnum.PSEUDO_CHANNEL_INFO, TimeManager.getInstance().getTimestamp());
+                    ogmsg = (msg as OrnamentGainedMessage);
+                    this._knownOrnaments.push(ogmsg.ornamentId);
+                    infoo = ParamsDecoder.applyParams(I18n.getUiText("ui.ornament.ornamentUnlockWithLink"), [ogmsg.ornamentId]);
+                    KernelEventsManager.getInstance().processCallback(ChatHookList.TextInformation, infoo, ChatActivableChannelsEnum.PSEUDO_CHANNEL_INFO, TimeManager.getInstance().getTimestamp());
                     KernelEventsManager.getInstance().processCallback(QuestHookList.OrnamentsListUpdated, this._knownOrnaments);
                     return (true);
                 case (msg is TitleSelectRequestAction):
-                    _local_10 = (msg as TitleSelectRequestAction);
-                    _local_11 = new TitleSelectRequestMessage();
-                    _local_11.initTitleSelectRequestMessage(_local_10.titleId);
-                    ConnectionsHandler.getConnection().send(_local_11);
+                    tsra = (msg as TitleSelectRequestAction);
+                    tsrmsg = new TitleSelectRequestMessage();
+                    tsrmsg.initTitleSelectRequestMessage(tsra.titleId);
+                    ConnectionsHandler.getConnection().send(tsrmsg);
                     return (true);
                 case (msg is TitleSelectedMessage):
-                    _local_12 = (msg as TitleSelectedMessage);
-                    this._currentTitle = _local_12.titleId;
+                    tsmsg = (msg as TitleSelectedMessage);
+                    this._currentTitle = tsmsg.titleId;
                     KernelEventsManager.getInstance().processCallback(QuestHookList.TitleUpdated, this._currentTitle);
                     return (true);
                 case (msg is TitleSelectErrorMessage):
-                    _local_13 = (msg as TitleSelectErrorMessage);
+                    tsemsg = (msg as TitleSelectErrorMessage);
                     _log.debug("erreur de selection de titre");
                     return (true);
                 case (msg is OrnamentSelectRequestAction):
-                    _local_14 = (msg as OrnamentSelectRequestAction);
-                    _local_15 = new OrnamentSelectRequestMessage();
-                    _local_15.initOrnamentSelectRequestMessage(_local_14.ornamentId);
-                    ConnectionsHandler.getConnection().send(_local_15);
+                    osra = (msg as OrnamentSelectRequestAction);
+                    osrmsg = new OrnamentSelectRequestMessage();
+                    osrmsg.initOrnamentSelectRequestMessage(osra.ornamentId);
+                    ConnectionsHandler.getConnection().send(osrmsg);
                     return (true);
                 case (msg is OrnamentSelectedMessage):
-                    _local_16 = (msg as OrnamentSelectedMessage);
-                    this._currentOrnament = _local_16.ornamentId;
+                    osmsg = (msg as OrnamentSelectedMessage);
+                    this._currentOrnament = osmsg.ornamentId;
                     KernelEventsManager.getInstance().processCallback(QuestHookList.OrnamentUpdated, this._currentOrnament);
                     return (true);
                 case (msg is OrnamentSelectErrorMessage):
-                    _local_17 = (msg as OrnamentSelectErrorMessage);
+                    osemsg = (msg as OrnamentSelectErrorMessage);
                     _log.debug("erreur de selection d'ornement");
                     return (true);
             };
@@ -189,5 +189,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.frames
+} com.ankamagames.dofus.logic.game.common.frames
 

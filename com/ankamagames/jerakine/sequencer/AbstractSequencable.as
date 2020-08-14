@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.sequencer
+package com.ankamagames.jerakine.sequencer
 {
     import flash.events.EventDispatcher;
     import com.ankamagames.jerakine.logger.Logger;
@@ -12,21 +12,17 @@
     public class AbstractSequencable extends EventDispatcher implements IPausableSequencable 
     {
 
-        public static const DEFAULT_TIMEOUT:uint = 5000;
+        public static var DEFAULT_TIMEOUT:uint = 5000;
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(AbstractSequencable));
 
-        private var _listeners:Dictionary;
+        private var _listeners:Dictionary = new Dictionary();
         private var _timeOut:Timer;
         private var _castingSpellId:int = -1;
-        protected var _timeoutMax:int = 5000;
+        protected var _timeoutMax:int = DEFAULT_TIMEOUT;
         private var _withTimeOut:Boolean = false;
         private var _paused:Boolean;
+        private var _finished:Boolean = false;
 
-        public function AbstractSequencable()
-        {
-            this._listeners = new Dictionary();
-            super();
-        }
 
         public function get paused():Boolean
         {
@@ -38,10 +34,20 @@
             return (this._timeoutMax);
         }
 
+        public function get finished():Boolean
+        {
+            return (this._finished);
+        }
+
+        public function set finished(bool:Boolean):void
+        {
+            this._finished = bool;
+        }
+
         public function set timeout(value:int):void
         {
             this._timeoutMax = value;
-            if (((this._timeOut) && (!((value == -1)))))
+            if (((this._timeOut) && (!(value == -1))))
             {
                 this._timeOut.delay = value;
             };
@@ -49,7 +55,7 @@
 
         public function get hasDefaultTimeout():Boolean
         {
-            return ((this._timeoutMax == DEFAULT_TIMEOUT));
+            return (this._timeoutMax == DEFAULT_TIMEOUT);
         }
 
         public function pause():void
@@ -76,13 +82,13 @@
 
         public function addListener(listener:ISequencableListener):void
         {
-            if (((!(this._timeOut)) && (!((this._timeoutMax == -1)))))
+            if (((!(this._timeOut)) && (!(this._timeoutMax == -1))))
             {
                 this._timeOut = new Timer(this._timeoutMax, 1);
                 this._timeOut.addEventListener(TimerEvent.TIMER, this.onTimeOut);
                 this._timeOut.start();
             };
-            if (!(this._listeners))
+            if (!this._listeners)
             {
                 this._listeners = new Dictionary();
             };
@@ -99,6 +105,7 @@
                 this._timeOut.reset();
                 this._timeOut = null;
             };
+            this._finished = true;
             for each (listener in this._listeners)
             {
                 if (listener)
@@ -110,7 +117,7 @@
 
         public function removeListener(listener:ISequencableListener):void
         {
-            if (!(this._listeners))
+            if (!this._listeners)
             {
                 return;
             };
@@ -162,5 +169,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.sequencer
+} com.ankamagames.jerakine.sequencer
 

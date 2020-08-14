@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.newCache.impl
+package com.ankamagames.jerakine.newCache.impl
 {
     import com.ankamagames.jerakine.newCache.ICache;
     import flash.utils.Dictionary;
@@ -6,14 +6,9 @@
     public class InfiniteCache implements ICache 
     {
 
-        protected var _cache:Dictionary;
+        protected var _cache:Dictionary = new Dictionary(true);
         protected var _size:uint;
 
-        public function InfiniteCache()
-        {
-            this._cache = new Dictionary(true);
-            super();
-        }
 
         public function get size():uint
         {
@@ -22,10 +17,10 @@
 
         public function contains(ref:*):Boolean
         {
-            return (!((this._cache[ref] == null)));
+            return (!(this._cache[ref] == null));
         }
 
-        public function extract(ref:*)
+        public function extract(ref:*):*
         {
             var obj:* = this._cache[ref];
             delete this._cache[ref];
@@ -33,7 +28,7 @@
             return (obj);
         }
 
-        public function peek(ref:*)
+        public function peek(ref:*):*
         {
             return (this._cache[ref]);
         }
@@ -53,5 +48,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.newCache.impl
+} com.ankamagames.jerakine.newCache.impl
 

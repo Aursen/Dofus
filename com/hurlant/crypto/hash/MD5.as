@@ -1,4 +1,4 @@
-﻿package com.hurlant.crypto.hash
+package com.hurlant.crypto.hash
 {
     import flash.utils.Endian;
     import flash.utils.ByteArray;
@@ -167,22 +167,22 @@
 
         private function rol(num:uint, cnt:uint):uint
         {
-            return (((num << cnt) | (num >>> (32 - cnt))));
+            return ((num << cnt) | (num >>> (32 - cnt)));
         }
 
         private function cmn(q:uint, a:uint, b:uint, x:uint, s:uint, t:uint):uint
         {
-            return ((this.rol((((a + q) + x) + t), s) + b));
+            return (this.rol((((a + q) + x) + t), s) + b);
         }
 
         private function ff(a:uint, b:uint, c:uint, d:uint, x:uint, s:uint, t:uint):uint
         {
-            return (this.cmn(((b & c) | (~(b) & d)), a, b, x, s, t));
+            return (this.cmn(((b & c) | ((~(b)) & d)), a, b, x, s, t));
         }
 
         private function gg(a:uint, b:uint, c:uint, d:uint, x:uint, s:uint, t:uint):uint
         {
-            return (this.cmn(((b & d) | (c & ~(d))), a, b, x, s, t));
+            return (this.cmn(((b & d) | (c & (~(d)))), a, b, x, s, t));
         }
 
         private function hh(a:uint, b:uint, c:uint, d:uint, x:uint, s:uint, t:uint):uint
@@ -192,7 +192,7 @@
 
         private function ii(a:uint, b:uint, c:uint, d:uint, x:uint, s:uint, t:uint):uint
         {
-            return (this.cmn((c ^ (b | ~(d))), a, b, x, s, t));
+            return (this.cmn((c ^ (b | (~(d)))), a, b, x, s, t));
         }
 
         public function toString():String
@@ -202,5 +202,5 @@
 
 
     }
-}//package com.hurlant.crypto.hash
+} com.hurlant.crypto.hash
 

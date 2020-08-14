@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.types.event
+package com.ankamagames.berilia.types.event
 {
     import flash.events.Event;
 
@@ -7,11 +7,11 @@
 
         public static const REMOVE_COMPONENT:String = "Berilia_remove_component";
 
-        public function BeriliaEvent(type:String, bubbles:Boolean=false, cancelable:Boolean=false)
+        public function BeriliaEvent(_arg_1:String, bubbles:Boolean=false, cancelable:Boolean=false)
         {
-            super(type, bubbles, cancelable);
+            super(_arg_1, bubbles, cancelable);
         }
 
     }
-}//package com.ankamagames.berilia.types.event
+} com.ankamagames.berilia.types.event
 

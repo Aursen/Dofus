@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.context.roleplay.lockable
+package com.ankamagames.dofus.network.messages.game.context.roleplay.lockable
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class LockableShowCodeDialogMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -55,6 +55,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_LockableShowCodeDialogMessage(output);
@@ -77,7 +85,28 @@
 
         public function deserializeAs_LockableShowCodeDialogMessage(input:ICustomDataInput):void
         {
+            this._changeOrUseFunc(input);
+            this._codeSizeFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_LockableShowCodeDialogMessage(tree);
+        }
+
+        public function deserializeAsyncAs_LockableShowCodeDialogMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._changeOrUseFunc);
+            tree.addChild(this._codeSizeFunc);
+        }
+
+        private function _changeOrUseFunc(input:ICustomDataInput):void
+        {
             this.changeOrUse = input.readBoolean();
+        }
+
+        private function _codeSizeFunc(input:ICustomDataInput):void
+        {
             this.codeSize = input.readByte();
             if (this.codeSize < 0)
             {
@@ -87,5 +116,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.context.roleplay.lockable
+} com.ankamagames.dofus.network.messages.game.context.roleplay.lockable
 

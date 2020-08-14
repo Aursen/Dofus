@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.datacenter.effects.instances
+package com.ankamagames.dofus.datacenter.effects.instances
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.dofus.datacenter.effects.EffectInstance;
@@ -41,14 +41,14 @@
             {
                 case 0:
                     monsterFamilyId = uint(value);
-                    return;
+                    break;
                 case 2:
                     this.monsterCount = uint(value);
-                    return;
+                    break;
             };
         }
 
 
     }
-}//package com.ankamagames.dofus.datacenter.effects.instances
+} com.ankamagames.dofus.datacenter.effects.instances
 

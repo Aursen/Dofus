@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.startup
+package com.ankamagames.dofus.network.messages.game.startup
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,9 +6,9 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import com.ankamagames.jerakine.network.utils.BooleanByteWrapper;
 
-    [Trusted]
     public class StartupActionFinishedMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -59,6 +59,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_StartupActionFinishedMessage(output);
@@ -84,9 +92,30 @@
 
         public function deserializeAs_StartupActionFinishedMessage(input:ICustomDataInput):void
         {
+            this.deserializeByteBoxes(input);
+            this._actionIdFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_StartupActionFinishedMessage(tree);
+        }
+
+        public function deserializeAsyncAs_StartupActionFinishedMessage(tree:FuncTree):void
+        {
+            tree.addChild(this.deserializeByteBoxes);
+            tree.addChild(this._actionIdFunc);
+        }
+
+        private function deserializeByteBoxes(input:ICustomDataInput):void
+        {
             var _box0:uint = input.readByte();
             this.success = BooleanByteWrapper.getFlag(_box0, 0);
             this.automaticAction = BooleanByteWrapper.getFlag(_box0, 1);
+        }
+
+        private function _actionIdFunc(input:ICustomDataInput):void
+        {
             this.actionId = input.readInt();
             if (this.actionId < 0)
             {
@@ -96,5 +125,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.startup
+} com.ankamagames.dofus.network.messages.game.startup
 

@@ -1,7 +1,8 @@
-﻿package com.ankamagames.dofus.network.messages.game.context.roleplay
+package com.ankamagames.dofus.network.messages.game.context.roleplay
 {
     import com.ankamagames.jerakine.network.INetworkMessage;
     import com.ankamagames.dofus.network.types.game.house.HouseInformationsInside;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import __AS3__.vec.Vector;
     import com.ankamagames.dofus.network.types.game.house.HouseInformations;
     import com.ankamagames.dofus.network.types.game.context.roleplay.GameRolePlayActorInformations;
@@ -9,29 +10,25 @@
     import com.ankamagames.dofus.network.types.game.interactive.StatedElement;
     import com.ankamagames.dofus.network.types.game.interactive.MapObstacle;
     import com.ankamagames.dofus.network.types.game.context.fight.FightCommonInformations;
+    import com.ankamagames.dofus.network.types.game.context.fight.FightStartingPositions;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
 
-    [Trusted]
     public class MapComplementaryInformationsDataInHouseMessage extends MapComplementaryInformationsDataMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 6130;
 
         private var _isInitialized:Boolean = false;
-        public var currentHouse:HouseInformationsInside;
+        public var currentHouse:HouseInformationsInside = new HouseInformationsInside();
+        private var _currentHousetree:FuncTree;
 
-        public function MapComplementaryInformationsDataInHouseMessage()
-        {
-            this.currentHouse = new HouseInformationsInside();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
-            return (((super.isInitialized) && (this._isInitialized)));
+            return ((super.isInitialized) && (this._isInitialized));
         }
 
         override public function getMessageId():uint
@@ -39,9 +36,9 @@
             return (6130);
         }
 
-        public function initMapComplementaryInformationsDataInHouseMessage(subAreaId:uint=0, mapId:uint=0, houses:Vector.<HouseInformations>=null, actors:Vector.<GameRolePlayActorInformations>=null, interactiveElements:Vector.<InteractiveElement>=null, statedElements:Vector.<StatedElement>=null, obstacles:Vector.<MapObstacle>=null, fights:Vector.<FightCommonInformations>=null, currentHouse:HouseInformationsInside=null):MapComplementaryInformationsDataInHouseMessage
+        public function initMapComplementaryInformationsDataInHouseMessage(subAreaId:uint=0, mapId:Number=0, houses:Vector.<HouseInformations>=null, actors:Vector.<GameRolePlayActorInformations>=null, interactiveElements:Vector.<InteractiveElement>=null, statedElements:Vector.<StatedElement>=null, obstacles:Vector.<MapObstacle>=null, fights:Vector.<FightCommonInformations>=null, hasAggressiveMonsters:Boolean=false, fightStartPositions:FightStartingPositions=null, currentHouse:HouseInformationsInside=null):MapComplementaryInformationsDataInHouseMessage
         {
-            super.initMapComplementaryInformationsDataMessage(subAreaId, mapId, houses, actors, interactiveElements, statedElements, obstacles, fights);
+            super.initMapComplementaryInformationsDataMessage(subAreaId, mapId, houses, actors, interactiveElements, statedElements, obstacles, fights, hasAggressiveMonsters, fightStartPositions);
             this.currentHouse = currentHouse;
             this._isInitialized = true;
             return (this);
@@ -64,6 +61,14 @@
         override public function unpack(input:ICustomDataInput, length:uint):void
         {
             this.deserialize(input);
+        }
+
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
         }
 
         override public function serialize(output:ICustomDataOutput):void
@@ -89,7 +94,24 @@
             this.currentHouse.deserialize(input);
         }
 
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_MapComplementaryInformationsDataInHouseMessage(tree);
+        }
+
+        public function deserializeAsyncAs_MapComplementaryInformationsDataInHouseMessage(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            this._currentHousetree = tree.addChild(this._currentHousetreeFunc);
+        }
+
+        private function _currentHousetreeFunc(input:ICustomDataInput):void
+        {
+            this.currentHouse = new HouseInformationsInside();
+            this.currentHouse.deserializeAsync(this._currentHousetree);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.context.roleplay
+} com.ankamagames.dofus.network.messages.game.context.roleplay
 

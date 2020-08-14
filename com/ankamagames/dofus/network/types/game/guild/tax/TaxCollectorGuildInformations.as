@@ -1,7 +1,8 @@
-﻿package com.ankamagames.dofus.network.types.game.guild.tax
+package com.ankamagames.dofus.network.types.game.guild.tax
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.dofus.network.types.game.context.roleplay.BasicGuildInformations;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
 
@@ -10,13 +11,9 @@
 
         public static const protocolId:uint = 446;
 
-        public var guild:BasicGuildInformations;
+        public var guild:BasicGuildInformations = new BasicGuildInformations();
+        private var _guildtree:FuncTree;
 
-        public function TaxCollectorGuildInformations()
-        {
-            this.guild = new BasicGuildInformations();
-            super();
-        }
 
         override public function getTypeId():uint
         {
@@ -57,7 +54,24 @@
             this.guild.deserialize(input);
         }
 
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_TaxCollectorGuildInformations(tree);
+        }
+
+        public function deserializeAsyncAs_TaxCollectorGuildInformations(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            this._guildtree = tree.addChild(this._guildtreeFunc);
+        }
+
+        private function _guildtreeFunc(input:ICustomDataInput):void
+        {
+            this.guild = new BasicGuildInformations();
+            this.guild.deserializeAsync(this._guildtree);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.types.game.guild.tax
+} com.ankamagames.dofus.network.types.game.guild.tax
 

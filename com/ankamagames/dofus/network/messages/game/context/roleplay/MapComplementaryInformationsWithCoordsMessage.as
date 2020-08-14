@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.context.roleplay
+package com.ankamagames.dofus.network.messages.game.context.roleplay
 {
     import com.ankamagames.jerakine.network.INetworkMessage;
     import __AS3__.vec.Vector;
@@ -8,12 +8,13 @@
     import com.ankamagames.dofus.network.types.game.interactive.StatedElement;
     import com.ankamagames.dofus.network.types.game.interactive.MapObstacle;
     import com.ankamagames.dofus.network.types.game.context.fight.FightCommonInformations;
+    import com.ankamagames.dofus.network.types.game.context.fight.FightStartingPositions;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class MapComplementaryInformationsWithCoordsMessage extends MapComplementaryInformationsDataMessage implements INetworkMessage 
     {
 
@@ -26,7 +27,7 @@
 
         override public function get isInitialized():Boolean
         {
-            return (((super.isInitialized) && (this._isInitialized)));
+            return ((super.isInitialized) && (this._isInitialized));
         }
 
         override public function getMessageId():uint
@@ -34,9 +35,9 @@
             return (6268);
         }
 
-        public function initMapComplementaryInformationsWithCoordsMessage(subAreaId:uint=0, mapId:uint=0, houses:Vector.<HouseInformations>=null, actors:Vector.<GameRolePlayActorInformations>=null, interactiveElements:Vector.<InteractiveElement>=null, statedElements:Vector.<StatedElement>=null, obstacles:Vector.<MapObstacle>=null, fights:Vector.<FightCommonInformations>=null, worldX:int=0, worldY:int=0):MapComplementaryInformationsWithCoordsMessage
+        public function initMapComplementaryInformationsWithCoordsMessage(subAreaId:uint=0, mapId:Number=0, houses:Vector.<HouseInformations>=null, actors:Vector.<GameRolePlayActorInformations>=null, interactiveElements:Vector.<InteractiveElement>=null, statedElements:Vector.<StatedElement>=null, obstacles:Vector.<MapObstacle>=null, fights:Vector.<FightCommonInformations>=null, hasAggressiveMonsters:Boolean=false, fightStartPositions:FightStartingPositions=null, worldX:int=0, worldY:int=0):MapComplementaryInformationsWithCoordsMessage
         {
-            super.initMapComplementaryInformationsDataMessage(subAreaId, mapId, houses, actors, interactiveElements, statedElements, obstacles, fights);
+            super.initMapComplementaryInformationsDataMessage(subAreaId, mapId, houses, actors, interactiveElements, statedElements, obstacles, fights, hasAggressiveMonsters, fightStartPositions);
             this.worldX = worldX;
             this.worldY = worldY;
             this._isInitialized = true;
@@ -63,6 +64,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         override public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_MapComplementaryInformationsWithCoordsMessage(output);
@@ -71,12 +80,12 @@
         public function serializeAs_MapComplementaryInformationsWithCoordsMessage(output:ICustomDataOutput):void
         {
             super.serializeAs_MapComplementaryInformationsDataMessage(output);
-            if ((((this.worldX < -255)) || ((this.worldX > 0xFF))))
+            if (((this.worldX < -255) || (this.worldX > 0xFF)))
             {
                 throw (new Error((("Forbidden value (" + this.worldX) + ") on element worldX.")));
             };
             output.writeShort(this.worldX);
-            if ((((this.worldY < -255)) || ((this.worldY > 0xFF))))
+            if (((this.worldY < -255) || (this.worldY > 0xFF)))
             {
                 throw (new Error((("Forbidden value (" + this.worldY) + ") on element worldY.")));
             };
@@ -91,13 +100,35 @@
         public function deserializeAs_MapComplementaryInformationsWithCoordsMessage(input:ICustomDataInput):void
         {
             super.deserialize(input);
+            this._worldXFunc(input);
+            this._worldYFunc(input);
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_MapComplementaryInformationsWithCoordsMessage(tree);
+        }
+
+        public function deserializeAsyncAs_MapComplementaryInformationsWithCoordsMessage(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._worldXFunc);
+            tree.addChild(this._worldYFunc);
+        }
+
+        private function _worldXFunc(input:ICustomDataInput):void
+        {
             this.worldX = input.readShort();
-            if ((((this.worldX < -255)) || ((this.worldX > 0xFF))))
+            if (((this.worldX < -255) || (this.worldX > 0xFF)))
             {
                 throw (new Error((("Forbidden value (" + this.worldX) + ") on element of MapComplementaryInformationsWithCoordsMessage.worldX.")));
             };
+        }
+
+        private function _worldYFunc(input:ICustomDataInput):void
+        {
             this.worldY = input.readShort();
-            if ((((this.worldY < -255)) || ((this.worldY > 0xFF))))
+            if (((this.worldY < -255) || (this.worldY > 0xFF)))
             {
                 throw (new Error((("Forbidden value (" + this.worldY) + ") on element of MapComplementaryInformationsWithCoordsMessage.worldY.")));
             };
@@ -105,5 +136,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.context.roleplay
+} com.ankamagames.dofus.network.messages.game.context.roleplay
 

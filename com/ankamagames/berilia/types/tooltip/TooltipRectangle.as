@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.types.tooltip
+package com.ankamagames.berilia.types.tooltip
 {
     import com.ankamagames.jerakine.interfaces.IRectangle;
     import com.ankamagames.jerakine.interfaces.IModuleUtil;
@@ -72,5 +72,5 @@
 
 
     }
-}//package com.ankamagames.berilia.types.tooltip
+} com.ankamagames.berilia.types.tooltip
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.scripts.api
+package com.ankamagames.dofus.scripts.api
 {
     import com.ankamagames.jerakine.lua.LuaPackage;
     import __AS3__.vec.Vector;
@@ -9,19 +9,13 @@
     public class ScriptSequenceApi implements LuaPackage 
     {
 
-        private var _sequencers:Vector.<SerialSequencer>;
-        private var _callbacks:Vector.<Function>;
+        private var _sequencers:Vector.<SerialSequencer> = new Vector.<SerialSequencer>(0);
+        private var _callbacks:Vector.<Function> = new Vector.<Function>(0);
 
-        public function ScriptSequenceApi()
-        {
-            this._sequencers = new Vector.<SerialSequencer>(0);
-            this._callbacks = new Vector.<Function>(0);
-            super();
-        }
 
         public function hasSequences():Boolean
         {
-            return ((this._sequencers.length > 0));
+            return (this._sequencers.length > 0);
         }
 
         public function create():SerialSequencer
@@ -65,5 +59,5 @@
 
 
     }
-}//package com.ankamagames.dofus.scripts.api
+} com.ankamagames.dofus.scripts.api
 

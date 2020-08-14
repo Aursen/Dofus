@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.utils.web
+package com.ankamagames.berilia.utils.web
 {
     import flash.events.EventDispatcher;
     import com.ankamagames.jerakine.logger.Logger;
@@ -30,7 +30,7 @@
 
         public static function getInstance():HttpServer
         {
-            if (!(_self))
+            if (!_self)
             {
                 _self = new (HttpServer)();
             };
@@ -76,7 +76,7 @@
 
         public function getUrlTo(target:String):String
         {
-            return (((("http://localhost:" + this._usedPort) + "/") + target));
+            return ((("http://localhost:" + this._usedPort) + "/") + target);
         }
 
         public function close():void
@@ -86,11 +86,10 @@
             {
                 httpSocket.tearDown();
             };
-            if (((!((this._server == null))) && (this._server.bound)))
+            if (((!(this._server == null)) && (this._server.bound)))
             {
                 this._server.removeEventListener(Event.CONNECT, this.onConnect);
                 this._server.close();
-                trace("Server closed");
                 _log.warn("Server closed");
             };
         }
@@ -110,5 +109,5 @@
 
 
     }
-}//package com.ankamagames.berilia.utils.web
+} com.ankamagames.berilia.utils.web
 

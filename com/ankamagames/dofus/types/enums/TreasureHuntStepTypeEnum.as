@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.types.enums
+package com.ankamagames.dofus.types.enums
 {
     public class TreasureHuntStepTypeEnum 
     {
@@ -12,5 +12,5 @@
 
 
     }
-}//package com.ankamagames.dofus.types.enums
+} com.ankamagames.dofus.types.enums
 

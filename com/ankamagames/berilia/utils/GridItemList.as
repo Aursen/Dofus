@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.utils
+package com.ankamagames.berilia.utils
 {
     import com.ankamagames.berilia.components.gridRenderer.XmlUiGridRenderer;
     import com.ankamagames.berilia.components.gridRenderer.SlotGridRenderer;
@@ -19,5 +19,5 @@
 
 
     }
-}//package com.ankamagames.berilia.utils
+} com.ankamagames.berilia.utils
 

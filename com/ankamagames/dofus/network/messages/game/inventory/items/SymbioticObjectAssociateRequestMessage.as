@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.inventory.items
+package com.ankamagames.dofus.network.messages.game.inventory.items
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class SymbioticObjectAssociateRequestMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -61,6 +61,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_SymbioticObjectAssociateRequestMessage(output);
@@ -73,7 +81,7 @@
                 throw (new Error((("Forbidden value (" + this.symbioteUID) + ") on element symbioteUID.")));
             };
             output.writeVarInt(this.symbioteUID);
-            if ((((this.symbiotePos < 0)) || ((this.symbiotePos > 0xFF))))
+            if (((this.symbiotePos < 0) || (this.symbiotePos > 0xFF)))
             {
                 throw (new Error((("Forbidden value (" + this.symbiotePos) + ") on element symbiotePos.")));
             };
@@ -83,7 +91,7 @@
                 throw (new Error((("Forbidden value (" + this.hostUID) + ") on element hostUID.")));
             };
             output.writeVarInt(this.hostUID);
-            if ((((this.hostPos < 0)) || ((this.hostPos > 0xFF))))
+            if (((this.hostPos < 0) || (this.hostPos > 0xFF)))
             {
                 throw (new Error((("Forbidden value (" + this.hostPos) + ") on element hostPos.")));
             };
@@ -97,23 +105,56 @@
 
         public function deserializeAs_SymbioticObjectAssociateRequestMessage(input:ICustomDataInput):void
         {
+            this._symbioteUIDFunc(input);
+            this._symbiotePosFunc(input);
+            this._hostUIDFunc(input);
+            this._hostPosFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_SymbioticObjectAssociateRequestMessage(tree);
+        }
+
+        public function deserializeAsyncAs_SymbioticObjectAssociateRequestMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._symbioteUIDFunc);
+            tree.addChild(this._symbiotePosFunc);
+            tree.addChild(this._hostUIDFunc);
+            tree.addChild(this._hostPosFunc);
+        }
+
+        private function _symbioteUIDFunc(input:ICustomDataInput):void
+        {
             this.symbioteUID = input.readVarUhInt();
             if (this.symbioteUID < 0)
             {
                 throw (new Error((("Forbidden value (" + this.symbioteUID) + ") on element of SymbioticObjectAssociateRequestMessage.symbioteUID.")));
             };
+        }
+
+        private function _symbiotePosFunc(input:ICustomDataInput):void
+        {
             this.symbiotePos = input.readUnsignedByte();
-            if ((((this.symbiotePos < 0)) || ((this.symbiotePos > 0xFF))))
+            if (((this.symbiotePos < 0) || (this.symbiotePos > 0xFF)))
             {
                 throw (new Error((("Forbidden value (" + this.symbiotePos) + ") on element of SymbioticObjectAssociateRequestMessage.symbiotePos.")));
             };
+        }
+
+        private function _hostUIDFunc(input:ICustomDataInput):void
+        {
             this.hostUID = input.readVarUhInt();
             if (this.hostUID < 0)
             {
                 throw (new Error((("Forbidden value (" + this.hostUID) + ") on element of SymbioticObjectAssociateRequestMessage.hostUID.")));
             };
+        }
+
+        private function _hostPosFunc(input:ICustomDataInput):void
+        {
             this.hostPos = input.readUnsignedByte();
-            if ((((this.hostPos < 0)) || ((this.hostPos > 0xFF))))
+            if (((this.hostPos < 0) || (this.hostPos > 0xFF)))
             {
                 throw (new Error((("Forbidden value (" + this.hostPos) + ") on element of SymbioticObjectAssociateRequestMessage.hostPos.")));
             };
@@ -121,5 +162,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.inventory.items
+} com.ankamagames.dofus.network.messages.game.inventory.items
 

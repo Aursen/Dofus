@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.network
+package com.ankamagames.jerakine.network
 {
     import flash.utils.IDataInput;
 
@@ -7,9 +7,9 @@
 
         private var _proxy:IConnectionProxy;
 
-        public function ProxyedServerConnection(proxy:IConnectionProxy, host:String=null, port:int=0)
+        public function ProxyedServerConnection(proxy:IConnectionProxy, host:String=null, port:int=0, id:String="")
         {
-            super(host, port);
+            super(host, port, id);
             this._proxy = proxy;
         }
 
@@ -39,5 +39,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.network
+} com.ankamagames.jerakine.network
 

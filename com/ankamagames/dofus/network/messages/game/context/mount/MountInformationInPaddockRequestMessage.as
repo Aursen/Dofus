@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.context.mount
+package com.ankamagames.dofus.network.messages.game.context.mount
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class MountInformationInPaddockRequestMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -52,6 +52,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_MountInformationInPaddockRequestMessage(output);
@@ -59,7 +67,7 @@
 
         public function serializeAs_MountInformationInPaddockRequestMessage(output:ICustomDataOutput):void
         {
-            output.writeInt(this.mapRideId);
+            output.writeVarInt(this.mapRideId);
         }
 
         public function deserialize(input:ICustomDataInput):void
@@ -69,10 +77,25 @@
 
         public function deserializeAs_MountInformationInPaddockRequestMessage(input:ICustomDataInput):void
         {
-            this.mapRideId = input.readInt();
+            this._mapRideIdFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_MountInformationInPaddockRequestMessage(tree);
+        }
+
+        public function deserializeAsyncAs_MountInformationInPaddockRequestMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._mapRideIdFunc);
+        }
+
+        private function _mapRideIdFunc(input:ICustomDataInput):void
+        {
+            this.mapRideId = input.readVarInt();
         }
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.context.mount
+} com.ankamagames.dofus.network.messages.game.context.mount
 

@@ -1,7 +1,8 @@
-﻿package com.ankamagames.dofus.network.types.game.context.roleplay
+package com.ankamagames.dofus.network.types.game.context.roleplay
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.dofus.network.types.game.guild.GuildEmblem;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
 
@@ -10,22 +11,18 @@
 
         public static const protocolId:uint = 127;
 
-        public var guildEmblem:GuildEmblem;
+        public var guildEmblem:GuildEmblem = new GuildEmblem();
+        private var _guildEmblemtree:FuncTree;
 
-        public function GuildInformations()
-        {
-            this.guildEmblem = new GuildEmblem();
-            super();
-        }
 
         override public function getTypeId():uint
         {
             return (127);
         }
 
-        public function initGuildInformations(guildId:uint=0, guildName:String="", guildEmblem:GuildEmblem=null):GuildInformations
+        public function initGuildInformations(guildId:uint=0, guildName:String="", guildLevel:uint=0, guildEmblem:GuildEmblem=null):GuildInformations
         {
-            super.initBasicGuildInformations(guildId, guildName);
+            super.initBasicGuildInformations(guildId, guildName, guildLevel);
             this.guildEmblem = guildEmblem;
             return (this);
         }
@@ -59,7 +56,24 @@
             this.guildEmblem.deserialize(input);
         }
 
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GuildInformations(tree);
+        }
+
+        public function deserializeAsyncAs_GuildInformations(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            this._guildEmblemtree = tree.addChild(this._guildEmblemtreeFunc);
+        }
+
+        private function _guildEmblemtreeFunc(input:ICustomDataInput):void
+        {
+            this.guildEmblem = new GuildEmblem();
+            this.guildEmblem.deserializeAsync(this._guildEmblemtree);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.types.game.context.roleplay
+} com.ankamagames.dofus.network.types.game.context.roleplay
 

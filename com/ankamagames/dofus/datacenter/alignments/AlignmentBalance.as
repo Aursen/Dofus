@@ -1,9 +1,10 @@
-﻿package com.ankamagames.dofus.datacenter.alignments
+package com.ankamagames.dofus.datacenter.alignments
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
+    import com.ankamagames.dofus.types.IdAccessors;
     import com.ankamagames.jerakine.data.GameData;
     import com.ankamagames.jerakine.data.I18n;
 
@@ -12,6 +13,7 @@
 
         public static const MODULE:String = "AlignmentBalance";
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(AlignmentBalance));
+        public static var idAccessors:IdAccessors = new IdAccessors(getAlignmentBalanceById, getAlignmentBalances);
 
         public var id:int;
         public var startValue:int;
@@ -24,7 +26,7 @@
 
         public static function getAlignmentBalanceById(id:int):AlignmentBalance
         {
-            return ((GameData.getObject(MODULE, id) as AlignmentBalance));
+            return (GameData.getObject(MODULE, id) as AlignmentBalance);
         }
 
         public static function getAlignmentBalances():Array
@@ -35,7 +37,7 @@
 
         public function get name():String
         {
-            if (!(this._name))
+            if (!this._name)
             {
                 this._name = I18n.getText(this.nameId);
             };
@@ -44,7 +46,7 @@
 
         public function get description():String
         {
-            if (!(this._description))
+            if (!this._description)
             {
                 this._description = I18n.getText(this.descriptionId);
             };
@@ -53,5 +55,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.alignments
+} com.ankamagames.dofus.datacenter.alignments
 

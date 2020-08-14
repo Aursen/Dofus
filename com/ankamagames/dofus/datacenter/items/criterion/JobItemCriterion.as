@@ -1,30 +1,59 @@
-﻿package com.ankamagames.dofus.datacenter.items.criterion
+package com.ankamagames.dofus.datacenter.items.criterion
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
-    import com.ankamagames.dofus.internalDatacenter.jobs.KnownJob;
+    import com.ankamagames.dofus.internalDatacenter.jobs.KnownJobWrapper;
     import com.ankamagames.dofus.logic.game.common.managers.PlayedCharacterManager;
     import com.ankamagames.dofus.datacenter.jobs.Job;
+    import com.ankamagames.jerakine.utils.pattern.PatternDecoder;
     import com.ankamagames.jerakine.data.I18n;
 
     public class JobItemCriterion extends ItemCriterion implements IDataCenter 
     {
 
+        private const VALUE_NOT_SPECIFIC_JOB:uint = 0xFFFFFFFF;
+
         private var _jobId:uint;
+        private var _jobsCount:int;
         private var _jobLevel:int = -1;
 
         public function JobItemCriterion(pCriterion:String)
         {
+            var isValidNumber:Boolean;
+            var _jobIdentifier:Array;
             super(pCriterion);
             var arrayParams:Array = String(_criterionValueText).split(",");
-            if (((arrayParams) && ((arrayParams.length > 0))))
+            if (((arrayParams) && (arrayParams.length > 0)))
             {
-                if (arrayParams.length > 2)
+                if (arrayParams.length <= 2)
                 {
-                    trace((("Les paramètres pour le job sont mauvais ! (" + _serverCriterionForm) + ")"));
-                }
-                else
-                {
-                    this._jobId = uint(arrayParams[0]);
+                    isValidNumber = ((!(isNaN(parseInt(arrayParams[0])))) && (parseInt(arrayParams[0]) > 0));
+                    if (isValidNumber)
+                    {
+                        this._jobId = uint(arrayParams[0]);
+                        this._jobsCount = 1;
+                    }
+                    else
+                    {
+                        _jobIdentifier = arrayParams[0].split("");
+                        if (_jobIdentifier[0] == "a")
+                        {
+                            this._jobId = this.VALUE_NOT_SPECIFIC_JOB;
+                            this._jobsCount = 1;
+                        }
+                        else
+                        {
+                            if (_jobIdentifier[0] == "n")
+                            {
+                                this._jobId = this.VALUE_NOT_SPECIFIC_JOB;
+                                this._jobsCount = parseInt(_jobIdentifier[1]);
+                            }
+                            else
+                            {
+                                this._jobId = 0;
+                                this._jobsCount = 0;
+                            };
+                        };
+                    };
                     this._jobLevel = int(arrayParams[1]);
                 };
             }
@@ -37,27 +66,43 @@
 
         override public function get isRespected():Boolean
         {
-            var knownJob:KnownJob;
-            var kj:KnownJob;
-            for each (kj in PlayedCharacterManager.getInstance().jobs)
+            var knownJob:KnownJobWrapper;
+            var knownJobCount:int;
+            var knownJobs:Array = PlayedCharacterManager.getInstance().jobs;
+            if (this._jobsCount > 0)
             {
-                if (kj.jobDescription.jobId == this._jobId)
+                if (this._jobId == this.VALUE_NOT_SPECIFIC_JOB)
                 {
-                    knownJob = kj;
-                };
-            };
-            if (this._jobLevel != -1)
-            {
-                if (((knownJob) && ((knownJob.jobExperience.jobLevel > this._jobLevel))))
+                    knownJobCount = 0;
+                    for each (knownJob in knownJobs)
+                    {
+                        if (!knownJob)
+                        {
+                        }
+                        else
+                        {
+                            if (((this._jobLevel == -1) || (knownJob.jobLevel > this._jobLevel)))
+                            {
+                                knownJobCount++;
+                            };
+                            if (knownJobCount >= this._jobsCount)
+                            {
+                                return (true);
+                            };
+                        };
+                    };
+                }
+                else
                 {
-                    return (true);
-                };
-            }
-            else
-            {
-                if (knownJob)
-                {
-                    return (true);
+                    knownJob = knownJobs[this._jobId];
+                    if (!knownJob)
+                    {
+                        return (false);
+                    };
+                    if (((this._jobLevel == -1) || (knownJob.jobLevel > this._jobLevel)))
+                    {
+                        return (true);
+                    };
                 };
             };
             return (false);
@@ -65,14 +110,30 @@
 
         override public function get text():String
         {
+            var job:Job;
             var readableCriterionRef:String = "";
+            var readableCriterionValue:String = "";
             var readableCriterion:String = "";
-            var job:Job = Job.getJobById(this._jobId);
-            if (!(job))
+            if (this._jobsCount > 0)
             {
-                return (readableCriterion);
+                if (((this._jobsCount > 1) || (this._jobId == this.VALUE_NOT_SPECIFIC_JOB)))
+                {
+                    readableCriterionValue = (readableCriterionValue + PatternDecoder.combine(I18n.getUiText("ui.criterion.atLeastSomeJobs", [this._jobsCount]), "n", (this._jobsCount == 1), (this._jobsCount == 0)));
+                }
+                else
+                {
+                    job = Job.getJobById(this._jobId);
+                    if (!job)
+                    {
+                        return (readableCriterion);
+                    };
+                    readableCriterionValue = (readableCriterionValue + job.name);
+                };
+            }
+            else
+            {
+                return ("");
             };
-            var readableCriterionValue:String = job.name;
             var optionalJobLevel:String = "";
             if (this._jobLevel >= 0)
             {
@@ -106,5 +167,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.items.criterion
+} com.ankamagames.dofus.datacenter.items.criterion
 

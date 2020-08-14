@@ -1,14 +1,14 @@
-﻿package com.ankamagames.dofus.logic.game.common.actions.guild
+package com.ankamagames.dofus.logic.game.common.actions.guild
 {
     import com.ankamagames.jerakine.handlers.messages.Action;
 
     public class GuildFightJoinRequestAction implements Action 
     {
 
-        public var taxCollectorId:uint;
+        public var taxCollectorId:Number;
 
 
-        public static function create(pTaxCollectorId:uint):GuildFightJoinRequestAction
+        public static function create(pTaxCollectorId:Number):GuildFightJoinRequestAction
         {
             var action:GuildFightJoinRequestAction = new (GuildFightJoinRequestAction)();
             action.taxCollectorId = pTaxCollectorId;
@@ -17,5 +17,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.actions.guild
+} com.ankamagames.dofus.logic.game.common.actions.guild
 

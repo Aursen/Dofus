@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.common.actions.externalGame
+package com.ankamagames.dofus.logic.game.common.actions.externalGame
 {
     import com.ankamagames.jerakine.handlers.messages.Action;
 
@@ -6,18 +6,16 @@
     {
 
         public var categoryId:int;
-        public var pageId:int;
 
 
-        public static function create(categoryId:int, pageId:int=1):ShopArticlesListRequestAction
+        public static function create(categoryId:int):ShopArticlesListRequestAction
         {
             var action:ShopArticlesListRequestAction = new (ShopArticlesListRequestAction)();
             action.categoryId = categoryId;
-            action.pageId = pageId;
             return (action);
         }
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.actions.externalGame
+} com.ankamagames.dofus.logic.game.common.actions.externalGame
 

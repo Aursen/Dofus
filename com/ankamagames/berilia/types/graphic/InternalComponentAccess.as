@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.types.graphic
+package com.ankamagames.berilia.types.graphic
 {
     import com.ankamagames.berilia.UIComponent;
 
@@ -6,7 +6,7 @@
     {
 
 
-        public static function getProperty(target:UIComponent, property:String)
+        public static function getProperty(target:UIComponent, property:String):*
         {
             return (target[property]);
         }
@@ -18,5 +18,5 @@
 
 
     }
-}//package com.ankamagames.berilia.types.graphic
+} com.ankamagames.berilia.types.graphic
 

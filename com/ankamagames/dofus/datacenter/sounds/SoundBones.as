@@ -1,6 +1,7 @@
-﻿package com.ankamagames.dofus.datacenter.sounds
+package com.ankamagames.dofus.datacenter.sounds
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
+    import com.ankamagames.dofus.types.IdAccessors;
     import __AS3__.vec.Vector;
     import flash.utils.Dictionary;
     import com.ankamagames.jerakine.data.GameData;
@@ -10,6 +11,7 @@
     {
 
         public static var MODULE:String = "SoundBones";
+        public static var idAccessors:IdAccessors = new IdAccessors(getSoundBonesById, getSoundBones);
 
         public var id:uint;
         public var keys:Vector.<String>;
@@ -43,7 +45,7 @@
             var animationList:Vector.<SoundAnimation> = this.getSoundAnimations(animationName);
             return (animationList.filter(function (a:SoundAnimation):Boolean
             {
-                return ((((a.label == label)) && ((a.startFrame == frame))));
+                return ((a.label == label) && (a.startFrame == frame));
             }));
         }
 
@@ -57,7 +59,7 @@
             var ret:Vector.<SoundAnimation> = new Vector.<SoundAnimation>();
             for each (sa in this._cacheDictionary[animationName])
             {
-                if ((((sa.label == label)) || ((((label == null)) && ((sa.label == "null"))))))
+                if (((sa.label == label) || ((label == null) && (sa.label == "null"))))
                 {
                     ret.push(sa);
                 };
@@ -68,7 +70,7 @@
         public function getRandomSoundAnimation(animationName:String, label:String=null):SoundAnimation
         {
             var list:Vector.<SoundAnimation> = this.getSoundAnimationByLabel(animationName, label);
-            var rnd:int = int((Math.random() % list.length));
+            var rnd:int = int(int((Math.random() % list.length)));
             var sa:SoundAnimation = list[rnd];
             return (sa);
         }
@@ -86,14 +88,14 @@
                 animationName = this.keys[i];
                 this._cacheDictionary[animationName] = this.values[i];
                 animationParams = animationName.split("_");
-                if (((animationParams) && ((animationParams.length == 2))))
+                if (((animationParams) && (animationParams.length == 2)))
                 {
                     animationType = animationParams[0];
                     animationDirection = int(animationParams[1]);
                 }
                 else
                 {
-                    break;
+                    continue;
                 };
                 switch (animationDirection)
                 {
@@ -115,5 +117,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.sounds
+} com.ankamagames.dofus.datacenter.sounds
 

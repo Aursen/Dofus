@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.script
+package com.ankamagames.dofus.network.messages.game.script
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class CinematicMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -52,6 +52,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_CinematicMessage(output);
@@ -73,6 +81,21 @@
 
         public function deserializeAs_CinematicMessage(input:ICustomDataInput):void
         {
+            this._cinematicIdFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_CinematicMessage(tree);
+        }
+
+        public function deserializeAsyncAs_CinematicMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._cinematicIdFunc);
+        }
+
+        private function _cinematicIdFunc(input:ICustomDataInput):void
+        {
             this.cinematicId = input.readVarUhShort();
             if (this.cinematicId < 0)
             {
@@ -82,5 +105,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.script
+} com.ankamagames.dofus.network.messages.game.script
 

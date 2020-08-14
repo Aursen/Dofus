@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus
+package com.ankamagames.dofus
 {
     import mx.core.ByteArrayAsset;
 
@@ -8,5 +8,5 @@
 
 
     }
-}//package com.ankamagames.dofus
+} com.ankamagames.dofus
 

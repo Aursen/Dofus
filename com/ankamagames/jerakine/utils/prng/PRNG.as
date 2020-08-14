@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.utils.prng
+package com.ankamagames.jerakine.utils.prng
 {
     public interface PRNG 
     {
@@ -10,5 +10,5 @@
         function nextDoubleR(_arg_1:Number, _arg_2:Number):Number;
 
     }
-}//package com.ankamagames.jerakine.utils.prng
+} com.ankamagames.jerakine.utils.prng
 

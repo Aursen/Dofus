@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.utils.display
+package com.ankamagames.jerakine.utils.display
 {
     import com.ankamagames.jerakine.interfaces.IRectangle;
     import flash.geom.Point;
@@ -71,10 +71,10 @@
 
         public function toString():String
         {
-            return (((((((("x " + this._x) + ":, y: ") + this._y) + ", w: ") + this._width) + ", h: ") + this._height));
+            return ((((((("x " + this._x) + ":, y: ") + this._y) + ", w: ") + this._width) + ", h: ") + this._height);
         }
 
 
     }
-}//package com.ankamagames.jerakine.utils.display
+} com.ankamagames.jerakine.utils.display
 

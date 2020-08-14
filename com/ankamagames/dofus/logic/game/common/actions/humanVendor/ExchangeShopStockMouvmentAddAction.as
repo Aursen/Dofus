@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.common.actions.humanVendor
+package com.ankamagames.dofus.logic.game.common.actions.humanVendor
 {
     import com.ankamagames.jerakine.handlers.messages.Action;
 
@@ -7,10 +7,10 @@
 
         public var objectUID:uint;
         public var quantity:uint;
-        public var price:uint;
+        public var price:Number = 0;
 
 
-        public static function create(pObjectUID:uint, pQuantity:uint, pPrice:uint):ExchangeShopStockMouvmentAddAction
+        public static function create(pObjectUID:uint, pQuantity:uint, pPrice:Number):ExchangeShopStockMouvmentAddAction
         {
             var a:ExchangeShopStockMouvmentAddAction = new (ExchangeShopStockMouvmentAddAction)();
             a.objectUID = pObjectUID;
@@ -21,5 +21,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.actions.humanVendor
+} com.ankamagames.dofus.logic.game.common.actions.humanVendor
 

@@ -1,10 +1,10 @@
-﻿package com.ankamagames.dofus.network.types.game.interactive
+package com.ankamagames.dofus.network.types.game.interactive
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class InteractiveElementNamedSkill extends InteractiveElementSkill implements INetworkType 
     {
 
@@ -54,6 +54,22 @@
         public function deserializeAs_InteractiveElementNamedSkill(input:ICustomDataInput):void
         {
             super.deserialize(input);
+            this._nameIdFunc(input);
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_InteractiveElementNamedSkill(tree);
+        }
+
+        public function deserializeAsyncAs_InteractiveElementNamedSkill(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._nameIdFunc);
+        }
+
+        private function _nameIdFunc(input:ICustomDataInput):void
+        {
             this.nameId = input.readVarUhInt();
             if (this.nameId < 0)
             {
@@ -63,5 +79,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.interactive
+} com.ankamagames.dofus.network.types.game.interactive
 

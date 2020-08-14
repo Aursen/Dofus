@@ -1,6 +1,7 @@
-﻿package com.ankamagames.jerakine.network
+package com.ankamagames.jerakine.network
 {
     import com.ankamagames.jerakine.logger.LogEvent;
+    import com.ankamagames.jerakine.utils.benchmark.monitoring.FpsManager;
     import flash.events.Event;
 
     public class NetworkLogEvent extends LogEvent 
@@ -14,6 +15,7 @@
             super(null, null, 0);
             this._msg = msg;
             this._isServerMsg = isServerMsg;
+            FpsManager.getInstance().watchObject(this);
         }
 
         public function get networkMessage():INetworkMessage
@@ -33,5 +35,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.network
+} com.ankamagames.jerakine.network
 

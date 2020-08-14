@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.components.messages
+package com.ankamagames.berilia.components.messages
 {
     import com.ankamagames.jerakine.messages.Message;
     import com.ankamagames.jerakine.logger.Logger;
@@ -63,5 +63,5 @@
 
 
     }
-}//package com.ankamagames.berilia.components.messages
+} com.ankamagames.berilia.components.messages
 

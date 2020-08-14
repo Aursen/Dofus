@@ -1,10 +1,9 @@
-﻿package com.ankamagames.jerakine.utils.display
+package com.ankamagames.jerakine.utils.display
 {
     import flash.utils.Dictionary;
     import flash.display.DisplayObjectContainer;
     import flash.display.MovieClip;
     import flash.display.DisplayObject;
-    import flash.events.Event;
 
     public class MovieClipUtils 
     {
@@ -17,19 +16,19 @@
 
         public static function isSingleFrame(mc:DisplayObjectContainer):Boolean
         {
-            var _local_3:int;
-            var _local_4:int;
+            var i:int;
+            var num:int;
             var child:DisplayObjectContainer;
             var movieClip:MovieClip = (mc as MovieClip);
-            if (((movieClip) && ((movieClip.totalFrames > 1))))
+            if (((movieClip) && (movieClip.totalFrames > 1)))
             {
                 return (false);
             };
-            _local_3 = -1;
-            _local_4 = mc.numChildren;
-            while (++_local_3 < _local_4)
+            i = -1;
+            num = mc.numChildren;
+            while (++i < num)
             {
-                child = (mc.getChildAt(_local_3) as DisplayObjectContainer);
+                child = (mc.getChildAt(i) as DisplayObjectContainer);
                 if (((child) && (!(isSingleFrame(child)))))
                 {
                     return (false);
@@ -44,7 +43,7 @@
             if ((clip is MovieClip))
             {
                 MovieClip(clip).stop();
-                if (((_isAsync) && ((MovieClip(clip).totalFrames > 1))))
+                if (((_isAsync) && (MovieClip(clip).totalFrames > 1)))
                 {
                     asynchStopDoneCount++;
                 };
@@ -61,54 +60,7 @@
             };
         }
 
-        private static function stopMovieClipASynch(e:Event):void
-        {
-            var clip:Object;
-            var missing:Boolean;
-            var frame:*;
-            var clipToStop:DisplayObject;
-            var allDone:Boolean = true;
-            for (clip in _asynchClip)
-            {
-                if (clip)
-                {
-                    for (frame in _asynchClip[clip])
-                    {
-                        if (!(_asynchClip[clip][frame]))
-                        {
-                            clipToStop = clip.getChildAt(frame);
-                            if (!(clipToStop))
-                            {
-                                missing = true;
-                            }
-                            else
-                            {
-                                if ((clipToStop is DisplayObjectContainer))
-                                {
-                                    _isAsync = true;
-                                    stopMovieClip((clipToStop as DisplayObjectContainer));
-                                    _isAsync = false;
-                                };
-                            };
-                        };
-                    };
-                    if (!(missing))
-                    {
-                        delete _asynchClip[clip];
-                    }
-                    else
-                    {
-                        allDone = false;
-                    };
-                };
-            };
-            if (allDone)
-            {
-                EnterFrameDispatcher.removeEventListener(stopMovieClipASynch);
-            };
-        }
-
 
     }
-}//package com.ankamagames.jerakine.utils.display
+} com.ankamagames.jerakine.utils.display
 

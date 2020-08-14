@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.network
+package com.ankamagames.jerakine.network
 {
     import flash.events.Event;
 
@@ -9,9 +9,9 @@
 
         private var _message:INetworkMessage;
 
-        public function NetworkSentEvent(type:String, msg:INetworkMessage)
+        public function NetworkSentEvent(_arg_1:String, msg:INetworkMessage)
         {
-            super(type, false, false);
+            super(_arg_1, false, false);
             this._message = msg;
         }
 
@@ -22,5 +22,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.network
+} com.ankamagames.jerakine.network
 

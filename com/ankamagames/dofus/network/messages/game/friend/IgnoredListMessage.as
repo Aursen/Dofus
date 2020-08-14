@@ -1,9 +1,10 @@
-﻿package com.ankamagames.dofus.network.messages.game.friend
+package com.ankamagames.dofus.network.messages.game.friend
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
     import __AS3__.vec.Vector;
     import com.ankamagames.dofus.network.types.game.friend.IgnoredInformations;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
@@ -11,20 +12,15 @@
     import com.ankamagames.dofus.network.ProtocolTypeManager;
     import __AS3__.vec.*;
 
-    [Trusted]
     public class IgnoredListMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 5674;
 
         private var _isInitialized:Boolean = false;
-        public var ignoredList:Vector.<IgnoredInformations>;
+        public var ignoredList:Vector.<IgnoredInformations> = new Vector.<IgnoredInformations>();
+        private var _ignoredListtree:FuncTree;
 
-        public function IgnoredListMessage()
-        {
-            this.ignoredList = new Vector.<IgnoredInformations>();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
@@ -59,6 +55,14 @@
         override public function unpack(input:ICustomDataInput, length:uint):void
         {
             this.deserialize(input);
+        }
+
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
         }
 
         public function serialize(output:ICustomDataOutput):void
@@ -99,7 +103,36 @@
             };
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_IgnoredListMessage(tree);
+        }
+
+        public function deserializeAsyncAs_IgnoredListMessage(tree:FuncTree):void
+        {
+            this._ignoredListtree = tree.addChild(this._ignoredListtreeFunc);
+        }
+
+        private function _ignoredListtreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._ignoredListtree.addChild(this._ignoredListFunc);
+                i++;
+            };
+        }
+
+        private function _ignoredListFunc(input:ICustomDataInput):void
+        {
+            var _id:uint = input.readUnsignedShort();
+            var _item:IgnoredInformations = ProtocolTypeManager.getInstance(IgnoredInformations, _id);
+            _item.deserialize(input);
+            this.ignoredList.push(_item);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.friend
+} com.ankamagames.dofus.network.messages.game.friend
 

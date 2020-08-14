@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.entities.interfaces
+package com.ankamagames.jerakine.entities.interfaces
 {
     import com.ankamagames.jerakine.entities.behaviours.IMovementBehavior;
     import com.ankamagames.jerakine.types.positions.MovementPath;
@@ -15,5 +15,5 @@
         function stop(_arg_1:Boolean=false):void;
 
     }
-}//package com.ankamagames.jerakine.entities.interfaces
+} com.ankamagames.jerakine.entities.interfaces
 

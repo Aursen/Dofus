@@ -1,28 +1,24 @@
-﻿package com.ankamagames.dofus.network.messages.game.guild.tax
+package com.ankamagames.dofus.network.messages.game.guild.tax
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
     import com.ankamagames.dofus.network.types.game.character.CharacterMinimalPlusLookInformations;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
 
-    [Trusted]
     public class GuildFightPlayersHelpersJoinMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 5720;
 
         private var _isInitialized:Boolean = false;
-        public var fightId:uint = 0;
-        public var playerInfo:CharacterMinimalPlusLookInformations;
+        public var fightId:Number = 0;
+        public var playerInfo:CharacterMinimalPlusLookInformations = new CharacterMinimalPlusLookInformations();
+        private var _playerInfotree:FuncTree;
 
-        public function GuildFightPlayersHelpersJoinMessage()
-        {
-            this.playerInfo = new CharacterMinimalPlusLookInformations();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
@@ -34,7 +30,7 @@
             return (5720);
         }
 
-        public function initGuildFightPlayersHelpersJoinMessage(fightId:uint=0, playerInfo:CharacterMinimalPlusLookInformations=null):GuildFightPlayersHelpersJoinMessage
+        public function initGuildFightPlayersHelpersJoinMessage(fightId:Number=0, playerInfo:CharacterMinimalPlusLookInformations=null):GuildFightPlayersHelpersJoinMessage
         {
             this.fightId = fightId;
             this.playerInfo = playerInfo;
@@ -61,6 +57,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_GuildFightPlayersHelpersJoinMessage(output);
@@ -68,11 +72,11 @@
 
         public function serializeAs_GuildFightPlayersHelpersJoinMessage(output:ICustomDataOutput):void
         {
-            if (this.fightId < 0)
+            if (((this.fightId < 0) || (this.fightId > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.fightId) + ") on element fightId.")));
             };
-            output.writeInt(this.fightId);
+            output.writeDouble(this.fightId);
             this.playerInfo.serializeAs_CharacterMinimalPlusLookInformations(output);
         }
 
@@ -83,16 +87,38 @@
 
         public function deserializeAs_GuildFightPlayersHelpersJoinMessage(input:ICustomDataInput):void
         {
-            this.fightId = input.readInt();
-            if (this.fightId < 0)
-            {
-                throw (new Error((("Forbidden value (" + this.fightId) + ") on element of GuildFightPlayersHelpersJoinMessage.fightId.")));
-            };
+            this._fightIdFunc(input);
             this.playerInfo = new CharacterMinimalPlusLookInformations();
             this.playerInfo.deserialize(input);
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GuildFightPlayersHelpersJoinMessage(tree);
+        }
+
+        public function deserializeAsyncAs_GuildFightPlayersHelpersJoinMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._fightIdFunc);
+            this._playerInfotree = tree.addChild(this._playerInfotreeFunc);
+        }
+
+        private function _fightIdFunc(input:ICustomDataInput):void
+        {
+            this.fightId = input.readDouble();
+            if (((this.fightId < 0) || (this.fightId > 9007199254740992)))
+            {
+                throw (new Error((("Forbidden value (" + this.fightId) + ") on element of GuildFightPlayersHelpersJoinMessage.fightId.")));
+            };
+        }
+
+        private function _playerInfotreeFunc(input:ICustomDataInput):void
+        {
+            this.playerInfo = new CharacterMinimalPlusLookInformations();
+            this.playerInfo.deserializeAsync(this._playerInfotree);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.guild.tax
+} com.ankamagames.dofus.network.messages.game.guild.tax
 

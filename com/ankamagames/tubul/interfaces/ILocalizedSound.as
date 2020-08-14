@@ -1,4 +1,4 @@
-﻿package com.ankamagames.tubul.interfaces
+package com.ankamagames.tubul.interfaces
 {
     import flash.geom.Point;
 
@@ -17,5 +17,5 @@
         function set volumeMax(_arg_1:Number):void;
 
     }
-}//package com.ankamagames.tubul.interfaces
+} com.ankamagames.tubul.interfaces
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.datacenter.effects.instances
+package com.ankamagames.dofus.datacenter.effects.instances
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.dofus.datacenter.effects.EffectInstance;
@@ -16,6 +16,7 @@
             o.rawZone = rawZone;
             o.effectUid = effectUid;
             o.effectId = effectId;
+            o.order = order;
             o.duration = duration;
             o.delay = delay;
             o.diceNum = this.diceNum;
@@ -23,28 +24,34 @@
             o.value = value;
             o.random = random;
             o.group = group;
-            o.hidden = hidden;
+            o.visibleInTooltip = visibleInTooltip;
+            o.visibleInBuffUi = visibleInBuffUi;
+            o.visibleInFightLog = visibleInFightLog;
+            o.visibleOnTerrain = visibleOnTerrain;
             o.targetId = targetId;
             o.targetMask = targetMask;
             o.delay = delay;
             o.triggers = triggers;
-            o.order = order;
+            o.effectElement = effectElement;
+            o.spellId = spellId;
+            o.forClientOnly = forClientOnly;
+            o.dispellable = dispellable;
             return (o);
         }
 
         override public function get parameter0():Object
         {
-            return (((!((this.diceNum == 0))) ? this.diceNum : null));
+            return ((this.diceNum != 0) ? this.diceNum : null);
         }
 
         override public function get parameter1():Object
         {
-            return (((!((this.diceSide == 0))) ? this.diceSide : null));
+            return ((this.diceSide != 0) ? this.diceSide : null);
         }
 
         override public function get parameter2():Object
         {
-            return (((!((value == 0))) ? value : null));
+            return ((value != 0) ? value : null);
         }
 
         override public function setParameter(paramIndex:uint, value:*):void
@@ -53,13 +60,13 @@
             {
                 case 0:
                     this.diceNum = uint(value);
-                    return;
+                    break;
                 case 1:
                     this.diceSide = uint(value);
-                    return;
+                    break;
                 case 2:
                     this.value = int(value);
-                    return;
+                    break;
             };
         }
 
@@ -67,8 +74,16 @@
         {
             if ((term is EffectInstanceDice))
             {
+                if (this.diceSide == 0)
+                {
+                    this.diceSide = this.diceNum;
+                };
                 this.diceNum = (this.diceNum + term.diceNum);
-                this.diceSide = (this.diceSide + term.diceSide);
+                this.diceSide = (this.diceSide + ((term.diceSide != 0) ? term.diceSide : term.diceNum));
+                if (this.diceNum == this.diceSide)
+                {
+                    this.diceSide = 0;
+                };
                 forceDescriptionRefresh();
             }
             else
@@ -76,7 +91,7 @@
                 if ((term is EffectInstanceInteger))
                 {
                     this.diceNum = (this.diceNum + term.value);
-                    this.diceSide = ((!((this.diceSide == 0))) ? (this.diceSide + term.value) : 0);
+                    this.diceSide = ((this.diceSide != 0) ? (this.diceSide + term.value) : 0);
                     forceDescriptionRefresh();
                 }
                 else
@@ -89,5 +104,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.effects.instances
+} com.ankamagames.dofus.datacenter.effects.instances
 

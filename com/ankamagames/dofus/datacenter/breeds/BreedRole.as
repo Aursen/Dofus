@@ -1,9 +1,10 @@
-﻿package com.ankamagames.dofus.datacenter.breeds
+package com.ankamagames.dofus.datacenter.breeds
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
+    import com.ankamagames.dofus.types.IdAccessors;
     import com.ankamagames.jerakine.data.GameData;
     import com.ankamagames.jerakine.data.I18n;
 
@@ -12,6 +13,7 @@
 
         public static const MODULE:String = "BreedRoles";
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(BreedRole));
+        public static var idAccessors:IdAccessors = new IdAccessors(getBreedRoleById, getBreedRoles);
 
         public var id:int;
         public var nameId:uint;
@@ -24,7 +26,7 @@
 
         public static function getBreedRoleById(id:int):BreedRole
         {
-            return ((GameData.getObject(MODULE, id) as BreedRole));
+            return (GameData.getObject(MODULE, id) as BreedRole);
         }
 
         public static function getBreedRoles():Array
@@ -35,7 +37,7 @@
 
         public function get name():String
         {
-            if (!(this._name))
+            if (!this._name)
             {
                 this._name = I18n.getText(this.nameId);
             };
@@ -44,7 +46,7 @@
 
         public function get description():String
         {
-            if (!(this._description))
+            if (!this._description)
             {
                 this._description = I18n.getText(this.descriptionId);
             };
@@ -53,5 +55,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.breeds
+} com.ankamagames.dofus.datacenter.breeds
 

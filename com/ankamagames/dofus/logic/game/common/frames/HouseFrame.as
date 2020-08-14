@@ -1,12 +1,15 @@
-﻿package com.ankamagames.dofus.logic.game.common.frames
+package com.ankamagames.dofus.logic.game.common.frames
 {
     import com.ankamagames.jerakine.messages.Frame;
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
+    import __AS3__.vec.Vector;
+    import com.ankamagames.dofus.internalDatacenter.house.HouseWrapper;
     import com.ankamagames.jerakine.types.enums.Priority;
     import com.ankamagames.dofus.logic.game.common.actions.LeaveDialogAction;
     import com.ankamagames.dofus.network.messages.game.dialog.LeaveDialogRequestMessage;
+    import com.ankamagames.dofus.network.messages.game.context.roleplay.houses.AccountHouseMessage;
     import com.ankamagames.dofus.logic.game.common.actions.HouseBuyAction;
     import com.ankamagames.dofus.network.messages.game.context.roleplay.houses.HouseBuyRequestMessage;
     import com.ankamagames.dofus.logic.game.common.actions.HouseSellAction;
@@ -14,11 +17,9 @@
     import com.ankamagames.dofus.logic.game.common.actions.HouseSellFromInsideAction;
     import com.ankamagames.dofus.network.messages.game.context.roleplay.houses.HouseSellFromInsideRequestMessage;
     import com.ankamagames.dofus.network.messages.game.context.roleplay.purchasable.PurchasableDialogMessage;
-    import com.ankamagames.dofus.internalDatacenter.house.HouseWrapper;
+    import com.ankamagames.dofus.network.messages.game.context.roleplay.houses.guild.HouseGuildNoneMessage;
     import com.ankamagames.dofus.network.messages.game.context.roleplay.houses.guild.HouseGuildRightsMessage;
-    import com.ankamagames.dofus.network.types.game.guild.GuildEmblem;
-    import com.ankamagames.dofus.internalDatacenter.guild.EmblemWrapper;
-    import com.ankamagames.dofus.network.messages.game.context.roleplay.houses.HouseSoldMessage;
+    import com.ankamagames.dofus.network.messages.game.context.roleplay.houses.HouseSellingUpdateMessage;
     import com.ankamagames.dofus.network.messages.game.context.roleplay.houses.HouseBuyResultMessage;
     import com.ankamagames.dofus.logic.game.common.actions.HouseGuildRightsViewAction;
     import com.ankamagames.dofus.network.messages.game.context.roleplay.houses.guild.HouseGuildRightsViewMessage;
@@ -35,14 +36,16 @@
     import com.ankamagames.dofus.logic.game.common.actions.HouseLockFromInsideAction;
     import com.ankamagames.dofus.network.messages.game.context.roleplay.houses.HouseLockFromInsideRequestMessage;
     import com.ankamagames.dofus.network.messages.game.context.roleplay.lockable.LockableCodeResultMessage;
+    import com.ankamagames.dofus.network.types.game.house.AccountHouseInformations;
     import com.ankamagames.dofus.kernel.net.ConnectionsHandler;
-    import com.ankamagames.dofus.kernel.Kernel;
     import com.ankamagames.berilia.managers.KernelEventsManager;
     import com.ankamagames.dofus.misc.lists.HookList;
-    import com.ankamagames.dofus.network.messages.game.context.roleplay.houses.guild.HouseGuildNoneMessage;
+    import com.ankamagames.dofus.kernel.Kernel;
+    import com.ankamagames.dofus.logic.common.managers.PlayerManager;
     import com.ankamagames.jerakine.messages.Message;
     import com.ankamagames.dofus.logic.game.roleplay.frames.RoleplayEntitiesFrame;
     import flash.utils.Dictionary;
+    import __AS3__.vec.*;
 
     public class HouseFrame implements Frame 
     {
@@ -50,11 +53,17 @@
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(HouseFrame));
 
         private var _houseDialogFrame:HouseDialogFrame;
+        private var _accountHouses:Vector.<HouseWrapper>;
 
 
         public function get priority():int
         {
             return (Priority.NORMAL);
+        }
+
+        public function get accountHouses():Vector.<HouseWrapper>
+        {
+            return (this._accountHouses);
         }
 
         public function pushed():Boolean
@@ -67,150 +76,194 @@
         {
             var i:int;
             var housesListSize:int;
-            var _local_4:LeaveDialogAction;
-            var _local_5:LeaveDialogRequestMessage;
-            var _local_6:HouseBuyAction;
-            var _local_7:HouseBuyRequestMessage;
-            var _local_8:HouseSellAction;
-            var _local_9:HouseSellRequestMessage;
-            var _local_10:HouseSellFromInsideAction;
-            var _local_11:HouseSellFromInsideRequestMessage;
-            var _local_12:PurchasableDialogMessage;
-            var _local_13:int;
-            var _local_14:String;
-            var _local_15:uint;
-            var _local_16:HouseWrapper;
-            var _local_17:HouseGuildRightsMessage;
-            var _local_18:GuildEmblem;
-            var _local_19:EmblemWrapper;
-            var _local_20:EmblemWrapper;
-            var _local_21:Object;
-            var _local_22:HouseSoldMessage;
-            var _local_23:HouseBuyResultMessage;
-            var _local_24:HouseGuildRightsViewAction;
-            var _local_25:HouseGuildRightsViewMessage;
-            var _local_26:HouseGuildShareAction;
-            var _local_27:HouseGuildShareRequestMessage;
-            var _local_28:HouseKickAction;
-            var _local_29:HouseKickRequestMessage;
-            var _local_30:HouseKickIndoorMerchantAction;
-            var _local_31:HouseKickIndoorMerchantRequestMessage;
-            var _local_32:LockableStateUpdateHouseDoorMessage;
-            var _local_33:LockableShowCodeDialogMessage;
-            var _local_34:LockableChangeCodeAction;
-            var _local_35:LockableChangeCodeMessage;
-            var _local_36:HouseLockFromInsideAction;
-            var _local_37:HouseLockFromInsideRequestMessage;
-            var _local_38:LockableCodeResultMessage;
+            var house:HouseWrapper;
+            var lda:LeaveDialogAction;
+            var lsrmsg:LeaveDialogRequestMessage;
+            var ahm:AccountHouseMessage;
+            var hba:HouseBuyAction;
+            var hbrm:HouseBuyRequestMessage;
+            var hsa:HouseSellAction;
+            var hsrm:HouseSellRequestMessage;
+            var hsfia:HouseSellFromInsideAction;
+            var hsfirmag:HouseSellFromInsideRequestMessage;
+            var pdmsg:PurchasableDialogMessage;
+            var houseWrapper:HouseWrapper;
+            var hgnm:HouseGuildNoneMessage;
+            var hgrm:HouseGuildRightsMessage;
+            var hsum:HouseSellingUpdateMessage;
+            var houseIndex:int;
+            var nhbrm:HouseBuyResultMessage;
+            var hgrva:HouseGuildRightsViewAction;
+            var hgrvm:HouseGuildRightsViewMessage;
+            var hsga:HouseGuildShareAction;
+            var hgsrm:HouseGuildShareRequestMessage;
+            var hka:HouseKickAction;
+            var hkrm:HouseKickRequestMessage;
+            var hkima:HouseKickIndoorMerchantAction;
+            var hkimrm:HouseKickIndoorMerchantRequestMessage;
+            var lsuhdmsg:LockableStateUpdateHouseDoorMessage;
+            var lscdmsg:LockableShowCodeDialogMessage;
+            var lcca:LockableChangeCodeAction;
+            var lccmsg:LockableChangeCodeMessage;
+            var hlfia:HouseLockFromInsideAction;
+            var hlfimsg:HouseLockFromInsideRequestMessage;
+            var lcrmsg:LockableCodeResultMessage;
+            var accountHouse:AccountHouseInformations;
             switch (true)
             {
                 case (msg is LeaveDialogAction):
-                    _local_4 = (msg as LeaveDialogAction);
-                    _local_5 = new LeaveDialogRequestMessage();
-                    _local_5.initLeaveDialogRequestMessage();
-                    ConnectionsHandler.getConnection().send(_local_5);
+                    lda = (msg as LeaveDialogAction);
+                    lsrmsg = new LeaveDialogRequestMessage();
+                    lsrmsg.initLeaveDialogRequestMessage();
+                    ConnectionsHandler.getConnection().send(lsrmsg);
+                    return (true);
+                case (msg is AccountHouseMessage):
+                    ahm = (msg as AccountHouseMessage);
+                    this._accountHouses = new Vector.<HouseWrapper>();
+                    for each (accountHouse in ahm.houses)
+                    {
+                        this._accountHouses.push(HouseWrapper.createOwned(accountHouse));
+                    };
+                    KernelEventsManager.getInstance().processCallback(HookList.HouseInformations, this._accountHouses);
                     return (true);
                 case (msg is HouseBuyAction):
-                    _local_6 = (msg as HouseBuyAction);
-                    _local_7 = new HouseBuyRequestMessage();
-                    _local_7.initHouseBuyRequestMessage(_local_6.proposedPrice);
-                    ConnectionsHandler.getConnection().send(_local_7);
+                    hba = (msg as HouseBuyAction);
+                    hbrm = new HouseBuyRequestMessage();
+                    hbrm.initHouseBuyRequestMessage(hba.proposedPrice);
+                    ConnectionsHandler.getConnection().send(hbrm);
                     return (true);
                 case (msg is HouseSellAction):
-                    _local_8 = (msg as HouseSellAction);
-                    _local_9 = new HouseSellRequestMessage();
-                    _local_9.initHouseSellRequestMessage(_local_8.amount);
-                    ConnectionsHandler.getConnection().send(_local_9);
+                    hsa = (msg as HouseSellAction);
+                    hsrm = new HouseSellRequestMessage();
+                    hsrm.initHouseSellRequestMessage(hsa.instanceId, hsa.amount, hsa.forSale);
+                    ConnectionsHandler.getConnection().send(hsrm);
                     return (true);
                 case (msg is HouseSellFromInsideAction):
-                    _local_10 = (msg as HouseSellFromInsideAction);
-                    _local_11 = new HouseSellFromInsideRequestMessage();
-                    _local_11.initHouseSellFromInsideRequestMessage(_local_10.amount);
-                    ConnectionsHandler.getConnection().send(_local_11);
+                    hsfia = (msg as HouseSellFromInsideAction);
+                    hsfirmag = new HouseSellFromInsideRequestMessage();
+                    hsfirmag.initHouseSellFromInsideRequestMessage(hsfia.instanceId, hsfia.amount, hsfia.forSale);
+                    ConnectionsHandler.getConnection().send(hsfirmag);
                     return (true);
                 case (msg is PurchasableDialogMessage):
-                    _local_12 = (msg as PurchasableDialogMessage);
-                    _local_13 = 0;
-                    _local_14 = "";
-                    _local_15 = _local_12.purchasableId;
-                    _local_16 = this.getHouseInformations(_local_12.purchasableId);
-                    if (_local_16)
-                    {
-                        _local_13 = _local_16.houseId;
-                        _local_14 = _local_16.ownerName;
-                    };
+                    pdmsg = (msg as PurchasableDialogMessage);
+                    houseWrapper = this.getHouseInformations(pdmsg.purchasableId);
                     Kernel.getWorker().addFrame(this._houseDialogFrame);
-                    KernelEventsManager.getInstance().processCallback(HookList.PurchasableDialog, _local_12.buyOrSell, _local_12.price, _local_16);
+                    KernelEventsManager.getInstance().processCallback(HookList.PurchasableDialog, pdmsg.buyOrSell, pdmsg.price, houseWrapper, pdmsg.purchasableInstanceId);
                     return (true);
                 case (msg is HouseGuildNoneMessage):
+                    hgnm = (msg as HouseGuildNoneMessage);
                     KernelEventsManager.getInstance().processCallback(HookList.HouseGuildNone);
+                    for each (house in this._accountHouses)
+                    {
+                        if ((((house.houseId == hgnm.houseId) && (house.houseInstances)) && (house.houseInstances[0].id == hgnm.instanceId)))
+                        {
+                            house.houseInstances[0].setGuildIdentity(null);
+                            break;
+                        };
+                    };
+                    KernelEventsManager.getInstance().processCallback(HookList.HouseInformations, this._accountHouses);
                     return (true);
                 case (msg is HouseGuildRightsMessage):
-                    _local_17 = (msg as HouseGuildRightsMessage);
-                    _local_18 = _local_17.guildInfo.guildEmblem;
-                    _local_19 = EmblemWrapper.create(_local_18.symbolShape, EmblemWrapper.UP, _local_18.symbolColor);
-                    _local_20 = EmblemWrapper.create(_local_18.backgroundShape, EmblemWrapper.BACK, _local_18.backgroundColor);
-                    _local_21 = {
-                        "upEmblem":_local_19,
-                        "backEmblem":_local_20
+                    hgrm = (msg as HouseGuildRightsMessage);
+                    for each (house in this._accountHouses)
+                    {
+                        if ((((house.houseId == hgrm.houseId) && (house.houseInstances)) && (house.houseInstances[0].id == hgrm.instanceId)))
+                        {
+                            house.houseInstances[0].setGuildIdentity(hgrm.guildInfo);
+                            break;
+                        };
                     };
-                    KernelEventsManager.getInstance().processCallback(HookList.HouseGuildRights, _local_17.houseId, _local_17.guildInfo.guildName, _local_21, _local_17.rights);
+                    KernelEventsManager.getInstance().processCallback(HookList.HouseInformations, this._accountHouses);
+                    KernelEventsManager.getInstance().processCallback(HookList.HouseGuildRights, hgrm.houseId, house.houseInstances[0].guildIdentity, hgrm.rights);
                     return (true);
-                case (msg is HouseSoldMessage):
-                    _local_22 = (msg as HouseSoldMessage);
-                    KernelEventsManager.getInstance().processCallback(HookList.HouseSold, _local_22.houseId, _local_22.realPrice, _local_22.buyerName);
+                case (msg is HouseSellingUpdateMessage):
+                    hsum = (msg as HouseSellingUpdateMessage);
+                    houseIndex = 0;
+                    for each (house in this._accountHouses)
+                    {
+                        if ((((house.houseId == hsum.houseId) && (house.houseInstances)) && (house.houseInstances[0].id == hsum.instanceId)))
+                        {
+                            house.houseInstances[0].price = hsum.realPrice;
+                            break;
+                        };
+                        houseIndex++;
+                    };
+                    if (!house)
+                    {
+                        _log.error((((("Tentative d'update la maison " + hsum.houseId) + " ") + hsum.instanceId) + " qui n'existe pas."));
+                        return (true);
+                    };
+                    if (hsum.buyerName == PlayerManager.getInstance().nickname)
+                    {
+                        KernelEventsManager.getInstance().processCallback(HookList.HouseSellingUpdate, hsum.houseId, hsum.instanceId, hsum.realPrice, hsum.buyerName);
+                    }
+                    else
+                    {
+                        KernelEventsManager.getInstance().processCallback(HookList.HouseSold, hsum.houseId, hsum.instanceId, hsum.realPrice, hsum.buyerName, house.subareaName, house.worldX, house.worldY);
+                        this._accountHouses.splice(houseIndex, 1);
+                    };
+                    KernelEventsManager.getInstance().processCallback(HookList.HouseInformations, this._accountHouses);
                     return (true);
                 case (msg is HouseBuyResultMessage):
-                    _local_23 = (msg as HouseBuyResultMessage);
-                    KernelEventsManager.getInstance().processCallback(HookList.HouseBuyResult, _local_23.houseId, _local_23.bought, _local_23.realPrice, this.getHouseInformations(_local_23.houseId).ownerName);
+                    nhbrm = (msg as HouseBuyResultMessage);
                     return (true);
                 case (msg is HouseGuildRightsViewAction):
-                    _local_24 = (msg as HouseGuildRightsViewAction);
-                    _local_25 = new HouseGuildRightsViewMessage();
-                    ConnectionsHandler.getConnection().send(_local_25);
+                    hgrva = (msg as HouseGuildRightsViewAction);
+                    hgrvm = new HouseGuildRightsViewMessage();
+                    hgrvm.initHouseGuildRightsViewMessage(hgrva.houseId, hgrva.instanceId);
+                    ConnectionsHandler.getConnection().send(hgrvm);
                     return (true);
                 case (msg is HouseGuildShareAction):
-                    _local_26 = (msg as HouseGuildShareAction);
-                    _local_27 = new HouseGuildShareRequestMessage();
-                    _local_27.initHouseGuildShareRequestMessage(_local_26.enabled, _local_26.rights);
-                    ConnectionsHandler.getConnection().send(_local_27);
+                    hsga = (msg as HouseGuildShareAction);
+                    hgsrm = new HouseGuildShareRequestMessage();
+                    hgsrm.initHouseGuildShareRequestMessage(hsga.houseId, hsga.instanceId, hsga.enabled, hsga.rights);
+                    ConnectionsHandler.getConnection().send(hgsrm);
                     return (true);
                 case (msg is HouseKickAction):
-                    _local_28 = (msg as HouseKickAction);
-                    _local_29 = new HouseKickRequestMessage();
-                    _local_29.initHouseKickRequestMessage(_local_28.id);
-                    ConnectionsHandler.getConnection().send(_local_29);
+                    hka = (msg as HouseKickAction);
+                    hkrm = new HouseKickRequestMessage();
+                    hkrm.initHouseKickRequestMessage(hka.id);
+                    ConnectionsHandler.getConnection().send(hkrm);
                     return (true);
                 case (msg is HouseKickIndoorMerchantAction):
-                    _local_30 = (msg as HouseKickIndoorMerchantAction);
-                    _local_31 = new HouseKickIndoorMerchantRequestMessage();
-                    _local_31.initHouseKickIndoorMerchantRequestMessage(_local_30.cellId);
-                    ConnectionsHandler.getConnection().send(_local_31);
+                    hkima = (msg as HouseKickIndoorMerchantAction);
+                    hkimrm = new HouseKickIndoorMerchantRequestMessage();
+                    hkimrm.initHouseKickIndoorMerchantRequestMessage(hkima.cellId);
+                    ConnectionsHandler.getConnection().send(hkimrm);
                     return (true);
                 case (msg is LockableStateUpdateHouseDoorMessage):
-                    _local_32 = (msg as LockableStateUpdateHouseDoorMessage);
-                    KernelEventsManager.getInstance().processCallback(HookList.LockableStateUpdateHouseDoor, _local_32.houseId, _local_32.locked);
+                    lsuhdmsg = (msg as LockableStateUpdateHouseDoorMessage);
+                    for each (house in this._accountHouses)
+                    {
+                        if ((((house.houseId == lsuhdmsg.houseId) && (house.houseInstances)) && (house.houseInstances[0].id == lsuhdmsg.instanceId)))
+                        {
+                            house.houseInstances[0].isLocked = lsuhdmsg.locked;
+                            break;
+                        };
+                    };
+                    KernelEventsManager.getInstance().processCallback(HookList.HouseInformations, this._accountHouses);
+                    KernelEventsManager.getInstance().processCallback(HookList.LockableStateUpdateHouseDoor, lsuhdmsg.houseId, lsuhdmsg.instanceId, lsuhdmsg.locked);
                     return (true);
                 case (msg is LockableShowCodeDialogMessage):
-                    _local_33 = (msg as LockableShowCodeDialogMessage);
+                    lscdmsg = (msg as LockableShowCodeDialogMessage);
                     Kernel.getWorker().addFrame(this._houseDialogFrame);
-                    KernelEventsManager.getInstance().processCallback(HookList.LockableShowCode, _local_33.changeOrUse, _local_33.codeSize);
+                    KernelEventsManager.getInstance().processCallback(HookList.LockableShowCode, lscdmsg.changeOrUse, lscdmsg.codeSize);
                     return (true);
                 case (msg is LockableChangeCodeAction):
-                    _local_34 = (msg as LockableChangeCodeAction);
-                    _local_35 = new LockableChangeCodeMessage();
-                    _local_35.initLockableChangeCodeMessage(_local_34.code);
-                    ConnectionsHandler.getConnection().send(_local_35);
+                    lcca = (msg as LockableChangeCodeAction);
+                    lccmsg = new LockableChangeCodeMessage();
+                    lccmsg.initLockableChangeCodeMessage(lcca.code);
+                    ConnectionsHandler.getConnection().send(lccmsg);
                     return (true);
                 case (msg is HouseLockFromInsideAction):
-                    _local_36 = (msg as HouseLockFromInsideAction);
-                    _local_37 = new HouseLockFromInsideRequestMessage();
-                    _local_37.initHouseLockFromInsideRequestMessage(_local_36.code);
-                    ConnectionsHandler.getConnection().send(_local_37);
+                    hlfia = (msg as HouseLockFromInsideAction);
+                    hlfimsg = new HouseLockFromInsideRequestMessage();
+                    hlfimsg.initHouseLockFromInsideRequestMessage(hlfia.code);
+                    ConnectionsHandler.getConnection().send(hlfimsg);
                     return (true);
                 case (msg is LockableCodeResultMessage):
-                    _local_38 = (msg as LockableCodeResultMessage);
-                    KernelEventsManager.getInstance().processCallback(HookList.LockableCodeResult, _local_38.result);
+                    lcrmsg = (msg as LockableCodeResultMessage);
+                    KernelEventsManager.getInstance().processCallback(HookList.LockableCodeResult, lcrmsg.result);
                     return (true);
             };
             return (false);
@@ -221,7 +274,7 @@
             return (true);
         }
 
-        private function getHouseInformations(houseID:uint):HouseWrapper
+        private function getHouseInformations(houseID:Number):HouseWrapper
         {
             var hi:HouseWrapper;
             var houseList:Dictionary = (Kernel.getWorker().getFrame(RoleplayEntitiesFrame) as RoleplayEntitiesFrame).housesInformations;
@@ -237,5 +290,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.frames
+} com.ankamagames.dofus.logic.game.common.frames
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.resources
+package com.ankamagames.jerakine.resources
 {
     public class ResourceType 
     {
@@ -14,12 +14,13 @@
         public static const RESOURCE_ASWF:uint = 9;
         public static const RESOURCE_MP3:uint = 16;
         public static const RESOURCE_SIGNED_FILE:uint = 17;
+        public static const RESOURCE_JSON:uint = 18;
         public static const RESOURCE_NONE:uint = 0xFF;
 
 
-        public static function getName(type:uint):String
+        public static function getName(_arg_1:uint):String
         {
-            switch (type)
+            switch (_arg_1)
             {
                 case RESOURCE_BINARY:
                     return ("binary");
@@ -45,5 +46,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.resources
+} com.ankamagames.jerakine.resources
 

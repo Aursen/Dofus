@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.utils.display.spellZone
+package com.ankamagames.jerakine.utils.display.spellZone
 {
     public interface IZoneShape 
     {
@@ -9,5 +9,5 @@
         function get zoneShape():uint;
 
     }
-}//package com.ankamagames.jerakine.utils.display.spellZone
+} com.ankamagames.jerakine.utils.display.spellZone
 

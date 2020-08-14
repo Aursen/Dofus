@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.handlers
+package com.ankamagames.jerakine.handlers
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
@@ -60,19 +60,19 @@
 
         public function getFocus():InteractiveObject
         {
-            return (((_currentFocus) ? (_currentFocus.object as InteractiveObject) : null));
+            return ((_currentFocus) ? (_currentFocus.object as InteractiveObject) : null);
         }
 
         public function hasFocus(io:InteractiveObject):Boolean
         {
             if (_currentFocus)
             {
-                return ((_currentFocus.object == io));
+                return (_currentFocus.object == io);
             };
             return (false);
         }
 
 
     }
-}//package com.ankamagames.jerakine.handlers
+} com.ankamagames.jerakine.handlers
 

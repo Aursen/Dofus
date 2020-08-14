@@ -1,8 +1,9 @@
-﻿package com.ankamagames.dofus.network.types.game.context
+package com.ankamagames.dofus.network.types.game.context
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
     public class EntityDispositionInformations implements INetworkType 
     {
@@ -38,7 +39,7 @@
 
         public function serializeAs_EntityDispositionInformations(output:ICustomDataOutput):void
         {
-            if ((((this.cellId < -1)) || ((this.cellId > 559))))
+            if (((this.cellId < -1) || (this.cellId > 559)))
             {
                 throw (new Error((("Forbidden value (" + this.cellId) + ") on element cellId.")));
             };
@@ -53,11 +54,32 @@
 
         public function deserializeAs_EntityDispositionInformations(input:ICustomDataInput):void
         {
+            this._cellIdFunc(input);
+            this._directionFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_EntityDispositionInformations(tree);
+        }
+
+        public function deserializeAsyncAs_EntityDispositionInformations(tree:FuncTree):void
+        {
+            tree.addChild(this._cellIdFunc);
+            tree.addChild(this._directionFunc);
+        }
+
+        private function _cellIdFunc(input:ICustomDataInput):void
+        {
             this.cellId = input.readShort();
-            if ((((this.cellId < -1)) || ((this.cellId > 559))))
+            if (((this.cellId < -1) || (this.cellId > 559)))
             {
                 throw (new Error((("Forbidden value (" + this.cellId) + ") on element of EntityDispositionInformations.cellId.")));
             };
+        }
+
+        private function _directionFunc(input:ICustomDataInput):void
+        {
             this.direction = input.readByte();
             if (this.direction < 0)
             {
@@ -67,5 +89,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.context
+} com.ankamagames.dofus.network.types.game.context
 

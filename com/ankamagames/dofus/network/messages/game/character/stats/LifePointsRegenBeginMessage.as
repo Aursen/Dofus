@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.character.stats
+package com.ankamagames.dofus.network.messages.game.character.stats
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class LifePointsRegenBeginMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -52,6 +52,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_LifePointsRegenBeginMessage(output);
@@ -59,7 +67,7 @@
 
         public function serializeAs_LifePointsRegenBeginMessage(output:ICustomDataOutput):void
         {
-            if ((((this.regenRate < 0)) || ((this.regenRate > 0xFF))))
+            if (((this.regenRate < 0) || (this.regenRate > 0xFF)))
             {
                 throw (new Error((("Forbidden value (" + this.regenRate) + ") on element regenRate.")));
             };
@@ -73,8 +81,23 @@
 
         public function deserializeAs_LifePointsRegenBeginMessage(input:ICustomDataInput):void
         {
+            this._regenRateFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_LifePointsRegenBeginMessage(tree);
+        }
+
+        public function deserializeAsyncAs_LifePointsRegenBeginMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._regenRateFunc);
+        }
+
+        private function _regenRateFunc(input:ICustomDataInput):void
+        {
             this.regenRate = input.readUnsignedByte();
-            if ((((this.regenRate < 0)) || ((this.regenRate > 0xFF))))
+            if (((this.regenRate < 0) || (this.regenRate > 0xFF)))
             {
                 throw (new Error((("Forbidden value (" + this.regenRate) + ") on element of LifePointsRegenBeginMessage.regenRate.")));
             };
@@ -82,5 +105,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.character.stats
+} com.ankamagames.dofus.network.messages.game.character.stats
 

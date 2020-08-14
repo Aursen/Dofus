@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.inventory.exchanges
+package com.ankamagames.dofus.network.messages.game.inventory.exchanges
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class ExchangeBidHouseListMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -15,6 +15,7 @@
 
         private var _isInitialized:Boolean = false;
         public var id:uint = 0;
+        public var follow:Boolean = false;
 
 
         override public function get isInitialized():Boolean
@@ -27,9 +28,10 @@
             return (5807);
         }
 
-        public function initExchangeBidHouseListMessage(id:uint=0):ExchangeBidHouseListMessage
+        public function initExchangeBidHouseListMessage(id:uint=0, follow:Boolean=false):ExchangeBidHouseListMessage
         {
             this.id = id;
+            this.follow = follow;
             this._isInitialized = true;
             return (this);
         }
@@ -37,6 +39,7 @@
         override public function reset():void
         {
             this.id = 0;
+            this.follow = false;
             this._isInitialized = false;
         }
 
@@ -52,6 +55,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_ExchangeBidHouseListMessage(output);
@@ -64,6 +75,7 @@
                 throw (new Error((("Forbidden value (" + this.id) + ") on element id.")));
             };
             output.writeVarShort(this.id);
+            output.writeBoolean(this.follow);
         }
 
         public function deserialize(input:ICustomDataInput):void
@@ -73,6 +85,23 @@
 
         public function deserializeAs_ExchangeBidHouseListMessage(input:ICustomDataInput):void
         {
+            this._idFunc(input);
+            this._followFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_ExchangeBidHouseListMessage(tree);
+        }
+
+        public function deserializeAsyncAs_ExchangeBidHouseListMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._idFunc);
+            tree.addChild(this._followFunc);
+        }
+
+        private function _idFunc(input:ICustomDataInput):void
+        {
             this.id = input.readVarUhShort();
             if (this.id < 0)
             {
@@ -80,7 +109,12 @@
             };
         }
 
+        private function _followFunc(input:ICustomDataInput):void
+        {
+            this.follow = input.readBoolean();
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.inventory.exchanges
+} com.ankamagames.dofus.network.messages.game.inventory.exchanges
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.common.managers
+package com.ankamagames.dofus.logic.game.common.managers
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
@@ -30,18 +30,18 @@
             for each (pe in path.path)
             {
                 lastOrientation = pe.orientation;
-                value = (((lastOrientation & 7) << 12) | (pe.step.cellId & 4095));
+                value = (((lastOrientation & 0x07) << 12) | (pe.step.cellId & 0x0FFF));
                 movement.push(value);
                 moveCount++;
             };
-            lastValue = (((lastOrientation & 7) << 12) | (path.end.cellId & 4095));
+            lastValue = (((lastOrientation & 0x07) << 12) | (path.end.cellId & 0x0FFF));
             movement.push(lastValue);
             if (DEBUG_ADAPTER)
             {
                 movStr = "";
                 for each (movCell in movement)
                 {
-                    movStr = (movStr + ((movCell & 4095) + " > "));
+                    movStr = (movStr + ((movCell & 0x0FFF) + " > "));
                 };
                 _log.debug(("Sending path : " + movStr));
             };
@@ -60,7 +60,7 @@
             var moveCount:uint;
             for each (movement in path)
             {
-                destination = MapPoint.fromCellId((movement & 4095));
+                destination = MapPoint.fromCellId((movement & 0x0FFF));
                 pe = new PathElement();
                 pe.step = destination;
                 if (moveCount == 0)
@@ -95,5 +95,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.managers
+} com.ankamagames.dofus.logic.game.common.managers
 

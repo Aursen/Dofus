@@ -1,10 +1,10 @@
-﻿package com.ankamagames.dofus.network.types.game.interactive.skill
+package com.ankamagames.dofus.network.types.game.interactive.skill
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class SkillActionDescriptionTimed extends SkillActionDescription implements INetworkType 
     {
 
@@ -39,7 +39,7 @@
         public function serializeAs_SkillActionDescriptionTimed(output:ICustomDataOutput):void
         {
             super.serializeAs_SkillActionDescription(output);
-            if ((((this.time < 0)) || ((this.time > 0xFF))))
+            if (((this.time < 0) || (this.time > 0xFF)))
             {
                 throw (new Error((("Forbidden value (" + this.time) + ") on element time.")));
             };
@@ -54,8 +54,24 @@
         public function deserializeAs_SkillActionDescriptionTimed(input:ICustomDataInput):void
         {
             super.deserialize(input);
+            this._timeFunc(input);
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_SkillActionDescriptionTimed(tree);
+        }
+
+        public function deserializeAsyncAs_SkillActionDescriptionTimed(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._timeFunc);
+        }
+
+        private function _timeFunc(input:ICustomDataInput):void
+        {
             this.time = input.readUnsignedByte();
-            if ((((this.time < 0)) || ((this.time > 0xFF))))
+            if (((this.time < 0) || (this.time > 0xFF)))
             {
                 throw (new Error((("Forbidden value (" + this.time) + ") on element of SkillActionDescriptionTimed.time.")));
             };
@@ -63,5 +79,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.interactive.skill
+} com.ankamagames.dofus.network.types.game.interactive.skill
 

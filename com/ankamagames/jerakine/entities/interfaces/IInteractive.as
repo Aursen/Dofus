@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.entities.interfaces
+package com.ankamagames.jerakine.entities.interfaces
 {
     import flash.events.IEventDispatcher;
     import com.ankamagames.jerakine.messages.MessageHandler;
@@ -11,5 +11,5 @@
         function get enabledInteractions():uint;
 
     }
-}//package com.ankamagames.jerakine.entities.interfaces
+} com.ankamagames.jerakine.entities.interfaces
 

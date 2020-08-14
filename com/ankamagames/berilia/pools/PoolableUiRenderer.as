@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.pools
+package com.ankamagames.berilia.pools
 {
     import com.ankamagames.berilia.uiRender.UiRenderer;
     import com.ankamagames.jerakine.pools.Poolable;
@@ -15,5 +15,5 @@
 
 
     }
-}//package com.ankamagames.berilia.pools
+} com.ankamagames.berilia.pools
 

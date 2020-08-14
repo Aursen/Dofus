@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.context
+package com.ankamagames.dofus.network.messages.game.context
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class GameContextCreateMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -52,6 +52,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_GameContextCreateMessage(output);
@@ -69,6 +77,21 @@
 
         public function deserializeAs_GameContextCreateMessage(input:ICustomDataInput):void
         {
+            this._contextFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GameContextCreateMessage(tree);
+        }
+
+        public function deserializeAsyncAs_GameContextCreateMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._contextFunc);
+        }
+
+        private function _contextFunc(input:ICustomDataInput):void
+        {
             this.context = input.readByte();
             if (this.context < 0)
             {
@@ -78,5 +101,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.context
+} com.ankamagames.dofus.network.messages.game.context
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.enums
+package com.ankamagames.berilia.enums
 {
     public class XmlAttributesEnum 
     {
@@ -20,8 +20,12 @@
         public static const ATTRIBUTE_TARGET:String = "target";
         public static const ATTRIBUTE_FOCUS:String = "giveFocus";
         public static const ATTRIBUTE_TRANSMITFOCUS:String = "transmitFocus";
+        public static const ATTRIBUTE_LABEL_DEBUG:String = "labelDebug";
+        public static const ATTRIBUTE_IGNORE:String = "ignore";
+        public static const ATTRIBUTE_FULLSCREEN:String = "fullscreen";
+        public static const ATTRIBUTE_SETONTOP_ONCLICK:String = "setOnTopOnClick";
 
 
     }
-}//package com.ankamagames.berilia.enums
+} com.ankamagames.berilia.enums
 

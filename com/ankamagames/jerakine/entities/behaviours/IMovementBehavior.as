@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.entities.behaviours
+package com.ankamagames.jerakine.entities.behaviours
 {
     import com.ankamagames.jerakine.entities.interfaces.IMovable;
     import com.ankamagames.jerakine.types.positions.MovementPath;
@@ -15,5 +15,5 @@
         function synchroniseSubEntitiesPosition(_arg_1:IMovable, _arg_2:DisplayObject=null):void;
 
     }
-}//package com.ankamagames.jerakine.entities.behaviours
+} com.ankamagames.jerakine.entities.behaviours
 

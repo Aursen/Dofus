@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.console.chat
+package com.ankamagames.dofus.console.chat
 {
     import com.ankamagames.jerakine.console.ConsoleInstructionHandler;
     import com.ankamagames.dofus.network.messages.game.context.fight.GameFightOptionToggleMessage;
@@ -15,14 +15,17 @@
     public class FightInstructionHandler implements ConsoleInstructionHandler 
     {
 
+        private var _cmd:String;
+
 
         public function handle(console:ConsoleHandler, cmd:String, args:Array):void
         {
-            var _local_4:String;
+            var player:String;
             var option:uint;
             var gfotmsg:GameFightOptionToggleMessage;
-            var fighterId:int;
+            var fighterId:Number;
             var gckmsg:GameContextKickMessage;
+            this._cmd = cmd;
             switch (cmd)
             {
                 case "s":
@@ -34,38 +37,34 @@
                         gfotmsg.initGameFightOptionToggleMessage(option);
                         ConnectionsHandler.getConnection().send(gfotmsg);
                     };
-                    return;
+                    break;
                 case "list":
                     this.listFighters(console);
-                    return;
+                    break;
                 case "players":
                     this.listFighters(console);
-                    return;
+                    break;
                 case "kick":
-                    if (args.length != 2)
-                    {
-                        return;
-                    };
-                    _local_4 = args[1];
+                    player = args[0];
                     if (FightContextFrame.preFightIsActive)
                     {
-                        fighterId = this.getFighterId(_local_4);
-                        if (fighterId != 0)
+                        fighterId = this.getFighterId(player);
+                        if (((!(fighterId == 0)) && (!(fighterId == PlayedCharacterManager.getInstance().id))))
                         {
                             gckmsg = new GameContextKickMessage();
-                            gckmsg.initGameContextKickMessage(1);
+                            gckmsg.initGameContextKickMessage(fighterId);
                             ConnectionsHandler.getConnection().send(gckmsg);
                         };
                     };
-                    return;
+                    break;
             };
         }
 
-        private function getFighterId(name:String):int
+        private function getFighterId(name:String):Number
         {
-            var fighterId:int;
+            var fighterId:Number;
             var fightFrame:FightContextFrame = (Kernel.getWorker().getFrame(FightContextFrame) as FightContextFrame);
-            var fighters:Vector.<int> = fightFrame.battleFrame.fightersList;
+            var fighters:Vector.<Number> = fightFrame.preparationFrame.fightersList;
             for each (fighterId in fighters)
             {
                 if (fightFrame.getFighterName(fighterId) == name)
@@ -79,12 +78,19 @@
         private function listFighters(console:ConsoleHandler):void
         {
             var fightFrame:FightContextFrame;
-            var fighters:Vector.<int>;
-            var fighterId:int;
+            var fighters:Vector.<Number>;
+            var fighterId:Number;
             if (PlayedCharacterManager.getInstance().isFighting)
             {
                 fightFrame = (Kernel.getWorker().getFrame(FightContextFrame) as FightContextFrame);
-                fighters = fightFrame.battleFrame.fightersList;
+                if (FightContextFrame.preFightIsActive)
+                {
+                    fighters = fightFrame.preparationFrame.fightersList;
+                }
+                else
+                {
+                    fighters = fightFrame.battleFrame.fightersList;
+                };
                 for each (fighterId in fighters)
                 {
                     console.output(fightFrame.getFighterName(fighterId));
@@ -116,5 +122,5 @@
 
 
     }
-}//package com.ankamagames.dofus.console.chat
+} com.ankamagames.dofus.console.chat
 

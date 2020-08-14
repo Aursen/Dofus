@@ -1,4 +1,4 @@
-﻿package com.ankamagames.tiphon.types
+package com.ankamagames.tiphon.types
 {
     import com.ankamagames.tiphon.types.look.TiphonEntityLook;
 
@@ -9,5 +9,5 @@
         function getModifiedAnimation(_arg_1:String, _arg_2:TiphonEntityLook):String;
 
     }
-}//package com.ankamagames.tiphon.types
+} com.ankamagames.tiphon.types
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.context.roleplay.paddock
+package com.ankamagames.dofus.network.messages.game.context.roleplay.paddock
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class PaddockToSellFilterMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -17,7 +17,8 @@
         public var areaId:int = 0;
         public var atLeastNbMount:int = 0;
         public var atLeastNbMachine:int = 0;
-        public var maxPrice:uint = 0;
+        public var maxPrice:Number = 0;
+        public var orderBy:uint = 0;
 
 
         override public function get isInitialized():Boolean
@@ -30,12 +31,13 @@
             return (6161);
         }
 
-        public function initPaddockToSellFilterMessage(areaId:int=0, atLeastNbMount:int=0, atLeastNbMachine:int=0, maxPrice:uint=0):PaddockToSellFilterMessage
+        public function initPaddockToSellFilterMessage(areaId:int=0, atLeastNbMount:int=0, atLeastNbMachine:int=0, maxPrice:Number=0, orderBy:uint=0):PaddockToSellFilterMessage
         {
             this.areaId = areaId;
             this.atLeastNbMount = atLeastNbMount;
             this.atLeastNbMachine = atLeastNbMachine;
             this.maxPrice = maxPrice;
+            this.orderBy = orderBy;
             this._isInitialized = true;
             return (this);
         }
@@ -46,6 +48,7 @@
             this.atLeastNbMount = 0;
             this.atLeastNbMachine = 0;
             this.maxPrice = 0;
+            this.orderBy = 0;
             this._isInitialized = false;
         }
 
@@ -61,6 +64,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_PaddockToSellFilterMessage(output);
@@ -71,11 +82,12 @@
             output.writeInt(this.areaId);
             output.writeByte(this.atLeastNbMount);
             output.writeByte(this.atLeastNbMachine);
-            if (this.maxPrice < 0)
+            if (((this.maxPrice < 0) || (this.maxPrice > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.maxPrice) + ") on element maxPrice.")));
             };
-            output.writeVarInt(this.maxPrice);
+            output.writeVarLong(this.maxPrice);
+            output.writeByte(this.orderBy);
         }
 
         public function deserialize(input:ICustomDataInput):void
@@ -85,17 +97,61 @@
 
         public function deserializeAs_PaddockToSellFilterMessage(input:ICustomDataInput):void
         {
+            this._areaIdFunc(input);
+            this._atLeastNbMountFunc(input);
+            this._atLeastNbMachineFunc(input);
+            this._maxPriceFunc(input);
+            this._orderByFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_PaddockToSellFilterMessage(tree);
+        }
+
+        public function deserializeAsyncAs_PaddockToSellFilterMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._areaIdFunc);
+            tree.addChild(this._atLeastNbMountFunc);
+            tree.addChild(this._atLeastNbMachineFunc);
+            tree.addChild(this._maxPriceFunc);
+            tree.addChild(this._orderByFunc);
+        }
+
+        private function _areaIdFunc(input:ICustomDataInput):void
+        {
             this.areaId = input.readInt();
+        }
+
+        private function _atLeastNbMountFunc(input:ICustomDataInput):void
+        {
             this.atLeastNbMount = input.readByte();
+        }
+
+        private function _atLeastNbMachineFunc(input:ICustomDataInput):void
+        {
             this.atLeastNbMachine = input.readByte();
-            this.maxPrice = input.readVarUhInt();
-            if (this.maxPrice < 0)
+        }
+
+        private function _maxPriceFunc(input:ICustomDataInput):void
+        {
+            this.maxPrice = input.readVarUhLong();
+            if (((this.maxPrice < 0) || (this.maxPrice > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.maxPrice) + ") on element of PaddockToSellFilterMessage.maxPrice.")));
             };
         }
 
+        private function _orderByFunc(input:ICustomDataInput):void
+        {
+            this.orderBy = input.readByte();
+            if (this.orderBy < 0)
+            {
+                throw (new Error((("Forbidden value (" + this.orderBy) + ") on element of PaddockToSellFilterMessage.orderBy.")));
+            };
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.context.roleplay.paddock
+} com.ankamagames.dofus.network.messages.game.context.roleplay.paddock
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.fight.types
+package com.ankamagames.dofus.logic.game.fight.types
 {
     import com.ankamagames.jerakine.types.positions.MapPoint;
     import com.ankamagames.dofus.datacenter.spells.Spell;
@@ -11,7 +11,7 @@
         private static var _unicID:uint = 0;
 
         public var castingSpellId:uint;
-        public var casterId:int;
+        public var casterId:Number;
         public var targetedCell:MapPoint;
         public var spell:Spell;
         public var spellRank:SpellLevel;
@@ -23,6 +23,7 @@
         public var isCriticalFail:Boolean;
         public var portalIds:Vector.<int>;
         public var portalMapPoints:Vector.<MapPoint>;
+        public var defaultTargetGfxId:uint;
 
         public function CastingSpell(updateCastingId:Boolean=true)
         {
@@ -33,5 +34,5 @@
         }
 
     }
-}//package com.ankamagames.dofus.logic.game.fight.types
+} com.ankamagames.dofus.logic.game.fight.types
 

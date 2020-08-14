@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.pools
+package com.ankamagames.jerakine.pools
 {
     import flash.geom.Rectangle;
 
@@ -34,5 +34,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.pools
+} com.ankamagames.jerakine.pools
 

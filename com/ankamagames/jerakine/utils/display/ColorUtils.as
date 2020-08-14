@@ -1,5 +1,7 @@
-﻿package com.ankamagames.jerakine.utils.display
+package com.ankamagames.jerakine.utils.display
 {
+    import flash.geom.ColorTransform;
+
     public class ColorUtils 
     {
 
@@ -12,9 +14,9 @@
             var hue:Number;
             var sat:Number;
             var lum:Number;
-            var _local_11:Number;
-            var _local_12:Number;
-            var _local_13:Number;
+            var deltaR:Number;
+            var deltaG:Number;
+            var deltaB:Number;
             r = ((color & 0xFF0000) >> 16);
             g = ((color & 0xFF00) >> 8);
             b = (color & 0xFF);
@@ -40,24 +42,24 @@
                 {
                     sat = (1 - (delta / ((2 - max) - min)));
                 };
-                _local_11 = ((((max - r) / 6) + (delta / 2)) / delta);
-                _local_12 = ((((max - g) / 6) + (delta / 2)) / delta);
-                _local_13 = ((((max - b) / 6) + (delta / 2)) / delta);
+                deltaR = ((((max - r) / 6) + (delta / 2)) / delta);
+                deltaG = ((((max - g) / 6) + (delta / 2)) / delta);
+                deltaB = ((((max - b) / 6) + (delta / 2)) / delta);
                 if (r == max)
                 {
-                    hue = (_local_13 - _local_12);
+                    hue = (deltaB - deltaG);
                 }
                 else
                 {
                     if (g == max)
                     {
-                        hue = (((1 / 3) + _local_11) - _local_13);
+                        hue = (((1 / 3) + deltaR) - deltaB);
                     }
                     else
                     {
                         if (b == max)
                         {
-                            hue = (((2 / 3) + _local_12) - _local_11);
+                            hue = (((2 / 3) + deltaG) - deltaR);
                         };
                     };
                 };
@@ -77,7 +79,19 @@
             });
         }
 
+        public static function mixColorTransforms(ctf1:ColorTransform, ctf2:ColorTransform, a:Number=0.5):ColorTransform
+        {
+            var p:String;
+            var ct:ColorTransform = new ColorTransform();
+            var props:Array = ["redOffset", "redMultiplier", "greenOffset", "greenMultiplier", "blueOffset", "blueMultiplier"];
+            for each (p in props)
+            {
+                ct[p] = (ctf1[p] + ((ctf2[p] - ctf1[p]) * a));
+            };
+            return (ct);
+        }
+
 
     }
-}//package com.ankamagames.jerakine.utils.display
+} com.ankamagames.jerakine.utils.display
 

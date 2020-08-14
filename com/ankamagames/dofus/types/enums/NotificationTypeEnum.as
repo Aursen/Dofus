@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.types.enums
+package com.ankamagames.dofus.types.enums
 {
     public class NotificationTypeEnum 
     {
@@ -9,9 +9,10 @@
         public static const PRIORITY_INVITATION:uint = 3;
         public static const INFORMATION:uint = 4;
         public static const SERVER_INFORMATION:uint = 5;
-        public static const NOTIFICATION_PRIORITY:Array = [NotificationTypeEnum.ERROR, NotificationTypeEnum.PRIORITY_INVITATION, NotificationTypeEnum.INVITATION, NotificationTypeEnum.SERVER_INFORMATION, NotificationTypeEnum.INFORMATION, NotificationTypeEnum.TUTORIAL];
+        public static const SURVEY_INVITATION:uint = 6;
+        public static const NOTIFICATION_PRIORITY:Array = [NotificationTypeEnum.ERROR, NotificationTypeEnum.PRIORITY_INVITATION, NotificationTypeEnum.INVITATION, NotificationTypeEnum.SERVER_INFORMATION, NotificationTypeEnum.INFORMATION, NotificationTypeEnum.TUTORIAL, NotificationTypeEnum.SURVEY_INVITATION];
 
 
     }
-}//package com.ankamagames.dofus.types.enums
+} com.ankamagames.dofus.types.enums
 

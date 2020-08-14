@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.basic
+package com.ankamagames.dofus.network.messages.game.basic
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class SequenceNumberMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -52,6 +52,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_SequenceNumberMessage(output);
@@ -59,7 +67,7 @@
 
         public function serializeAs_SequenceNumberMessage(output:ICustomDataOutput):void
         {
-            if ((((this.number < 0)) || ((this.number > 0xFFFF))))
+            if (((this.number < 0) || (this.number > 0xFFFF)))
             {
                 throw (new Error((("Forbidden value (" + this.number) + ") on element number.")));
             };
@@ -73,8 +81,23 @@
 
         public function deserializeAs_SequenceNumberMessage(input:ICustomDataInput):void
         {
+            this._numberFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_SequenceNumberMessage(tree);
+        }
+
+        public function deserializeAsyncAs_SequenceNumberMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._numberFunc);
+        }
+
+        private function _numberFunc(input:ICustomDataInput):void
+        {
             this.number = input.readUnsignedShort();
-            if ((((this.number < 0)) || ((this.number > 0xFFFF))))
+            if (((this.number < 0) || (this.number > 0xFFFF)))
             {
                 throw (new Error((("Forbidden value (" + this.number) + ") on element of SequenceNumberMessage.number.")));
             };
@@ -82,5 +105,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.basic
+} com.ankamagames.dofus.network.messages.game.basic
 

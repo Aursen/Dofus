@@ -1,4 +1,4 @@
-﻿package com.ankamagames.tiphon.display
+package com.ankamagames.tiphon.display
 {
     import flash.utils.Dictionary;
     import flash.display.MovieClip;
@@ -86,7 +86,7 @@
 
         override public function get currentFrame():int
         {
-            return ((this._currentIndex + 1));
+            return (this._currentIndex + 1);
         }
 
         public function get smoothing():Boolean
@@ -134,7 +134,7 @@
 
         override public function prevFrame():void
         {
-            this.displayFrame((((this._currentIndex > 0)) ? (this._currentIndex - 1) : (this._totalFrames - 1)));
+            this.displayFrame(((this._currentIndex > 0) ? (this._currentIndex - 1) : (this._totalFrames - 1)));
         }
 
         protected function displayFrame(frameIndex:uint):Boolean
@@ -145,12 +145,12 @@
             };
             var frameList:Array = FRAMES[this._targetName].frameList;
             var rf:RasterizedFrame = (frameList[frameIndex] as RasterizedFrame);
-            if (!(rf))
+            if (!rf)
             {
                 rf = new RasterizedFrame(this._target, frameIndex);
                 frameList[frameIndex] = rf;
             };
-            if (!(this._bitmap))
+            if (!this._bitmap)
             {
                 this._bitmap = new Bitmap(rf.bitmapData);
                 this._bitmap.smoothing = this._smoothing;
@@ -168,5 +168,5 @@
 
 
     }
-}//package com.ankamagames.tiphon.display
+} com.ankamagames.tiphon.display
 

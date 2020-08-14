@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.common.actions.guild
+package com.ankamagames.dofus.logic.game.common.actions.guild
 {
     import com.ankamagames.jerakine.handlers.messages.Action;
 
@@ -23,5 +23,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.actions.guild
+} com.ankamagames.dofus.logic.game.common.actions.guild
 

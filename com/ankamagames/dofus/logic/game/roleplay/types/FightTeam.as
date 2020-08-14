@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.roleplay.types
+package com.ankamagames.dofus.logic.game.roleplay.types
 {
     import com.ankamagames.dofus.network.types.game.context.GameContextActorInformations;
     import com.ankamagames.jerakine.logger.Logger;
@@ -56,7 +56,7 @@
             };
             for each (fightTeamMember in this.teamInfos.teamMembers)
             {
-                if (((((fightTeamMember) && ((fightTeamMember is FightTeamMemberCharacterInformations)))) && (!((partyMemberNames.indexOf(FightTeamMemberCharacterInformations(fightTeamMember).name) == -1)))))
+                if ((((fightTeamMember) && (fightTeamMember is FightTeamMemberCharacterInformations)) && (!(partyMemberNames.indexOf(FightTeamMemberCharacterInformations(fightTeamMember).name) == -1))))
                 {
                     teamHasGroupMember = true;
                     break;
@@ -82,5 +82,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.roleplay.types
+} com.ankamagames.dofus.logic.game.roleplay.types
 

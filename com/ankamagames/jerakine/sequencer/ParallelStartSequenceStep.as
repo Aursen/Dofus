@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.sequencer
+package com.ankamagames.jerakine.sequencer
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
@@ -56,7 +56,7 @@
             }
             else
             {
-                if (!(this._waitAllSequenceEnd))
+                if (!this._waitAllSequenceEnd)
                 {
                     if (this._sequenceEndCount == 1)
                     {
@@ -68,5 +68,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.sequencer
+} com.ankamagames.jerakine.sequencer
 

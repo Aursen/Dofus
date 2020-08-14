@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.connection.frames
+package com.ankamagames.dofus.logic.connection.frames
 {
     import com.ankamagames.jerakine.messages.Frame;
     import com.ankamagames.jerakine.logger.Logger;
@@ -6,9 +6,8 @@
     import flash.utils.getQualifiedClassName;
     import flash.utils.Timer;
     import com.ankamagames.jerakine.types.enums.Priority;
-    import com.ankamagames.dofus.network.messages.handshake.ProtocolRequired;
-    import com.ankamagames.dofus.logic.common.frames.AuthorizedFrame;
     import com.ankamagames.dofus.kernel.net.ConnectionsHandler;
+    import com.ankamagames.dofus.network.messages.handshake.ProtocolRequired;
     import com.ankamagames.jerakine.network.INetworkMessage;
     import com.ankamagames.dofus.network.Metadata;
     import com.ankamagames.dofus.kernel.Kernel;
@@ -37,36 +36,40 @@
 
         public function pushed():Boolean
         {
+            ConnectionsHandler.hasReceivedNetworkMsg = false;
             return (true);
         }
 
         public function process(msg:Message):Boolean
         {
-            var _local_2:ProtocolRequired;
-            var authoFrame:AuthorizedFrame;
+            var prmsg:ProtocolRequired;
             var commonMod:Object;
             ConnectionsHandler.hasReceivedMsg = true;
-            if ((((msg is INetworkMessage)) && (this._timeOutTimer)))
+            if ((msg is INetworkMessage))
             {
-                this._timeOutTimer.stop();
+                ConnectionsHandler.hasReceivedNetworkMsg = true;
+                if (this._timeOutTimer)
+                {
+                    this._timeOutTimer.stop();
+                };
             };
             switch (true)
             {
                 case (msg is ProtocolRequired):
-                    _local_2 = (msg as ProtocolRequired);
-                    if (_local_2.requiredVersion > Metadata.PROTOCOL_BUILD)
+                    prmsg = (msg as ProtocolRequired);
+                    _log.info((("Current protocol build is " + Metadata.PROTOCOL_BUILD) + "."));
+                    if (prmsg.requiredVersion > Metadata.PROTOCOL_BUILD)
                     {
-                        _log.fatal((((("Current protocol build is " + Metadata.PROTOCOL_BUILD) + ", required build is ") + _local_2.requiredVersion) + "."));
-                        Kernel.panic(PanicMessages.PROTOCOL_TOO_OLD, [Metadata.PROTOCOL_BUILD, _local_2.requiredVersion]);
+                        _log.fatal((((("Current protocol build is " + Metadata.PROTOCOL_BUILD) + ", required build is ") + prmsg.requiredVersion) + "."));
+                        Kernel.panic(PanicMessages.PROTOCOL_TOO_OLD, [Metadata.PROTOCOL_BUILD, prmsg.requiredVersion]);
                     };
-                    if (_local_2.currentVersion < Metadata.PROTOCOL_REQUIRED_BUILD)
+                    if (prmsg.currentVersion < Metadata.PROTOCOL_REQUIRED_BUILD)
                     {
-                        _log.fatal((((("Current protocol build (" + Metadata.PROTOCOL_BUILD) + ") is too new for the server version (") + _local_2.currentVersion) + ")."));
-                        authoFrame = (Kernel.getWorker().getFrame(AuthorizedFrame) as AuthorizedFrame);
-                        if ((((BuildInfos.BUILD_TYPE >= BuildTypeEnum.TESTING)) || (authoFrame.isFantomas())))
+                        _log.fatal((((("Current protocol build (" + Metadata.PROTOCOL_BUILD) + ") is too new for the server version (") + prmsg.currentVersion) + ")."));
+                        if (BuildInfos.BUILD_TYPE >= BuildTypeEnum.TESTING)
                         {
                             commonMod = UiModuleManager.getInstance().getModule("Ankama_Common").mainClass;
-                            commonMod.openPopup(I18n.getUiText("ui.popup.warning"), I18n.getUiText("ui.popup.protocolError", [Metadata.PROTOCOL_BUILD, _local_2.currentVersion]), [I18n.getUiText("ui.common.ok")]);
+                            commonMod.openPopup(I18n.getUiText("ui.popup.warning"), I18n.getUiText("ui.popup.protocolError", [Metadata.PROTOCOL_BUILD, prmsg.currentVersion]), [I18n.getUiText("ui.common.ok")]);
                         };
                     };
                     Kernel.getWorker().removeFrame(this);
@@ -98,5 +101,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.connection.frames
+} com.ankamagames.dofus.logic.connection.frames
 

@@ -1,16 +1,16 @@
-﻿package com.ankamagames.dofus.logic.game.common.actions.guild
+package com.ankamagames.dofus.logic.game.common.actions.guild
 {
     import com.ankamagames.jerakine.handlers.messages.Action;
 
     public class GuildFightLeaveRequestAction implements Action 
     {
 
-        public var taxCollectorId:uint;
-        public var characterId:uint;
+        public var taxCollectorId:Number;
+        public var characterId:Number;
         public var warning:Boolean;
 
 
-        public static function create(pTaxCollectorId:uint, pCharacterId:uint, pWarning:Boolean=false):GuildFightLeaveRequestAction
+        public static function create(pTaxCollectorId:Number, pCharacterId:Number, pWarning:Boolean=false):GuildFightLeaveRequestAction
         {
             var action:GuildFightLeaveRequestAction = new (GuildFightLeaveRequestAction)();
             action.taxCollectorId = pTaxCollectorId;
@@ -21,5 +21,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.actions.guild
+} com.ankamagames.dofus.logic.game.common.actions.guild
 

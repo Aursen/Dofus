@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.network
+package com.ankamagames.jerakine.network
 {
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.utils.types.Int64;
@@ -13,13 +13,13 @@
         private static const SHORT_SIZE:int = 16;
         private static const SHORT_MIN_VALUE:int = -32768;
         private static const SHORT_MAX_VALUE:int = 32767;
-        private static const UNSIGNED_SHORT_MAX_VALUE:int = 65536;
+        private static const UNSIGNED_SHORT_MAX_VALUE:int = 0x10000;
         private static const CHUNCK_BIT_SIZE:int = 7;
         private static const MAX_ENCODING_LENGTH:int = Math.ceil((INT_SIZE / CHUNCK_BIT_SIZE));
         private static const MASK_10000000:int = 128;
         private static const MASK_01111111:int = 127;
 
-        private var _data;
+        private var _data:*;
 
         public function CustomDataWrapper(data:*)
         {
@@ -184,7 +184,7 @@
             return (this._data.bytesAvailable);
         }
 
-        public function readObject()
+        public function readObject():*
         {
             return (this._data.readObject());
         }
@@ -204,16 +204,16 @@
             return (this._data.endian);
         }
 
-        public function set endian(type:String):void
+        public function set endian(_arg_1:String):void
         {
-            this._data.endian = type;
+            this._data.endian = _arg_1;
         }
 
         public function writeVarInt(value:int):void
         {
             var b:int;
             var ba:ByteArray = new ByteArray();
-            if ((((value >= 0)) && ((value <= MASK_01111111))))
+            if (((value >= 0) && (value <= MASK_01111111)))
             {
                 ba.writeByte(value);
                 this._data.writeBytes(ba);
@@ -239,18 +239,18 @@
         public function writeVarShort(value:int):void
         {
             var b:int;
-            if ((((value > SHORT_MAX_VALUE)) || ((value < SHORT_MIN_VALUE))))
+            if (((value > SHORT_MAX_VALUE) || (value < SHORT_MIN_VALUE)))
             {
                 throw (new Error("Forbidden value"));
             };
             var ba:ByteArray = new ByteArray();
-            if ((((value >= 0)) && ((value <= MASK_01111111))))
+            if (((value >= 0) && (value <= MASK_01111111)))
             {
                 ba.writeByte(value);
                 this._data.writeBytes(ba);
                 return;
             };
-            var c:int = (value & 0xFFFF);
+            var c:* = (value & 0xFFFF);
             var buffer:ByteArray = new ByteArray();
             while (c != 0)
             {
@@ -269,7 +269,7 @@
 
         public function writeVarLong(value:Number):void
         {
-            var _local_3:uint;
+            var i:uint;
             var val:Int64 = Int64.fromNumber(value);
             if (val.high == 0)
             {
@@ -277,20 +277,20 @@
             }
             else
             {
-                _local_3 = 0;
-                while (_local_3 < 4)
+                i = 0;
+                while (i < 4)
                 {
-                    this._data.writeByte(((val.low & 127) | 128));
+                    this._data.writeByte(((val.low & 0x7F) | 0x80));
                     val.low = (val.low >>> 7);
-                    _local_3++;
+                    i++;
                 };
-                if ((val.high & (268435455 << 3)) == 0)
+                if ((val.high & (0xFFFFFFF << 3)) == 0)
                 {
                     this._data.writeByte(((val.high << 4) | val.low));
                 }
                 else
                 {
-                    this._data.writeByte(((((val.high << 4) | val.low) & 127) | 128));
+                    this._data.writeByte(((((val.high << 4) | val.low) & 0x7F) | 0x80));
                     this.writeint32(this._data, (val.high >>> 3));
                 };
             };
@@ -370,7 +370,7 @@
                 };
                 if (b >= 128)
                 {
-                    result.low = (result.low | ((b & 127) << i));
+                    result.low = (result.low | ((b & 0x7F) << i));
                 }
                 else
                 {
@@ -381,7 +381,7 @@
             };
             if (b >= 128)
             {
-                b = (b & 127);
+                b = (b & 0x7F);
                 result.low = (result.low | (b << i));
                 result.high = (b >>> 4);
             }
@@ -399,7 +399,7 @@
                 {
                     if (b >= 128)
                     {
-                        result.high = (result.high | ((b & 127) << i));
+                        result.high = (result.high | ((b & 0x7F) << i));
                     }
                     else
                     {
@@ -426,7 +426,7 @@
                 };
                 if (b >= 128)
                 {
-                    result.low = (result.low | ((b & 127) << i));
+                    result.low = (result.low | ((b & 0x7F) << i));
                 }
                 else
                 {
@@ -437,7 +437,7 @@
             };
             if (b >= 128)
             {
-                b = (b & 127);
+                b = (b & 0x7F);
                 result.low = (result.low | (b << i));
                 result.high = (b >>> 4);
             }
@@ -455,7 +455,7 @@
                 {
                     if (b >= 128)
                     {
-                        result.high = (result.high | ((b & 127) << i));
+                        result.high = (result.high | ((b & 0x7F) << i));
                     }
                     else
                     {
@@ -477,12 +477,12 @@
                     output.writeByte(value);
                     return;
                 };
-                output.writeByte(((value & 127) | 128));
+                output.writeByte(((value & 0x7F) | 0x80));
                 value = (value >>> 7);
             };
         }
 
 
     }
-}//package com.ankamagames.jerakine.network
+} com.ankamagames.jerakine.network
 

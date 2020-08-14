@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.datacenter.items
+package com.ankamagames.dofus.datacenter.items
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.jerakine.data.GameData;
@@ -16,7 +16,7 @@
 
         public static function getIncarnationLevelById(id:uint):IncarnationLevel
         {
-            return ((GameData.getObject(MODULE, id) as IncarnationLevel));
+            return (GameData.getObject(MODULE, id) as IncarnationLevel);
         }
 
         public static function getIncarnationLevelByIdAndLevel(incarnationId:int, level:int):IncarnationLevel
@@ -33,5 +33,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.items
+} com.ankamagames.dofus.datacenter.items
 

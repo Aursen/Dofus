@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.scripts.spells
+package com.ankamagames.dofus.scripts.spells
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
@@ -11,17 +11,23 @@
     import com.ankamagames.dofus.scripts.api.FxApi;
     import com.ankamagames.tiphon.sequence.SetDirectionStep;
     import com.ankamagames.jerakine.types.positions.MapPoint;
+    import com.ankamagames.jerakine.managers.OptionManager;
+    import com.ankamagames.dofus.logic.game.common.managers.PlayedCharacterManager;
     import com.ankamagames.dofus.scripts.api.SequenceApi;
     import com.ankamagames.jerakine.enum.AddGfxModeEnum;
+    import com.ankamagames.jerakine.entities.interfaces.IEntity;
     import com.ankamagames.dofus.logic.game.fight.steps.FightLifeVariationStep;
-    import com.ankamagames.dofus.logic.game.fight.steps.IFightStep;
     import __AS3__.vec.Vector;
+    import com.ankamagames.dofus.logic.game.fight.steps.IFightStep;
     import com.ankamagames.tiphon.display.TiphonSprite;
     import com.ankamagames.dofus.types.entities.Glyph;
     import com.ankamagames.dofus.types.enums.PortalAnimationEnum;
     import com.ankamagames.tiphon.sequence.PlayAnimationStep;
     import com.ankamagames.tiphon.events.TiphonEvent;
-    import __AS3__.vec.*;
+    import com.ankamagames.dofus.types.entities.Projectile;
+    import com.ankamagames.atouin.types.sequences.AddWorldEntityStep;
+    import com.ankamagames.atouin.types.sequences.DestroyEntityStep;
+    import com.ankamagames.atouin.enums.PlacementStrataEnums;
 
     public class SpellScriptBase 
     {
@@ -29,6 +35,8 @@
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(SpellScriptBase));
         protected static const PREFIX_CASTER:String = "caster";
         protected static const PREFIX_TARGET:String = "target";
+        protected static const PREFIX_GLYPH:String = "glyph";
+        protected static const DEFAULT_CASTER_ANIMATION:int = 4;
 
         protected var latestStep:ISequencable;
         protected var runner:SpellFxRunner;
@@ -40,28 +48,53 @@
             this.runner = spellFxRunner;
             this.spell = SpellFxApi.GetCastingSpell(this.runner);
             this.caster = (FxApi.GetCurrentCaster(this.runner) as AnimatedCharacter);
+            if (((this.runner.stepsBuffer) && (this.runner.stepsBuffer.length > 0)))
+            {
+                this.latestStep = this.runner.stepsBuffer[(this.runner.stepsBuffer.length - 1)];
+            };
         }
 
         protected function addCasterSetDirectionStep(target:MapPoint):void
         {
-            var orientation:uint;
             var orientationStep:SetDirectionStep;
-            if (((((((this.caster) && (this.caster.position))) && (target))) && (!(FxApi.IsPositionsEquals(this.caster.position, target)))))
+            if ((((this.caster) && (this.caster.position)) && (target)))
             {
-                orientation = this.caster.position.advancedOrientationTo(target);
-                orientationStep = new SetDirectionStep(this.caster, orientation);
-                SpellFxApi.AddFrontStep(this.runner, orientationStep);
+                orientationStep = new SetDirectionStep(this.caster, 0, target);
+                if (((!(this.latestStep)) && (this.runner.stepsBuffer.length > 0)))
+                {
+                    this.latestStep = this.runner.stepsBuffer[(this.runner.stepsBuffer.length - 1)];
+                };
+                if (!this.latestStep)
+                {
+                    SpellFxApi.AddFrontStep(this.runner, orientationStep);
+                }
+                else
+                {
+                    SpellFxApi.AddStepAfter(this.runner, this.latestStep, orientationStep);
+                };
                 this.latestStep = orientationStep;
             };
         }
 
         protected function addCasterAnimationStep():void
         {
+            var animId:int;
+            var allowSpellEffects:Boolean;
             var animationStep:ISequencable;
             if (((this.caster) && (SpellFxApi.HasSpellParam(this.spell, "animId"))))
             {
-                animationStep = SequenceApi.CreatePlayAnimationStep(this.caster, ("AnimAttaque" + SpellFxApi.GetSpellParam(this.spell, "animId")), true, true, "SHOT");
-                if (!(this.latestStep))
+                animId = SpellFxApi.GetSpellParam(this.spell, "animId");
+                allowSpellEffects = OptionManager.getOptionManager("dofus").getOption("allowSpellEffects");
+                if ((((!(allowSpellEffects)) && (this.caster.id > 0)) && (PlayedCharacterManager.getInstance().isFighting)))
+                {
+                    animId = DEFAULT_CASTER_ANIMATION;
+                };
+                animationStep = SequenceApi.CreatePlayAnimationStep(this.caster, ("AnimAttaque" + animId), true, true, "SHOT");
+                if (animId > 400000)
+                {
+                    animationStep.timeout = (animationStep.timeout * 2);
+                };
+                if (!this.latestStep)
                 {
                     SpellFxApi.AddFrontStep(this.runner, animationStep);
                 }
@@ -73,11 +106,11 @@
             };
         }
 
-        protected function addGfxEntityStep(originCell:MapPoint, casterCell:MapPoint, targetCell:MapPoint, stringPrefix:String, stringSuffix:String=""):void
+        protected function addNewGfxEntityStep(originCell:MapPoint, casterCell:MapPoint, targetCell:MapPoint, stringPrefix:String, stringSuffix:String="", startEntity:IEntity=null, pGfxId:uint=0):void
         {
             var startCell:MapPoint;
             var endCell:MapPoint;
-            if (((((!(originCell)) || (!(casterCell)))) || (!(targetCell))))
+            if ((((!(originCell)) || (!(casterCell))) || (!(targetCell))))
             {
                 return;
             };
@@ -104,7 +137,7 @@
             {
                 startCell = casterCell;
                 endCell = targetCell;
-                if (((((casterCell) && (endCell))) && ((casterCell.cellId == endCell.cellId))))
+                if ((((casterCell) && (endCell)) && (casterCell.cellId == endCell.cellId)))
                 {
                     endCell = endCell.getNearestCellInDirection(this.caster.getDirection());
                     if (endCell == null)
@@ -112,16 +145,20 @@
                         endCell = targetCell;
                     };
                 };
-                if (!(endCell))
+                if (!endCell)
                 {
                     _log.debug("Failed to add a GfxEntityStep, expecting it to be oriented, but found no endCell!");
                     return;
                 };
             };
-            var gfxEntityStep:ISequencable = SequenceApi.CreateAddGfxEntityStep(this.runner, SpellFxApi.GetSpellParam(this.spell, ((stringPrefix + "GfxId") + stringSuffix)), originCell, gfxAngle, spellGfxEntityYOffset, gfxDisplayMode, startCell, endCell, spellGfxEntityShowUnder);
-            if (!(this.latestStep))
+            var gfxEntityStep:ISequencable = SequenceApi.CreateAddGfxEntityStep(this.runner, ((pGfxId) ? pGfxId : SpellFxApi.GetSpellParam(this.spell, ((stringPrefix + "GfxId") + stringSuffix))), originCell, gfxAngle, spellGfxEntityYOffset, gfxDisplayMode, startCell, endCell, spellGfxEntityShowUnder, startEntity);
+            if (!this.latestStep)
             {
-                if ((((((stringPrefix == PREFIX_TARGET)) && (SpellFxApi.HasSpellParam(this.spell, "playTargetGfxFirst")))) && (SpellFxApi.GetSpellParam(this.spell, "playTargetGfxFirst"))))
+                SpellFxApi.AddFrontStep(this.runner, gfxEntityStep);
+            }
+            else
+            {
+                if ((((stringPrefix == PREFIX_TARGET) && (SpellFxApi.HasSpellParam(this.spell, ("playTargetGfxFirst" + stringSuffix)))) && (SpellFxApi.GetSpellParam(this.spell, ("playTargetGfxFirst" + stringSuffix)) > 0)))
                 {
                     SpellFxApi.AddStepBefore(this.runner, this.latestStep, gfxEntityStep);
                 }
@@ -129,10 +166,6 @@
                 {
                     SpellFxApi.AddStepAfter(this.runner, this.latestStep, gfxEntityStep);
                 };
-            }
-            else
-            {
-                SpellFxApi.AddStepAfter(this.runner, this.latestStep, gfxEntityStep);
             };
             this.latestStep = gfxEntityStep;
         }
@@ -140,21 +173,18 @@
         protected function addAnimHitSteps():void
         {
             var lifeVariationStep:FightLifeVariationStep;
-            var _local_3:String;
-            var lifeVariationSteps:Vector.<IFightStep> = Vector.<IFightStep>(SpellFxApi.GetStepsFromType(this.runner, "lifeVariation"));
+            var hitAnimName:String;
+            var lifeVariationSteps:Vector.<IFightStep> = SpellFxApi.GetStepsFromType(this.runner, "lifeVariation");
             for each (lifeVariationStep in lifeVariationSteps)
             {
-                if (lifeVariationStep.value >= 0)
+                if (lifeVariationStep.value < 0)
                 {
-                }
-                else
-                {
-                    _local_3 = "AnimHit";
+                    hitAnimName = "AnimHit";
                     if (SpellFxApi.HasSpellParam(this.spell, "customHitAnim"))
                     {
-                        _local_3 = SpellFxApi.GetSpellParam(this.spell, "customHitAnim");
+                        hitAnimName = SpellFxApi.GetSpellParam(this.spell, "customHitAnim");
                     };
-                    SpellFxApi.AddStepBefore(this.runner, lifeVariationStep, SequenceApi.CreatePlayAnimationStep((lifeVariationStep.target as TiphonSprite), _local_3, true, false));
+                    SpellFxApi.AddStepBefore(this.runner, lifeVariationStep, SequenceApi.CreatePlayAnimationStep((lifeVariationStep.target as TiphonSprite), hitAnimName, true, false));
                 };
             };
         }
@@ -172,7 +202,7 @@
                 if (glyph.getAnimation() != PortalAnimationEnum.STATE_NORMAL)
                 {
                     glyphAnimationStep = new PlayAnimationStep(glyph, PortalAnimationEnum.STATE_NORMAL, false, false);
-                    if (!(this.latestStep))
+                    if (!this.latestStep)
                     {
                         SpellFxApi.AddFrontStep(this.runner, glyphAnimationStep);
                     }
@@ -183,7 +213,7 @@
                     this.latestStep = glyphAnimationStep;
                 };
                 glyphAnimationStep = new PlayAnimationStep(glyph, PortalAnimationEnum.STATE_ENTRY_SPELL, false, true, TiphonEvent.ANIMATION_SHOT);
-                if (!(this.latestStep))
+                if (!this.latestStep)
                 {
                     SpellFxApi.AddFrontStep(this.runner, glyphAnimationStep);
                 }
@@ -202,7 +232,7 @@
                     if (glyph.getAnimation() != PortalAnimationEnum.STATE_NORMAL)
                     {
                         glyphAnimationStep = new PlayAnimationStep(glyph, PortalAnimationEnum.STATE_NORMAL, false, false);
-                        if (!(this.latestStep))
+                        if (!this.latestStep)
                         {
                             SpellFxApi.AddFrontStep(this.runner, glyphAnimationStep);
                         }
@@ -224,7 +254,7 @@
                 if (glyph.getAnimation() != PortalAnimationEnum.STATE_NORMAL)
                 {
                     glyphAnimationStep = new PlayAnimationStep(glyph, PortalAnimationEnum.STATE_NORMAL, false, false);
-                    if (!(this.latestStep))
+                    if (!this.latestStep)
                     {
                         SpellFxApi.AddFrontStep(this.runner, glyphAnimationStep);
                     }
@@ -240,6 +270,27 @@
             };
         }
 
+        protected function addFBackgroundSteps():void
+        {
+            var foregroundStrata:int;
+            var background:Projectile;
+            var addBackgroundStep:AddWorldEntityStep;
+            var destroyMissileStep:DestroyEntityStep;
+            if (SpellFxApi.HasSpellParam(this.spell, "foregroundGfxId"))
+            {
+                foregroundStrata = PlacementStrataEnums.STRATA_FOREGROUND;
+                if (SpellFxApi.HasSpellParam(this.spell, "foregroundGfxShowUnder"))
+                {
+                    foregroundStrata = PlacementStrataEnums.STRATA_SPELL_BACKGROUND;
+                };
+                background = (FxApi.CreateGfxEntity(SpellFxApi.GetSpellParam(this.spell, "foregroundGfxId"), MapPoint.fromCellId(272)) as Projectile);
+                addBackgroundStep = SequenceApi.CreateAddWorldEntityStep(background, foregroundStrata);
+                SpellFxApi.AddFrontStep(this.runner, addBackgroundStep);
+                destroyMissileStep = SequenceApi.CreateDestroyEntityStep(background);
+                SpellFxApi.AddBackStep(this.runner, destroyMissileStep);
+            };
+        }
+
         protected function destroy():void
         {
             this.latestStep = null;
@@ -249,5 +300,5 @@
 
 
     }
-}//package com.ankamagames.dofus.scripts.spells
+} com.ankamagames.dofus.scripts.spells
 

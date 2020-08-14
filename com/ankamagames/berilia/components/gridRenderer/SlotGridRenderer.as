@@ -1,13 +1,11 @@
-﻿package com.ankamagames.berilia.components.gridRenderer
+package com.ankamagames.berilia.components.gridRenderer
 {
     import com.ankamagames.berilia.interfaces.IGridRenderer;
-    import com.ankamagames.jerakine.interfaces.ICustomSecureObject;
     import com.ankamagames.jerakine.logger.Logger;
-    import com.ankamagames.berilia.components.Grid;
-    import com.ankamagames.jerakine.types.Uri;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
-    import com.ankamagames.berilia.managers.SecureCenter;
+    import com.ankamagames.berilia.components.Grid;
+    import com.ankamagames.jerakine.types.Uri;
     import com.ankamagames.berilia.components.Slot;
     import flash.display.DisplayObject;
     import com.ankamagames.jerakine.interfaces.ISlotData;
@@ -21,47 +19,45 @@
     import com.ankamagames.berilia.UIComponent;
     import gs.events.TweenEvent;
 
-    [RendererArgs(emptySlotTexture="com.ankamagames.jerakine.types::Uri", overTexture="com.ankamagames.jerakine.types::Uri", selectedTexture="com.ankamagames.jerakine.types::Uri", dropAllowedTexture="com.ankamagames.jerakine.types::Uri", dropRefusedTexture="com.ankamagames.jerakine.types::Uri", timerTexture="com.ankamagames.jerakine.types::Uri", quantityFont="String", allowDrop="Boolean", buttonMode="Boolean")]
-    public class SlotGridRenderer implements IGridRenderer, ICustomSecureObject 
+    public class SlotGridRenderer implements IGridRenderer 
     {
 
-        protected var _log:Logger;
+        protected var _log:Logger = Log.getLogger(getQualifiedClassName(SlotGridRenderer));
         private var _grid:Grid;
         private var _emptyTexture:Uri;
+        private var _backgroundTexture:Uri;
         private var _overTexture:Uri;
         private var _selectedTexture:Uri;
         private var _acceptDragTexture:Uri;
         private var _refuseDragTexture:Uri;
-        private var _customTexture:Uri;
         private var _timerTexture:Uri;
         private var _cssUri:Uri;
         private var _allowDrop:Boolean;
         private var _isButton:Boolean;
         private var _hideQuantities:Boolean = false;
-        [Untrusted]
+        private var _useTextureCache:Boolean = true;
+        private var _activeFunctionName:String = null;
         public var dropValidatorFunction:Function;
-        [Untrusted]
         public var processDropFunction:Function;
-        [Untrusted]
         public var removeDropSourceFunction:Function;
 
         public function SlotGridRenderer(strParams:String)
         {
-            this._log = Log.getLogger(getQualifiedClassName(SlotGridRenderer));
-            super();
             var params:Array = ((strParams) ? strParams.split(",") : []);
-            this._emptyTexture = ((((params[0]) && (params[0].length))) ? new Uri(params[0]) : null);
-            this._overTexture = ((((params[1]) && (params[1].length))) ? new Uri(params[1]) : null);
-            this._selectedTexture = ((((params[2]) && (params[2].length))) ? new Uri(params[2]) : null);
-            this._acceptDragTexture = ((((params[3]) && (params[3].length))) ? new Uri(params[3]) : null);
-            this._refuseDragTexture = ((((params[4]) && (params[4].length))) ? new Uri(params[4]) : null);
-            this._timerTexture = ((((params[5]) && (params[5].length))) ? new Uri(params[5]) : null);
-            this._cssUri = ((((params[6]) && (params[6].length))) ? new Uri(params[6]) : null);
-            this._allowDrop = ((((params[7]) && (params[7].length))) ? (params[7] == "true") : true);
-            this._isButton = ((((params[8]) && (params[8].length))) ? (params[8] == "true") : false);
+            this._emptyTexture = (((params[0]) && (params[0].length)) ? new Uri(params[0]) : null);
+            this._overTexture = (((params[1]) && (params[1].length)) ? new Uri(params[1]) : null);
+            this._selectedTexture = (((params[2]) && (params[2].length)) ? new Uri(params[2]) : null);
+            this._acceptDragTexture = (((params[3]) && (params[3].length)) ? new Uri(params[3]) : null);
+            this._refuseDragTexture = (((params[4]) && (params[4].length)) ? new Uri(params[4]) : null);
+            this._timerTexture = (((params[5]) && (params[5].length)) ? new Uri(params[5]) : null);
+            this._cssUri = (((params[6]) && (params[6].length)) ? new Uri(params[6]) : null);
+            this._allowDrop = (((params[7]) && (params[7].length)) ? (params[7] == "true") : true);
+            this._isButton = (((params[8]) && (params[8].length)) ? (params[8] == "true") : false);
+            this._useTextureCache = (((params[9]) && (params[9].length)) ? ((params[9] == "true") ? true : false) : true);
+            this._activeFunctionName = (((params[10]) && (params[10].length)) ? params[10] : null);
+            this._backgroundTexture = (((params[11]) && (params[11].length)) ? new Uri(params[11]) : null);
         }
 
-        [Untrusted]
         public function set allowDrop(pAllow:Boolean):void
         {
             this._allowDrop = pAllow;
@@ -72,7 +68,6 @@
             return (this._allowDrop);
         }
 
-        [Untrusted]
         public function set isButton(pButton:Boolean):void
         {
             this._isButton = pButton;
@@ -83,7 +78,6 @@
             return (this._isButton);
         }
 
-        [Untrusted]
         public function set hideQuantities(value:Boolean):void
         {
             this._hideQuantities = value;
@@ -94,60 +88,62 @@
             return (this._hideQuantities);
         }
 
+        [Uri]
         public function get acceptDragTexture():Uri
         {
             return (this._acceptDragTexture);
         }
 
-        [Untrusted]
+        [Uri]
         public function set acceptDragTexture(uri:Uri):void
         {
             this._acceptDragTexture = uri;
         }
 
+        [Uri]
         public function get refuseDragTexture():Uri
         {
             return (this._refuseDragTexture);
         }
 
-        [Untrusted]
+        [Uri]
         public function set refuseDragTexture(uri:Uri):void
         {
             this._refuseDragTexture = uri;
         }
 
-        public function get customTexture():Uri
-        {
-            return (this._customTexture);
-        }
-
-        [Untrusted]
-        public function set customTexture(uri:Uri):void
-        {
-            this._customTexture = uri;
-        }
-
-        [Untrusted]
         public function set grid(g:Grid):void
         {
             this._grid = g;
         }
 
+        public function set useTextureCache(pUseCache:Boolean):void
+        {
+            this._useTextureCache = pUseCache;
+        }
+
+        public function get useTextureCache():Boolean
+        {
+            return (this._useTextureCache);
+        }
+
         public function render(data:*, index:uint, selected:Boolean, subIndex:uint=0):DisplayObject
         {
-            var slotData:* = SecureCenter.unsecure(data);
+            var slotData:* = data;
             var slot:Slot = new Slot();
             slot.name = ((((this._grid.getUi().name + "::") + this._grid.name) + "::item") + index);
             slot.mouseEnabled = true;
             slot.emptyTexture = this._emptyTexture;
+            slot.forcedBackGroundIconUri = this._backgroundTexture;
             slot.highlightTexture = this._overTexture;
             slot.timerTexture = this._timerTexture;
             slot.selectedTexture = this._selectedTexture;
             slot.acceptDragTexture = this._acceptDragTexture;
             slot.refuseDragTexture = this._refuseDragTexture;
-            slot.customTexture = this._customTexture;
             slot.css = this._cssUri;
             slot.isButton = this._isButton;
+            slot.useTextureCache = this._useTextureCache;
+            slot.isActiveFunction = ((this._activeFunctionName) ? this._grid.getUi().uiClass[this._activeFunctionName] : null);
             if (this._hideQuantities)
             {
                 slot.hideTopLabel = true;
@@ -209,8 +205,10 @@
             if ((dispObj is Slot))
             {
                 slot = Slot(dispObj);
-                slot.data = (SecureCenter.unsecure(data) as ISlotData);
-                if (!(this._isButton))
+                slot.width = this._grid.slotWidth;
+                slot.height = this._grid.slotHeight;
+                slot.data = (data as ISlotData);
+                if (!this._isButton)
                 {
                     slot.selected = selected;
                     slot.allowDrag = this._allowDrop;
@@ -227,6 +225,11 @@
                 slot.dropValidator = this._dropValidatorFunction;
                 slot.removeDropSource = this._removeDropSourceFunction;
                 slot.processDrop = this._processDrop;
+                if ((((((data) && (!(getQualifiedClassName(data).indexOf("ItemWrapper") == -1))) && (!(data.linked))) && (data.forcedBackGroundIconUri)) && (!(data.forcedBackGroundIconUri.fileName.indexOf("linkedSlot") == -1))))
+                {
+                    data.forcedBackGroundIconUri = null;
+                    slot.refresh();
+                };
             }
             else
             {
@@ -241,7 +244,7 @@
 
         public function remove(dispObj:DisplayObject):void
         {
-            if ((((dispObj is Slot)) && (dispObj.parent)))
+            if (((dispObj is Slot) && (dispObj.parent)))
             {
                 Slot(dispObj).remove();
             };
@@ -251,12 +254,12 @@
         {
             this._grid = null;
             this._emptyTexture = null;
+            this._backgroundTexture = null;
             this._overTexture = null;
             this._timerTexture = null;
             this._selectedTexture = null;
             this._acceptDragTexture = null;
             this._refuseDragTexture = null;
-            this._customTexture = null;
             this._cssUri = null;
         }
 
@@ -265,6 +268,10 @@
             var linkCursor:LinkedCursorData;
             var pt:Point;
             var tweenTarget:DisplayObject;
+            if (!this._allowDrop)
+            {
+                return;
+            };
             if (this.processDropFunction != null)
             {
                 this.processDropFunction(target, data, source);
@@ -333,5 +340,5 @@
 
 
     }
-}//package com.ankamagames.berilia.components.gridRenderer
+} com.ankamagames.berilia.components.gridRenderer
 

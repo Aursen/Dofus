@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.types.zones
+package com.ankamagames.jerakine.types.zones
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
@@ -7,6 +7,7 @@
     import __AS3__.vec.Vector;
     import com.ankamagames.jerakine.types.positions.MapPoint;
     import com.ankamagames.jerakine.types.enums.DirectionsEnum;
+    import mapTools.MapTools;
     import __AS3__.vec.*;
 
     public class Line implements IZone 
@@ -18,6 +19,9 @@
         private var _minRadius:uint = 0;
         private var _nDirection:uint = 1;
         private var _dataMapProvider:IDataMapProvider;
+        private var _fromCaster:Boolean;
+        private var _stopAtTarget:Boolean;
+        private var _casterCellId:uint;
 
         public function Line(nRadius:uint, dataMapProvider:IDataMapProvider)
         {
@@ -37,7 +41,7 @@
 
         public function get surface():uint
         {
-            return ((this._radius + 1));
+            return (this._radius + 1);
         }
 
         public function set minRadius(r:uint):void
@@ -60,15 +64,52 @@
             return (this._nDirection);
         }
 
+        public function set fromCaster(b:Boolean):void
+        {
+            this._fromCaster = b;
+        }
+
+        public function get fromCaster():Boolean
+        {
+            return (this._fromCaster);
+        }
+
+        public function set stopAtTarget(b:Boolean):void
+        {
+            this._stopAtTarget = b;
+        }
+
+        public function get stopAtTarget():Boolean
+        {
+            return (this._stopAtTarget);
+        }
+
+        public function set casterCellId(c:uint):void
+        {
+            this._casterCellId = c;
+        }
+
+        public function get casterCellId():uint
+        {
+            return (this._casterCellId);
+        }
+
         public function getCells(cellId:uint=0):Vector.<uint>
         {
             var added:Boolean;
+            var distance:uint;
             var aCells:Vector.<uint> = new Vector.<uint>();
-            var origin:MapPoint = MapPoint.fromCellId(cellId);
+            var origin:MapPoint = ((this._fromCaster) ? MapPoint.fromCellId(this.casterCellId) : MapPoint.fromCellId(cellId));
             var x:int = origin.x;
             var y:int = origin.y;
+            var length:uint = ((this.fromCaster) ? ((this._radius + this._minRadius) - 1) : this._radius);
+            if (((this.fromCaster) && (this.stopAtTarget)))
+            {
+                distance = origin.distanceToCell(MapPoint.fromCellId(cellId));
+                length = ((distance < length) ? distance : length);
+            };
             var r:int = this._minRadius;
-            while (r <= this._radius)
+            while (r <= length)
             {
                 switch (this._nDirection)
                 {
@@ -128,9 +169,9 @@
 
         private function addCell(x:int, y:int, cellMap:Vector.<uint>):Boolean
         {
-            if ((((this._dataMapProvider == null)) || (this._dataMapProvider.pointMov(x, y))))
+            if (((this._dataMapProvider == null) || (this._dataMapProvider.pointMov(x, y))))
             {
-                cellMap.push(MapPoint.fromCoords(x, y).cellId);
+                cellMap.push(MapTools.getCellIdByCoord(x, y));
                 return (true);
             };
             return (false);
@@ -138,5 +179,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.types.zones
+} com.ankamagames.jerakine.types.zones
 

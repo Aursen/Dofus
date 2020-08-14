@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.utils.benchmark.monitoring
+package com.ankamagames.jerakine.utils.benchmark.monitoring
 {
     import flash.events.Event;
 
@@ -7,11 +7,11 @@
 
         public var data:Object;
 
-        public function FpsManagerEvent(type:String, bubbles:Boolean=false, cancelable:Boolean=false)
+        public function FpsManagerEvent(_arg_1:String, bubbles:Boolean=false, cancelable:Boolean=false)
         {
-            super(type, bubbles, cancelable);
+            super(_arg_1, bubbles, cancelable);
         }
 
     }
-}//package com.ankamagames.jerakine.utils.benchmark.monitoring
+} com.ankamagames.jerakine.utils.benchmark.monitoring
 

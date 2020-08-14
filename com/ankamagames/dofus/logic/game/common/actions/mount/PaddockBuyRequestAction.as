@@ -1,14 +1,14 @@
-﻿package com.ankamagames.dofus.logic.game.common.actions.mount
+package com.ankamagames.dofus.logic.game.common.actions.mount
 {
     import com.ankamagames.jerakine.handlers.messages.Action;
 
     public class PaddockBuyRequestAction implements Action 
     {
 
-        public var proposedPrice:uint;
+        public var proposedPrice:Number = 0;
 
 
-        public static function create(proposedPrice:uint):PaddockBuyRequestAction
+        public static function create(proposedPrice:Number):PaddockBuyRequestAction
         {
             var action:PaddockBuyRequestAction = new (PaddockBuyRequestAction)();
             action.proposedPrice = proposedPrice;
@@ -17,5 +17,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.actions.mount
+} com.ankamagames.dofus.logic.game.common.actions.mount
 

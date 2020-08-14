@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.internalDatacenter.communication
+package com.ankamagames.dofus.internalDatacenter.communication
 {
     import flash.utils.Proxy;
     import com.ankamagames.jerakine.interfaces.IDataCenter;
@@ -79,7 +79,7 @@
 
         public function get iconUri():Uri
         {
-            if (!(this._uri))
+            if (!this._uri)
             {
                 this._uri = new Uri(XmlConfig.getInstance().getEntry("config.content.path").concat("gfx/emotes/").concat(this.id).concat(".png"));
             };
@@ -88,7 +88,7 @@
 
         public function get fullSizeIconUri():Uri
         {
-            if (!(this._uri))
+            if (!this._uri)
             {
                 this._uri = new Uri(XmlConfig.getInstance().getEntry("config.content.path").concat("gfx/emotes/").concat(this.id).concat(".png"));
             };
@@ -163,7 +163,7 @@
             return (true);
         }
 
-        override flash_proxy function getProperty(name:*)
+        override flash_proxy function getProperty(name:*):*
         {
             var l:* = undefined;
             var r:* = undefined;
@@ -172,7 +172,7 @@
                 return (this[name]);
             };
             l = this.emote;
-            if (!(l))
+            if (!l)
             {
                 r = "";
             };
@@ -182,7 +182,7 @@
             }
             catch(e:Error)
             {
-                return (("Error_on_item_" + name));
+                return ("Error_on_item_" + name);
             };
         }
 
@@ -193,7 +193,7 @@
 
         public function toString():String
         {
-            return ((("[EmoteWrapper#" + this.id) + "]"));
+            return (("[EmoteWrapper#" + this.id) + "]");
         }
 
         public function addHolder(h:ISlotDataHolder):void
@@ -213,7 +213,7 @@
 
         public function getIconUri(pngMode:Boolean=true):Uri
         {
-            if (!(this._uri))
+            if (!this._uri)
             {
                 this._uri = new Uri(XmlConfig.getInstance().getEntry("config.content.path").concat("gfx/emotes/").concat(this.id).concat(".png"));
             };
@@ -222,5 +222,5 @@
 
 
     }
-}//package com.ankamagames.dofus.internalDatacenter.communication
+} com.ankamagames.dofus.internalDatacenter.communication
 

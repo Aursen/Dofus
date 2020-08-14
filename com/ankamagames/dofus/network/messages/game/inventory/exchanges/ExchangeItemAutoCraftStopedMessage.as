@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.inventory.exchanges
+package com.ankamagames.dofus.network.messages.game.inventory.exchanges
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class ExchangeItemAutoCraftStopedMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -52,6 +52,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_ExchangeItemAutoCraftStopedMessage(output);
@@ -69,10 +77,25 @@
 
         public function deserializeAs_ExchangeItemAutoCraftStopedMessage(input:ICustomDataInput):void
         {
+            this._reasonFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_ExchangeItemAutoCraftStopedMessage(tree);
+        }
+
+        public function deserializeAsyncAs_ExchangeItemAutoCraftStopedMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._reasonFunc);
+        }
+
+        private function _reasonFunc(input:ICustomDataInput):void
+        {
             this.reason = input.readByte();
         }
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.inventory.exchanges
+} com.ankamagames.dofus.network.messages.game.inventory.exchanges
 

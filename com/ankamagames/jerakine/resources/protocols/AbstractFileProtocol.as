@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.resources.protocols
+package com.ankamagames.jerakine.resources.protocols
 {
     import com.ankamagames.jerakine.resources.IResourceObserver;
     import flash.utils.Dictionary;
@@ -11,7 +11,8 @@
     {
 
         private static var _loadingFile:Dictionary = new Dictionary(true);
-        private static var _singleLoadingFile:Dictionary = new Dictionary(true);
+
+        protected var _singleFileObserver:IResourceObserver;
 
 
         public function initAdapter(uri:Uri, forcedAdapter:Class):void
@@ -21,7 +22,7 @@
 
         public function getUrl(uri:Uri):String
         {
-            if (((((!((uri.fileType == "swf"))) || (!(uri.subPath)))) || ((uri.subPath.length == 0))))
+            if ((((!(uri.fileType == "swf")) || (!(uri.subPath))) || (uri.subPath.length == 0)))
             {
                 return (uri.normalizedUri);
             };
@@ -35,7 +36,6 @@
                 _adapter.free();
             };
             _loadingFile = new Dictionary(true);
-            _singleLoadingFile = new Dictionary(true);
         }
 
         public function get adapter():IAdapter
@@ -51,16 +51,6 @@
         public function set loadingFile(value:Dictionary):void
         {
             _loadingFile = value;
-        }
-
-        public function get singleLoadingFile():Dictionary
-        {
-            return (_singleLoadingFile);
-        }
-
-        public function set singleLoadingFile(value:Dictionary):void
-        {
-            _singleLoadingFile = value;
         }
 
         public function load(uri:Uri, observer:IResourceObserver, dispatchProgress:Boolean, cache:ICache, forcedAdapter:Class, singleFile:Boolean):void
@@ -90,5 +80,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.resources.protocols
+} com.ankamagames.jerakine.resources.protocols
 

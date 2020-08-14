@@ -1,8 +1,9 @@
-﻿package com.ankamagames.dofus.network.types.game.data.items
+package com.ankamagames.dofus.network.types.game.data.items
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import __AS3__.vec.Vector;
     import com.ankamagames.dofus.network.types.game.data.items.effects.ObjectEffect;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
     import com.ankamagames.dofus.network.ProtocolTypeManager;
@@ -15,15 +16,11 @@
 
         public var position:uint = 63;
         public var objectGID:uint = 0;
-        public var effects:Vector.<ObjectEffect>;
+        public var effects:Vector.<ObjectEffect> = new Vector.<ObjectEffect>();
         public var objectUID:uint = 0;
         public var quantity:uint = 0;
+        private var _effectstree:FuncTree;
 
-        public function ObjectItem()
-        {
-            this.effects = new Vector.<ObjectEffect>();
-            super();
-        }
 
         override public function getTypeId():uint
         {
@@ -57,7 +54,7 @@
         public function serializeAs_ObjectItem(output:ICustomDataOutput):void
         {
             super.serializeAs_Item(output);
-            output.writeByte(this.position);
+            output.writeShort(this.position);
             if (this.objectGID < 0)
             {
                 throw (new Error((("Forbidden value (" + this.objectGID) + ") on element objectGID.")));
@@ -93,16 +90,8 @@
             var _id3:uint;
             var _item3:ObjectEffect;
             super.deserialize(input);
-            this.position = input.readUnsignedByte();
-            if ((((this.position < 0)) || ((this.position > 0xFF))))
-            {
-                throw (new Error((("Forbidden value (" + this.position) + ") on element of ObjectItem.position.")));
-            };
-            this.objectGID = input.readVarUhShort();
-            if (this.objectGID < 0)
-            {
-                throw (new Error((("Forbidden value (" + this.objectGID) + ") on element of ObjectItem.objectGID.")));
-            };
+            this._positionFunc(input);
+            this._objectGIDFunc(input);
             var _effectsLen:uint = input.readUnsignedShort();
             var _i3:uint;
             while (_i3 < _effectsLen)
@@ -113,11 +102,73 @@
                 this.effects.push(_item3);
                 _i3++;
             };
+            this._objectUIDFunc(input);
+            this._quantityFunc(input);
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_ObjectItem(tree);
+        }
+
+        public function deserializeAsyncAs_ObjectItem(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._positionFunc);
+            tree.addChild(this._objectGIDFunc);
+            this._effectstree = tree.addChild(this._effectstreeFunc);
+            tree.addChild(this._objectUIDFunc);
+            tree.addChild(this._quantityFunc);
+        }
+
+        private function _positionFunc(input:ICustomDataInput):void
+        {
+            this.position = input.readShort();
+            if (this.position < 0)
+            {
+                throw (new Error((("Forbidden value (" + this.position) + ") on element of ObjectItem.position.")));
+            };
+        }
+
+        private function _objectGIDFunc(input:ICustomDataInput):void
+        {
+            this.objectGID = input.readVarUhShort();
+            if (this.objectGID < 0)
+            {
+                throw (new Error((("Forbidden value (" + this.objectGID) + ") on element of ObjectItem.objectGID.")));
+            };
+        }
+
+        private function _effectstreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._effectstree.addChild(this._effectsFunc);
+                i++;
+            };
+        }
+
+        private function _effectsFunc(input:ICustomDataInput):void
+        {
+            var _id:uint = input.readUnsignedShort();
+            var _item:ObjectEffect = ProtocolTypeManager.getInstance(ObjectEffect, _id);
+            _item.deserialize(input);
+            this.effects.push(_item);
+        }
+
+        private function _objectUIDFunc(input:ICustomDataInput):void
+        {
             this.objectUID = input.readVarUhInt();
             if (this.objectUID < 0)
             {
                 throw (new Error((("Forbidden value (" + this.objectUID) + ") on element of ObjectItem.objectUID.")));
             };
+        }
+
+        private function _quantityFunc(input:ICustomDataInput):void
+        {
             this.quantity = input.readVarUhInt();
             if (this.quantity < 0)
             {
@@ -127,5 +178,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.data.items
+} com.ankamagames.dofus.network.types.game.data.items
 

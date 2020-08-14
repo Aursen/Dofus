@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.types
+package com.ankamagames.jerakine.types
 {
     public class SoundEventParamWrapper 
     {
@@ -11,8 +11,9 @@
         public var berceauFadeIn:int;
         public var berceauFadeOut:int;
         public var noCutSilence:Boolean;
+        public var isLocalized:int;
 
-        public function SoundEventParamWrapper(pId:String, pVolume:uint, pRollOff:uint, pBerceauDuree:int=-1, pBerceauVol:int=-1, pBerceauFadeIn:int=-1, pBerceauFadeOut:int=-1, pNoCutSilence:Boolean=false)
+        public function SoundEventParamWrapper(pId:String, pVolume:uint, pRollOff:uint, pBerceauDuree:int=-1, pBerceauVol:int=-1, pBerceauFadeIn:int=-1, pBerceauFadeOut:int=-1, pNoCutSilence:Boolean=false, pIsLocalized:int=-1)
         {
             this.id = pId;
             this.volume = pVolume;
@@ -22,8 +23,9 @@
             this.berceauFadeIn = pBerceauFadeIn;
             this.berceauFadeOut = pBerceauFadeOut;
             this.noCutSilence = pNoCutSilence;
+            this.isLocalized = pIsLocalized;
         }
 
     }
-}//package com.ankamagames.jerakine.types
+} com.ankamagames.jerakine.types
 

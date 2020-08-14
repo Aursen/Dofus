@@ -1,4 +1,4 @@
-﻿package com.ankamagames.tiphon.sequence
+package com.ankamagames.tiphon.sequence
 {
     import com.ankamagames.jerakine.sequencer.AbstractSequencable;
     import com.ankamagames.tiphon.display.TiphonSprite;
@@ -33,10 +33,10 @@
 
         override public function toString():String
         {
-            return (((("set animation " + this._animation) + " on ") + this._target.name));
+            return ((("set animation " + this._animation) + " on ") + this._target.name);
         }
 
 
     }
-}//package com.ankamagames.tiphon.sequence
+} com.ankamagames.tiphon.sequence
 

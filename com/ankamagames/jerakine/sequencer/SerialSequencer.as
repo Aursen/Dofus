@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.sequencer
+package com.ankamagames.jerakine.sequencer
 {
     import flash.events.EventDispatcher;
     import flash.events.IEventDispatcher;
@@ -16,7 +16,7 @@
         public static const DEFAULT_SEQUENCER_NAME:String = "SerialSequencerDefault";
         private static var SEQUENCERS:Array = [];
 
-        private var _aStep:Array;
+        private var _aStep:Array = new Array();
         private var _currentStep:ISequencable;
         private var _lastStep:ISequencable;
         private var _running:Boolean = false;
@@ -25,25 +25,23 @@
         private var _paused:Boolean;
         private var _defaultStepTimeout:int = -2147483648;
 
-        public function SerialSequencer(type:String="SerialSequencerDefault")
+        public function SerialSequencer(_arg_1:String="SerialSequencerDefault")
         {
-            this._aStep = new Array();
-            super();
-            if (!(SEQUENCERS[type]))
+            if (!SEQUENCERS[_arg_1])
             {
-                SEQUENCERS[type] = new Dictionary(true);
+                SEQUENCERS[_arg_1] = new Dictionary(true);
             };
-            SEQUENCERS[type][this] = true;
+            SEQUENCERS[_arg_1][this] = true;
         }
 
-        public static function clearByType(type:String):void
+        public static function clearByType(_arg_1:String):void
         {
             var seq:Object;
-            for (seq in SEQUENCERS[type])
+            for (seq in SEQUENCERS[_arg_1])
             {
                 SerialSequencer(seq).clear();
             };
-            delete SEQUENCERS[type];
+            delete SEQUENCERS[_arg_1];
         }
 
 
@@ -120,12 +118,19 @@
 
         public function start():void
         {
-            if (!(this._running))
+            if (!this._running)
             {
-                this._running = !((this._aStep.length == 0));
+                this._running = (!(this._aStep.length == 0));
                 if (this._running)
                 {
-                    this.execute();
+                    while (((this._aStep.length > 0) && (this._running)))
+                    {
+                        this.execute();
+                        if (((((this._currentStep) && (this._currentStep is AbstractSequencable)) && (!((this._currentStep as AbstractSequencable).finished))) && (!(this.areUnfinishedParallelStepsLeft()))))
+                        {
+                            this._running = false;
+                        };
+                    };
                 }
                 else
                 {
@@ -166,11 +171,29 @@
             return (str);
         }
 
+        private function areUnfinishedParallelStepsLeft():Boolean
+        {
+            var currentStep:ISequencable;
+            var parallelStep:ParallelStartSequenceStep;
+            for each (currentStep in this._aStep)
+            {
+                if ((currentStep is ParallelStartSequenceStep))
+                {
+                    parallelStep = (currentStep as ParallelStartSequenceStep);
+                    if (!parallelStep.finished)
+                    {
+                        return (true);
+                    };
+                };
+            };
+            return (false);
+        }
+
         private function execute():void
         {
             this._lastStep = this._currentStep;
             this._currentStep = this._aStep.shift();
-            if (!(this._currentStep))
+            if (!this._currentStep)
             {
                 return;
             };
@@ -183,7 +206,7 @@
                     this._activeSubSequenceCount++;
                     ISubSequenceSequencable(this._currentStep).addEventListener(SequencerEvent.SEQUENCE_END, this.onSubSequenceEnd);
                 };
-                if (((!((this._defaultStepTimeout == int.MIN_VALUE))) && (this._currentStep.hasDefaultTimeout)))
+                if (((!(this._defaultStepTimeout == int.MIN_VALUE)) && (this._currentStep.hasDefaultTimeout)))
                 {
                     this._currentStep.timeout = this._defaultStepTimeout;
                 };
@@ -201,6 +224,10 @@
                     ISubSequenceSequencable(_currentStep).removeEventListener(SequencerEvent.SEQUENCE_END, onSubSequenceEnd);
                 };
                 _log.error(((("Exception sur la step " + _currentStep) + " : \n") + e.getStackTrace()));
+                if ((_currentStep is AbstractSequencable))
+                {
+                    (_currentStep as AbstractSequencable).finished = true;
+                };
                 stepFinished(_currentStep);
             };
         }
@@ -218,10 +245,10 @@
                 {
                     dispatchEvent(new SequencerEvent(SequencerEvent.SEQUENCE_STEP_FINISH, this, this._currentStep));
                 };
-                this._running = !((this._aStep.length == 0));
-                if (!(this._running))
+                this._running = (!(this._aStep.length == 0));
+                if (!this._running)
                 {
-                    if (!(this._activeSubSequenceCount))
+                    if (!this._activeSubSequenceCount)
                     {
                         dispatchEvent(new SequencerEvent(SequencerEvent.SEQUENCE_END, this));
                     }
@@ -229,10 +256,6 @@
                     {
                         this._running = true;
                     };
-                }
-                else
-                {
-                    this.execute();
                 };
             }
             else
@@ -241,13 +264,14 @@
                 {
                     dispatchEvent(new SequencerEvent(SequencerEvent.SEQUENCE_STEP_FINISH, this, this._currentStep));
                 };
+                this.start();
             };
         }
 
         private function onSubSequenceEnd(e:SequencerEvent):void
         {
             this._activeSubSequenceCount--;
-            if (!(this._activeSubSequenceCount))
+            if (((!(this._activeSubSequenceCount)) && (!(this.areUnfinishedParallelStepsLeft()))))
             {
                 this._running = false;
                 dispatchEvent(new SequencerEvent(SequencerEvent.SEQUENCE_END, this));
@@ -256,5 +280,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.sequencer
+} com.ankamagames.jerakine.sequencer
 

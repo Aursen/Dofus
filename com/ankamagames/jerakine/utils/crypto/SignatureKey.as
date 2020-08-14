@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.utils.crypto
+package com.ankamagames.jerakine.utils.crypto
 {
     import com.hurlant.crypto.rsa.RSAKey;
     import com.hurlant.math.BigInteger;
@@ -21,7 +21,7 @@
         {
             var k:RSAKey;
             var header:String = input.readUTF();
-            if (((!((header == PUBLIC_KEY_HEADER))) && (!((header == PRIVATE_KEY_HEADER)))))
+            if (((!(header == PUBLIC_KEY_HEADER)) && (!(header == PRIVATE_KEY_HEADER))))
             {
                 throw (Error("Invalid public or private header"));
             };
@@ -33,7 +33,7 @@
             {
                 k = RSAKey.parsePrivateKey(input.readUTF(), input.readUTF(), input.readUTF(), input.readUTF(), input.readUTF(), input.readUTF(), input.readUTF(), input.readUTF());
             };
-            return (new (SignatureKey)(k.n, k.e, k.d, k.p, k.q, k.dmp1, k.dmq1, k.coeff));
+            return (new SignatureKey(k.n, k.e, k.d, k.p, k.q, k.dmp1, k.dmq1, k.coeff));
         }
 
 
@@ -44,5 +44,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.utils.crypto
+} com.ankamagames.jerakine.utils.crypto
 

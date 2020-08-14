@@ -1,4 +1,4 @@
-﻿package com.ankamagames.atouin.enums
+package com.ankamagames.atouin.enums
 {
     public class ElementTypesEnum 
     {
@@ -8,5 +8,5 @@
 
 
     }
-}//package com.ankamagames.atouin.enums
+} com.ankamagames.atouin.enums
 

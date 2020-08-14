@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.inventory.exchanges
+package com.ankamagames.dofus.network.messages.game.inventory.exchanges
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,16 +6,16 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class ExchangeOkMultiCraftMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 5768;
 
         private var _isInitialized:Boolean = false;
-        public var initiatorId:uint = 0;
-        public var otherId:uint = 0;
+        public var initiatorId:Number = 0;
+        public var otherId:Number = 0;
         public var role:int = 0;
 
 
@@ -29,7 +29,7 @@
             return (5768);
         }
 
-        public function initExchangeOkMultiCraftMessage(initiatorId:uint=0, otherId:uint=0, role:int=0):ExchangeOkMultiCraftMessage
+        public function initExchangeOkMultiCraftMessage(initiatorId:Number=0, otherId:Number=0, role:int=0):ExchangeOkMultiCraftMessage
         {
             this.initiatorId = initiatorId;
             this.otherId = otherId;
@@ -58,6 +58,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_ExchangeOkMultiCraftMessage(output);
@@ -65,16 +73,16 @@
 
         public function serializeAs_ExchangeOkMultiCraftMessage(output:ICustomDataOutput):void
         {
-            if (this.initiatorId < 0)
+            if (((this.initiatorId < 0) || (this.initiatorId > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.initiatorId) + ") on element initiatorId.")));
             };
-            output.writeVarInt(this.initiatorId);
-            if (this.otherId < 0)
+            output.writeVarLong(this.initiatorId);
+            if (((this.otherId < 0) || (this.otherId > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.otherId) + ") on element otherId.")));
             };
-            output.writeVarInt(this.otherId);
+            output.writeVarLong(this.otherId);
             output.writeByte(this.role);
         }
 
@@ -85,20 +93,47 @@
 
         public function deserializeAs_ExchangeOkMultiCraftMessage(input:ICustomDataInput):void
         {
-            this.initiatorId = input.readVarUhInt();
-            if (this.initiatorId < 0)
+            this._initiatorIdFunc(input);
+            this._otherIdFunc(input);
+            this._roleFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_ExchangeOkMultiCraftMessage(tree);
+        }
+
+        public function deserializeAsyncAs_ExchangeOkMultiCraftMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._initiatorIdFunc);
+            tree.addChild(this._otherIdFunc);
+            tree.addChild(this._roleFunc);
+        }
+
+        private function _initiatorIdFunc(input:ICustomDataInput):void
+        {
+            this.initiatorId = input.readVarUhLong();
+            if (((this.initiatorId < 0) || (this.initiatorId > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.initiatorId) + ") on element of ExchangeOkMultiCraftMessage.initiatorId.")));
             };
-            this.otherId = input.readVarUhInt();
-            if (this.otherId < 0)
+        }
+
+        private function _otherIdFunc(input:ICustomDataInput):void
+        {
+            this.otherId = input.readVarUhLong();
+            if (((this.otherId < 0) || (this.otherId > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.otherId) + ") on element of ExchangeOkMultiCraftMessage.otherId.")));
             };
+        }
+
+        private function _roleFunc(input:ICustomDataInput):void
+        {
             this.role = input.readByte();
         }
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.inventory.exchanges
+} com.ankamagames.dofus.network.messages.game.inventory.exchanges
 

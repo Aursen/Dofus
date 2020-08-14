@@ -1,4 +1,4 @@
-﻿package com.ankamagames.atouin.messages
+package com.ankamagames.atouin.messages
 {
     import flash.display.Sprite;
     import com.ankamagames.jerakine.types.positions.MapPoint;
@@ -54,5 +54,5 @@
 
 
     }
-}//package com.ankamagames.atouin.messages
+} com.ankamagames.atouin.messages
 

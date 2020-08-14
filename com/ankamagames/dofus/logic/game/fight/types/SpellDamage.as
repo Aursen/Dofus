@@ -1,521 +1,385 @@
-﻿package com.ankamagames.dofus.logic.game.fight.types
+package com.ankamagames.dofus.logic.game.fight.types
 {
+    import com.ankamagames.jerakine.logger.Logger;
+    import com.ankamagames.jerakine.logger.Log;
+    import flash.utils.getQualifiedClassName;
     import __AS3__.vec.Vector;
+    import damageCalculation.damageManagement.DamageRange;
+    import tools.enumeration.ElementEnum;
     import com.ankamagames.jerakine.data.XmlConfig;
-    import com.ankamagames.dofus.network.enums.ChatActivableChannelsEnum;
-    import com.ankamagames.jerakine.managers.OptionManager;
     import com.ankamagames.berilia.managers.HtmlManager;
     import com.ankamagames.dofus.datacenter.spells.SpellState;
+    import com.ankamagames.dofus.internalDatacenter.DataEnum;
+    import com.ankamagames.jerakine.data.I18n;
     import __AS3__.vec.*;
 
     public class SpellDamage 
     {
 
+        protected static const _log:Logger = Log.getLogger(getQualifiedClassName(SpellDamage));
+        public static const DAMAGE_TYPE_COUNT:int = 4;
+        public static const LIFE_DAMAGES:int = 0;
+        public static const SHIELD_DAMAGES:int = 1;
+        public static const SHIELD_ADDED:int = 2;
+        public static const LIFE_ADDED:int = 3;
+        public static const CRITICAL_COUNT:int = 2;
+        public static const NORMAL:int = 0;
+        public static const CRITICAL:int = 1;
+        public static const MIN_MAX_COUNT:int = 3;
+        public static const MIN:int = 0;
+        public static const MAX:int = 1;
+        public static const HAS_ZERO:int = 2;
+
+        private var _damageRanges:Vector.<DamageRange>;
+        private var _randomGroupDamages:Vector.<SpellDamage>;
+        private var group:int = 0;
+        private var _damages:Array;
+        private var _element:Array;
         public var invulnerableState:Boolean;
         public var unhealableState:Boolean;
-        public var hasCriticalDamage:Boolean;
-        public var hasCriticalShieldPointsRemoved:Boolean;
-        public var hasCriticalLifePointsAdded:Boolean;
-        public var isHealingSpell:Boolean;
-        public var hasHeal:Boolean;
-        private var _effectDamages:Vector.<EffectDamage>;
-        private var _minDamage:int;
-        private var _maxDamage:int;
-        private var _minCriticalDamage:int;
-        private var _maxCriticalDamage:int;
-        private var _minShieldPointsRemoved:int;
-        private var _maxShieldPointsRemoved:int;
-        private var _minCriticalShieldPointsRemoved:int;
-        private var _maxCriticalShieldPointsRemoved:int;
-        public var effectIcons:Array;
+        public var telefrag:Boolean = false;
+        public var unknownDamage:Boolean = false;
+        public var effectIcons:Array = [];
 
         public function SpellDamage()
         {
-            this._effectDamages = new Vector.<EffectDamage>();
+            this._damageRanges = new Vector.<DamageRange>();
+            this._randomGroupDamages = new Vector.<SpellDamage>();
+            this._damages = [[[0, 0, 0], [0, 0, 0]], [[0, 0, 0], [0, 0, 0]], [[0, 0, 0], [0, 0, 0]], [[0, 0, 0], [0, 0, 0]]];
+            this._element = [0, 0];
         }
 
-        public function get minDamage():int
-        {
-            var ed:EffectDamage;
-            this._minDamage = 0;
-            for each (ed in this._effectDamages)
-            {
-                this._minDamage = (this._minDamage + ed.minDamage);
-            };
-            return (this._minDamage);
-        }
-
-        public function set minDamage(pMinDamage:int):void
-        {
-            this._minDamage = pMinDamage;
-        }
-
-        public function get maxDamage():int
-        {
-            var ed:EffectDamage;
-            this._maxDamage = 0;
-            for each (ed in this._effectDamages)
-            {
-                this._maxDamage = (this._maxDamage + ed.maxDamage);
-            };
-            return (this._maxDamage);
-        }
-
-        public function set maxDamage(pMaxDamage:int):void
-        {
-            this._maxDamage = pMaxDamage;
-        }
-
-        public function get minCriticalDamage():int
-        {
-            var ed:EffectDamage;
-            this._minCriticalDamage = 0;
-            for each (ed in this._effectDamages)
-            {
-                this._minCriticalDamage = (this._minCriticalDamage + ed.minCriticalDamage);
-            };
-            return (this._minCriticalDamage);
-        }
-
-        public function set minCriticalDamage(pMinCriticalDamage:int):void
-        {
-            this._minCriticalDamage = pMinCriticalDamage;
-        }
-
-        public function get maxCriticalDamage():int
-        {
-            var ed:EffectDamage;
-            this._maxCriticalDamage = 0;
-            for each (ed in this._effectDamages)
-            {
-                this._maxCriticalDamage = (this._maxCriticalDamage + ed.maxCriticalDamage);
-            };
-            return (this._maxCriticalDamage);
-        }
-
-        public function set maxCriticalDamage(pMaxCriticalDamage:int):void
-        {
-            this._maxCriticalDamage = pMaxCriticalDamage;
-        }
-
-        public function get minErosionDamage():int
-        {
-            var minErosion:int;
-            var ed:EffectDamage;
-            for each (ed in this._effectDamages)
-            {
-                minErosion = (minErosion + ed.minErosionDamage);
-            };
-            return (minErosion);
-        }
-
-        public function get maxErosionDamage():int
-        {
-            var maxErosion:int;
-            var ed:EffectDamage;
-            for each (ed in this._effectDamages)
-            {
-                maxErosion = (maxErosion + ed.maxErosionDamage);
-            };
-            return (maxErosion);
-        }
-
-        public function get minCriticalErosionDamage():int
-        {
-            var minCriticalErosion:int;
-            var ed:EffectDamage;
-            for each (ed in this._effectDamages)
-            {
-                minCriticalErosion = (minCriticalErosion + ed.minCriticalErosionDamage);
-            };
-            return (minCriticalErosion);
-        }
-
-        public function get maxCriticalErosionDamage():int
-        {
-            var maxCriticalErosion:int;
-            var ed:EffectDamage;
-            for each (ed in this._effectDamages)
-            {
-                maxCriticalErosion = (maxCriticalErosion + ed.maxCriticalErosionDamage);
-            };
-            return (maxCriticalErosion);
-        }
-
-        public function get minShieldPointsRemoved():int
-        {
-            var ed:EffectDamage;
-            this._minShieldPointsRemoved = 0;
-            for each (ed in this._effectDamages)
-            {
-                this._minShieldPointsRemoved = (this._minShieldPointsRemoved + ed.minShieldPointsRemoved);
-            };
-            return (this._minShieldPointsRemoved);
-        }
-
-        public function set minShieldPointsRemoved(pMinShieldPointsRemoved:int):void
-        {
-            this._minShieldPointsRemoved = pMinShieldPointsRemoved;
-        }
-
-        public function get maxShieldPointsRemoved():int
-        {
-            var ed:EffectDamage;
-            this._maxShieldPointsRemoved = 0;
-            for each (ed in this._effectDamages)
-            {
-                this._maxShieldPointsRemoved = (this._maxShieldPointsRemoved + ed.maxShieldPointsRemoved);
-            };
-            return (this._maxShieldPointsRemoved);
-        }
-
-        public function set maxShieldPointsRemoved(pMaxShieldPointsRemoved:int):void
-        {
-            this._maxShieldPointsRemoved = pMaxShieldPointsRemoved;
-        }
-
-        public function get minCriticalShieldPointsRemoved():int
-        {
-            var ed:EffectDamage;
-            this._minCriticalShieldPointsRemoved = 0;
-            for each (ed in this._effectDamages)
-            {
-                this._minCriticalShieldPointsRemoved = (this._minCriticalShieldPointsRemoved + ed.minCriticalShieldPointsRemoved);
-            };
-            return (this._minCriticalShieldPointsRemoved);
-        }
-
-        public function set minCriticalShieldPointsRemoved(pMinCriticalShieldPointsRemoved:int):void
-        {
-            this._minCriticalShieldPointsRemoved = pMinCriticalShieldPointsRemoved;
-        }
-
-        public function get maxCriticalShieldPointsRemoved():int
-        {
-            var ed:EffectDamage;
-            this._maxCriticalShieldPointsRemoved = 0;
-            for each (ed in this._effectDamages)
-            {
-                this._maxCriticalShieldPointsRemoved = (this._maxCriticalShieldPointsRemoved + ed.maxCriticalShieldPointsRemoved);
-            };
-            return (this._maxCriticalShieldPointsRemoved);
-        }
-
-        public function set maxCriticalShieldPointsRemoved(pMaxCriticalShieldPointsRemoved:int):void
-        {
-            this._maxCriticalShieldPointsRemoved = pMaxCriticalShieldPointsRemoved;
-        }
-
-        public function get minLifePointsAdded():int
-        {
-            var minLife:int;
-            var ed:EffectDamage;
-            for each (ed in this._effectDamages)
-            {
-                minLife = (minLife + ed.minLifePointsAdded);
-            };
-            return (minLife);
-        }
-
-        public function get maxLifePointsAdded():int
-        {
-            var maxLife:int;
-            var ed:EffectDamage;
-            for each (ed in this._effectDamages)
-            {
-                maxLife = (maxLife + ed.maxLifePointsAdded);
-            };
-            return (maxLife);
-        }
-
-        public function get minCriticalLifePointsAdded():int
-        {
-            var minCriticalLife:int;
-            var ed:EffectDamage;
-            for each (ed in this._effectDamages)
-            {
-                minCriticalLife = (minCriticalLife + ed.minCriticalLifePointsAdded);
-            };
-            return (minCriticalLife);
-        }
-
-        public function get maxCriticalLifePointsAdded():int
-        {
-            var maxCriticalLife:int;
-            var ed:EffectDamage;
-            for each (ed in this._effectDamages)
-            {
-                maxCriticalLife = (maxCriticalLife + ed.maxCriticalLifePointsAdded);
-            };
-            return (maxCriticalLife);
-        }
-
-        public function get lifePointsAddedBasedOnLifePercent():int
-        {
-            var lifePointsFromPercent:int;
-            var ed:EffectDamage;
-            for each (ed in this._effectDamages)
-            {
-                lifePointsFromPercent = (lifePointsFromPercent + ed.lifePointsAddedBasedOnLifePercent);
-            };
-            return (lifePointsFromPercent);
-        }
-
-        public function get criticalLifePointsAddedBasedOnLifePercent():int
-        {
-            var criticalLifePointsFromPercent:int;
-            var ed:EffectDamage;
-            for each (ed in this._effectDamages)
-            {
-                criticalLifePointsFromPercent = (criticalLifePointsFromPercent + ed.criticalLifePointsAddedBasedOnLifePercent);
-            };
-            return (criticalLifePointsFromPercent);
-        }
-
-        public function updateDamage():void
-        {
-            this.minDamage;
-            this.maxDamage;
-            this.minCriticalDamage;
-            this.maxCriticalDamage;
-            this.minShieldPointsRemoved;
-            this.maxShieldPointsRemoved;
-            this.minCriticalShieldPointsRemoved;
-            this.maxCriticalShieldPointsRemoved;
-        }
-
-        public function addEffectDamage(pEffectDamage:EffectDamage):void
-        {
-            this._effectDamages.push(pEffectDamage);
-        }
-
-        public function get effectDamages():Vector.<EffectDamage>
-        {
-            return (this._effectDamages);
-        }
-
-        public function get hasRandomEffects():Boolean
-        {
-            var ed:EffectDamage;
-            for each (ed in this._effectDamages)
-            {
-                if (ed.random > 0)
-                {
-                    return (true);
-                };
-            };
-            return (false);
-        }
-
-        public function get random():int
-        {
-            var ed:EffectDamage;
-            var r:int = -1;
-            var first:Boolean = true;
-            for each (ed in this._effectDamages)
-            {
-                if (ed.random > 0)
-                {
-                    if (first)
-                    {
-                        r = ed.random;
-                        first = false;
-                    }
-                    else
-                    {
-                        if (ed.random != r)
-                        {
-                            return (-1);
-                        };
-                    };
-                };
-            };
-            return (r);
-        }
-
-        public function get element():int
-        {
-            var ed:EffectDamage;
-            var hasPushDamages:Boolean;
-            var element:int = -1;
-            var first:Boolean = true;
-            for each (ed in this._effectDamages)
-            {
-                if (ed.element != -1)
-                {
-                    if (first)
-                    {
-                        element = ed.element;
-                        first = false;
-                    }
-                    else
-                    {
-                        if (ed.element != element)
-                        {
-                            return (-1);
-                        };
-                    };
-                };
-                if (ed.effectId == 5)
-                {
-                    hasPushDamages = true;
-                };
-            };
-            if (((!((element == -1))) && (hasPushDamages)))
-            {
-                element = -1;
-            };
-            return (element);
-        }
-
-        private function get damageConvertedToHeal():Boolean
-        {
-            var ed:EffectDamage;
-            for each (ed in this._effectDamages)
-            {
-                if (ed.damageConvertedToHeal)
-                {
-                    return (true);
-                };
-            };
-            return (false);
-        }
-
-        private function getElementTextColor(pElementId:int):String
+        private static function getElementTextColor(pElementId:int):String
         {
             var color:String;
-            if (pElementId == -1)
+            switch (pElementId)
             {
-                color = "fight.text.multi";
-            }
-            else
-            {
-                switch (pElementId)
-                {
-                    case 0:
-                        color = "fight.text.neutral";
-                        break;
-                    case 1:
-                        color = "fight.text.earth";
-                        break;
-                    case 2:
-                        color = "fight.text.fire";
-                        break;
-                    case 3:
-                        color = "fight.text.water";
-                        break;
-                    case 4:
-                        color = "fight.text.air";
-                        break;
-                };
+                case ElementEnum.ELEMENT_NEUTRAL:
+                    color = "fight.text.neutral";
+                    break;
+                case ElementEnum.ELEMENT_EARTH:
+                    color = "fight.text.earth";
+                    break;
+                case ElementEnum.ELEMENT_FIRE:
+                    color = "fight.text.fire";
+                    break;
+                case ElementEnum.ELEMENT_WATER:
+                    color = "fight.text.water";
+                    break;
+                case ElementEnum.ELEMENT_AIR:
+                    color = "fight.text.air";
+                    break;
+                default:
+                    color = "fight.text.multi";
             };
             return (XmlConfig.getInstance().getEntry(("colors." + color)));
         }
 
-        private function getEffectString(pMin:int, pMax:int, pMinCritical:int, pMaxCritical:int, pHasCritical:Boolean, pRandom:int=0):String
+        private static function getRangeString(min:int, max:int, forceTrace:Boolean):String
         {
-            var normal:String;
-            var critical:String;
-            var effectStr:String = "";
-            if (pMin == pMax)
+            var range:String = "";
+            if ((((forceTrace) || (!(min == 0))) || (!(max == 0))))
             {
-                normal = String(pMax);
-            }
-            else
-            {
-                normal = (pMin + ((!((pMax == 0))) ? (" - " + pMax) : ""));
-            };
-            if (pHasCritical)
-            {
-                if (pMinCritical == pMaxCritical)
+                if (((min == max) || (max == 0)))
                 {
-                    critical = String(pMaxCritical);
+                    range = String(min);
                 }
                 else
                 {
-                    critical = (pMinCritical + ((!((pMaxCritical == 0))) ? (" - " + pMaxCritical) : ""));
+                    range = ((min + " - ") + max);
                 };
             };
-            if (normal)
+            return (range);
+        }
+
+
+        public function hasDamageType(damageType:int, critical:int):Boolean
+        {
+            return ((!(this._damages[damageType][critical][MIN] == 0)) || (!(this._damages[damageType][critical][MAX] == 0)));
+        }
+
+        public function hasDamage():Boolean
+        {
+            return ((this._damageRanges.length > 0) || (this._randomGroupDamages.length > 0));
+        }
+
+        public function reset():void
+        {
+            var j:int;
+            var k:int;
+            var i:int;
+            while (i < DAMAGE_TYPE_COUNT)
+            {
+                j = 0;
+                while (j < CRITICAL_COUNT)
+                {
+                    k = 0;
+                    while (k < MIN_MAX_COUNT)
+                    {
+                        this._damages[i][j][k] = 0;
+                        k++;
+                    };
+                    this._element[j] = ElementEnum.ELEMENT_NONE;
+                    j++;
+                };
+                i++;
+            };
+            this.invulnerableState = true;
+            this.unhealableState = true;
+        }
+
+        public function updateDamageLine(damage:DamageRange, damageType:int, critical:int):void
+        {
+            if (damage.isHeal)
+            {
+                this.unhealableState = false;
+            }
+            else
+            {
+                this.invulnerableState = false;
+                if (((this.hasDamageType(LIFE_DAMAGES, critical)) || (this.hasDamageType(SHIELD_DAMAGES, critical))) != damage.isZero())
+                {
+                    if (this._element[critical] != ElementEnum.ELEMENT_UNDEFINED)
+                    {
+                        if (((!(this._element[critical] == ElementEnum.ELEMENT_NONE)) && (!(damage.elemId == this._element[critical]))))
+                        {
+                            this._element[critical] = ElementEnum.ELEMENT_UNDEFINED;
+                        }
+                        else
+                        {
+                            this._element[critical] = damage.elemId;
+                        };
+                    };
+                }
+                else
+                {
+                    if (!damage.isZero())
+                    {
+                        this._element[critical] = damage.elemId;
+                    };
+                };
+            };
+            if (damage.isZero())
+            {
+                this._damages[damageType][critical][HAS_ZERO]++;
+            }
+            else
+            {
+                this._damages[damageType][critical][MIN] = (this._damages[damageType][critical][MIN] + damage.min);
+                this._damages[damageType][critical][MAX] = (this._damages[damageType][critical][MAX] + damage.max);
+            };
+        }
+
+        public function updateDamage():void
+        {
+            var damage:DamageRange;
+            var randomGroup:SpellDamage;
+            var damageType:int;
+            var critical:int;
+            this.reset();
+            var hasInvulnerability:Boolean;
+            var hasUnhealable:Boolean;
+            for each (damage in this._damageRanges)
+            {
+                if (damage.isInvulnerable)
+                {
+                    if (damage.isHeal)
+                    {
+                        hasUnhealable = true;
+                    }
+                    else
+                    {
+                        hasInvulnerability = true;
+                    };
+                }
+                else
+                {
+                    if (damage.isCollision)
+                    {
+                        damage.elemId = ElementEnum.ELEMENT_NEUTRAL;
+                    };
+                    damageType = ((damage.isHeal) ? ((damage.isShieldDamage) ? SHIELD_ADDED : LIFE_ADDED) : ((damage.isShieldDamage) ? SHIELD_DAMAGES : LIFE_DAMAGES));
+                    critical = ((damage.isCritical) ? CRITICAL : NORMAL);
+                    this.updateDamageLine(damage, damageType, critical);
+                };
+            };
+            this.invulnerableState = ((this.invulnerableState) && (hasInvulnerability));
+            this.unhealableState = ((this.unhealableState) && (hasUnhealable));
+            for each (randomGroup in this._randomGroupDamages)
+            {
+                randomGroup.updateDamage();
+                this.invulnerableState = ((this.invulnerableState) && (randomGroup.invulnerableState));
+                this.unhealableState = ((this.unhealableState) && (randomGroup.unhealableState));
+            };
+        }
+
+        public function addDamageRange(damageRange:DamageRange, pIndex:int=2147483647):void
+        {
+            var randomGroup:SpellDamage;
+            var groupDamages:SpellDamage;
+            if (damageRange.group != 0)
+            {
+                randomGroup = null;
+                for each (groupDamages in this._randomGroupDamages)
+                {
+                    if (groupDamages.group == damageRange.group)
+                    {
+                        randomGroup = groupDamages;
+                        break;
+                    };
+                };
+                if (randomGroup == null)
+                {
+                    randomGroup = new SpellDamage();
+                    randomGroup.group = damageRange.group;
+                    randomGroup.effectIcons = this.effectIcons;
+                    this._randomGroupDamages.push(randomGroup);
+                };
+                randomGroup._damageRanges.splice(pIndex, 0, damageRange);
+            }
+            else
+            {
+                this._damageRanges.splice(pIndex, 0, damageRange);
+            };
+        }
+
+        public function hasRandomEffects():Boolean
+        {
+            return (this._randomGroupDamages.length > 0);
+        }
+
+        public function get random():int
+        {
+            if (((this._damageRanges) && (this._damageRanges.length > 0)))
+            {
+                return (this._damageRanges[0].probability);
+            };
+            return (-1);
+        }
+
+        public function printZero(forDamage:Boolean):Boolean
+        {
+            var damageType:int = ((forDamage) ? LIFE_DAMAGES : LIFE_ADDED);
+            var hasEffect:* = (this._damages[damageType][NORMAL][HAS_ZERO] > 0);
+            hasEffect = ((hasEffect) || (this._damages[damageType][CRITICAL][HAS_ZERO] > 0));
+            return (hasEffect);
+        }
+
+        public function isZeroOnly(damageType:int, critical:int):Boolean
+        {
+            return (this._damages[damageType][critical][HAS_ZERO] > 0);
+        }
+
+        private function getEffectString(damageType:int, colorString:Boolean):String
+        {
+            var effectStr:String = "";
+            var normal:String = getRangeString(this._damages[damageType][NORMAL][MIN], this._damages[damageType][NORMAL][MAX], this.isZeroOnly(damageType, NORMAL));
+            if (colorString)
+            {
+                effectStr = HtmlManager.addTag(normal, HtmlManager.SPAN, {"color":getElementTextColor(this._element[NORMAL])});
+            }
+            else
             {
                 effectStr = normal;
             };
-            if (critical)
+            var critical:String = getRangeString(this._damages[damageType][CRITICAL][MIN], this._damages[damageType][CRITICAL][MAX], this.isZeroOnly(damageType, CRITICAL));
+            if (critical != "")
             {
-                if (normal)
+                if (colorString)
                 {
-                    effectStr = (effectStr + ((" (<b>" + critical) + "</b>)"));
+                    effectStr = (effectStr + ((" (" + HtmlManager.addTag(critical, HtmlManager.SPAN, {"color":getElementTextColor(this._element[CRITICAL])})) + ")"));
+                }
+                else
+                {
+                    effectStr = (effectStr + ((" (" + critical) + ")"));
                 };
             };
-            return ((((pRandom > 0)) ? ((pRandom + "% ") + effectStr) : effectStr));
+            return (effectStr);
+        }
+
+        public function writeLineString(damageType:int, icon:String, colorString:Boolean):String
+        {
+            var shieldAddedStr:String;
+            if (((this.hasDamageType(damageType, NORMAL)) || (this.hasDamageType(damageType, CRITICAL))))
+            {
+                shieldAddedStr = this.getEffectString(damageType, colorString);
+                if (this.unknownDamage)
+                {
+                    shieldAddedStr = (shieldAddedStr + HtmlManager.addTag(" (+ ?)", HtmlManager.SPAN, {"color":getElementTextColor(ElementEnum.ELEMENT_MULTI)}));
+                };
+                if (shieldAddedStr != "")
+                {
+                    this.effectIcons.push(icon);
+                    shieldAddedStr = (shieldAddedStr + "\n");
+                };
+                return (shieldAddedStr);
+            };
+            return ("");
         }
 
         public function toString():String
         {
-            var ed:EffectDamage;
-            var effText:String;
-            var _local_7:String;
-            var dmgStr:String;
-            var healStr:String;
-            var finalStr:String = "";
-            var damageColor:String = this.getElementTextColor(this.element);
-            var shieldColor:String = "0x9966CC";
-            var healColor:int = OptionManager.getOptionManager("chat")[("channelColor" + ChatActivableChannelsEnum.PSEUDO_CHANNEL_FIGHT_LOG)];
-            this.effectIcons = new Array();
-            if (((this.hasRandomEffects) && (!(this.invulnerableState))))
+            var invulnerableStateData:SpellState;
+            var invulnerableStr:String;
+            var i:int;
+            var randomGroup:SpellDamage;
+            var finalStr:String = ((this.random > 0) ? (this.random + "% ") : "");
+            if (this.invulnerableState)
             {
-                for each (ed in this._effectDamages)
-                {
-                    if (ed.element != -1)
-                    {
-                        if (this.damageConvertedToHeal)
-                        {
-                            this.effectIcons.push("lifePoints");
-                            effText = this.getEffectString(ed.minLifePointsAdded, ed.maxLifePointsAdded, ed.minCriticalLifePointsAdded, ed.maxCriticalLifePointsAdded, ed.hasCritical, ed.random);
-                        }
-                        else
-                        {
-                            this.effectIcons.push(null);
-                            effText = this.getEffectString(ed.minDamage, ed.maxDamage, ed.minCriticalDamage, ed.maxCriticalDamage, ed.hasCritical, ed.random);
-                        };
-                        finalStr = (finalStr + (HtmlManager.addTag(effText, HtmlManager.SPAN, {"color":((!(this.damageConvertedToHeal)) ? this.getElementTextColor(ed.element) : healColor)}) + "\n"));
-                    };
-                };
+                this.effectIcons.push(null);
+                invulnerableStateData = SpellState.getSpellStateById(DataEnum.SPELL_STATE_INVULNERABLE);
+                invulnerableStr = ((invulnerableStateData) ? invulnerableStateData.name : I18n.getUiText("ui.prism.state0"));
+                finalStr = (finalStr + (invulnerableStr + "\n"));
             }
             else
             {
-                if (((!(this.isHealingSpell)) && (!(this.damageConvertedToHeal))))
+                finalStr = (finalStr + this.writeLineString(SHIELD_DAMAGES, "broken_armor", true));
+                finalStr = (finalStr + this.writeLineString(LIFE_DAMAGES, null, true));
+                if ((((!(this.hasDamageType(LIFE_DAMAGES, NORMAL))) && (!(this.hasDamageType(LIFE_DAMAGES, CRITICAL)))) && (this.printZero(true))))
                 {
-                    dmgStr = this.getEffectString(this._minDamage, this._maxDamage, this._minCriticalDamage, this._maxCriticalDamage, this.hasCriticalDamage);
-                    dmgStr = ((!(this.invulnerableState)) ? dmgStr : SpellState.getSpellStateById(56).name);
                     this.effectIcons.push(null);
-                    finalStr = (finalStr + (HtmlManager.addTag(dmgStr, HtmlManager.SPAN, {"color":damageColor}) + "\n"));
+                    finalStr = (finalStr + (HtmlManager.addTag("0", HtmlManager.SPAN, {"color":getElementTextColor(this._element[NORMAL])}) + "\n"));
                 };
-                if (((!(this.isHealingSpell)) && (!(this.invulnerableState))))
+            };
+            finalStr = (finalStr + this.writeLineString(SHIELD_ADDED, "armor", false));
+            if (this.unhealableState)
+            {
+                this.effectIcons.push(null);
+                finalStr = (finalStr + SpellState.getSpellStateById(DataEnum.SPELL_STATE_UNHEALABLE).name);
+            }
+            else
+            {
+                finalStr = (finalStr + this.writeLineString(LIFE_ADDED, "pv", false));
+                if ((((!(this.hasDamageType(LIFE_ADDED, NORMAL))) && (!(this.hasDamageType(LIFE_ADDED, CRITICAL)))) && (this.printZero(false))))
                 {
-                    if (((!((this._minShieldPointsRemoved == 0))) && (!((this._maxShieldPointsRemoved == 0)))))
-                    {
-                        _local_7 = this.getEffectString(this._minShieldPointsRemoved, this._maxShieldPointsRemoved, this._minCriticalShieldPointsRemoved, this._maxCriticalShieldPointsRemoved, this.hasCriticalShieldPointsRemoved);
-                    };
-                    if (_local_7)
-                    {
-                        this.effectIcons.push(null);
-                        finalStr = (finalStr + (HtmlManager.addTag(_local_7, HtmlManager.SPAN, {"color":shieldColor}) + "\n"));
-                    };
+                    this.effectIcons.push("pv");
+                    finalStr = (finalStr + "0\n");
                 };
-                if (((this.hasHeal) || (this.damageConvertedToHeal)))
+            };
+            if (this.hasRandomEffects())
+            {
+                i = 0;
+                while (i < this._randomGroupDamages.length)
                 {
-                    healStr = this.getEffectString(this.minLifePointsAdded, this.maxLifePointsAdded, this.minCriticalLifePointsAdded, this.maxCriticalLifePointsAdded, this.hasCriticalLifePointsAdded);
-                    if (this.unhealableState)
+                    randomGroup = this._randomGroupDamages[i];
+                    if (((i > 0) || (!(finalStr == ""))))
                     {
-                        this.effectIcons.push(null);
-                        healStr = SpellState.getSpellStateById(76).name;
-                    }
-                    else
-                    {
-                        this.effectIcons.push("lifePoints");
+                        this.effectIcons.push("common/window_separator_grey_horizontal");
+                        finalStr = (finalStr + "\n");
                     };
-                    finalStr = (finalStr + HtmlManager.addTag(healStr, HtmlManager.SPAN, {"color":healColor}));
+                    finalStr = (finalStr + (randomGroup.toString() + "\n"));
+                    i++;
+                };
+            };
+            if (this.telefrag)
+            {
+                finalStr = (finalStr + SpellState.getSpellStateById(DataEnum.SPELL_STATE_TELEFRAG_ALLY).name);
+            }
+            else
+            {
+                if (finalStr.charAt((finalStr.length - 1)) == "\n")
+                {
+                    finalStr = finalStr.substring(0, (finalStr.length - 1));
                 };
             };
             return (finalStr);
@@ -523,5 +387,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.fight.types
+} com.ankamagames.dofus.logic.game.fight.types
 

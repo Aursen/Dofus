@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.basic
+package com.ankamagames.dofus.network.messages.game.basic
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class BasicDateMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -58,6 +58,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_BasicDateMessage(output);
@@ -89,16 +97,43 @@
 
         public function deserializeAs_BasicDateMessage(input:ICustomDataInput):void
         {
+            this._dayFunc(input);
+            this._monthFunc(input);
+            this._yearFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_BasicDateMessage(tree);
+        }
+
+        public function deserializeAsyncAs_BasicDateMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._dayFunc);
+            tree.addChild(this._monthFunc);
+            tree.addChild(this._yearFunc);
+        }
+
+        private function _dayFunc(input:ICustomDataInput):void
+        {
             this.day = input.readByte();
             if (this.day < 0)
             {
                 throw (new Error((("Forbidden value (" + this.day) + ") on element of BasicDateMessage.day.")));
             };
+        }
+
+        private function _monthFunc(input:ICustomDataInput):void
+        {
             this.month = input.readByte();
             if (this.month < 0)
             {
                 throw (new Error((("Forbidden value (" + this.month) + ") on element of BasicDateMessage.month.")));
             };
+        }
+
+        private function _yearFunc(input:ICustomDataInput):void
+        {
             this.year = input.readShort();
             if (this.year < 0)
             {
@@ -108,5 +143,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.basic
+} com.ankamagames.dofus.network.messages.game.basic
 

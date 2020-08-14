@@ -1,18 +1,21 @@
-﻿package com.ankamagames.dofus.misc.stats
+package com.ankamagames.dofus.misc.stats
 {
     import com.ankamagames.jerakine.messages.Frame;
     import flash.utils.Dictionary;
+    import com.ankamagames.dofus.network.messages.connection.IdentificationSuccessMessage;
+    import com.ankamagames.jerakine.handlers.messages.Action;
+    import com.ankamagames.jerakine.handlers.messages.HumanInputMessage;
     import com.ankamagames.jerakine.messages.Message;
     import com.ankamagames.jerakine.types.enums.Priority;
 
     public class StatisticsFrame implements Frame 
     {
 
-        private var _framesStats:Dictionary;
+        private var _stats:Dictionary;
 
-        public function StatisticsFrame(pFramesStats:Dictionary)
+        public function StatisticsFrame(pStats:Dictionary)
         {
-            this._framesStats = pFramesStats;
+            this._stats = pStats;
         }
 
         public function pushed():Boolean
@@ -28,9 +31,25 @@
         public function process(msg:Message):Boolean
         {
             var stats:IStatsClass;
-            for each (stats in this._framesStats)
+            var ftue:*;
+            var uiName:String;
+            if ((msg is IdentificationSuccessMessage))
             {
-                stats.process(msg);
+                ftue = StatisticsManager.getInstance().getData(("firstTimeUserExperience-" + StatsAction.getUserId()));
+                if (ftue)
+                {
+                    for (uiName in ftue)
+                    {
+                        StatisticsManager.getInstance().setFirstTimeUserExperience(uiName, ftue[uiName]);
+                    };
+                };
+            };
+            for each (stats in this._stats)
+            {
+                if (((!(msg is HumanInputMessage)) && (!(msg is Action))))
+                {
+                    stats.process(msg);
+                };
             };
             return (false);
         }
@@ -42,5 +61,5 @@
 
 
     }
-}//package com.ankamagames.dofus.misc.stats
+} com.ankamagames.dofus.misc.stats
 

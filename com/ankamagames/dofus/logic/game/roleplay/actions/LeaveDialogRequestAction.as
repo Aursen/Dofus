@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.roleplay.actions
+package com.ankamagames.dofus.logic.game.roleplay.actions
 {
     import com.ankamagames.jerakine.handlers.messages.Action;
 
@@ -13,5 +13,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.roleplay.actions
+} com.ankamagames.dofus.logic.game.roleplay.actions
 

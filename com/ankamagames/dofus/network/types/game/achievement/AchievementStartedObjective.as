@@ -1,10 +1,10 @@
-﻿package com.ankamagames.dofus.network.types.game.achievement
+package com.ankamagames.dofus.network.types.game.achievement
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class AchievementStartedObjective extends AchievementObjective implements INetworkType 
     {
 
@@ -54,6 +54,22 @@
         public function deserializeAs_AchievementStartedObjective(input:ICustomDataInput):void
         {
             super.deserialize(input);
+            this._valueFunc(input);
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_AchievementStartedObjective(tree);
+        }
+
+        public function deserializeAsyncAs_AchievementStartedObjective(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._valueFunc);
+        }
+
+        private function _valueFunc(input:ICustomDataInput):void
+        {
             this.value = input.readVarUhShort();
             if (this.value < 0)
             {
@@ -63,5 +79,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.achievement
+} com.ankamagames.dofus.network.types.game.achievement
 

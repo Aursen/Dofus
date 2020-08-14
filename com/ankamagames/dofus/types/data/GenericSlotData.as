@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.types.data
+package com.ankamagames.dofus.types.data
 {
     import com.ankamagames.jerakine.interfaces.ISlotData;
     import com.ankamagames.jerakine.types.Uri;
@@ -108,5 +108,5 @@
 
 
     }
-}//package com.ankamagames.dofus.types.data
+} com.ankamagames.dofus.types.data
 

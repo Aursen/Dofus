@@ -1,32 +1,28 @@
-﻿package com.ankamagames.dofus.network.messages.game.inventory.exchanges
+package com.ankamagames.dofus.network.messages.game.inventory.exchanges
 {
     import com.ankamagames.jerakine.network.INetworkMessage;
     import __AS3__.vec.Vector;
     import com.ankamagames.dofus.network.types.game.mount.MountClientData;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
     import __AS3__.vec.*;
 
-    [Trusted]
     public class ExchangeStartOkMountMessage extends ExchangeStartOkMountWithOutPaddockMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 5979;
 
         private var _isInitialized:Boolean = false;
-        public var paddockedMountsDescription:Vector.<MountClientData>;
+        public var paddockedMountsDescription:Vector.<MountClientData> = new Vector.<MountClientData>();
+        private var _paddockedMountsDescriptiontree:FuncTree;
 
-        public function ExchangeStartOkMountMessage()
-        {
-            this.paddockedMountsDescription = new Vector.<MountClientData>();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
-            return (((super.isInitialized) && (this._isInitialized)));
+            return ((super.isInitialized) && (this._isInitialized));
         }
 
         override public function getMessageId():uint
@@ -59,6 +55,14 @@
         override public function unpack(input:ICustomDataInput, length:uint):void
         {
             this.deserialize(input);
+        }
+
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
         }
 
         override public function serialize(output:ICustomDataOutput):void
@@ -98,7 +102,36 @@
             };
         }
 
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_ExchangeStartOkMountMessage(tree);
+        }
+
+        public function deserializeAsyncAs_ExchangeStartOkMountMessage(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            this._paddockedMountsDescriptiontree = tree.addChild(this._paddockedMountsDescriptiontreeFunc);
+        }
+
+        private function _paddockedMountsDescriptiontreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._paddockedMountsDescriptiontree.addChild(this._paddockedMountsDescriptionFunc);
+                i++;
+            };
+        }
+
+        private function _paddockedMountsDescriptionFunc(input:ICustomDataInput):void
+        {
+            var _item:MountClientData = new MountClientData();
+            _item.deserialize(input);
+            this.paddockedMountsDescription.push(_item);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.inventory.exchanges
+} com.ankamagames.dofus.network.messages.game.inventory.exchanges
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.eval
+package com.ankamagames.jerakine.eval
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
@@ -8,48 +8,58 @@
     {
 
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(Evaluator));
+        private static var operatorPriority:Array = [divide, multiply, minus, plus, sup, inf, supOrEquals, infOrEquals, equals, diff, and, or, ternary];
         private static const NUMBER:uint = 0;
         private static const STRING:uint = 1;
 
 
-        public function eval(expr:String)
+        public static function eval(expr:String):*
         {
-            return (this.complexEval(expr));
+            return (complexEval(expr));
         }
 
-        private function simpleEval(expr:String)
+        private static function generateOp(expr:String):Array
         {
             var operator:Function;
             var currentChar:String;
-            var partialOp:Array;
-            var lastOp:*;
-            var _local_15:Boolean;
-            var _local_16:Boolean;
-            var k:uint;
-            var currentOperator:String = "";
+            var startIndex:int;
+            var ok:Boolean;
             var inQuote:Boolean;
-            var protect:Boolean;
             var currentParam:String = "";
             var currentType:uint = STRING;
-            var op:Array = new Array();
+            var op:Array = [];
+            startIndex = -1;
+            var stopIndex:int = -1;
+            var incr:Function = function (index:int=-1):void
+            {
+                if (startIndex == -1)
+                {
+                    startIndex = index;
+                    stopIndex = (index + 1);
+                }
+                else
+                {
+                    stopIndex++;
+                };
+            };
             var i:uint;
             while (i < expr.length)
             {
                 currentChar = expr.charAt(i);
-                if ((((currentChar == "'")) && (!(protect))))
+                if (currentChar == "'")
                 {
                     currentType = STRING;
-                    inQuote = !(inQuote);
+                    inQuote = (!(inQuote));
                 }
                 else
                 {
                     if (currentChar == "\\")
                     {
-                        protect = true;
+                        i++;
                     }
                     else
                     {
-                        if (!(inQuote))
+                        if (!inQuote)
                         {
                             switch (currentChar)
                             {
@@ -70,97 +80,113 @@
                                 case "8":
                                 case "9":
                                     currentType = NUMBER;
-                                    currentOperator = "";
                                     operator = null;
-                                    currentParam = (currentParam + currentChar);
+                                    (incr(i));
                                     break;
                                 case ".":
-                                    currentParam = (currentParam + ".");
+                                    (incr(i));
                                     break;
                                 default:
-                                    if ((((currentChar == "-")) || ((currentChar == "+"))))
+                                    if ((((currentChar == "-") || (currentChar == "+")) && (startIndex == -1)))
                                     {
-                                        if (!(currentParam.length))
-                                        {
-                                            currentParam = (currentParam + currentChar);
-                                            break;
-                                        };
+                                        (incr(i));
+                                        break;
                                     };
-                                    _local_15 = true;
-                                    _local_16 = false;
-                                    currentOperator = (currentOperator + currentChar);
-                                    switch (currentOperator)
+                                    ok = true;
+                                    switch (currentChar)
                                     {
                                         case "-":
-                                            operator = this.minus;
+                                            operator = minus;
                                             break;
                                         case "+":
-                                            operator = this.plus;
+                                            operator = plus;
                                             break;
                                         case "*":
-                                            operator = this.multiply;
+                                            operator = multiply;
                                             break;
                                         case "/":
-                                            operator = this.divide;
+                                            operator = divide;
+                                            break;
+                                        case "?":
+                                            operator = ternary;
+                                            break;
+                                        case ":":
+                                            operator = opElse;
                                             break;
                                         case ">":
                                             if (expr.charAt((i + 1)) != "=")
                                             {
-                                                operator = this.sup;
+                                                operator = sup;
                                             }
                                             else
                                             {
-                                                _local_16 = true;
-                                                _local_15 = false;
+                                                operator = supOrEquals;
+                                                i++;
                                             };
-                                            break;
-                                        case ">=":
-                                            operator = this.supOrEquals;
                                             break;
                                         case "<":
                                             if (expr.charAt((i + 1)) != "=")
                                             {
-                                                operator = this.inf;
+                                                operator = inf;
                                             }
                                             else
                                             {
-                                                _local_16 = true;
-                                                _local_15 = false;
+                                                operator = infOrEquals;
+                                                i++;
                                             };
                                             break;
-                                        case "<=":
-                                            operator = this.infOrEquals;
-                                            break;
-                                        case "&&":
-                                            operator = this.and;
-                                            break;
-                                        case "||":
-                                            operator = this.or;
-                                            break;
-                                        case "==":
-                                            operator = this.equals;
-                                            break;
-                                        case "!=":
-                                            operator = this.diff;
-                                            break;
-                                        case "?":
-                                            operator = this.ternary;
-                                            break;
-                                        case ":":
-                                            operator = this.opElse;
-                                            break;
                                         case "|":
+                                            if (expr.charAt((i + 1)) == "|")
+                                            {
+                                                operator = or;
+                                                i++;
+                                            }
+                                            else
+                                            {
+                                                ok = false;
+                                            };
+                                            break;
                                         case "=":
+                                            if (expr.charAt((i + 1)) == "=")
+                                            {
+                                                operator = equals;
+                                                i++;
+                                            }
+                                            else
+                                            {
+                                                ok = false;
+                                            };
+                                            break;
                                         case "&":
+                                            if (expr.charAt((i + 1)) == "&")
+                                            {
+                                                operator = and;
+                                                i++;
+                                            }
+                                            else
+                                            {
+                                                ok = false;
+                                            };
+                                            break;
                                         case "!":
-                                            _local_16 = true;
+                                            if (expr.charAt((i + 1)) == "=")
+                                            {
+                                                operator = diff;
+                                                i++;
+                                            }
+                                            else
+                                            {
+                                                ok = false;
+                                            };
+                                            break;
                                         default:
-                                            _local_15 = false;
+                                            ok = false;
                                     };
-                                    if (_local_15)
+                                    if (ok)
                                     {
-                                        if (currentParam.length)
+                                        if (startIndex != -1)
                                         {
+                                            currentParam = expr.substring(startIndex, stopIndex);
                                             if (currentType == STRING)
                                             {
                                                 op.push(currentParam);
@@ -173,34 +199,38 @@
                                         }
                                         else
                                         {
-                                            _log.warn(this.showPosInExpr(i, expr));
-                                            _log.warn(((("Expecting Number at char " + i) + ", but found operator ") + currentChar));
+                                            if (currentType == STRING)
+                                            {
+                                                op.push("");
+                                                op.push(operator);
+                                            }
+                                            else
+                                            {
+                                                _log.warn(showPosInExpr(i, expr));
+                                                _log.warn(((("Expecting Number at char " + i) + ", but found operator ") + currentChar));
+                                            };
                                         };
-                                        currentParam = "";
+                                        startIndex = -1;
                                     }
                                     else
                                     {
-                                        if (!(_local_16))
-                                        {
-                                            _log.warn(this.showPosInExpr(i, expr));
-                                            _log.warn(("Bad character at " + i));
-                                        };
+                                        _log.warn(showPosInExpr(i, expr));
+                                        _log.warn(("Bad character at " + i));
                                     };
                             };
                         }
                         else
                         {
-                            currentOperator = "";
                             operator = null;
-                            currentParam = (currentParam + currentChar);
-                            protect = false;
+                            (incr(i));
                         };
                     };
                 };
                 i++;
             };
-            if (currentParam.length)
+            if (startIndex != -1)
             {
+                currentParam = expr.substring(startIndex, stopIndex);
                 if (currentType == STRING)
                 {
                     op.push(currentParam);
@@ -210,93 +240,99 @@
                     op.push(parseFloat(currentParam));
                 };
             };
-            var operatorPriority:Array = [this.divide, this.multiply, this.minus, this.plus, this.sup, this.inf, this.supOrEquals, this.infOrEquals, this.equals, this.diff, this.and, this.or, this.ternary];
+            return (op);
+        }
+
+        private static function simpleEval(expr:String):*
+        {
+            var partialOp:Array;
+            var lastOp:*;
+            var k:uint;
+            var op:Array = generateOp(expr);
             var j:uint;
             while (j < operatorPriority.length)
             {
-                partialOp = new Array();
+                if (op.length == 1)
+                {
+                    break;
+                };
+                partialOp = null;
                 k = 0;
                 while (k < op.length)
                 {
-                    if ((((op[k] is Function)) && ((op[k] == operatorPriority[j]))))
+                    if (((op[k] is Function) && (op[k] == operatorPriority[j])))
                     {
-                        lastOp = partialOp[(partialOp.length - 1)];
-                        if ((((lastOp is Number)) || ((((((((((op[k] == this.plus)) || ((op[k] == this.ternary)))) || ((op[k] == this.equals)))) || ((op[k] == this.diff)))) && ((lastOp is String))))))
+                        if (partialOp == null)
                         {
-                            if ((((op[(k + 1)] is Number)) || ((((((((((op[k] == this.plus)) || ((op[k] == this.ternary)))) || ((op[k] == this.equals)))) || ((op[k] == this.diff)))) && ((op[(k + 1)] is String))))))
+                            lastOp = op[(k - 1)];
+                            if (k > 1)
                             {
-                                if (op[k] === this.ternary)
+                                partialOp = op.slice(0, (k - 1));
+                            }
+                            else
+                            {
+                                partialOp = [];
+                            };
+                        }
+                        else
+                        {
+                            if (partialOp.length > 0)
+                            {
+                                lastOp = partialOp[(partialOp.length - 1)];
+                            }
+                            else
+                            {
+                                lastOp = op[(k - 1)];
+                            };
+                        };
+                        if ((((lastOp is Number) || ((lastOp is String) && ((((op[k] == plus) || (op[k] == ternary)) || (op[k] == equals)) || (op[k] == diff)))) && ((op[(k + 1)] is Number) || ((op[(k + 1)] is String) && ((((op[k] == plus) || (op[k] == ternary)) || (op[k] == equals)) || (op[k] == diff))))))
+                        {
+                            if (op[k] === ternary)
+                            {
+                                if (op[(k + 2)] == opElse)
                                 {
-                                    if (op[(k + 2)] == this.opElse)
-                                    {
-                                        partialOp[(partialOp.length - 1)] = this.ternary(lastOp, op[(k + 1)], op[(k + 3)]);
-                                        k = (k + 2);
-                                    }
-                                    else
-                                    {
-                                        _log.warn("operator ':' not found");
-                                    };
+                                    partialOp.push(ternary(lastOp, op[(k + 1)], op[(k + 3)]));
+                                    k = (k + 2);
                                 }
                                 else
                                 {
-                                    partialOp[(partialOp.length - 1)] = op[k](lastOp, op[(k + 1)]);
+                                    _log.warn("operator ':' not found");
                                 };
                             }
                             else
                             {
-                                _log.warn((("Expect Number, but find [" + op[(k + 1)]) + "]"));
+                                partialOp.push(op[k](lastOp, op[(k + 1)]));
                             };
-                            k++;
                         }
                         else
                         {
-                            lastOp = op[(k - 1)];
-                            if ((((lastOp is Number)) || ((((((((((op[k] == this.plus)) || ((op[k] == this.ternary)))) || ((op[k] == this.equals)))) || ((op[k] == this.diff)))) && ((lastOp is String))))))
-                            {
-                                if ((((op[(k + 1)] is Number)) || ((((((((((op[k] == this.plus)) || ((op[k] == this.ternary)))) || ((op[k] == this.equals)))) || ((op[k] == this.diff)))) && ((op[(k + 1)] is String))))))
-                                {
-                                    if (op[k] === this.ternary)
-                                    {
-                                        if (op[(k + 2)] == this.opElse)
-                                        {
-                                            partialOp[(partialOp.length - 1)] = this.ternary(lastOp, op[(k + 1)], op[(k + 3)]);
-                                        }
-                                        else
-                                        {
-                                            _log.warn("operator ':' not found");
-                                        };
-                                    }
-                                    else
-                                    {
-                                        partialOp.push(op[k](lastOp, op[(k + 1)]));
-                                    };
-                                }
-                                else
-                                {
-                                    _log.warn((("Expect Number,  but find [" + op[(k + 1)]) + "]"));
-                                };
-                                k++;
-                            };
+                            _log.warn((("Expect Number,  but find [" + op[(k + 1)]) + "]"));
                         };
+                        k++;
                     }
                     else
                     {
-                        partialOp.push(op[k]);
+                        if (partialOp != null)
+                        {
+                            partialOp.push(op[k]);
+                        };
                     };
                     k++;
                 };
-                op = partialOp;
+                if (partialOp != null)
+                {
+                    op = partialOp;
+                };
                 j++;
             };
             return (op[0]);
         }
 
-        private function complexEval(expr:String)
+        private static function complexEval(expr:String):*
         {
             var start:int;
             var res:*;
             var i:uint;
-            expr = this.trim(expr);
             var modif:Boolean = true;
             var parenthCount:int;
             while (modif)
@@ -307,7 +343,7 @@
                 {
                     if (expr.charAt(i) == "(")
                     {
-                        if (!(parenthCount))
+                        if (!parenthCount)
                         {
                             start = i;
                         };
@@ -316,10 +352,10 @@
                     if (expr.charAt(i) == ")")
                     {
                         parenthCount--;
-                        if (!(parenthCount))
+                        if (!parenthCount)
                         {
-                            res = this.complexEval(expr.substr((start + 1), ((i - start) - 1)));
-                            expr = ((expr.substr(0, start) + (((res is Number)) ? res : (("'" + res) + "'"))) + expr.substr((i + 1)));
+                            res = complexEval(expr.substr((start + 1), ((i - start) - 1)));
+                            expr = ((expr.substr(0, start) + ((res is Number) ? res : (("'" + res) + "'"))) + expr.substr((i + 1)));
                             modif = true;
                             break;
                         };
@@ -331,122 +367,95 @@
             {
                 _log.warn(("Missing right parenthesis in " + expr));
             };
-            return (this.simpleEval(expr));
+            return (simpleEval(expr));
         }
 
-        private function plus(a:*, b:*)
+        private static function plus(a:*, b:*):*
         {
-            return ((a + b));
+            return (a + b);
         }
 
-        private function minus(a:Number, b:Number):Number
+        private static function minus(a:Number, b:Number):Number
         {
-            return ((a - b));
+            return (a - b);
         }
 
-        private function multiply(a:Number, b:Number):Number
+        private static function multiply(a:Number, b:Number):Number
         {
-            return ((a * b));
+            return (a * b);
         }
 
-        private function divide(a:Number, b:Number):Number
+        private static function divide(a:Number, b:Number):Number
         {
-            return ((a / b));
+            return (a / b);
         }
 
-        private function sup(a:Number, b:Number):Number
+        private static function sup(a:Number, b:Number):Number
         {
-            return ((((a > b)) ? 1 : 0));
+            return ((a > b) ? 1 : 0);
         }
 
-        private function supOrEquals(a:Number, b:Number):Number
+        private static function supOrEquals(a:Number, b:Number):Number
         {
-            return ((((a >= b)) ? 1 : 0));
+            return ((a >= b) ? 1 : 0);
         }
 
-        private function inf(a:Number, b:Number):Number
+        private static function inf(a:Number, b:Number):Number
         {
-            return ((((a < b)) ? 1 : 0));
+            return ((a < b) ? 1 : 0);
         }
 
-        private function infOrEquals(a:Number, b:Number):Number
+        private static function infOrEquals(a:Number, b:Number):Number
         {
-            return ((((a <= b)) ? 1 : 0));
+            return ((a <= b) ? 1 : 0);
         }
 
-        private function and(a:Number, b:Number):Number
+        private static function and(a:Number, b:Number):Number
         {
-            return (((((a) && (b))) ? 1 : 0));
+            return (((a) && (b)) ? 1 : 0);
         }
 
-        private function or(a:Number, b:Number):Number
+        private static function or(a:Number, b:Number):Number
         {
-            return (((((a) || (b))) ? 1 : 0));
+            return (((a) || (b)) ? 1 : 0);
         }
 
-        private function equals(a:*, b:*):Number
+        private static function equals(a:*, b:*):Number
         {
-            return ((((a)==b) ? 1 : 0));
+            if ((((a == "") && (b == "null")) || ((a == "null") && (b == ""))))
+            {
+                return (1);
+            };
+            return ((a == b) ? 1 : 0);
         }
 
-        private function diff(a:*, b:*):Number
+        private static function diff(a:*, b:*):Number
         {
-            return ((((a)!=b) ? 1 : 0));
+            return ((a != b) ? 1 : 0);
         }
 
-        private function ternary(cond:Number, a:*, b:*)
+        private static function ternary(cond:Number, a:*, b:*):*
         {
-            return (((cond) ? a : b));
+            return ((cond) ? a : b);
         }
 
-        private function opElse():void
+        private static function opElse():void
         {
         }
 
-        private function showPosInExpr(pos:uint, expr:String):String
+        private static function showPosInExpr(pos:uint, expr:String):String
         {
-            var res:String = (expr + "\n");
+            var res:* = (expr + "\n");
             var i:uint;
             while (i < pos)
             {
                 res = (res + " ");
                 i++;
             };
-            return ((res + "^"));
-        }
-
-        private function trim(str:String):String
-        {
-            var curChar:String;
-            var res:String = "";
-            var protect:Boolean;
-            var inQuote:Boolean;
-            var i:uint;
-            while (i < str.length)
-            {
-                curChar = str.charAt(i);
-                if ((((curChar == "'")) && (!(protect))))
-                {
-                    inQuote = !(inQuote);
-                };
-                if (curChar == "\\")
-                {
-                    protect = true;
-                }
-                else
-                {
-                    protect = false;
-                };
-                if (((!((curChar == " "))) || (inQuote)))
-                {
-                    res = (res + curChar);
-                };
-                i++;
-            };
-            return (res);
+            return (res + "^");
         }
 
 
     }
-}//package com.ankamagames.jerakine.eval
+} com.ankamagames.jerakine.eval
 

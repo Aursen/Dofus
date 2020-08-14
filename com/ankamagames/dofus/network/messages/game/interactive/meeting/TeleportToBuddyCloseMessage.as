@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.interactive.meeting
+package com.ankamagames.dofus.network.messages.game.interactive.meeting
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class TeleportToBuddyCloseMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -15,7 +15,7 @@
 
         private var _isInitialized:Boolean = false;
         public var dungeonId:uint = 0;
-        public var buddyId:uint = 0;
+        public var buddyId:Number = 0;
 
 
         override public function get isInitialized():Boolean
@@ -28,7 +28,7 @@
             return (6303);
         }
 
-        public function initTeleportToBuddyCloseMessage(dungeonId:uint=0, buddyId:uint=0):TeleportToBuddyCloseMessage
+        public function initTeleportToBuddyCloseMessage(dungeonId:uint=0, buddyId:Number=0):TeleportToBuddyCloseMessage
         {
             this.dungeonId = dungeonId;
             this.buddyId = buddyId;
@@ -55,6 +55,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_TeleportToBuddyCloseMessage(output);
@@ -67,11 +75,11 @@
                 throw (new Error((("Forbidden value (" + this.dungeonId) + ") on element dungeonId.")));
             };
             output.writeVarShort(this.dungeonId);
-            if (this.buddyId < 0)
+            if (((this.buddyId < 0) || (this.buddyId > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.buddyId) + ") on element buddyId.")));
             };
-            output.writeVarInt(this.buddyId);
+            output.writeVarLong(this.buddyId);
         }
 
         public function deserialize(input:ICustomDataInput):void
@@ -81,13 +89,34 @@
 
         public function deserializeAs_TeleportToBuddyCloseMessage(input:ICustomDataInput):void
         {
+            this._dungeonIdFunc(input);
+            this._buddyIdFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_TeleportToBuddyCloseMessage(tree);
+        }
+
+        public function deserializeAsyncAs_TeleportToBuddyCloseMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._dungeonIdFunc);
+            tree.addChild(this._buddyIdFunc);
+        }
+
+        private function _dungeonIdFunc(input:ICustomDataInput):void
+        {
             this.dungeonId = input.readVarUhShort();
             if (this.dungeonId < 0)
             {
                 throw (new Error((("Forbidden value (" + this.dungeonId) + ") on element of TeleportToBuddyCloseMessage.dungeonId.")));
             };
-            this.buddyId = input.readVarUhInt();
-            if (this.buddyId < 0)
+        }
+
+        private function _buddyIdFunc(input:ICustomDataInput):void
+        {
+            this.buddyId = input.readVarUhLong();
+            if (((this.buddyId < 0) || (this.buddyId > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.buddyId) + ") on element of TeleportToBuddyCloseMessage.buddyId.")));
             };
@@ -95,5 +124,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.interactive.meeting
+} com.ankamagames.dofus.network.messages.game.interactive.meeting
 

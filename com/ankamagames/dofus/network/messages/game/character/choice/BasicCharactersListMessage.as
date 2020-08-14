@@ -1,9 +1,10 @@
-﻿package com.ankamagames.dofus.network.messages.game.character.choice
+package com.ankamagames.dofus.network.messages.game.character.choice
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
     import __AS3__.vec.Vector;
     import com.ankamagames.dofus.network.types.game.character.choice.CharacterBaseInformations;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
@@ -11,20 +12,15 @@
     import com.ankamagames.dofus.network.ProtocolTypeManager;
     import __AS3__.vec.*;
 
-    [Trusted]
     public class BasicCharactersListMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 6475;
 
         private var _isInitialized:Boolean = false;
-        public var characters:Vector.<CharacterBaseInformations>;
+        public var characters:Vector.<CharacterBaseInformations> = new Vector.<CharacterBaseInformations>();
+        private var _characterstree:FuncTree;
 
-        public function BasicCharactersListMessage()
-        {
-            this.characters = new Vector.<CharacterBaseInformations>();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
@@ -59,6 +55,14 @@
         override public function unpack(input:ICustomDataInput, length:uint):void
         {
             this.deserialize(input);
+        }
+
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
         }
 
         public function serialize(output:ICustomDataOutput):void
@@ -99,7 +103,36 @@
             };
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_BasicCharactersListMessage(tree);
+        }
+
+        public function deserializeAsyncAs_BasicCharactersListMessage(tree:FuncTree):void
+        {
+            this._characterstree = tree.addChild(this._characterstreeFunc);
+        }
+
+        private function _characterstreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._characterstree.addChild(this._charactersFunc);
+                i++;
+            };
+        }
+
+        private function _charactersFunc(input:ICustomDataInput):void
+        {
+            var _id:uint = input.readUnsignedShort();
+            var _item:CharacterBaseInformations = ProtocolTypeManager.getInstance(CharacterBaseInformations, _id);
+            _item.deserialize(input);
+            this.characters.push(_item);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.character.choice
+} com.ankamagames.dofus.network.messages.game.character.choice
 

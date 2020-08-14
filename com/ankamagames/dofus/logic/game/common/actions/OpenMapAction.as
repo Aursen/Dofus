@@ -1,25 +1,25 @@
-﻿package com.ankamagames.dofus.logic.game.common.actions
+package com.ankamagames.dofus.logic.game.common.actions
 {
     import com.ankamagames.jerakine.handlers.messages.Action;
 
     public class OpenMapAction implements Action 
     {
 
-        public var conquest:Boolean;
-        public var pocket:Boolean;
         public var ignoreSetting:Boolean;
+        public var fromShortcut:Boolean;
+        public var conquest:Boolean;
 
 
-        public static function create(ignoreSetting:Boolean=false, pocket:Boolean=true, conquest:Boolean=false):OpenMapAction
+        public static function create(ignoreSetting:Boolean=false, fromShortcut:Boolean=false, conquest:Boolean=false):OpenMapAction
         {
             var a:OpenMapAction = new (OpenMapAction)();
             a.ignoreSetting = ignoreSetting;
-            a.pocket = pocket;
+            a.fromShortcut = fromShortcut;
             a.conquest = conquest;
             return (a);
         }
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.actions
+} com.ankamagames.dofus.logic.game.common.actions
 

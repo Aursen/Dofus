@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.common.frames
+package com.ankamagames.dofus.logic.game.common.frames
 {
     import com.ankamagames.jerakine.messages.Frame;
     import com.ankamagames.jerakine.logger.Logger;
@@ -48,6 +48,7 @@
         private var _stackInputMessage:Vector.<AbstractBehavior>;
         private var _stackOutputMessage:Vector.<AbstractBehavior>;
         private var _stopMessages:Vector.<String>;
+        private var _unnoticeableMessages:Vector.<String>;
         private var _ignoredMsg:Vector.<Message>;
         private var _checkPointList:Vector.<CheckPointEntity>;
         private var _currentMode:String;
@@ -57,6 +58,7 @@
         private var _paused:Boolean = false;
         private var _waitingMessage:Message;
         private var _enabled:Boolean;
+        private var _wasInFight:Boolean;
 
         public function StackManagementFrame()
         {
@@ -79,7 +81,7 @@
         public function onKeyDown(pEvt:KeyboardEvent):void
         {
             var m:AddBehaviorToStackAction;
-            if (((((this._enabled) && (!(this._keyDown)))) && ((pEvt.keyCode == KEY_CODE))))
+            if ((((this._enabled) && (!(this._keyDown))) && (pEvt.keyCode == KEY_CODE)))
             {
                 this._keyDown = true;
                 this.initStackInputMessages(AbstractBehavior.NORMAL);
@@ -92,8 +94,8 @@
         public function onKeyUp(pEvt:KeyboardEvent=null):void
         {
             var m:RemoveBehaviorToStackAction;
-            var keyCode:uint = (((pEvt == null)) ? KEY_CODE : pEvt.keyCode);
-            if (((this._keyDown) && ((keyCode == KEY_CODE))))
+            var keyCode:uint = ((pEvt == null) ? KEY_CODE : pEvt.keyCode);
+            if (((this._keyDown) && (keyCode == KEY_CODE)))
             {
                 this._keyDown = false;
                 m = new RemoveBehaviorToStackAction();
@@ -130,7 +132,7 @@
             for each (c in BEHAVIOR_LIST)
             {
                 b = new (c)();
-                if ((((newMode == AbstractBehavior.NORMAL)) || ((((newMode == AbstractBehavior.ALWAYS)) && ((b.type == AbstractBehavior.ALWAYS))))))
+                if (((newMode == AbstractBehavior.NORMAL) || ((newMode == AbstractBehavior.ALWAYS) && (b.type == AbstractBehavior.ALWAYS))))
                 {
                     tmp = this.getInputMessageAlreadyWatched(tmpVector, c);
                     if (tmp != null)
@@ -154,7 +156,6 @@
         {
             this._stopMessages = new Vector.<String>();
             this._stopMessages.push("NpcDialogCreationMessage");
-            this._stopMessages.push("CurrentMapMessage");
             this._stopMessages.push("GameFightStartingMessage");
             this._stopMessages.push("DocumentReadingBeginMessage");
             this._stopMessages.push("LockableShowCodeDialogMessage");
@@ -164,6 +165,28 @@
             this._stopMessages.push("ExchangeStartOkJobIndexMessage");
             this._stopMessages.push("EmotePlayMessage");
             this._stopMessages.push("GameMapNoMovementMessage");
+            this._stopMessages.push("CheckFileRequestMessage");
+            this._unnoticeableMessages = new Vector.<String>();
+            this._unnoticeableMessages.push("MouseOverMessage");
+            this._unnoticeableMessages.push("MouseOutMessage");
+            this._unnoticeableMessages.push("EntityMouseOverMessage");
+            this._unnoticeableMessages.push("EntityMouseOutMessage");
+            this._unnoticeableMessages.push("MapContainerRollOutMessage");
+            this._unnoticeableMessages.push("MapContainerRollOverMessage");
+            this._unnoticeableMessages.push("InteractiveElementMouseOverMessage");
+            this._unnoticeableMessages.push("InteractiveElementMouseOutMessage");
+            this._unnoticeableMessages.push("ItemRollOverMessage");
+            this._unnoticeableMessages.push("ItemRollOutMessage");
+            this._unnoticeableMessages.push("AdjacentMapOverMessage");
+            this._unnoticeableMessages.push("AdjacentMapOutMessage");
+            this._unnoticeableMessages.push("MouseDownMessage");
+            this._unnoticeableMessages.push("MouseUpMessage");
+            this._unnoticeableMessages.push("MouseClickMessage");
+            this._unnoticeableMessages.push("FocusChangeMessage");
+            this._unnoticeableMessages.push("TextureReadyMessage");
+            this._unnoticeableMessages.push("MapRenderProgressMessage");
+            this._unnoticeableMessages.push("TextInformationMessage");
+            this._unnoticeableMessages.push("RawDataMessage");
         }
 
         public function pushed():Boolean
@@ -185,20 +208,21 @@
         public function process(msg:Message):Boolean
         {
             var gccmsg:GameContextCreateMessage;
-            var _local_3:AddBehaviorToStackAction;
-            var _local_4:RemoveBehaviorToStackAction;
-            var _local_5:AbstractBehavior;
-            var _local_6:String;
-            var _local_7:Boolean;
-            var _local_8:Boolean;
-            var _local_9:Boolean;
+            var elem:AbstractBehavior;
+            var abtsmsg:AddBehaviorToStackAction;
+            var rbtsmsg:RemoveBehaviorToStackAction;
+            var msgClassName:String;
+            var ieNotAvailableAnymore:Boolean;
+            var catchInputMsg:Boolean;
+            var catchOutputMsg:Boolean;
             var b:String;
             var behavior:AbstractBehavior;
-            var _local_12:MoveBehavior;
-            var _local_13:ChangeMapBehavior;
-            var _local_14:InteractiveElementBehavior;
+            var moveBehavior:MoveBehavior;
+            var changeMapBehavior:ChangeMapBehavior;
+            var ieBehavior:InteractiveElementBehavior;
             var ieBehaviorIndex:int;
             var ieam:InteractiveElementActivationMessage;
+            var behaviour:AbstractBehavior;
             var stop:Boolean;
             if ((msg is GameContextCreateMessage))
             {
@@ -206,9 +230,16 @@
                 if (gccmsg.context == GameContextEnum.FIGHT)
                 {
                     this.stopWatchingActions();
-                    this.emptyStack();
+                    for each (elem in this._stackOutputMessage)
+                    {
+                        this.removeCheckPoint(elem);
+                    };
+                    this._ignoredMsg = new Vector.<Message>();
+                    this._ignoreAllMessages = false;
+                    this._limitReached = false;
                     this._keyDown = false;
                     this._enabled = false;
+                    this._wasInFight = true;
                 }
                 else
                 {
@@ -218,15 +249,15 @@
                     };
                 };
             };
-            if (!(this._enabled))
+            if (!this._enabled)
             {
                 return (false);
             };
             switch (true)
             {
                 case (msg is AddBehaviorToStackAction):
-                    _local_3 = (msg as AddBehaviorToStackAction);
-                    for each (b in _local_3.behavior)
+                    abtsmsg = (msg as AddBehaviorToStackAction);
+                    for each (b in abtsmsg.behavior)
                     {
                         switch (b)
                         {
@@ -241,8 +272,8 @@
                     };
                     return (true);
                 case (msg is RemoveBehaviorToStackAction):
-                    _local_4 = (msg as RemoveBehaviorToStackAction);
-                    switch (_local_4.behavior)
+                    rbtsmsg = (msg as RemoveBehaviorToStackAction);
+                    switch (rbtsmsg.behavior)
                     {
                         case StackActionEnum.REMOVE_ALL:
                             this.stopWatchingActions();
@@ -253,44 +284,48 @@
                     this.emptyStack();
                     return (true);
                 default:
-                    _local_6 = getQualifiedClassName(msg).split("::")[1];
-                    _local_7 = (((_local_6 == "InteractiveUsedMessage")) || ((_local_6 == "InteractiveUseErrorMessage")));
-                    if (((this._paused) && (((!((ACTION_MESSAGES.indexOf(_local_6) == -1))) || (_local_7)))))
+                    msgClassName = getQualifiedClassName(msg).split("::")[1];
+                    ieNotAvailableAnymore = ((msgClassName == "InteractiveUsedMessage") || (msgClassName == "InteractiveUseErrorMessage"));
+                    if (this._unnoticeableMessages.indexOf(msgClassName) != -1)
+                    {
+                        return (false);
+                    };
+                    if (((this._paused) && ((!(ACTION_MESSAGES.indexOf(msgClassName) == -1)) || (ieNotAvailableAnymore))))
                     {
                         for each (behavior in this._stackOutputMessage)
                         {
                             switch (true)
                             {
                                 case (behavior is MoveBehavior):
-                                    _local_12 = (behavior as MoveBehavior);
-                                    if ((((msg is CellClickMessage)) && (((msg as CellClickMessage).cellId == _local_12.getMapPoint().cellId))))
+                                    moveBehavior = (behavior as MoveBehavior);
+                                    if (((msg is CellClickMessage) && ((msg as CellClickMessage).cellId == moveBehavior.getMapPoint().cellId)))
                                     {
                                         this._waitingMessage = msg;
                                         return (false);
                                     };
                                     break;
                                 case (behavior is ChangeMapBehavior):
-                                    _local_13 = (behavior as ChangeMapBehavior);
-                                    if ((((msg is AdjacentMapClickMessage)) && (((msg as AdjacentMapClickMessage).cellId == _local_13.getMapPoint().cellId))))
+                                    changeMapBehavior = (behavior as ChangeMapBehavior);
+                                    if (((msg is AdjacentMapClickMessage) && ((msg as AdjacentMapClickMessage).cellId == changeMapBehavior.getMapPoint().cellId)))
                                     {
                                         this._waitingMessage = msg;
                                         return (false);
                                     };
                                     break;
                                 case (behavior is InteractiveElementBehavior):
-                                    _local_14 = (behavior as InteractiveElementBehavior);
-                                    if ((((msg is InteractiveElementActivationMessage)) && (((msg as InteractiveElementActivationMessage).interactiveElement.elementId == _local_14.interactiveElement.elementId))))
+                                    ieBehavior = (behavior as InteractiveElementBehavior);
+                                    if (((msg is InteractiveElementActivationMessage) && ((msg as InteractiveElementActivationMessage).interactiveElement.elementId == ieBehavior.interactiveElement.elementId)))
                                     {
                                         this._waitingMessage = msg;
                                         return (false);
                                     };
-                                    if (((_local_7) && ((_local_14.interactiveElement.elementId == (msg as Object).elemId))))
+                                    if (((ieNotAvailableAnymore) && (ieBehavior.interactiveElement.elementId == (msg as Object).elemId)))
                                     {
-                                        _local_14.processOutputMessage(msg, this._currentMode);
-                                        this.removeCheckPoint(_local_14);
-                                        ieBehaviorIndex = this._stackOutputMessage.indexOf(_local_14);
+                                        ieBehavior.processOutputMessage(msg, this._currentMode);
+                                        this.removeCheckPoint(ieBehavior);
+                                        ieBehaviorIndex = this._stackOutputMessage.indexOf(ieBehavior);
                                         ieam = (this._waitingMessage as InteractiveElementActivationMessage);
-                                        if (((ieam) && ((ieam.interactiveElement.elementId == _local_14.interactiveElement.elementId))))
+                                        if (((ieam) && (ieam.interactiveElement.elementId == ieBehavior.interactiveElement.elementId)))
                                         {
                                             this._waitingMessage = null;
                                         };
@@ -305,11 +340,11 @@
                         };
                         return (false);
                     };
-                    for each (_local_5 in this._stackInputMessage)
+                    for each (behaviour in this._stackInputMessage)
                     {
-                        _local_5.checkAvailability(msg);
+                        behaviour.checkAvailability(msg);
                     };
-                    if (this._stopMessages.indexOf(_local_6) != -1)
+                    if (this._stopMessages.indexOf(msgClassName) != -1)
                     {
                         stop = true;
                         if ((msg is EmotePlayMessage))
@@ -330,9 +365,9 @@
                         this._ignoredMsg.splice(this._ignoredMsg.indexOf(msg), 1);
                         return (false);
                     };
-                    _local_8 = this.processStackInputMessages(msg);
-                    _local_9 = this.processStackOutputMessages(msg);
-                    return (_local_8);
+                    catchInputMsg = this.processStackInputMessages(msg);
+                    catchOutputMsg = this.processStackOutputMessages(msg);
+                    return (catchInputMsg);
             };
         }
 
@@ -341,7 +376,6 @@
             var elem:AbstractBehavior;
             var copy:AbstractBehavior;
             var elementInStack:AbstractBehavior;
-            var ch:CheckPointEntity;
             var tchatMessage:String;
             if (this._stackOutputMessage.length >= LIMIT)
             {
@@ -351,10 +385,10 @@
             {
                 if (elem.processInputMessage(pMsg, this._currentMode))
                 {
-                    if ((((this._currentMode == AbstractBehavior.ALWAYS)) && (((!(elem.isActive)) || ((((this._stackOutputMessage.length > 0)) && (!(elem.isAvailableToStart))))))))
+                    if (((this._currentMode == AbstractBehavior.ALWAYS) && ((!(elem.isActive)) || ((this._stackOutputMessage.length > 0) && (!(elem.isAvailableToStart))))))
                     {
                         this.emptyStack(false);
-                        if (!(elem.isActive))
+                        if (!elem.isActive)
                         {
                             return (false);
                         };
@@ -382,18 +416,15 @@
                                 KernelEventsManager.getInstance().processCallback(ChatHookList.TextInformation, tchatMessage, ChatFrame.RED_CHANNEL_ID, TimeManager.getInstance().getTimestamp());
                                 return (true);
                             };
-                            if ((((((this._stackOutputMessage.length == 0)) && (elem.needToWait))) && ((this._currentMode == AbstractBehavior.NORMAL))))
+                            if ((((this._stackOutputMessage.length == 0) && (elem.needToWait)) && (this._currentMode == AbstractBehavior.NORMAL)))
                             {
                                 this._stackOutputMessage.push(AbstractBehavior.createFake(StackActionEnum.MOVE, [elem.getFakePosition()]));
                             };
                             this._stackOutputMessage.push(copy);
-                            if (((!((this._currentMode == AbstractBehavior.ALWAYS))) || ((((this._currentMode == AbstractBehavior.ALWAYS)) && ((this._stackOutputMessage.length > 1))))))
+                            if (((!(this._currentMode == AbstractBehavior.ALWAYS)) || ((this._currentMode == AbstractBehavior.ALWAYS) && (this._stackOutputMessage.length > 1))))
                             {
-                                copy.addIcon();
+                                this.addCheckPoint(copy);
                             };
-                            ch = new CheckPointEntity(copy.sprite, elem.getMapPoint());
-                            this._checkPointList.push(ch);
-                            EntitiesDisplayManager.getInstance().displayEntity(ch, elem.getMapPoint(), PlacementStrataEnums.STRATA_AREA);
                             if (elem.type == AbstractBehavior.STOP)
                             {
                                 this._ignoreAllMessages = true;
@@ -407,7 +438,7 @@
                             };
                             this.removeCheckPoint(elementInStack);
                             this._stackOutputMessage.splice(this._stackOutputMessage.indexOf(elementInStack), 1);
-                            if (((this._limitReached) && ((this._stackOutputMessage.length < LIMIT))))
+                            if (((this._limitReached) && (this._stackOutputMessage.length < LIMIT)))
                             {
                                 this._limitReached = false;
                             };
@@ -425,9 +456,19 @@
             var be:AbstractBehavior;
             for each (be in this._stackOutputMessage)
             {
-                if (((be.getMapPoint()) && ((be.getMapPoint().cellId == copy.getMapPoint().cellId))))
+                if (((be.getMapPoint()) && (be.getMapPoint().cellId == copy.getMapPoint().cellId)))
                 {
-                    return (be);
+                    if (((be is InteractiveElementBehavior) && (copy is InteractiveElementBehavior)))
+                    {
+                        if ((be as InteractiveElementBehavior).interactiveElement.elementId == (copy as InteractiveElementBehavior).interactiveElement.elementId)
+                        {
+                            return (be);
+                        };
+                    }
+                    else
+                    {
+                        return (be);
+                    };
                 };
             };
             return (null);
@@ -446,11 +487,11 @@
                     if (isCatched)
                     {
                         this._stackOutputMessage.splice(this._stackOutputMessage.indexOf(currentStackElement), 1);
-                        if (((this._limitReached) && ((this._stackOutputMessage.length < LIMIT))))
+                        if (((this._limitReached) && (this._stackOutputMessage.length < LIMIT)))
                         {
                             this._limitReached = false;
                         };
-                        if (((this._ignoreAllMessages) && ((currentStackElement.type == AbstractBehavior.STOP))))
+                        if (((this._ignoreAllMessages) && (currentStackElement.type == AbstractBehavior.STOP)))
                         {
                             this._ignoreAllMessages = false;
                         };
@@ -475,7 +516,7 @@
                             };
                             this.removeCheckPoint(currentStackElement);
                             this._stackOutputMessage.splice(this._stackOutputMessage.indexOf(currentStackElement), 1);
-                            if (((this._limitReached) && ((this._stackOutputMessage.length < LIMIT))))
+                            if (((this._limitReached) && (this._stackOutputMessage.length < LIMIT)))
                             {
                                 this._limitReached = false;
                             };
@@ -487,6 +528,23 @@
             return (false);
         }
 
+        private function addCheckPoint(stackElement:AbstractBehavior):void
+        {
+            var ch:CheckPointEntity;
+            var che:CheckPointEntity;
+            for each (ch in this._checkPointList)
+            {
+                if (((stackElement.getMapPoint()) && (stackElement.getMapPoint().cellId == ch.position.cellId)))
+                {
+                    EntitiesDisplayManager.getInstance().removeEntity(ch);
+                };
+            };
+            stackElement.addIcon();
+            che = new CheckPointEntity(stackElement.sprite, stackElement.getMapPoint());
+            this._checkPointList.push(che);
+            EntitiesDisplayManager.getInstance().displayEntity(che, stackElement.getMapPoint(), PlacementStrataEnums.STRATA_AREA);
+        }
+
         private function removeCheckPoint(stackElement:AbstractBehavior):void
         {
             var ch:CheckPointEntity;
@@ -495,7 +553,7 @@
             {
                 for each (ch in this._checkPointList)
                 {
-                    if (((stackElement.getMapPoint()) && ((stackElement.getMapPoint().cellId == ch.position.cellId))))
+                    if ((((((stackElement.getMapPoint()) && (ch.position)) && (stackElement.getMapPoint().cellId == ch.position.cellId)) && (stackElement.sprite)) && (stackElement.sprite.parent == ch)))
                     {
                         EntitiesDisplayManager.getInstance().removeEntity(ch);
                         this._checkPointList.splice(this._checkPointList.indexOf(ch), 1);
@@ -512,11 +570,29 @@
             this._stackOutputMessage.splice(this._stackOutputMessage.indexOf(pAction), 1);
         }
 
+        public function resumeStack():void
+        {
+            var elem:AbstractBehavior;
+            if (((this._wasInFight) && (this._stackOutputMessage.length > 0)))
+            {
+                for each (elem in this._stackOutputMessage)
+                {
+                    this.addCheckPoint(elem);
+                };
+                if (((!(this._stackOutputMessage[0].pendingMessage)) && (!(this._stackOutputMessage[0].actionStarted))))
+                {
+                    this._stackOutputMessage[0].pendingMessage = this._stackOutputMessage[0].processedMessage;
+                };
+                this.processStackOutputMessages(this._stackOutputMessage[0].pendingMessage);
+            };
+            this._wasInFight = false;
+        }
+
         private function emptyStack(all:Boolean=true):void
         {
             var outputMessage:AbstractBehavior;
             var checkpoint:CheckPointEntity;
-            if ((((this._stackOutputMessage.length == 1)) && ((this._stackOutputMessage[0].actionStarted == false))))
+            if (((this._stackOutputMessage.length == 1) && (this._stackOutputMessage[0].actionStarted == false)))
             {
                 this._stackOutputMessage[0].removeIcon();
                 this._stackOutputMessage[0].remove();
@@ -525,7 +601,7 @@
             var cpy:Vector.<AbstractBehavior> = this._stackOutputMessage.concat();
             for each (outputMessage in cpy)
             {
-                if (((((all) || (!((cpy.indexOf(outputMessage) == 0))))) || ((((cpy.indexOf(outputMessage) == 0)) && (!(outputMessage.actionStarted))))))
+                if ((((all) || (!(cpy.indexOf(outputMessage) == 0))) || ((cpy.indexOf(outputMessage) == 0) && (!(outputMessage.actionStarted)))))
                 {
                     outputMessage.removeIcon();
                     outputMessage.remove();
@@ -542,6 +618,7 @@
             this._ignoredMsg = new Vector.<Message>();
             this._ignoreAllMessages = false;
             this._limitReached = false;
+            this._wasInFight = false;
         }
 
         private function stopWatchingActions():void
@@ -604,5 +681,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.frames
+} com.ankamagames.dofus.logic.game.common.frames
 

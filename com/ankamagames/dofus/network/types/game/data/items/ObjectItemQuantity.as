@@ -1,8 +1,9 @@
-﻿package com.ankamagames.dofus.network.types.game.data.items
+package com.ankamagames.dofus.network.types.game.data.items
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
     public class ObjectItemQuantity extends Item implements INetworkType 
     {
@@ -59,11 +60,33 @@
         public function deserializeAs_ObjectItemQuantity(input:ICustomDataInput):void
         {
             super.deserialize(input);
+            this._objectUIDFunc(input);
+            this._quantityFunc(input);
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_ObjectItemQuantity(tree);
+        }
+
+        public function deserializeAsyncAs_ObjectItemQuantity(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._objectUIDFunc);
+            tree.addChild(this._quantityFunc);
+        }
+
+        private function _objectUIDFunc(input:ICustomDataInput):void
+        {
             this.objectUID = input.readVarUhInt();
             if (this.objectUID < 0)
             {
                 throw (new Error((("Forbidden value (" + this.objectUID) + ") on element of ObjectItemQuantity.objectUID.")));
             };
+        }
+
+        private function _quantityFunc(input:ICustomDataInput):void
+        {
             this.quantity = input.readVarUhInt();
             if (this.quantity < 0)
             {
@@ -73,5 +96,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.data.items
+} com.ankamagames.dofus.network.types.game.data.items
 

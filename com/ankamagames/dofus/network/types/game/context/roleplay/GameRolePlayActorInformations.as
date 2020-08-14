@@ -1,11 +1,12 @@
-﻿package com.ankamagames.dofus.network.types.game.context.roleplay
+package com.ankamagames.dofus.network.types.game.context.roleplay
 {
     import com.ankamagames.dofus.network.types.game.context.GameContextActorInformations;
     import com.ankamagames.jerakine.network.INetworkType;
-    import com.ankamagames.dofus.network.types.game.look.EntityLook;
     import com.ankamagames.dofus.network.types.game.context.EntityDispositionInformations;
+    import com.ankamagames.dofus.network.types.game.look.EntityLook;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
     public class GameRolePlayActorInformations extends GameContextActorInformations implements INetworkType 
     {
@@ -18,9 +19,9 @@
             return (141);
         }
 
-        public function initGameRolePlayActorInformations(contextualId:int=0, look:EntityLook=null, disposition:EntityDispositionInformations=null):GameRolePlayActorInformations
+        public function initGameRolePlayActorInformations(contextualId:Number=0, disposition:EntityDispositionInformations=null, look:EntityLook=null):GameRolePlayActorInformations
         {
-            super.initGameContextActorInformations(contextualId, look, disposition);
+            super.initGameContextActorInformations(contextualId, disposition, look);
             return (this);
         }
 
@@ -49,7 +50,17 @@
             super.deserialize(input);
         }
 
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GameRolePlayActorInformations(tree);
+        }
+
+        public function deserializeAsyncAs_GameRolePlayActorInformations(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.types.game.context.roleplay
+} com.ankamagames.dofus.network.types.game.context.roleplay
 

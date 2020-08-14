@@ -1,20 +1,38 @@
-﻿package com.ankamagames.dofus.uiApi
+package com.ankamagames.dofus.uiApi
 {
     import com.ankamagames.berilia.interfaces.IApi;
     import com.ankamagames.jerakine.logger.Logger;
-    import com.ankamagames.berilia.types.data.UiModule;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
+    import com.ankamagames.berilia.types.data.UiModule;
     import com.ankamagames.dofus.network.types.game.context.roleplay.quest.QuestActiveInformations;
     import __AS3__.vec.Vector;
     import com.ankamagames.dofus.datacenter.quest.Quest;
     import com.ankamagames.dofus.internalDatacenter.items.ItemWrapper;
     import com.ankamagames.dofus.logic.game.common.frames.QuestFrame;
+    import com.ankamagames.dofus.network.types.game.achievement.AchievementAchieved;
+    import com.ankamagames.dofus.datacenter.quest.AchievementReward;
     import com.ankamagames.dofus.logic.game.common.managers.PlayedCharacterManager;
     import com.ankamagames.dofus.datacenter.quest.Achievement;
-    import com.ankamagames.dofus.network.types.game.achievement.AchievementRewardable;
+    import com.ankamagames.dofus.internalDatacenter.quest.AchievementRewardsWrapper;
+    import com.ankamagames.dofus.network.types.game.achievement.AchievementAchievedRewardable;
     import com.ankamagames.dofus.datacenter.quest.AchievementObjective;
     import com.ankamagames.jerakine.utils.misc.StringUtils;
+    import com.ankamagames.dofus.datacenter.bonus.Bonus;
+    import com.ankamagames.dofus.logic.game.common.managers.AlmanaxManager;
+    import com.ankamagames.dofus.datacenter.bonus.QuestXPBonus;
+    import com.ankamagames.dofus.datacenter.bonus.QuestKamasBonus;
+    import com.ankamagames.atouin.Atouin;
+    import flash.display.Sprite;
+    import com.ankamagames.jerakine.utils.display.StageShareManager;
+    import com.ankamagames.atouin.AtouinConstants;
+    import com.ankamagames.atouin.managers.FrustumManager;
+    import com.ankamagames.dofus.datacenter.world.MapPosition;
+    import com.ankamagames.dofus.datacenter.world.SubArea;
+    import com.ankamagames.dofus.datacenter.quest.QuestObjective;
+    import com.ankamagames.dofus.network.enums.CompassTypeEnum;
+    import com.ankamagames.jerakine.data.I18n;
+    import com.ankamagames.berilia.factories.HyperlinkFactory;
     import com.ankamagames.dofus.kernel.Kernel;
     import __AS3__.vec.*;
 
@@ -22,14 +40,21 @@
     public class QuestApi implements IApi 
     {
 
-        protected var _log:Logger;
+        private static var _instance:QuestApi;
+
+        protected var _log:Logger = Log.getLogger(getQualifiedClassName(QuestApi));
         private var _module:UiModule;
 
-        public function QuestApi()
+
+        public static function getInstance():QuestApi
         {
-            this._log = Log.getLogger(getQualifiedClassName(QuestApi));
-            super();
+            if (!_instance)
+            {
+                _instance = new (QuestApi)();
+            };
+            return (_instance);
         }
+
 
         [ApiData(name="module")]
         public function set module(value:UiModule):void
@@ -37,19 +62,16 @@
             this._module = value;
         }
 
-        [Trusted]
         public function destroy():void
         {
             this._module = null;
         }
 
-        [Untrusted]
         public function getQuestInformations(questId:int):Object
         {
             return (this.getQuestFrame().getQuestInformations(questId));
         }
 
-        [Untrusted]
         public function getAllQuests():Vector.<Object>
         {
             var activeQuest:QuestActiveInformations;
@@ -75,7 +97,6 @@
             return (r);
         }
 
-        [Untrusted]
         public function getActiveQuests():Vector.<uint>
         {
             var activeQuest:QuestActiveInformations;
@@ -88,40 +109,53 @@
             return (data);
         }
 
-        [Untrusted]
         public function getCompletedQuests():Vector.<uint>
         {
             return (this.getQuestFrame().getCompletedQuests());
         }
 
-        [Untrusted]
-        public function getAllQuestsOrderByCategory(withCompletedQuests:Boolean=false):Array
+        public function getReinitDoneQuests():Vector.<uint>
+        {
+            return (this.getQuestFrame().getReinitDoneQuests());
+        }
+
+        public function getAllQuestsOrderByCategory(withCompletedQuests:Boolean=false, withActiveQuests:Boolean=true):Array
         {
             var quest:Quest;
             var questInfos:QuestActiveInformations;
             var category:Object;
+            var activeQuests:Vector.<QuestActiveInformations>;
             var questId:uint;
             var completedQuests:Vector.<uint>;
             var catsListWithQuests:Array = new Array();
             var totalQuest:int;
             var tabIndex:uint;
-            var activeQuests:Vector.<QuestActiveInformations> = this.getQuestFrame().getActiveQuests();
-            totalQuest = (totalQuest + activeQuests.length);
-            for each (questInfos in activeQuests)
+            if (withActiveQuests)
             {
-                quest = Quest.getQuestById(questInfos.questId);
-                tabIndex = quest.category.order;
-                if ((((tabIndex > catsListWithQuests.length)) || (!(catsListWithQuests[tabIndex]))))
+                activeQuests = this.getQuestFrame().getActiveQuests();
+                totalQuest = (totalQuest + activeQuests.length);
+                for each (questInfos in activeQuests)
                 {
-                    category = new Object();
-                    category.data = new Array();
-                    category.id = quest.categoryId;
-                    catsListWithQuests[tabIndex] = category;
+                    quest = Quest.getQuestById(questInfos.questId);
+                    if (!quest)
+                    {
+                    }
+                    else
+                    {
+                        tabIndex = quest.category.order;
+                        if (((tabIndex > catsListWithQuests.length) || (!(catsListWithQuests[tabIndex]))))
+                        {
+                            category = new Object();
+                            category.data = new Array();
+                            category.id = quest.categoryId;
+                            catsListWithQuests[tabIndex] = category;
+                        };
+                        catsListWithQuests[tabIndex].data.push({
+                            "id":questInfos.questId,
+                            "status":true
+                        });
+                    };
                 };
-                catsListWithQuests[tabIndex].data.push({
-                    "id":questInfos.questId,
-                    "status":true
-                });
             };
             if (withCompletedQuests)
             {
@@ -130,24 +164,29 @@
                 for each (questId in completedQuests)
                 {
                     quest = Quest.getQuestById(questId);
-                    tabIndex = quest.category.order;
-                    if ((((tabIndex > catsListWithQuests.length)) || (!(catsListWithQuests[tabIndex]))))
+                    if (!quest)
                     {
-                        category = new Object();
-                        category.data = new Array();
-                        category.id = quest.categoryId;
-                        catsListWithQuests[tabIndex] = category;
+                    }
+                    else
+                    {
+                        tabIndex = quest.category.order;
+                        if (((tabIndex > catsListWithQuests.length) || (!(catsListWithQuests[tabIndex]))))
+                        {
+                            category = new Object();
+                            category.data = new Array();
+                            category.id = quest.categoryId;
+                            catsListWithQuests[tabIndex] = category;
+                        };
+                        catsListWithQuests[tabIndex].data.push({
+                            "id":questId,
+                            "status":false
+                        });
                     };
-                    catsListWithQuests[tabIndex].data.push({
-                        "id":questId,
-                        "status":false
-                    });
                 };
             };
             return (catsListWithQuests);
         }
 
-        [Untrusted]
         public function getTutorialReward():Vector.<ItemWrapper>
         {
             var itemWrapperList:Vector.<ItemWrapper> = new Vector.<ItemWrapper>();
@@ -166,51 +205,63 @@
             return (itemWrapperList);
         }
 
-        [Untrusted]
         public function getNotificationList():Array
         {
             return (QuestFrame.notificationList);
         }
 
-        [Untrusted]
-        public function getFinishedAchievementsIds():Vector.<uint>
+        public function getFinishedAchievements():Vector.<AchievementAchieved>
         {
-            return (this.getQuestFrame().finishedAchievementsIds);
+            return (this.getQuestFrame().finishedAchievements);
         }
 
-        [Untrusted]
-        public function isAchievementFinished(id:int):Boolean
+        public function getFinishedCharacterAchievementIds():Array
         {
-            return (!((this.getQuestFrame().finishedAchievementsIds.indexOf(id) == -1)));
+            return (this.getQuestFrame().finishedCharacterAchievementIds);
         }
 
-        [Untrusted]
+        public function getFinishedAccountAchievementIds():Array
+        {
+            return (this.getQuestFrame().finishedAccountAchievementIds);
+        }
+
+        public function isAchievementConditionRespectedForSpecificLevel(achievementReward:AchievementReward, level:int=0):Boolean
+        {
+            return (achievementReward.isConditionRespectedForSpecificLevel(level));
+        }
+
         public function getAchievementKamasReward(achievement:Achievement, level:int=0):Number
         {
             if (level == 0)
             {
-                level = PlayedCharacterManager.getInstance().infos.level;
+                level = PlayedCharacterManager.getInstance().limitedLevel;
             };
             return (achievement.getKamasReward(level));
         }
 
-        [Untrusted]
         public function getAchievementExperienceReward(achievement:Achievement, level:int=0):Number
         {
             if (level == 0)
             {
-                level = PlayedCharacterManager.getInstance().infos.level;
+                level = PlayedCharacterManager.getInstance().limitedLevel;
             };
             return (achievement.getExperienceReward(level, PlayedCharacterManager.getInstance().experiencePercent));
         }
 
-        [Untrusted]
-        public function getRewardableAchievements():Vector.<AchievementRewardable>
+        public function getAchievementReward(achievement:Achievement, level:int=0, showAllReward:Boolean=false):AchievementRewardsWrapper
         {
-            return (this.getQuestFrame().rewardableAchievements);
+            if (level == 0)
+            {
+                level = PlayedCharacterManager.getInstance().limitedLevel;
+            };
+            return (achievement.getAchievementRewardByLevel(level, showAllReward));
         }
 
-        [Untrusted]
+        public function getRewardableAchievements():Vector.<AchievementAchievedRewardable>
+        {
+            return ((this.getQuestFrame()) ? this.getQuestFrame().rewardableAchievements : null);
+        }
+
         public function getAchievementObjectivesNames(achId:int):String
         {
             var objId:int;
@@ -228,18 +279,144 @@
             return (text);
         }
 
-        [Untrusted]
         public function getTreasureHunt(typeId:int):Object
         {
             return (this.getQuestFrame().getTreasureHuntById(typeId));
         }
 
+        public function getAlmanaxQuestXpBonusMultiplier(pQuestId:uint):Number
+        {
+            var bonusId:int;
+            var bonus:Bonus;
+            var mul:Number = NaN;
+            for each (bonusId in AlmanaxManager.getInstance().calendar.bonusesIds)
+            {
+                bonus = Bonus.getBonusById(bonusId);
+                if (((bonus is QuestXPBonus) && (bonus.isRespected(Quest.getQuestById(pQuestId).categoryId))))
+                {
+                    if (isNaN(mul))
+                    {
+                        mul = 1;
+                    };
+                    mul = (mul * (bonus.amount / 100));
+                };
+            };
+            return ((isNaN(mul)) ? 0 : mul);
+        }
+
+        public function getAlmanaxQuestKamasBonusMultiplier(pQuestId:uint):Number
+        {
+            var bonusId:int;
+            var bonus:Bonus;
+            var mul:Number = NaN;
+            for each (bonusId in AlmanaxManager.getInstance().calendar.bonusesIds)
+            {
+                bonus = Bonus.getBonusById(bonusId);
+                if (((bonus is QuestKamasBonus) && (bonus.isRespected(Quest.getQuestById(pQuestId).categoryId))))
+                {
+                    if (isNaN(mul))
+                    {
+                        mul = 1;
+                    };
+                    mul = (mul * (bonus.amount / 100));
+                };
+            };
+            return ((isNaN(mul)) ? 0 : mul);
+        }
+
+        public function toggleWorldMask(name:String):void
+        {
+            var worldMask:Sprite = Atouin.getInstance().getWorldMask(name);
+            if (!worldMask.visible)
+            {
+                Atouin.getInstance().setWorldMaskDimensions((StageShareManager.startWidth + (AtouinConstants.CELL_HALF_WIDTH / 2)), FrustumManager.getInstance().frustum.marginBottom, 0, 0.7, name);
+            };
+            Atouin.getInstance().toggleWorldMask(name, (!(worldMask.visible)));
+        }
+
+        public function getQuestObjectiveFlagInfos(questId:uint, objectiveId:uint):Object
+        {
+            var objectiveWorldMapId:int;
+            var entranceMapIds:Object;
+            var exitMapIds:Object;
+            var mapPos:MapPosition;
+            var subArea:SubArea;
+            var objective:QuestObjective = QuestObjective.getQuestObjectiveById(objectiveId);
+            if (((((!(objective)) || (!(PlayedCharacterManager.getInstance().currentWorldMap))) || (!(PlayedCharacterManager.getInstance().currentSubArea))) || ((objective.mapId) && (!(MapPosition.getMapPositionById(objective.mapId))))))
+            {
+                return (null);
+            };
+            var newFlagId:String = ((((("flag_srv" + CompassTypeEnum.COMPASS_TYPE_QUEST) + "_") + questId) + "_") + objective.id);
+            var flagX:Number = ((objective.coords) ? objective.coords.x : NaN);
+            var flagY:Number = ((objective.coords) ? objective.coords.y : NaN);
+            var worldMapId:int = 1;
+            var flagText:String = ((I18n.getUiText("ui.common.quests") + "\n") + HyperlinkFactory.decode(objective.text, false));
+            if (objective.mapId)
+            {
+                mapPos = MapPosition.getMapPositionById(objective.mapId);
+                subArea = SubArea.getSubAreaById(mapPos.subAreaId);
+                entranceMapIds = subArea.entranceMapIds;
+                exitMapIds = subArea.exitMapIds;
+                objectiveWorldMapId = subArea.worldmap.id;
+                if (worldMapId != objectiveWorldMapId)
+                {
+                    if (worldMapId == 1)
+                    {
+                        if (entranceMapIds.length > 0)
+                        {
+                            mapPos = MapPosition.getMapPositionById(entranceMapIds[0]);
+                        }
+                        else
+                        {
+                            worldMapId = objectiveWorldMapId;
+                        };
+                    }
+                    else
+                    {
+                        subArea = PlayedCharacterManager.getInstance().currentSubArea;
+                        if (exitMapIds.length > 0)
+                        {
+                            mapPos = MapPosition.getMapPositionById(exitMapIds[0]);
+                        }
+                        else
+                        {
+                            worldMapId = objectiveWorldMapId;
+                        };
+                    };
+                };
+                flagX = mapPos.posX;
+                flagY = mapPos.posY;
+            };
+            if (((!(isNaN(flagX))) && (!(isNaN(flagY)))))
+            {
+                flagText = (flagText + ((((" (" + flagX) + ",") + flagY) + ")"));
+            };
+            return ({
+                "id":newFlagId,
+                "text":flagText,
+                "worldMapId":worldMapId,
+                "x":flagX,
+                "y":flagY
+            });
+        }
+
+        public function getFollowedQuests():Object
+        {
+            var questFrame:QuestFrame = (Kernel.getWorker().getFrame(QuestFrame) as QuestFrame);
+            return (questFrame.getFollowedQuests());
+        }
+
+        public function refreshAchievementsCriterions():void
+        {
+            (Kernel.getWorker().getFrame(QuestFrame) as QuestFrame).processAchievements();
+        }
+
         private function getQuestFrame():QuestFrame
         {
-            return ((Kernel.getWorker().getFrame(QuestFrame) as QuestFrame));
+            return (Kernel.getWorker().getFrame(QuestFrame) as QuestFrame);
         }
 
 
     }
-}//package com.ankamagames.dofus.uiApi
+} com.ankamagames.dofus.uiApi
 

@@ -1,16 +1,16 @@
-﻿package com.ankamagames.dofus.network.messages.game.context.roleplay.party
+package com.ankamagames.dofus.network.messages.game.context.roleplay.party
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
     import __AS3__.vec.Vector;
     import com.ankamagames.dofus.network.types.game.context.roleplay.party.DungeonPartyFinderPlayer;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
     import __AS3__.vec.*;
 
-    [Trusted]
     public class DungeonPartyFinderRoomContentMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -18,13 +18,9 @@
 
         private var _isInitialized:Boolean = false;
         public var dungeonId:uint = 0;
-        public var players:Vector.<DungeonPartyFinderPlayer>;
+        public var players:Vector.<DungeonPartyFinderPlayer> = new Vector.<DungeonPartyFinderPlayer>();
+        private var _playerstree:FuncTree;
 
-        public function DungeonPartyFinderRoomContentMessage()
-        {
-            this.players = new Vector.<DungeonPartyFinderPlayer>();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
@@ -63,6 +59,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_DungeonPartyFinderRoomContentMessage(output);
@@ -92,11 +96,7 @@
         public function deserializeAs_DungeonPartyFinderRoomContentMessage(input:ICustomDataInput):void
         {
             var _item2:DungeonPartyFinderPlayer;
-            this.dungeonId = input.readVarUhShort();
-            if (this.dungeonId < 0)
-            {
-                throw (new Error((("Forbidden value (" + this.dungeonId) + ") on element of DungeonPartyFinderRoomContentMessage.dungeonId.")));
-            };
+            this._dungeonIdFunc(input);
             var _playersLen:uint = input.readUnsignedShort();
             var _i2:uint;
             while (_i2 < _playersLen)
@@ -108,7 +108,45 @@
             };
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_DungeonPartyFinderRoomContentMessage(tree);
+        }
+
+        public function deserializeAsyncAs_DungeonPartyFinderRoomContentMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._dungeonIdFunc);
+            this._playerstree = tree.addChild(this._playerstreeFunc);
+        }
+
+        private function _dungeonIdFunc(input:ICustomDataInput):void
+        {
+            this.dungeonId = input.readVarUhShort();
+            if (this.dungeonId < 0)
+            {
+                throw (new Error((("Forbidden value (" + this.dungeonId) + ") on element of DungeonPartyFinderRoomContentMessage.dungeonId.")));
+            };
+        }
+
+        private function _playerstreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._playerstree.addChild(this._playersFunc);
+                i++;
+            };
+        }
+
+        private function _playersFunc(input:ICustomDataInput):void
+        {
+            var _item:DungeonPartyFinderPlayer = new DungeonPartyFinderPlayer();
+            _item.deserialize(input);
+            this.players.push(_item);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.context.roleplay.party
+} com.ankamagames.dofus.network.messages.game.context.roleplay.party
 

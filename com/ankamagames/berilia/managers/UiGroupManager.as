@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.managers
+package com.ankamagames.berilia.managers
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
@@ -14,14 +14,11 @@
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(UiGroupManager));
         private static var _self:UiGroupManager;
 
-        private var _registeredGroup:Array;
-        private var _uis:Array;
+        private var _registeredGroup:Array = new Array();
+        private var _uis:Array = new Array();
 
         public function UiGroupManager()
         {
-            this._registeredGroup = new Array();
-            this._uis = new Array();
-            super();
             if (_self)
             {
                 throw (new SingletonError());
@@ -31,7 +28,7 @@
 
         public static function getInstance():UiGroupManager
         {
-            if (!(_self))
+            if (!_self)
             {
                 _self = new (UiGroupManager)();
             };
@@ -64,10 +61,10 @@
         {
             var group:UiGroup;
             var actualGroupUis:Array;
-            var uiName:String;
             var close:Boolean;
             var uiName2:String;
-            if (!(e.uiData))
+            var uiName:String;
+            if (!e.uiData)
             {
                 _log.error("No data for this UI.");
                 return;
@@ -76,18 +73,18 @@
             {
                 return;
             };
-            if (!(this._uis[e.uiData.uiGroupName]))
+            if (!this._uis[e.uiData.uiGroupName])
             {
                 this._uis[e.uiData.uiGroupName] = new Array();
             };
             var currentGroup:UiGroup = this.getGroup(e.uiData.uiGroupName);
-            if (!(currentGroup))
+            if (!currentGroup)
             {
                 return;
             };
             for each (group in this._registeredGroup)
             {
-                if (((((currentGroup.exclusive) && (!(group.permanent)))) && (!((group.name == currentGroup.name)))))
+                if ((((currentGroup.exclusive) && (!(group.permanent))) && (!(group.name == currentGroup.name))))
                 {
                     if (this._uis[group.name] != null)
                     {
@@ -102,7 +99,7 @@
                                     close = false;
                                 };
                             };
-                            if (((close) && (!((uiName2 == null)))))
+                            if (((close) && (uiName2)))
                             {
                                 Berilia.getInstance().unloadUi(uiName);
                             };
@@ -116,5 +113,5 @@
 
 
     }
-}//package com.ankamagames.berilia.managers
+} com.ankamagames.berilia.managers
 

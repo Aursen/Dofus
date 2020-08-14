@@ -1,12 +1,14 @@
-﻿package com.ankamagames.dofus.datacenter.quest
+package com.ankamagames.dofus.datacenter.quest
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
+    import com.ankamagames.dofus.types.IdAccessors;
     import __AS3__.vec.Vector;
-    import com.ankamagames.jerakine.data.GameData;
+    import com.ankamagames.dofus.datacenter.items.criterion.GroupItemCriterion;
     import com.ankamagames.dofus.network.types.game.context.roleplay.quest.GameRolePlayNpcQuestFlag;
+    import com.ankamagames.jerakine.data.GameData;
     import com.ankamagames.jerakine.data.I18n;
     import com.ankamagames.dofus.logic.game.common.managers.PlayedCharacterManager;
     import __AS3__.vec.*;
@@ -16,30 +18,24 @@
 
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(Quest));
         public static const MODULE:String = "Quests";
+        public static var idAccessors:IdAccessors = new IdAccessors(getQuestById, getQuests);
 
         public var id:uint;
         public var nameId:uint;
         public var stepIds:Vector.<uint>;
         public var categoryId:uint;
-        public var isRepeatable:Boolean;
         public var repeatType:uint;
         public var repeatLimit:uint;
         public var isDungeonQuest:Boolean;
         public var levelMin:uint;
         public var levelMax:uint;
+        public var isPartyQuest:Boolean;
+        public var startCriterion:String;
+        public var followable:Boolean;
         private var _name:String;
         private var _steps:Vector.<QuestStep>;
+        private var _conditions:GroupItemCriterion;
 
-
-        public static function getQuestById(id:int):Quest
-        {
-            return ((GameData.getObject(MODULE, id) as Quest));
-        }
-
-        public static function getQuests():Array
-        {
-            return (GameData.getObjects(MODULE));
-        }
 
         public static function getFirstValidQuest(questFlag:GameRolePlayNpcQuestFlag):Quest
         {
@@ -55,7 +51,7 @@
                 if (quest != null)
                 {
                     res1 = quest.getPriorityValue();
-                    if ((((validQuestRes < res1)) || ((validQuest == null))))
+                    if (((validQuestRes < res1) || (validQuest == null)))
                     {
                         validQuest = quest;
                         validQuestRes = res1;
@@ -68,7 +64,7 @@
                 if (quest != null)
                 {
                     res2 = quest.getPriorityValue();
-                    if ((((validQuestRes < res2)) || ((validQuest == null))))
+                    if (((validQuestRes < res2) || (validQuest == null)))
                     {
                         validQuest = quest;
                         validQuestRes = res2;
@@ -78,10 +74,20 @@
             return (validQuest);
         }
 
+        public static function getQuestById(id:int):Quest
+        {
+            return (GameData.getObject(MODULE, id) as Quest);
+        }
+
+        public static function getQuests():Array
+        {
+            return (GameData.getObjects(MODULE));
+        }
+
 
         public function get name():String
         {
-            if (!(this._name))
+            if (!this._name)
             {
                 this._name = I18n.getText(this.nameId);
             };
@@ -91,7 +97,7 @@
         public function get steps():Vector.<QuestStep>
         {
             var i:uint;
-            if (!(this._steps))
+            if (!this._steps)
             {
                 this._steps = new Vector.<QuestStep>(this.stepIds.length, true);
                 i = 0;
@@ -109,11 +115,20 @@
             return (QuestCategory.getQuestCategoryById(this.categoryId));
         }
 
+        public function get canBeStarted():Boolean
+        {
+            if (((!(this._conditions)) && (this.startCriterion)))
+            {
+                this._conditions = new GroupItemCriterion(this.startCriterion);
+            };
+            return ((this._conditions) ? this._conditions.isRespected : true);
+        }
+
         public function getPriorityValue():int
         {
-            var playerLvl:int = PlayedCharacterManager.getInstance().infos.level;
+            var playerLvl:int = PlayedCharacterManager.getInstance().limitedLevel;
             var res:int;
-            if ((((playerLvl >= this.levelMin)) && ((playerLvl <= this.levelMax))))
+            if (((playerLvl >= this.levelMin) && (playerLvl <= this.levelMax)))
             {
                 res = (res + 10000);
             };
@@ -126,5 +141,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.quest
+} com.ankamagames.dofus.datacenter.quest
 

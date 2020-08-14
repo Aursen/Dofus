@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.common.frames
+package com.ankamagames.dofus.logic.common.frames
 {
     import com.ankamagames.jerakine.messages.Frame;
     import flash.utils.Timer;
@@ -25,6 +25,7 @@
     import flash.events.Event;
     import flash.utils.setTimeout;
     import com.ankamagames.dofus.network.messages.common.basic.BasicPingMessage;
+    import com.ankamagames.dofus.kernel.net.ConnectionType;
     import com.ankamagames.atouin.types.CellReference;
     import com.ankamagames.jerakine.types.positions.MapPoint;
     import com.ankamagames.atouin.managers.MapDisplayManager;
@@ -58,8 +59,8 @@
         private var _fightCount:uint;
         private var _mapPos:Array;
         private var _enabled:Boolean;
-        private var _rollOverTimer:Timer;
-        private var _actionTimer:Timer;
+        private var _rollOverTimer:Timer = new Timer(2000);
+        private var _actionTimer:Timer = new Timer(5000);
         private var _chatTimer:Timer;
         private var _inFight:Boolean;
         private var _lastElemOver:Sprite;
@@ -71,9 +72,6 @@
 
         public function DebugBotFrame()
         {
-            this._rollOverTimer = new Timer(2000);
-            this._actionTimer = new Timer(5000);
-            super();
             if (_self)
             {
                 throw (new SingletonError());
@@ -85,7 +83,7 @@
 
         public static function getInstance():DebugBotFrame
         {
-            if (!(_self))
+            if (!_self)
             {
                 _self = new (DebugBotFrame)();
             };
@@ -99,7 +97,6 @@
             {
                 this._changeMap = false;
                 this._chatTimer = new Timer(time);
-                trace(("start debug chat mode with a timer of: " + time));
                 this._chatTimer.addEventListener(TimerEvent.TIMER, this.sendChatMessage);
             }
             else
@@ -153,19 +150,19 @@
 
         public function process(msg:Message):Boolean
         {
-            var _local_2:MapFightCountMessage;
-            var _local_3:MapRunningFightListMessage;
-            var _local_4:int;
-            var _local_5:int;
-            var _local_6:GameFightJoinRequestMessage;
-            var _local_7:ChatServerMessage;
+            var mfcMsg:MapFightCountMessage;
+            var mrflMsg:MapRunningFightListMessage;
+            var maxFightId:int;
+            var maxFighter:int;
+            var joinRequestMsg:GameFightJoinRequestMessage;
+            var csmsg:ChatServerMessage;
             var requestRunningFightMsg:MapRunningFightListRequestMessage;
             var fightInfos:FightExternalInformations;
             switch (true)
             {
                 case (msg is MapFightCountMessage):
-                    _local_2 = (msg as MapFightCountMessage);
-                    if (_local_2.fightCount)
+                    mfcMsg = (msg as MapFightCountMessage);
+                    if (mfcMsg.fightCount)
                     {
                         requestRunningFightMsg = new MapRunningFightListRequestMessage();
                         requestRunningFightMsg.initMapRunningFightListRequestMessage();
@@ -174,24 +171,24 @@
                     };
                     break;
                 case (msg is MapRunningFightListMessage):
-                    if (!(this._frameFightListRequest)) break;
+                    if (!this._frameFightListRequest) break;
                     this._frameFightListRequest = false;
-                    _local_3 = (msg as MapRunningFightListMessage);
-                    for each (fightInfos in _local_3.fights)
+                    mrflMsg = (msg as MapRunningFightListMessage);
+                    for each (fightInfos in mrflMsg.fights)
                     {
-                        if (fightInfos.fightTeams.length > _local_5)
+                        if (fightInfos.fightTeams.length > maxFighter)
                         {
-                            _local_5 = fightInfos.fightTeams.length;
-                            _local_4 = fightInfos.fightId;
+                            maxFighter = fightInfos.fightTeams.length;
+                            maxFightId = fightInfos.fightId;
                         };
                     };
-                    if (((this._wait) || ((Math.random() < 0.6))))
+                    if (((this._wait) || (Math.random() < 0.6)))
                     {
                         return (true);
                     };
-                    _local_6 = new GameFightJoinRequestMessage();
-                    _local_6.initGameFightJoinRequestMessage(0, _local_4);
-                    ConnectionsHandler.getConnection().send(_local_6);
+                    joinRequestMsg = new GameFightJoinRequestMessage();
+                    joinRequestMsg.initGameFightJoinRequestMessage(0, maxFightId);
+                    ConnectionsHandler.getConnection().send(joinRequestMsg);
                     this._actionTimer.reset();
                     this._actionTimer.start();
                     return (true);
@@ -209,10 +206,10 @@
                     this._wait = true;
                     break;
                 case (msg is ChatServerMessage):
-                    _local_7 = (msg as ChatServerMessage);
-                    if ((((_local_7.channel == ChatChannelsMultiEnum.CHANNEL_SALES)) || ((((_local_7.channel == ChatChannelsMultiEnum.CHANNEL_SEEK)) && ((Math.random() > 0.95))))))
+                    csmsg = (msg as ChatServerMessage);
+                    if (((csmsg.channel == ChatChannelsMultiEnum.CHANNEL_SALES) || ((csmsg.channel == ChatChannelsMultiEnum.CHANNEL_SEEK) && (Math.random() > 0.95))))
                     {
-                        this.join(_local_7.senderName);
+                        this.join(csmsg.senderName);
                     };
                     break;
             };
@@ -255,7 +252,7 @@
 
         private function randomMove():void
         {
-            if (((((this._inFight) || (this._wait))) || (!(this._changeMap))))
+            if ((((this._inFight) || (this._wait)) || (!(this._changeMap))))
             {
                 return;
             };
@@ -269,14 +266,14 @@
 
         private function fakeActivity():void
         {
-            if (!(this._enabled))
+            if (!this._enabled)
             {
                 return;
             };
             setTimeout(this.fakeActivity, ((1000 * 60) * 5));
             var bpmgs:BasicPingMessage = new BasicPingMessage();
             bpmgs.initBasicPingMessage(false);
-            ConnectionsHandler.getConnection().send(bpmgs);
+            ConnectionsHandler.getConnection().send(bpmgs, ConnectionType.TO_ALL_SERVERS);
         }
 
         private function randomWalk():void
@@ -296,7 +293,7 @@
                     avaibleCells.push(mp);
                 };
             };
-            if (!(avaibleCells))
+            if (!avaibleCells)
             {
                 return;
             };
@@ -328,7 +325,7 @@
                 };
             };
             entity = avaibleEntities[Math.floor((avaibleEntities.length * Math.random()))];
-            if (!(entity))
+            if (!entity)
             {
                 return;
             };
@@ -351,7 +348,7 @@
                     };
                 };
             };
-            if (!(avaibleElem.length))
+            if (!avaibleElem.length)
             {
                 return;
             };
@@ -370,7 +367,7 @@
         {
             var channel:int;
             var removedSentences:int;
-            var color:uint = (Math.random() * 0xFFFFFF);
+            var color:uint = uint((Math.random() * 0xFFFFFF));
             var SENTENCES:Vector.<String> = new Vector.<String>();
             SENTENCES[0] = (('Test html: salut <span style="color:#' + (Math.random() * 0xFFFFFF).toString(8)) + '">je suis la</span> et la');
             SENTENCES[1] = "i'm batman";
@@ -392,5 +389,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.common.frames
+} com.ankamagames.dofus.logic.common.frames
 

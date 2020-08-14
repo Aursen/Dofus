@@ -1,28 +1,24 @@
-﻿package com.ankamagames.dofus.network.messages.game.context.roleplay.party
+package com.ankamagames.dofus.network.messages.game.context.roleplay.party
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
     import __AS3__.vec.Vector;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
     import __AS3__.vec.*;
 
-    [Trusted]
     public class DungeonPartyFinderRegisterRequestMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 6249;
 
         private var _isInitialized:Boolean = false;
-        public var dungeonIds:Vector.<uint>;
+        public var dungeonIds:Vector.<uint> = new Vector.<uint>();
+        private var _dungeonIdstree:FuncTree;
 
-        public function DungeonPartyFinderRegisterRequestMessage()
-        {
-            this.dungeonIds = new Vector.<uint>();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
@@ -57,6 +53,14 @@
         override public function unpack(input:ICustomDataInput, length:uint):void
         {
             this.deserialize(input);
+        }
+
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
         }
 
         public function serialize(output:ICustomDataOutput):void
@@ -101,7 +105,38 @@
             };
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_DungeonPartyFinderRegisterRequestMessage(tree);
+        }
+
+        public function deserializeAsyncAs_DungeonPartyFinderRegisterRequestMessage(tree:FuncTree):void
+        {
+            this._dungeonIdstree = tree.addChild(this._dungeonIdstreeFunc);
+        }
+
+        private function _dungeonIdstreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._dungeonIdstree.addChild(this._dungeonIdsFunc);
+                i++;
+            };
+        }
+
+        private function _dungeonIdsFunc(input:ICustomDataInput):void
+        {
+            var _val:uint = input.readVarUhShort();
+            if (_val < 0)
+            {
+                throw (new Error((("Forbidden value (" + _val) + ") on elements of dungeonIds.")));
+            };
+            this.dungeonIds.push(_val);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.context.roleplay.party
+} com.ankamagames.dofus.network.messages.game.context.roleplay.party
 

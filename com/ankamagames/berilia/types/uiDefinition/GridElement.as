@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.types.uiDefinition
+package com.ankamagames.berilia.types.uiDefinition
 {
     import flash.utils.Dictionary;
 
@@ -13,5 +13,5 @@
         }
 
     }
-}//package com.ankamagames.berilia.types.uiDefinition
+} com.ankamagames.berilia.types.uiDefinition
 

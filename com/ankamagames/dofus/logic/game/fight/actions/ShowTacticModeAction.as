@@ -1,18 +1,21 @@
-﻿package com.ankamagames.dofus.logic.game.fight.actions
+package com.ankamagames.dofus.logic.game.fight.actions
 {
     import com.ankamagames.jerakine.handlers.messages.Action;
 
     public class ShowTacticModeAction implements Action 
     {
 
+        public var force:Boolean;
 
-        public static function create():ShowTacticModeAction
+
+        public static function create(pForce:Boolean=false):ShowTacticModeAction
         {
             var a:ShowTacticModeAction = new (ShowTacticModeAction)();
+            a.force = pForce;
             return (a);
         }
 
 
     }
-}//package com.ankamagames.dofus.logic.game.fight.actions
+} com.ankamagames.dofus.logic.game.fight.actions
 

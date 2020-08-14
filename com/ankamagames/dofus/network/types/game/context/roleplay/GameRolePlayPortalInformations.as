@@ -1,9 +1,10 @@
-﻿package com.ankamagames.dofus.network.types.game.context.roleplay
+package com.ankamagames.dofus.network.types.game.context.roleplay
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.dofus.network.types.game.context.roleplay.treasureHunt.PortalInformation;
-    import com.ankamagames.dofus.network.types.game.look.EntityLook;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import com.ankamagames.dofus.network.types.game.context.EntityDispositionInformations;
+    import com.ankamagames.dofus.network.types.game.look.EntityLook;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
     import com.ankamagames.dofus.network.ProtocolTypeManager;
@@ -13,22 +14,18 @@
 
         public static const protocolId:uint = 467;
 
-        public var portal:PortalInformation;
+        public var portal:PortalInformation = new PortalInformation();
+        private var _portaltree:FuncTree;
 
-        public function GameRolePlayPortalInformations()
-        {
-            this.portal = new PortalInformation();
-            super();
-        }
 
         override public function getTypeId():uint
         {
             return (467);
         }
 
-        public function initGameRolePlayPortalInformations(contextualId:int=0, look:EntityLook=null, disposition:EntityDispositionInformations=null, portal:PortalInformation=null):GameRolePlayPortalInformations
+        public function initGameRolePlayPortalInformations(contextualId:Number=0, disposition:EntityDispositionInformations=null, look:EntityLook=null, portal:PortalInformation=null):GameRolePlayPortalInformations
         {
-            super.initGameRolePlayActorInformations(contextualId, look, disposition);
+            super.initGameRolePlayActorInformations(contextualId, disposition, look);
             this.portal = portal;
             return (this);
         }
@@ -64,7 +61,25 @@
             this.portal.deserialize(input);
         }
 
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GameRolePlayPortalInformations(tree);
+        }
+
+        public function deserializeAsyncAs_GameRolePlayPortalInformations(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            this._portaltree = tree.addChild(this._portaltreeFunc);
+        }
+
+        private function _portaltreeFunc(input:ICustomDataInput):void
+        {
+            var _id:uint = input.readUnsignedShort();
+            this.portal = ProtocolTypeManager.getInstance(PortalInformation, _id);
+            this.portal.deserializeAsync(this._portaltree);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.types.game.context.roleplay
+} com.ankamagames.dofus.network.types.game.context.roleplay
 

@@ -1,21 +1,24 @@
-﻿package com.ankamagames.dofus.logic.game.fight.steps
+package com.ankamagames.dofus.logic.game.fight.steps
 {
     import com.ankamagames.jerakine.sequencer.AbstractSequencable;
     import com.ankamagames.dofus.logic.game.fight.types.SpellCastInFightManager;
-    import com.ankamagames.dofus.logic.game.common.managers.PlayedCharacterManager;
+    import com.ankamagames.dofus.logic.game.common.frames.SpellInventoryManagementFrame;
     import com.ankamagames.dofus.internalDatacenter.spells.SpellWrapper;
     import com.ankamagames.dofus.logic.game.fight.types.castSpellManager.SpellManager;
+    import com.ankamagames.dofus.logic.game.common.managers.PlayedCharacterManager;
     import com.ankamagames.dofus.logic.game.fight.managers.CurrentPlayedFighterManager;
+    import com.ankamagames.dofus.kernel.Kernel;
+    import __AS3__.vec.Vector;
 
     public class FightSpellCooldownVariationStep extends AbstractSequencable implements IFightStep 
     {
 
-        private var _fighterId:int;
+        private var _fighterId:Number;
         private var _spellId:int;
         private var _actionId:int;
         private var _value:int;
 
-        public function FightSpellCooldownVariationStep(fighterId:int, actionId:int, spellId:int, value:int)
+        public function FightSpellCooldownVariationStep(fighterId:Number, actionId:int, spellId:int, value:int)
         {
             this._fighterId = fighterId;
             this._spellId = spellId;
@@ -31,24 +34,26 @@
         override public function start():void
         {
             var spellCastManager:SpellCastInFightManager;
-            var playerManager:PlayedCharacterManager;
+            var simf:SpellInventoryManagementFrame;
+            var spellList:Array;
             var spellLvl:uint;
             var spellKnown:SpellWrapper;
             var spellManager:SpellManager;
-            if (this._fighterId == CurrentPlayedFighterManager.getInstance().currentFighterId)
+            if (((this._fighterId == CurrentPlayedFighterManager.getInstance().currentFighterId) || (this._fighterId == PlayedCharacterManager.getInstance().id)))
             {
                 spellCastManager = CurrentPlayedFighterManager.getInstance().getSpellCastManagerById(this._fighterId);
-                playerManager = PlayedCharacterManager.getInstance();
-                for each (spellKnown in playerManager.spellsInventory)
+                simf = (Kernel.getWorker().getFrame(SpellInventoryManagementFrame) as SpellInventoryManagementFrame);
+                spellList = simf.getFullSpellListByOwnerId(this._fighterId);
+                for each (spellKnown in spellList)
                 {
                     if (spellKnown.id == this._spellId)
                     {
                         spellLvl = spellKnown.spellLevel;
                     };
                 };
-                if (((spellCastManager) && ((spellLvl > 0))))
+                if (((spellCastManager) && (spellLvl > 0)))
                 {
-                    if (!(spellCastManager.getSpellManagerBySpellId(this._spellId)))
+                    if (!spellCastManager.getSpellManagerBySpellId(this._spellId))
                     {
                         spellCastManager.castSpell(this._spellId, spellLvl, [], false);
                     };
@@ -59,7 +64,12 @@
             executeCallbacks();
         }
 
+        public function get targets():Vector.<Number>
+        {
+            return (new <Number>[this._fighterId]);
+        }
+
 
     }
-}//package com.ankamagames.dofus.logic.game.fight.steps
+} com.ankamagames.dofus.logic.game.fight.steps
 

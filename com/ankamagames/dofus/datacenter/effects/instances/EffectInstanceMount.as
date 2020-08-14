@@ -1,14 +1,27 @@
-﻿package com.ankamagames.dofus.datacenter.effects.instances
+package com.ankamagames.dofus.datacenter.effects.instances
 {
     import com.ankamagames.dofus.datacenter.effects.EffectInstance;
     import com.ankamagames.jerakine.interfaces.IDataCenter;
+    import __AS3__.vec.Vector;
+    import __AS3__.vec.*;
 
     public class EffectInstanceMount extends EffectInstance implements IDataCenter 
     {
 
-        public var date:Number;
-        public var modelId:uint;
-        public var mountId:uint;
+        public var id:Number;
+        public var expirationDate:Number;
+        public var model:uint;
+        public var name:String = "";
+        public var owner:String = "";
+        public var level:uint = 0;
+        public var sex:Boolean = false;
+        public var isRideable:Boolean = false;
+        public var isFeconded:Boolean = false;
+        public var isFecondationReady:Boolean = false;
+        public var reproductionCount:int = 0;
+        public var reproductionCountMax:uint = 0;
+        public var effects:Vector.<EffectInstanceInteger> = new Vector.<EffectInstanceInteger>();
+        public var capacities:Vector.<uint> = new Vector.<uint>();
 
 
         override public function clone():EffectInstance
@@ -18,29 +31,50 @@
             o.effectId = effectId;
             o.duration = duration;
             o.delay = delay;
-            o.date = this.date;
-            o.modelId = this.modelId;
-            o.mountId = this.mountId;
             o.random = random;
             o.group = group;
             o.targetId = targetId;
             o.targetMask = targetMask;
+            o.id = this.id;
+            o.expirationDate = this.expirationDate;
+            o.model = this.model;
+            o.name = this.name;
+            o.owner = this.owner;
+            o.level = this.level;
+            o.sex = this.sex;
+            o.isRideable = this.isRideable;
+            o.isFeconded = this.isFeconded;
+            o.isFecondationReady = this.isFecondationReady;
+            o.reproductionCount = this.reproductionCount;
+            o.reproductionCountMax = this.reproductionCountMax;
+            o.effects = this.effects;
+            o.capacities = this.capacities;
             return (o);
         }
 
         override public function get parameter0():Object
         {
-            return (this.date);
+            return (this.id);
         }
 
         override public function get parameter1():Object
         {
-            return (this.modelId);
+            return (this.expirationDate);
         }
 
         override public function get parameter2():Object
         {
-            return (this.mountId);
+            return (this.model);
+        }
+
+        override public function get parameter3():Object
+        {
+            return (this.name);
+        }
+
+        override public function get parameter4():Object
+        {
+            return (this.owner);
         }
 
         override public function setParameter(paramIndex:uint, value:*):void
@@ -48,18 +82,24 @@
             switch (paramIndex)
             {
                 case 0:
-                    this.date = Number(value);
-                    return;
+                    this.id = Number(value);
+                    break;
                 case 1:
-                    this.modelId = uint(value);
-                    return;
+                    this.expirationDate = Number(value);
+                    break;
                 case 2:
-                    this.mountId = uint(value);
-                    return;
+                    this.model = uint(value);
+                    break;
+                case 3:
+                    this.name = String(value);
+                    break;
+                case 4:
+                    this.owner = String(value);
+                    break;
             };
         }
 
 
     }
-}//package com.ankamagames.dofus.datacenter.effects.instances
+} com.ankamagames.dofus.datacenter.effects.instances
 

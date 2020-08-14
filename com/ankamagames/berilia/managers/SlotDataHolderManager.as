@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.managers
+package com.ankamagames.berilia.managers
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
@@ -14,20 +14,18 @@
 
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(SlotDataHolderManager));
 
-        private var _weakHolderReference:Dictionary;
+        private var _weakHolderReference:Dictionary = new Dictionary(true);
         private var _linkedSlotsData:Vector.<ISlotData>;
 
         public function SlotDataHolderManager(linkedSlotData:ISlotData)
         {
-            this._weakHolderReference = new Dictionary(true);
-            super();
             this._linkedSlotsData = new Vector.<ISlotData>();
             this._linkedSlotsData.push(linkedSlotData);
         }
 
         public function setLinkedSlotData(slotData:ISlotData):void
         {
-            if (!(this._linkedSlotsData))
+            if (!this._linkedSlotsData)
             {
                 this._linkedSlotsData = new Vector.<ISlotData>();
             };
@@ -66,7 +64,7 @@
             {
                 for each (linkedSlotData in this._linkedSlotsData)
                 {
-                    if (((h) && ((ISlotDataHolder(h).data === linkedSlotData))))
+                    if (((h) && (ISlotDataHolder(h).data === linkedSlotData)))
                     {
                         h.refresh();
                     };
@@ -76,5 +74,5 @@
 
 
     }
-}//package com.ankamagames.berilia.managers
+} com.ankamagames.berilia.managers
 

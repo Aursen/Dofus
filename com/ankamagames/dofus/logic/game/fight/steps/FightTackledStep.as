@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.fight.steps
+package com.ankamagames.dofus.logic.game.fight.steps
 {
     import com.ankamagames.jerakine.sequencer.AbstractSequencable;
     import com.ankamagames.jerakine.sequencer.ISequencableListener;
@@ -10,14 +10,15 @@
     import com.ankamagames.dofus.types.enums.AnimationEnum;
     import com.ankamagames.dofus.logic.game.fight.fightEvents.FightEventsHelper;
     import com.ankamagames.dofus.logic.game.fight.types.FightEventEnum;
+    import __AS3__.vec.Vector;
 
     public class FightTackledStep extends AbstractSequencable implements IFightStep, ISequencableListener 
     {
 
-        private var _fighterId:int;
+        private var _fighterId:Number;
         private var _animStep:ISequencable;
 
-        public function FightTackledStep(fighterId:int)
+        public function FightTackledStep(fighterId:Number)
         {
             this._fighterId = fighterId;
         }
@@ -30,7 +31,7 @@
         override public function start():void
         {
             var tackledEntity:IEntity = DofusEntities.getEntity(this._fighterId);
-            if (!(tackledEntity))
+            if (!tackledEntity)
             {
                 _log.warn((("Unable to play tackle of an unexisting fighter " + this._fighterId) + "."));
                 this.stepFinished(this);
@@ -48,7 +49,12 @@
             executeCallbacks();
         }
 
+        public function get targets():Vector.<Number>
+        {
+            return (new <Number>[this._fighterId]);
+        }
+
 
     }
-}//package com.ankamagames.dofus.logic.game.fight.steps
+} com.ankamagames.dofus.logic.game.fight.steps
 

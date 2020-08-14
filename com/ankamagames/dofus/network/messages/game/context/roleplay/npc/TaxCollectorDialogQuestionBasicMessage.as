@@ -1,27 +1,23 @@
-﻿package com.ankamagames.dofus.network.messages.game.context.roleplay.npc
+package com.ankamagames.dofus.network.messages.game.context.roleplay.npc
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
     import com.ankamagames.dofus.network.types.game.context.roleplay.BasicGuildInformations;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
 
-    [Trusted]
     public class TaxCollectorDialogQuestionBasicMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 5619;
 
         private var _isInitialized:Boolean = false;
-        public var guildInfo:BasicGuildInformations;
+        public var guildInfo:BasicGuildInformations = new BasicGuildInformations();
+        private var _guildInfotree:FuncTree;
 
-        public function TaxCollectorDialogQuestionBasicMessage()
-        {
-            this.guildInfo = new BasicGuildInformations();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
@@ -58,6 +54,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_TaxCollectorDialogQuestionBasicMessage(output);
@@ -79,7 +83,23 @@
             this.guildInfo.deserialize(input);
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_TaxCollectorDialogQuestionBasicMessage(tree);
+        }
+
+        public function deserializeAsyncAs_TaxCollectorDialogQuestionBasicMessage(tree:FuncTree):void
+        {
+            this._guildInfotree = tree.addChild(this._guildInfotreeFunc);
+        }
+
+        private function _guildInfotreeFunc(input:ICustomDataInput):void
+        {
+            this.guildInfo = new BasicGuildInformations();
+            this.guildInfo.deserializeAsync(this._guildInfotree);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.context.roleplay.npc
+} com.ankamagames.dofus.network.messages.game.context.roleplay.npc
 

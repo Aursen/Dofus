@@ -1,8 +1,9 @@
-﻿package com.ankamagames.dofus.network.types.game.character.status
+package com.ankamagames.dofus.network.types.game.character.status
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
     public class PlayerStatusExtended extends PlayerStatus implements INetworkType 
     {
@@ -49,10 +50,26 @@
         public function deserializeAs_PlayerStatusExtended(input:ICustomDataInput):void
         {
             super.deserialize(input);
+            this._messageFunc(input);
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_PlayerStatusExtended(tree);
+        }
+
+        public function deserializeAsyncAs_PlayerStatusExtended(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._messageFunc);
+        }
+
+        private function _messageFunc(input:ICustomDataInput):void
+        {
             this.message = input.readUTF();
         }
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.character.status
+} com.ankamagames.dofus.network.types.game.character.status
 

@@ -1,6 +1,5 @@
-﻿package com.ankamagames.berilia.enums
+package com.ankamagames.berilia.enums
 {
-    [Trusted]
     public class LocationTypeEnum 
     {
 
@@ -9,5 +8,5 @@
 
 
     }
-}//package com.ankamagames.berilia.enums
+} com.ankamagames.berilia.enums
 

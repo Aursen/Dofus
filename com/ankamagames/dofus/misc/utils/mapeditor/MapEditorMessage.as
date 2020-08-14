@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.misc.utils.mapeditor
+package com.ankamagames.dofus.misc.utils.mapeditor
 {
     import flash.utils.ByteArray;
     import flash.utils.IDataOutput;
@@ -14,14 +14,14 @@
         public var type:uint;
         public var data:ByteArray;
 
-        public function MapEditorMessage(type:uint)
+        public function MapEditorMessage(_arg_1:uint)
         {
-            this.type = type;
+            this.type = _arg_1;
         }
 
         public function serialize(target:IDataOutput):void
         {
-            if (!(this.data))
+            if (!this.data)
             {
                 target.writeInt(4);
                 target.writeInt(this.type);
@@ -37,5 +37,5 @@
 
 
     }
-}//package com.ankamagames.dofus.misc.utils.mapeditor
+} com.ankamagames.dofus.misc.utils.mapeditor
 

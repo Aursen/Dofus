@@ -1,4 +1,4 @@
-﻿package com.ankamagames.atouin.messages
+package com.ankamagames.atouin.messages
 {
     import com.ankamagames.jerakine.messages.Message;
     import flash.display.DisplayObject;
@@ -11,7 +11,7 @@
         private var _spZone:DisplayObject;
         private var _cellId:int;
         private var _cellData:CellData;
-        private var _neighborMapId:uint;
+        private var _neighborMapId:Number;
 
         public function AdjacentMapOverMessage(nDirection:uint, zone:DisplayObject, cellId:int, cellData:CellData)
         {
@@ -43,5 +43,5 @@
 
 
     }
-}//package com.ankamagames.atouin.messages
+} com.ankamagames.atouin.messages
 

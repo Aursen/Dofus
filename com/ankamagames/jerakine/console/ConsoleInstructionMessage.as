@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.console
+package com.ankamagames.jerakine.console
 {
     import com.ankamagames.jerakine.messages.Message;
 
@@ -27,7 +27,7 @@
 
         public function get completCmd():String
         {
-            return ((((this._localCmd) ? "/" : "") + this._cmd));
+            return (((this._localCmd) ? "/" : "") + this._cmd);
         }
 
         public function get args():Array
@@ -44,13 +44,13 @@
         {
             var result:Boolean;
             var i:uint;
-            result = (((cim.completCmd == this.completCmd)) && ((this.args.length == cim.args.length)));
+            result = ((cim.completCmd == this.completCmd) && (this.args.length == cim.args.length));
             if (result)
             {
                 i = 0;
                 while (i < this.args.length)
                 {
-                    result = ((result) && ((this.args[i] == cim.args[i])));
+                    result = ((result) && (this.args[i] == cim.args[i]));
                     i++;
                 };
             };
@@ -59,5 +59,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.console
+} com.ankamagames.jerakine.console
 

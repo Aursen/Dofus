@@ -1,7 +1,8 @@
-﻿package com.ankamagames.dofus.network.types.game.data.items
+package com.ankamagames.dofus.network.types.game.data.items
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import __AS3__.vec.Vector;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
     import __AS3__.vec.*;
@@ -11,21 +12,17 @@
 
         public static const protocolId:uint = 121;
 
-        public var quantities:Vector.<uint>;
-        public var types:Vector.<uint>;
+        public var quantities:Vector.<uint> = new Vector.<uint>();
+        public var types:Vector.<uint> = new Vector.<uint>();
         public var taxPercentage:Number = 0;
         public var taxModificationPercentage:Number = 0;
         public var maxItemLevel:uint = 0;
         public var maxItemPerAccount:uint = 0;
         public var npcContextualId:int = 0;
         public var unsoldDelay:uint = 0;
+        private var _quantitiestree:FuncTree;
+        private var _typestree:FuncTree;
 
-        public function SellerBuyerDescriptor()
-        {
-            this.quantities = new Vector.<uint>();
-            this.types = new Vector.<uint>();
-            super();
-        }
 
         public function getTypeId():uint
         {
@@ -88,7 +85,7 @@
             };
             output.writeFloat(this.taxPercentage);
             output.writeFloat(this.taxModificationPercentage);
-            if ((((this.maxItemLevel < 0)) || ((this.maxItemLevel > 0xFF))))
+            if (((this.maxItemLevel < 0) || (this.maxItemLevel > 0xFF)))
             {
                 throw (new Error((("Forbidden value (" + this.maxItemLevel) + ") on element maxItemLevel.")));
             };
@@ -139,19 +136,108 @@
                 this.types.push(_val2);
                 _i2++;
             };
+            this._taxPercentageFunc(input);
+            this._taxModificationPercentageFunc(input);
+            this._maxItemLevelFunc(input);
+            this._maxItemPerAccountFunc(input);
+            this._npcContextualIdFunc(input);
+            this._unsoldDelayFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_SellerBuyerDescriptor(tree);
+        }
+
+        public function deserializeAsyncAs_SellerBuyerDescriptor(tree:FuncTree):void
+        {
+            this._quantitiestree = tree.addChild(this._quantitiestreeFunc);
+            this._typestree = tree.addChild(this._typestreeFunc);
+            tree.addChild(this._taxPercentageFunc);
+            tree.addChild(this._taxModificationPercentageFunc);
+            tree.addChild(this._maxItemLevelFunc);
+            tree.addChild(this._maxItemPerAccountFunc);
+            tree.addChild(this._npcContextualIdFunc);
+            tree.addChild(this._unsoldDelayFunc);
+        }
+
+        private function _quantitiestreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._quantitiestree.addChild(this._quantitiesFunc);
+                i++;
+            };
+        }
+
+        private function _quantitiesFunc(input:ICustomDataInput):void
+        {
+            var _val:uint = input.readVarUhInt();
+            if (_val < 0)
+            {
+                throw (new Error((("Forbidden value (" + _val) + ") on elements of quantities.")));
+            };
+            this.quantities.push(_val);
+        }
+
+        private function _typestreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._typestree.addChild(this._typesFunc);
+                i++;
+            };
+        }
+
+        private function _typesFunc(input:ICustomDataInput):void
+        {
+            var _val:uint = input.readVarUhInt();
+            if (_val < 0)
+            {
+                throw (new Error((("Forbidden value (" + _val) + ") on elements of types.")));
+            };
+            this.types.push(_val);
+        }
+
+        private function _taxPercentageFunc(input:ICustomDataInput):void
+        {
             this.taxPercentage = input.readFloat();
+        }
+
+        private function _taxModificationPercentageFunc(input:ICustomDataInput):void
+        {
             this.taxModificationPercentage = input.readFloat();
+        }
+
+        private function _maxItemLevelFunc(input:ICustomDataInput):void
+        {
             this.maxItemLevel = input.readUnsignedByte();
-            if ((((this.maxItemLevel < 0)) || ((this.maxItemLevel > 0xFF))))
+            if (((this.maxItemLevel < 0) || (this.maxItemLevel > 0xFF)))
             {
                 throw (new Error((("Forbidden value (" + this.maxItemLevel) + ") on element of SellerBuyerDescriptor.maxItemLevel.")));
             };
+        }
+
+        private function _maxItemPerAccountFunc(input:ICustomDataInput):void
+        {
             this.maxItemPerAccount = input.readVarUhInt();
             if (this.maxItemPerAccount < 0)
             {
                 throw (new Error((("Forbidden value (" + this.maxItemPerAccount) + ") on element of SellerBuyerDescriptor.maxItemPerAccount.")));
             };
+        }
+
+        private function _npcContextualIdFunc(input:ICustomDataInput):void
+        {
             this.npcContextualId = input.readInt();
+        }
+
+        private function _unsoldDelayFunc(input:ICustomDataInput):void
+        {
             this.unsoldDelay = input.readVarUhShort();
             if (this.unsoldDelay < 0)
             {
@@ -161,5 +247,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.data.items
+} com.ankamagames.dofus.network.types.game.data.items
 

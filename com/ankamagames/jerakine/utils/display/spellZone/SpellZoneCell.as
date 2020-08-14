@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.utils.display.spellZone
+package com.ankamagames.jerakine.utils.display.spellZone
 {
     import flash.display.Sprite;
     import flash.events.MouseEvent;
@@ -107,5 +107,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.utils.display.spellZone
+} com.ankamagames.jerakine.utils.display.spellZone
 

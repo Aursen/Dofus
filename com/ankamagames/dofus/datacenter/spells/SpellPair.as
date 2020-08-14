@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.datacenter.spells
+package com.ankamagames.dofus.datacenter.spells
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.jerakine.data.GameData;
@@ -19,7 +19,7 @@
 
         public static function getSpellPairById(id:int):SpellPair
         {
-            return ((GameData.getObject(MODULE, id) as SpellPair));
+            return (GameData.getObject(MODULE, id) as SpellPair);
         }
 
         public static function getSpellPairs():Array
@@ -30,7 +30,7 @@
 
         public function get name():String
         {
-            if (!(this._name))
+            if (!this._name)
             {
                 this._name = I18n.getText(this.nameId);
             };
@@ -39,7 +39,7 @@
 
         public function get description():String
         {
-            if (!(this._desc))
+            if (!this._desc)
             {
                 this._desc = I18n.getText(this.descriptionId);
             };
@@ -48,5 +48,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.spells
+} com.ankamagames.dofus.datacenter.spells
 

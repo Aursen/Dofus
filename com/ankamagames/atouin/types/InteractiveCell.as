@@ -1,4 +1,4 @@
-﻿package com.ankamagames.atouin.types
+package com.ankamagames.atouin.types
 {
     import flash.display.DisplayObjectContainer;
 
@@ -19,5 +19,5 @@
         }
 
     }
-}//package com.ankamagames.atouin.types
+} com.ankamagames.atouin.types
 

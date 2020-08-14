@@ -1,8 +1,9 @@
-﻿package com.ankamagames.dofus.network.types.game.data.items
+package com.ankamagames.dofus.network.types.game.data.items
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
     public class Item implements INetworkType 
     {
@@ -40,7 +41,15 @@
         {
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+        }
+
+        public function deserializeAsyncAs_Item(tree:FuncTree):void
+        {
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.types.game.data.items
+} com.ankamagames.dofus.network.types.game.data.items
 

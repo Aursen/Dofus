@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.pools
+package com.ankamagames.jerakine.pools
 {
     import flash.geom.Point;
 
@@ -19,9 +19,10 @@
 
         public function free():void
         {
+            this.renew();
         }
 
 
     }
-}//package com.ankamagames.jerakine.pools
+} com.ankamagames.jerakine.pools
 

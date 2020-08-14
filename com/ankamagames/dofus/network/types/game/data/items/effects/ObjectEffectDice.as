@@ -1,10 +1,10 @@
-﻿package com.ankamagames.dofus.network.types.game.data.items.effects
+package com.ankamagames.dofus.network.types.game.data.items.effects
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class ObjectEffectDice extends ObjectEffect implements INetworkType 
     {
 
@@ -49,17 +49,17 @@
             {
                 throw (new Error((("Forbidden value (" + this.diceNum) + ") on element diceNum.")));
             };
-            output.writeVarShort(this.diceNum);
+            output.writeVarInt(this.diceNum);
             if (this.diceSide < 0)
             {
                 throw (new Error((("Forbidden value (" + this.diceSide) + ") on element diceSide.")));
             };
-            output.writeVarShort(this.diceSide);
+            output.writeVarInt(this.diceSide);
             if (this.diceConst < 0)
             {
                 throw (new Error((("Forbidden value (" + this.diceConst) + ") on element diceConst.")));
             };
-            output.writeVarShort(this.diceConst);
+            output.writeVarInt(this.diceConst);
         }
 
         override public function deserialize(input:ICustomDataInput):void
@@ -70,17 +70,45 @@
         public function deserializeAs_ObjectEffectDice(input:ICustomDataInput):void
         {
             super.deserialize(input);
-            this.diceNum = input.readVarUhShort();
+            this._diceNumFunc(input);
+            this._diceSideFunc(input);
+            this._diceConstFunc(input);
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_ObjectEffectDice(tree);
+        }
+
+        public function deserializeAsyncAs_ObjectEffectDice(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._diceNumFunc);
+            tree.addChild(this._diceSideFunc);
+            tree.addChild(this._diceConstFunc);
+        }
+
+        private function _diceNumFunc(input:ICustomDataInput):void
+        {
+            this.diceNum = input.readVarUhInt();
             if (this.diceNum < 0)
             {
                 throw (new Error((("Forbidden value (" + this.diceNum) + ") on element of ObjectEffectDice.diceNum.")));
             };
-            this.diceSide = input.readVarUhShort();
+        }
+
+        private function _diceSideFunc(input:ICustomDataInput):void
+        {
+            this.diceSide = input.readVarUhInt();
             if (this.diceSide < 0)
             {
                 throw (new Error((("Forbidden value (" + this.diceSide) + ") on element of ObjectEffectDice.diceSide.")));
             };
-            this.diceConst = input.readVarUhShort();
+        }
+
+        private function _diceConstFunc(input:ICustomDataInput):void
+        {
+            this.diceConst = input.readVarUhInt();
             if (this.diceConst < 0)
             {
                 throw (new Error((("Forbidden value (" + this.diceConst) + ") on element of ObjectEffectDice.diceConst.")));
@@ -89,5 +117,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.data.items.effects
+} com.ankamagames.dofus.network.types.game.data.items.effects
 

@@ -1,29 +1,33 @@
-﻿package com.ankamagames.berilia.types.template
+package com.ankamagames.berilia.types.template
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
     import flash.xml.XMLDocument;
-    import com.ankamagames.jerakine.eval.Evaluator;
     import flash.xml.XMLNode;
     import com.ankamagames.berilia.enums.XmlTagsEnum;
     import com.ankamagames.berilia.enums.XmlAttributesEnum;
+    import flash.xml.XMLNodeType;
+    import com.ankamagames.jerakine.eval.Evaluator;
 
     public class XmlTemplate 
     {
 
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(XmlTemplate));
+        private static var _instanceIdInc:int = 0;
+        private static var _utilDoc:XMLDocument = new XMLDocument();
 
-        private var _aTemplateParams:Array;
         private var _sXml:String;
         private var _xDoc:XMLDocument;
-        private var _aVariablesStack:Array;
         private var _filename:String;
+        private var _templateParams:Array = [];
+        private var _templateVars:Array = [];
+        private var _utilsVar:Array;
+        private var _instanceId:int;
+        private var _uniqueIdInc:int = 0;
 
         public function XmlTemplate(sXml:String=null, sFilename:String=null)
         {
-            this._aVariablesStack = new Array();
-            super();
             this._filename = sFilename;
             if (sXml != null)
             {
@@ -54,59 +58,29 @@
 
         public function get templateParams():Array
         {
-            return (this._aTemplateParams);
+            return (this._templateParams);
         }
 
-        public function get variablesStack():Array
+        public function get templateVars():Array
         {
-            return (this._aVariablesStack);
+            return (this._templateVars);
         }
 
         public function makeTemplate(aVar:Array):XMLNode
         {
-            var key:String;
-            var aVariables:Array;
-            var variable:TemplateVar;
-            var step:uint;
-            var evaluator:Evaluator = new Evaluator();
-            var newXml:String = this._xDoc.toString();
-            var localVar:Array = [];
-            for (key in this._aTemplateParams)
-            {
-                localVar[key] = this._aTemplateParams[key];
-            };
-            for (key in aVar)
-            {
-                if (!(this._aTemplateParams[key]))
-                {
-                    _log.error((((("Template " + this._filename) + ", param ") + key) + " is not defined"));
-                    delete aVar[key];
-                }
-                else
-                {
-                    localVar[key] = aVar[key];
-                };
-            };
-            newXml = this.replaceParam(newXml, localVar, "#");
-            aVariables = new Array();
-            step = 0;
-            while (step < this._aVariablesStack.length)
-            {
-                variable = this._aVariablesStack[step].clone();
-                variable.value = evaluator.eval(this.replaceParam(this.replaceParam(variable.value, localVar, "#"), aVariables, "$"));
-                aVariables[variable.name] = variable;
-                step++;
-            };
-            newXml = this.replaceParam(newXml, aVariables, "$");
-            var newDoc:XMLDocument = new XMLDocument();
-            newDoc.parseXML(newXml);
-            return (newDoc);
+            this.initializeIds();
+            return (this.initTemplateWithParam(aVar, this.initFinalVar(aVar), this._xDoc));
+        }
+
+        private function initializeIds():void
+        {
+            this._instanceId = _instanceIdInc++;
+            this._utilsVar = [new TemplateVar("TEMPLATE_INSTANCE_ID", ((this._filename.replace(".xml", "") + "") + this._instanceId)), new TemplateVar("UNIQUE_ID", this.getUniqueId)];
         }
 
         private function parseTemplate():void
         {
             this._xDoc = new XMLDocument();
-            this._aTemplateParams = new Array();
             this._xDoc.ignoreWhite = true;
             this._xDoc.parseXML(this._sXml);
             if ((this._xDoc.firstChild.nodeName + ".xml") != this._filename)
@@ -114,97 +88,297 @@
                 _log.error(((((("Wrong root node name in " + this._filename) + ", found ") + this._xDoc.firstChild.nodeName) + ", waiting for ") + this._filename.replace(".xml", "")));
                 return;
             };
-            this.matchDynamicsParts(this._xDoc.firstChild);
+            this.storeVarAndParam(this._xDoc.firstChild);
         }
 
-        private function matchDynamicsParts(node:XMLNode):void
+        private function storeVarAndParam(node:XMLNode):void
         {
             var currNode:XMLNode;
-            var variable:TemplateVar;
-            var param:TemplateParam;
             var i:uint;
-            for (;i < node.childNodes.length;i++)
+            while (i < node.childNodes.length)
             {
                 currNode = node.childNodes[i];
                 if (currNode.nodeName == XmlTagsEnum.TAG_VAR)
                 {
                     if (currNode.attributes[XmlAttributesEnum.ATTRIBUTE_NAME])
                     {
-                        variable = new TemplateVar(currNode.attributes[XmlAttributesEnum.ATTRIBUTE_NAME]);
-                        variable.value = currNode.firstChild.toString().replace(/&apos;/g, "'");
-                        this._aVariablesStack.push(variable);
+                        this._templateVars[currNode.attributes[XmlAttributesEnum.ATTRIBUTE_NAME]] = currNode.childNodes;
                         currNode.removeNode();
                         i--;
-                        continue;
-                    };
-                    _log.warn((((currNode.nodeName + " must have [") + XmlAttributesEnum.ATTRIBUTE_NAME) + "] attribute"));
-                };
-                if (currNode.nodeName == XmlTagsEnum.TAG_PARAM)
-                {
-                    if (currNode.attributes[XmlAttributesEnum.ATTRIBUTE_NAME])
+                    }
+                    else
                     {
-                        param = new TemplateParam(currNode.attributes[XmlAttributesEnum.ATTRIBUTE_NAME]);
-                        this._aTemplateParams[param.name] = param;
-                        if (currNode.hasChildNodes())
+                        _log.warn((((((("Template " + this._filename) + ", ") + currNode.nodeName) + " must have [") + XmlAttributesEnum.ATTRIBUTE_NAME) + "] attribute"));
+                    };
+                }
+                else
+                {
+                    if (currNode.nodeName == XmlTagsEnum.TAG_PARAM)
+                    {
+                        if (currNode.attributes[XmlAttributesEnum.ATTRIBUTE_NAME])
                         {
-                            param.defaultValue = currNode.firstChild.toString();
+                            this._templateParams[currNode.attributes[XmlAttributesEnum.ATTRIBUTE_NAME]] = currNode.childNodes;
+                            currNode.removeNode();
+                            i--;
                         }
                         else
                         {
-                            param.defaultValue = "";
+                            _log.warn((((((("Template " + this._filename) + ", ") + currNode.nodeName) + " must have [") + XmlAttributesEnum.ATTRIBUTE_NAME) + "] attribute"));
                         };
-                        currNode.removeNode();
-                        i--;
-                    }
-                    else
-                    {
-                        _log.warn((((currNode.nodeName + " must have [") + XmlAttributesEnum.ATTRIBUTE_NAME) + "] attribute"));
-                    };
-                };
-            };
-        }
-
-        private function replaceParam(txt:String, aVars:Array, prefix:String, recur:uint=1):String
-        {
-            var value:String;
-            var key:String;
-            var i:uint;
-            if (!(txt))
-            {
-                return (txt);
-            };
-            var sortedParam:Array = new Array();
-            for (key in aVars)
-            {
-                sortedParam.push(key);
-            };
-            sortedParam.sort(Array.DESCENDING);
-            i = 0;
-            while (i < sortedParam.length)
-            {
-                key = sortedParam[i];
-                if (aVars[key] != null)
-                {
-                    value = aVars[key].value;
-                    if (((!(value)) && ((aVars[key] is TemplateParam))))
-                    {
-                        value = aVars[key].defaultValue;
-                    };
-                    if (value == null)
-                    {
-                        _log.warn((("No value for " + prefix) + key));
-                    }
-                    else
-                    {
-                        txt = txt.split((prefix + key)).join(value);
                     };
                 };
                 i++;
             };
-            return (txt);
+        }
+
+        private function initTemplateWithParam(specifiedParam:Array, finalVar:Array, xmlNode:XMLNode):XMLNode
+        {
+            var node:XMLNode;
+            var nodeValue:String;
+            var paramNode:XMLNode;
+            var finalNode:XMLNode = xmlNode.cloneNode(false);
+            this.initAttributes(specifiedParam, finalVar, finalNode);
+            for each (node in xmlNode.childNodes)
+            {
+                if (node.nodeType == XMLNodeType.ELEMENT_NODE)
+                {
+                    finalNode.appendChild(this.initTemplateWithParam(specifiedParam, finalVar, node));
+                }
+                else
+                {
+                    if (node.nodeType == XMLNodeType.TEXT_NODE)
+                    {
+                        nodeValue = node.nodeValue;
+                        if (nodeValue.charAt(0) == "#")
+                        {
+                            if (nodeValue.indexOf("\n") != -1)
+                            {
+                                nodeValue = nodeValue.substring(1, nodeValue.indexOf("\n"));
+                            }
+                            else
+                            {
+                                nodeValue = nodeValue.substring(1);
+                            };
+                            if (((specifiedParam) && (specifiedParam[nodeValue])))
+                            {
+                                _utilDoc.parseXML(specifiedParam[nodeValue].value);
+                                for each (paramNode in _utilDoc.childNodes)
+                                {
+                                    finalNode.appendChild(paramNode.cloneNode(true));
+                                };
+                            }
+                            else
+                            {
+                                if (((this._templateParams[nodeValue]) && (this._templateParams[nodeValue][0])))
+                                {
+                                    for each (paramNode in this._templateParams[nodeValue])
+                                    {
+                                        finalNode.appendChild(paramNode.cloneNode(true));
+                                    };
+                                };
+                            };
+                        }
+                        else
+                        {
+                            if (nodeValue.charAt(0) == "$")
+                            {
+                                if (nodeValue.indexOf("\n") != -1)
+                                {
+                                    nodeValue = nodeValue.substring(1, nodeValue.indexOf("\n"));
+                                }
+                                else
+                                {
+                                    nodeValue = nodeValue.substring(1);
+                                };
+                                if (finalVar[nodeValue])
+                                {
+                                    _utilDoc.parseXML(finalVar[nodeValue]);
+                                    finalNode.appendChild(_utilDoc.firstChild);
+                                }
+                                else
+                                {
+                                    _log.warn((((("Template " + this._filename) + ", var ") + nodeValue) + " is not defined"));
+                                };
+                            }
+                            else
+                            {
+                                finalNode.appendChild(node.cloneNode(false));
+                            };
+                        };
+                    };
+                };
+            };
+            return (finalNode);
+        }
+
+        private function initAttributes(specifiedParam:Array, finalVar:Array, finalNode:XMLNode):void
+        {
+            var attribute:String;
+            var value:String;
+            var paramName:String;
+            var indexKey:uint;
+            var reverse:Boolean;
+            var sign:String;
+            for (attribute in finalNode.attributes)
+            {
+                value = finalNode.attributes[attribute];
+                paramName = null;
+                indexKey = 0;
+                reverse = false;
+                sign = "";
+                if (value.charAt(1) == "!")
+                {
+                    paramName = value.substring(2);
+                    reverse = true;
+                }
+                else
+                {
+                    if (value.charAt(0) == "-")
+                    {
+                        indexKey = 1;
+                        sign = "-";
+                    };
+                };
+                if (value.charAt(indexKey) == "#")
+                {
+                    if (!paramName)
+                    {
+                        paramName = value.substring((indexKey + 1));
+                    };
+                    value = (sign + this.getParamString(specifiedParam, paramName));
+                }
+                else
+                {
+                    if (value.charAt(indexKey) == "$")
+                    {
+                        if (!paramName)
+                        {
+                            paramName = value.substring((indexKey + 1));
+                        };
+                        if (finalVar[paramName] != null)
+                        {
+                            value = (sign + finalVar[paramName]);
+                        }
+                        else
+                        {
+                            _log.warn((((((("Template " + this._filename) + ", node ") + finalNode.nodeName) + " contains var attribute ") + paramName) + " but it don't exist !"));
+                        };
+                    };
+                };
+                if (reverse)
+                {
+                    if (value == "true")
+                    {
+                        value = "false";
+                    }
+                    else
+                    {
+                        if (value == "false")
+                        {
+                            value = "true";
+                        }
+                        else
+                        {
+                            _log.warn((((("Template " + this._filename) + ", can't reverse ") + value) + ", it's not a boolean !"));
+                        };
+                    };
+                };
+                finalNode.attributes[attribute] = value;
+            };
+        }
+
+        private function initFinalVar(specifiedParam:Array=null):Array
+        {
+            var varName:String;
+            var paramNode:XMLNode;
+            var nodeValue:String;
+            var index:int;
+            var paramName:String;
+            var finalVar:Array = [];
+            for (varName in this._templateVars)
+            {
+                paramNode = this._templateVars[varName][0];
+                nodeValue = paramNode.nodeValue;
+                index = nodeValue.indexOf("#");
+                while (index != -1)
+                {
+                    paramName = nodeValue.substring((index + 1));
+                    if (paramName.indexOf("'") != -1)
+                    {
+                        paramName = paramName.substring(0, paramName.indexOf("'"));
+                    }
+                    else
+                    {
+                        if (paramName.indexOf(" ") != -1)
+                        {
+                            paramName = paramName.substring(0, paramName.indexOf(" "));
+                        };
+                    };
+                    nodeValue = nodeValue.replace(("#" + paramName), this.getParamString(specifiedParam, paramName));
+                    index = nodeValue.indexOf("#", (index + 1));
+                };
+                finalVar[varName] = Evaluator.eval(nodeValue);
+            };
+            return (finalVar);
+        }
+
+        private function getParamString(specifiedParam:Array, paramName:String):String
+        {
+            var paramString:String;
+            if (((specifiedParam) && (specifiedParam[paramName])))
+            {
+                paramString = this.getRealValue(specifiedParam[paramName].value);
+            }
+            else
+            {
+                if (this._templateParams[paramName])
+                {
+                    if (this._templateParams[paramName][0])
+                    {
+                        paramString = this.getRealValue(this._templateParams[paramName][0].nodeValue);
+                    }
+                    else
+                    {
+                        paramString = "";
+                    };
+                }
+                else
+                {
+                    _log.warn((((("Template " + this._filename) + " contains param ") + paramName) + " but it don't exist !"));
+                };
+            };
+            return (paramString);
+        }
+
+        private function getRealValue(value:String):String
+        {
+            var utilsVar:String;
+            var tmpVar:TemplateVar;
+            if (value == null)
+            {
+                return (value);
+            };
+            var index:int = value.indexOf("$");
+            if (index != -1)
+            {
+                utilsVar = value.substring((index + 1));
+                for each (tmpVar in this._utilsVar)
+                {
+                    if (tmpVar.name == utilsVar)
+                    {
+                        return (tmpVar.value);
+                    };
+                };
+            };
+            return (value);
+        }
+
+        private function getUniqueId():String
+        {
+            return ((((this._filename + "_") + this._instanceId) + "_") + this._uniqueIdInc++);
         }
 
 
     }
-}//package com.ankamagames.berilia.types.template
+} com.ankamagames.berilia.types.template
 

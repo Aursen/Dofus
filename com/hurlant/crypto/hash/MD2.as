@@ -1,4 +1,4 @@
-﻿package com.hurlant.crypto.hash
+package com.hurlant.crypto.hash
 {
     import flash.utils.ByteArray;
 
@@ -32,7 +32,7 @@
             var t:uint;
             var k:uint;
             var savedLength:uint = src.length;
-            var i:uint = (((16 - (src.length % 16))) || (16));
+            var i:uint = ((16 - (src.length % 16)) || (16));
             do 
             {
                 src[src.length] = i;
@@ -71,8 +71,7 @@
                     k = 0;
                     while (k < 48)
                     {
-                        t = (X[k] ^ S[t]);
-                        X[k] = t;
+                        X[k] = (t = (X[k] ^ S[t]));
                         k++;
                     };
                     t = ((t + j) & 0xFF);
@@ -92,5 +91,5 @@
 
 
     }
-}//package com.hurlant.crypto.hash
+} com.hurlant.crypto.hash
 

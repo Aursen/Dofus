@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.prism
+package com.ankamagames.dofus.network.messages.game.prism
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class PrismFightSwapRequestMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -15,7 +15,7 @@
 
         private var _isInitialized:Boolean = false;
         public var subAreaId:uint = 0;
-        public var targetId:uint = 0;
+        public var targetId:Number = 0;
 
 
         override public function get isInitialized():Boolean
@@ -28,7 +28,7 @@
             return (5901);
         }
 
-        public function initPrismFightSwapRequestMessage(subAreaId:uint=0, targetId:uint=0):PrismFightSwapRequestMessage
+        public function initPrismFightSwapRequestMessage(subAreaId:uint=0, targetId:Number=0):PrismFightSwapRequestMessage
         {
             this.subAreaId = subAreaId;
             this.targetId = targetId;
@@ -55,6 +55,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_PrismFightSwapRequestMessage(output);
@@ -67,11 +75,11 @@
                 throw (new Error((("Forbidden value (" + this.subAreaId) + ") on element subAreaId.")));
             };
             output.writeVarShort(this.subAreaId);
-            if (this.targetId < 0)
+            if (((this.targetId < 0) || (this.targetId > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.targetId) + ") on element targetId.")));
             };
-            output.writeVarInt(this.targetId);
+            output.writeVarLong(this.targetId);
         }
 
         public function deserialize(input:ICustomDataInput):void
@@ -81,13 +89,34 @@
 
         public function deserializeAs_PrismFightSwapRequestMessage(input:ICustomDataInput):void
         {
+            this._subAreaIdFunc(input);
+            this._targetIdFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_PrismFightSwapRequestMessage(tree);
+        }
+
+        public function deserializeAsyncAs_PrismFightSwapRequestMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._subAreaIdFunc);
+            tree.addChild(this._targetIdFunc);
+        }
+
+        private function _subAreaIdFunc(input:ICustomDataInput):void
+        {
             this.subAreaId = input.readVarUhShort();
             if (this.subAreaId < 0)
             {
                 throw (new Error((("Forbidden value (" + this.subAreaId) + ") on element of PrismFightSwapRequestMessage.subAreaId.")));
             };
-            this.targetId = input.readVarUhInt();
-            if (this.targetId < 0)
+        }
+
+        private function _targetIdFunc(input:ICustomDataInput):void
+        {
+            this.targetId = input.readVarUhLong();
+            if (((this.targetId < 0) || (this.targetId > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.targetId) + ") on element of PrismFightSwapRequestMessage.targetId.")));
             };
@@ -95,5 +124,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.prism
+} com.ankamagames.dofus.network.messages.game.prism
 

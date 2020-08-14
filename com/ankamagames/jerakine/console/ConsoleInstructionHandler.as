@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.console
+package com.ankamagames.jerakine.console
 {
     public interface ConsoleInstructionHandler 
     {
@@ -8,5 +8,5 @@
         function getParamPossibilities(_arg_1:String, _arg_2:uint=0, _arg_3:Array=null):Array;
 
     }
-}//package com.ankamagames.jerakine.console
+} com.ankamagames.jerakine.console
 

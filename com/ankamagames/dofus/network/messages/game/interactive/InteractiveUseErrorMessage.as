@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.interactive
+package com.ankamagames.dofus.network.messages.game.interactive
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class InteractiveUseErrorMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -55,6 +55,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_InteractiveUseErrorMessage(output);
@@ -81,11 +89,32 @@
 
         public function deserializeAs_InteractiveUseErrorMessage(input:ICustomDataInput):void
         {
+            this._elemIdFunc(input);
+            this._skillInstanceUidFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_InteractiveUseErrorMessage(tree);
+        }
+
+        public function deserializeAsyncAs_InteractiveUseErrorMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._elemIdFunc);
+            tree.addChild(this._skillInstanceUidFunc);
+        }
+
+        private function _elemIdFunc(input:ICustomDataInput):void
+        {
             this.elemId = input.readVarUhInt();
             if (this.elemId < 0)
             {
                 throw (new Error((("Forbidden value (" + this.elemId) + ") on element of InteractiveUseErrorMessage.elemId.")));
             };
+        }
+
+        private function _skillInstanceUidFunc(input:ICustomDataInput):void
+        {
             this.skillInstanceUid = input.readVarUhInt();
             if (this.skillInstanceUid < 0)
             {
@@ -95,5 +124,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.interactive
+} com.ankamagames.dofus.network.messages.game.interactive
 

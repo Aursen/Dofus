@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.types.messages
+package com.ankamagames.berilia.types.messages
 {
     import com.ankamagames.jerakine.messages.Message;
     import com.ankamagames.jerakine.types.Uri;
@@ -34,5 +34,5 @@
 
 
     }
-}//package com.ankamagames.berilia.types.messages
+} com.ankamagames.berilia.types.messages
 

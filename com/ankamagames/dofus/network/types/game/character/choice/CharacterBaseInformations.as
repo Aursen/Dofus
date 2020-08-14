@@ -1,17 +1,17 @@
-﻿package com.ankamagames.dofus.network.types.game.character.choice
+package com.ankamagames.dofus.network.types.game.character.choice
 {
     import com.ankamagames.dofus.network.types.game.character.CharacterMinimalPlusLookInformations;
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.dofus.network.types.game.look.EntityLook;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
     public class CharacterBaseInformations extends CharacterMinimalPlusLookInformations implements INetworkType 
     {
 
         public static const protocolId:uint = 45;
 
-        public var breed:int = 0;
         public var sex:Boolean = false;
 
 
@@ -20,10 +20,9 @@
             return (45);
         }
 
-        public function initCharacterBaseInformations(id:uint=0, level:uint=0, name:String="", entityLook:EntityLook=null, breed:int=0, sex:Boolean=false):CharacterBaseInformations
+        public function initCharacterBaseInformations(id:Number=0, name:String="", level:uint=0, entityLook:EntityLook=null, breed:int=0, sex:Boolean=false):CharacterBaseInformations
         {
-            super.initCharacterMinimalPlusLookInformations(id, level, name, entityLook);
-            this.breed = breed;
+            super.initCharacterMinimalPlusLookInformations(id, name, level, entityLook, breed);
             this.sex = sex;
             return (this);
         }
@@ -31,7 +30,6 @@
         override public function reset():void
         {
             super.reset();
-            this.breed = 0;
             this.sex = false;
         }
 
@@ -43,7 +41,6 @@
         public function serializeAs_CharacterBaseInformations(output:ICustomDataOutput):void
         {
             super.serializeAs_CharacterMinimalPlusLookInformations(output);
-            output.writeByte(this.breed);
             output.writeBoolean(this.sex);
         }
 
@@ -55,11 +52,26 @@
         public function deserializeAs_CharacterBaseInformations(input:ICustomDataInput):void
         {
             super.deserialize(input);
-            this.breed = input.readByte();
+            this._sexFunc(input);
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_CharacterBaseInformations(tree);
+        }
+
+        public function deserializeAsyncAs_CharacterBaseInformations(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._sexFunc);
+        }
+
+        private function _sexFunc(input:ICustomDataInput):void
+        {
             this.sex = input.readBoolean();
         }
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.character.choice
+} com.ankamagames.dofus.network.types.game.character.choice
 

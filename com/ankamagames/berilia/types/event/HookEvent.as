@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.types.event
+package com.ankamagames.berilia.types.event
 {
     import flash.events.Event;
     import com.ankamagames.berilia.types.data.Hook;
@@ -10,9 +10,9 @@
 
         private var _hook:Hook;
 
-        public function HookEvent(type:String, hook:Hook)
+        public function HookEvent(_arg_1:String, hook:Hook)
         {
-            super(type, false, false);
+            super(_arg_1, false, false);
             this._hook = hook;
         }
 
@@ -23,5 +23,5 @@
 
 
     }
-}//package com.ankamagames.berilia.types.event
+} com.ankamagames.berilia.types.event
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.roleplay.messages
+package com.ankamagames.dofus.logic.game.roleplay.messages
 {
     import com.ankamagames.jerakine.messages.Message;
     import com.ankamagames.dofus.network.types.game.interactive.InteractiveElement;
@@ -7,7 +7,7 @@
     {
 
         private var _ie:InteractiveElement;
-        private var _sprite;
+        private var _sprite:*;
 
         public function InteractiveElementMouseOverMessage(ie:InteractiveElement, sprite:*)
         {
@@ -20,12 +20,12 @@
             return (this._ie);
         }
 
-        public function get sprite()
+        public function get sprite():*
         {
             return (this._sprite);
         }
 
 
     }
-}//package com.ankamagames.dofus.logic.game.roleplay.messages
+} com.ankamagames.dofus.logic.game.roleplay.messages
 

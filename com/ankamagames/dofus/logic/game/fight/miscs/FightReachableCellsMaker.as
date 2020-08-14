@@ -1,9 +1,11 @@
-﻿package com.ankamagames.dofus.logic.game.fight.miscs
+package com.ankamagames.dofus.logic.game.fight.miscs
 {
+    import com.ankamagames.jerakine.logger.Logger;
+    import com.ankamagames.jerakine.logger.Log;
     import __AS3__.vec.Vector;
     import com.ankamagames.jerakine.types.positions.MapPoint;
-    import com.ankamagames.dofus.network.types.game.context.fight.GameFightFighterInformations;
     import com.ankamagames.jerakine.entities.interfaces.IEntity;
+    import com.ankamagames.dofus.network.types.game.context.fight.GameFightFighterInformations;
     import com.ankamagames.dofus.kernel.Kernel;
     import com.ankamagames.dofus.logic.game.fight.frames.FightEntitiesFrame;
     import com.ankamagames.atouin.managers.EntitiesManager;
@@ -13,62 +15,82 @@
     public class FightReachableCellsMaker 
     {
 
-        private var _cellGrid:Vector.<Vector.<_ReachableCellStore>>;
+        protected static const _log:Logger = Log.getLogger("FightReachableCellsMaker");
+
+        private var _cellGrid:Vector.<Vector.<_ReachableCellData>>;
         private var _reachableCells:Vector.<uint>;
         private var _unreachableCells:Vector.<uint>;
         private var _mapPoint:MapPoint;
-        private var _infos:GameFightFighterInformations;
         private var _mp:int;
-        private var _waitingCells:Vector.<_ReachableCellStore>;
-        private var _watchedCells:Vector.<_ReachableCellStore>;
+        private var _waitingCells:Vector.<_ReachableCellData>;
+        private var _watchedCells:Vector.<_ReachableCellData>;
 
         public function FightReachableCellsMaker(infos:GameFightFighterInformations, fromCellId:int=-1, movementPoint:int=-1)
         {
             var i:String;
             var x:int;
             var y:int;
-            var e:IEntity;
-            var node:_ReachableCellStore;
+            var entities:Array;
+            var entity:IEntity;
+            var entityInfos:GameFightFighterInformations;
+            var node:_ReachableCellData;
             var evade:Number;
             super();
             var entitiesFrame:FightEntitiesFrame = (Kernel.getWorker().getFrame(FightEntitiesFrame) as FightEntitiesFrame);
-            this._infos = infos;
+            this._reachableCells = new Vector.<uint>();
+            this._unreachableCells = new Vector.<uint>();
             if (movementPoint > -1)
             {
                 this._mp = movementPoint;
             }
             else
             {
-                this._mp = (((this._infos.stats.movementPoints > 0)) ? this._infos.stats.movementPoints : 0);
+                this._mp = ((infos.stats.movementPoints > 0) ? infos.stats.movementPoints : 0);
             };
-            this._mapPoint = MapPoint.fromCellId(((!((fromCellId == -1))) ? fromCellId : this._infos.disposition.cellId));
-            this._cellGrid = new Vector.<Vector.<_ReachableCellStore>>(((this._mp * 2) + 1));
+            if (fromCellId != -1)
+            {
+                this._mapPoint = MapPoint.fromCellId(fromCellId);
+            }
+            else
+            {
+                if (infos.disposition.cellId != -1)
+                {
+                    this._mapPoint = MapPoint.fromCellId(infos.disposition.cellId);
+                }
+                else
+                {
+                    _log.warn((("Failed to initialize FightReachableCellsMaker for entity " + infos.contextualId) + " because its cellId is -1"));
+                    return;
+                };
+            };
+            this._cellGrid = new Vector.<Vector.<_ReachableCellData>>(((this._mp * 2) + 1));
             for (i in this._cellGrid)
             {
-                this._cellGrid[i] = new Vector.<_ReachableCellStore>(((this._mp * 2) + 1));
+                this._cellGrid[i] = new Vector.<_ReachableCellData>(((this._mp * 2) + 1));
             };
-            for each (e in EntitiesManager.getInstance().entities)
+            entities = EntitiesManager.getInstance().entities;
+            for each (entity in entities)
             {
-                if (e.id != this._infos.contextualId)
+                if (((!(entity.id == infos.contextualId)) && (entity.position)))
                 {
-                    x = ((e.position.x - this._mapPoint.x) + this._mp);
-                    y = ((e.position.y - this._mapPoint.y) + this._mp);
-                    if ((((((((x >= 0)) && ((x < ((this._mp * 2) + 1))))) && ((y >= 0)))) && ((y < ((this._mp * 2) + 1)))))
+                    x = ((entity.position.x - this._mapPoint.x) + this._mp);
+                    y = ((entity.position.y - this._mapPoint.y) + this._mp);
+                    if (((((x >= 0) && (x < ((this._mp * 2) + 1))) && (y >= 0)) && (y < ((this._mp * 2) + 1))))
                     {
-                        infos = (entitiesFrame.getEntityInfos(e.id) as GameFightFighterInformations);
-                        if (infos)
+                        entityInfos = (entitiesFrame.getEntityInfos(entity.id) as GameFightFighterInformations);
+                        if (entityInfos)
                         {
-                            if ((((infos.disposition is FightEntityDispositionInformations)) && ((FightEntityDispositionInformations(infos.disposition).carryingCharacterId == this._infos.contextualId))))
+                            if (((entityInfos.disposition is FightEntityDispositionInformations) && (FightEntityDispositionInformations(entityInfos.disposition).carryingCharacterId == infos.contextualId)))
                             {
                             }
                             else
                             {
-                                node = new _ReachableCellStore(e.position, x, y, this._cellGrid);
-                                node.state = _ReachableCellStore.STATE_UNREACHABLE;
-                                evade = TackleUtil.getTackleForFighter(infos, this._infos);
-                                if (((!(node.evade)) || ((evade < node.evade))))
+                                node = new _ReachableCellData(entity.position, x, y, this._cellGrid);
+                                node.state = _ReachableCellData.STATE_UNREACHABLE;
+                                evade = TackleUtil.getTackleForFighter(entityInfos, infos);
+                                if (((!(node.evadePercent)) || (evade < node.evadePercent)))
                                 {
-                                    node.evade = evade;
+                                    node.evadePercent = evade;
                                 };
                                 this._cellGrid[x][y] = node;
                             };
@@ -76,8 +98,6 @@
                     };
                 };
             };
-            this._reachableCells = new Vector.<uint>();
-            this._unreachableCells = new Vector.<uint>();
             this.compute();
         }
 
@@ -93,29 +113,29 @@
 
         private function compute():void
         {
-            var tmpCells:Vector.<_ReachableCellStore>;
-            var node:_ReachableCellStore;
+            var tmpCells:Vector.<_ReachableCellData>;
+            var node:_ReachableCellData;
             var mp:int = this._mp;
             var untacledMp:int = this._mp;
-            this._waitingCells = new Vector.<_ReachableCellStore>();
-            this._watchedCells = new Vector.<_ReachableCellStore>();
+            this._waitingCells = new Vector.<_ReachableCellData>();
+            this._watchedCells = new Vector.<_ReachableCellData>();
             this.markNode(this._mapPoint.x, this._mapPoint.y, mp, untacledMp);
             while (((this._waitingCells.length) || (this._watchedCells.length)))
             {
                 if (this._waitingCells.length)
                 {
                     tmpCells = this._waitingCells;
-                    this._waitingCells = new Vector.<_ReachableCellStore>();
+                    this._waitingCells = new Vector.<_ReachableCellData>();
                 }
                 else
                 {
                     tmpCells = this._watchedCells;
-                    this._watchedCells = new Vector.<_ReachableCellStore>();
+                    this._watchedCells = new Vector.<_ReachableCellData>();
                 };
                 for each (node in tmpCells)
                 {
-                    mp = (int(((node.bestMp * node.evade) + 0.49)) - 1);
-                    untacledMp = (node.bestUntackledMp - 1);
+                    mp = (int(((node.bestRemainingMp * node.evadePercent) + 0.49)) - 1);
+                    untacledMp = (node.bestRemainingMpNoTackle - 1);
                     if (MapPoint.isInMap((node.mapPoint.x - 1), node.mapPoint.y))
                     {
                         this.markNode((node.mapPoint.x - 1), node.mapPoint.y, mp, untacledMp);
@@ -141,13 +161,13 @@
             var index:int;
             var xTab:int = ((x - this._mapPoint.x) + this._mp);
             var yTab:int = ((y - this._mapPoint.y) + this._mp);
-            var node:_ReachableCellStore = this._cellGrid[xTab][yTab];
-            if (!(node))
+            var node:_ReachableCellData = this._cellGrid[xTab][yTab];
+            if (!node)
             {
-                node = new _ReachableCellStore(MapPoint.fromCoords(x, y), xTab, yTab, this._cellGrid);
+                node = new _ReachableCellData(MapPoint.fromCoords(x, y), xTab, yTab, this._cellGrid);
                 this._cellGrid[xTab][yTab] = node;
-                node.findState(this._infos);
-                if (node.state != _ReachableCellStore.STATE_UNREACHABLE)
+                node.findState();
+                if (node.state != _ReachableCellData.STATE_UNREACHABLE)
                 {
                     if (mp >= 0)
                     {
@@ -159,16 +179,16 @@
                     };
                 };
             };
-            if (node.state == _ReachableCellStore.STATE_UNREACHABLE)
+            if (((node.state == _ReachableCellData.STATE_UNREACHABLE) && ((!(this._mapPoint.x == x)) || (!(this._mapPoint.y == y)))))
             {
                 return;
             };
-            if (((((!(node.set)) || ((mp > node.bestMp)))) || ((untackledMp > node.bestUntackledMp))))
+            if ((((!(node.mpUpdated)) || (mp > node.bestRemainingMp)) || (untackledMp > node.bestRemainingMpNoTackle)))
             {
-                if ((((mp >= 0)) && ((node.bestMp < 0))))
+                index = this._unreachableCells.indexOf(node.mapPoint.cellId);
+                if (((mp >= 0) && (!(index == -1))))
                 {
                     this._reachableCells.push(node.mapPoint.cellId);
-                    index = this._unreachableCells.indexOf(node.mapPoint.cellId);
                     if (index == -1)
                     {
                         throw (new Error((("INTERNAL ERROR : " + node.mapPoint.cellId) + " : Can't delete cell because it don't exist")));
@@ -178,13 +198,13 @@
                 node.updateMp(mp, untackledMp);
                 if (untackledMp > 0)
                 {
-                    if (node.state == _ReachableCellStore.STATE_REACHABLE)
+                    if (((node.state == _ReachableCellData.STATE_REACHABLE) || ((node.mapPoint.cellId == this._mapPoint.cellId) && (node.state == _ReachableCellData.STATE_UNREACHABLE))))
                     {
                         this._waitingCells.push(node);
                     }
                     else
                     {
-                        if (node.state == _ReachableCellStore.STATE_WATCHED)
+                        if (node.state == _ReachableCellData.STATE_WATCHED)
                         {
                             this._watchedCells.push(node);
                         };
@@ -195,15 +215,14 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.fight.miscs
+} com.ankamagames.dofus.logic.game.fight.miscs
 
 import com.ankamagames.jerakine.types.positions.MapPoint;
 import __AS3__.vec.Vector;
 import com.ankamagames.atouin.data.map.CellData;
 import com.ankamagames.atouin.managers.MapDisplayManager;
-import com.ankamagames.dofus.network.types.game.context.fight.GameFightFighterInformations;
 
-class _ReachableCellStore 
+class _ReachableCellData 
 {
 
     public static const STATE_UNDEFINED:int = 0;
@@ -213,15 +232,15 @@ class _ReachableCellStore
 
     public var mapPoint:MapPoint;
     public var state:int;
-    public var evade:Number = 1;
-    public var bestMp:int;
-    public var bestUntackledMp:int;
-    public var set:Boolean;
+    public var evadePercent:Number = 1;
+    public var bestRemainingMp:int;
+    public var bestRemainingMpNoTackle:int;
+    public var mpUpdated:Boolean;
     public var gridX:int;
     public var gridY:int;
-    public var cellGrid:Vector.<Vector.<_ReachableCellStore>>;
+    public var cellGrid:Vector.<Vector.<_ReachableCellData>>;
 
-    public function _ReachableCellStore(mapPoint:MapPoint, gridX:int, gridY:int, cellGrid:Vector.<Vector.<_ReachableCellStore>>)
+    public function _ReachableCellData(mapPoint:MapPoint, gridX:int, gridY:int, cellGrid:Vector.<Vector.<_ReachableCellData>>)
     {
         this.mapPoint = mapPoint;
         this.gridX = gridX;
@@ -229,9 +248,9 @@ class _ReachableCellStore
         this.cellGrid = cellGrid;
     }
 
-    public function findState(playerInfos:GameFightFighterInformations):void
+    public function findState():void
     {
-        var _local_3:_ReachableCellStore;
+        var neighbour:_ReachableCellData;
         var cellData:CellData = CellData(MapDisplayManager.getInstance().getDataMapContainer().dataMap.cells[this.mapPoint.cellId]);
         if (((!(cellData.mov)) || (cellData.nonWalkableDuringFight)))
         {
@@ -239,56 +258,62 @@ class _ReachableCellStore
         }
         else
         {
-            this.evade = 1;
+            this.evadePercent = 1;
             if (this.gridX > 0)
             {
-                _local_3 = this.cellGrid[(this.gridX - 1)][this.gridY];
-                if (((_local_3) && ((_local_3.state == STATE_UNREACHABLE))))
+                neighbour = this.cellGrid[(this.gridX - 1)][this.gridY];
+                if (((neighbour) && (neighbour.state == STATE_UNREACHABLE)))
                 {
-                    this.evade = (this.evade * _local_3.evade);
+                    this.evadePercent = (this.evadePercent * neighbour.evadePercent);
                 };
             };
             if (this.gridX < (this.cellGrid.length - 1))
             {
-                _local_3 = this.cellGrid[(this.gridX + 1)][this.gridY];
-                if (((_local_3) && ((_local_3.state == STATE_UNREACHABLE))))
+                neighbour = this.cellGrid[(this.gridX + 1)][this.gridY];
+                if (((neighbour) && (neighbour.state == STATE_UNREACHABLE)))
                 {
-                    this.evade = (this.evade * _local_3.evade);
+                    this.evadePercent = (this.evadePercent * neighbour.evadePercent);
                 };
             };
             if (this.gridY > 0)
             {
-                _local_3 = this.cellGrid[this.gridX][(this.gridY - 1)];
-                if (((_local_3) && ((_local_3.state == STATE_UNREACHABLE))))
+                neighbour = this.cellGrid[this.gridX][(this.gridY - 1)];
+                if (((neighbour) && (neighbour.state == STATE_UNREACHABLE)))
                 {
-                    this.evade = (this.evade * _local_3.evade);
+                    this.evadePercent = (this.evadePercent * neighbour.evadePercent);
                 };
             };
             if (this.gridY < (this.cellGrid[0].length - 1))
             {
-                _local_3 = this.cellGrid[this.gridX][(this.gridY + 1)];
-                if (((_local_3) && ((_local_3.state == STATE_UNREACHABLE))))
+                neighbour = this.cellGrid[this.gridX][(this.gridY + 1)];
+                if (((neighbour) && (neighbour.state == STATE_UNREACHABLE)))
                 {
-                    this.evade = (this.evade * _local_3.evade);
+                    this.evadePercent = (this.evadePercent * neighbour.evadePercent);
                 };
             };
-            this.state = (((this.evade == 1)) ? STATE_REACHABLE : STATE_WATCHED);
+            this.state = ((this.evadePercent == 1) ? STATE_REACHABLE : STATE_WATCHED);
         };
     }
 
     public function updateMp(bestMp:int, bestUntackledMp:int):void
     {
-        this.set = true;
-        if (bestMp > this.bestMp)
+        this.mpUpdated = true;
+        if (bestMp > this.bestRemainingMp)
         {
-            this.bestMp = bestMp;
+            this.bestRemainingMp = bestMp;
         };
-        if (bestUntackledMp > this.bestUntackledMp)
+        if (bestUntackledMp > this.bestRemainingMpNoTackle)
         {
-            this.bestUntackledMp = bestUntackledMp;
+            this.bestRemainingMpNoTackle = bestUntackledMp;
         };
+    }
+
+    public function toString():String
+    {
+        return ("Node " + this.mapPoint.cellId);
     }
 
 
 }
+
 

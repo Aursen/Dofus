@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.logger
+package com.ankamagames.jerakine.logger
 {
     public interface Logger 
     {
@@ -15,5 +15,5 @@
         function clear():void;
 
     }
-}//package com.ankamagames.jerakine.logger
+} com.ankamagames.jerakine.logger
 

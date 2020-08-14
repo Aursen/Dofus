@@ -1,12 +1,12 @@
-﻿package com.ankamagames.dofus.network.types.game.character.choice
+package com.ankamagames.dofus.network.types.game.character.choice
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import __AS3__.vec.Vector;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
     import __AS3__.vec.*;
 
-    [Trusted]
     public class RemodelingInformation implements INetworkType 
     {
 
@@ -16,13 +16,9 @@
         public var breed:int = 0;
         public var sex:Boolean = false;
         public var cosmeticId:uint = 0;
-        public var colors:Vector.<int>;
+        public var colors:Vector.<int> = new Vector.<int>();
+        private var _colorstree:FuncTree;
 
-        public function RemodelingInformation()
-        {
-            this.colors = new Vector.<int>();
-            super();
-        }
 
         public function getTypeId():uint
         {
@@ -80,14 +76,10 @@
         public function deserializeAs_RemodelingInformation(input:ICustomDataInput):void
         {
             var _val5:int;
-            this.name = input.readUTF();
-            this.breed = input.readByte();
-            this.sex = input.readBoolean();
-            this.cosmeticId = input.readVarUhShort();
-            if (this.cosmeticId < 0)
-            {
-                throw (new Error((("Forbidden value (" + this.cosmeticId) + ") on element of RemodelingInformation.cosmeticId.")));
-            };
+            this._nameFunc(input);
+            this._breedFunc(input);
+            this._sexFunc(input);
+            this._cosmeticIdFunc(input);
             var _colorsLen:uint = input.readUnsignedShort();
             var _i5:uint;
             while (_i5 < _colorsLen)
@@ -98,7 +90,62 @@
             };
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_RemodelingInformation(tree);
+        }
+
+        public function deserializeAsyncAs_RemodelingInformation(tree:FuncTree):void
+        {
+            tree.addChild(this._nameFunc);
+            tree.addChild(this._breedFunc);
+            tree.addChild(this._sexFunc);
+            tree.addChild(this._cosmeticIdFunc);
+            this._colorstree = tree.addChild(this._colorstreeFunc);
+        }
+
+        private function _nameFunc(input:ICustomDataInput):void
+        {
+            this.name = input.readUTF();
+        }
+
+        private function _breedFunc(input:ICustomDataInput):void
+        {
+            this.breed = input.readByte();
+        }
+
+        private function _sexFunc(input:ICustomDataInput):void
+        {
+            this.sex = input.readBoolean();
+        }
+
+        private function _cosmeticIdFunc(input:ICustomDataInput):void
+        {
+            this.cosmeticId = input.readVarUhShort();
+            if (this.cosmeticId < 0)
+            {
+                throw (new Error((("Forbidden value (" + this.cosmeticId) + ") on element of RemodelingInformation.cosmeticId.")));
+            };
+        }
+
+        private function _colorstreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._colorstree.addChild(this._colorsFunc);
+                i++;
+            };
+        }
+
+        private function _colorsFunc(input:ICustomDataInput):void
+        {
+            var _val:int = input.readInt();
+            this.colors.push(_val);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.types.game.character.choice
+} com.ankamagames.dofus.network.types.game.character.choice
 

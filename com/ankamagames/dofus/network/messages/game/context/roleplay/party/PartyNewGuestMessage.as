@@ -1,7 +1,8 @@
-﻿package com.ankamagames.dofus.network.messages.game.context.roleplay.party
+package com.ankamagames.dofus.network.messages.game.context.roleplay.party
 {
     import com.ankamagames.jerakine.network.INetworkMessage;
     import com.ankamagames.dofus.network.types.game.context.roleplay.party.PartyGuestInformations;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
@@ -13,17 +14,13 @@
         public static const protocolId:uint = 6260;
 
         private var _isInitialized:Boolean = false;
-        public var guest:PartyGuestInformations;
+        public var guest:PartyGuestInformations = new PartyGuestInformations();
+        private var _guesttree:FuncTree;
 
-        public function PartyNewGuestMessage()
-        {
-            this.guest = new PartyGuestInformations();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
-            return (((super.isInitialized) && (this._isInitialized)));
+            return ((super.isInitialized) && (this._isInitialized));
         }
 
         override public function getMessageId():uint
@@ -58,6 +55,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         override public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_PartyNewGuestMessage(output);
@@ -81,7 +86,24 @@
             this.guest.deserialize(input);
         }
 
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_PartyNewGuestMessage(tree);
+        }
+
+        public function deserializeAsyncAs_PartyNewGuestMessage(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            this._guesttree = tree.addChild(this._guesttreeFunc);
+        }
+
+        private function _guesttreeFunc(input:ICustomDataInput):void
+        {
+            this.guest = new PartyGuestInformations();
+            this.guest.deserializeAsync(this._guesttree);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.context.roleplay.party
+} com.ankamagames.dofus.network.messages.game.context.roleplay.party
 

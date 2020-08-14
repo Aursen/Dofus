@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.common.frames
+package com.ankamagames.dofus.logic.game.common.frames
 {
     import com.ankamagames.jerakine.messages.Frame;
     import com.ankamagames.jerakine.logger.Logger;
@@ -23,7 +23,7 @@
 
         public static function get mountFrame():MountFrame
         {
-            return ((Kernel.getWorker().getFrame(MountFrame) as MountFrame));
+            return (Kernel.getWorker().getFrame(MountFrame) as MountFrame);
         }
 
 
@@ -46,14 +46,14 @@
 
         public function process(msg:Message):Boolean
         {
-            var _local_2:ExchangeLeaveMessage;
+            var elm:ExchangeLeaveMessage;
             switch (true)
             {
                 case (msg is ExchangeMountStableErrorMessage):
                     return (true);
                 case (msg is ExchangeLeaveMessage):
-                    _local_2 = (msg as ExchangeLeaveMessage);
-                    if (_local_2.dialogType == DialogTypeEnum.DIALOG_EXCHANGE)
+                    elm = (msg as ExchangeLeaveMessage);
+                    if (elm.dialogType == DialogTypeEnum.DIALOG_EXCHANGE)
                     {
                         Kernel.getWorker().removeFrame(this);
                     };
@@ -76,5 +76,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.frames
+} com.ankamagames.dofus.logic.game.common.frames
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.resources.adapters.impl
+package com.ankamagames.jerakine.resources.adapters.impl
 {
     import com.ankamagames.jerakine.resources.adapters.IAdapter;
     import flash.media.Sound;
@@ -60,7 +60,7 @@
             this._uri = null;
         }
 
-        protected function getResource(ldr:LoaderInfo)
+        protected function getResource(ldr:LoaderInfo):*
         {
             return (this._sound);
         }
@@ -126,5 +126,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.resources.adapters.impl
+} com.ankamagames.jerakine.resources.adapters.impl
 

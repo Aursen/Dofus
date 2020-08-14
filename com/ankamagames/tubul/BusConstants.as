@@ -1,4 +1,4 @@
-﻿package com.ankamagames.tubul
+package com.ankamagames.tubul
 {
     public class BusConstants 
     {
@@ -8,5 +8,5 @@
 
 
     }
-}//package com.ankamagames.tubul
+} com.ankamagames.tubul
 

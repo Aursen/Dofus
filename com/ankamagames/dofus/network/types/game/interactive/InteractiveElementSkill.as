@@ -1,10 +1,10 @@
-﻿package com.ankamagames.dofus.network.types.game.interactive
+package com.ankamagames.dofus.network.types.game.interactive
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class InteractiveElementSkill implements INetworkType 
     {
 
@@ -58,11 +58,32 @@
 
         public function deserializeAs_InteractiveElementSkill(input:ICustomDataInput):void
         {
+            this._skillIdFunc(input);
+            this._skillInstanceUidFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_InteractiveElementSkill(tree);
+        }
+
+        public function deserializeAsyncAs_InteractiveElementSkill(tree:FuncTree):void
+        {
+            tree.addChild(this._skillIdFunc);
+            tree.addChild(this._skillInstanceUidFunc);
+        }
+
+        private function _skillIdFunc(input:ICustomDataInput):void
+        {
             this.skillId = input.readVarUhInt();
             if (this.skillId < 0)
             {
                 throw (new Error((("Forbidden value (" + this.skillId) + ") on element of InteractiveElementSkill.skillId.")));
             };
+        }
+
+        private function _skillInstanceUidFunc(input:ICustomDataInput):void
+        {
             this.skillInstanceUid = input.readInt();
             if (this.skillInstanceUid < 0)
             {
@@ -72,5 +93,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.interactive
+} com.ankamagames.dofus.network.types.game.interactive
 

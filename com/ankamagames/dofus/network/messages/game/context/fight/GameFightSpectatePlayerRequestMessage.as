@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.context.fight
+package com.ankamagames.dofus.network.messages.game.context.fight
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,15 +6,15 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class GameFightSpectatePlayerRequestMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 6474;
 
         private var _isInitialized:Boolean = false;
-        public var playerId:int = 0;
+        public var playerId:Number = 0;
 
 
         override public function get isInitialized():Boolean
@@ -27,7 +27,7 @@
             return (6474);
         }
 
-        public function initGameFightSpectatePlayerRequestMessage(playerId:int=0):GameFightSpectatePlayerRequestMessage
+        public function initGameFightSpectatePlayerRequestMessage(playerId:Number=0):GameFightSpectatePlayerRequestMessage
         {
             this.playerId = playerId;
             this._isInitialized = true;
@@ -52,6 +52,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_GameFightSpectatePlayerRequestMessage(output);
@@ -59,7 +67,11 @@
 
         public function serializeAs_GameFightSpectatePlayerRequestMessage(output:ICustomDataOutput):void
         {
-            output.writeInt(this.playerId);
+            if (((this.playerId < 0) || (this.playerId > 9007199254740992)))
+            {
+                throw (new Error((("Forbidden value (" + this.playerId) + ") on element playerId.")));
+            };
+            output.writeVarLong(this.playerId);
         }
 
         public function deserialize(input:ICustomDataInput):void
@@ -69,10 +81,29 @@
 
         public function deserializeAs_GameFightSpectatePlayerRequestMessage(input:ICustomDataInput):void
         {
-            this.playerId = input.readInt();
+            this._playerIdFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GameFightSpectatePlayerRequestMessage(tree);
+        }
+
+        public function deserializeAsyncAs_GameFightSpectatePlayerRequestMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._playerIdFunc);
+        }
+
+        private function _playerIdFunc(input:ICustomDataInput):void
+        {
+            this.playerId = input.readVarUhLong();
+            if (((this.playerId < 0) || (this.playerId > 9007199254740992)))
+            {
+                throw (new Error((("Forbidden value (" + this.playerId) + ") on element of GameFightSpectatePlayerRequestMessage.playerId.")));
+            };
         }
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.context.fight
+} com.ankamagames.dofus.network.messages.game.context.fight
 

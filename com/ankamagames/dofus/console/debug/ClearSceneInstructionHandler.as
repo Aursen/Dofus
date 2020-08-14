@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.console.debug
+package com.ankamagames.dofus.console.debug
 {
     import com.ankamagames.jerakine.console.ConsoleInstructionHandler;
     import flash.display.DisplayObjectContainer;
@@ -19,13 +19,13 @@
 
         public function handle(console:ConsoleHandler, cmd:String, args:Array):void
         {
-            var _local_4:DisplayObjectContainer;
-            var _local_5:uint;
-            var _local_6:uint;
-            var _local_7:uint;
-            var _local_8:uint;
-            var _local_9:Array;
-            var _local_10:RoleplayEntitiesFrame;
+            var scene:DisplayObjectContainer;
+            var count:uint;
+            var totalCount:uint;
+            var charCount:uint;
+            var othersCount:uint;
+            var entities:Array;
+            var entitiesFrame:RoleplayEntitiesFrame;
             var o:*;
             var entity:*;
             switch (cmd)
@@ -35,52 +35,52 @@
                     {
                         console.output("No arguments needed.");
                     };
-                    _local_4 = Dofus.getInstance().getWorldContainer();
-                    while (_local_4.numChildren > 0)
+                    scene = Dofus.getInstance().getWorldContainer();
+                    while (scene.numChildren > 0)
                     {
-                        _local_4.removeChildAt(0);
+                        scene.removeChildAt(0);
                     };
                     console.output("Scene cleared.");
-                    return;
+                    break;
                 case "clearentities":
-                    _local_5 = 0;
+                    count = 0;
                     for each (o in EntitiesManager.getInstance().entities)
                     {
-                        _local_5++;
+                        count++;
                     };
-                    console.output((("EntitiesManager : " + _local_5) + " entities"));
+                    console.output((("EntitiesManager : " + count) + " entities"));
                     Atouin.getInstance().clearEntities();
                     Atouin.getInstance().display(PlayedCharacterManager.getInstance().currentMap);
                     System.gc();
                     setTimeout(this.asynchInfo, 2000, console);
-                    return;
+                    break;
                 case "countentities":
-                    _local_6 = 0;
-                    _local_7 = 0;
-                    _local_8 = 0;
-                    _local_9 = EntitiesManager.getInstance().entities;
-                    for each (entity in _local_9)
+                    totalCount = 0;
+                    charCount = 0;
+                    othersCount = 0;
+                    entities = EntitiesManager.getInstance().entities;
+                    for each (entity in entities)
                     {
-                        _local_6++;
+                        totalCount++;
                         if ((entity is TiphonSprite))
                         {
                             if (entity.id >= 0)
                             {
-                                _local_7++;
+                                charCount++;
                             }
                             else
                             {
-                                _local_8++;
+                                othersCount++;
                             };
                         };
                     };
-                    console.output((((((_local_6 + " entities : ") + _local_7) + " characters, ") + _local_8) + " monsters & npc."));
-                    _local_10 = (Kernel.getWorker().getFrame(RoleplayEntitiesFrame) as RoleplayEntitiesFrame);
-                    if (_local_10)
+                    console.output((((((totalCount + " entities : ") + charCount) + " characters, ") + othersCount) + " monsters & npc."));
+                    entitiesFrame = (Kernel.getWorker().getFrame(RoleplayEntitiesFrame) as RoleplayEntitiesFrame);
+                    if (entitiesFrame)
                     {
-                        console.output(((((("Switch to creature mode : " + _local_10.entitiesNumber) + " of ") + _local_10.creaturesLimit) + " -> ") + _local_10.creaturesMode));
+                        console.output(((((("Switch to creature mode : " + entitiesFrame.entitiesNumber) + " of ") + entitiesFrame.creaturesLimit) + " -> ") + entitiesFrame.creaturesMode));
                     };
-                    return;
+                    break;
             };
         }
 
@@ -105,7 +105,7 @@
                 case "countentities":
                     return ("Count all entities from the scene.");
             };
-            return ((("No help for command '" + cmd) + "'"));
+            return (("No help for command '" + cmd) + "'");
         }
 
         public function getParamPossibilities(cmd:String, paramIndex:uint=0, currentParams:Array=null):Array
@@ -115,5 +115,5 @@
 
 
     }
-}//package com.ankamagames.dofus.console.debug
+} com.ankamagames.dofus.console.debug
 

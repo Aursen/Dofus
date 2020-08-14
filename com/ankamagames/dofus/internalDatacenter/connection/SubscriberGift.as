@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.internalDatacenter.connection
+package com.ankamagames.dofus.internalDatacenter.connection
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
 
@@ -75,5 +75,5 @@
 
 
     }
-}//package com.ankamagames.dofus.internalDatacenter.connection
+} com.ankamagames.dofus.internalDatacenter.connection
 

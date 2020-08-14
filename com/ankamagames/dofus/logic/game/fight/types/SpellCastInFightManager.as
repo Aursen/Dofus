@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.fight.types
+package com.ankamagames.dofus.logic.game.fight.types
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
@@ -23,17 +23,15 @@
 
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(SpellCastInFightManager));
 
-        private var _spells:Dictionary;
+        private var _spells:Dictionary = new Dictionary();
         private var skipFirstTurn:Boolean = true;
         private var _storedSpellCooldowns:Vector.<GameFightSpellCooldown>;
         public var currentTurn:int = 0;
-        public var entityId:int;
+        public var entityId:Number;
         public var needCooldownUpdate:Boolean = false;
 
-        public function SpellCastInFightManager(entityId:int)
+        public function SpellCastInFightManager(entityId:Number)
         {
-            this._spells = new Dictionary();
-            super();
             this.entityId = entityId;
         }
 
@@ -49,26 +47,29 @@
 
         public function resetInitialCooldown(hasBeenSummoned:Boolean=false):void
         {
-            var sm:SpellManager;
             var s:SpellWrapper;
             var spim:SpellInventoryManagementFrame = (Kernel.getWorker().getFrame(SpellInventoryManagementFrame) as SpellInventoryManagementFrame);
             var spellList:Array = spim.getFullSpellListByOwnerId(this.entityId);
             for each (s in spellList)
             {
-                if (s.spellLevelInfos.initialCooldown != 0)
+                this.initializeSpellInitialCooldown(s, hasBeenSummoned);
+            };
+        }
+
+        public function resetSpellInitialCooldown(spellId:int, hasBeenSummoned:Boolean=false):void
+        {
+            var spellWrapper:SpellWrapper;
+            var spellInventoryManagementFrame:SpellInventoryManagementFrame = (Kernel.getWorker().getFrame(SpellInventoryManagementFrame) as SpellInventoryManagementFrame);
+            var spellList:Array = spellInventoryManagementFrame.getFullSpellListByOwnerId(this.entityId);
+            for each (spellWrapper in spellList)
+            {
+                if (spellWrapper.spellId !== spellId)
                 {
-                    if (((hasBeenSummoned) && ((s.actualCooldown > s.spellLevelInfos.initialCooldown))))
-                    {
-                    }
-                    else
-                    {
-                        if (this._spells[s.spellId] == null)
-                        {
-                            this._spells[s.spellId] = new SpellManager(this, s.spellId, s.spellLevel);
-                        };
-                        sm = this._spells[s.spellId];
-                        sm.resetInitialCooldown(this.currentTurn);
-                    };
+                }
+                else
+                {
+                    this.initializeSpellInitialCooldown(spellWrapper, hasBeenSummoned);
+                    break;
                 };
             };
         }
@@ -93,14 +94,14 @@
             while (k < numCoolDown)
             {
                 spellCooldown = spellCooldowns[k];
-                spellW = SpellWrapper.getFirstSpellWrapperById(spellCooldown.spellId, this.entityId);
-                if (!(spellW))
+                spellW = SpellWrapper.getSpellWrapperById(spellCooldown.spellId, this.entityId);
+                if (!spellW)
                 {
                     this.needCooldownUpdate = true;
                     this._storedSpellCooldowns = spellCooldowns;
                     return;
                 };
-                if (((spellW) && ((spellW.spellLevel > 0))))
+                if (((spellW) && (spellW.spellLevel > 0)))
                 {
                     spellLevel = spellW.spell.getSpellLevel(spellW.spellLevel);
                     spellCastManager = playedFighterManager.getSpellCastManagerById(this.entityId);
@@ -152,10 +153,28 @@
 
         public function getSpellManagerBySpellId(pSpellId:uint):SpellManager
         {
-            return ((this._spells[pSpellId] as SpellManager));
+            return (this._spells[pSpellId] as SpellManager);
+        }
+
+        private function initializeSpellInitialCooldown(spellWrapper:SpellWrapper, hasBeenSummoned:Boolean):void
+        {
+            var spellManager:SpellManager;
+            if (spellWrapper.spellLevelInfos.initialCooldown !== 0)
+            {
+                if (((hasBeenSummoned) && (spellWrapper.actualCooldown > spellWrapper.spellLevelInfos.initialCooldown)))
+                {
+                    return;
+                };
+                if (this._spells[spellWrapper.spellId] == null)
+                {
+                    this._spells[spellWrapper.spellId] = new SpellManager(this, spellWrapper.spellId, spellWrapper.spellLevel);
+                };
+                spellManager = this._spells[spellWrapper.spellId];
+                spellManager.resetInitialCooldown(this.currentTurn);
+            };
         }
 
 
     }
-}//package com.ankamagames.dofus.logic.game.fight.types
+} com.ankamagames.dofus.logic.game.fight.types
 

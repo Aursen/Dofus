@@ -1,4 +1,4 @@
-﻿package com.ankamagames.atouin.data.map.elements
+package com.ankamagames.atouin.data.map.elements
 {
     import com.ankamagames.atouin.data.map.Cell;
     import com.ankamagames.atouin.enums.ElementTypesEnum;
@@ -68,5 +68,5 @@
 
 
     }
-}//package com.ankamagames.atouin.data.map.elements
+} com.ankamagames.atouin.data.map.elements
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.components
+package com.ankamagames.berilia.components
 {
     import com.ankamagames.berilia.UIComponent;
     import flash.utils.Timer;
@@ -17,9 +17,6 @@
     import flash.ui.Keyboard;
     import com.ankamagames.jerakine.messages.Message;
     import com.ankamagames.jerakine.utils.misc.StringUtils;
-    import com.ankamagames.jerakine.replay.LogFrame;
-    import com.ankamagames.jerakine.replay.LogTypeEnum;
-    import com.ankamagames.jerakine.replay.KeyboardInput;
     import com.ankamagames.berilia.components.messages.ChangeMessage;
     import flash.display.InteractiveObject;
     import com.ankamagames.jerakine.data.XmlConfig;
@@ -34,7 +31,7 @@
         public static var numberStrSeparator:String;
 
         private var _nMaxChars:int;
-        private var _nNumberMax:uint;
+        private var _nNumberMax:Number = 0;
         private var _bPassword:Boolean = false;
         private var _sRestrictChars:String;
         private var _bNumberAutoFormat:Boolean = false;
@@ -54,6 +51,7 @@
         private var _undoing:Boolean;
         private var _redoing:Boolean;
         private var _deleting:Boolean;
+        private var _placeholderText:String;
         public var focusEventHandlerPriority:Boolean = true;
 
         public function Input()
@@ -74,6 +72,17 @@
             this._currentHyperlinkCodes = new Vector.<String>(0);
         }
 
+        public function get placeholderText():String
+        {
+            return (this._placeholderText);
+        }
+
+        public function set placeholderText(sValue:String):void
+        {
+            this._placeholderText = sValue;
+            this.text = this._placeholderText;
+        }
+
         public function get lastTextOnInput():String
         {
             return (this._lastTextOnInput);
@@ -90,7 +99,7 @@
             _tText.maxChars = this._nMaxChars;
         }
 
-        public function set numberMax(nValue:uint):void
+        public function set numberMax(nValue:Number):void
         {
             this._nNumberMax = nValue;
         }
@@ -117,7 +126,7 @@
         public function set numberAutoFormat(bValue:Boolean):void
         {
             this._bNumberAutoFormat = bValue;
-            if (!(bValue))
+            if (!bValue)
             {
                 if (this._timerFormatDelay)
                 {
@@ -151,17 +160,21 @@
         {
             this._sRestrictChars = sValue;
             _tText.restrict = this._sRestrictChars;
-            this._isNumericInput = (((this._sRestrictChars == "0-9")) || ((this._sRestrictChars == "0-9  ")));
+            this._isNumericInput = ((this._sRestrictChars == "0-9") || (this._sRestrictChars == "0-9  "));
         }
 
         public function get haveFocus():Boolean
         {
-            return ((Berilia.getInstance().docMain.stage.focus == _tText));
+            return (Berilia.getInstance().docMain.stage.focus == _tText);
         }
 
         override public function set text(sValue:String):void
         {
             super.text = sValue;
+            if (!_bHtmlAllowed)
+            {
+                height = __height;
+            };
             this.onTextChange(null);
         }
 
@@ -199,7 +212,7 @@
 
         private function undo():void
         {
-            if (((this._deleting) && ((_tText.text.length == 0))))
+            if (((this._deleting) && (_tText.text.length == 0)))
             {
                 this._inputHistory.pop();
             };
@@ -231,7 +244,7 @@
                         return;
                     };
                 };
-                if (((((this._historyCurrentIndex + 1) > (this._inputHistory.length - 1))) && (!(this.wasHistoryText()))))
+                if ((((this._historyCurrentIndex + 1) > (this._inputHistory.length - 1)) && (!(this.wasHistoryText()))))
                 {
                     this.addHistory(_tText.text);
                 };
@@ -262,7 +275,7 @@
             {
                 return;
             };
-            if ((((this._inputHistory.length > 0)) && ((this._historyCurrentIndex < (this._inputHistory.length - 1)))))
+            if (((this._inputHistory.length > 0) && (this._historyCurrentIndex < (this._inputHistory.length - 1))))
             {
                 _tText.text = this._inputHistory[++this._historyCurrentIndex].text;
                 this._historyEntryHyperlinkCodes = this._inputHistory[this._historyCurrentIndex].hyperlinkCodes;
@@ -299,7 +312,7 @@
         private function checkClearHistory():Boolean
         {
             var nextIndex:int;
-            if (((((this._undoing) || (this._redoing))) && (this.wasHistoryText())))
+            if ((((this._undoing) || (this._redoing)) && (this.wasHistoryText())))
             {
                 nextIndex = (this._historyCurrentIndex + 1);
                 this._inputHistory.splice(nextIndex, (this._inputHistory.length - nextIndex));
@@ -311,7 +324,7 @@
 
         private function wasHistoryText():Boolean
         {
-            return ((((this._inputHistory.length > 0)) && (((((((!((this._historyCurrentIndex == -1))) && ((this._historyCurrentIndex <= (this._inputHistory.length - 1))))) && ((this._lastTextOnInput == this._inputHistory[this._historyCurrentIndex].text)))) || ((((this._historyCurrentIndex == -1)) && ((((this._lastTextOnInput == "")) || ((this._lastTextOnInput == "0"))))))))));
+            return ((this._inputHistory.length > 0) && ((((!(this._historyCurrentIndex == -1)) && (this._historyCurrentIndex <= (this._inputHistory.length - 1))) && (this._lastTextOnInput == this._inputHistory[this._historyCurrentIndex].text)) || ((this._historyCurrentIndex == -1) && ((this._lastTextOnInput == "") || (this._lastTextOnInput == "0")))));
         }
 
         private function deletePreviousWord():void
@@ -327,6 +340,15 @@
             this.onTextChange(null);
         }
 
+        private function removePlaceholderText():void
+        {
+            if (((this._placeholderText) && (_tText.text == this._placeholderText)))
+            {
+                _tText.text = "";
+                this._placeholderText = null;
+            };
+        }
+
         override public function focus():void
         {
             Berilia.getInstance().docMain.stage.focus = _tText;
@@ -339,52 +361,53 @@
             FocusHandler.getInstance().setFocus(null);
         }
 
-        [HideInFakeClass]
         override public function process(msg:Message):Boolean
         {
             var delta:int;
             var inc:int;
             var newValue:int;
             var kdmsg:KeyboardKeyDownMessage;
-            if ((((msg is MouseClickMessage)) && ((MouseClickMessage(msg).target == this))))
+            if (((msg is MouseClickMessage) && (MouseClickMessage(msg).target == _tText)))
             {
                 this.focus();
+                this.removePlaceholderText();
             };
             var tfIntValue:int = parseInt(text.split(" ").join("").split(" ").join("").split(this._numberSeparator).join(""));
-            if ((((((msg is MouseWheelMessage)) && (!(disabled)))) && ((tfIntValue.toString(10) == text.split(" ").join("").split(" ").join("").split(this._numberSeparator).join("")))))
+            if ((((msg is MouseWheelMessage) && (!(disabled))) && (tfIntValue.toString(10) == text.split(" ").join("").split(" ").join("").split(this._numberSeparator).join(""))))
             {
-                delta = ((((msg as MouseWheelMessage).mouseEvent.delta > 0)) ? 1 : -1);
-                inc = (((Math.abs(tfIntValue) > 99)) ? Math.pow(10, ((tfIntValue + delta).toString(10).length - 2)) : 1);
+                delta = (((msg as MouseWheelMessage).mouseEvent.delta > 0) ? 1 : -1);
+                inc = ((Math.abs(tfIntValue) > 99) ? Math.pow(10, ((tfIntValue + delta).toString(10).length - 2)) : 1);
                 if (ShortcutsFrame.ctrlKey)
                 {
                     inc = 1;
                 };
                 newValue = (tfIntValue + (delta * inc));
-                newValue = (((newValue < 0)) ? 0 : newValue);
-                if ((((this._nNumberMax > 0)) && ((newValue > this._nNumberMax))))
+                newValue = ((newValue < 0) ? 0 : newValue);
+                if (((this._nNumberMax > 0) && (newValue > this._nNumberMax)))
                 {
                     newValue = this._nNumberMax;
                 };
                 this.text = newValue.toString();
+                return (true);
             };
             if (((!(this.password)) && (this.haveFocus)))
             {
                 if ((msg is KeyboardKeyDownMessage))
                 {
                     kdmsg = (msg as KeyboardKeyDownMessage);
-                    if (((((kdmsg.keyboardEvent.ctrlKey) && ((kdmsg.keyboardEvent.keyCode == Keyboard.Z)))) && (!(kdmsg.keyboardEvent.shiftKey))))
+                    if ((((kdmsg.keyboardEvent.ctrlKey) && (kdmsg.keyboardEvent.keyCode == Keyboard.Z)) && (!(kdmsg.keyboardEvent.shiftKey))))
                     {
                         this.undo();
                     }
                     else
                     {
-                        if (((((kdmsg.keyboardEvent.shiftKey) && (kdmsg.keyboardEvent.ctrlKey))) && ((kdmsg.keyboardEvent.keyCode == Keyboard.Z))))
+                        if ((((kdmsg.keyboardEvent.shiftKey) && (kdmsg.keyboardEvent.ctrlKey)) && (kdmsg.keyboardEvent.keyCode == Keyboard.Z)))
                         {
                             this.redo();
                         }
                         else
                         {
-                            if (((((((((((!((kdmsg.keyboardEvent.keyCode == Keyboard.ENTER))) && (!((kdmsg.keyboardEvent.keyCode == Keyboard.BACKSPACE))))) && (!(kdmsg.keyboardEvent.ctrlKey)))) && (!(((kdmsg.keyboardEvent.shiftKey) && ((kdmsg.keyboardEvent.keyCode == Keyboard.SHIFT))))))) && (!((kdmsg.keyboardEvent.keyCode == Keyboard.UP))))) && (!((kdmsg.keyboardEvent.keyCode == Keyboard.DOWN)))))
+                            if (((((((!(kdmsg.keyboardEvent.keyCode == Keyboard.ENTER)) && (!(kdmsg.keyboardEvent.keyCode == Keyboard.BACKSPACE))) && (!(kdmsg.keyboardEvent.ctrlKey))) && (!((kdmsg.keyboardEvent.shiftKey) && (kdmsg.keyboardEvent.keyCode == Keyboard.SHIFT)))) && (!(kdmsg.keyboardEvent.keyCode == Keyboard.UP))) && (!(kdmsg.keyboardEvent.keyCode == Keyboard.DOWN))))
                             {
                                 this._undoing = (this._deleting = (this._redoing = (this._chatHistoryText = false)));
                             };
@@ -410,7 +433,7 @@
         public function getHyperLinkCodes():Vector.<String>
         {
             var hyperlinkCodes:Vector.<String>;
-            if (!(this._historyEntryHyperlinkCodes))
+            if (!this._historyEntryHyperlinkCodes)
             {
                 hyperlinkCodes = this._currentHyperlinkCodes.concat();
             }
@@ -451,17 +474,16 @@
                     sameText = (this._lastTextOnInput == _tText.text);
                 };
             };
-            if (!(sameText))
+            if (!sameText)
             {
-                LogFrame.log(LogTypeEnum.KEYBOARD_INPUT, new KeyboardInput(customUnicName, _strReplace.substr(0, _tText.text.length)));
                 if (((!(this._sendingText)) && (!(this._chatHistoryText))))
                 {
                     this.checkClearHistory();
-                    if (((((((((this._lastTextOnInput) && (!(this._deleting)))) && (!(this._redoing)))) && (!(this._undoing)))) && ((this._lastTextOnInput.length > _tText.text.length))))
+                    if ((((((this._lastTextOnInput) && (!(this._deleting))) && (!(this._redoing))) && (!(this._undoing))) && (this._lastTextOnInput.length > _tText.text.length)))
                     {
                         this.addHistory(this._lastTextOnInput);
                     };
-                    if (((this._deleting) && ((_tText.text.length == 0))))
+                    if (((this._deleting) && (_tText.text.length == 0)))
                     {
                         this.addHistory(((this._isNumericInput) ? "0" : ""));
                         this._historyCurrentIndex = (this._inputHistory.length - 1);
@@ -483,10 +505,11 @@
 
         private function onTextInput(pEvent:TextEvent):void
         {
+            this.removePlaceholderText();
             if (pEvent.text.length > 1)
             {
                 this.checkClearHistory();
-                if (((((((((!(this._undoing)) && (!(this._redoing)))) && (!(this._deleting)))) && (!((this._lastTextOnInput == null))))) && (((_tText.text.length + pEvent.text.length) > this._lastTextOnInput.length))))
+                if ((((((!(this._undoing)) && (!(this._redoing))) && (!(this._deleting))) && (!(this._lastTextOnInput == null))) && ((_tText.text.length + pEvent.text.length) > this._lastTextOnInput.length)))
                 {
                     this.addHistory(this._lastTextOnInput);
                 };
@@ -496,7 +519,7 @@
 
         private function onKeyUp(pEvent:KeyboardEvent):void
         {
-            if ((((((pEvent.keyCode == Keyboard.ENTER)) && (!((XmlConfig.getInstance().getEntry("config.lang.current") == "ja"))))) && (!(((((((((pEvent.altKey) || (pEvent.shiftKey))) || (pEvent.ctrlKey))) || (((pEvent.hasOwnProperty("controlKey")) && (pEvent.controlKey))))) || (((pEvent.hasOwnProperty("commandKey")) && (pEvent.commandKey))))))))
+            if ((((pEvent.keyCode == Keyboard.ENTER) && (!(XmlConfig.getInstance().getEntry("config.lang.current") == "ja"))) && (!(((((pEvent.altKey) || (pEvent.shiftKey)) || (pEvent.ctrlKey)) || ((pEvent.hasOwnProperty("controlKey")) && (pEvent.controlKey))) || ((pEvent.hasOwnProperty("commandKey")) && (pEvent.commandKey))))))
             {
                 this._sendingText = true;
                 this._inputHistory.length = 0;
@@ -506,7 +529,7 @@
 
         private function onKeyDown(pEvent:KeyboardEvent):void
         {
-            if (((((((!(pEvent.altKey)) && (!(pEvent.shiftKey)))) && (pEvent.ctrlKey))) && ((pEvent.keyCode == Keyboard.Y))))
+            if (((((!(pEvent.altKey)) && (!(pEvent.shiftKey))) && (pEvent.ctrlKey)) && (pEvent.keyCode == Keyboard.Y)))
             {
                 pEvent.preventDefault();
                 pEvent.stopImmediatePropagation();
@@ -514,7 +537,7 @@
             }
             else
             {
-                if (((((((!(pEvent.altKey)) && (!(pEvent.shiftKey)))) && (pEvent.ctrlKey))) && ((pEvent.keyCode == Keyboard.BACKSPACE))))
+                if (((((!(pEvent.altKey)) && (!(pEvent.shiftKey))) && (pEvent.ctrlKey)) && (pEvent.keyCode == Keyboard.BACKSPACE)))
                 {
                     pEvent.preventDefault();
                     pEvent.stopImmediatePropagation();
@@ -522,7 +545,7 @@
                 }
                 else
                 {
-                    if ((((pEvent.keyCode == Keyboard.UP)) || ((pEvent.keyCode == Keyboard.DOWN))))
+                    if (((pEvent.keyCode == Keyboard.UP) || (pEvent.keyCode == Keyboard.DOWN)))
                     {
                         this._chatHistoryText = true;
                         this._undoing = (this._redoing = (this._deleting = false));
@@ -534,7 +557,7 @@
                         if (pEvent.keyCode == Keyboard.BACKSPACE)
                         {
                             this._chatHistoryText = false;
-                            if (!(this._deleting))
+                            if (!this._deleting)
                             {
                                 this._deleting = true;
                                 this._undoing = (this._redoing = false);
@@ -542,6 +565,14 @@
                                 {
                                     this.addHistory(this._lastTextOnInput);
                                 };
+                            };
+                        }
+                        else
+                        {
+                            if ((((!(_tText.multiline)) && (pEvent.ctrlKey)) && (pEvent.keyCode == Keyboard.ENTER)))
+                            {
+                                pEvent.preventDefault();
+                                pEvent.stopImmediatePropagation();
                             };
                         };
                     };
@@ -579,7 +610,7 @@
             i = 0;
             while (i < (_tText.length - 1))
             {
-                if ((((startText.charAt(i) == this._numberSeparator)) || ((startText.charAt(i) == " "))))
+                if (((startText.charAt(i) == this._numberSeparator) || (startText.charAt(i) == " ")))
                 {
                     if (i < caret)
                     {
@@ -632,7 +663,7 @@
 
 
     }
-}//package com.ankamagames.berilia.components
+} com.ankamagames.berilia.components
 
 import __AS3__.vec.Vector;
 
@@ -660,4 +691,5 @@ class InputEntry
 
 
 }
+
 

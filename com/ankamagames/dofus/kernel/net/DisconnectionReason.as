@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.kernel.net
+package com.ankamagames.dofus.kernel.net
 {
     public class DisconnectionReason 
     {
@@ -24,5 +24,5 @@
 
 
     }
-}//package com.ankamagames.dofus.kernel.net
+} com.ankamagames.dofus.kernel.net
 

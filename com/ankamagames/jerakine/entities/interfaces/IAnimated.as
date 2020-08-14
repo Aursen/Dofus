@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.entities.interfaces
+package com.ankamagames.jerakine.entities.interfaces
 {
     public interface IAnimated 
     {
@@ -10,5 +10,5 @@
         function setAnimationAndDirection(_arg_1:String, _arg_2:uint, _arg_3:Boolean=false):void;
 
     }
-}//package com.ankamagames.jerakine.entities.interfaces
+} com.ankamagames.jerakine.entities.interfaces
 

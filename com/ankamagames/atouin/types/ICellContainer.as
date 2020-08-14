@@ -1,4 +1,4 @@
-﻿package com.ankamagames.atouin.types
+package com.ankamagames.atouin.types
 {
     public interface ICellContainer 
     {
@@ -26,5 +26,5 @@
         function addFakeChild(_arg_1:Object, _arg_2:Object, _arg_3:Object):void;
 
     }
-}//package com.ankamagames.atouin.types
+} com.ankamagames.atouin.types
 

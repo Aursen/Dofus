@@ -1,11 +1,10 @@
-﻿package com.ankamagames.dofus.internalDatacenter.guild
+package com.ankamagames.dofus.internalDatacenter.guild
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import flash.utils.Dictionary;
     import com.ankamagames.dofus.network.types.game.social.GuildVersatileInformations;
     import com.ankamagames.dofus.network.types.game.context.roleplay.BasicGuildInformations;
     import com.ankamagames.dofus.network.types.game.context.roleplay.GuildInformations;
-    import com.ankamagames.dofus.network.types.game.social.AlliancedGuildFactSheetInformations;
     import com.ankamagames.dofus.network.types.game.guild.GuildEmblem;
     import com.ankamagames.jerakine.data.I18n;
     import __AS3__.vec.Vector;
@@ -41,16 +40,24 @@
         public var upEmblem:EmblemWrapper;
         public var backEmblem:EmblemWrapper;
         public var level:uint = 0;
-        public var enabled:Boolean;
         public var creationDate:uint;
-        public var leaderId:uint;
+        public var leaderId:Number;
         public var nbMembers:uint;
         public var nbConnectedMembers:uint;
         public var experience:Number;
         public var expLevelFloor:Number;
         public var expNextLevelFloor:Number;
-        public var alliance:AllianceWrapper;
-        public var allianceTag:String;
+        public var motd:String = "";
+        public var formattedMotd:String = "";
+        public var motdWriterId:Number;
+        public var motdWriterName:String = "";
+        public var motdTimestamp:Number;
+        public var bulletin:String = "";
+        public var formattedBulletin:String = "";
+        public var bulletinWriterId:Number;
+        public var bulletinWriterName:String = "";
+        public var bulletinTimestamp:Number;
+        public var lastNotifiedTimestamp:Number;
         private var _memberRightsNumber:uint;
 
 
@@ -95,11 +102,6 @@
                         o.backEmblem = EmblemWrapper.fromNetwork(GuildInformations(msg).guildEmblem, true);
                         o.upEmblem = EmblemWrapper.fromNetwork(GuildInformations(msg).guildEmblem, false);
                     };
-                    if ((msg is AlliancedGuildFactSheetInformations))
-                    {
-                        o.alliance = AllianceWrapper.getFromNetwork(AlliancedGuildFactSheetInformations(msg).allianceInfos);
-                        o.allianceTag = o.alliance.allianceTag;
-                    };
                 };
             };
             return (o);
@@ -110,7 +112,7 @@
             _ref[pGuildId] = pGuildWrapper;
         }
 
-        public static function create(pGuildId:uint, pGuildName:String, pGuildEmblem:GuildEmblem, pMemberRights:Number, pEnabled:Boolean):GuildWrapper
+        public static function create(pGuildId:uint, pGuildName:String, pGuildEmblem:GuildEmblem, pMemberRights:Number):GuildWrapper
         {
             var item:GuildWrapper;
             item = new (GuildWrapper)();
@@ -118,7 +120,6 @@
             item.guildId = pGuildId;
             item._guildName = pGuildName;
             item._memberRightsNumber = pMemberRights;
-            item.enabled = pEnabled;
             if (pGuildEmblem != null)
             {
                 item.upEmblem = EmblemWrapper.create(pGuildEmblem.symbolShape, EmblemWrapper.UP, pGuildEmblem.symbolColor);
@@ -198,108 +199,107 @@
 
         public function get isBoss():Boolean
         {
-            return (((1 & this._memberRightsNumber) > 0));
+            return ((0x01 & this._memberRightsNumber) > 0);
         }
 
         public function get manageGuildBoosts():Boolean
         {
-            return (((((this.isBoss) || (this.manageRights))) || (((2 & this._memberRightsNumber) > 0))));
+            return (((this.isBoss) || (this.manageRights)) || ((0x02 & this._memberRightsNumber) > 0));
         }
 
         public function get manageRights():Boolean
         {
-            return (((this.isBoss) || (((4 & this._memberRightsNumber) > 0))));
+            return ((this.isBoss) || ((0x04 & this._memberRightsNumber) > 0));
         }
 
         public function get inviteNewMembers():Boolean
         {
-            return (((((this.isBoss) || (this.manageRights))) || (((8 & this._memberRightsNumber) > 0))));
+            return (((this.isBoss) || (this.manageRights)) || ((0x08 & this._memberRightsNumber) > 0));
         }
 
         public function get banMembers():Boolean
         {
-            return (((((this.isBoss) || (this.manageRights))) || (((16 & this._memberRightsNumber) > 0))));
+            return (((this.isBoss) || (this.manageRights)) || ((0x10 & this._memberRightsNumber) > 0));
         }
 
         public function get manageXPContribution():Boolean
         {
-            return (((((this.isBoss) || (this.manageRights))) || (((32 & this._memberRightsNumber) > 0))));
+            return (((this.isBoss) || (this.manageRights)) || ((0x20 & this._memberRightsNumber) > 0));
         }
 
         public function get manageRanks():Boolean
         {
-            return (((((this.isBoss) || (this.manageRights))) || (((64 & this._memberRightsNumber) > 0))));
+            return (((this.isBoss) || (this.manageRights)) || ((0x40 & this._memberRightsNumber) > 0));
         }
 
         public function get hireTaxCollector():Boolean
         {
-            return (((((this.isBoss) || (this.manageRights))) || (((128 & this._memberRightsNumber) > 0))));
+            return (((this.isBoss) || (this.manageRights)) || ((0x80 & this._memberRightsNumber) > 0));
         }
 
         public function get manageMyXpContribution():Boolean
         {
-            return (((((this.isBoss) || (this.manageRights))) || (((0x0100 & this._memberRightsNumber) > 0))));
+            return (((this.isBoss) || (this.manageRights)) || ((0x0100 & this._memberRightsNumber) > 0));
         }
 
         public function get collect():Boolean
         {
-            return (((((this.isBoss) || (this.manageRights))) || (((0x0200 & this._memberRightsNumber) > 0))));
+            return (((this.isBoss) || (this.manageRights)) || ((0x0200 & this._memberRightsNumber) > 0));
         }
 
         public function get manageLightRights():Boolean
         {
-            return (((((this.isBoss) || (this.manageRights))) || (((0x0400 & this._memberRightsNumber) > 0))));
+            return (((this.isBoss) || (this.manageRights)) || ((0x0400 & this._memberRightsNumber) > 0));
         }
 
         public function get useFarms():Boolean
         {
-            return (((((this.isBoss) || (this.manageRights))) || (((0x1000 & this._memberRightsNumber) > 0))));
+            return (((this.isBoss) || (this.manageRights)) || ((0x1000 & this._memberRightsNumber) > 0));
         }
 
         public function get organizeFarms():Boolean
         {
-            return (((((this.isBoss) || (this.manageRights))) || (((0x2000 & this._memberRightsNumber) > 0))));
+            return (((this.isBoss) || (this.manageRights)) || ((0x2000 & this._memberRightsNumber) > 0));
         }
 
         public function get takeOthersRidesInFarm():Boolean
         {
-            return (((((this.isBoss) || (this.manageRights))) || (((0x4000 & this._memberRightsNumber) > 0))));
+            return (((this.isBoss) || (this.manageRights)) || ((0x4000 & this._memberRightsNumber) > 0));
         }
 
         public function get prioritizeMeInDefense():Boolean
         {
-            return (((((this.isBoss) || (this.manageRights))) || (((0x8000 & this._memberRightsNumber) > 0))));
+            return (((this.isBoss) || (this.manageRights)) || ((0x8000 & this._memberRightsNumber) > 0));
         }
 
         public function get collectMyTaxCollectors():Boolean
         {
-            return (((((this.isBoss) || (this.manageRights))) || (((65536 & this._memberRightsNumber) > 0))));
+            return (((this.isBoss) || (this.manageRights)) || ((0x010000 & this._memberRightsNumber) > 0));
         }
 
         public function get setAlliancePrism():Boolean
         {
-            return (((((this.isBoss) || (this.manageRights))) || (((131072 & this._memberRightsNumber) > 0))));
+            return (((this.isBoss) || (this.manageRights)) || ((0x020000 & this._memberRightsNumber) > 0));
         }
 
         public function get talkInAllianceChannel():Boolean
         {
-            return (((((this.isBoss) || (this.manageRights))) || (((262144 & this._memberRightsNumber) > 0))));
+            return (((this.isBoss) || (this.manageRights)) || ((0x040000 & this._memberRightsNumber) > 0));
         }
 
         public function clone():GuildWrapper
         {
-            var wrapper:GuildWrapper = create(this.guildId, this.guildName, null, this.memberRightsNumber, this.enabled);
+            var wrapper:GuildWrapper = create(this.guildId, this.guildName, null, this.memberRightsNumber);
             wrapper.upEmblem = this.upEmblem;
             wrapper.backEmblem = this.backEmblem;
             return (wrapper);
         }
 
-        public function update(pGuildId:uint, pGuildName:String, pGuildEmblem:GuildEmblem, pMemberRights:Number, pEnabled:Boolean):void
+        public function update(pGuildId:uint, pGuildName:String, pGuildEmblem:GuildEmblem, pMemberRights:Number):void
         {
             this.guildId = pGuildId;
             this._guildName = pGuildName;
             this._memberRightsNumber = pMemberRights;
-            this.enabled = pEnabled;
             this.upEmblem.update(pGuildEmblem.symbolShape, EmblemWrapper.UP, pGuildEmblem.symbolColor);
             this.backEmblem.update(pGuildEmblem.backgroundShape, EmblemWrapper.BACK, pGuildEmblem.backgroundColor);
         }
@@ -391,5 +391,5 @@
 
 
     }
-}//package com.ankamagames.dofus.internalDatacenter.guild
+} com.ankamagames.dofus.internalDatacenter.guild
 

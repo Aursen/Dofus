@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.common.actions
+package com.ankamagames.dofus.logic.game.common.actions
 {
     import com.ankamagames.jerakine.handlers.messages.Action;
 
@@ -6,10 +6,10 @@
     {
 
         private var _contactType:uint;
-        private var _entityId:uint;
+        private var _entityId:Number;
 
 
-        public static function create(pContactType:uint, pEntityId:uint):ContactLookRequestByIdAction
+        public static function create(pContactType:uint, pEntityId:Number):ContactLookRequestByIdAction
         {
             var clrbia:ContactLookRequestByIdAction = new (ContactLookRequestByIdAction)();
             clrbia._contactType = pContactType;
@@ -23,12 +23,12 @@
             return (this._contactType);
         }
 
-        public function get entityId():uint
+        public function get entityId():Number
         {
             return (this._entityId);
         }
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.actions
+} com.ankamagames.dofus.logic.game.common.actions
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.tiphon.engine
+package com.ankamagames.tiphon.engine
 {
     public class TiphonLibraries 
     {
@@ -8,5 +8,5 @@
 
 
     }
-}//package com.ankamagames.tiphon.engine
+} com.ankamagames.tiphon.engine
 

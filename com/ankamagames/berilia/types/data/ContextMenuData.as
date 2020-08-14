@@ -1,11 +1,11 @@
-﻿package com.ankamagames.berilia.types.data
+package com.ankamagames.berilia.types.data
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
 
     public class ContextMenuData implements IDataCenter 
     {
 
-        public var data;
+        public var data:*;
         public var makerName:String;
         public var content:UnsecureArray;
 
@@ -23,5 +23,5 @@
         }
 
     }
-}//package com.ankamagames.berilia.types.data
+} com.ankamagames.berilia.types.data
 

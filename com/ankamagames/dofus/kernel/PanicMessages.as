@@ -1,49 +1,55 @@
-﻿package com.ankamagames.dofus.kernel
+package com.ankamagames.dofus.kernel
 {
+    import flash.utils.ByteArray;
+    import by.blooddy.crypto.serialization.JSON;
+    import com.ankamagames.jerakine.data.XmlConfig;
+    import flash.system.Capabilities;
+    import com.ankamagames.dofus.BuildInfos;
+    import com.ankamagames.dofus.network.enums.BuildTypeEnum;
+    import com.ankamagames.dofus.misc.utils.ParamsDecoder;
+
     public final class PanicMessages 
     {
 
+        private static const _i18nFile:Class = PanicMessages__i18nFile;
+        private static const _bytes:ByteArray = (new _i18nFile() as ByteArray);
+        private static const _i18n:* = by.blooddy.crypto.serialization.JSON.decode(_bytes.readUTFBytes(_bytes.bytesAvailable));
+        private static const SUPPORT_URL:String = "https://support.ankama.com/";
         public static const CONFIG_LOADING_FAILED:uint = 1;
         public static const I18N_LOADING_FAILED:uint = 2;
         public static const WRONG_CONTEXT_CREATED:uint = 3;
         public static const PROTOCOL_TOO_OLD:uint = 4;
         public static const PROTOCOL_TOO_NEW:uint = 5;
+        public static const TOO_MANY_CLIENTS:uint = 6;
+        public static const UNABLE_TO_GET_FLASHKEY:uint = 7;
+        public static const OUT_OF_MEMORY:uint = 8;
 
 
         public static function getMessage(errorId:uint, args:Array):String
         {
-            var errorMsg:String = "";
-            try
+            var lang:String = XmlConfig.getInstance().getEntry("config.lang.current");
+            if (!lang)
             {
-                switch (errorId)
-                {
-                    case CONFIG_LOADING_FAILED:
-                        errorMsg = ("The Kernel was unable to load the main configuration file.\n" + "Your client installation may be corrupted.");
-                        break;
-                    case I18N_LOADING_FAILED:
-                        errorMsg = (((("The Kernel was unable to load the localization file.\n" + "Your client installation may be corrupted.\n\n") + "The requested language was '") + args[0]) + "'.");
-                        break;
-                    case WRONG_CONTEXT_CREATED:
-                        errorMsg = (("A wrong or unexpected game context (id " + args[0]) + ") has been created.");
-                        break;
-                    case PROTOCOL_TOO_OLD:
-                        errorMsg = ((((("The client protocol version (which is " + args[0]) + ") is too old for the server.\n") + "The server needs protocol version ") + args[1]) + ".");
-                        break;
-                    case PROTOCOL_TOO_NEW:
-                        errorMsg = ((((("The client protocol version (which is " + args[0]) + ") is too new for the server.\n") + "The server can handle clients up to protocol version ") + args[1]) + ".");
-                        break;
-                    default:
-                        errorMsg = ("Unknown error " + errorId);
-                };
-            }
-            catch(e:Error)
-            {
-                errorMsg = "There was an error, and the error system failed to display that error.";
+                lang = Capabilities.language;
             };
-            return ((((errorMsg + "\n\n") + "Please contact the Ankama Games support with this error message.\n") + "http://support.ankama-games.com/"));
+            lang = ((_i18n[lang]) ? lang : "en");
+            var errorKey:String = ("error" + errorId);
+            var message:String = ((_i18n[lang][errorKey]) ? _i18n[lang][errorKey] : _i18n[lang]["unknown"]);
+            if (errorId != PanicMessages.OUT_OF_MEMORY)
+            {
+                if (((((BuildInfos.BUILD_TYPE == BuildTypeEnum.RELEASE) && (!(errorId == PanicMessages.PROTOCOL_TOO_OLD))) && (!(errorId == PanicMessages.TOO_MANY_CLIENTS))) && (!(errorId == PanicMessages.PROTOCOL_TOO_NEW))))
+                {
+                    message = (message + (((((("\n" + _i18n[lang]["support"]) + " <a href='") + SUPPORT_URL) + "'><font color='#ffd376'><b>") + SUPPORT_URL) + "</b></font></a>"));
+                }
+                else
+                {
+                    message = (message + ("\n" + _i18n[lang]["update"]));
+                };
+            };
+            return ((message) ? ParamsDecoder.applyParams(message, args) : "");
         }
 
 
     }
-}//package com.ankamagames.dofus.kernel
+} com.ankamagames.dofus.kernel
 

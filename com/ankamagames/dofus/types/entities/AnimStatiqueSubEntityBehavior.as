@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.types.entities
+package com.ankamagames.dofus.types.entities
 {
     import com.ankamagames.tiphon.types.ISubEntityBehavior;
     import com.ankamagames.tiphon.display.TiphonSprite;
@@ -21,12 +21,12 @@
             this._animation = parentData.animation;
             switch (true)
             {
-                case !((this._parentData.animation.indexOf(AnimationEnum.ANIM_STATIQUE) == -1)):
-                case !((this._parentData.animation.indexOf(AnimationEnum.ANIM_HIT) == -1)):
-                case !((this._parentData.animation.indexOf(AnimationEnum.ANIM_ATTAQUE_BASE) == -1)):
-                case !((this._parentData.animation.indexOf(AnimationEnum.ANIM_MORT) == -1)):
-                case !((this._parentData.animation.indexOf("AnimEmote") == -1)):
-                    if (!(target.hasAnimation(parentData.animation, parentData.direction)))
+                case (!(this._parentData.animation.indexOf(AnimationEnum.ANIM_STATIQUE) == -1)):
+                case (!(this._parentData.animation.indexOf(AnimationEnum.ANIM_HIT) == -1)):
+                case (!(this._parentData.animation.indexOf(AnimationEnum.ANIM_ATTAQUE_BASE) == -1)):
+                case (!(this._parentData.animation.indexOf(AnimationEnum.ANIM_MORT) == -1)):
+                case (!(this._parentData.animation.indexOf("AnimEmote") == -1)):
+                    if (!target.hasAnimation(parentData.animation, parentData.direction))
                     {
                         this._animation = AnimationEnum.ANIM_STATIQUE;
                     };
@@ -58,5 +58,5 @@
 
 
     }
-}//package com.ankamagames.dofus.types.entities
+} com.ankamagames.dofus.types.entities
 

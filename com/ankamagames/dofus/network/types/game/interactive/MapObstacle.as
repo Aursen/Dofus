@@ -1,10 +1,10 @@
-﻿package com.ankamagames.dofus.network.types.game.interactive
+package com.ankamagames.dofus.network.types.game.interactive
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class MapObstacle implements INetworkType 
     {
 
@@ -39,7 +39,7 @@
 
         public function serializeAs_MapObstacle(output:ICustomDataOutput):void
         {
-            if ((((this.obstacleCellId < 0)) || ((this.obstacleCellId > 559))))
+            if (((this.obstacleCellId < 0) || (this.obstacleCellId > 559)))
             {
                 throw (new Error((("Forbidden value (" + this.obstacleCellId) + ") on element obstacleCellId.")));
             };
@@ -54,11 +54,32 @@
 
         public function deserializeAs_MapObstacle(input:ICustomDataInput):void
         {
+            this._obstacleCellIdFunc(input);
+            this._stateFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_MapObstacle(tree);
+        }
+
+        public function deserializeAsyncAs_MapObstacle(tree:FuncTree):void
+        {
+            tree.addChild(this._obstacleCellIdFunc);
+            tree.addChild(this._stateFunc);
+        }
+
+        private function _obstacleCellIdFunc(input:ICustomDataInput):void
+        {
             this.obstacleCellId = input.readVarUhShort();
-            if ((((this.obstacleCellId < 0)) || ((this.obstacleCellId > 559))))
+            if (((this.obstacleCellId < 0) || (this.obstacleCellId > 559)))
             {
                 throw (new Error((("Forbidden value (" + this.obstacleCellId) + ") on element of MapObstacle.obstacleCellId.")));
             };
+        }
+
+        private function _stateFunc(input:ICustomDataInput):void
+        {
             this.state = input.readByte();
             if (this.state < 0)
             {
@@ -68,5 +89,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.interactive
+} com.ankamagames.dofus.network.types.game.interactive
 

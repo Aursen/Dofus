@@ -1,15 +1,16 @@
-﻿package com.ankamagames.dofus.network.types.game.shortcut
+package com.ankamagames.dofus.network.types.game.shortcut
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
     public class ShortcutObjectPreset extends ShortcutObject implements INetworkType 
     {
 
         public static const protocolId:uint = 370;
 
-        public var presetId:uint = 0;
+        public var presetId:int = 0;
 
 
         override public function getTypeId():uint
@@ -17,7 +18,7 @@
             return (370);
         }
 
-        public function initShortcutObjectPreset(slot:uint=0, presetId:uint=0):ShortcutObjectPreset
+        public function initShortcutObjectPreset(slot:uint=0, presetId:int=0):ShortcutObjectPreset
         {
             super.initShortcutObject(slot);
             this.presetId = presetId;
@@ -38,11 +39,7 @@
         public function serializeAs_ShortcutObjectPreset(output:ICustomDataOutput):void
         {
             super.serializeAs_ShortcutObject(output);
-            if (this.presetId < 0)
-            {
-                throw (new Error((("Forbidden value (" + this.presetId) + ") on element presetId.")));
-            };
-            output.writeByte(this.presetId);
+            output.writeShort(this.presetId);
         }
 
         override public function deserialize(input:ICustomDataInput):void
@@ -53,14 +50,26 @@
         public function deserializeAs_ShortcutObjectPreset(input:ICustomDataInput):void
         {
             super.deserialize(input);
-            this.presetId = input.readByte();
-            if (this.presetId < 0)
-            {
-                throw (new Error((("Forbidden value (" + this.presetId) + ") on element of ShortcutObjectPreset.presetId.")));
-            };
+            this._presetIdFunc(input);
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_ShortcutObjectPreset(tree);
+        }
+
+        public function deserializeAsyncAs_ShortcutObjectPreset(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._presetIdFunc);
+        }
+
+        private function _presetIdFunc(input:ICustomDataInput):void
+        {
+            this.presetId = input.readShort();
         }
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.shortcut
+} com.ankamagames.dofus.network.types.game.shortcut
 

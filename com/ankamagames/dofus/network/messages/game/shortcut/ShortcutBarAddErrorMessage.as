@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.shortcut
+package com.ankamagames.dofus.network.messages.game.shortcut
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class ShortcutBarAddErrorMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -52,6 +52,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_ShortcutBarAddErrorMessage(output);
@@ -69,6 +77,21 @@
 
         public function deserializeAs_ShortcutBarAddErrorMessage(input:ICustomDataInput):void
         {
+            this._errorFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_ShortcutBarAddErrorMessage(tree);
+        }
+
+        public function deserializeAsyncAs_ShortcutBarAddErrorMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._errorFunc);
+        }
+
+        private function _errorFunc(input:ICustomDataInput):void
+        {
             this.error = input.readByte();
             if (this.error < 0)
             {
@@ -78,5 +101,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.shortcut
+} com.ankamagames.dofus.network.messages.game.shortcut
 

@@ -1,9 +1,10 @@
-﻿package com.ankamagames.dofus.network.types.game.character.restriction
+package com.ankamagames.dofus.network.types.game.character.restriction
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.utils.BooleanByteWrapper;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
     public class ActorRestrictionsInformations implements INetworkType 
     {
@@ -132,6 +133,21 @@
 
         public function deserializeAs_ActorRestrictionsInformations(input:ICustomDataInput):void
         {
+            this.deserializeByteBoxes(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_ActorRestrictionsInformations(tree);
+        }
+
+        public function deserializeAsyncAs_ActorRestrictionsInformations(tree:FuncTree):void
+        {
+            tree.addChild(this.deserializeByteBoxes);
+        }
+
+        private function deserializeByteBoxes(input:ICustomDataInput):void
+        {
             var _box0:uint = input.readByte();
             this.cantBeAggressed = BooleanByteWrapper.getFlag(_box0, 0);
             this.cantBeChallenged = BooleanByteWrapper.getFlag(_box0, 1);
@@ -160,5 +176,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.character.restriction
+} com.ankamagames.dofus.network.types.game.character.restriction
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.tiphon.sequence
+package com.ankamagames.tiphon.sequence
 {
     import com.ankamagames.jerakine.sequencer.AbstractSequencable;
     import com.ankamagames.tiphon.events.TiphonEvent;
@@ -27,7 +27,7 @@
                 executeCallbacks();
                 return;
             };
-            if (((((!(this._initOk)) || (this._released))) || (!((this._targetStep.animation == this._targetStep.target.getAnimation())))))
+            if ((((!(this._initOk)) || (this._released)) || (!(this._targetStep.animation == this._targetStep.target.getAnimation()))))
             {
                 this._targetStep.target.removeEventListener(TiphonEvent.ANIMATION_EVENT, this.onEvent);
                 this._targetStep = null;
@@ -41,7 +41,7 @@
 
         private function onEvent(e:TiphonEvent):void
         {
-            if (((((e) && ((e.type == this._waitedEvent)))) || (!((this._targetStep.animation == this._targetStep.target.getAnimation())))))
+            if ((((e) && (e.type == this._waitedEvent)) || (!(this._targetStep.animation == this._targetStep.target.getAnimation()))))
             {
                 this._released = true;
                 if (this._targetStep)
@@ -58,10 +58,10 @@
 
         override public function toString():String
         {
-            return (((("Waiting event [" + this._waitedEvent) + "] for ") + this._targetStep));
+            return ((("Waiting event [" + this._waitedEvent) + "] for ") + this._targetStep);
         }
 
 
     }
-}//package com.ankamagames.tiphon.sequence
+} com.ankamagames.tiphon.sequence
 

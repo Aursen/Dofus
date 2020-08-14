@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.resources.adapters
+package com.ankamagames.jerakine.resources.adapters
 {
     import flash.utils.Dictionary;
     import com.ankamagames.jerakine.resources.adapters.impl.XmlAdapter;
@@ -7,9 +7,9 @@
     import com.ankamagames.jerakine.resources.adapters.impl.SwfAdapter;
     import com.ankamagames.jerakine.resources.adapters.impl.AdvancedSwfAdapter;
     import com.ankamagames.jerakine.resources.adapters.impl.SwlAdapter;
-    import com.ankamagames.jerakine.resources.adapters.impl.DxAdapter;
     import com.ankamagames.jerakine.resources.adapters.impl.ZipAdapter;
     import com.ankamagames.jerakine.resources.adapters.impl.MP3Adapter;
+    import com.ankamagames.jerakine.resources.adapters.impl.JSONAdapter;
     import com.ankamagames.jerakine.utils.files.FileUtils;
     import com.ankamagames.jerakine.resources.ResourceError;
     import com.ankamagames.jerakine.resources.adapters.impl.SignedFileAdapter;
@@ -28,7 +28,8 @@
         public static function getAdapter(uri:Uri):IAdapter
         {
             var ca:*;
-            switch (uri.fileType)
+            var uriFileType:String = uri.fileType;
+            switch (uriFileType.toLowerCase())
             {
                 case "xml":
                 case "meta":
@@ -39,7 +40,6 @@
                 case "gif":
                 case "jpg":
                 case "jpeg":
-                case "wdp":
                     return (new BitmapAdapter());
                 case "txt":
                 case "css":
@@ -50,33 +50,29 @@
                     return (new AdvancedSwfAdapter());
                 case "swl":
                     return (new SwlAdapter());
-                case "dx":
-                    return (new DxAdapter());
                 case "zip":
                     return (new ZipAdapter());
                 case "mp3":
                     return (new MP3Adapter());
+                case "json":
+                    return (new JSONAdapter());
                 default:
-                    if (uri.subPath)
+                    if (((uri.subPath) && (FileUtils.getExtension(uri.path) == "swf")))
                     {
-                        switch (FileUtils.getExtension(uri.path))
-                        {
-                            case "swf":
-                                return (new AdvancedSwfAdapter());
-                        };
+                        return (new AdvancedSwfAdapter());
                     };
             };
-            var customAdapter:Class = (_customAdapters[uri.fileType] as Class);
+            var customAdapter:Class = (_customAdapters[uriFileType] as Class);
             if (customAdapter)
             {
                 ca = new (customAdapter)();
-                if (!((ca is IAdapter)))
+                if (!(ca is IAdapter))
                 {
-                    throw (new ResourceError((("Registered custom adapter for extension " + uri.fileType) + " isn't an IAdapter class.")));
+                    throw (new ResourceError((("Registered custom adapter for extension " + uriFileType) + " isn't an IAdapter class.")));
                 };
                 return (ca);
             };
-            if (uri.fileType.substr(-1) == "s")
+            if (uriFileType.substr(-1) == "s")
             {
                 return (new SignedFileAdapter());
             };
@@ -95,5 +91,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.resources.adapters
+} com.ankamagames.jerakine.resources.adapters
 

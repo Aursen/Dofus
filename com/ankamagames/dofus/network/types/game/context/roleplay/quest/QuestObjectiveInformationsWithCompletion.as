@@ -1,9 +1,10 @@
-﻿package com.ankamagames.dofus.network.types.game.context.roleplay.quest
+package com.ankamagames.dofus.network.types.game.context.roleplay.quest
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import __AS3__.vec.Vector;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
     public class QuestObjectiveInformationsWithCompletion extends QuestObjectiveInformations implements INetworkType 
     {
@@ -62,11 +63,33 @@
         public function deserializeAs_QuestObjectiveInformationsWithCompletion(input:ICustomDataInput):void
         {
             super.deserialize(input);
+            this._curCompletionFunc(input);
+            this._maxCompletionFunc(input);
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_QuestObjectiveInformationsWithCompletion(tree);
+        }
+
+        public function deserializeAsyncAs_QuestObjectiveInformationsWithCompletion(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._curCompletionFunc);
+            tree.addChild(this._maxCompletionFunc);
+        }
+
+        private function _curCompletionFunc(input:ICustomDataInput):void
+        {
             this.curCompletion = input.readVarUhShort();
             if (this.curCompletion < 0)
             {
                 throw (new Error((("Forbidden value (" + this.curCompletion) + ") on element of QuestObjectiveInformationsWithCompletion.curCompletion.")));
             };
+        }
+
+        private function _maxCompletionFunc(input:ICustomDataInput):void
+        {
             this.maxCompletion = input.readVarUhShort();
             if (this.maxCompletion < 0)
             {
@@ -76,5 +99,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.context.roleplay.quest
+} com.ankamagames.dofus.network.types.game.context.roleplay.quest
 

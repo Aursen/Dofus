@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.utils.system
+package com.ankamagames.jerakine.utils.system
 {
     import flash.display.Sprite;
     import flash.utils.Dictionary;
@@ -179,7 +179,7 @@
             this._contentTf.wordWrap = true;
             this._contentTf.multiline = true;
             this._contentTf.text = this._content;
-            this._contentTf.height = ((this._content.split("\n").length + 1) * 23);
+            this._contentTf.height = (this._contentTf.numLines * 23);
             this._contentTf.y = 30;
             this._mainContainer.addChild(this._contentTf);
             if (((this._buttons) && (this._buttons.length)))
@@ -214,7 +214,7 @@
             btnText.defaultTextFormat = tf;
             btnText.text = text;
             btnText.height = 20;
-            btnText.width = (((btnText.textWidth < 50)) ? 50 : (btnText.textWidth + 10));
+            btnText.width = ((btnText.textWidth < 50) ? 50 : (btnText.textWidth + 10));
             btnText.selectable = false;
             btnText.mouseEnabled = false;
             btn.addChild(btnText);
@@ -248,7 +248,7 @@
         {
             if ((this._callBacks[e.target] is Function))
             {
-                var _local_2 = this._callBacks;
+                var _local_2:* = this._callBacks;
                 (_local_2[e.target]());
             }
             else
@@ -263,5 +263,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.utils.system
+} com.ankamagames.jerakine.utils.system
 

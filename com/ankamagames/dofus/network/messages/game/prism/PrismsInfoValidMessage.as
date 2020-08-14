@@ -1,29 +1,25 @@
-﻿package com.ankamagames.dofus.network.messages.game.prism
+package com.ankamagames.dofus.network.messages.game.prism
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
     import __AS3__.vec.Vector;
     import com.ankamagames.dofus.network.types.game.prism.PrismFightersInformation;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
     import __AS3__.vec.*;
 
-    [Trusted]
     public class PrismsInfoValidMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 6451;
 
         private var _isInitialized:Boolean = false;
-        public var fights:Vector.<PrismFightersInformation>;
+        public var fights:Vector.<PrismFightersInformation> = new Vector.<PrismFightersInformation>();
+        private var _fightstree:FuncTree;
 
-        public function PrismsInfoValidMessage()
-        {
-            this.fights = new Vector.<PrismFightersInformation>();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
@@ -58,6 +54,14 @@
         override public function unpack(input:ICustomDataInput, length:uint):void
         {
             this.deserialize(input);
+        }
+
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
         }
 
         public function serialize(output:ICustomDataOutput):void
@@ -95,7 +99,35 @@
             };
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_PrismsInfoValidMessage(tree);
+        }
+
+        public function deserializeAsyncAs_PrismsInfoValidMessage(tree:FuncTree):void
+        {
+            this._fightstree = tree.addChild(this._fightstreeFunc);
+        }
+
+        private function _fightstreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._fightstree.addChild(this._fightsFunc);
+                i++;
+            };
+        }
+
+        private function _fightsFunc(input:ICustomDataInput):void
+        {
+            var _item:PrismFightersInformation = new PrismFightersInformation();
+            _item.deserialize(input);
+            this.fights.push(_item);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.prism
+} com.ankamagames.dofus.network.messages.game.prism
 

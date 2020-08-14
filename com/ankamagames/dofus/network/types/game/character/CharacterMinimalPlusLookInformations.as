@@ -1,7 +1,8 @@
-﻿package com.ankamagames.dofus.network.types.game.character
+package com.ankamagames.dofus.network.types.game.character
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.dofus.network.types.game.look.EntityLook;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
 
@@ -10,23 +11,21 @@
 
         public static const protocolId:uint = 163;
 
-        public var entityLook:EntityLook;
+        public var entityLook:EntityLook = new EntityLook();
+        public var breed:int = 0;
+        private var _entityLooktree:FuncTree;
 
-        public function CharacterMinimalPlusLookInformations()
-        {
-            this.entityLook = new EntityLook();
-            super();
-        }
 
         override public function getTypeId():uint
         {
             return (163);
         }
 
-        public function initCharacterMinimalPlusLookInformations(id:uint=0, level:uint=0, name:String="", entityLook:EntityLook=null):CharacterMinimalPlusLookInformations
+        public function initCharacterMinimalPlusLookInformations(id:Number=0, name:String="", level:uint=0, entityLook:EntityLook=null, breed:int=0):CharacterMinimalPlusLookInformations
         {
-            super.initCharacterMinimalInformations(id, level, name);
+            super.initCharacterMinimalInformations(id, name, level);
             this.entityLook = entityLook;
+            this.breed = breed;
             return (this);
         }
 
@@ -45,6 +44,7 @@
         {
             super.serializeAs_CharacterMinimalInformations(output);
             this.entityLook.serializeAs_EntityLook(output);
+            output.writeByte(this.breed);
         }
 
         override public function deserialize(input:ICustomDataInput):void
@@ -57,9 +57,33 @@
             super.deserialize(input);
             this.entityLook = new EntityLook();
             this.entityLook.deserialize(input);
+            this._breedFunc(input);
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_CharacterMinimalPlusLookInformations(tree);
+        }
+
+        public function deserializeAsyncAs_CharacterMinimalPlusLookInformations(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            this._entityLooktree = tree.addChild(this._entityLooktreeFunc);
+            tree.addChild(this._breedFunc);
+        }
+
+        private function _entityLooktreeFunc(input:ICustomDataInput):void
+        {
+            this.entityLook = new EntityLook();
+            this.entityLook.deserializeAsync(this._entityLooktree);
+        }
+
+        private function _breedFunc(input:ICustomDataInput):void
+        {
+            this.breed = input.readByte();
         }
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.character
+} com.ankamagames.dofus.network.types.game.character
 

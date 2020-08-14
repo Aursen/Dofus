@@ -1,4 +1,4 @@
-﻿package com.ankamagames.atouin.types
+package com.ankamagames.atouin.types
 {
     import flash.display.Sprite;
     import com.ankamagames.jerakine.logger.Logger;
@@ -32,7 +32,7 @@
             while (i < numChildren)
             {
                 currentCell = (getChildAt(i) as CellContainer);
-                if (!!(currentCell))
+                if (currentCell)
                 {
                     if (cellCtr.depth < currentCell.depth)
                     {
@@ -49,5 +49,5 @@
 
 
     }
-}//package com.ankamagames.atouin.types
+} com.ankamagames.atouin.types
 

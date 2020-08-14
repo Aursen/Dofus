@@ -1,8 +1,8 @@
-﻿package com.ankamagames.jerakine.network
+package com.ankamagames.jerakine.network
 {
     public interface INetworkType 
     {
 
     }
-}//package com.ankamagames.jerakine.network
+} com.ankamagames.jerakine.network
 

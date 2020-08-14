@@ -1,0 +1,20 @@
+package chat.protocol.user.events
+{
+    import chat.protocol.common.JsonifiedMessage;
+    import chat.protocol.user.data.FriendGroup;
+
+    public class UserFriendGroupCreatedEvt extends JsonifiedMessage 
+    {
+
+        public var userId:String;
+        public var group:FriendGroup;
+
+        public function UserFriendGroupCreatedEvt(userId:String, group:FriendGroup)
+        {
+            this.userId = userId;
+            this.group = group;
+        }
+
+    }
+} chat.protocol.user.events
+

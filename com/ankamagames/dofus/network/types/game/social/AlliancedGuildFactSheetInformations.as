@@ -1,34 +1,30 @@
-﻿package com.ankamagames.dofus.network.types.game.social
+package com.ankamagames.dofus.network.types.game.social
 {
     import com.ankamagames.dofus.network.types.game.context.roleplay.GuildInformations;
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.dofus.network.types.game.context.roleplay.BasicNamedAllianceInformations;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import com.ankamagames.dofus.network.types.game.guild.GuildEmblem;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
 
-    [Trusted]
     public class AlliancedGuildFactSheetInformations extends GuildInformations implements INetworkType 
     {
 
         public static const protocolId:uint = 422;
 
-        public var allianceInfos:BasicNamedAllianceInformations;
+        public var allianceInfos:BasicNamedAllianceInformations = new BasicNamedAllianceInformations();
+        private var _allianceInfostree:FuncTree;
 
-        public function AlliancedGuildFactSheetInformations()
-        {
-            this.allianceInfos = new BasicNamedAllianceInformations();
-            super();
-        }
 
         override public function getTypeId():uint
         {
             return (422);
         }
 
-        public function initAlliancedGuildFactSheetInformations(guildId:uint=0, guildName:String="", guildEmblem:GuildEmblem=null, allianceInfos:BasicNamedAllianceInformations=null):AlliancedGuildFactSheetInformations
+        public function initAlliancedGuildFactSheetInformations(guildId:uint=0, guildName:String="", guildLevel:uint=0, guildEmblem:GuildEmblem=null, allianceInfos:BasicNamedAllianceInformations=null):AlliancedGuildFactSheetInformations
         {
-            super.initGuildInformations(guildId, guildName, guildEmblem);
+            super.initGuildInformations(guildId, guildName, guildLevel, guildEmblem);
             this.allianceInfos = allianceInfos;
             return (this);
         }
@@ -62,7 +58,24 @@
             this.allianceInfos.deserialize(input);
         }
 
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_AlliancedGuildFactSheetInformations(tree);
+        }
+
+        public function deserializeAsyncAs_AlliancedGuildFactSheetInformations(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            this._allianceInfostree = tree.addChild(this._allianceInfostreeFunc);
+        }
+
+        private function _allianceInfostreeFunc(input:ICustomDataInput):void
+        {
+            this.allianceInfos = new BasicNamedAllianceInformations();
+            this.allianceInfos.deserializeAsync(this._allianceInfostree);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.types.game.social
+} com.ankamagames.dofus.network.types.game.social
 

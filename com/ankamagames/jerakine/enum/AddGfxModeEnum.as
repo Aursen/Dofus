@@ -1,6 +1,5 @@
-﻿package com.ankamagames.jerakine.enum
+package com.ankamagames.jerakine.enum
 {
-    [Trusted]
     public class AddGfxModeEnum 
     {
 
@@ -10,5 +9,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.enum
+} com.ankamagames.jerakine.enum
 

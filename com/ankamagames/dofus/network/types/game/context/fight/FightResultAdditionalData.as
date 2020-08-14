@@ -1,8 +1,9 @@
-﻿package com.ankamagames.dofus.network.types.game.context.fight
+package com.ankamagames.dofus.network.types.game.context.fight
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
     public class FightResultAdditionalData implements INetworkType 
     {
@@ -40,7 +41,15 @@
         {
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+        }
+
+        public function deserializeAsyncAs_FightResultAdditionalData(tree:FuncTree):void
+        {
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.types.game.context.fight
+} com.ankamagames.dofus.network.types.game.context.fight
 

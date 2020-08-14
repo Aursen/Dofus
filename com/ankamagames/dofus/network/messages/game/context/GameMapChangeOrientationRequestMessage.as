@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.context
+package com.ankamagames.dofus.network.messages.game.context
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class GameMapChangeOrientationRequestMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -52,6 +52,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_GameMapChangeOrientationRequestMessage(output);
@@ -69,6 +77,21 @@
 
         public function deserializeAs_GameMapChangeOrientationRequestMessage(input:ICustomDataInput):void
         {
+            this._directionFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GameMapChangeOrientationRequestMessage(tree);
+        }
+
+        public function deserializeAsyncAs_GameMapChangeOrientationRequestMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._directionFunc);
+        }
+
+        private function _directionFunc(input:ICustomDataInput):void
+        {
             this.direction = input.readByte();
             if (this.direction < 0)
             {
@@ -78,5 +101,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.context
+} com.ankamagames.dofus.network.messages.game.context
 

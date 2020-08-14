@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.scripts
+package com.ankamagames.dofus.scripts
 {
     import com.ankamagames.jerakine.types.positions.MapPoint;
 
@@ -35,5 +35,5 @@
 
 
     }
-}//package com.ankamagames.dofus.scripts
+} com.ankamagames.dofus.scripts
 

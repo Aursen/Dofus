@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.datacenter.effects.instances
+package com.ankamagames.dofus.datacenter.effects.instances
 {
     import com.ankamagames.dofus.datacenter.effects.EffectInstance;
     import com.ankamagames.jerakine.interfaces.IDataCenter;
@@ -49,17 +49,17 @@
             {
                 case 0:
                     this.days = uint(value);
-                    return;
+                    break;
                 case 1:
                     this.hours = uint(value);
-                    return;
+                    break;
                 case 2:
                     this.minutes = uint(value);
-                    return;
+                    break;
             };
         }
 
 
     }
-}//package com.ankamagames.dofus.datacenter.effects.instances
+} com.ankamagames.dofus.datacenter.effects.instances
 

@@ -1,15 +1,15 @@
-﻿package com.ankamagames.dofus.network.messages.game.context.roleplay.npc
+package com.ankamagames.dofus.network.messages.game.context.roleplay.npc
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
     import __AS3__.vec.Vector;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
     import __AS3__.vec.*;
 
-    [Trusted]
     public class NpcDialogQuestionMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -17,15 +17,11 @@
 
         private var _isInitialized:Boolean = false;
         public var messageId:uint = 0;
-        public var dialogParams:Vector.<String>;
-        public var visibleReplies:Vector.<uint>;
+        public var dialogParams:Vector.<String> = new Vector.<String>();
+        public var visibleReplies:Vector.<uint> = new Vector.<uint>();
+        private var _dialogParamstree:FuncTree;
+        private var _visibleRepliestree:FuncTree;
 
-        public function NpcDialogQuestionMessage()
-        {
-            this.dialogParams = new Vector.<String>();
-            this.visibleReplies = new Vector.<uint>();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
@@ -66,6 +62,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_NpcDialogQuestionMessage(output);
@@ -77,7 +81,7 @@
             {
                 throw (new Error((("Forbidden value (" + this.messageId) + ") on element messageId.")));
             };
-            output.writeVarShort(this.messageId);
+            output.writeVarInt(this.messageId);
             output.writeShort(this.dialogParams.length);
             var _i2:uint;
             while (_i2 < this.dialogParams.length)
@@ -93,7 +97,7 @@
                 {
                     throw (new Error((("Forbidden value (" + this.visibleReplies[_i3]) + ") on element 3 (starting at 1) of visibleReplies.")));
                 };
-                output.writeVarShort(this.visibleReplies[_i3]);
+                output.writeVarInt(this.visibleReplies[_i3]);
                 _i3++;
             };
         }
@@ -107,11 +111,7 @@
         {
             var _val2:String;
             var _val3:uint;
-            this.messageId = input.readVarUhShort();
-            if (this.messageId < 0)
-            {
-                throw (new Error((("Forbidden value (" + this.messageId) + ") on element of NpcDialogQuestionMessage.messageId.")));
-            };
+            this._messageIdFunc(input);
             var _dialogParamsLen:uint = input.readUnsignedShort();
             var _i2:uint;
             while (_i2 < _dialogParamsLen)
@@ -124,7 +124,7 @@
             var _i3:uint;
             while (_i3 < _visibleRepliesLen)
             {
-                _val3 = input.readVarUhShort();
+                _val3 = input.readVarUhInt();
                 if (_val3 < 0)
                 {
                     throw (new Error((("Forbidden value (" + _val3) + ") on elements of visibleReplies.")));
@@ -134,7 +134,66 @@
             };
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_NpcDialogQuestionMessage(tree);
+        }
+
+        public function deserializeAsyncAs_NpcDialogQuestionMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._messageIdFunc);
+            this._dialogParamstree = tree.addChild(this._dialogParamstreeFunc);
+            this._visibleRepliestree = tree.addChild(this._visibleRepliestreeFunc);
+        }
+
+        private function _messageIdFunc(input:ICustomDataInput):void
+        {
+            this.messageId = input.readVarUhInt();
+            if (this.messageId < 0)
+            {
+                throw (new Error((("Forbidden value (" + this.messageId) + ") on element of NpcDialogQuestionMessage.messageId.")));
+            };
+        }
+
+        private function _dialogParamstreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._dialogParamstree.addChild(this._dialogParamsFunc);
+                i++;
+            };
+        }
+
+        private function _dialogParamsFunc(input:ICustomDataInput):void
+        {
+            var _val:String = input.readUTF();
+            this.dialogParams.push(_val);
+        }
+
+        private function _visibleRepliestreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._visibleRepliestree.addChild(this._visibleRepliesFunc);
+                i++;
+            };
+        }
+
+        private function _visibleRepliesFunc(input:ICustomDataInput):void
+        {
+            var _val:uint = input.readVarUhInt();
+            if (_val < 0)
+            {
+                throw (new Error((("Forbidden value (" + _val) + ") on elements of visibleReplies.")));
+            };
+            this.visibleReplies.push(_val);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.context.roleplay.npc
+} com.ankamagames.dofus.network.messages.game.context.roleplay.npc
 

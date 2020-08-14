@@ -1,10 +1,14 @@
-﻿package com.ankamagames.dofus.logic.common.managers
+package com.ankamagames.dofus.logic.common.managers
 {
     import com.ankamagames.jerakine.interfaces.IDestroyable;
     import com.ankamagames.dofus.datacenter.servers.Server;
+    import com.ankamagames.dofus.datacenter.servers.ServerTemporisSeason;
     import __AS3__.vec.Vector;
     import com.ankamagames.dofus.internalDatacenter.connection.BasicCharacterWrapper;
+    import com.ankamagames.dofus.network.types.game.havenbag.HavenBagRoomPreviewInformation;
     import com.ankamagames.jerakine.utils.errors.SingletonError;
+    import com.ankamagames.dofus.datacenter.houses.HavenbagTheme;
+    import __AS3__.vec.*;
 
     public class PlayerManager implements IDestroyable 
     {
@@ -14,28 +18,40 @@
         public var accountId:uint;
         public var communityId:uint;
         public var hasRights:Boolean;
+        public var hasConsoleRight:Boolean;
         public var nickname:String;
         public var subscriptionEndDate:Number;
         public var secretQuestion:String;
         public var adminStatus:int;
         public var passkey:String;
         public var accountCreation:Number;
+        public var isSafe:Boolean = false;
+        public var canCreateNewCharacter:Boolean = true;
         private var _server:Server;
+        private var _serverSeason:ServerTemporisSeason;
+        private var _gameServerPort:uint;
+        private var _kisServerPort:uint;
         public var serverCommunityId:int = -1;
         public var serverLang:String;
         public var serverGameType:int = -1;
+        public var serverIsMonoAccount:Boolean;
         public var serversList:Vector.<int>;
         public var charactersList:Vector.<BasicCharacterWrapper>;
         public var allowAutoConnectCharacter:Boolean = false;
-        public var autoConnectOfASpecificCharacterId:int = -1;
+        public var autoConnectOfASpecificCharacterId:Number = -1;
+        public var wasAlreadyConnected:Boolean = false;
+        public var havenbagAvailableRooms:Vector.<HavenBagRoomPreviewInformation>;
+        public var havenbagAvailableThemes:Vector.<int> = new Vector.<int>();
+        public var arenaLeaveBanTime:int = -1;
+        public var hasFreeAutopilot:Boolean;
         private var _subscriptionDurationElapsed:Number;
-        private var _connexionTime:Number;
+        private var _subscriptionEndDateUpdateTime:Number;
 
         public function PlayerManager()
         {
-            if (!(this._connexionTime))
+            if (!this._subscriptionEndDateUpdateTime)
             {
-                this._connexionTime = new Date().getTime();
+                this.refreshSubscriptionEndDateUpdateTime();
             };
             if (_self != null)
             {
@@ -70,6 +86,7 @@
                 {
                     this._server.gameTypeId = this.serverGameType;
                 };
+                this._server.monoAccount = this.serverIsMonoAccount;
                 if (this.serverLang != "")
                 {
                     this._server.language = this.serverLang;
@@ -78,17 +95,47 @@
             return (this._server);
         }
 
+        public function set gameServerPort(value:uint):void
+        {
+            this._gameServerPort = value;
+        }
+
+        public function get gameServerPort():uint
+        {
+            return (this._gameServerPort);
+        }
+
+        public function set kisServerPort(value:uint):void
+        {
+            this._kisServerPort = value;
+        }
+
+        public function get kisServerPort():uint
+        {
+            return (this._kisServerPort);
+        }
+
+        public function get serverSeason():ServerTemporisSeason
+        {
+            return (this._serverSeason);
+        }
+
+        public function set serverSeason(season:ServerTemporisSeason):void
+        {
+            this._serverSeason = season;
+        }
+
         public function get subscriptionDurationElapsed():Number
         {
             var now:Number;
             var subscriptionSinceConnection:Number;
-            if (this.subscriptionEndDate > this._connexionTime)
+            if (this.subscriptionEndDate > this._subscriptionEndDateUpdateTime)
             {
                 now = new Date().getTime();
-                subscriptionSinceConnection = (Math.min(this.subscriptionEndDate, now) - this._connexionTime);
+                subscriptionSinceConnection = (Math.min(this.subscriptionEndDate, now) - this._subscriptionEndDateUpdateTime);
                 if (subscriptionSinceConnection > 0)
                 {
-                    return ((this._subscriptionDurationElapsed + Math.floor((subscriptionSinceConnection / 1000))));
+                    return (this._subscriptionDurationElapsed + Math.floor((subscriptionSinceConnection / 1000)));
                 };
             };
             return (this._subscriptionDurationElapsed);
@@ -99,6 +146,21 @@
             this._subscriptionDurationElapsed = n;
         }
 
+        public function refreshSubscriptionEndDateUpdateTime():void
+        {
+            this._subscriptionEndDateUpdateTime = new Date().getTime();
+        }
+
+        public function isBasicAccount():Boolean
+        {
+            return ((this.subscriptionEndDate <= 0) && (!(this.hasRights)));
+        }
+
+        public function isMapInHavenbag(mapId:int):Boolean
+        {
+            return (HavenbagTheme.isMapIdInHavenbag(mapId));
+        }
+
         public function destroy():void
         {
             _self = null;
@@ -106,5 +168,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.common.managers
+} com.ankamagames.dofus.logic.common.managers
 

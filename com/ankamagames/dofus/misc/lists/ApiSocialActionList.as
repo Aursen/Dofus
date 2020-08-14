@@ -1,8 +1,9 @@
-﻿package com.ankamagames.dofus.misc.lists
+package com.ankamagames.dofus.misc.lists
 {
     import com.ankamagames.dofus.misc.utils.DofusApiAction;
     import com.ankamagames.dofus.logic.game.common.actions.OpenSocialAction;
     import com.ankamagames.dofus.logic.game.common.actions.social.FriendsListRequestAction;
+    import com.ankamagames.dofus.logic.game.common.actions.social.ContactsListRequestAction;
     import com.ankamagames.dofus.logic.game.common.actions.social.EnemiesListRequestAction;
     import com.ankamagames.dofus.logic.game.common.actions.social.SpouseRequestAction;
     import com.ankamagames.dofus.logic.game.common.actions.social.AddFriendAction;
@@ -15,6 +16,7 @@
     import com.ankamagames.dofus.logic.game.common.actions.social.JoinSpouseAction;
     import com.ankamagames.dofus.logic.game.common.actions.social.FriendSpouseFollowAction;
     import com.ankamagames.dofus.logic.game.common.actions.social.FriendWarningSetAction;
+    import com.ankamagames.dofus.logic.game.common.actions.social.StatusShareSetAction;
     import com.ankamagames.dofus.logic.game.common.actions.social.MemberWarningSetAction;
     import com.ankamagames.dofus.logic.game.common.actions.social.FriendOrGuildMemberLevelUpWarningSetAction;
     import com.ankamagames.dofus.logic.game.common.actions.social.FriendGuildSetWarnOnAchievementCompleteAction;
@@ -32,7 +34,9 @@
     import com.ankamagames.dofus.logic.game.common.actions.guild.GuildSpellUpgradeRequestAction;
     import com.ankamagames.dofus.logic.game.common.actions.guild.GuildCharacsUpgradeRequestAction;
     import com.ankamagames.dofus.logic.game.common.actions.guild.GuildFarmTeleportRequestAction;
-    import com.ankamagames.dofus.logic.game.common.actions.guild.GuildHouseTeleportRequestAction;
+    import com.ankamagames.dofus.logic.game.common.actions.HouseTeleportRequestAction;
+    import com.ankamagames.dofus.logic.game.common.actions.guild.GuildMotdSetRequestAction;
+    import com.ankamagames.dofus.logic.game.common.actions.guild.GuildBulletinSetRequestAction;
     import com.ankamagames.dofus.logic.game.common.actions.guild.GuildFightJoinRequestAction;
     import com.ankamagames.dofus.logic.game.common.actions.guild.GuildFightTakePlaceRequestAction;
     import com.ankamagames.dofus.logic.game.common.actions.guild.GuildFightLeaveRequestAction;
@@ -50,15 +54,24 @@
     import com.ankamagames.dofus.logic.game.common.actions.alliance.AllianceListRequestAction;
     import com.ankamagames.dofus.logic.game.common.actions.alliance.AllianceInsiderInfoRequestAction;
     import com.ankamagames.dofus.logic.game.common.actions.alliance.AllianceChangeGuildRightsAction;
+    import com.ankamagames.dofus.logic.game.common.actions.alliance.AllianceMotdSetRequestAction;
+    import com.ankamagames.dofus.logic.game.common.actions.alliance.AllianceBulletinSetRequestAction;
     import com.ankamagames.dofus.logic.game.common.actions.social.CharacterReportAction;
     import com.ankamagames.dofus.logic.game.common.actions.social.ChatReportAction;
     import com.ankamagames.dofus.logic.game.common.actions.social.PlayerStatusUpdateRequestAction;
+    import com.ankamagames.dofus.logic.game.common.actions.dare.DareCreationRequestAction;
+    import com.ankamagames.dofus.logic.game.common.actions.dare.DareInformationsRequestAction;
+    import com.ankamagames.dofus.logic.game.common.actions.dare.DareCancelRequestAction;
+    import com.ankamagames.dofus.logic.game.common.actions.dare.DareListRequestAction;
+    import com.ankamagames.dofus.logic.game.common.actions.dare.DareSubscribeRequestAction;
+    import com.ankamagames.dofus.logic.game.common.actions.dare.DareRewardRequestAction;
 
     public class ApiSocialActionList 
     {
 
         public static const OpenSocial:DofusApiAction = new DofusApiAction("OpenSocial", OpenSocialAction);
         public static const FriendsListRequest:DofusApiAction = new DofusApiAction("FriendsListRequest", FriendsListRequestAction);
+        public static const ContactsListRequest:DofusApiAction = new DofusApiAction("ContactsListRequest", ContactsListRequestAction);
         public static const EnemiesListRequest:DofusApiAction = new DofusApiAction("EnemiesListRequest", EnemiesListRequestAction);
         public static const SpouseRequest:DofusApiAction = new DofusApiAction("SpouseRequest", SpouseRequestAction);
         public static const AddFriend:DofusApiAction = new DofusApiAction("AddFriend", AddFriendAction);
@@ -71,6 +84,7 @@
         public static const JoinSpouse:DofusApiAction = new DofusApiAction("JoinSpouse", JoinSpouseAction);
         public static const FriendSpouseFollow:DofusApiAction = new DofusApiAction("FriendSpouseFollow", FriendSpouseFollowAction);
         public static const FriendWarningSet:DofusApiAction = new DofusApiAction("FriendWarningSet", FriendWarningSetAction);
+        public static const StatusShareSet:DofusApiAction = new DofusApiAction("StatusShareSet", StatusShareSetAction);
         public static const MemberWarningSet:DofusApiAction = new DofusApiAction("MemberWarningSet", MemberWarningSetAction);
         public static const FriendOrGuildMemberLevelUpWarningSet:DofusApiAction = new DofusApiAction("FriendOrGuildMemberLevelUpWarningSet", FriendOrGuildMemberLevelUpWarningSetAction);
         public static const FriendGuildSetWarnOnAchievementComplete:DofusApiAction = new DofusApiAction("FriendGuildSetWarnOnAchievementComplete", FriendGuildSetWarnOnAchievementCompleteAction);
@@ -88,7 +102,9 @@
         public static const GuildSpellUpgradeRequest:DofusApiAction = new DofusApiAction("GuildSpellUpgradeRequest", GuildSpellUpgradeRequestAction);
         public static const GuildCharacsUpgradeRequest:DofusApiAction = new DofusApiAction("GuildCharacsUpgradeRequest", GuildCharacsUpgradeRequestAction);
         public static const GuildFarmTeleportRequest:DofusApiAction = new DofusApiAction("GuildFarmTeleportRequest", GuildFarmTeleportRequestAction);
-        public static const GuildHouseTeleportRequest:DofusApiAction = new DofusApiAction("GuildHouseTeleportRequest", GuildHouseTeleportRequestAction);
+        public static const HouseTeleportRequest:DofusApiAction = new DofusApiAction("HouseTeleportRequest", HouseTeleportRequestAction);
+        public static const GuildMotdSetRequest:DofusApiAction = new DofusApiAction("GuildMotdSetRequest", GuildMotdSetRequestAction);
+        public static const GuildBulletinSetRequest:DofusApiAction = new DofusApiAction("GuildBulletinSetRequest", GuildBulletinSetRequestAction);
         public static const GuildFightJoinRequest:DofusApiAction = new DofusApiAction("GuildFightJoinRequest", GuildFightJoinRequestAction);
         public static const GuildFightTakePlaceRequest:DofusApiAction = new DofusApiAction("GuildFightTakePlaceRequest", GuildFightTakePlaceRequestAction);
         public static const GuildFightLeaveRequest:DofusApiAction = new DofusApiAction("GuildFightLeaveRequest", GuildFightLeaveRequestAction);
@@ -106,11 +122,19 @@
         public static const AllianceListRequest:DofusApiAction = new DofusApiAction("AllianceListRequest", AllianceListRequestAction);
         public static const AllianceInsiderInfoRequest:DofusApiAction = new DofusApiAction("AllianceInsiderInfoRequest", AllianceInsiderInfoRequestAction);
         public static const AllianceChangeGuildRights:DofusApiAction = new DofusApiAction("AllianceChangeGuildRights", AllianceChangeGuildRightsAction);
+        public static const AllianceMotdSetRequest:DofusApiAction = new DofusApiAction("AllianceMotdSetRequest", AllianceMotdSetRequestAction);
+        public static const AllianceBulletinSetRequest:DofusApiAction = new DofusApiAction("AllianceBulletinSetRequest", AllianceBulletinSetRequestAction);
         public static const CharacterReport:DofusApiAction = new DofusApiAction("CharacterReport", CharacterReportAction);
         public static const ChatReport:DofusApiAction = new DofusApiAction("ChatReport", ChatReportAction);
         public static const PlayerStatusUpdateRequest:DofusApiAction = new DofusApiAction("PlayerStatusUpdateRequest", PlayerStatusUpdateRequestAction);
+        public static const DareCreationRequest:DofusApiAction = new DofusApiAction("DareCreationRequest", DareCreationRequestAction);
+        public static const DareInformationsRequest:DofusApiAction = new DofusApiAction("DareInformationsRequest", DareInformationsRequestAction);
+        public static const DareCancelRequest:DofusApiAction = new DofusApiAction("DareCancelRequest", DareCancelRequestAction);
+        public static const DareListRequest:DofusApiAction = new DofusApiAction("DareListRequest", DareListRequestAction);
+        public static const DareSubscribeRequest:DofusApiAction = new DofusApiAction("DareSubscribeRequest", DareSubscribeRequestAction);
+        public static const DareRewardRequest:DofusApiAction = new DofusApiAction("DareRewardRequest", DareRewardRequestAction);
 
 
     }
-}//package com.ankamagames.dofus.misc.lists
+} com.ankamagames.dofus.misc.lists
 

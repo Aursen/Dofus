@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.data
+package com.ankamagames.jerakine.data
 {
     import com.ankamagames.jerakine.utils.errors.SingletonError;
     import com.ankamagames.jerakine.managers.StoreDataManager;
@@ -21,7 +21,7 @@
 
         public static function getInstance():GameDataUpdater
         {
-            if (!(_self))
+            if (!_self)
             {
                 _self = new (GameDataUpdater)();
             };
@@ -46,12 +46,15 @@
                 case "d2o":
                 case "d2os":
                     GameDataFileAccessor.getInstance().init(e.uri);
-                    _versions[e.uri.tag.file] = e.uri.tag.version;
-                    StoreDataManager.getInstance().setData(JerakineConstants.DATASTORE_FILES_INFO, _storeKey, _versions);
+                    if (_versions[e.uri.tag.file] != e.uri.tag.version)
+                    {
+                        _versions[e.uri.tag.file] = e.uri.tag.version;
+                        StoreDataManager.getInstance().setData(JerakineConstants.DATASTORE_FILES_INFO, _storeKey, _versions);
+                    };
                     dispatchEvent(new LangFileEvent(LangFileEvent.COMPLETE, false, false, e.uri.tag.file));
                     _dataFilesLoaded = true;
                     _loadedFileCount++;
-                    return;
+                    break;
                 default:
                     super.onLoaded(e);
             };
@@ -59,5 +62,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.data
+} com.ankamagames.jerakine.data
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.fight.actions
+package com.ankamagames.dofus.logic.game.fight.actions
 {
     import com.ankamagames.jerakine.handlers.messages.Action;
 
@@ -23,5 +23,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.fight.actions
+} com.ankamagames.dofus.logic.game.fight.actions
 

@@ -1,43 +1,32 @@
-﻿package com.ankamagames.dofus.internalDatacenter.people
+package com.ankamagames.dofus.internalDatacenter.people
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.dofus.network.types.game.friend.IgnoredInformations;
+    import com.ankamagames.jerakine.enum.SocialCharacterCategoryEnum;
     import com.ankamagames.dofus.network.types.game.friend.IgnoredOnlineInformations;
 
-    public class EnemyWrapper implements IDataCenter 
+    public class EnemyWrapper extends SocialCharacterWrapper implements IDataCenter 
     {
 
         private var _item:IgnoredInformations;
-        public var name:String = "";
-        public var accountId:int;
-        public var state:int = 1;
-        public var lastConnection:int = -1;
-        public var online:Boolean = false;
-        public var type:String = "Enemy";
-        public var playerId:int;
-        public var playerName:String = "";
-        public var breed:uint = 0;
-        public var sex:uint = 2;
-        public var level:int = 0;
-        public var alignmentSide:int = -1;
-        public var guildName:String = "";
-        public var achievementPoints:int = -1;
 
         public function EnemyWrapper(o:IgnoredInformations)
         {
+            super(o.accountName, o.accountId);
+            e_category = SocialCharacterCategoryEnum.CATEGORY_ENEMY;
             this._item = o;
-            this.name = o.accountName;
-            this.accountId = o.accountId;
+            name = o.accountName;
+            accountId = o.accountId;
             if ((o is IgnoredOnlineInformations))
             {
-                this.playerName = IgnoredOnlineInformations(o).playerName;
-                this.playerId = IgnoredOnlineInformations(o).playerId;
-                this.breed = IgnoredOnlineInformations(o).breed;
-                this.sex = ((IgnoredOnlineInformations(o).sex) ? 1 : 0);
-                this.online = true;
+                playerName = IgnoredOnlineInformations(o).playerName;
+                playerId = IgnoredOnlineInformations(o).playerId;
+                breed = IgnoredOnlineInformations(o).breed;
+                sex = ((IgnoredOnlineInformations(o).sex) ? 1 : 0);
+                online = true;
             };
         }
 
     }
-}//package com.ankamagames.dofus.internalDatacenter.people
+} com.ankamagames.dofus.internalDatacenter.people
 

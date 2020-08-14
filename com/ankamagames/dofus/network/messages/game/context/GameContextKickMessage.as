@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.context
+package com.ankamagames.dofus.network.messages.game.context
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,15 +6,15 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class GameContextKickMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 6081;
 
         private var _isInitialized:Boolean = false;
-        public var targetId:int = 0;
+        public var targetId:Number = 0;
 
 
         override public function get isInitialized():Boolean
@@ -27,7 +27,7 @@
             return (6081);
         }
 
-        public function initGameContextKickMessage(targetId:int=0):GameContextKickMessage
+        public function initGameContextKickMessage(targetId:Number=0):GameContextKickMessage
         {
             this.targetId = targetId;
             this._isInitialized = true;
@@ -52,6 +52,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_GameContextKickMessage(output);
@@ -59,7 +67,11 @@
 
         public function serializeAs_GameContextKickMessage(output:ICustomDataOutput):void
         {
-            output.writeInt(this.targetId);
+            if (((this.targetId < -9007199254740992) || (this.targetId > 9007199254740992)))
+            {
+                throw (new Error((("Forbidden value (" + this.targetId) + ") on element targetId.")));
+            };
+            output.writeDouble(this.targetId);
         }
 
         public function deserialize(input:ICustomDataInput):void
@@ -69,10 +81,29 @@
 
         public function deserializeAs_GameContextKickMessage(input:ICustomDataInput):void
         {
-            this.targetId = input.readInt();
+            this._targetIdFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GameContextKickMessage(tree);
+        }
+
+        public function deserializeAsyncAs_GameContextKickMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._targetIdFunc);
+        }
+
+        private function _targetIdFunc(input:ICustomDataInput):void
+        {
+            this.targetId = input.readDouble();
+            if (((this.targetId < -9007199254740992) || (this.targetId > 9007199254740992)))
+            {
+                throw (new Error((("Forbidden value (" + this.targetId) + ") on element of GameContextKickMessage.targetId.")));
+            };
         }
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.context
+} com.ankamagames.dofus.network.messages.game.context
 

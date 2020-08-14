@@ -1,4 +1,4 @@
-﻿package com.hurlant.util.der
+package com.hurlant.util.der
 {
     import flash.utils.ByteArray;
     import com.hurlant.util.Hex;
@@ -9,9 +9,9 @@
         private var type:uint;
         private var len:uint;
 
-        public function ByteString(type:uint=4, length:uint=0)
+        public function ByteString(_arg_1:uint=4, length:uint=0)
         {
-            this.type = type;
+            this.type = _arg_1;
             this.len = length;
         }
 
@@ -32,10 +32,10 @@
 
         override public function toString():String
         {
-            return ((((((((DER.indent + "ByteString[") + this.type) + "][") + this.len) + "][") + Hex.fromArray(this)) + "]"));
+            return (((((((DER.indent + "ByteString[") + this.type) + "][") + this.len) + "][") + Hex.fromArray(this)) + "]");
         }
 
 
     }
-}//package com.hurlant.util.der
+} com.hurlant.util.der
 

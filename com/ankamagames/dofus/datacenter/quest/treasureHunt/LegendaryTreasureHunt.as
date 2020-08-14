@@ -1,6 +1,7 @@
-﻿package com.ankamagames.dofus.datacenter.quest.treasureHunt
+package com.ankamagames.dofus.datacenter.quest.treasureHunt
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
+    import com.ankamagames.dofus.types.IdAccessors;
     import com.ankamagames.dofus.datacenter.monsters.Monster;
     import com.ankamagames.dofus.datacenter.items.Item;
     import com.ankamagames.jerakine.data.GameData;
@@ -12,6 +13,7 @@
     {
 
         public static const MODULE:String = "LegendaryTreasureHunts";
+        public static var idAccessors:IdAccessors = new IdAccessors(getLegendaryTreasureHuntById, getLegendaryTreasureHunts);
 
         public var id:uint;
         public var nameId:uint;
@@ -27,7 +29,7 @@
 
         public static function getLegendaryTreasureHuntById(id:int):LegendaryTreasureHunt
         {
-            return ((GameData.getObject(MODULE, id) as LegendaryTreasureHunt));
+            return (GameData.getObject(MODULE, id) as LegendaryTreasureHunt);
         }
 
         public static function getLegendaryTreasureHunts():Array
@@ -38,7 +40,7 @@
 
         public function get name():String
         {
-            if (!(this._name))
+            if (!this._name)
             {
                 this._name = I18n.getText(this.nameId);
             };
@@ -47,7 +49,7 @@
 
         public function get monster():Monster
         {
-            if (!(this._monster))
+            if (!this._monster)
             {
                 this._monster = Monster.getMonsterById(this.monsterId);
             };
@@ -56,7 +58,7 @@
 
         public function get chest():Item
         {
-            if (!(this._chest))
+            if (!this._chest)
             {
                 this._chest = Item.getItemById(this.chestId);
             };
@@ -70,5 +72,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.quest.treasureHunt
+} com.ankamagames.dofus.datacenter.quest.treasureHunt
 

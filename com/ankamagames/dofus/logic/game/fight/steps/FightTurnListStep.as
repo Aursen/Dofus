@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.fight.steps
+package com.ankamagames.dofus.logic.game.fight.steps
 {
     import com.ankamagames.jerakine.sequencer.AbstractSequencable;
     import com.ankamagames.jerakine.sequencer.ISequencer;
@@ -13,12 +13,12 @@
     {
 
         private var _throwSubSequence:ISequencer;
-        private var _newTurnsList:Vector.<int>;
-        private var _newDeadTurnsList:Vector.<int>;
-        private var _turnsList:Vector.<int>;
-        private var _deadTurnsList:Vector.<int>;
+        private var _newTurnsList:Vector.<Number>;
+        private var _newDeadTurnsList:Vector.<Number>;
+        private var _turnsList:Vector.<Number>;
+        private var _deadTurnsList:Vector.<Number>;
 
-        public function FightTurnListStep(turnsList:Vector.<int>, deadTurnsList:Vector.<int>)
+        public function FightTurnListStep(turnsList:Vector.<Number>, deadTurnsList:Vector.<Number>)
         {
             this._turnsList = turnsList;
             this._deadTurnsList = deadTurnsList;
@@ -38,14 +38,19 @@
                 fbf.deadFightersList = this._deadTurnsList;
             };
             KernelEventsManager.getInstance().processCallback(HookList.FightersListUpdated);
-            if (((Dofus.getInstance().options.orderFighters) && (Kernel.getWorker().getFrame(FightEntitiesFrame))))
+            if (((Dofus.getInstance().options.getOption("orderFighters")) && (Kernel.getWorker().getFrame(FightEntitiesFrame))))
             {
                 (Kernel.getWorker().getFrame(FightEntitiesFrame) as FightEntitiesFrame).updateAllEntitiesNumber(this._turnsList);
             };
             executeCallbacks();
         }
 
+        public function get targets():Vector.<Number>
+        {
+            return (this._turnsList);
+        }
+
 
     }
-}//package com.ankamagames.dofus.logic.game.fight.steps
+} com.ankamagames.dofus.logic.game.fight.steps
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.tiphon.display
+package com.ankamagames.tiphon.display
 {
     import flash.display.BitmapData;
     import flash.geom.Matrix;
@@ -30,10 +30,10 @@
                 mtx = new Matrix();
                 sX = target.scaleX;
                 sY = target.scaleY;
-                bmpW = (((sX > 0)) ? (bounds.width * sX) : (-(bounds.width) * sX));
-                bmpH = (((sY > 0)) ? (bounds.height * sY) : (-(bounds.height) * sY));
-                drawX = (((sX > 0)) ? (bounds.x * sX) : ((bounds.x + bounds.width) * sX));
-                drawY = (((sY > 0)) ? (bounds.y * sY) : ((bounds.y + bounds.height) * sY));
+                bmpW = ((sX > 0) ? (bounds.width * sX) : (-(bounds.width) * sX));
+                bmpH = ((sY > 0) ? (bounds.height * sY) : (-(bounds.height) * sY));
+                drawX = ((sX > 0) ? (bounds.x * sX) : ((bounds.x + bounds.width) * sX));
+                drawY = ((sY > 0) ? (bounds.y * sY) : ((bounds.y + bounds.height) * sY));
                 mtx.scale(sX, sY);
                 mtx.translate(-(drawX), -(drawY));
                 this.x = drawX;
@@ -46,7 +46,7 @@
                 bmpd = new BitmapData(1, 1, true, 0xFFFFFF);
             };
             this.bitmapData = bmpd;
-            if ((((target.currentFrame == target.framesLoaded)) && (target.parent)))
+            if (((target.currentFrame == target.framesLoaded) && (target.parent)))
             {
                 target.parent.removeChild(target);
             };
@@ -54,10 +54,10 @@
 
         public function toString():String
         {
-            return ((((((((((("[RasterizedFrame " + this.x) + ",") + this.y) + ": ") + this.bitmapData) + " (") + this.bitmapData.width) + "/") + this.bitmapData.height) + ")]"));
+            return (((((((((("[RasterizedFrame " + this.x) + ",") + this.y) + ": ") + this.bitmapData) + " (") + this.bitmapData.width) + "/") + this.bitmapData.height) + ")]");
         }
 
 
     }
-}//package com.ankamagames.tiphon.display
+} com.ankamagames.tiphon.display
 

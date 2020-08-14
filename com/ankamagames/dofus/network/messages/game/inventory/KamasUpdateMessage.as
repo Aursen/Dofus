@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.inventory
+package com.ankamagames.dofus.network.messages.game.inventory
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,15 +6,15 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class KamasUpdateMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 5537;
 
         private var _isInitialized:Boolean = false;
-        public var kamasTotal:int = 0;
+        public var kamasTotal:Number = 0;
 
 
         override public function get isInitialized():Boolean
@@ -27,7 +27,7 @@
             return (5537);
         }
 
-        public function initKamasUpdateMessage(kamasTotal:int=0):KamasUpdateMessage
+        public function initKamasUpdateMessage(kamasTotal:Number=0):KamasUpdateMessage
         {
             this.kamasTotal = kamasTotal;
             this._isInitialized = true;
@@ -52,6 +52,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_KamasUpdateMessage(output);
@@ -59,7 +67,11 @@
 
         public function serializeAs_KamasUpdateMessage(output:ICustomDataOutput):void
         {
-            output.writeVarInt(this.kamasTotal);
+            if (((this.kamasTotal < 0) || (this.kamasTotal > 9007199254740992)))
+            {
+                throw (new Error((("Forbidden value (" + this.kamasTotal) + ") on element kamasTotal.")));
+            };
+            output.writeVarLong(this.kamasTotal);
         }
 
         public function deserialize(input:ICustomDataInput):void
@@ -69,10 +81,29 @@
 
         public function deserializeAs_KamasUpdateMessage(input:ICustomDataInput):void
         {
-            this.kamasTotal = input.readVarInt();
+            this._kamasTotalFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_KamasUpdateMessage(tree);
+        }
+
+        public function deserializeAsyncAs_KamasUpdateMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._kamasTotalFunc);
+        }
+
+        private function _kamasTotalFunc(input:ICustomDataInput):void
+        {
+            this.kamasTotal = input.readVarUhLong();
+            if (((this.kamasTotal < 0) || (this.kamasTotal > 9007199254740992)))
+            {
+                throw (new Error((("Forbidden value (" + this.kamasTotal) + ") on element of KamasUpdateMessage.kamasTotal.")));
+            };
         }
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.inventory
+} com.ankamagames.dofus.network.messages.game.inventory
 

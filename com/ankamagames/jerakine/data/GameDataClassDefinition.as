@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.data
+package com.ankamagames.jerakine.data
 {
     import __AS3__.vec.Vector;
     import flash.utils.getDefinitionByName;
@@ -22,7 +22,7 @@
             return (this._fields);
         }
 
-        public function read(module:String, stream:IDataInput)
+        public function read(module:String, stream:IDataInput):*
         {
             var field:GameDataField;
             var inst:* = new this._class();
@@ -46,5 +46,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.data
+} com.ankamagames.jerakine.data
 

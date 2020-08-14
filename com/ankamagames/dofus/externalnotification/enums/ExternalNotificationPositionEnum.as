@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.externalnotification.enums
+package com.ankamagames.dofus.externalnotification.enums
 {
     public class ExternalNotificationPositionEnum 
     {
@@ -10,5 +10,5 @@
 
 
     }
-}//package com.ankamagames.dofus.externalnotification.enums
+} com.ankamagames.dofus.externalnotification.enums
 

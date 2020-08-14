@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.utils.system
+package com.ankamagames.jerakine.utils.system
 {
     import flash.external.ExternalInterface;
     import com.ankamagames.jerakine.enum.WebBrowserEnum;
@@ -27,7 +27,7 @@
 
         public static function getSingleton():SystemManager
         {
-            if (!(_singleton))
+            if (!_singleton)
             {
                 _singleton = new (SystemManager)();
             };
@@ -53,9 +53,9 @@
         public function get browser():String
         {
             var userAgent:String;
-            if (!(this._browser))
+            if (!this._browser)
             {
-                if (!(ExternalInterface.available))
+                if (!ExternalInterface.available)
                 {
                     this._browser = WebBrowserEnum.NONE;
                     return (this._browser);
@@ -65,19 +65,19 @@
                     userAgent = (ExternalInterface.call("window.navigator.userAgent.toString") as String).toLowerCase();
                     switch (true)
                     {
-                        case !((userAgent.indexOf("chrome") == -1)):
+                        case (!(userAgent.indexOf("chrome") == -1)):
                             this._browser = WebBrowserEnum.CHROME;
                             break;
-                        case !((userAgent.indexOf("firefox") == -1)):
+                        case (!(userAgent.indexOf("firefox") == -1)):
                             this._browser = WebBrowserEnum.FIREFOX;
                             break;
-                        case !((userAgent.indexOf("msie") == -1)):
+                        case (!(userAgent.indexOf("msie") == -1)):
                             this._browser = WebBrowserEnum.INTERNET_EXPLORER;
                             break;
-                        case !((userAgent.indexOf("safari") == -1)):
+                        case (!(userAgent.indexOf("safari") == -1)):
                             this._browser = WebBrowserEnum.SAFARI;
                             break;
-                        case !((userAgent.indexOf("opera") == -1)):
+                        case (!(userAgent.indexOf("opera") == -1)):
                             this._browser = WebBrowserEnum.OPERA;
                             break;
                         default:
@@ -94,9 +94,9 @@
 
         public function get browserVersion():String
         {
-            if (!(this._browserVersion))
+            if (!this._browserVersion)
             {
-                if (!(ExternalInterface.available))
+                if (!ExternalInterface.available)
                 {
                     this._browserVersion = "-1";
                     return (this._browserVersion);
@@ -158,7 +158,7 @@
             if (cos == OperatingSystem.LINUX)
             {
                 this._os = OperatingSystem.LINUX;
-                this._version = "unknow";
+                this._version = "unknown";
             }
             else
             {
@@ -181,5 +181,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.utils.system
+} com.ankamagames.jerakine.utils.system
 

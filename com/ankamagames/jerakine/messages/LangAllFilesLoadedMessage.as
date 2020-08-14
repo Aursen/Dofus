@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.messages
+package com.ankamagames.jerakine.messages
 {
     public class LangAllFilesLoadedMessage implements Message 
     {
@@ -24,5 +24,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.messages
+} com.ankamagames.jerakine.messages
 

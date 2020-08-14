@@ -1,24 +1,25 @@
-﻿package com.ankamagames.jerakine.network
+package com.ankamagames.jerakine.network
 {
     import flash.events.EventDispatcher;
+    import com.ankamagames.jerakine.logger.Logger;
+    import com.ankamagames.jerakine.logger.Log;
+    import flash.utils.getQualifiedClassName;
     import flash.utils.Dictionary;
-    import com.ankamagames.jerakine.utils.misc.DescribeTypeCache;
     import flash.events.IEventDispatcher;
-    import com.ankamagames.jerakine.messages.Message;
     import flash.events.Event;
+    import flash.events.IOErrorEvent;
+    import flash.events.SecurityErrorEvent;
+    import com.ankamagames.jerakine.messages.Message;
 
-    [Event(="connect", type="flash.events.Event")]
-    [Event(="close", type="flash.events.Event")]
-    [Event(="ioError", type="flash.events.IOErrorEvent")]
-    [Event(="securityError", type="flash.events.SecurityErrorEvent")]
-    [Event(="messageSentEvent", type="com.ankamagames.jerakine.network.NetworkSentEvent")]
     public class MultiConnection extends EventDispatcher 
     {
 
-        private var _connectionByMsg:Dictionary;
-        private var _connectionByEvent:Dictionary;
-        private var _connectionById:Dictionary;
-        private var _idByConnection:Dictionary;
+        protected static const _log:Logger = Log.getLogger(getQualifiedClassName(MultiConnection));
+
+        private var _connectionByMsg:Dictionary = new Dictionary(true);
+        private var _connectionByEvent:Dictionary = new Dictionary(true);
+        private var _connectionById:Dictionary = new Dictionary();
+        private var _idByConnection:Dictionary = new Dictionary();
         private var _connectionCount:uint;
         private var _mainConnection:IServerConnection;
         private var _messageRouter:IMessageRouter;
@@ -26,10 +27,6 @@
 
         public function MultiConnection()
         {
-            this._connectionByMsg = new Dictionary(true);
-            this._connectionByEvent = new Dictionary(true);
-            this._connectionById = new Dictionary();
-            this._idByConnection = new Dictionary();
             super(this);
         }
 
@@ -40,7 +37,7 @@
 
         public function set mainConnection(conn:IServerConnection):void
         {
-            if (!(this._idByConnection[conn]))
+            if (!this._idByConnection[conn])
             {
                 throw (new ArgumentError("Connection must be added before setted to be the main connection"));
             };
@@ -59,7 +56,7 @@
 
         public function get connected():Boolean
         {
-            return (!((this._connectionConnectedCount == 0)));
+            return (!(this._connectionConnectedCount == 0));
         }
 
         public function get connectionCount():uint
@@ -69,7 +66,6 @@
 
         public function addConnection(conn:IServerConnection, id:String):void
         {
-            var e:* = undefined;
             if (this._connectionById[id])
             {
                 this.removeConnection(id);
@@ -81,11 +77,12 @@
             this._connectionById[id] = conn;
             this._idByConnection[conn] = id;
             this._connectionCount++;
+            _log.warn(("Adding connection " + id));
             conn.handler = new MessageWatcher(this.proccessMsg, conn.handler, conn);
-            for each (e in DescribeTypeCache.typeDescription(conn)..metadata.(@name == "Event").arg.(@key == "").@value)
-            {
-                IEventDispatcher(conn).addEventListener(e.toString(), this.onSubConnectionEvent);
-            };
+            IEventDispatcher(conn).addEventListener(Event.CONNECT, this.onSubConnectionEvent);
+            IEventDispatcher(conn).addEventListener(Event.CLOSE, this.onSubConnectionEvent);
+            IEventDispatcher(conn).addEventListener(IOErrorEvent.IO_ERROR, this.onSubConnectionEvent);
+            IEventDispatcher(conn).addEventListener(SecurityErrorEvent.SECURITY_ERROR, this.onSubConnectionEvent);
             if (conn.connected)
             {
                 this._connectionConnectedCount++;
@@ -96,7 +93,7 @@
         {
             var id:String;
             var conn:IServerConnection;
-            var e:* = undefined;
+            var otherConn:IServerConnection;
             if ((idOrConnection is String))
             {
                 id = idOrConnection;
@@ -107,25 +104,29 @@
                 id = this._idByConnection[idOrConnection];
                 conn = idOrConnection;
             };
-            if (!(conn))
+            if (!conn)
             {
                 return (false);
             };
-            for each (e in DescribeTypeCache.typeDescription(conn)..metadata.(@name == "Event").arg.(@key == "").@value)
-            {
-                IEventDispatcher(conn).removeEventListener(e.toString(), this.onSubConnectionEvent);
-            };
+            IEventDispatcher(conn).removeEventListener(Event.CONNECT, this.onSubConnectionEvent);
+            IEventDispatcher(conn).removeEventListener(Event.CLOSE, this.onSubConnectionEvent);
+            IEventDispatcher(conn).removeEventListener(IOErrorEvent.IO_ERROR, this.onSubConnectionEvent);
+            IEventDispatcher(conn).removeEventListener(SecurityErrorEvent.SECURITY_ERROR, this.onSubConnectionEvent);
             this._connectionCount--;
             if (conn.connected)
             {
                 this._connectionConnectedCount--;
             };
-            if (this._mainConnection == conn)
-            {
-                this._mainConnection = null;
-            };
             delete this._connectionById[id];
             delete this._idByConnection[conn];
+            if (this._mainConnection == conn)
+            {
+                for each (otherConn in this._connectionById)
+                {
+                    this._mainConnection = otherConn;
+                    break;
+                };
+            };
             if ((conn.handler is MessageWatcher))
             {
                 conn.handler = MessageWatcher(conn.handler).handler;
@@ -164,7 +165,7 @@
             {
                 return (IServerConnection(this._connectionById[id]).pauseBuffer);
             };
-            if (!(id))
+            if (!id)
             {
                 mergedPauseBuffer = [];
                 for each (conn in this._connectionById)
@@ -181,12 +182,18 @@
             var connection:IServerConnection;
             if (id)
             {
+                _log.warn((("Connection " + id) + " will be closed..."));
                 if (this._connectionById[id])
                 {
                     IServerConnection(this._connectionById[id]).close();
+                    if (this._connectionCount > 1)
+                    {
+                        this.removeConnection(id);
+                    };
                 };
                 return;
             };
+            _log.warn("All connections will be closed...");
             for each (connection in this._connectionById)
             {
                 connection.close();
@@ -227,11 +234,34 @@
             };
         }
 
-        public function send(msg:INetworkMessage):void
+        public function send(msg:INetworkMessage, connectionId:String=""):void
         {
+            var conn:IServerConnection;
             if (this._messageRouter)
             {
-                this.getSubConnection(this._messageRouter.getConnectionId(msg)).send(msg);
+                if (connectionId == "")
+                {
+                    connectionId = this._messageRouter.getConnectionId(msg);
+                };
+                if (((!(connectionId)) || (connectionId == "")))
+                {
+                    _log.error((msg + " sending impossible : no connection id"));
+                    return;
+                };
+                if (connectionId == "all")
+                {
+                    for each (conn in this._connectionById)
+                    {
+                        if (conn.connected)
+                        {
+                            conn.send(msg);
+                        };
+                    };
+                }
+                else
+                {
+                    this.getSubConnection(connectionId).send(msg);
+                };
             }
             else
             {
@@ -263,12 +293,15 @@
                     break;
             };
             this._connectionByEvent[e] = (e.target as IServerConnection);
-            dispatchEvent(e);
+            if (hasEventListener(e.type))
+            {
+                dispatchEvent(e);
+            };
         }
 
 
     }
-}//package com.ankamagames.jerakine.network
+} com.ankamagames.jerakine.network
 
 import com.ankamagames.jerakine.messages.MessageHandler;
 import com.ankamagames.jerakine.network.IServerConnection;
@@ -296,4 +329,5 @@ class MessageWatcher implements MessageHandler
 
 
 }
+
 

@@ -1,15 +1,15 @@
-﻿package com.ankamagames.dofus.logic.game.approach.actions
+package com.ankamagames.dofus.logic.game.approach.actions
 {
     import com.ankamagames.jerakine.handlers.messages.Action;
 
     public class CharacterDeletionAction implements Action 
     {
 
-        public var id:int;
+        public var id:Number;
         public var answer:String;
 
 
-        public static function create(id:int, answer:String):CharacterDeletionAction
+        public static function create(id:Number, answer:String):CharacterDeletionAction
         {
             var a:CharacterDeletionAction = new (CharacterDeletionAction)();
             a.id = id;
@@ -19,5 +19,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.approach.actions
+} com.ankamagames.dofus.logic.game.approach.actions
 

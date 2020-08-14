@@ -1,7 +1,8 @@
-﻿package com.ankamagames.dofus.network.types.game.context.roleplay.quest
+package com.ankamagames.dofus.network.types.game.context.roleplay.quest
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import __AS3__.vec.Vector;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
     import __AS3__.vec.*;
@@ -13,13 +14,9 @@
 
         public var objectiveId:uint = 0;
         public var objectiveStatus:Boolean = false;
-        public var dialogParams:Vector.<String>;
+        public var dialogParams:Vector.<String> = new Vector.<String>();
+        private var _dialogParamstree:FuncTree;
 
-        public function QuestObjectiveInformations()
-        {
-            this.dialogParams = new Vector.<String>();
-            super();
-        }
 
         public function getTypeId():uint
         {
@@ -71,12 +68,8 @@
         public function deserializeAs_QuestObjectiveInformations(input:ICustomDataInput):void
         {
             var _val3:String;
-            this.objectiveId = input.readVarUhShort();
-            if (this.objectiveId < 0)
-            {
-                throw (new Error((("Forbidden value (" + this.objectiveId) + ") on element of QuestObjectiveInformations.objectiveId.")));
-            };
-            this.objectiveStatus = input.readBoolean();
+            this._objectiveIdFunc(input);
+            this._objectiveStatusFunc(input);
             var _dialogParamsLen:uint = input.readUnsignedShort();
             var _i3:uint;
             while (_i3 < _dialogParamsLen)
@@ -87,7 +80,50 @@
             };
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_QuestObjectiveInformations(tree);
+        }
+
+        public function deserializeAsyncAs_QuestObjectiveInformations(tree:FuncTree):void
+        {
+            tree.addChild(this._objectiveIdFunc);
+            tree.addChild(this._objectiveStatusFunc);
+            this._dialogParamstree = tree.addChild(this._dialogParamstreeFunc);
+        }
+
+        private function _objectiveIdFunc(input:ICustomDataInput):void
+        {
+            this.objectiveId = input.readVarUhShort();
+            if (this.objectiveId < 0)
+            {
+                throw (new Error((("Forbidden value (" + this.objectiveId) + ") on element of QuestObjectiveInformations.objectiveId.")));
+            };
+        }
+
+        private function _objectiveStatusFunc(input:ICustomDataInput):void
+        {
+            this.objectiveStatus = input.readBoolean();
+        }
+
+        private function _dialogParamstreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._dialogParamstree.addChild(this._dialogParamsFunc);
+                i++;
+            };
+        }
+
+        private function _dialogParamsFunc(input:ICustomDataInput):void
+        {
+            var _val:String = input.readUTF();
+            this.dialogParams.push(_val);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.types.game.context.roleplay.quest
+} com.ankamagames.dofus.network.types.game.context.roleplay.quest
 

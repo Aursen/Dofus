@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.shield
+package com.ankamagames.dofus.logic.shield
 {
     public class ShieldSecureLevel 
     {
@@ -9,5 +9,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.shield
+} com.ankamagames.dofus.logic.shield
 

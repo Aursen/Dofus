@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.utils.display.spellZone
+package com.ankamagames.jerakine.utils.display.spellZone
 {
     import __AS3__.vec.Vector;
 
@@ -11,5 +11,5 @@
         function get spellZoneEffects():Vector.<IZoneShape>;
 
     }
-}//package com.ankamagames.jerakine.utils.display.spellZone
+} com.ankamagames.jerakine.utils.display.spellZone
 

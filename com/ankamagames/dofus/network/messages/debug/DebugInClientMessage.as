@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.debug
+package com.ankamagames.dofus.network.messages.debug
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class DebugInClientMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -55,6 +55,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_DebugInClientMessage(output);
@@ -73,15 +81,36 @@
 
         public function deserializeAs_DebugInClientMessage(input:ICustomDataInput):void
         {
+            this._levelFunc(input);
+            this._messageFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_DebugInClientMessage(tree);
+        }
+
+        public function deserializeAsyncAs_DebugInClientMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._levelFunc);
+            tree.addChild(this._messageFunc);
+        }
+
+        private function _levelFunc(input:ICustomDataInput):void
+        {
             this.level = input.readByte();
             if (this.level < 0)
             {
                 throw (new Error((("Forbidden value (" + this.level) + ") on element of DebugInClientMessage.level.")));
             };
+        }
+
+        private function _messageFunc(input:ICustomDataInput):void
+        {
             this.message = input.readUTF();
         }
 
 
     }
-}//package com.ankamagames.dofus.network.messages.debug
+} com.ankamagames.dofus.network.messages.debug
 

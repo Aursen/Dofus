@@ -1,6 +1,7 @@
-﻿package com.ankamagames.dofus.logic.game.fight.steps
+package com.ankamagames.dofus.logic.game.fight.steps
 {
     import com.ankamagames.dofus.logic.game.fight.steps.abstract.AbstractStatContextualStep;
+    import com.ankamagames.dofus.network.enums.GameContextEnum;
     import com.ankamagames.dofus.logic.game.fight.frames.FightEntitiesFrame;
     import com.ankamagames.dofus.network.types.game.context.fight.GameFightFighterInformations;
     import com.ankamagames.dofus.network.types.game.context.fight.GameFightCharacterInformations;
@@ -9,6 +10,8 @@
     import com.ankamagames.dofus.network.types.game.character.characteristic.CharacterCharacteristicsInformations;
     import com.ankamagames.dofus.logic.game.fight.fightEvents.FightEventsHelper;
     import com.ankamagames.dofus.logic.game.fight.types.FightEventEnum;
+    import com.ankamagames.dofus.logic.game.common.managers.PlayedCharacterManager;
+    import com.ankamagames.dofus.logic.game.common.managers.SpeakingItemManager;
 
     public class FightLifeVariationStep extends AbstractStatContextualStep implements IFightStep 
     {
@@ -18,16 +21,16 @@
 
         private var _delta:int;
         private var _permanentDamages:int;
-        private var _actionId:int;
+        private var _elementId:int;
         public var skipTextEvent:Boolean = false;
 
-        public function FightLifeVariationStep(entityId:int, delta:int, permanentDamages:int, actionId:int)
+        public function FightLifeVariationStep(entityId:Number, delta:int, permanentDamages:int, elementId:int)
         {
-            super(COLOR, delta.toString(), entityId, BLOCKING);
+            super(COLOR, delta.toString(), entityId, GameContextEnum.FIGHT, BLOCKING);
             _virtual = true;
             this._delta = delta;
             this._permanentDamages = permanentDamages;
-            this._actionId = actionId;
+            this._elementId = elementId;
         }
 
         public function get stepType():String
@@ -50,15 +53,15 @@
             return (this._permanentDamages);
         }
 
-        public function get actionId():int
+        public function get elementId():int
         {
-            return (this._actionId);
+            return (this._elementId);
         }
 
         override public function start():void
         {
             var fighterInfos:GameFightFighterInformations = (FightEntitiesFrame.getCurrentInstance().getEntityInfos(_targetId) as GameFightFighterInformations);
-            if (!(fighterInfos))
+            if (!fighterInfos)
             {
                 super.executeCallbacks();
                 return;
@@ -84,15 +87,30 @@
                 characteristics.lifePoints = fighterInfos.stats.lifePoints;
                 characteristics.maxLifePoints = fighterInfos.stats.maxLifePoints;
             };
-            if ((((this._delta < 0)) || ((((this._delta == 0)) && (!(this.skipTextEvent))))))
+            if (((this._delta < 0) || ((this._delta == 0) && (!(this.skipTextEvent)))))
             {
-                FightEventsHelper.sendFightEvent(FightEventEnum.FIGHTER_LIFE_LOSS, [_targetId, Math.abs(this._delta), this._actionId], _targetId, castingSpellId, false, 2);
+                FightEventsHelper.sendFightEvent(FightEventEnum.FIGHTER_LIFE_LOSS, [_targetId, Math.abs(this._delta), this._elementId], _targetId, castingSpellId, false, 2);
+                if (_targetId == PlayedCharacterManager.getInstance().id)
+                {
+                    SpeakingItemManager.getInstance().triggerEvent(SpeakingItemManager.SPEAK_TRIGGER_PLAYER_LOOSE_LIFE);
+                }
+                else
+                {
+                    if (fighterInfos.spawnInfo.teamId == PlayedCharacterManager.getInstance().teamId)
+                    {
+                        SpeakingItemManager.getInstance().triggerEvent(SpeakingItemManager.SPEAK_TRIGGER_ALLIED_LOOSE_LIFE);
+                    }
+                    else
+                    {
+                        SpeakingItemManager.getInstance().triggerEvent(SpeakingItemManager.SPEAK_TRIGGER_ENEMY_LOOSE_LIFE);
+                    };
+                };
             }
             else
             {
                 if (this._delta > 0)
                 {
-                    FightEventsHelper.sendFightEvent(FightEventEnum.FIGHTER_LIFE_GAIN, [_targetId, Math.abs(this._delta), this._actionId], _targetId, castingSpellId, false, 2);
+                    FightEventsHelper.sendFightEvent(FightEventEnum.FIGHTER_LIFE_GAIN, [_targetId, Math.abs(this._delta), this._elementId], _targetId, castingSpellId, false, 2);
                 };
             };
             super.start();
@@ -100,5 +118,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.fight.steps
+} com.ankamagames.dofus.logic.game.fight.steps
 

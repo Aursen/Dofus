@@ -1,4 +1,4 @@
-﻿package com.somerandomdude.colortoolkit
+package com.somerandomdude.colortoolkit
 {
     import com.somerandomdude.colortoolkit.spaces.Gray;
     import com.somerandomdude.colortoolkit.spaces.HSB;
@@ -17,7 +17,7 @@
 
         public static function setColorOpaque(color:int):int
         {
-            return ((((0xFF000000 | (((color >> 16) & 0xFF) << 16)) | (((color >> 8) & 0xFF) << 8)) | (color & 0xFF)));
+            return (((0xFF000000 | (((color >> 16) & 0xFF) << 16)) | (((color >> 8) & 0xFF) << 8)) | (color & 0xFF));
         }
 
         public static function desaturate(color:int):int
@@ -119,7 +119,7 @@
                 {
                     y1 = (y1 + 360);
                 };
-                if ((((y0 <= hsb.hue)) && ((hsb.hue <= y1))))
+                if (((y0 <= hsb.hue) && (hsb.hue <= y1)))
                 {
                     a = ((1 * x0) + (((x1 - x0) * (hsb.hue - y0)) / (y1 - y0)));
                     break;
@@ -147,7 +147,7 @@
                 {
                     yy1 = (yy1 + 360);
                 };
-                if ((((xx0 <= a)) && ((a <= xx1))))
+                if (((xx0 <= a) && (a <= xx1)))
                 {
                     newHue = ((1 * yy0) + (((yy1 - yy0) * (a - xx0)) / (xx1 - xx0)));
                     break;
@@ -161,5 +161,5 @@
 
 
     }
-}//package com.somerandomdude.colortoolkit
+} com.somerandomdude.colortoolkit
 

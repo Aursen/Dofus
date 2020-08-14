@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.types.characteristicContextual
+package com.ankamagames.dofus.types.characteristicContextual
 {
     import flash.display.Sprite;
     import com.ankamagames.jerakine.entities.interfaces.IEntity;
@@ -8,6 +8,7 @@
     {
 
         private var _referedEntity:IEntity;
+        public var gameContext:uint;
 
         public function CharacteristicContextual():void
         {
@@ -32,5 +33,5 @@
 
 
     }
-}//package com.ankamagames.dofus.types.characteristicContextual
+} com.ankamagames.dofus.types.characteristicContextual
 

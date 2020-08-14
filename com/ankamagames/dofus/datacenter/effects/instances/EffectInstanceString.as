@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.datacenter.effects.instances
+package com.ankamagames.dofus.datacenter.effects.instances
 {
     import com.ankamagames.dofus.datacenter.effects.EffectInstance;
     import com.ankamagames.jerakine.interfaces.IDataCenter;
@@ -39,5 +39,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.effects.instances
+} com.ankamagames.dofus.datacenter.effects.instances
 

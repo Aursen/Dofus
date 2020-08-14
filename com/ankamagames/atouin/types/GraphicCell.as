@@ -1,23 +1,25 @@
-﻿package com.ankamagames.atouin.types
+package com.ankamagames.atouin.types
 {
     import flash.display.Sprite;
     import com.ankamagames.jerakine.interfaces.ICustomUnicNameGetter;
+    import com.ankamagames.jerakine.logger.Logger;
+    import com.ankamagames.jerakine.logger.Log;
+    import flash.utils.getQualifiedClassName;
 
     public class GraphicCell extends Sprite implements ICustomUnicNameGetter 
     {
 
-        private var _dropValidator:Function;
-        private var _removeDropSource:Function;
-        private var _processDrop:Function;
+        protected static const _log:Logger = Log.getLogger(getQualifiedClassName(GraphicCell));
+
+        private var _dropValidator:Function = returnTrueFunction;
+        private var _removeDropSource:Function = returnTrueFunction;
+        private var _processDrop:Function = returnTrueFunction;
         private var _name:String;
         public var cellId:uint;
+        private var _initialElevation:int = 0;
 
         public function GraphicCell(cellId:uint)
         {
-            this._dropValidator = this.returnTrueFunction;
-            this._removeDropSource = this.returnTrueFunction;
-            this._processDrop = this.returnTrueFunction;
-            super();
             this.cellId = cellId;
             name = cellId.toString();
             this._name = ("cell::" + cellId);
@@ -61,6 +63,16 @@
             return (this._processDrop);
         }
 
+        public function set initialElevation(value:int):void
+        {
+            this._initialElevation = value;
+        }
+
+        public function get initialElevation():int
+        {
+            return (this._initialElevation);
+        }
+
         private function returnTrueFunction(... args):Boolean
         {
             return (true);
@@ -68,5 +80,5 @@
 
 
     }
-}//package com.ankamagames.atouin.types
+} com.ankamagames.atouin.types
 

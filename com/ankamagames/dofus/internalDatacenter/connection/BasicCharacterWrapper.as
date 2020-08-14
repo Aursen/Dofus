@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.internalDatacenter.connection
+package com.ankamagames.dofus.internalDatacenter.connection
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.tiphon.types.look.TiphonEntityLook;
@@ -9,7 +9,7 @@
     public class BasicCharacterWrapper implements IDataCenter 
     {
 
-        public var id:uint;
+        public var id:Number;
         public var name:String;
         public var level:uint;
         public var entityLook:TiphonEntityLook;
@@ -17,12 +17,13 @@
         public var sex:Boolean;
         public var deathState:uint;
         public var deathCount:uint;
+        public var deathMaxLevel:uint;
         public var bonusXp:uint;
         public var unusable:Boolean;
         private var _breed:Breed;
 
 
-        public static function create(id:uint, name:String, level:uint, entityLook:EntityLook, breed:uint, sex:Boolean, deathState:uint=0, deathCount:uint=0, bonusXp:uint=0, unusable:Boolean=false):BasicCharacterWrapper
+        public static function create(id:Number, name:String, level:uint, entityLook:EntityLook, breed:uint, sex:Boolean, deathState:uint=0, deathCount:uint=0, deathMaxLevel:uint=0, bonusXp:uint=0, unusable:Boolean=false):BasicCharacterWrapper
         {
             var obj:BasicCharacterWrapper = new (BasicCharacterWrapper)();
             obj.id = id;
@@ -30,9 +31,11 @@
             obj.level = level;
             obj.entityLook = EntityLookAdapter.fromNetwork(entityLook);
             obj.breedId = breed;
+            obj._breed = Breed.getBreedById(obj.breedId);
             obj.sex = sex;
             obj.deathState = deathState;
             obj.deathCount = deathCount;
+            obj.deathMaxLevel = deathMaxLevel;
             obj.bonusXp = bonusXp;
             obj.unusable = unusable;
             return (obj);
@@ -41,7 +44,7 @@
 
         public function get breed():Breed
         {
-            if (!(this._breed))
+            if (!this._breed)
             {
                 this._breed = Breed.getBreedById(this.breedId);
             };
@@ -50,10 +53,10 @@
 
         public function toString():String
         {
-            return ((((("[BasicCharacterWrapper#" + this.id) + "_") + this.name) + "]"));
+            return (((("[BasicCharacterWrapper#" + this.id) + "_") + this.name) + "]");
         }
 
 
     }
-}//package com.ankamagames.dofus.internalDatacenter.connection
+} com.ankamagames.dofus.internalDatacenter.connection
 

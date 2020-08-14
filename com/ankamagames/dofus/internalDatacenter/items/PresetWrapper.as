@@ -1,15 +1,15 @@
-﻿package com.ankamagames.dofus.internalDatacenter.items
+package com.ankamagames.dofus.internalDatacenter.items
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
     import com.ankamagames.jerakine.types.Uri;
-    import com.ankamagames.dofus.network.types.game.inventory.preset.PresetItem;
-    import com.ankamagames.jerakine.data.XmlConfig;
+    import com.ankamagames.dofus.network.types.game.presets.ItemForPreset;
     import com.ankamagames.dofus.logic.game.common.managers.InventoryManager;
+    import com.ankamagames.jerakine.data.XmlConfig;
+    import com.ankamagames.dofus.network.enums.CharacterInventoryPositionEnum;
     import __AS3__.vec.Vector;
-    import com.ankamagames.dofus.logic.game.common.managers.PlayedCharacterManager;
     import com.ankamagames.jerakine.interfaces.ISlotDataHolder;
 
     public class PresetWrapper extends ItemWrapper implements IDataCenter 
@@ -24,25 +24,28 @@
         private var _pngMode:Boolean;
 
 
-        public static function create(id:int, gfxId:int, objects:Vector.<PresetItem>, mount:Boolean=false):PresetWrapper
+        public static function create(id:int, gfxId:int, objects:Vector.<ItemForPreset>, mount:Boolean=false):PresetWrapper
         {
             var emptyUri:Uri;
+            var pos:int;
             var objExists:Boolean;
-            var item:PresetItem;
+            var item:ItemForPreset;
             var mountFakeItemWrapper:MountWrapper;
+            var itemsCount:int = InventoryManager.getInstance().getMaxItemsCountForPreset();
             var presetWrapper:PresetWrapper = new (PresetWrapper)();
             presetWrapper.id = id;
             presetWrapper.gfxId = gfxId;
-            presetWrapper.objects = new Array(16);
+            presetWrapper.objects = new Array(itemsCount);
             presetWrapper.mount = mount;
             var delinkedUri:Uri = new Uri((XmlConfig.getInstance().getEntry("config.ui.skin") + "bitmap/failureSlot.png"));
             var i:int;
-            while (i < 16)
+            while (i < itemsCount)
             {
+                pos = InventoryManager.getInstance().getPositionForPresetItemIndex(i);
                 objExists = false;
                 for each (item in objects)
                 {
-                    if (item.position == i)
+                    if (item.position == pos)
                     {
                         if (item.objUid)
                         {
@@ -58,28 +61,16 @@
                         objExists = true;
                     };
                 };
-                if ((((((i == 8)) && (!(objExists)))) && (mount)))
+                if ((((pos == CharacterInventoryPositionEnum.ACCESSORY_POSITION_PETS) && (!(objExists))) && (mount)))
                 {
                     mountFakeItemWrapper = MountWrapper.create();
                     presetWrapper.objects[i] = mountFakeItemWrapper;
                     presetWrapper.objects[i].backGroundIconUri = null;
                     objExists = true;
                 };
-                if (!(objExists))
+                if (!objExists)
                 {
-                    switch (i)
-                    {
-                        case 9:
-                        case 10:
-                        case 11:
-                        case 12:
-                        case 13:
-                        case 14:
-                            emptyUri = new Uri((XmlConfig.getInstance().getEntry("config.ui.skin") + "assets.swf|tx_slotDofus"));
-                            break;
-                        default:
-                            emptyUri = new Uri(((XmlConfig.getInstance().getEntry("config.ui.skin") + "assets.swf|tx_slotItem") + i));
-                    };
+                    emptyUri = new Uri((((XmlConfig.getInstance().getEntry("config.ui.skin") + "texture/slot/tx_slot_") + getSlotNameByPositionId(i)) + ".png"));
                     presetWrapper.objects[i] = SimpleTextureWrapper.create(emptyUri);
                 };
                 i++;
@@ -87,26 +78,49 @@
             return (presetWrapper);
         }
 
+        private static function getSlotNameByPositionId(i:int):String
+        {
+            var pos:int = InventoryManager.getInstance().getPositionForPresetItemIndex(i);
+            switch (pos)
+            {
+                case CharacterInventoryPositionEnum.ACCESSORY_POSITION_AMULET:
+                    return ("collar");
+                case CharacterInventoryPositionEnum.ACCESSORY_POSITION_WEAPON:
+                    return ("weapon");
+                case CharacterInventoryPositionEnum.INVENTORY_POSITION_RING_LEFT:
+                case CharacterInventoryPositionEnum.INVENTORY_POSITION_RING_RIGHT:
+                    return ("ring");
+                case CharacterInventoryPositionEnum.ACCESSORY_POSITION_BELT:
+                    return ("belt");
+                case CharacterInventoryPositionEnum.ACCESSORY_POSITION_BOOTS:
+                    return ("shoe");
+                case CharacterInventoryPositionEnum.ACCESSORY_POSITION_HAT:
+                    return ("helmet");
+                case CharacterInventoryPositionEnum.ACCESSORY_POSITION_CAPE:
+                    return ("cape");
+                case CharacterInventoryPositionEnum.ACCESSORY_POSITION_PETS:
+                    return ("pet");
+                case CharacterInventoryPositionEnum.INVENTORY_POSITION_DOFUS_1:
+                case CharacterInventoryPositionEnum.INVENTORY_POSITION_DOFUS_2:
+                case CharacterInventoryPositionEnum.INVENTORY_POSITION_DOFUS_3:
+                case CharacterInventoryPositionEnum.INVENTORY_POSITION_DOFUS_4:
+                case CharacterInventoryPositionEnum.INVENTORY_POSITION_DOFUS_5:
+                case CharacterInventoryPositionEnum.INVENTORY_POSITION_DOFUS_6:
+                    return ("dofus");
+                case CharacterInventoryPositionEnum.ACCESSORY_POSITION_SHIELD:
+                    return ("shield");
+                case CharacterInventoryPositionEnum.INVENTORY_POSITION_ENTITY:
+                    return ("companon");
+                case CharacterInventoryPositionEnum.INVENTORY_POSITION_COSTUME:
+                    return ("costume");
+                default:
+                    return ("companon");
+            };
+        }
+
 
         public function get objects():Array
         {
-            var mountFakeItemWrapper:MountWrapper;
-            if (this.mount)
-            {
-                if (((PlayedCharacterManager.getInstance().mount) || (((!(PlayedCharacterManager.getInstance().mount)) && (this._objects[8])))))
-                {
-                    if (!((this._objects[8] is MountWrapper)))
-                    {
-                        mountFakeItemWrapper = MountWrapper.create();
-                        this._objects[8] = mountFakeItemWrapper;
-                        this._objects[8].backGroundIconUri = null;
-                    }
-                    else
-                    {
-                        this._objects[8].update(0, 0, 0, 0, null);
-                    };
-                };
-            };
             return (this._objects);
         }
 
@@ -137,7 +151,7 @@
 
         override public function getIconUri(pngMode:Boolean=true):Uri
         {
-            if (!(this._uri))
+            if (!this._uri)
             {
                 this._pngMode = false;
                 this._uri = new Uri(XmlConfig.getInstance().getEntry("config.gfx.path").concat("presets/icons.swf|icon_").concat(this.gfxId));
@@ -160,15 +174,15 @@
             return (true);
         }
 
-        public function updateObject(object:PresetItem):void
+        public function updateObject(object:ItemForPreset):void
         {
             var emptyUri:Uri;
-            var _local_5:uint;
+            var gid:uint;
             var delinkedUri:Uri = new Uri((XmlConfig.getInstance().getEntry("config.ui.skin") + "bitmap/failureSlot.png"));
             var i:int = object.position;
             if (this._objects[i])
             {
-                if (this._objects[i].objectGID == object.objGid)
+                if (((this._objects[i].hasOwnProperty("objectGID")) && (this._objects[i].objectGID == object.objGid)))
                 {
                     if (object.objUid)
                     {
@@ -180,24 +194,24 @@
                     }
                     else
                     {
-                        _local_5 = object.objGid;
-                        this._objects[i] = ItemWrapper.create(0, 0, _local_5, 1, null, false);
+                        gid = object.objGid;
+                        this._objects[i] = ItemWrapper.create(0, 0, gid, 1, null, false);
                         this._objects[i].backGroundIconUri = delinkedUri;
                         this._objects[i].active = false;
                     };
                 }
                 else
                 {
-                    if ((((object.objGid == 0)) && ((object.objUid == 0))))
+                    if (((object.objGid == 0) && (object.objUid == 0)))
                     {
                         switch (i)
                         {
-                            case 9:
-                            case 10:
-                            case 11:
-                            case 12:
-                            case 13:
-                            case 14:
+                            case CharacterInventoryPositionEnum.INVENTORY_POSITION_DOFUS_1:
+                            case CharacterInventoryPositionEnum.INVENTORY_POSITION_DOFUS_2:
+                            case CharacterInventoryPositionEnum.INVENTORY_POSITION_DOFUS_3:
+                            case CharacterInventoryPositionEnum.INVENTORY_POSITION_DOFUS_4:
+                            case CharacterInventoryPositionEnum.INVENTORY_POSITION_DOFUS_5:
+                            case CharacterInventoryPositionEnum.INVENTORY_POSITION_DOFUS_6:
                                 emptyUri = new Uri((XmlConfig.getInstance().getEntry("config.ui.skin") + "assets.swf|tx_slotDofus"));
                                 break;
                             default:
@@ -219,5 +233,5 @@
 
 
     }
-}//package com.ankamagames.dofus.internalDatacenter.items
+} com.ankamagames.dofus.internalDatacenter.items
 

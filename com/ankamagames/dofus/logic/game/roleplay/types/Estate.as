@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.roleplay.types
+package com.ankamagames.dofus.logic.game.roleplay.types
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
@@ -17,7 +17,7 @@
 
         public var name:String;
         public var area:String;
-        public var price:uint;
+        public var price:Number = 0;
         public var infos:Object;
 
         public function Estate(estate:Object)
@@ -35,7 +35,7 @@
                 house = (estate as HouseInformationsForSell);
                 subAreah = SubArea.getSubAreaById(house.subAreaId);
                 housen = House.getGuildHouseById(house.modelId);
-                if (!(housen))
+                if (!housen)
                 {
                     this.name = "-";
                 }
@@ -46,7 +46,7 @@
                 if (subAreah)
                 {
                     area = Area.getAreaById(subAreah.areaId);
-                    if (!(area))
+                    if (!area)
                     {
                         this.area = "-";
                     }
@@ -72,7 +72,7 @@
                     if (subAreap)
                     {
                         areap = Area.getAreaById(subAreap.areaId);
-                        if (!(areap))
+                        if (!areap)
                         {
                             this.area = "-";
                         }
@@ -92,5 +92,5 @@
         }
 
     }
-}//package com.ankamagames.dofus.logic.game.roleplay.types
+} com.ankamagames.dofus.logic.game.roleplay.types
 

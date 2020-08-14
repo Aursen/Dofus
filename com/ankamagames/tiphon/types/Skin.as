@@ -1,4 +1,4 @@
-﻿package com.ankamagames.tiphon.types
+package com.ankamagames.tiphon.types
 {
     import flash.events.EventDispatcher;
     import com.ankamagames.jerakine.logger.Logger;
@@ -30,16 +30,12 @@
         private var _skinClass:Array;
         private var _aSkinPartOrdered:Array;
         private var _validate:Boolean = true;
-        private var _partTransformData:Dictionary;
-        private var _transformData:Dictionary;
-        private var _baseSkins:Dictionary;
+        private var _partTransformData:Dictionary = new Dictionary();
+        private var _transformData:Dictionary = new Dictionary();
+        private var _baseSkins:Dictionary = new Dictionary();
 
         public function Skin()
         {
-            this._partTransformData = new Dictionary();
-            this._transformData = new Dictionary();
-            this._baseSkins = new Dictionary();
-            super();
             this._partToSwl = new Dictionary();
             this._skinParts = new Array();
             this._skinClass = new Array();
@@ -48,7 +44,7 @@
 
         public static function addAlternativeSkin(gfxId:uint, alternativeGfxId:uint):void
         {
-            if (!(_alternativeSkin[gfxId]))
+            if (!_alternativeSkin[gfxId])
             {
                 _alternativeSkin[gfxId] = new Array();
             };
@@ -64,14 +60,14 @@
         public function get complete():Boolean
         {
             var skinId:uint;
-            if (!(this._validate))
+            if (!this._validate)
             {
                 return (false);
             };
             var isComplete:Boolean = true;
             for each (skinId in this._aSkinPartOrdered)
             {
-                isComplete = ((isComplete) && (((Tiphon.skinLibrary.isLoaded(skinId)) || (Tiphon.skinLibrary.hasError(skinId)))));
+                isComplete = ((isComplete) && ((Tiphon.skinLibrary.isLoaded(skinId)) || (Tiphon.skinLibrary.hasError(skinId))));
             };
             return (isComplete);
         }
@@ -103,7 +99,7 @@
         public function add(gfxId:uint, alternativeSkinIndex:int=-1):uint
         {
             var oldSkinGfxId:int = -1;
-            if (!(_censoredSkin))
+            if (!_censoredSkin)
             {
                 _censoredSkin = CensoredContentManager.getInstance().getCensoredIndex(2);
             };
@@ -111,7 +107,7 @@
             {
                 gfxId = _censoredSkin[gfxId];
             };
-            if (((((((!((alternativeSkinIndex == -1))) && (_alternativeSkin))) && (_alternativeSkin[gfxId]))) && ((alternativeSkinIndex < _alternativeSkin[gfxId].length))))
+            if (((((!(alternativeSkinIndex == -1)) && (_alternativeSkin)) && (_alternativeSkin[gfxId])) && (alternativeSkinIndex < _alternativeSkin[gfxId].length)))
             {
                 oldSkinGfxId = gfxId;
                 gfxId = _alternativeSkin[gfxId][alternativeSkinIndex];
@@ -121,7 +117,7 @@
             var i:uint;
             while (i < this._aSkinPartOrdered.length)
             {
-                if (((!((this._aSkinPartOrdered[i] == gfxId))) && (!((this._aSkinPartOrdered[i] == oldSkinGfxId)))))
+                if (((!(this._aSkinPartOrdered[i] == gfxId)) && (!(this._aSkinPartOrdered[i] == oldSkinGfxId))))
                 {
                     parts.push(this._aSkinPartOrdered[i]);
                 };
@@ -206,7 +202,7 @@
 
         public function addTransform(part:String, skinId:uint, data:TransformData):void
         {
-            if (!(this._partTransformData[part]))
+            if (!this._partTransformData[part])
             {
                 this._partTransformData[part] = new Dictionary();
             };
@@ -235,7 +231,7 @@
             {
                 gfxId = this._aSkinPartOrdered[i];
                 lib = Tiphon.skinLibrary.getResourceById(gfxId);
-                if (!!(lib))
+                if (lib)
                 {
                     classPart = lib.getDefinitions();
                     for each (className in classPart)
@@ -262,8 +258,8 @@
                             j = (this._aSkinPartOrdered.length - 1);
                             while (j >= -1)
                             {
-                                gfxId = (((j >= 0)) ? this._aSkinPartOrdered[j] : 0);
-                                if (((this._baseSkins[gfxId]) && (!((this._baseSkins[gfxId] == gfxId)))))
+                                gfxId = ((j >= 0) ? this._aSkinPartOrdered[j] : 0);
+                                if (((this._baseSkins[gfxId]) && (!(this._baseSkins[gfxId] == gfxId))))
                                 {
                                     gfxId = this._baseSkins[gfxId];
                                 };
@@ -292,5 +288,5 @@
 
 
     }
-}//package com.ankamagames.tiphon.types
+} com.ankamagames.tiphon.types
 

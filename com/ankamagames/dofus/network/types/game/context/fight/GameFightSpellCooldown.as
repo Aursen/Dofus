@@ -1,10 +1,10 @@
-﻿package com.ankamagames.dofus.network.types.game.context.fight
+package com.ankamagames.dofus.network.types.game.context.fight
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class GameFightSpellCooldown implements INetworkType 
     {
 
@@ -54,7 +54,28 @@
 
         public function deserializeAs_GameFightSpellCooldown(input:ICustomDataInput):void
         {
+            this._spellIdFunc(input);
+            this._cooldownFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GameFightSpellCooldown(tree);
+        }
+
+        public function deserializeAsyncAs_GameFightSpellCooldown(tree:FuncTree):void
+        {
+            tree.addChild(this._spellIdFunc);
+            tree.addChild(this._cooldownFunc);
+        }
+
+        private function _spellIdFunc(input:ICustomDataInput):void
+        {
             this.spellId = input.readInt();
+        }
+
+        private function _cooldownFunc(input:ICustomDataInput):void
+        {
             this.cooldown = input.readByte();
             if (this.cooldown < 0)
             {
@@ -64,5 +85,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.context.fight
+} com.ankamagames.dofus.network.types.game.context.fight
 

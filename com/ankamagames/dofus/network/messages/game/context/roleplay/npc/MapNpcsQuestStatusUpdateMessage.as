@@ -1,34 +1,30 @@
-﻿package com.ankamagames.dofus.network.messages.game.context.roleplay.npc
+package com.ankamagames.dofus.network.messages.game.context.roleplay.npc
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
     import __AS3__.vec.Vector;
     import com.ankamagames.dofus.network.types.game.context.roleplay.quest.GameRolePlayNpcQuestFlag;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
     import __AS3__.vec.*;
 
-    [Trusted]
     public class MapNpcsQuestStatusUpdateMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 5642;
 
         private var _isInitialized:Boolean = false;
-        public var mapId:int = 0;
-        public var npcsIdsWithQuest:Vector.<int>;
-        public var questFlags:Vector.<GameRolePlayNpcQuestFlag>;
-        public var npcsIdsWithoutQuest:Vector.<int>;
+        public var mapId:Number = 0;
+        public var npcsIdsWithQuest:Vector.<int> = new Vector.<int>();
+        public var questFlags:Vector.<GameRolePlayNpcQuestFlag> = new Vector.<GameRolePlayNpcQuestFlag>();
+        public var npcsIdsWithoutQuest:Vector.<int> = new Vector.<int>();
+        private var _npcsIdsWithQuesttree:FuncTree;
+        private var _questFlagstree:FuncTree;
+        private var _npcsIdsWithoutQuesttree:FuncTree;
 
-        public function MapNpcsQuestStatusUpdateMessage()
-        {
-            this.npcsIdsWithQuest = new Vector.<int>();
-            this.questFlags = new Vector.<GameRolePlayNpcQuestFlag>();
-            this.npcsIdsWithoutQuest = new Vector.<int>();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
@@ -40,7 +36,7 @@
             return (5642);
         }
 
-        public function initMapNpcsQuestStatusUpdateMessage(mapId:int=0, npcsIdsWithQuest:Vector.<int>=null, questFlags:Vector.<GameRolePlayNpcQuestFlag>=null, npcsIdsWithoutQuest:Vector.<int>=null):MapNpcsQuestStatusUpdateMessage
+        public function initMapNpcsQuestStatusUpdateMessage(mapId:Number=0, npcsIdsWithQuest:Vector.<int>=null, questFlags:Vector.<GameRolePlayNpcQuestFlag>=null, npcsIdsWithoutQuest:Vector.<int>=null):MapNpcsQuestStatusUpdateMessage
         {
             this.mapId = mapId;
             this.npcsIdsWithQuest = npcsIdsWithQuest;
@@ -71,6 +67,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_MapNpcsQuestStatusUpdateMessage(output);
@@ -78,7 +82,11 @@
 
         public function serializeAs_MapNpcsQuestStatusUpdateMessage(output:ICustomDataOutput):void
         {
-            output.writeInt(this.mapId);
+            if (((this.mapId < 0) || (this.mapId > 9007199254740992)))
+            {
+                throw (new Error((("Forbidden value (" + this.mapId) + ") on element mapId.")));
+            };
+            output.writeDouble(this.mapId);
             output.writeShort(this.npcsIdsWithQuest.length);
             var _i2:uint;
             while (_i2 < this.npcsIdsWithQuest.length)
@@ -112,7 +120,7 @@
             var _val2:int;
             var _item3:GameRolePlayNpcQuestFlag;
             var _val4:int;
-            this.mapId = input.readInt();
+            this._mapIdFunc(input);
             var _npcsIdsWithQuestLen:uint = input.readUnsignedShort();
             var _i2:uint;
             while (_i2 < _npcsIdsWithQuestLen)
@@ -140,7 +148,81 @@
             };
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_MapNpcsQuestStatusUpdateMessage(tree);
+        }
+
+        public function deserializeAsyncAs_MapNpcsQuestStatusUpdateMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._mapIdFunc);
+            this._npcsIdsWithQuesttree = tree.addChild(this._npcsIdsWithQuesttreeFunc);
+            this._questFlagstree = tree.addChild(this._questFlagstreeFunc);
+            this._npcsIdsWithoutQuesttree = tree.addChild(this._npcsIdsWithoutQuesttreeFunc);
+        }
+
+        private function _mapIdFunc(input:ICustomDataInput):void
+        {
+            this.mapId = input.readDouble();
+            if (((this.mapId < 0) || (this.mapId > 9007199254740992)))
+            {
+                throw (new Error((("Forbidden value (" + this.mapId) + ") on element of MapNpcsQuestStatusUpdateMessage.mapId.")));
+            };
+        }
+
+        private function _npcsIdsWithQuesttreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._npcsIdsWithQuesttree.addChild(this._npcsIdsWithQuestFunc);
+                i++;
+            };
+        }
+
+        private function _npcsIdsWithQuestFunc(input:ICustomDataInput):void
+        {
+            var _val:int = input.readInt();
+            this.npcsIdsWithQuest.push(_val);
+        }
+
+        private function _questFlagstreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._questFlagstree.addChild(this._questFlagsFunc);
+                i++;
+            };
+        }
+
+        private function _questFlagsFunc(input:ICustomDataInput):void
+        {
+            var _item:GameRolePlayNpcQuestFlag = new GameRolePlayNpcQuestFlag();
+            _item.deserialize(input);
+            this.questFlags.push(_item);
+        }
+
+        private function _npcsIdsWithoutQuesttreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._npcsIdsWithoutQuesttree.addChild(this._npcsIdsWithoutQuestFunc);
+                i++;
+            };
+        }
+
+        private function _npcsIdsWithoutQuestFunc(input:ICustomDataInput):void
+        {
+            var _val:int = input.readInt();
+            this.npcsIdsWithoutQuest.push(_val);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.context.roleplay.npc
+} com.ankamagames.dofus.network.messages.game.context.roleplay.npc
 

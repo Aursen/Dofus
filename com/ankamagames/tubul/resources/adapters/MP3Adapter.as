@@ -1,4 +1,4 @@
-﻿package com.ankamagames.tubul.resources.adapters
+package com.ankamagames.tubul.resources.adapters
 {
     import com.ankamagames.jerakine.resources.adapters.AbstractUrlLoaderAdapter;
     import com.ankamagames.jerakine.resources.adapters.IAdapter;
@@ -67,7 +67,7 @@
             };
         }
 
-        override protected function getResource(dataFormat:String, data:*)
+        override protected function getResource(dataFormat:String, data:*):*
         {
             return (this._sound);
         }
@@ -96,5 +96,5 @@
 
 
     }
-}//package com.ankamagames.tubul.resources.adapters
+} com.ankamagames.tubul.resources.adapters
 

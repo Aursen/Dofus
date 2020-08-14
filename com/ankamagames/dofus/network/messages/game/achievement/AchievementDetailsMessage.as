@@ -1,27 +1,23 @@
-﻿package com.ankamagames.dofus.network.messages.game.achievement
+package com.ankamagames.dofus.network.messages.game.achievement
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
     import com.ankamagames.dofus.network.types.game.achievement.Achievement;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
 
-    [Trusted]
     public class AchievementDetailsMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 6378;
 
         private var _isInitialized:Boolean = false;
-        public var achievement:Achievement;
+        public var achievement:Achievement = new Achievement();
+        private var _achievementtree:FuncTree;
 
-        public function AchievementDetailsMessage()
-        {
-            this.achievement = new Achievement();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
@@ -58,6 +54,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_AchievementDetailsMessage(output);
@@ -79,7 +83,23 @@
             this.achievement.deserialize(input);
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_AchievementDetailsMessage(tree);
+        }
+
+        public function deserializeAsyncAs_AchievementDetailsMessage(tree:FuncTree):void
+        {
+            this._achievementtree = tree.addChild(this._achievementtreeFunc);
+        }
+
+        private function _achievementtreeFunc(input:ICustomDataInput):void
+        {
+            this.achievement = new Achievement();
+            this.achievement.deserializeAsync(this._achievementtree);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.achievement
+} com.ankamagames.dofus.network.messages.game.achievement
 

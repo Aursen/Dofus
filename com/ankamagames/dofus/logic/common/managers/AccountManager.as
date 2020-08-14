@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.common.managers
+package com.ankamagames.dofus.logic.common.managers
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
@@ -17,6 +17,8 @@
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(AccountManager));
 
         private var _accounts:Dictionary;
+        public var achievementPoints:int = 0;
+        public var achievementPercent:int = 0;
 
         public function AccountManager()
         {
@@ -25,7 +27,7 @@
 
         public static function getInstance():AccountManager
         {
-            if (!(_singleton))
+            if (!_singleton)
             {
                 _singleton = new (AccountManager)();
             };
@@ -64,10 +66,10 @@
             };
         }
 
-        public function setAccountFromId(playerId:int, accountId:int, accountName:String=null):void
+        public function setAccountFromId(playerId:Number, accountId:int, accountName:String=null):void
         {
             var entityInfo:GameRolePlayNamedActorInformations;
-            var _local_6:FightEntitiesFrame;
+            var _fightEntityFrame:FightEntitiesFrame;
             var fightInfo:GameFightFighterNamedInformations;
             var _roleplayEntityFrame:RoleplayEntitiesFrame = (Kernel.getWorker().getFrame(RoleplayEntitiesFrame) as RoleplayEntitiesFrame);
             if (_roleplayEntityFrame)
@@ -83,10 +85,10 @@
             }
             else
             {
-                _local_6 = (Kernel.getWorker().getFrame(FightEntitiesFrame) as FightEntitiesFrame);
-                if (_local_6)
+                _fightEntityFrame = (Kernel.getWorker().getFrame(FightEntitiesFrame) as FightEntitiesFrame);
+                if (_fightEntityFrame)
                 {
-                    fightInfo = (_local_6.getEntityInfos(playerId) as GameFightFighterNamedInformations);
+                    fightInfo = (_fightEntityFrame.getEntityInfos(playerId) as GameFightFighterNamedInformations);
                     if (fightInfo)
                     {
                         this._accounts[fightInfo.name] = {
@@ -100,5 +102,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.common.managers
+} com.ankamagames.dofus.logic.common.managers
 

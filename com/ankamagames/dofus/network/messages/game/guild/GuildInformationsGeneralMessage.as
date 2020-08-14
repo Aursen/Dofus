@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.guild
+package com.ankamagames.dofus.network.messages.game.guild
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,16 +6,14 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
-    import com.ankamagames.jerakine.network.utils.BooleanByteWrapper;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class GuildInformationsGeneralMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 5557;
 
         private var _isInitialized:Boolean = false;
-        public var enabled:Boolean = false;
         public var abandonnedPaddock:Boolean = false;
         public var level:uint = 0;
         public var expLevelFloor:Number = 0;
@@ -36,9 +34,8 @@
             return (5557);
         }
 
-        public function initGuildInformationsGeneralMessage(enabled:Boolean=false, abandonnedPaddock:Boolean=false, level:uint=0, expLevelFloor:Number=0, experience:Number=0, expNextLevelFloor:Number=0, creationDate:uint=0, nbTotalMembers:uint=0, nbConnectedMembers:uint=0):GuildInformationsGeneralMessage
+        public function initGuildInformationsGeneralMessage(abandonnedPaddock:Boolean=false, level:uint=0, expLevelFloor:Number=0, experience:Number=0, expNextLevelFloor:Number=0, creationDate:uint=0, nbTotalMembers:uint=0, nbConnectedMembers:uint=0):GuildInformationsGeneralMessage
         {
-            this.enabled = enabled;
             this.abandonnedPaddock = abandonnedPaddock;
             this.level = level;
             this.expLevelFloor = expLevelFloor;
@@ -53,7 +50,6 @@
 
         override public function reset():void
         {
-            this.enabled = false;
             this.abandonnedPaddock = false;
             this.level = 0;
             this.expLevelFloor = 0;
@@ -77,6 +73,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_GuildInformationsGeneralMessage(output);
@@ -84,26 +88,23 @@
 
         public function serializeAs_GuildInformationsGeneralMessage(output:ICustomDataOutput):void
         {
-            var _box0:uint;
-            _box0 = BooleanByteWrapper.setFlag(_box0, 0, this.enabled);
-            _box0 = BooleanByteWrapper.setFlag(_box0, 1, this.abandonnedPaddock);
-            output.writeByte(_box0);
-            if ((((this.level < 0)) || ((this.level > 0xFF))))
+            output.writeBoolean(this.abandonnedPaddock);
+            if (((this.level < 0) || (this.level > 0xFF)))
             {
                 throw (new Error((("Forbidden value (" + this.level) + ") on element level.")));
             };
             output.writeByte(this.level);
-            if ((((this.expLevelFloor < 0)) || ((this.expLevelFloor > 9007199254740992))))
+            if (((this.expLevelFloor < 0) || (this.expLevelFloor > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.expLevelFloor) + ") on element expLevelFloor.")));
             };
             output.writeVarLong(this.expLevelFloor);
-            if ((((this.experience < 0)) || ((this.experience > 9007199254740992))))
+            if (((this.experience < 0) || (this.experience > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.experience) + ") on element experience.")));
             };
             output.writeVarLong(this.experience);
-            if ((((this.expNextLevelFloor < 0)) || ((this.expNextLevelFloor > 9007199254740992))))
+            if (((this.expNextLevelFloor < 0) || (this.expNextLevelFloor > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.expNextLevelFloor) + ") on element expNextLevelFloor.")));
             };
@@ -132,39 +133,94 @@
 
         public function deserializeAs_GuildInformationsGeneralMessage(input:ICustomDataInput):void
         {
-            var _box0:uint = input.readByte();
-            this.enabled = BooleanByteWrapper.getFlag(_box0, 0);
-            this.abandonnedPaddock = BooleanByteWrapper.getFlag(_box0, 1);
+            this._abandonnedPaddockFunc(input);
+            this._levelFunc(input);
+            this._expLevelFloorFunc(input);
+            this._experienceFunc(input);
+            this._expNextLevelFloorFunc(input);
+            this._creationDateFunc(input);
+            this._nbTotalMembersFunc(input);
+            this._nbConnectedMembersFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GuildInformationsGeneralMessage(tree);
+        }
+
+        public function deserializeAsyncAs_GuildInformationsGeneralMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._abandonnedPaddockFunc);
+            tree.addChild(this._levelFunc);
+            tree.addChild(this._expLevelFloorFunc);
+            tree.addChild(this._experienceFunc);
+            tree.addChild(this._expNextLevelFloorFunc);
+            tree.addChild(this._creationDateFunc);
+            tree.addChild(this._nbTotalMembersFunc);
+            tree.addChild(this._nbConnectedMembersFunc);
+        }
+
+        private function _abandonnedPaddockFunc(input:ICustomDataInput):void
+        {
+            this.abandonnedPaddock = input.readBoolean();
+        }
+
+        private function _levelFunc(input:ICustomDataInput):void
+        {
             this.level = input.readUnsignedByte();
-            if ((((this.level < 0)) || ((this.level > 0xFF))))
+            if (((this.level < 0) || (this.level > 0xFF)))
             {
                 throw (new Error((("Forbidden value (" + this.level) + ") on element of GuildInformationsGeneralMessage.level.")));
             };
+        }
+
+        private function _expLevelFloorFunc(input:ICustomDataInput):void
+        {
             this.expLevelFloor = input.readVarUhLong();
-            if ((((this.expLevelFloor < 0)) || ((this.expLevelFloor > 9007199254740992))))
+            if (((this.expLevelFloor < 0) || (this.expLevelFloor > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.expLevelFloor) + ") on element of GuildInformationsGeneralMessage.expLevelFloor.")));
             };
+        }
+
+        private function _experienceFunc(input:ICustomDataInput):void
+        {
             this.experience = input.readVarUhLong();
-            if ((((this.experience < 0)) || ((this.experience > 9007199254740992))))
+            if (((this.experience < 0) || (this.experience > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.experience) + ") on element of GuildInformationsGeneralMessage.experience.")));
             };
+        }
+
+        private function _expNextLevelFloorFunc(input:ICustomDataInput):void
+        {
             this.expNextLevelFloor = input.readVarUhLong();
-            if ((((this.expNextLevelFloor < 0)) || ((this.expNextLevelFloor > 9007199254740992))))
+            if (((this.expNextLevelFloor < 0) || (this.expNextLevelFloor > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.expNextLevelFloor) + ") on element of GuildInformationsGeneralMessage.expNextLevelFloor.")));
             };
+        }
+
+        private function _creationDateFunc(input:ICustomDataInput):void
+        {
             this.creationDate = input.readInt();
             if (this.creationDate < 0)
             {
                 throw (new Error((("Forbidden value (" + this.creationDate) + ") on element of GuildInformationsGeneralMessage.creationDate.")));
             };
+        }
+
+        private function _nbTotalMembersFunc(input:ICustomDataInput):void
+        {
             this.nbTotalMembers = input.readVarUhShort();
             if (this.nbTotalMembers < 0)
             {
                 throw (new Error((("Forbidden value (" + this.nbTotalMembers) + ") on element of GuildInformationsGeneralMessage.nbTotalMembers.")));
             };
+        }
+
+        private function _nbConnectedMembersFunc(input:ICustomDataInput):void
+        {
             this.nbConnectedMembers = input.readVarUhShort();
             if (this.nbConnectedMembers < 0)
             {
@@ -174,5 +230,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.guild
+} com.ankamagames.dofus.network.messages.game.guild
 

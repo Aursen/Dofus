@@ -1,4 +1,4 @@
-﻿package com.hurlant.util.der
+package com.hurlant.util.der
 {
     import flash.utils.ByteArray;
     import com.hurlant.crypto.rsa.RSAKey;
@@ -86,5 +86,5 @@
 
 
     }
-}//package com.hurlant.util.der
+} com.hurlant.util.der
 

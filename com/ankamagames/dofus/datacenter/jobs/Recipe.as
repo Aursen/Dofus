@@ -1,12 +1,14 @@
-﻿package com.ankamagames.dofus.datacenter.jobs
+package com.ankamagames.dofus.datacenter.jobs
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
+    import com.ankamagames.dofus.types.IdAccessors;
     import __AS3__.vec.Vector;
     import com.ankamagames.dofus.internalDatacenter.items.ItemWrapper;
     import com.ankamagames.jerakine.data.GameData;
-    import com.ankamagames.dofus.internalDatacenter.jobs.RecipeWithSkill;
+    import com.ankamagames.dofus.internalDatacenter.DataEnum;
     import com.ankamagames.dofus.misc.utils.GameDataQuery;
     import com.ankamagames.jerakine.data.I18n;
+    import com.ankamagames.jerakine.data.I18nFileAccessor;
     import __AS3__.vec.*;
 
     public class Recipe implements IDataCenter 
@@ -14,6 +16,7 @@
 
         public static const MODULE:String = "Recipes";
         private static var _jobRecipes:Array;
+        public static var idAccessors:IdAccessors = new IdAccessors(null, getAllRecipes);
 
         public var resultId:int;
         public var resultNameId:uint;
@@ -23,53 +26,54 @@
         public var quantities:Vector.<uint>;
         public var jobId:int;
         public var skillId:int;
+        public var changeVersion:String;
+        public var tooltipExpirationDate:Number = NaN;
         private var _result:ItemWrapper;
         private var _resultName:String;
         private var _ingredients:Vector.<ItemWrapper>;
         private var _job:Job;
         private var _skill:Skill;
+        private var _words:String;
 
 
         public static function getRecipeByResultId(resultId:int):Recipe
         {
-            return ((GameData.getObject(MODULE, resultId) as Recipe));
+            return (GameData.getObject(MODULE, resultId) as Recipe);
         }
 
-        public static function getAllRecipesForSkillId(pSkillId:uint, pMaxCase:uint):Array
+        public static function getAllRecipesForSkillId(pSkillId:uint, jobLevel:uint):Array
         {
-            var result:int;
             var recipe:Recipe;
-            var recipeSlots:uint;
+            var resultId:int;
             var recipes:Array = new Array();
             var craftables:Vector.<int> = Skill.getSkillById(pSkillId).craftableItemIds;
-            for each (result in craftables)
+            for each (resultId in craftables)
             {
-                recipe = getRecipeByResultId(result);
+                recipe = getRecipeByResultId(resultId);
                 if (recipe)
                 {
-                    recipeSlots = recipe.ingredientIds.length;
-                    if (recipeSlots <= pMaxCase)
+                    if (recipe.resultLevel <= jobLevel)
                     {
-                        recipes.push(new RecipeWithSkill(recipe, Skill.getSkillById(pSkillId)));
+                        recipes.push(recipe);
                     };
                 };
             };
-            recipes = recipes.sort(skillSortFunction);
+            recipes = recipes.sortOn("resultLevel", (Array.NUMERIC | Array.DESCENDING));
             return (recipes);
         }
 
         public static function getAllRecipes():Array
         {
-            return ((GameData.getObjects(MODULE) as Array));
+            return (GameData.getObjects(MODULE) as Array);
         }
 
         public static function getRecipesByJobId(jobId:uint):Array
         {
-            if (jobId == 1)
+            if (jobId == DataEnum.JOB_ID_BASE)
             {
                 return (null);
             };
-            if (!(_jobRecipes))
+            if (!_jobRecipes)
             {
                 _jobRecipes = new Array();
             };
@@ -90,23 +94,10 @@
             return (results);
         }
 
-        private static function skillSortFunction(a:RecipeWithSkill, b:RecipeWithSkill):Number
-        {
-            if (a.recipe.quantities.length > b.recipe.quantities.length)
-            {
-                return (-1);
-            };
-            if (a.recipe.quantities.length == b.recipe.quantities.length)
-            {
-                return (0);
-            };
-            return (1);
-        }
-
 
         public function get result():ItemWrapper
         {
-            if (!(this._result))
+            if (!this._result)
             {
                 this._result = ItemWrapper.create(0, 0, this.resultId, 0, null, false);
             };
@@ -115,7 +106,7 @@
 
         public function get resultName():String
         {
-            if (!(this._resultName))
+            if (!this._resultName)
             {
                 this._resultName = I18n.getText(this.resultNameId);
             };
@@ -126,7 +117,7 @@
         {
             var ingredientsCount:uint;
             var i:uint;
-            if (!(this._ingredients))
+            if (!this._ingredients)
             {
                 ingredientsCount = this.ingredientIds.length;
                 this._ingredients = new Vector.<ItemWrapper>(ingredientsCount, true);
@@ -140,9 +131,24 @@
             return (this._ingredients);
         }
 
+        public function get words():String
+        {
+            var ingredient:ItemWrapper;
+            if (!this._words)
+            {
+                this._words = I18nFileAccessor.getInstance().getUnDiacriticalText(this.resultNameId);
+                for each (ingredient in this.ingredients)
+                {
+                    this._words = (this._words + (" " + I18nFileAccessor.getInstance().getUnDiacriticalText(ingredient.nameId)));
+                };
+                this._words = this._words.toLowerCase();
+            };
+            return (this._words);
+        }
+
         public function get job():Job
         {
-            if (!(this._job))
+            if (!this._job)
             {
                 this._job = Job.getJobById(this.jobId);
             };
@@ -151,7 +157,7 @@
 
         public function get skill():Skill
         {
-            if (!(this._skill))
+            if (!this._skill)
             {
                 this._skill = Skill.getSkillById(this.skillId);
             };
@@ -160,5 +166,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.jobs
+} com.ankamagames.dofus.datacenter.jobs
 

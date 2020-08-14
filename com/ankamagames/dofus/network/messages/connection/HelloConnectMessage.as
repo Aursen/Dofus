@@ -1,15 +1,15 @@
-﻿package com.ankamagames.dofus.network.messages.connection
+package com.ankamagames.dofus.network.messages.connection
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
     import __AS3__.vec.Vector;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
     import __AS3__.vec.*;
 
-    [Trusted]
     public class HelloConnectMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -18,13 +18,9 @@
         private var _isInitialized:Boolean = false;
         [Transient]
         public var salt:String = "";
-        public var key:Vector.<int>;
+        public var key:Vector.<int> = new Vector.<int>();
+        private var _keytree:FuncTree;
 
-        public function HelloConnectMessage()
-        {
-            this.key = new Vector.<int>();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
@@ -63,6 +59,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_HelloConnectMessage(output);
@@ -71,7 +75,7 @@
         public function serializeAs_HelloConnectMessage(output:ICustomDataOutput):void
         {
             output.writeUTF(this.salt);
-            output.writeShort(this.key.length);
+            output.writeVarInt(this.key.length);
             var _i2:uint;
             while (_i2 < this.key.length)
             {
@@ -88,8 +92,8 @@
         public function deserializeAs_HelloConnectMessage(input:ICustomDataInput):void
         {
             var _val2:int;
-            this.salt = input.readUTF();
-            var _keyLen:uint = input.readUnsignedShort();
+            this._saltFunc(input);
+            var _keyLen:uint = input.readVarInt();
             var _i2:uint;
             while (_i2 < _keyLen)
             {
@@ -99,7 +103,40 @@
             };
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_HelloConnectMessage(tree);
+        }
+
+        public function deserializeAsyncAs_HelloConnectMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._saltFunc);
+            this._keytree = tree.addChild(this._keytreeFunc);
+        }
+
+        private function _saltFunc(input:ICustomDataInput):void
+        {
+            this.salt = input.readUTF();
+        }
+
+        private function _keytreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readVarInt();
+            var i:uint;
+            while (i < length)
+            {
+                this._keytree.addChild(this._keyFunc);
+                i++;
+            };
+        }
+
+        private function _keyFunc(input:ICustomDataInput):void
+        {
+            var _val:int = input.readByte();
+            this.key.push(_val);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.connection
+} com.ankamagames.dofus.network.messages.connection
 

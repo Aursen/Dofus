@@ -1,4 +1,4 @@
-﻿package com.hurlant.util.der
+package com.hurlant.util.der
 {
     import flash.utils.ByteArray;
 
@@ -10,17 +10,17 @@
 
         public static function parse(der:ByteArray, structure:*=null):IAsn1Type
         {
-            var type:int;
+            var _local_3:int;
             var len:int;
             var b:ByteArray;
             var count:int;
-            var _local_8:int;
-            var _local_9:Sequence;
-            var _local_10:Array;
-            var _local_11:Set;
-            var _local_12:ByteString;
-            var _local_13:PrintableString;
-            var _local_14:UTCTime;
+            var p:int;
+            var o:Sequence;
+            var arrayStruct:Array;
+            var s:Set;
+            var bs:ByteString;
+            var ps:PrintableString;
+            var ut:UTCTime;
             var tmpStruct:Object;
             var wantConstructed:Boolean;
             var isConstructed:Boolean;
@@ -29,13 +29,13 @@
             var obj:IAsn1Type;
             var size:int;
             var ba:ByteArray;
-            type = der.readUnsignedByte();
-            var constructed:Boolean = !(((type & 32) == 0));
-            type = (type & 31);
+            _local_3 = der.readUnsignedByte();
+            var constructed:* = (!((_local_3 & 0x20) == 0));
+            _local_3 = (_local_3 & 0x1F);
             len = der.readUnsignedByte();
             if (len >= 128)
             {
-                count = (len & 127);
+                count = (len & 0x7F);
                 len = 0;
                 while (count > 0)
                 {
@@ -43,23 +43,23 @@
                     count--;
                 };
             };
-            switch (type)
+            switch (_local_3)
             {
                 case 0:
                 case 16:
-                    _local_8 = der.position;
-                    _local_9 = new Sequence(type, len);
-                    _local_10 = (structure as Array);
-                    if (_local_10 != null)
+                    p = der.position;
+                    o = new Sequence(_local_3, len);
+                    arrayStruct = (structure as Array);
+                    if (arrayStruct != null)
                     {
-                        _local_10 = _local_10.concat();
+                        arrayStruct = arrayStruct.concat();
                     };
-                    while (der.position < (_local_8 + len))
+                    while (der.position < (p + len))
                     {
                         tmpStruct = null;
-                        if (_local_10 != null)
+                        if (arrayStruct != null)
                         {
-                            tmpStruct = _local_10.shift();
+                            tmpStruct = arrayStruct.shift();
                         };
                         if (tmpStruct != null)
                         {
@@ -69,9 +69,9 @@
                                 isConstructed = isConstructedType(der);
                                 if (wantConstructed != isConstructed)
                                 {
-                                    _local_9.push(tmpStruct.defaultValue);
-                                    _local_9[tmpStruct.name] = tmpStruct.defaultValue;
-                                    tmpStruct = _local_10.shift();
+                                    o.push(tmpStruct.defaultValue);
+                                    o[tmpStruct.name] = tmpStruct.defaultValue;
+                                    tmpStruct = arrayStruct.shift();
                                 }
                                 else
                                 {
@@ -88,38 +88,38 @@
                                 size = getLengthOfNextElement(der);
                                 ba = new ByteArray();
                                 ba.writeBytes(der, der.position, size);
-                                _local_9[(name + "_bin")] = ba;
+                                o[(name + "_bin")] = ba;
                             };
                             obj = DER.parse(der, value);
-                            _local_9.push(obj);
-                            _local_9[name] = obj;
+                            o.push(obj);
+                            o[name] = obj;
                         }
                         else
                         {
-                            _local_9.push(DER.parse(der));
+                            o.push(DER.parse(der));
                         };
                     };
-                    return (_local_9);
+                    return (o);
                 case 17:
-                    _local_8 = der.position;
-                    _local_11 = new Set(type, len);
-                    while (der.position < (_local_8 + len))
+                    p = der.position;
+                    s = new Set(_local_3, len);
+                    while (der.position < (p + len))
                     {
-                        _local_11.push(DER.parse(der));
+                        s.push(DER.parse(der));
                     };
-                    return (_local_11);
+                    return (s);
                 case 2:
                     b = new ByteArray();
                     der.readBytes(b, 0, len);
                     b.position = 0;
-                    return (new Integer(type, len, b));
+                    return (new Integer(_local_3, len, b));
                 case 6:
                     b = new ByteArray();
                     der.readBytes(b, 0, len);
                     b.position = 0;
-                    return (new ObjectIdentifier(type, len, b));
+                    return (new ObjectIdentifier(_local_3, len, b));
                 default:
-                    trace(("I DONT KNOW HOW TO HANDLE DER stuff of TYPE " + type));
+                    trace(("I DONT KNOW HOW TO HANDLE DER stuff of TYPE " + _local_3));
                 case 3:
                     if (der[der.position] == 0)
                     {
@@ -127,24 +127,24 @@
                         len--;
                     };
                 case 4:
-                    _local_12 = new ByteString(type, len);
-                    der.readBytes(_local_12, 0, len);
-                    return (_local_12);
+                    bs = new ByteString(_local_3, len);
+                    der.readBytes(bs, 0, len);
+                    return (bs);
                 case 5:
                     return (null);
                 case 19:
-                    _local_13 = new PrintableString(type, len);
-                    _local_13.setString(der.readMultiByte(len, "US-ASCII"));
-                    return (_local_13);
+                    ps = new PrintableString(_local_3, len);
+                    ps.setString(der.readMultiByte(len, "US-ASCII"));
+                    return (ps);
                 case 34:
                 case 20:
-                    _local_13 = new PrintableString(type, len);
-                    _local_13.setString(der.readMultiByte(len, "latin1"));
-                    return (_local_13);
+                    ps = new PrintableString(_local_3, len);
+                    ps.setString(der.readMultiByte(len, "latin1"));
+                    return (ps);
                 case 23:
-                    _local_14 = new UTCTime(type, len);
-                    _local_14.setUTCTime(der.readMultiByte(len, "US-ASCII"));
-                    return (_local_14);
+                    ut = new UTCTime(_local_3, len);
+                    ut.setUTCTime(der.readMultiByte(len, "US-ASCII"));
+                    return (ut);
             };
         }
 
@@ -156,7 +156,7 @@
             var len:int = b.readUnsignedByte();
             if (len >= 128)
             {
-                count = (len & 127);
+                count = (len & 0x7F);
                 len = 0;
                 while (count > 0)
                 {
@@ -171,14 +171,14 @@
 
         private static function isConstructedType(b:ByteArray):Boolean
         {
-            var type:int = b[b.position];
-            return (!(((type & 32) == 0)));
+            var _local_2:int = b[b.position];
+            return (!((_local_2 & 0x20) == 0));
         }
 
-        public static function wrapDER(type:int, data:ByteArray):ByteArray
+        public static function wrapDER(_arg_1:int, data:ByteArray):ByteArray
         {
             var d:ByteArray = new ByteArray();
-            d.writeByte(type);
+            d.writeByte(_arg_1);
             var len:int = data.length;
             if (len < 128)
             {
@@ -188,29 +188,29 @@
             {
                 if (len < 0x0100)
                 {
-                    d.writeByte((1 | 128));
+                    d.writeByte((0x01 | 0x80));
                     d.writeByte(len);
                 }
                 else
                 {
-                    if (len < 65536)
+                    if (len < 0x10000)
                     {
-                        d.writeByte((2 | 128));
+                        d.writeByte((0x02 | 0x80));
                         d.writeByte((len >> 8));
                         d.writeByte(len);
                     }
                     else
                     {
-                        if (len < (65536 * 0x0100))
+                        if (len < (0x10000 * 0x0100))
                         {
-                            d.writeByte((3 | 128));
+                            d.writeByte((0x03 | 0x80));
                             d.writeByte((len >> 16));
                             d.writeByte((len >> 8));
                             d.writeByte(len);
                         }
                         else
                         {
-                            d.writeByte((4 | 128));
+                            d.writeByte((0x04 | 0x80));
                             d.writeByte((len >> 24));
                             d.writeByte((len >> 16));
                             d.writeByte((len >> 8));
@@ -226,5 +226,5 @@
 
 
     }
-}//package com.hurlant.util.der
+} com.hurlant.util.der
 

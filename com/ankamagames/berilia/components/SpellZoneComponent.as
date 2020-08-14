@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.components
+package com.ankamagames.berilia.components
 {
     import com.ankamagames.berilia.types.graphic.GraphicContainer;
     import com.ankamagames.berilia.FinalizableUIComponent;
@@ -7,7 +7,7 @@
     import com.ankamagames.jerakine.utils.display.spellZone.IZoneShape;
     import com.ankamagames.jerakine.types.Uri;
     import com.ankamagames.jerakine.data.I18n;
-    import com.ankamagames.jerakine.types.positions.MapPoint;
+    import mapTools.MapTools;
 
     public class SpellZoneComponent extends GraphicContainer implements FinalizableUIComponent 
     {
@@ -25,7 +25,6 @@
         private var _minRange:uint;
         private var _maxRange:uint;
         private var _infiniteRange:Boolean = false;
-        private var _finalized:Boolean;
 
         public function SpellZoneComponent()
         {
@@ -39,22 +38,21 @@
             var zoneEffect:Object;
             this._spellLevel = pSpellLevel;
             this._spellZoneManager.spellLevel = this._spellLevel;
-            var infiniteRange:Boolean = (((((this._spellLevel.minimalRange == 0)) && ((this._spellLevel.maximalRange == 0)))) || ((this._spellLevel.maximalRange == 63)));
+            var infiniteRange:Boolean = (((this._spellLevel.minimalRange == 0) && (this._spellLevel.maximalRange == 0)) || (this._spellLevel.maximalRange == 63));
             var infiniteZoneEffect:Boolean;
             var affectOneCharacter:Boolean = true;
             for each (zoneEffect in this._spellLevel.spellZoneEffects)
             {
-                if (!((((zoneEffect.zoneSize == 0)) && ((zoneEffect.zoneShape == 80)))))
+                if (!((zoneEffect.zoneSize == 0) && (zoneEffect.zoneShape == 80)))
                 {
                     affectOneCharacter = false;
                 };
             };
-            if (((((infiniteRange) && (!(affectOneCharacter)))) || (infiniteZoneEffect)))
+            this._infiniteRange = false;
+            if ((((infiniteRange) && (!(affectOneCharacter))) || (infiniteZoneEffect)))
             {
-                this._infiniteRange = false;
                 return;
             };
-            this._infiniteRange = false;
             this.setRange(this._spellLevel.minimalRange, this._spellLevel.maximalRange);
         }
 
@@ -70,7 +68,7 @@
                 additionalRange = 0;
                 for each (shape in this._spellLevel.spellZoneEffects)
                 {
-                    if ((((additionalRange < (shape.zoneSize / 2))) && (!((shape.zoneSize == 63)))))
+                    if (((additionalRange < (shape.zoneSize / 2)) && (!(shape.zoneSize == 63))))
                     {
                         additionalRange = shape.zoneSize;
                     };
@@ -98,17 +96,7 @@
             this._spellZoneManager.remove();
         }
 
-        public function get finalized():Boolean
-        {
-            return (this._finalized);
-        }
-
-        public function set finalized(b:Boolean):void
-        {
-            this._finalized = b;
-        }
-
-        public function finalize():void
+        override public function finalize():void
         {
             var infiniteText:String;
             if (this._infiniteRange)
@@ -138,7 +126,7 @@
                 {
                     removeChild(this._infiniteLabel);
                 };
-                if (!(this.contains(this._spellZoneManager)))
+                if (!this.contains(this._spellZoneManager))
                 {
                     addChild(this._spellZoneManager);
                 };
@@ -146,7 +134,8 @@
                 this._cellWidth = (__width / this._horizontalCells);
                 this._cellHeight = (this._cellWidth / this._cellRatio);
                 this._spellZoneManager.show();
-                this._finalized = true;
+                _finalized = true;
+                super.finalize();
                 getUi().iAmFinalized(this);
             };
         }
@@ -160,11 +149,11 @@
         {
             var posX:uint = spellRange;
             var posY:uint;
-            var centerCellId:uint = MapPoint.fromCoords(posX, posY).cellId;
+            var centerCellId:uint = MapTools.getCellIdByCoord(posX, posY);
             return (centerCellId);
         }
 
 
     }
-}//package com.ankamagames.berilia.components
+} com.ankamagames.berilia.components
 

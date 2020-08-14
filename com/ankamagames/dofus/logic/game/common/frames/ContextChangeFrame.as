@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.common.frames
+package com.ankamagames.dofus.logic.game.common.frames
 {
     import com.ankamagames.jerakine.messages.Frame;
     import com.ankamagames.jerakine.logger.Logger;
@@ -7,6 +7,7 @@
     import com.ankamagames.jerakine.types.enums.Priority;
     import com.ankamagames.dofus.network.messages.game.context.GameContextCreateMessage;
     import com.ankamagames.dofus.network.messages.game.context.GameContextQuitMessage;
+    import com.ankamagames.dofus.network.messages.game.context.roleplay.CurrentMapMessage;
     import com.ankamagames.dofus.kernel.Kernel;
     import com.ankamagames.dofus.logic.game.roleplay.frames.RoleplayContextFrame;
     import com.ankamagames.berilia.managers.KernelEventsManager;
@@ -23,6 +24,8 @@
 
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(ContextChangeFrame));
 
+        public var mapChangeConnexion:String = "";
+
 
         public function get priority():int
         {
@@ -36,13 +39,14 @@
 
         public function process(msg:Message):Boolean
         {
-            var _local_2:GameContextCreateMessage;
-            var _local_3:GameContextQuitMessage;
+            var gccmsg:GameContextCreateMessage;
+            var gcqmsg:GameContextQuitMessage;
+            var mcmsg:CurrentMapMessage;
             switch (true)
             {
                 case (msg is GameContextCreateMessage):
-                    _local_2 = (msg as GameContextCreateMessage);
-                    switch (_local_2.context)
+                    gccmsg = (msg as GameContextCreateMessage);
+                    switch (gccmsg.context)
                     {
                         case GameContextEnum.ROLE_PLAY:
                             Kernel.getWorker().addFrame(new RoleplayContextFrame());
@@ -53,13 +57,17 @@
                             KernelEventsManager.getInstance().processCallback(HookList.ContextChanged, GameContextEnum.FIGHT);
                             break;
                         default:
-                            Kernel.panic(PanicMessages.WRONG_CONTEXT_CREATED, [_local_2.context]);
+                            Kernel.panic(PanicMessages.WRONG_CONTEXT_CREATED, [gccmsg.context]);
                     };
                     return (true);
                 case (msg is GameContextQuitAction):
-                    _local_3 = new GameContextQuitMessage();
-                    ConnectionsHandler.getConnection().send(_local_3);
+                    gcqmsg = new GameContextQuitMessage();
+                    ConnectionsHandler.getConnection().send(gcqmsg);
                     return (true);
+                case (msg is CurrentMapMessage):
+                    mcmsg = (msg as CurrentMapMessage);
+                    this.mapChangeConnexion = mcmsg.sourceConnection;
+                    return (false);
             };
             return (false);
         }
@@ -71,5 +79,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.frames
+} com.ankamagames.dofus.logic.game.common.frames
 

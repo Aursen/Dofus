@@ -1,6 +1,7 @@
-﻿package com.ankamagames.dofus.datacenter.quest
+package com.ankamagames.dofus.datacenter.quest
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
+    import com.ankamagames.dofus.types.IdAccessors;
     import __AS3__.vec.Vector;
     import com.ankamagames.jerakine.data.GameData;
     import com.ankamagames.jerakine.data.I18n;
@@ -10,6 +11,7 @@
     {
 
         public static const MODULE:String = "QuestCategory";
+        public static var idAccessors:IdAccessors = new IdAccessors(getQuestCategoryById, getQuestCategories);
 
         public var id:uint;
         public var nameId:uint;
@@ -21,7 +23,7 @@
 
         public static function getQuestCategoryById(id:int):QuestCategory
         {
-            return ((GameData.getObject(MODULE, id) as QuestCategory));
+            return (GameData.getObject(MODULE, id) as QuestCategory);
         }
 
         public static function getQuestCategories():Array
@@ -32,7 +34,7 @@
 
         public function get name():String
         {
-            if (!(this._name))
+            if (!this._name)
             {
                 this._name = I18n.getText(this.nameId);
             };
@@ -43,7 +45,7 @@
         {
             var i:int;
             var len:int;
-            if (!(this._quests))
+            if (!this._quests)
             {
                 len = this.questIds.length;
                 this._quests = new Vector.<Quest>(len, true);
@@ -59,5 +61,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.quest
+} com.ankamagames.dofus.datacenter.quest
 

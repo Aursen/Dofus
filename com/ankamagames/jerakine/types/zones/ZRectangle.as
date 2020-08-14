@@ -1,8 +1,9 @@
-﻿package com.ankamagames.jerakine.types.zones
+package com.ankamagames.jerakine.types.zones
 {
     import com.ankamagames.jerakine.map.IDataMapProvider;
     import __AS3__.vec.Vector;
     import com.ankamagames.jerakine.types.positions.MapPoint;
+    import mapTools.MapTools;
     import __AS3__.vec.*;
 
     public class ZRectangle implements IZone 
@@ -74,9 +75,9 @@
             var origin:MapPoint = MapPoint.fromCellId(cellId);
             var x:int = origin.x;
             var y:int = origin.y;
-            if ((((this._radius == 0)) || ((this._radius2 == 0))))
+            if (((this._radius == 0) || (this._radius2 == 0)))
             {
-                if ((((this._minRadius == 0)) && (!(this._diagonalFree))))
+                if (((this._minRadius == 0) && (!(this._diagonalFree))))
                 {
                     aCells.push(cellId);
                 };
@@ -88,9 +89,9 @@
                 j = (y - this._radius2);
                 while (j <= (y + this._radius2))
                 {
-                    if (((!(this._minRadius)) || (((Math.abs((x - i)) + Math.abs((y - j))) >= this._minRadius))))
+                    if (((!(this._minRadius)) || ((Math.abs((x - i)) + Math.abs((y - j))) >= this._minRadius)))
                     {
-                        if (((!(this._diagonalFree)) || (!((Math.abs((x - i)) == Math.abs((y - j)))))))
+                        if (((!(this._diagonalFree)) || (!(Math.abs((x - i)) == Math.abs((y - j))))))
                         {
                             if (MapPoint.isInMap(i, j))
                             {
@@ -107,13 +108,13 @@
 
         private function addCell(x:int, y:int, cellMap:Vector.<uint>):void
         {
-            if ((((this._dataMapProvider == null)) || (this._dataMapProvider.pointMov(x, y))))
+            if (((this._dataMapProvider == null) || (this._dataMapProvider.pointMov(x, y))))
             {
-                cellMap.push(MapPoint.fromCoords(x, y).cellId);
+                cellMap.push(MapTools.getCellIdByCoord(x, y));
             };
         }
 
 
     }
-}//package com.ankamagames.jerakine.types.zones
+} com.ankamagames.jerakine.types.zones
 

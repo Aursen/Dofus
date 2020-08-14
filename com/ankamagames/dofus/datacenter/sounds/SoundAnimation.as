@@ -1,12 +1,14 @@
-﻿package com.ankamagames.dofus.datacenter.sounds
+package com.ankamagames.dofus.datacenter.sounds
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
+    import com.ankamagames.dofus.types.IdAccessors;
     import com.ankamagames.jerakine.data.GameData;
 
     public class SoundAnimation implements IDataCenter 
     {
 
         public static var MODULE:String = "SoundAnimations";
+        public static var idAccessors:IdAccessors = new IdAccessors(getSoundAnimationById, getSoundAnimations);
 
         public var id:uint;
         public var name:String;
@@ -24,7 +26,7 @@
 
         public static function getSoundAnimationById(id:uint):SoundAnimation
         {
-            return ((GameData.getObject(MODULE, id) as SoundAnimation));
+            return (GameData.getObject(MODULE, id) as SoundAnimation);
         }
 
         public static function getSoundAnimations():Array
@@ -34,5 +36,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.sounds
+} com.ankamagames.dofus.datacenter.sounds
 

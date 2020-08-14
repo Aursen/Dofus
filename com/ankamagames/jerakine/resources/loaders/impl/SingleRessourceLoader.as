@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.resources.loaders.impl
+package com.ankamagames.jerakine.resources.loaders.impl
 {
     import com.ankamagames.jerakine.resources.loaders.AbstractRessourceLoader;
     import com.ankamagames.jerakine.resources.loaders.IResourceLoader;
@@ -27,7 +27,7 @@
             {
                 throw (new ArgumentError("Can't load a null uri."));
             };
-            if (!((uri is Uri)))
+            if (!(uri is Uri))
             {
                 throw (new ArgumentError("Can't load an array of URIs when using a LOADER_SINGLE loader."));
             };
@@ -35,7 +35,7 @@
             _cache = cache;
             _completed = false;
             _filesTotal = 1;
-            if (!(checkCache(this._uri)))
+            if (!checkCache(this._uri))
             {
                 this._protocol = ProtocolFactory.getProtocol(this._uri);
                 this._protocol.load(this._uri, this, hasEventListener(ResourceProgressEvent.PROGRESS), _cache, forcedAdapter, singleFile);
@@ -67,5 +67,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.resources.loaders.impl
+} com.ankamagames.jerakine.resources.loaders.impl
 

@@ -1,8 +1,9 @@
-﻿package com.ankamagames.dofus.network.types.game.context.roleplay.treasureHunt
+package com.ankamagames.dofus.network.types.game.context.roleplay.treasureHunt
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
     public class TreasureHuntStepFight extends TreasureHuntStep implements INetworkType 
     {
@@ -40,7 +41,15 @@
         {
         }
 
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+        }
+
+        public function deserializeAsyncAs_TreasureHuntStepFight(tree:FuncTree):void
+        {
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.types.game.context.roleplay.treasureHunt
+} com.ankamagames.dofus.network.types.game.context.roleplay.treasureHunt
 

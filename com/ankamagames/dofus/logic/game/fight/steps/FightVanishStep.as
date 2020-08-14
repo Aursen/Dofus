@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.fight.steps
+package com.ankamagames.dofus.logic.game.fight.steps
 {
     import com.ankamagames.jerakine.sequencer.AbstractSequencable;
     import com.ankamagames.jerakine.sequencer.ISequencer;
@@ -15,6 +15,7 @@
     import com.ankamagames.jerakine.sequencer.CallbackStep;
     import com.ankamagames.jerakine.types.Callback;
     import com.ankamagames.jerakine.types.events.SequencerEvent;
+    import __AS3__.vec.Vector;
     import com.ankamagames.dofus.logic.game.fight.frames.FightContextFrame;
     import com.ankamagames.berilia.managers.TooltipManager;
     import com.ankamagames.dofus.kernel.Kernel;
@@ -24,11 +25,11 @@
     public class FightVanishStep extends AbstractSequencable implements IFightStep 
     {
 
-        private var _entityId:int;
-        private var _sourceId:int;
+        private var _entityId:Number;
+        private var _sourceId:Number;
         private var _vanishSubSequence:ISequencer;
 
-        public function FightVanishStep(entityId:int, sourceId:int)
+        public function FightVanishStep(entityId:Number, sourceId:Number)
         {
             this._entityId = entityId;
             this._sourceId = sourceId;
@@ -39,30 +40,30 @@
             return ("vanish");
         }
 
-        public function get entityId():int
+        public function get entityId():Number
         {
             return (this._entityId);
         }
 
         override public function start():void
         {
-            var _local_2:Array;
-            var _local_3:int;
+            var impactedTarget:Array;
+            var myPos:int;
             var vanishingTiphonEntity:TiphonSprite;
             var rider:TiphonSprite;
             var vanishingEntity:IEntity = DofusEntities.getEntity(this._entityId);
-            if (!(vanishingEntity))
+            if (!vanishingEntity)
             {
                 _log.warn((("Unable to play vanish of an unexisting fighter " + this._entityId) + "."));
                 this.vanishFinished();
                 return;
             };
             BuffManager.getInstance().dispell(vanishingEntity.id, false, false, true);
-            _local_2 = BuffManager.getInstance().removeLinkedBuff(vanishingEntity.id, false, true);
+            impactedTarget = BuffManager.getInstance().removeLinkedBuff(vanishingEntity.id, false, true);
             BuffManager.getInstance().reaffectBuffs(vanishingEntity.id);
             this._vanishSubSequence = new SerialSequencer(FightBattleFrame.FIGHT_SEQUENCER_NAME);
-            _local_3 = FightEntitiesFrame.getCurrentInstance().getEntityInfos(this._sourceId).disposition.cellId;
-            if ((((vanishingEntity is TiphonSprite)) && (!((vanishingEntity.position.cellId == _local_3)))))
+            myPos = FightEntitiesFrame.getCurrentInstance().getEntityInfos(this._sourceId).disposition.cellId;
+            if (((vanishingEntity is TiphonSprite) && (!(vanishingEntity.position.cellId == myPos))))
             {
                 vanishingTiphonEntity = (vanishingEntity as TiphonSprite);
                 rider = (vanishingTiphonEntity.getSubEntitySlot(SubEntityBindingPointCategoryEnum.HOOK_POINT_CATEGORY_MOUNT_DRIVER, 0) as TiphonSprite);
@@ -88,7 +89,12 @@
             super.clear();
         }
 
-        private function manualRollOut(fighterId:int):void
+        public function get targets():Vector.<Number>
+        {
+            return (new <Number>[this._entityId]);
+        }
+
+        private function manualRollOut(fighterId:Number):void
         {
             var fightContextFrame:FightContextFrame;
             if (FightContextFrame.fighterEntityTooltipId == fighterId)
@@ -129,5 +135,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.fight.steps
+} com.ankamagames.dofus.logic.game.fight.steps
 

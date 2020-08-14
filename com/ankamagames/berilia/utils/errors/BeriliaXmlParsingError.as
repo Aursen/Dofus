@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.utils.errors
+package com.ankamagames.berilia.utils.errors
 {
     public class BeriliaXmlParsingError extends BeriliaError 
     {
@@ -9,5 +9,5 @@
         }
 
     }
-}//package com.ankamagames.berilia.utils.errors
+} com.ankamagames.berilia.utils.errors
 

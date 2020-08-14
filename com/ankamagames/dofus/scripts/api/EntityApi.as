@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.scripts.api
+package com.ankamagames.dofus.scripts.api
 {
     import com.ankamagames.jerakine.lua.LuaPackage;
     import flash.utils.Dictionary;
@@ -21,14 +21,9 @@
     public class EntityApi implements LuaPackage 
     {
 
-        private var _entities:Dictionary;
+        private var _entities:Dictionary = new Dictionary();
         private var _playerPosition:MapPoint;
 
-        public function EntityApi()
-        {
-            this._entities = new Dictionary();
-            super();
-        }
 
         public function init():void
         {
@@ -46,10 +41,10 @@
             delete this._entities[PlayedCharacterManager.getInstance().id];
         }
 
-        public function getEntity(pEntityId:int):ScriptEntity
+        public function getEntity(pEntityId:Number):ScriptEntity
         {
             var player:AnimatedCharacter;
-            if (((!(this._entities[pEntityId])) && ((pEntityId == PlayedCharacterManager.getInstance().id))))
+            if (((!(this._entities[pEntityId])) && (pEntityId == PlayedCharacterManager.getInstance().id)))
             {
                 player = (DofusEntities.getEntity(pEntityId) as AnimatedCharacter);
                 this._entities[pEntityId] = new ScriptEntity(pEntityId, player.look.toString());
@@ -57,11 +52,11 @@
             return (this._entities[pEntityId]);
         }
 
-        public function getWorldEntity(pEntityId:int):ScriptEntity
+        public function getWorldEntity(pEntityId:Number):ScriptEntity
         {
             var worldObject:SpriteWrapper;
             var entity:WorldEntitySprite;
-            if (!(this._entities[pEntityId]))
+            if (!this._entities[pEntityId])
             {
                 worldObject = (Atouin.getInstance().getIdentifiedElement(pEntityId) as SpriteWrapper);
                 entity = (worldObject.getChildAt(0) as WorldEntitySprite);
@@ -77,7 +72,7 @@
             var entity:AnimatedCharacter = (Atouin.getInstance().getEntityOnCell(pCellID) as AnimatedCharacter);
             if (entity)
             {
-                if (!(this._entities[entity.id]))
+                if (!this._entities[entity.id])
                 {
                     this._entities[entity.id] = new ScriptEntity(entity.id, entity.look.toString(), entity);
                 };
@@ -105,7 +100,7 @@
             return (this.getEntity(PlayedCharacterManager.getInstance().id));
         }
 
-        public function createMonster(pMonsterId:int, pAddEntity:Boolean=true, pStartX:int=0, pStartY:int=0, pStartDirection:int=1):ScriptEntity
+        public function createMonster(pMonsterId:Number, pAddEntity:Boolean=true, pStartX:int=0, pStartY:int=0, pStartDirection:int=1):ScriptEntity
         {
             var entity:ScriptEntity = this.createEntity(Monster.getMonsterById(pMonsterId).look);
             if (pAddEntity)
@@ -144,7 +139,7 @@
             return (entity);
         }
 
-        public function removeEntity(pEntityId:int):void
+        public function removeEntity(pEntityId:Number):void
         {
             delete this._entities[pEntityId];
         }
@@ -164,12 +159,12 @@
 
         private function createEntity(pLook:String):ScriptEntity
         {
-            var entityId:int = EntitiesManager.getInstance().getFreeEntityId();
+            var entityId:Number = EntitiesManager.getInstance().getFreeEntityId();
             this._entities[entityId] = new ScriptEntity(entityId, pLook);
             return (this._entities[entityId]);
         }
 
 
     }
-}//package com.ankamagames.dofus.scripts.api
+} com.ankamagames.dofus.scripts.api
 

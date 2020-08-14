@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.types.enums
+package com.ankamagames.jerakine.types.enums
 {
     import flash.events.MouseEvent;
     import flash.events.Event;
@@ -7,7 +7,6 @@
     import com.ankamagames.jerakine.entities.messages.EntityMouseOverMessage;
     import com.ankamagames.jerakine.entities.messages.EntityMouseOutMessage;
 
-    [Trusted]
     public class InteractionsEnum 
     {
 
@@ -47,5 +46,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.types.enums
+} com.ankamagames.jerakine.types.enums
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.common.misc.inventoryView
+package com.ankamagames.dofus.logic.game.common.misc.inventoryView
 {
     import com.ankamagames.dofus.logic.game.common.misc.HookLock;
     import com.ankamagames.dofus.logic.game.common.managers.StorageOptionManager;
@@ -21,7 +21,7 @@
 
         override public function isListening(item:ItemWrapper):Boolean
         {
-            return (((((super.isListening(item)) && (StorageOptionManager.getInstance().hasFilter()))) && ((item.typeId == StorageOptionManager.getInstance().filter))));
+            return (((super.isListening(item)) && (StorageOptionManager.getInstance().hasFilter())) && (item.typeId == StorageOptionManager.getInstance().filter));
         }
 
         override public function updateView():void
@@ -35,5 +35,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.misc.inventoryView
+} com.ankamagames.dofus.logic.game.common.misc.inventoryView
 

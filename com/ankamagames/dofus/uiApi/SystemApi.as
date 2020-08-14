@@ -1,66 +1,52 @@
-﻿package com.ankamagames.dofus.uiApi
+package com.ankamagames.dofus.uiApi
 {
     import com.ankamagames.berilia.interfaces.IApi;
     import flash.utils.Dictionary;
     import com.ankamagames.berilia.types.data.UiModule;
     import com.ankamagames.berilia.types.graphic.UiRootContainer;
     import com.ankamagames.jerakine.logger.Logger;
-    import com.ankamagames.jerakine.types.DataStoreType;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
+    import com.ankamagames.jerakine.types.DataStoreType;
+    import com.ankama.haapi.client.api.CharacterApi;
+    import com.ankamagames.jerakine.logger.LogLogger;
     import com.ankamagames.jerakine.utils.display.EnterFrameDispatcher;
     import com.ankamagames.dofus.kernel.Kernel;
+    import com.ankamagames.jerakine.messages.Worker;
     import com.ankamagames.dofus.logic.connection.frames.AuthentificationFrame;
     import com.ankamagames.dofus.logic.connection.frames.InitializationFrame;
     import com.ankamagames.dofus.logic.game.approach.frames.GameServerApproachFrame;
     import com.ankamagames.dofus.logic.connection.frames.ServerSelectionFrame;
-    import com.ankamagames.jerakine.messages.Worker;
-    import com.ankamagames.dofus.logic.connection.managers.AuthentificationManager;
     import com.ankamagames.berilia.types.data.Hook;
     import com.ankamagames.berilia.utils.errors.BeriliaError;
-    import com.ankamagames.berilia.utils.errors.UntrustedApiCallError;
     import com.ankamagames.berilia.types.listener.GenericListener;
     import com.ankamagames.berilia.managers.KernelEventsManager;
     import com.ankamagames.berilia.utils.errors.ApiError;
     import com.ankamagames.jerakine.utils.misc.CallWithParameters;
     import com.ankamagames.dofus.misc.utils.DofusApiAction;
-    import com.ankamagames.berilia.frames.ShortcutsFrame;
-    import com.ankamagames.berilia.frames.UIInteractionFrame;
-    import com.ankamagames.jerakine.utils.display.FrameIdManager;
-    import flash.utils.getTimer;
-    import com.ankamagames.berilia.managers.SecureCenter;
     import com.ankamagames.jerakine.handlers.messages.Action;
-    import com.ankamagames.jerakine.managers.StoreDataManager;
-    import com.ankamagames.berilia.managers.UiModuleManager;
-    import com.ankamagames.dofus.misc.lists.ApiActionList;
-    import com.ankamagames.jerakine.data.I18n;
-    import com.ankamagames.jerakine.replay.LogFrame;
-    import com.ankamagames.jerakine.replay.LogTypeEnum;
     import com.ankamagames.jerakine.logger.ModuleLogger;
     import com.ankamagames.dofus.BuildInfos;
     import com.ankamagames.dofus.network.enums.BuildTypeEnum;
+    import com.ankamagames.dofus.misc.interClient.InterClientManager;
     import com.ankamagames.jerakine.data.XmlConfig;
-    import flash.utils.getDefinitionByName;
     import com.ankamagames.dofus.Constants;
     import flash.net.navigateToURL;
     import flash.net.URLRequest;
     import com.ankamagames.dofus.logic.common.managers.PlayerManager;
+    import com.ankamagames.dofus.logic.game.common.managers.TimeManager;
+    import com.ankamagames.dofus.logic.game.fight.managers.BuffManager;
     import com.ankamagames.jerakine.types.enums.DataStoreEnum;
-    import com.ankamagames.jerakine.utils.display.StageShareManager;
-    import com.ankamagames.jerakine.utils.system.AirScanner;
-    import flash.system.Capabilities;
-    import flash.filesystem.FileStream;
-    import flash.filesystem.File;
-    import flash.filesystem.FileMode;
-    import com.ankamagames.jerakine.utils.system.SystemManager;
+    import com.ankamagames.jerakine.managers.StoreDataManager;
     import com.ankamagames.jerakine.interfaces.IModuleUtil;
     import com.ankamagames.jerakine.interfaces.IDataCenter;
+    import com.ankamagames.jerakine.utils.display.StageShareManager;
+    import com.ankamagames.jerakine.utils.system.SystemManager;
     import com.ankamagames.jerakine.managers.OptionManager;
     import com.ankamagames.atouin.Atouin;
     import com.ankamagames.dofus.logic.common.frames.MiscFrame;
     import com.ankamagames.dofus.types.data.ServerCommand;
     import com.ankamagames.jerakine.console.ConsolesManager;
-    import com.ankamagames.jerakine.utils.misc.Chrono;
     import flash.events.Event;
     import com.ankamagames.berilia.managers.TooltipManager;
     import com.ankamagames.dofus.logic.common.actions.ChangeWorldInteractionAction;
@@ -71,64 +57,80 @@
     import com.ankamagames.dofus.datacenter.servers.Server;
     import com.ankamagames.atouin.managers.DataGroundMapManager;
     import com.ankamagames.dofus.logic.game.common.frames.CameraControlFrame;
+    import com.ankamagames.jerakine.data.I18n;
     import com.ankamagames.berilia.components.ComponentInternalAccessor;
     import com.ankamagames.berilia.components.WebBrowser;
+    import com.ankamagames.dofus.misc.utils.HaapiKeyManager;
     import flash.net.URLRequestMethod;
+    import com.ankamagames.dofus.misc.utils.GameID;
     import com.ankamagames.dofus.logic.game.common.managers.PlayedCharacterManager;
-    import flash.external.ExternalInterface;
     import com.ankamagames.jerakine.utils.crypto.AdvancedMd5;
     import flash.utils.ByteArray;
     import flash.net.URLVariables;
-    import com.ankamagames.dofus.network.messages.authorized.AdminQuietCommandMessage;
-    import com.ankamagames.dofus.kernel.net.ConnectionsHandler;
+    import com.ankamagames.dofus.internalDatacenter.dare.DareCriteriaWrapper;
+    import com.ankamagames.dofus.misc.utils.CharacterIdConverter;
+    import com.ankamagames.dofus.network.enums.DareCriteriaTypeEnum;
+    import com.ankamagames.dofus.internalDatacenter.dare.DareWrapper;
+    import flash.geom.Point;
     import com.ankamagames.dofus.logic.game.roleplay.frames.RoleplayEntitiesFrame;
-    import com.ankamagames.dofus.logic.game.roleplay.frames.MonstersInfoFrame;
+    import com.ankamagames.dofus.logic.game.roleplay.frames.EntitiesTooltipsFrame;
     import com.ankamagames.atouin.AtouinConstants;
-    import com.ankamagames.jerakine.managers.PerformanceManager;
-    import com.ankamagames.dofus.logic.game.approach.managers.PartManager;
-    import com.ankamagames.dofus.network.types.updater.ContentPart;
-    import com.ankamagames.dofus.network.enums.PartStateEnum;
-    import com.ankamagames.dofus.kernel.updater.UpdaterConnexionHandler;
+    import com.ankamagames.dofus.logic.game.fight.frames.FightPreparationFrame;
+    import com.ankamagames.dofus.logic.common.managers.HyperlinkDisplayArrowManager;
+    import flash.display.MovieClip;
+    import com.ankamagames.berilia.managers.UiModuleManager;
+    import flash.filesystem.File;
+    import com.ankamagames.dofus.kernel.zaap.ZaapApi;
+    import flash.ui.Mouse;
+    import flash.ui.MouseCursor;
     import com.ankamagames.dofus.logic.common.managers.AccountManager;
     import com.ankamagames.dofus.logic.game.common.frames.ChatFrame;
-    import com.ankamagames.dofus.logic.connection.managers.GuestModeManager;
     import com.ankamagames.jerakine.utils.misc.DescribeTypeCache;
+    import __AS3__.vec.Vector;
     import com.ankamagames.jerakine.types.DynamicSecureObject;
-    import com.ankamagames.dofus.misc.utils.StatisticReportingManager;
     import flash.desktop.Clipboard;
     import flash.desktop.ClipboardFormats;
     import com.ankamagames.jerakine.utils.system.CommandLineArguments;
-    import com.ankamagames.dofus.modules.utils.ModuleInstallerFrame;
+    import flash.filesystem.FileStream;
+    import flash.filesystem.FileMode;
+    import com.ankamagames.dofus.themes.utils.ThemeInstallerFrame;
     import com.ankamagames.jerakine.handlers.HumanInputHandler;
+    import org.openapitools.common.ApiUserCredentials;
+    import org.openapitools.event.ApiClientEvent;
+    import com.ankamagames.jerakine.managers.LangManager;
+    import com.ankamagames.jerakine.managers.FontManager;
+    import com.ankamagames.berilia.managers.ThemeManager;
+    import com.ankamagames.dofus.misc.stats.StatisticsManager;
+    import com.ankamagames.jerakine.types.Callback;
+    import com.ankamagames.dofus.network.enums.ChatActivableChannelsEnum;
+    import com.ankamagames.dofus.misc.lists.ChatHookList;
+    import com.ankamagames.dofus.logic.connection.managers.AuthentificationManager;
+    import com.ankamagames.dofus.logic.shield.SecureModeManager;
+    import com.ankamagames.dofus.network.types.secure.TrustCertificate;
     import com.ankamagames.dofus.misc.utils.frames.LuaScriptRecorderFrame;
+    import com.ankamagames.jerakine.utils.misc.StringUtils;
 
     [InstanciedApi]
     public class SystemApi implements IApi 
     {
 
         public static var MEMORY_LOG:Dictionary = new Dictionary(true);
-        private static var _actionCountRef:Dictionary = new Dictionary();
-        private static var _actionTsRef:Dictionary = new Dictionary();
         private static var _wordInteractionEnable:Boolean = true;
-        private static var _lastFrameId:uint;
 
         private var _module:UiModule;
         private var _currentUi:UiRootContainer;
-        protected var _log:Logger;
+        protected var _log:Logger = Log.getLogger(getQualifiedClassName(SystemApi));
         private var _characterDataStore:DataStoreType;
         private var _accountDataStore:DataStoreType;
-        private var _moduleActionDataStore:DataStoreType;
-        private var _hooks:Dictionary;
-        private var _listener:Dictionary;
+        private var _computerDataStore:DataStoreType;
+        private var _dofusCharacterApi:CharacterApi;
+        private var _hooks:Dictionary = new Dictionary();
+        private var _listener:Dictionary = new Dictionary();
         private var _listenerCount:uint;
         private var _running:Boolean;
 
         public function SystemApi()
         {
-            this._log = Log.getLogger(getQualifiedClassName(SystemApi));
-            this._hooks = new Dictionary();
-            this._listener = new Dictionary();
-            super();
             MEMORY_LOG[this] = 1;
         }
 
@@ -137,6 +139,11 @@
             return (_wordInteractionEnable);
         }
 
+
+        public function enableLogs(enabled:Boolean):void
+        {
+            LogLogger.activeLog(enabled);
+        }
 
         [ApiData(name="module")]
         public function set module(value:UiModule):void
@@ -150,7 +157,6 @@
             this._currentUi = value;
         }
 
-        [Trusted]
         public function destroy():void
         {
             var hookName:*;
@@ -160,6 +166,7 @@
             this._currentUi = null;
             this._characterDataStore = null;
             this._accountDataStore = null;
+            this._computerDataStore = null;
             for (hookName in this._hooks)
             {
                 this.removeHook(hookName);
@@ -167,44 +174,31 @@
             this._hooks = new Dictionary();
         }
 
-        [Untrusted]
         public function isInGame():Boolean
         {
-            var authentificationFramePresent:Boolean = Kernel.getWorker().contains(AuthentificationFrame);
-            var initializationFramePresent:Boolean = Kernel.getWorker().contains(InitializationFrame);
-            var gameServerApproachFramePresent:Boolean = Kernel.getWorker().contains(GameServerApproachFrame);
-            var serverSelectionFramePresent:Boolean = Kernel.getWorker().contains(ServerSelectionFrame);
             var worker:Worker = Kernel.getWorker();
-            return (!(((((((authentificationFramePresent) || (initializationFramePresent))) || (gameServerApproachFramePresent))) || (serverSelectionFramePresent))));
+            var authentificationFramePresent:Boolean = worker.contains(AuthentificationFrame);
+            var initializationFramePresent:Boolean = worker.contains(InitializationFrame);
+            var gameServerApproachFramePresent:Boolean = worker.contains(GameServerApproachFrame);
+            var serverSelectionFramePresent:Boolean = worker.contains(ServerSelectionFrame);
+            return (!((((authentificationFramePresent) || (initializationFramePresent)) || (gameServerApproachFramePresent)) || (serverSelectionFramePresent)));
         }
 
-        [Trusted]
-        public function isLoggingWithTicket():Boolean
-        {
-            return (AuthentificationManager.getInstance().isLoggingWithTicket);
-        }
-
-        [Untrusted]
         public function addHook(hookClass:Class, callback:Function):void
         {
             var hookName:String;
             var classInfo:Array = getQualifiedClassName(hookClass).split("::");
             hookName = classInfo[(classInfo.length - 1)];
             var targetedHook:Hook = Hook.getHookByName(hookName);
-            if (!(targetedHook))
+            if (!targetedHook)
             {
                 throw (new BeriliaError((("Hook [" + hookName) + "] does not exists.")));
-            };
-            if (((targetedHook.trusted) && (!(this._module.trusted))))
-            {
-                throw (new UntrustedApiCallError((("Hook " + hookName) + " cannot be listen from an untrusted module")));
             };
             var listener:GenericListener = new GenericListener(hookName, ((this._currentUi) ? this._currentUi.name : ("__module_" + this._module.id)), callback, 0, ((this._currentUi) ? GenericListener.LISTENER_TYPE_UI : GenericListener.LISTENER_TYPE_MODULE));
             this._hooks[hookClass] = listener;
             KernelEventsManager.getInstance().registerEvent(listener);
         }
 
-        [Untrusted]
         public function removeHook(hookClass:Class):void
         {
             if (hookClass)
@@ -214,13 +208,11 @@
             };
         }
 
-        [Untrusted]
         public function createHook(name:String):void
         {
-            new Hook(name, false, false);
+            new Hook(name);
         }
 
-        [Untrusted]
         [NoBoxing]
         public function dispatchHook(hookClass:Class, ... params):void
         {
@@ -228,26 +220,17 @@
             var classInfo:Array = getQualifiedClassName(hookClass).split("::");
             hookName = classInfo[(classInfo.length - 1)];
             var targetedHook:Hook = Hook.getHookByName(hookName);
-            if (!(targetedHook))
+            if (!targetedHook)
             {
                 throw (new ApiError((("Hook [" + hookName) + "] does not exist")));
-            };
-            if (targetedHook.nativeHook)
-            {
-                throw (new UntrustedApiCallError((("Hook " + hookName) + " is a native hook. Native hooks cannot be dispatch by module")));
             };
             CallWithParameters.call(KernelEventsManager.getInstance().processCallback, new Array(targetedHook).concat(params));
         }
 
-        [APALogInfo(customInfo="'Action: ' + actionName")]
-        [Untrusted]
         public function sendAction(action:Object):uint
         {
             var apiAction:DofusApiAction;
             var classInfo:Array;
-            var t:uint;
-            var needConfirmStoreDataManager:Array;
-            var commonMod:Object;
             if (action.hasOwnProperty("parameters"))
             {
                 classInfo = getQualifiedClassName(action).split("::");
@@ -257,173 +240,103 @@
             {
                 throw (new ApiError((("Action [" + action) + "] don't implement IAction")));
             };
-            if (!(apiAction))
+            if (!apiAction)
             {
                 throw (new ApiError((("Action [" + action) + "] does not exist")));
             };
-            if (((apiAction.trusted) && (!(this._module.trusted))))
-            {
-                throw (new UntrustedApiCallError((("Action " + action) + " cannot be launch from an untrusted module")));
-            };
-            if (((((!(this._module.trusted)) && (apiAction.needInteraction))) && (!(((UIInteractionFrame(Kernel.getWorker().getFrame(UIInteractionFrame)).isProcessingDirectInteraction) || (ShortcutsFrame(Kernel.getWorker().getFrame(ShortcutsFrame)).isProcessingDirectInteraction))))))
-            {
-                return (0);
-            };
-            if (((!(this._module.trusted)) && (apiAction.maxUsePerFrame)))
-            {
-                if (_lastFrameId != FrameIdManager.frameId)
-                {
-                    _actionCountRef = new Dictionary();
-                    _lastFrameId = FrameIdManager.frameId;
-                };
-                if (_actionCountRef[apiAction] != undefined)
-                {
-                    if (_actionCountRef[apiAction] == 0)
-                    {
-                        return (0);
-                    };
-                    _actionCountRef[apiAction] = (_actionCountRef[apiAction] - 1);
-                }
-                else
-                {
-                    _actionCountRef[apiAction] = (apiAction.maxUsePerFrame - 1);
-                };
-            };
-            if (((!(this._module.trusted)) && (apiAction.minimalUseInterval)))
-            {
-                t = (getTimer() - _actionTsRef[apiAction]);
-                if (((_actionTsRef[apiAction]) && ((t <= apiAction.minimalUseInterval))))
-                {
-                    return (0);
-                };
-                _actionTsRef[apiAction] = getTimer();
-            };
-            var actionToSend:Action = CallWithParameters.callR(apiAction.actionClass["create"], SecureCenter.unsecureContent(action.parameters));
-            if (apiAction.needConfirmation)
-            {
-                if (!(this._moduleActionDataStore))
-                {
-                    this.initModuleActionDataStore();
-                };
-                needConfirmStoreDataManager = StoreDataManager.getInstance().getSetData(this._moduleActionDataStore, "needConfirm", new Array());
-                if (((!(this._module.trusted)) && (!((needConfirmStoreDataManager[apiAction.name] === false)))))
-                {
-                    commonMod = UiModuleManager.getInstance().getModule("Ankama_Common").mainClass;
-                    if ((actionToSend is ApiActionList.DeleteObject.actionClass))
-                    {
-                        commonMod.openPopup(I18n.getUiText("ui.popup.warning"), I18n.getUiText("ui.module.action.confirm", [this._module.name, apiAction.description]), [I18n.getUiText("ui.common.ok"), I18n.getUiText("ui.common.no")], [this.onActionConfirm(actionToSend, apiAction)], this.onActionConfirm(actionToSend, apiAction));
-                    }
-                    else
-                    {
-                        commonMod.openCheckboxPopup(I18n.getUiText("ui.popup.warning"), I18n.getUiText("ui.module.action.confirm", [this._module.name, apiAction.description]), this.onActionConfirm(actionToSend, apiAction), null, I18n.getUiText("ui.common.rememberMyChoice"));
-                    };
-                    return (2);
-                };
-            };
-            LogFrame.log(LogTypeEnum.ACTION, actionToSend);
+            var actionToSend:Action = CallWithParameters.callR(apiAction.actionClass["create"], action.parameters);
             ModuleLogger.log(actionToSend);
             Kernel.getWorker().process(actionToSend);
             return (1);
         }
 
-        private function onActionConfirm(actionToSend:Action, apiAction:DofusApiAction):Function
-        {
-            return (function (... args):void
-            {
-                var needConfirmStoreDataManager:*;
-                if (((args.length) && (args[0])))
-                {
-                    needConfirmStoreDataManager = StoreDataManager.getInstance().getSetData(_moduleActionDataStore, "needConfirm", new Array());
-                    needConfirmStoreDataManager[apiAction.name] = !(args[0]);
-                    StoreDataManager.getInstance().setData(_moduleActionDataStore, "needConfirm", needConfirmStoreDataManager);
-                };
-                LogFrame.log(LogTypeEnum.ACTION, actionToSend);
-                ModuleLogger.log(actionToSend);
-                Kernel.getWorker().process(actionToSend);
-            });
-        }
-
-        [Untrusted]
         public function log(level:uint, text:*):void
         {
             var ui:String = ((this._currentUi) ? ((this._currentUi.uiModule.name + "/") + this._currentUi.uiClass) : "?");
             this._log.log(level, ((("[" + ui) + "] ") + text));
-            if (((((this._module) && (!(this._module.trusted)))) || ((BuildInfos.BUILD_TYPE >= BuildTypeEnum.TESTING))))
+            if (BuildInfos.BUILD_TYPE >= BuildTypeEnum.TESTING)
             {
                 ModuleLogger.log(((("[" + ui) + "] ") + text), level);
             };
         }
 
-        [Trusted]
-        public function setConfigEntry(sKey:String, sValue:*):void
+        public function getClientId():uint
         {
-            XmlConfig.getInstance().setEntry(sKey, sValue);
+            return (InterClientManager.getInstance().clientId);
         }
 
-        [Untrusted]
-        public function getConfigEntry(sKey:String)
+        public function getNumberOfClients():uint
+        {
+            return (InterClientManager.getInstance().numClients);
+        }
+
+        public function getConfigEntry(sKey:String):*
         {
             return (XmlConfig.getInstance().getEntry(sKey));
         }
 
-        [Trusted]
-        public function getEnum(name:String):Class
-        {
-            var ClassReference:Class = (getDefinitionByName(name) as Class);
-            return (ClassReference);
-        }
-
-        [Trusted]
         public function isEventMode():Boolean
         {
             return (Constants.EVENT_MODE);
         }
 
-        [Trusted]
         public function isCharacterCreationAllowed():Boolean
         {
             return (Constants.CHARACTER_CREATION_ALLOWED);
         }
 
-        [Trusted]
-        public function getConfigKey(key:String)
+        public function getConfigKey(key:String):*
         {
             return (XmlConfig.getInstance().getEntry(("config." + key)));
         }
 
-        [Trusted]
         public function goToUrl(url:String):void
         {
+            if (!url)
+            {
+                this._log.warn("Failed to navigate to URL, no valid URL was provided.");
+                return;
+            };
+            if (url.indexOf("[!] ") == 0)
+            {
+                url = url.substr(4);
+            };
             navigateToURL(new URLRequest(url));
         }
 
-        [Trusted]
         public function getPlayerManager():PlayerManager
         {
             return (PlayerManager.getInstance());
         }
 
-        [Trusted]
+        public function getTimeManager():TimeManager
+        {
+            return (TimeManager.getInstance());
+        }
+
+        public function getBuffManager():BuffManager
+        {
+            return (BuffManager.getInstance());
+        }
+
         public function getPort():uint
         {
             var dst:DataStoreType = new DataStoreType("Dofus_ComputerOptions", true, DataStoreEnum.LOCATION_LOCAL, DataStoreEnum.BIND_ACCOUNT);
-            return (StoreDataManager.getInstance().getData(dst, "connectionPortDefault"));
+            return (StoreDataManager.getInstance().getData(dst, "defaultConnectionPort"));
         }
 
-        [Trusted]
         public function setPort(port:uint):Boolean
         {
             var dst:DataStoreType = new DataStoreType("Dofus_ComputerOptions", true, DataStoreEnum.LOCATION_LOCAL, DataStoreEnum.BIND_ACCOUNT);
-            return (StoreDataManager.getInstance().setData(dst, "connectionPortDefault", port));
+            return (StoreDataManager.getInstance().setData(dst, "defaultConnectionPort", port));
         }
 
-        [Untrusted]
-        public function setData(name:String, value:*, shareWithAccount:Boolean=false):Boolean
+        public function setData(name:String, value:*, dataStore:int=2):Boolean
         {
             var dst:DataStoreType;
-            if (shareWithAccount)
+            if (dataStore == DataStoreEnum.BIND_ACCOUNT)
             {
-                if (!(this._accountDataStore))
+                if (!this._accountDataStore)
                 {
                     this.initAccountDataStore();
                 };
@@ -431,136 +344,33 @@
             }
             else
             {
-                if (!(this._characterDataStore))
+                if (dataStore == DataStoreEnum.BIND_COMPUTER)
                 {
-                    this.initCharacterDataStore();
+                    if (!this._computerDataStore)
+                    {
+                        this.initComputerDataStore();
+                    };
+                    dst = this._computerDataStore;
+                }
+                else
+                {
+                    if (!this._characterDataStore)
+                    {
+                        this.initCharacterDataStore();
+                    };
+                    dst = this._characterDataStore;
                 };
-                dst = this._characterDataStore;
             };
             return (StoreDataManager.getInstance().setData(dst, name, value));
         }
 
-        [Untrusted]
-        public function getSetData(name:String, value:*, shareWithAccount:Boolean=false)
-        {
-            var dst:DataStoreType;
-            if (shareWithAccount)
-            {
-                if (!(this._accountDataStore))
-                {
-                    this.initAccountDataStore();
-                };
-                dst = this._accountDataStore;
-            }
-            else
-            {
-                if (!(this._characterDataStore))
-                {
-                    this.initCharacterDataStore();
-                };
-                dst = this._characterDataStore;
-            };
-            return (StoreDataManager.getInstance().getSetData(dst, name, value));
-        }
-
-        [Untrusted]
-        public function setQualityIsEnable():Boolean
-        {
-            return (StageShareManager.setQualityIsEnable);
-        }
-
-        [Untrusted]
-        public function hasAir():Boolean
-        {
-            return (AirScanner.hasAir());
-        }
-
-        [Untrusted]
-        public function getAirVersion():uint
-        {
-            return (((!((Capabilities.version.indexOf(" 10,0") == -1))) ? 1 : 2));
-        }
-
-        [Untrusted]
-        public function isAirVersionAvailable(version:uint):Boolean
-        {
-            return (this.setQualityIsEnable());
-        }
-
-        [Untrusted]
-        public function setAirVersion(version:uint):Boolean
-        {
-            var fs:FileStream;
-            var fs2:FileStream;
-            if (!(this.isAirVersionAvailable(version)))
-            {
-                return (false);
-            };
-            var file_air1:File = new File(((File.applicationDirectory.nativePath + File.separator) + "useOldAir"));
-            var file_air2:File = new File(((File.applicationDirectory.nativePath + File.separator) + "useNewAir"));
-            if (version == 1)
-            {
-                try
-                {
-                    if (file_air2.exists)
-                    {
-                        file_air2.deleteFile();
-                    };
-                    fs = new FileStream();
-                    fs.open(file_air1, FileMode.WRITE);
-                    fs.close();
-                }
-                catch(e:Error)
-                {
-                    return (false);
-                };
-            }
-            else
-            {
-                try
-                {
-                    if (file_air1.exists)
-                    {
-                        file_air1.deleteFile();
-                    };
-                    fs2 = new FileStream();
-                    fs2.open(file_air2, FileMode.WRITE);
-                    fs2.close();
-                }
-                catch(e:Error)
-                {
-                    return (false);
-                };
-            };
-            return (true);
-        }
-
-        [Untrusted]
-        public function getOs():String
-        {
-            return (SystemManager.getSingleton().os);
-        }
-
-        [Untrusted]
-        public function getOsVersion():String
-        {
-            return (SystemManager.getSingleton().version);
-        }
-
-        [Untrusted]
-        public function getCpu():String
-        {
-            return (SystemManager.getSingleton().cpu);
-        }
-
-        [Untrusted]
         [NoBoxing]
-        public function getData(name:String, shareWithAccount:Boolean=false)
+        public function getData(name:String, dataStore:int=2):*
         {
             var dst:DataStoreType;
-            if (shareWithAccount)
+            if (dataStore == DataStoreEnum.BIND_ACCOUNT)
             {
-                if (!(this._accountDataStore))
+                if (!this._accountDataStore)
                 {
                     this.initAccountDataStore();
                 };
@@ -568,55 +378,111 @@
             }
             else
             {
-                if (!(this._characterDataStore))
+                if (dataStore == DataStoreEnum.BIND_COMPUTER)
                 {
-                    this.initCharacterDataStore();
+                    if (!this._computerDataStore)
+                    {
+                        this.initComputerDataStore();
+                    };
+                    dst = this._computerDataStore;
+                }
+                else
+                {
+                    if (!this._characterDataStore)
+                    {
+                        this.initCharacterDataStore();
+                    };
+                    dst = this._characterDataStore;
                 };
-                dst = this._characterDataStore;
             };
             var value:* = StoreDataManager.getInstance().getData(dst, name);
             switch (true)
             {
                 case (value is IModuleUtil):
                 case (value is IDataCenter):
-                    return (SecureCenter.secure(value));
+                    return (value);
             };
             return (value);
         }
 
-        [Untrusted]
-        public function getOption(name:String, moduleName:String)
+        public function getSetData(name:String, value:*, dataStore:int=2):*
         {
-            return (OptionManager.getOptionManager(moduleName)[name]);
+            var dst:DataStoreType;
+            if (dataStore == DataStoreEnum.BIND_ACCOUNT)
+            {
+                if (!this._accountDataStore)
+                {
+                    this.initAccountDataStore();
+                };
+                dst = this._accountDataStore;
+            }
+            else
+            {
+                if (dataStore == DataStoreEnum.BIND_COMPUTER)
+                {
+                    if (!this._computerDataStore)
+                    {
+                        this.initComputerDataStore();
+                    };
+                    dst = this._computerDataStore;
+                }
+                else
+                {
+                    if (!this._characterDataStore)
+                    {
+                        this.initCharacterDataStore();
+                    };
+                    dst = this._characterDataStore;
+                };
+            };
+            return (StoreDataManager.getInstance().getSetData(dst, name, value));
         }
 
-        [Untrusted]
-        public function callbackHook(hook:Hook, ... params):void
+        public function setQualityIsEnable():Boolean
         {
-            KernelEventsManager.getInstance().processCallback(hook, params);
+            return (StageShareManager.setQualityIsEnable);
         }
 
-        [Untrusted]
+        public function getOs():String
+        {
+            return (SystemManager.getSingleton().os);
+        }
+
+        public function getOsVersion():String
+        {
+            return (SystemManager.getSingleton().version);
+        }
+
+        public function getCpu():String
+        {
+            return (SystemManager.getSingleton().cpu);
+        }
+
+        public function getOption(name:String, moduleName:String):*
+        {
+            if (((moduleName == "dofus") && (name == "displayTooltips")))
+            {
+                return (true);
+            };
+            return (OptionManager.getOptionManager(moduleName).getOption(name));
+        }
+
         public function showWorld(b:Boolean):void
         {
             Atouin.getInstance().showWorld(b);
         }
 
-        [Untrusted]
         public function worldIsVisible():Boolean
         {
             return (Atouin.getInstance().worldIsVisible);
         }
 
-        [Untrusted]
         public function getServerStatus():uint
         {
             var miscframe:MiscFrame = (Kernel.getWorker().getFrame(MiscFrame) as MiscFrame);
             return (miscframe.getServerStatus());
         }
 
-        [Deprecated(help="debugApi")]
-        [Trusted]
         public function getConsoleAutoCompletion(cmd:String, server:Boolean):String
         {
             if (server)
@@ -626,8 +492,6 @@
             return (ConsolesManager.getConsole("debug").autoComplete(cmd));
         }
 
-        [Deprecated(help="debugApi")]
-        [Trusted]
         public function getAutoCompletePossibilities(cmd:String, server:Boolean=false):Array
         {
             if (server)
@@ -637,15 +501,11 @@
             return (ConsolesManager.getConsole("debug").getAutoCompletePossibilities(cmd).sort());
         }
 
-        [Deprecated(help="debugApi")]
-        [Trusted]
         public function getAutoCompletePossibilitiesOnParam(cmd:String, server:Boolean=false, paramIndex:uint=0, currentParams:Array=null):Array
         {
             return (ConsolesManager.getConsole("debug").getAutoCompletePossibilitiesOnParam(cmd, paramIndex, currentParams).sort());
         }
 
-        [Deprecated(help="debugApi")]
-        [Trusted]
         public function getCmdHelp(cmd:String, server:Boolean=false):String
         {
             if (server)
@@ -655,19 +515,6 @@
             return (ConsolesManager.getConsole("debug").getCmdHelp(cmd));
         }
 
-        [Untrusted]
-        public function startChrono(label:String):void
-        {
-            Chrono.start(label);
-        }
-
-        [Untrusted]
-        public function stopChrono():void
-        {
-            Chrono.stop();
-        }
-
-        [Trusted]
         public function hasAdminCommand(cmd:String):Boolean
         {
             return (ServerCommand.hasCommand(cmd));
@@ -686,12 +533,11 @@
         }
 
         [NoBoxing]
-        [Trusted]
         public function addEventListener(listener:Function, name:String, frameRate:uint=25):void
         {
             this._listenerCount++;
             this._listener[name] = listener;
-            if (!(this._running))
+            if (!this._running)
             {
                 EnterFrameDispatcher.addEventListener(this.onEnterFrame, ((this._module.id + ".enterframe") + Math.random()), frameRate);
                 this._running = true;
@@ -699,7 +545,6 @@
         }
 
         [NoBoxing]
-        [Trusted]
         public function removeEventListener(listener:Function):void
         {
             var name:String;
@@ -716,14 +561,13 @@
             {
                 delete this._listener[name];
             };
-            if (!(this._listenerCount))
+            if (!this._listenerCount)
             {
                 this._running = false;
                 EnterFrameDispatcher.removeEventListener(this.onEnterFrame);
             };
         }
 
-        [Trusted]
         public function disableWorldInteraction(pTotal:Boolean=true):void
         {
             _wordInteractionEnable = false;
@@ -731,97 +575,82 @@
             Kernel.getWorker().process(ChangeWorldInteractionAction.create(false, pTotal));
         }
 
-        [Trusted]
         public function enableWorldInteraction():void
         {
             _wordInteractionEnable = true;
             Kernel.getWorker().process(ChangeWorldInteractionAction.create(true));
         }
 
-        [Trusted]
-        public function setFrameRate(f:uint):void
-        {
-            StageShareManager.stage.frameRate = f;
-        }
-
-        [Trusted]
         public function hasWorldInteraction():Boolean
         {
             var contextFrame:RoleplayContextFrame = (Kernel.getWorker().getFrame(RoleplayContextFrame) as RoleplayContextFrame);
-            if (!(contextFrame))
+            if (!contextFrame)
             {
                 return (false);
             };
             return (contextFrame.hasWorldInteraction);
         }
 
-        [Trusted]
         public function hasRight():Boolean
         {
             return (PlayerManager.getInstance().hasRights);
         }
 
-        [Untrusted]
-        public function isFightContext():Boolean
+        public function hasConsoleRight():Boolean
         {
-            return (Kernel.getWorker().contains(FightContextFrame));
+            return (PlayerManager.getInstance().hasConsoleRight);
         }
 
-        [Untrusted]
+        public function isFightContext():Boolean
+        {
+            return ((Kernel.getWorker().contains(FightContextFrame)) || (Kernel.getWorker().isBeingAdded(FightContextFrame)));
+        }
+
         public function getEntityLookFromString(s:String):TiphonEntityLook
         {
             return (TiphonEntityLook.fromString(s));
         }
 
-        [Untrusted]
         public function getCurrentVersion():Version
         {
-            return (BuildInfos.BUILD_VERSION);
+            return (BuildInfos.VERSION);
         }
 
-        [Untrusted]
         public function getBuildType():uint
         {
             return (BuildInfos.BUILD_TYPE);
         }
 
-        [Untrusted]
         public function getCurrentLanguage():String
         {
             return (XmlConfig.getInstance().getEntry("config.lang.current"));
         }
 
-        [Trusted]
         public function clearCache(pSelective:Boolean=false):void
         {
             Dofus.getInstance().clearCache(pSelective, true);
         }
 
-        [Trusted]
         public function reset():void
         {
             Dofus.getInstance().reboot();
         }
 
-        [Untrusted]
         public function getCurrentServer():Server
         {
             return (PlayerManager.getInstance().server);
         }
 
-        [Trusted]
         public function getGroundCacheSize():Number
         {
             return (DataGroundMapManager.getCurrentDiskUsed());
         }
 
-        [Trusted]
         public function clearGroundCache():void
         {
             DataGroundMapManager.clearGroundCache();
         }
 
-        [Trusted]
         public function zoom(value:Number):void
         {
             var cameraFrame:CameraControlFrame = (Kernel.getWorker().getFrame(CameraControlFrame) as CameraControlFrame);
@@ -833,13 +662,11 @@
             Atouin.getInstance().zoom(value);
         }
 
-        [Trusted]
         public function getCurrentZoom():Number
         {
             return (Atouin.getInstance().currentZoom);
         }
 
-        [Trusted]
         public function goToThirdPartyLogin(target:WebBrowser):void
         {
             var ur:URLRequest;
@@ -854,171 +681,149 @@
             (ComponentInternalAccessor.access(target, "load")(ur));
         }
 
-        [Trusted]
         public function goToOgrinePortal(target:WebBrowser):void
         {
-            var ur:URLRequest;
-            if ((((BuildInfos.BUILD_TYPE == BuildTypeEnum.RELEASE)) || ((BuildInfos.BUILD_TYPE == BuildTypeEnum.BETA))))
+            HaapiKeyManager.getInstance().callWithApiKey(function (apiKey:String):void
             {
-                ur = new URLRequest(I18n.getUiText("ui.link.ogrinePortal"));
-            }
-            else
-            {
-                ur = new URLRequest(I18n.getUiText("ui.link.ogrinePortalLocal"));
-            };
-            ur.data = this.getAnkamaPortalUrlParams();
-            ur.method = URLRequestMethod.POST;
-            (ComponentInternalAccessor.access(target, "load")(ur));
-        }
-
-        [Trusted]
-        public function openWebModalOgrinePortal(jsCallback:Function=null):void
-        {
-            var url:String;
-            var jsHack:String;
-            if ((((BuildInfos.BUILD_TYPE == BuildTypeEnum.RELEASE)) || ((BuildInfos.BUILD_TYPE == BuildTypeEnum.BETA))))
-            {
-                url = I18n.getUiText("ui.link.ogrinePortal");
-            }
-            else
-            {
-                url = I18n.getUiText("ui.link.ogrinePortalLocal");
-            };
-            var params:Object = new Object();
-            params.username = AuthentificationManager.getInstance().username;
-            params.passkey = AuthentificationManager.getInstance().ankamaPortalKey;
-            params.server = PlayerManager.getInstance().server.id;
-            params.serverName = PlayerManager.getInstance().server.name;
-            params.language = XmlConfig.getInstance().getEntry("config.lang.current");
-            params.character = PlayedCharacterManager.getInstance().id;
-            params.theme = OptionManager.getOptionManager("dofus").switchUiSkin;
-            if (ExternalInterface.available)
-            {
-                if (jsCallback != null)
+                var ur:URLRequest;
+                if (((BuildInfos.BUILD_TYPE == BuildTypeEnum.RELEASE) || (BuildInfos.BUILD_TYPE == BuildTypeEnum.BETA)))
                 {
-                    ExternalInterface.addCallback("goToShopArticle", jsCallback);
+                    ur = new URLRequest(I18n.getUiText("ui.link.ogrinePortal"));
+                }
+                else
+                {
+                    if (((BuildInfos.BUILD_TYPE == BuildTypeEnum.DEBUG) || (BuildInfos.BUILD_TYPE == BuildTypeEnum.INTERNAL)))
+                    {
+                        ur = new URLRequest(I18n.getUiText("ui.link.ogrinePortalTest"));
+                    }
+                    else
+                    {
+                        ur = new URLRequest(I18n.getUiText("ui.link.ogrinePortalLocal"));
+                    };
                 };
-                ExternalInterface.call("openModal", url, params);
-                jsHack = String(<![CDATA[
-					var streamingModalDiv = document.getElementsByClassName("ak-playstreaming-modal")[0];
-					streamingModalDiv.style.padding = "0px";
-					
-					var popupDiv = streamingModalDiv.parentNode;
-					popupDiv.style.background = "none";
-					popupDiv.style.top = "250px";
-					popupDiv.style.left = document.getElementById("streaming_swf").getBoundingClientRect().left + 86 + "px";
-					popupDiv.style.width = "680px";
-					if (popupDiv.children && popupDiv.children.length > 1) {
-						popupDiv.removeChild(popupDiv.children[0]);
-					}
-					
-					var popupIFrame = document.getElementById("ak-openmodal").getElementsByTagName("iframe")[0];
-					popupIFrame.setAttribute("height", "470");
-					popupIFrame.setAttribute("frameborder", "0");
-					
-					document.getElementsByClassName("ui-widget-overlay ui-front")[0].style.visibility = "hidden";
-				]]>
-                );
-                ExternalInterface.call("eval", jsHack);
-            };
+                ur.data = getAnkamaPortalUrlParams(apiKey);
+                ur.method = URLRequestMethod.POST;
+                (ComponentInternalAccessor.access(target, "load")(ur));
+            });
         }
 
-        [Trusted]
+        public function goToWebAuthentification(target:WebBrowser, serviceName:String):String
+        {
+            var ur:URLRequest;
+            if (((BuildInfos.BUILD_TYPE == BuildTypeEnum.RELEASE) || (BuildInfos.BUILD_TYPE == BuildTypeEnum.BETA)))
+            {
+                ur = new URLRequest(I18n.getUiText("ui.link.ankamaOauth", [serviceName]));
+            }
+            else
+            {
+                if (((BuildInfos.BUILD_TYPE == BuildTypeEnum.DEBUG) || (BuildInfos.BUILD_TYPE == BuildTypeEnum.INTERNAL)))
+                {
+                    ur = new URLRequest(I18n.getUiText("ui.link.ankamaOauthTest", [serviceName]));
+                }
+                else
+                {
+                    ur = new URLRequest(I18n.getUiText("ui.link.ankamaOauthLocal", [serviceName]));
+                };
+            };
+            (ComponentInternalAccessor.access(target, "load")(ur));
+            return (ur.url);
+        }
+
         public function goToAnkaBoxPortal(target:WebBrowser):void
         {
-            var ur:URLRequest;
-            if ((((BuildInfos.BUILD_TYPE == BuildTypeEnum.RELEASE)) || ((BuildInfos.BUILD_TYPE == BuildTypeEnum.BETA))))
+            HaapiKeyManager.getInstance().callWithApiKey(function (apiKey:String):void
             {
-                ur = new URLRequest(I18n.getUiText("ui.link.ankaboxPortal"));
-            }
-            else
-            {
-                ur = new URLRequest(I18n.getUiText("ui.link.ankaboxPortalLocal"));
-            };
-            ur.data = this.getAnkamaPortalUrlParams();
-            ur.data.idbar = 0;
-            ur.data.game = 1;
-            ur.method = URLRequestMethod.POST;
-            if (target)
-            {
-                (ComponentInternalAccessor.access(target, "load")(ur));
-            }
-            else
-            {
-                navigateToURL(ur);
-            };
+                var ur:URLRequest;
+                if (((BuildInfos.BUILD_TYPE == BuildTypeEnum.RELEASE) || (BuildInfos.BUILD_TYPE == BuildTypeEnum.BETA)))
+                {
+                    ur = new URLRequest(I18n.getUiText("ui.link.ankaboxPortal"));
+                }
+                else
+                {
+                    ur = new URLRequest(I18n.getUiText("ui.link.ankaboxPortalLocal"));
+                };
+                ur.data = getAnkamaPortalUrlParams(apiKey);
+                ur.data.idbar = 0;
+                ur.data.game = GameID.current;
+                ur.method = URLRequestMethod.POST;
+                if (target)
+                {
+                    (ComponentInternalAccessor.access(target, "load")(ur));
+                }
+                else
+                {
+                    navigateToURL(ur);
+                };
+            });
         }
 
-        [Trusted]
         public function goToAnkaBoxLastMessage(target:WebBrowser):void
         {
-            var ur:URLRequest;
-            if ((((BuildInfos.BUILD_TYPE == BuildTypeEnum.RELEASE)) || ((BuildInfos.BUILD_TYPE == BuildTypeEnum.BETA))))
+            HaapiKeyManager.getInstance().callWithApiKey(function (apiKey:String):void
             {
-                ur = new URLRequest(I18n.getUiText("ui.link.ankaboxLastMessage"));
-            }
-            else
-            {
-                ur = new URLRequest(I18n.getUiText("ui.link.ankaboxLastMessageLocal"));
-            };
-            ur.data = this.getAnkamaPortalUrlParams();
-            ur.data.idbar = 0;
-            ur.data.game = 1;
-            ur.method = URLRequestMethod.POST;
-            if (target)
-            {
-                (ComponentInternalAccessor.access(target, "load")(ur));
-            }
-            else
-            {
-                navigateToURL(ur);
-            };
+                var ur:URLRequest;
+                if (((BuildInfos.BUILD_TYPE == BuildTypeEnum.RELEASE) || (BuildInfos.BUILD_TYPE == BuildTypeEnum.BETA)))
+                {
+                    ur = new URLRequest(I18n.getUiText("ui.link.ankaboxLastMessage"));
+                }
+                else
+                {
+                    ur = new URLRequest(I18n.getUiText("ui.link.ankaboxLastMessageLocal"));
+                };
+                ur.data = getAnkamaPortalUrlParams(apiKey);
+                ur.data.idbar = 0;
+                ur.data.game = GameID.current;
+                ur.method = URLRequestMethod.POST;
+                if (target)
+                {
+                    (ComponentInternalAccessor.access(target, "load")(ur));
+                }
+                else
+                {
+                    navigateToURL(ur);
+                };
+            });
         }
 
-        [Trusted]
-        public function goToAnkaBoxSend(target:WebBrowser, userId:int):void
+        public function goToAnkaBoxSend(target:WebBrowser, userId:Number):void
         {
-            var ur:URLRequest;
-            if ((((BuildInfos.BUILD_TYPE == BuildTypeEnum.RELEASE)) || ((BuildInfos.BUILD_TYPE == BuildTypeEnum.BETA))))
+            HaapiKeyManager.getInstance().callWithApiKey(function (apiKey:String):void
             {
-                ur = new URLRequest(I18n.getUiText("ui.link.ankaboxSend"));
-            }
-            else
-            {
-                ur = new URLRequest(I18n.getUiText("ui.link.ankaboxSendLocal"));
-            };
-            ur.data = this.getAnkamaPortalUrlParams();
-            ur.data.i = String(userId);
-            ur.data.idbar = 0;
-            ur.data.game = 1;
-            ur.method = URLRequestMethod.POST;
-            if (target)
-            {
-                (ComponentInternalAccessor.access(target, "load")(ur));
-            }
-            else
-            {
-                navigateToURL(ur);
-            };
+                var ur:URLRequest;
+                if (((BuildInfos.BUILD_TYPE == BuildTypeEnum.RELEASE) || (BuildInfos.BUILD_TYPE == BuildTypeEnum.BETA)))
+                {
+                    ur = new URLRequest(I18n.getUiText("ui.link.ankaboxSend"));
+                }
+                else
+                {
+                    ur = new URLRequest(I18n.getUiText("ui.link.ankaboxSendLocal"));
+                };
+                ur.data = getAnkamaPortalUrlParams(apiKey);
+                ur.data.i = String(userId);
+                ur.data.idbar = 0;
+                ur.data.game = GameID.current;
+                ur.method = URLRequestMethod.POST;
+                if (target)
+                {
+                    (ComponentInternalAccessor.access(target, "load")(ur));
+                }
+                else
+                {
+                    navigateToURL(ur);
+                };
+            });
         }
 
-        [Trusted]
         public function goToSupportFAQ(faqURL:String):void
         {
             var ur:URLRequest = new URLRequest(faqURL);
             navigateToURL(ur);
         }
 
-        [Trusted]
-        public function goToChangelogPortal(target:WebBrowser):void
-        {
-        }
-
-        [Trusted]
-        public function goToCheckLink(url:String, sender:uint, senderName:String):void
+        public function goToCheckLink(url:String, sender:Number, senderName:String):void
         {
             var checkLink:String;
-            if ((((((BuildInfos.BUILD_TYPE == BuildTypeEnum.RELEASE)) || ((BuildInfos.BUILD_TYPE == BuildTypeEnum.BETA)))) || ((BuildInfos.BUILD_TYPE == BuildTypeEnum.TESTING))))
+            if ((((BuildInfos.BUILD_TYPE == BuildTypeEnum.RELEASE) || (BuildInfos.BUILD_TYPE == BuildTypeEnum.BETA)) || (BuildInfos.BUILD_TYPE == BuildTypeEnum.TESTING)))
             {
                 checkLink = I18n.getUiText("ui.link.checklink");
             }
@@ -1026,20 +831,20 @@
             {
                 checkLink = (("http://go.ankama.lan/" + this.getCurrentLanguage()) + "/check");
             };
-            if (url.indexOf("www") == 0)
+            if (((url.indexOf("http://") == -1) && (url.indexOf("https://") == -1)))
             {
                 url = ("http://" + url);
             };
             var click_id:uint = PlayerManager.getInstance().accountId;
             var click_name:String = PlayedCharacterManager.getInstance().infos.name;
-            var sender_id:uint = sender;
+            var sender_id:Number = sender;
             var sender_name:String = senderName;
-            var game:int = 1;
+            var game:int = GameID.current;
             var server:int = PlayerManager.getInstance().server.id;
             this._log.debug(((((((((("goToCheckLink : " + url) + " ") + click_id) + " ") + sender_id) + " ") + game) + " ") + server));
             var chaine:String = ((((((((url + click_id) + "") + sender_id) + "") + click_name) + senderName) + game.toString()) + server.toString());
             var keyMd5:String = AdvancedMd5.hex_hmac_md5(">:fIZ?vfU0sDM_9j", chaine);
-            var jsonTab:String = (((((((((((((((('{"url":"' + url) + '","click_account":') + click_id) + ',"from_account":') + sender_id) + ',"click_name":"') + click_name) + '","from_name":"') + sender_name) + '","game":') + game) + ',"server":') + server) + ',"hmac":"') + keyMd5) + '"}');
+            var jsonTab:* = (((((((((((((((('{"url":"' + url) + '","click_account":') + click_id) + ',"from_account":') + sender_id) + ',"click_name":"') + click_name) + '","from_name":"') + sender_name) + '","game":') + game) + ',"server":') + server) + ',"hmac":"') + keyMd5) + '"}');
             var bytearray:ByteArray = new ByteArray();
             bytearray.writeUTFBytes(jsonTab);
             bytearray.position = 0;
@@ -1058,44 +863,194 @@
             navigateToURL(ur);
         }
 
-        [Trusted]
-        public function refreshUrl(target:WebBrowser, domain:uint=0):void
+        public function goToDare(data:DareWrapper):void
         {
-            var params:URLVariables;
-            var ur:URLRequest = new URLRequest(target.location);
-            if (domain == 0)
+            var url:String;
+            var c:DareCriteriaWrapper;
+            var keyMd5:String;
+            var bytearray:ByteArray;
+            var buffer:String;
+            var param:int;
+            if ((((BuildInfos.BUILD_TYPE == BuildTypeEnum.RELEASE) || (BuildInfos.BUILD_TYPE == BuildTypeEnum.BETA)) || (BuildInfos.BUILD_TYPE == BuildTypeEnum.TESTING)))
             {
-                ur.data = this.getAnkamaPortalUrlParams();
-                ur.method = URLRequestMethod.POST;
+                url = (I18n.getUiText("ui.link.darelink") + data.dareId);
             }
             else
             {
-                if (domain == 1)
+                url = ((("http://www.dofus.tst/" + this.getCurrentLanguage()) + "/mmorpg/communaute/defis/") + data.dareId);
+            };
+            if (url.indexOf("www") == 0)
+            {
+                url = ("http://" + url);
+            };
+            var serverId:int = PlayerManager.getInstance().server.id;
+            this._log.debug(((("goToDare : " + url) + " ") + serverId));
+            var keyString:String = (((((((((((((((((url + data.dareId) + "") + serverId) + "") + CharacterIdConverter.extractServerCharacterIdFromInterserverCharacterId(data.creatorId)) + "") + data.subscriptionFee) + "") + data.jackpot) + "") + data.maxCountWinners) + "") + data.endDate) + "") + data.startDate) + "") + data.isPrivate);
+            var jsonTab:String = ((((((((((((((((((('{"url":"' + url) + '","id":') + data.dareId) + ',"srv":') + serverId) + ',"oid":') + CharacterIdConverter.extractServerCharacterIdFromInterserverCharacterId(data.creatorId)) + ',"sf":') + data.subscriptionFee) + ',"jp":') + data.jackpot) + ',"mwc":') + data.maxCountWinners) + ',"d":') + data.endDate) + ',"sd":') + data.startDate) + ',"p":') + data.isPrivate);
+            if (data.allianceId > 0)
+            {
+                jsonTab = (jsonTab + (',"aid":' + data.allianceId));
+                keyString = (keyString + (data.allianceId + ""));
+            }
+            else
+            {
+                if (data.guildId > 0)
                 {
-                    params = new URLVariables();
-                    params.tags = ((((BuildInfos.BUILD_VERSION.major + ".") + BuildInfos.BUILD_VERSION.minor) + ".") + BuildInfos.BUILD_VERSION.release);
-                    params.theme = OptionManager.getOptionManager("dofus").switchUiSkin;
-                    ur.data = params;
-                    ur.method = URLRequestMethod.GET;
+                    jsonTab = (jsonTab + (',"gid":' + data.guildId));
+                    keyString = (keyString + (data.guildId + ""));
                 };
             };
-            (ComponentInternalAccessor.access(target, "load")(ur));
-        }
-
-        [Trusted]
-        public function execServerCmd(cmd:String):void
-        {
-            var aqcmsg:AdminQuietCommandMessage = new AdminQuietCommandMessage();
-            aqcmsg.initAdminQuietCommandMessage(cmd);
-            if (PlayerManager.getInstance().hasRights)
+            for each (c in data.criteria)
             {
-                ConnectionsHandler.getConnection().send(aqcmsg);
+                if (c.type == DareCriteriaTypeEnum.MONSTER_ID)
+                {
+                    jsonTab = (jsonTab + (',"cm":' + c.params[0]));
+                    keyString = (keyString + (c.params[0] + ""));
+                }
+                else
+                {
+                    if (c.type == DareCriteriaTypeEnum.CHALLENGE_ID)
+                    {
+                        jsonTab = (jsonTab + (',"cc":' + c.params[0]));
+                        keyString = (keyString + (c.params[0] + ""));
+                    }
+                    else
+                    {
+                        if (c.type == DareCriteriaTypeEnum.IDOLS_SCORE)
+                        {
+                            jsonTab = (jsonTab + (',"cis":' + c.params[0]));
+                            keyString = (keyString + (c.params[0] + ""));
+                        }
+                        else
+                        {
+                            if (c.type == DareCriteriaTypeEnum.MAX_CHAR_LVL)
+                            {
+                                jsonTab = (jsonTab + (',"ccl":' + c.params[0]));
+                                keyString = (keyString + (c.params[0] + ""));
+                            }
+                            else
+                            {
+                                if (c.type == DareCriteriaTypeEnum.MAX_FIGHT_TURNS)
+                                {
+                                    jsonTab = (jsonTab + (',"ct":' + c.params[0]));
+                                    keyString = (keyString + (c.params[0] + ""));
+                                }
+                                else
+                                {
+                                    if (c.type == DareCriteriaTypeEnum.MAX_COUNT_CHAR)
+                                    {
+                                        jsonTab = (jsonTab + (',"ccx":' + c.params[0]));
+                                        keyString = (keyString + (c.params[0] + ""));
+                                    }
+                                    else
+                                    {
+                                        if (c.type == DareCriteriaTypeEnum.MIN_COUNT_CHAR)
+                                        {
+                                            jsonTab = (jsonTab + (',"ccn":' + c.params[0]));
+                                            keyString = (keyString + (c.params[0] + ""));
+                                        }
+                                        else
+                                        {
+                                            if (c.type == DareCriteriaTypeEnum.MIN_COUNT_MONSTERS)
+                                            {
+                                                jsonTab = (jsonTab + (',"cmc":' + c.params[0]));
+                                                keyString = (keyString + (c.params[0] + ""));
+                                            }
+                                            else
+                                            {
+                                                if (c.type == DareCriteriaTypeEnum.IDOLS)
+                                                {
+                                                    jsonTab = (jsonTab + ',"ci":');
+                                                }
+                                                else
+                                                {
+                                                    if (c.type == DareCriteriaTypeEnum.FORBIDDEN_BREEDS)
+                                                    {
+                                                        jsonTab = (jsonTab + ',"cbf":');
+                                                    }
+                                                    else
+                                                    {
+                                                        if (c.type == DareCriteriaTypeEnum.MANDATORY_BREEDS)
+                                                        {
+                                                            jsonTab = (jsonTab + ',"cbr":');
+                                                        };
+                                                    };
+                                                };
+                                            };
+                                        };
+                                    };
+                                };
+                            };
+                        };
+                    };
+                };
+                if ((((c.type == DareCriteriaTypeEnum.IDOLS) || (c.type == DareCriteriaTypeEnum.FORBIDDEN_BREEDS)) || (c.type == DareCriteriaTypeEnum.MANDATORY_BREEDS)))
+                {
+                    jsonTab = (jsonTab + "[");
+                    for each (param in c.params)
+                    {
+                        if (param > 0)
+                        {
+                            jsonTab = (jsonTab + (param + ","));
+                            keyString = (keyString + (param + ""));
+                        };
+                    };
+                    jsonTab = jsonTab.slice(0, (jsonTab.length - 1));
+                    jsonTab = (jsonTab + "]");
+                };
             };
+            this._log.debug(("keyString : " + keyString));
+            keyMd5 = AdvancedMd5.hex_hmac_md5(">:fIZ?vfU0sDM_9j", keyString);
+            jsonTab = (jsonTab + ((',"hmac":"' + keyMd5) + '"}'));
+            this._log.debug(("json : " + jsonTab));
+            bytearray = new ByteArray();
+            bytearray.writeUTFBytes(jsonTab);
+            bytearray.position = 0;
+            buffer = "";
+            bytearray.position = 0;
+            while (bytearray.bytesAvailable)
+            {
+                buffer = (buffer + bytearray.readUnsignedByte().toString(16));
+            };
+            buffer = buffer.toUpperCase();
+            url = (url + ("?s=" + buffer));
+            var ur:URLRequest = new URLRequest(url);
+            var params:URLVariables = new URLVariables();
+            params.s = buffer;
+            ur.method = URLRequestMethod.POST;
+            navigateToURL(ur);
         }
 
-        [Trusted]
+        public function refreshUrl(target:WebBrowser, domain:uint=0):void
+        {
+            HaapiKeyManager.getInstance().callWithApiKey(function (apiKey:String):void
+            {
+                var params:URLVariables;
+                var ur:URLRequest = new URLRequest(target.location);
+                if (domain == 0)
+                {
+                    ur.data = getAnkamaPortalUrlParams(apiKey);
+                    ur.method = URLRequestMethod.POST;
+                }
+                else
+                {
+                    if (domain == 1)
+                    {
+                        params = new URLVariables();
+                        params.tags = ((((BuildInfos.VERSION.major + ".") + BuildInfos.VERSION.minor) + ".") + BuildInfos.VERSION.code);
+                        params.theme = OptionManager.getOptionManager("dofus").getOption("currentUiSkin");
+                        ur.data = params;
+                        ur.method = URLRequestMethod.GET;
+                    };
+                };
+                (ComponentInternalAccessor.access(target, "load")(ur));
+            });
+        }
+
         public function mouseZoom(zoomIn:Boolean=true):void
         {
+            var arrowPos:Point;
+            var newPos:Point;
             var cameraFrame:CameraControlFrame = (Kernel.getWorker().getFrame(CameraControlFrame) as CameraControlFrame);
             if (cameraFrame.dragging)
             {
@@ -1109,18 +1064,30 @@
             {
                 rpEntitesFrame.updateAllIcons();
             };
-            var monstersInfoFrame:MonstersInfoFrame = (Kernel.getWorker().getFrame(MonstersInfoFrame) as MonstersInfoFrame);
-            if (monstersInfoFrame)
+            var entitiesTooltipsFrame:EntitiesTooltipsFrame = (Kernel.getWorker().getFrame(EntitiesTooltipsFrame) as EntitiesTooltipsFrame);
+            if (entitiesTooltipsFrame)
             {
-                monstersInfoFrame.update(true);
+                entitiesTooltipsFrame.update(true);
             };
-            if ((((zoomLevel <= AtouinConstants.MAX_ZOOM)) && ((zoomLevel >= 1))))
+            if (((zoomLevel <= AtouinConstants.MAX_ZOOM) && (zoomLevel >= 1)))
             {
                 TooltipManager.hideAll();
             };
+            var fightPreparationFrame:FightPreparationFrame = (Kernel.getWorker().getFrame(FightPreparationFrame) as FightPreparationFrame);
+            if (fightPreparationFrame)
+            {
+                fightPreparationFrame.updateSwapPositionRequestsIcons();
+            };
+            var arrow:MovieClip = HyperlinkDisplayArrowManager.getArrowClip();
+            if (((arrow) && (!(HyperlinkDisplayArrowManager.getArrowStrata() == 5))))
+            {
+                arrowPos = new Point(HyperlinkDisplayArrowManager.getArrowStartX(), HyperlinkDisplayArrowManager.getArrowStartY());
+                newPos = Atouin.getInstance().rootContainer.localToGlobal(arrowPos);
+                arrow.x = newPos.x;
+                arrow.y = newPos.y;
+            };
         }
 
-        [Trusted]
         public function resetZoom():void
         {
             Atouin.getInstance().zoom(1);
@@ -1129,80 +1096,23 @@
             {
                 rpEntitesFrame.updateAllIcons();
             };
+            var fightPreparationFrame:FightPreparationFrame = (Kernel.getWorker().getFrame(FightPreparationFrame) as FightPreparationFrame);
+            if (fightPreparationFrame)
+            {
+                fightPreparationFrame.updateSwapPositionRequestsIcons();
+            };
         }
 
-        [Trusted]
         public function getMaxZoom():uint
         {
             return (AtouinConstants.MAX_ZOOM);
         }
 
-        [Trusted]
-        public function optimize():Boolean
-        {
-            return (PerformanceManager.optimize);
-        }
-
-        [Untrusted]
-        public function hasPart(partName:String):Boolean
-        {
-            var part:ContentPart = PartManager.getInstance().getPart(partName);
-            if (part)
-            {
-                return ((part.state == PartStateEnum.PART_UP_TO_DATE));
-            };
-            return (true);
-        }
-
-        [Untrusted]
-        public function hasUpdaterConnection():Boolean
-        {
-            return (((UpdaterConnexionHandler.getConnection()) && (UpdaterConnexionHandler.getConnection().connected)));
-        }
-
-        [Untrusted]
-        public function isDownloading():Boolean
-        {
-            return (PartManager.getInstance().isDownloading);
-        }
-
-        [Untrusted]
-        public function isStreaming():Boolean
-        {
-            return (AirScanner.isStreamingVersion());
-        }
-
-        [Untrusted]
         public function isDevMode():Boolean
         {
             return (UiModuleManager.getInstance().isDevMode);
         }
 
-        [Untrusted]
-        public function isDownloadFinished():Boolean
-        {
-            return (PartManager.getInstance().isFinished);
-        }
-
-        [Untrusted]
-        public function notifyUser(always:Boolean):void
-        {
-            return (SystemManager.getSingleton().notifyUser(always));
-        }
-
-        [Untrusted]
-        public function setGameAlign(align:String):void
-        {
-            StageShareManager.stage.align = align;
-        }
-
-        [Untrusted]
-        public function getGameAlign():String
-        {
-            return (StageShareManager.stage.align);
-        }
-
-        [Untrusted]
         public function getDirectoryContent(path:String="."):Array
         {
             var len:uint;
@@ -1232,7 +1142,28 @@
             return ([]);
         }
 
-        [Trusted]
+        public function isUsingZaapLogin():Boolean
+        {
+            return (ZaapApi.isUsingZaapLogin());
+        }
+
+        public function setMouseCursor(cursor:String):void
+        {
+            switch (cursor)
+            {
+                case MouseCursor.ARROW:
+                case MouseCursor.AUTO:
+                case MouseCursor.BUTTON:
+                case MouseCursor.HAND:
+                case MouseCursor.IBEAM:
+                    if (Mouse.supportsCursor)
+                    {
+                        Mouse.cursor = cursor;
+                    };
+                    break;
+            };
+        }
+
         public function getAccountId(playerName:String):int
         {
             try
@@ -1245,14 +1176,9 @@
             return (0);
         }
 
-        [Untrusted]
         public function getIsAnkaBoxEnabled():Boolean
         {
             var chat:ChatFrame = (Kernel.getWorker().getFrame(ChatFrame) as ChatFrame);
-            if (GuestModeManager.getInstance().isLoggingAsGuest)
-            {
-                return (false);
-            };
             if (chat)
             {
                 return (chat.ankaboxEnabled);
@@ -1260,56 +1186,37 @@
             return (false);
         }
 
-        [Trusted]
         public function getAdminStatus():int
         {
             return (PlayerManager.getInstance().adminStatus);
         }
 
-        [Untrusted]
-        public function getObjectVariables(o:Object, onlyVar:Boolean=false, useCache:Boolean=false):Array
+        public function getObjectVariables(o:Object, onlyVar:Boolean=false, useCache:Boolean=false):Vector.<String>
         {
             return (DescribeTypeCache.getVariables(o, onlyVar, useCache));
         }
 
-        [Untrusted]
         public function getNewDynamicSecureObject():DynamicSecureObject
         {
             return (new DynamicSecureObject());
         }
 
-        [Trusted]
-        public function sendStatisticReport(key:String, value:String):Boolean
-        {
-            return (StatisticReportingManager.getInstance().report(key, value));
-        }
-
-        [Trusted]
-        public function isStatisticReported(key:String):Boolean
-        {
-            return (StatisticReportingManager.getInstance().isReported(key));
-        }
-
-        [Trusted]
         public function getNickname():String
         {
             return (PlayerManager.getInstance().nickname);
         }
 
-        [Trusted]
         public function copyToClipboard(val:String):void
         {
             Clipboard.generalClipboard.clear();
             Clipboard.generalClipboard.setData(ClipboardFormats.TEXT_FORMAT, val);
         }
 
-        [Trusted]
         public function getLaunchArgs():String
         {
             return (CommandLineArguments.getInstance().toString());
         }
 
-        [Trusted]
         public function getPartnerInfo():String
         {
             var fs:FileStream;
@@ -1326,85 +1233,151 @@
             return ("");
         }
 
-        [Trusted]
-        public function toggleModuleInstaller():void
+        public function toggleThemeInstaller():void
         {
-            var mif:ModuleInstallerFrame = (Kernel.getWorker().getFrame(ModuleInstallerFrame) as ModuleInstallerFrame);
-            if (mif)
+            var tif:ThemeInstallerFrame = (Kernel.getWorker().getFrame(ThemeInstallerFrame) as ThemeInstallerFrame);
+            if (tif)
             {
-                Kernel.getWorker().removeFrame(mif);
+                Kernel.getWorker().removeFrame(tif);
             }
             else
             {
-                Kernel.getWorker().addFrame(new ModuleInstallerFrame());
+                Kernel.getWorker().addFrame(new ThemeInstallerFrame());
             };
         }
 
-        [Trusted]
-        public function isUpdaterVersion2OrUnknown():Boolean
-        {
-            if (((!(CommandLineArguments.getInstance())) || (!(CommandLineArguments.getInstance().hasArgument("lang")))))
-            {
-                this._log.debug("Updater version : pas d'updater");
-                return (true);
-            };
-            if (!(CommandLineArguments.getInstance().hasArgument("updater_version")))
-            {
-                this._log.debug("Updater version : pas de version connue");
-                return (false);
-            };
-            this._log.debug(("Updater version : " + CommandLineArguments.getInstance().getArgument("updater_version")));
-            return ((CommandLineArguments.getInstance().getArgument("updater_version") == "v2"));
-        }
-
-        [Untrusted]
         public function isKeyDown(keyCode:uint):Boolean
         {
             return (HumanInputHandler.getInstance().getKeyboardPoll().isDown(keyCode));
         }
 
-        [Trusted]
-        public function isGuest():Boolean
-        {
-            return (GuestModeManager.getInstance().isLoggingAsGuest);
-        }
-
-        [Trusted]
-        public function isInForcedGuestMode():Boolean
-        {
-            return (GuestModeManager.getInstance().forceGuestMode);
-        }
-
-        [Trusted]
-        public function convertGuestAccount():void
-        {
-            GuestModeManager.getInstance().convertGuestAccount();
-        }
-
-        [Trusted]
         public function getGiftList():Array
         {
             var gsapf:GameServerApproachFrame = (Kernel.getWorker().getFrame(GameServerApproachFrame) as GameServerApproachFrame);
             return (gsapf.giftList);
         }
 
-        [Trusted]
         public function getCharaListMinusDeadPeople():Array
         {
             var gsapf:GameServerApproachFrame = (Kernel.getWorker().getFrame(GameServerApproachFrame) as GameServerApproachFrame);
             return (gsapf.charaListMinusDeadPeople);
         }
 
-        private function getAnkamaPortalUrlParams():URLVariables
+        public function removeFocus():void
+        {
+            StageShareManager.stage.focus = null;
+        }
+
+        public function getUrltoShareContent(content:Object, callback:Function, shareType:String=null):void
+        {
+            if (((((!(content)) || (!(content.hasOwnProperty("title")))) || (!(content.hasOwnProperty("description")))) || (!(content.hasOwnProperty("image")))))
+            {
+                throw (new ArgumentError("Content argument is null or missing required properties."));
+            };
+            if (!shareType)
+            {
+                shareType = CharacterApi.addScreenshot_TypeEnum_DEFAULT;
+            };
+            HaapiKeyManager.getInstance().callWithApiKey(function (apiKey:String):void
+            {
+                var apiCredentials:ApiUserCredentials;
+                var completeFct:Function = function (e:ApiClientEvent):void
+                {
+                    onShareUrlReady(e, callback);
+                };
+                var errorFct:Function = function (e:ApiClientEvent):void
+                {
+                    onShareUrlError(e, callback);
+                };
+                if (!_dofusCharacterApi)
+                {
+                    apiCredentials = new ApiUserCredentials("", XmlConfig.getInstance().getEntry("config.haapiUrlAnkama"), apiKey);
+                    _dofusCharacterApi = new CharacterApi(apiCredentials);
+                };
+                _dofusCharacterApi.add_screenshot(content.image, content.title, LangManager.getInstance().getEntry("config.lang.current"), CharacterIdConverter.extractServerCharacterIdFromInterserverCharacterId(PlayedCharacterManager.getInstance().id), PlayerManager.getInstance().server.id, PlayedCharacterManager.getInstance().currentMap.mapId, content.description, shareType).onSuccess(completeFct).onError(errorFct).call();
+            });
+        }
+
+        public function changeActiveFontType(newName:String):void
+        {
+            FontManager.getInstance().activeType = newName;
+        }
+
+        public function getActiveFontType():String
+        {
+            return (FontManager.getInstance().activeType);
+        }
+
+        public function useCustomUISkin():Boolean
+        {
+            return (!(OptionManager.getOptionManager("dofus").getOption("currentUiSkin") == ThemeManager.OFFICIAL_THEME_NAME));
+        }
+
+        public function resetCustomUISkin():void
+        {
+            OptionManager.getOptionManager("dofus").setOption("currentUiSkin", ThemeManager.OFFICIAL_THEME_NAME);
+            Dofus.getInstance().clearCache(true, true);
+        }
+
+        public function startStats(pStatsName:String, ... args):void
+        {
+            if (StatisticsManager.getInstance().statsEnabled)
+            {
+                StatisticsManager.getInstance().startStats.apply(StatisticsManager.getInstance(), [pStatsName].concat(args));
+            };
+        }
+
+        public function removeStats(pStatsName:String):void
+        {
+            if (StatisticsManager.getInstance().statsEnabled)
+            {
+                StatisticsManager.getInstance().removeStats(pStatsName);
+            };
+        }
+
+        public function createCallback(fMethod:Function, ... args):Callback
+        {
+            return (new Callback(fMethod, args));
+        }
+
+        private function onShareUrlReady(e:ApiClientEvent, callback:Function):void
+        {
+            var payload:Object = e.response.payload;
+            if ((((payload) && (payload.hasOwnProperty("status"))) && (payload.status)))
+            {
+                (callback(payload.url));
+            }
+            else
+            {
+                this.onShareUrlError(e, callback);
+            };
+        }
+
+        private function onShareUrlError(e:ApiClientEvent, callback:Function):void
+        {
+            this._log.error(("Failed to retrieve share url!\n" + e.response.errorMessage));
+            var errorMessage:String = I18n.getUiText("ui.social.share.popup.error");
+            var channelId:uint = ChatActivableChannelsEnum.PSEUDO_CHANNEL_INFO;
+            KernelEventsManager.getInstance().processCallback(ChatHookList.TextInformation, errorMessage, channelId, TimeManager.getInstance().getTimestamp());
+            (callback(null));
+        }
+
+        private function getAnkamaPortalUrlParams(apiKey:String):URLVariables
         {
             var params:URLVariables = new URLVariables();
             params.username = AuthentificationManager.getInstance().username;
-            params.passkey = AuthentificationManager.getInstance().ankamaPortalKey;
-            params.server = PlayerManager.getInstance().server.id;
-            params.serverName = PlayerManager.getInstance().server.name;
+            params.passkey = apiKey;
+            params.server = ((PlayerManager.getInstance().server) ? PlayerManager.getInstance().server.id : 0);
+            params.serverName = ((PlayerManager.getInstance().server) ? PlayerManager.getInstance().server.name : "");
             params.language = XmlConfig.getInstance().getEntry("config.lang.current");
-            params.character = PlayedCharacterManager.getInstance().id;
-            params.theme = OptionManager.getOptionManager("dofus").switchUiSkin;
+            params.character = ((PlayedCharacterManager.getInstance()) ? PlayedCharacterManager.getInstance().id : 0);
+            params.theme = OptionManager.getOptionManager("dofus").getOption("currentUiSkin");
+            var certificate:TrustCertificate = SecureModeManager.getInstance().certificate;
+            if (certificate)
+            {
+                params.certificateid = certificate.id;
+                params.certificatehash = certificate.hash;
+            };
             return (params);
         }
 
@@ -1418,9 +1391,9 @@
             this._characterDataStore = new DataStoreType(("Module_" + this._module.id), true, DataStoreEnum.LOCATION_LOCAL, DataStoreEnum.BIND_CHARACTER);
         }
 
-        private function initModuleActionDataStore():void
+        private function initComputerDataStore():void
         {
-            this._moduleActionDataStore = new DataStoreType(("ModuleAction_" + this._module.id), true, DataStoreEnum.LOCATION_LOCAL, DataStoreEnum.BIND_CHARACTER);
+            this._computerDataStore = new DataStoreType(("ComputerModule_" + this._module.id), true, DataStoreEnum.LOCATION_LOCAL, DataStoreEnum.BIND_COMPUTER);
         }
 
         private function luaZoom(value:Number):void
@@ -1432,7 +1405,12 @@
             };
         }
 
+        public function trimString(string:String):String
+        {
+            return (StringUtils.trim(string));
+        }
+
 
     }
-}//package com.ankamagames.dofus.uiApi
+} com.ankamagames.dofus.uiApi
 

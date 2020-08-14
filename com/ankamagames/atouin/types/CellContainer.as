@@ -1,4 +1,4 @@
-﻿package com.ankamagames.atouin.types
+package com.ankamagames.atouin.types
 {
     import flash.display.Sprite;
     import flash.geom.ColorTransform;
@@ -80,7 +80,7 @@
             if (isNaN(_ratio))
             {
                 val = XmlConfig.getInstance().getEntry("config.gfx.world.scaleRatio");
-                _ratio = (((val == null)) ? 1 : parseFloat(val));
+                _ratio = ((val == null) ? 1 : parseFloat(val));
             };
             var child:DisplayObject = (pChild as DisplayObject);
             if (pData != null)
@@ -116,5 +116,5 @@
 
 
     }
-}//package com.ankamagames.atouin.types
+} com.ankamagames.atouin.types
 

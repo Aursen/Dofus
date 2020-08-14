@@ -1,12 +1,13 @@
-﻿package com.ankamagames.dofus.network.types.game.context.fight
+package com.ankamagames.dofus.network.types.game.context.fight
 {
     import com.ankamagames.jerakine.network.INetworkType;
-    import com.ankamagames.dofus.network.types.game.look.EntityLook;
     import com.ankamagames.dofus.network.types.game.context.EntityDispositionInformations;
+    import com.ankamagames.dofus.network.types.game.look.EntityLook;
     import __AS3__.vec.Vector;
     import com.ankamagames.dofus.network.types.game.character.status.PlayerStatus;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
     public class GameFightMutantInformations extends GameFightFighterNamedInformations implements INetworkType 
     {
@@ -21,9 +22,9 @@
             return (50);
         }
 
-        public function initGameFightMutantInformations(contextualId:int=0, look:EntityLook=null, disposition:EntityDispositionInformations=null, teamId:uint=2, wave:uint=0, alive:Boolean=false, stats:GameFightMinimalStats=null, previousPositions:Vector.<uint>=null, name:String="", status:PlayerStatus=null, powerLevel:uint=0):GameFightMutantInformations
+        public function initGameFightMutantInformations(contextualId:Number=0, disposition:EntityDispositionInformations=null, look:EntityLook=null, spawnInfo:GameContextBasicSpawnInformation=null, wave:uint=0, stats:GameFightMinimalStats=null, previousPositions:Vector.<uint>=null, name:String="", status:PlayerStatus=null, leagueId:int=0, ladderPosition:int=0, hiddenInPrefight:Boolean=false, powerLevel:uint=0):GameFightMutantInformations
         {
-            super.initGameFightFighterNamedInformations(contextualId, look, disposition, teamId, wave, alive, stats, previousPositions, name, status);
+            super.initGameFightFighterNamedInformations(contextualId, disposition, look, spawnInfo, wave, stats, previousPositions, name, status, leagueId, ladderPosition, hiddenInPrefight);
             this.powerLevel = powerLevel;
             return (this);
         }
@@ -57,6 +58,22 @@
         public function deserializeAs_GameFightMutantInformations(input:ICustomDataInput):void
         {
             super.deserialize(input);
+            this._powerLevelFunc(input);
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GameFightMutantInformations(tree);
+        }
+
+        public function deserializeAsyncAs_GameFightMutantInformations(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._powerLevelFunc);
+        }
+
+        private function _powerLevelFunc(input:ICustomDataInput):void
+        {
             this.powerLevel = input.readByte();
             if (this.powerLevel < 0)
             {
@@ -66,5 +83,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.context.fight
+} com.ankamagames.dofus.network.types.game.context.fight
 

@@ -1,8 +1,9 @@
-﻿package com.ankamagames.dofus.network.types.game.context.roleplay
+package com.ankamagames.dofus.network.types.game.context.roleplay
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
     public class BasicNamedAllianceInformations extends BasicAllianceInformations implements INetworkType 
     {
@@ -49,10 +50,26 @@
         public function deserializeAs_BasicNamedAllianceInformations(input:ICustomDataInput):void
         {
             super.deserialize(input);
+            this._allianceNameFunc(input);
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_BasicNamedAllianceInformations(tree);
+        }
+
+        public function deserializeAsyncAs_BasicNamedAllianceInformations(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._allianceNameFunc);
+        }
+
+        private function _allianceNameFunc(input:ICustomDataInput):void
+        {
             this.allianceName = input.readUTF();
         }
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.context.roleplay
+} com.ankamagames.dofus.network.types.game.context.roleplay
 

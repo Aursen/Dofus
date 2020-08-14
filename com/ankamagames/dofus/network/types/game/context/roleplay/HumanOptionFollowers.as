@@ -1,25 +1,21 @@
-﻿package com.ankamagames.dofus.network.types.game.context.roleplay
+package com.ankamagames.dofus.network.types.game.context.roleplay
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import __AS3__.vec.Vector;
     import com.ankamagames.dofus.network.types.game.look.IndexedEntityLook;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
     import __AS3__.vec.*;
 
-    [Trusted]
     public class HumanOptionFollowers extends HumanOption implements INetworkType 
     {
 
         public static const protocolId:uint = 410;
 
-        public var followingCharactersLook:Vector.<IndexedEntityLook>;
+        public var followingCharactersLook:Vector.<IndexedEntityLook> = new Vector.<IndexedEntityLook>();
+        private var _followingCharactersLooktree:FuncTree;
 
-        public function HumanOptionFollowers()
-        {
-            this.followingCharactersLook = new Vector.<IndexedEntityLook>();
-            super();
-        }
 
         override public function getTypeId():uint
         {
@@ -74,7 +70,36 @@
             };
         }
 
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_HumanOptionFollowers(tree);
+        }
+
+        public function deserializeAsyncAs_HumanOptionFollowers(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            this._followingCharactersLooktree = tree.addChild(this._followingCharactersLooktreeFunc);
+        }
+
+        private function _followingCharactersLooktreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._followingCharactersLooktree.addChild(this._followingCharactersLookFunc);
+                i++;
+            };
+        }
+
+        private function _followingCharactersLookFunc(input:ICustomDataInput):void
+        {
+            var _item:IndexedEntityLook = new IndexedEntityLook();
+            _item.deserialize(input);
+            this.followingCharactersLook.push(_item);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.types.game.context.roleplay
+} com.ankamagames.dofus.network.types.game.context.roleplay
 

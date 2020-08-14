@@ -1,4 +1,4 @@
-﻿package com.ankamagames.tubul.enum
+package com.ankamagames.tubul.enum
 {
     public class EnumSoundType 
     {
@@ -8,5 +8,5 @@
 
 
     }
-}//package com.ankamagames.tubul.enum
+} com.ankamagames.tubul.enum
 

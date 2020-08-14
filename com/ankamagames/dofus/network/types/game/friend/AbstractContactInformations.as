@@ -1,8 +1,9 @@
-﻿package com.ankamagames.dofus.network.types.game.friend
+package com.ankamagames.dofus.network.types.game.friend
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
     public class AbstractContactInformations implements INetworkType 
     {
@@ -53,15 +54,36 @@
 
         public function deserializeAs_AbstractContactInformations(input:ICustomDataInput):void
         {
+            this._accountIdFunc(input);
+            this._accountNameFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_AbstractContactInformations(tree);
+        }
+
+        public function deserializeAsyncAs_AbstractContactInformations(tree:FuncTree):void
+        {
+            tree.addChild(this._accountIdFunc);
+            tree.addChild(this._accountNameFunc);
+        }
+
+        private function _accountIdFunc(input:ICustomDataInput):void
+        {
             this.accountId = input.readInt();
             if (this.accountId < 0)
             {
                 throw (new Error((("Forbidden value (" + this.accountId) + ") on element of AbstractContactInformations.accountId.")));
             };
+        }
+
+        private function _accountNameFunc(input:ICustomDataInput):void
+        {
             this.accountName = input.readUTF();
         }
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.friend
+} com.ankamagames.dofus.network.types.game.friend
 

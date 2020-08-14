@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.scripts.spells
+package com.ankamagames.dofus.scripts.spells
 {
     import com.ankamagames.jerakine.types.positions.MapPoint;
     import com.ankamagames.dofus.types.entities.Projectile;
@@ -34,7 +34,7 @@
             var targetCell:MapPoint = FxApi.GetCurrentTargetedCell(runner);
             var casterCell:MapPoint = FxApi.GetEntityCell(caster);
             var portalsCells:Vector.<MapPoint> = SpellFxApi.GetPortalCells(runner);
-            if (((portalsCells) && ((portalsCells.length > 1))))
+            if (((portalsCells) && (portalsCells.length > 1)))
             {
                 entryPortalCell = portalsCells[0];
                 exitPortalCell = portalsCells[(portalsCells.length - 1)];
@@ -45,9 +45,9 @@
             addCasterAnimationStep();
             if (SpellFxApi.HasSpellParam(spell, "casterGfxId"))
             {
-                addGfxEntityStep(casterCell, casterCell, tmpTargetCell, PREFIX_CASTER);
+                addNewGfxEntityStep(casterCell, casterCell, tmpTargetCell, PREFIX_CASTER, "", caster);
             };
-            if (SpellFxApi.HasSpellParam(spell, "missileGfxId"))
+            if ((((SpellFxApi.HasSpellParam(spell, "missileGfxId")) && (tmpTargetCell)) && (caster)))
             {
                 missileGfx = (FxApi.CreateGfxEntity(SpellFxApi.GetSpellParam(spell, "missileGfxId"), casterCell) as Projectile);
                 addMissileGfxStep = SequenceApi.CreateAddWorldEntityStep(missileGfx);
@@ -73,14 +73,14 @@
                 };
                 missileStep = SequenceApi.CreateParableGfxMovementStep(runner, missileGfx, tmpTargetCell, speed, curvature, missileGfxYOffset, missileOrientedToCurve);
                 destroyMissileStep = SequenceApi.CreateDestroyEntityStep(missileGfx);
-                if (tmpTargetCell == entryPortalCell)
+                if (((entryPortalCell) && (tmpTargetCell == entryPortalCell)))
                 {
                     missileGfx2 = (FxApi.CreateGfxEntity(SpellFxApi.GetSpellParam(spell, "missileGfxId"), exitPortalCell) as Projectile);
                     addMissileGfxStep2 = SequenceApi.CreateAddWorldEntityStep(missileGfx2);
                     missileStep2 = SequenceApi.CreateParableGfxMovementStep(runner, missileGfx2, targetCell, speed, curvature, missileGfxYOffset, missileOrientedToCurve);
                     destroyMissileStep2 = SequenceApi.CreateDestroyEntityStep(missileGfx2);
                 };
-                if (!(latestStep))
+                if (!latestStep)
                 {
                     SpellFxApi.AddFrontStep(runner, addMissileGfxStep);
                     SpellFxApi.AddStepAfter(runner, addMissileGfxStep, missileStep);
@@ -105,12 +105,13 @@
             };
             if (SpellFxApi.HasSpellParam(spell, "targetGfxId"))
             {
-                addGfxEntityStep(targetCell, tmpCasterCell, targetCell, PREFIX_TARGET);
+                addNewGfxEntityStep(targetCell, tmpCasterCell, targetCell, PREFIX_TARGET);
             };
             addAnimHitSteps();
+            addFBackgroundSteps();
             destroy();
         }
 
     }
-}//package com.ankamagames.dofus.scripts.spells
+} com.ankamagames.dofus.scripts.spells
 

@@ -1,8 +1,8 @@
-﻿package com.ankamagames.jerakine.messages
+package com.ankamagames.jerakine.messages
 {
     public interface ILogableMessage 
     {
 
     }
-}//package com.ankamagames.jerakine.messages
+} com.ankamagames.jerakine.messages
 

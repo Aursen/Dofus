@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.types.entities
+package com.ankamagames.dofus.types.entities
 {
     import com.ankamagames.tiphon.display.TiphonSprite;
     import com.ankamagames.jerakine.entities.interfaces.IEntity;
@@ -15,26 +15,33 @@
     import flash.utils.getQualifiedClassName;
     import flash.geom.ColorTransform;
     import com.ankamagames.atouin.AtouinConstants;
+    import flash.geom.Matrix;
     import com.ankamagames.jerakine.types.positions.MapPoint;
     import __AS3__.vec.Vector;
     import com.ankamagames.dofus.types.data.Follower;
-    import com.ankamagames.jerakine.types.positions.MovementPath;
     import com.ankamagames.jerakine.entities.behaviours.IMovementBehavior;
     import com.ankamagames.jerakine.entities.behaviours.IDisplayBehavior;
+    import com.ankamagames.dofus.logic.game.common.behaviours.IEntityDeleteBehavior;
     import flash.display.Bitmap;
     import com.ankamagames.atouin.entities.behaviours.display.AtouinDisplayBehavior;
     import com.ankamagames.atouin.entities.behaviours.movements.WalkingMovementBehavior;
-    import com.ankamagames.tiphon.events.TiphonEvent;
-    import com.ankamagames.dofus.types.enums.AnimationEnum;
-    import com.ankamagames.jerakine.types.enums.DirectionsEnum;
-    import com.ankamagames.tiphon.types.look.TiphonEntityLook;
     import com.ankamagames.dofus.kernel.Kernel;
+    import com.ankamagames.dofus.logic.game.fight.frames.FightContextFrame;
+    import com.ankamagames.dofus.logic.game.fight.behaviours.FightEntityDeleteBehavior;
+    import com.ankamagames.dofus.logic.game.roleplay.behaviours.RoleplayEntityDeleteBehavior;
+    import com.ankamagames.tiphon.events.TiphonEvent;
+    import com.ankamagames.tiphon.types.look.TiphonEntityLook;
     import com.ankamagames.jerakine.messages.MessageHandler;
     import com.ankamagames.jerakine.types.enums.InteractionsEnum;
     import com.ankamagames.dofus.network.enums.SubEntityBindingPointCategoryEnum;
+    import com.ankamagames.dofus.types.enums.AnimationEnum;
+    import com.ankamagames.jerakine.types.enums.DirectionsEnum;
+    import com.ankamagames.jerakine.managers.OptionManager;
+    import flash.filters.ColorMatrixFilter;
     import com.ankamagames.dofus.network.types.game.context.GameContextActorInformations;
     import com.ankamagames.dofus.logic.game.roleplay.frames.RoleplayContextFrame;
     import com.ankamagames.dofus.network.types.game.interactive.InteractiveElement;
+    import com.ankamagames.jerakine.types.positions.MovementPath;
     import com.ankamagames.jerakine.types.positions.PathElement;
     import com.ankamagames.dofus.logic.game.roleplay.frames.RoleplayEntitiesFrame;
     import com.ankamagames.dofus.network.types.game.context.roleplay.GameRolePlayHumanoidInformations;
@@ -45,19 +52,18 @@
     import com.ankamagames.jerakine.map.IDataMapProvider;
     import com.ankamagames.atouin.Atouin;
     import com.ankamagames.jerakine.pathfinding.Pathfinding;
+    import com.ankamagames.dofus.logic.game.fight.frames.FightTurnFrame;
     import com.ankamagames.dofus.logic.game.fight.frames.FightEntitiesFrame;
     import com.ankamagames.dofus.misc.EntityLookAdapter;
     import com.ankamagames.dofus.network.types.game.look.EntityLook;
+    import flash.utils.Dictionary;
     import flash.display.BitmapData;
     import flash.display.Sprite;
     import com.ankamagames.atouin.managers.InteractiveCellManager;
     import com.ankamagames.jerakine.utils.display.StageShareManager;
     import flash.display.DisplayObject;
-    import com.ankamagames.dofus.datacenter.sounds.SoundAnimation;
-    import com.ankamagames.tiphon.display.TiphonAnimation;
-    import com.ankamagames.dofus.datacenter.sounds.SoundBones;
-    import com.ankamagames.tiphon.engine.TiphonEventsManager;
-    import flash.events.Event;
+    import flash.geom.Rectangle;
+    import com.ankamagames.jerakine.utils.display.Rectangle2;
     import __AS3__.vec.*;
     import com.ankamagames.jerakine.entities.interfaces.*;
 
@@ -69,46 +75,109 @@
         private static const LUMINOSITY_TRANSFORM:ColorTransform = new ColorTransform(LUMINOSITY_FACTOR, LUMINOSITY_FACTOR, LUMINOSITY_FACTOR);
         private static const NORMAL_TRANSFORM:ColorTransform = new ColorTransform();
         private static const TRANSPARENCY_TRANSFORM:ColorTransform = new ColorTransform(1, 1, 1, AtouinConstants.OVERLAY_MODE_ALPHA);
+        private static const SHADOW_TRANSFORM_MATRIX:Matrix = new Matrix(0.77740478515625, -0.62744140625, -0.846054077148438, -0.531112670898438);
+        private static const SHADOW_MIRROR_TRANSFORM_MATRIX:Matrix = new Matrix(-0.77740478515625, 0.62744140625, -0.846054077148438, -0.531112670898438);
 
-        private var _id:int;
+        private var _id:Number;
         private var _position:MapPoint;
         private var _displayed:Boolean;
         private var _followers:Vector.<Follower>;
         private var _followed:AnimatedCharacter;
-        private var _followersMovPath:Vector.<MovementPath>;
         private var _transparencyAllowed:Boolean = true;
         private var _name:String;
         private var _canSeeThrough:Boolean = false;
+        private var _canWalkThrough:Boolean = false;
+        private var _canWalkTo:Boolean = false;
+        private var _shadow:TiphonSprite;
         protected var _movementBehavior:IMovementBehavior;
         protected var _displayBehavior:IDisplayBehavior;
+        protected var _deleteBehavior:IEntityDeleteBehavior;
         private var _bmpAlpha:Bitmap;
         private var _auraEntity:TiphonSprite;
         private var _visibleAura:Boolean = true;
+        private var _redrawMovementArea:Boolean = true;
         public var speedAdjust:Number = 0;
         public var slideOnNextMove:Boolean;
 
-        public function AnimatedCharacter(nId:int, look:TiphonEntityLook, followed:AnimatedCharacter=null)
+        public function AnimatedCharacter(nId:Number, look:TiphonEntityLook, followed:AnimatedCharacter=null, animation:String="AnimStatique", direction:uint=1)
         {
             this.id = nId;
             name = ("AnimatedCharacter" + nId);
+            this._name = ("entity::" + nId);
             this._followers = new Vector.<Follower>();
-            this._followersMovPath = new Vector.<MovementPath>();
             this._followed = followed;
             super(look);
-            this._name = ("entity::" + nId);
             this._displayBehavior = AtouinDisplayBehavior.getInstance();
             this._movementBehavior = WalkingMovementBehavior.getInstance();
+            this._deleteBehavior = ((Kernel.getWorker().getFrame(FightContextFrame) != null) ? FightEntityDeleteBehavior.getInstance() : RoleplayEntityDeleteBehavior.getInstance());
             addEventListener(TiphonEvent.RENDER_SUCCEED, this.onFirstRender);
             addEventListener(TiphonEvent.RENDER_FAILED, this.onFirstError);
-            setAnimationAndDirection(AnimationEnum.ANIM_STATIQUE, DirectionsEnum.DOWN_RIGHT);
+            if (animation)
+            {
+                this.setAnimationAndDirection(animation, direction);
+            };
         }
 
-        public function get id():int
+        private static function getFollowerAvailiableDirectionNumber(follower:Follower):uint
+        {
+            var b:Boolean;
+            var avaibleDirection:Array = [];
+            if ((follower.entity is TiphonSprite))
+            {
+                avaibleDirection = TiphonSprite(follower.entity).getAvaibleDirection();
+            };
+            var avaibleDirectionCount:uint;
+            for each (b in avaibleDirection)
+            {
+                if (b)
+                {
+                    avaibleDirectionCount++;
+                };
+            };
+            if (((avaibleDirection[1]) && (!(avaibleDirection[3]))))
+            {
+                avaibleDirectionCount++;
+            };
+            if (((!(avaibleDirection[1])) && (avaibleDirection[3])))
+            {
+                avaibleDirectionCount++;
+            };
+            if (((avaibleDirection[7]) && (!(avaibleDirection[5]))))
+            {
+                avaibleDirectionCount++;
+            };
+            if (((!(avaibleDirection[7])) && (avaibleDirection[5])))
+            {
+                avaibleDirectionCount++;
+            };
+            if (((!(avaibleDirection[0])) && (avaibleDirection[4])))
+            {
+                avaibleDirectionCount++;
+            };
+            if (((avaibleDirection[0]) && (!(avaibleDirection[4]))))
+            {
+                avaibleDirectionCount++;
+            };
+            return (avaibleDirectionCount);
+        }
+
+        public static function getFirstAnimatedParent(entity:TiphonSprite):AnimatedCharacter
+        {
+            var entityTmp:TiphonSprite = (entity as TiphonSprite);
+            while (((!(entityTmp === null)) && (!(entityTmp is AnimatedCharacter))))
+            {
+                entityTmp = entityTmp.parentSprite;
+            };
+            return ((entityTmp !== null) ? (entityTmp as AnimatedCharacter) : null);
+        }
+
+
+        public function get id():Number
         {
             return (this._id);
         }
 
-        public function set id(nValue:int):void
+        public function set id(nValue:Number):void
         {
             this._id = nValue;
         }
@@ -128,11 +197,11 @@
             var f:Follower;
             var lastPosition:MapPoint = this._position;
             this._position = oValue;
-            if (!(lastPosition))
+            if (!lastPosition)
             {
                 for each (f in this._followers)
                 {
-                    if (!(f.entity.position))
+                    if (!f.entity.position)
                     {
                         this.addFollower(f, true);
                     };
@@ -177,7 +246,7 @@
 
         public function get enabledInteractions():uint
         {
-            return (((InteractionsEnum.CLICK | InteractionsEnum.OUT) | InteractionsEnum.OVER));
+            return ((InteractionsEnum.CLICK | InteractionsEnum.OUT) | InteractionsEnum.OVER);
         }
 
         public function get isMoving():Boolean
@@ -202,40 +271,45 @@
 
         public function set visibleAura(visible:Boolean):void
         {
-            var currentAnimation:String;
             if (this._visibleAura == visible)
             {
                 return;
             };
             this._visibleAura = visible;
-            if (visible)
+            var currentAura:TiphonSprite = (getSubEntitySlot(SubEntityBindingPointCategoryEnum.HOOK_POINT_CATEGORY_BASE_FOREGROUND, 0) as TiphonSprite);
+            if (((currentAura) && (!(this.auraEntity))))
             {
-                currentAnimation = getAnimation();
-                if (((((this._auraEntity) && (currentAnimation))) && (!((currentAnimation.indexOf("AnimStatique") == -1)))))
-                {
-                    this.addSubEntity(this._auraEntity, SubEntityBindingPointCategoryEnum.HOOK_POINT_CATEGORY_BASE_FOREGROUND, 0);
-                    this._auraEntity.restartAnimation(0);
-                    this._auraEntity = null;
-                };
-            }
-            else
+                this.auraEntity = currentAura;
+            };
+            if (this.auraEntity)
             {
-                this._auraEntity = (getSubEntitySlot(SubEntityBindingPointCategoryEnum.HOOK_POINT_CATEGORY_BASE_FOREGROUND, 0) as TiphonSprite);
-                if (this._auraEntity)
-                {
-                    removeSubEntity(this._auraEntity);
-                    super.finalize();
-                };
+                this.auraEntity.visible = visible;
             };
         }
 
         public function get hasAura():Boolean
         {
-            if (((!((this._auraEntity == null))) || (!((getSubEntitySlot(SubEntityBindingPointCategoryEnum.HOOK_POINT_CATEGORY_BASE_FOREGROUND, 0) == null)))))
+            return ((!(this.auraEntity == null)) || (!(getSubEntitySlot(SubEntityBindingPointCategoryEnum.HOOK_POINT_CATEGORY_BASE_FOREGROUND, 0) == null)));
+        }
+
+        private function get auraEntity():TiphonSprite
+        {
+            return (this._auraEntity);
+        }
+
+        private function set auraEntity(aura:TiphonSprite):void
+        {
+            if (this._auraEntity == aura)
             {
-                return (true);
+                return;
             };
-            return (false);
+            if ((getSubEntitySlot(SubEntityBindingPointCategoryEnum.HOOK_POINT_CATEGORY_BASE_FOREGROUND, 0) as TiphonSprite))
+            {
+                this.removeSubEntity(this._auraEntity);
+            };
+            this._auraEntity = aura;
+            this._auraEntity.visible = this.visibleAura;
+            this.addSubEntity(this._auraEntity, SubEntityBindingPointCategoryEnum.HOOK_POINT_CATEGORY_BASE_FOREGROUND, 0);
         }
 
         public function getIsTransparencyAllowed():Boolean
@@ -263,7 +337,7 @@
             {
                 if (dirList[(dir % 8)])
                 {
-                    setAnimationAndDirection(AnimationEnum.ANIM_STATIQUE, (dir % 8));
+                    this.setAnimationAndDirection(AnimationEnum.ANIM_STATIQUE, (dir % 8));
                 };
                 dir++;
             };
@@ -273,6 +347,100 @@
         {
             removeEventListener(TiphonEvent.RENDER_SUCCEED, this.onFirstRender);
             removeEventListener(TiphonEvent.RENDER_FAILED, this.onFirstError);
+        }
+
+        public function initShadow(force:Boolean=false):void
+        {
+            var l:TiphonEntityLook;
+            if (OptionManager.getOptionManager("dofus").getOption("shadowCharacter"))
+            {
+                if (this._shadow)
+                {
+                    return;
+                };
+                if (look.getBone() == 1)
+                {
+                    l = TiphonEntityLook.fromString("{1|1965,218}");
+                    l.setScales((look.getScaleX() * 1.5), (look.getScaleY() * 1.5));
+                }
+                else
+                {
+                    l = look;
+                };
+                this._shadow = new TiphonSprite(l);
+                this._shadow.filters = [new ColorMatrixFilter([0, 0, 0, 0, 20, 0, 0, 0, 0, 20, 0, 0, 0, 0, 50, 0, 0, 0, 0.2, 0])];
+                addChildAt(this._shadow, 0);
+                if (force)
+                {
+                    this.setAnimationAndDirection(getAnimation(), getDirection());
+                };
+            }
+            else
+            {
+                if (!this._shadow)
+                {
+                    return;
+                };
+                this._shadow.destroy();
+                this._shadow = null;
+            };
+        }
+
+        override public function subEntitiesChanged(look:TiphonEntityLook):void
+        {
+            if (this._shadow)
+            {
+                this.removeSubEntity(this._shadow);
+            };
+            super.subEntitiesChanged(look);
+            if (this._shadow)
+            {
+                addChildAt(this._shadow, 0);
+            };
+        }
+
+        override protected function render():void
+        {
+            super.render();
+            this.initShadow();
+            this.processShadow();
+        }
+
+        private function processShadow():void
+        {
+            var direction:uint;
+            if (((destroyed) || (!(this._shadow))))
+            {
+                return;
+            };
+            if (this._shadow)
+            {
+                direction = getDirection();
+                this._shadow.transform.matrix = SHADOW_TRANSFORM_MATRIX;
+                switch (direction)
+                {
+                    case 1:
+                        if (hasAnimation(getAnimation(), 6))
+                        {
+                            direction = 6;
+                        };
+                        break;
+                    case 2:
+                        if (hasAnimation(getAnimation(), 3))
+                        {
+                            direction = 3;
+                        };
+                        break;
+                    case 5:
+                        if (hasAnimation(getAnimation(), 2))
+                        {
+                            direction = 2;
+                        };
+                        break;
+                };
+                this._shadow.setAnimationAndDirection(getAnimation(), direction);
+                addChildAt(this._shadow, 0);
+            };
         }
 
         public function canSeeThrough():Boolean
@@ -285,22 +453,33 @@
             this._canSeeThrough = value;
         }
 
+        public function setCanWalkThrough(value:Boolean):void
+        {
+            this._canWalkThrough = value;
+        }
+
         public function canWalkThrough():Boolean
         {
-            return (this._canSeeThrough);
+            return (this._canWalkThrough);
+        }
+
+        public function setCanWalkTo(value:Boolean):void
+        {
+            this._canWalkTo = value;
         }
 
         public function canWalkTo():Boolean
         {
-            return (this._canSeeThrough);
+            return (this._canWalkTo);
         }
 
         public function move(path:MovementPath, callback:Function=null, movementBehavior:IMovementBehavior=null):void
         {
+            var followerDirection:uint;
+            var forbidenCellsId:Array;
             var follower:Follower;
             var infos:GameContextActorInformations;
             var isCreatureMode:Boolean;
-            var forbidenCellsId:Array;
             var rpContextFrame:RoleplayContextFrame;
             var ies:Vector.<InteractiveElement>;
             var ie:InteractiveElement;
@@ -309,22 +488,21 @@
             var avaibleDirectionCount:uint;
             var endpoint:MapPoint;
             var followerPoint:MapPoint;
-            var tryCount:uint;
             var followedMovPath:MovementPath;
-            var firstDrawPath:Array;
+            var firstDrawPath:Vector.<PathElement>;
             var followerPath:MovementPath;
             var i:uint;
             var storedMovementPath:MovementPath;
             var pElem:PathElement;
             var lastElement:PathElement;
-            if (!(path.start.equals(this.position)))
+            if (!path.start.equals(this.position))
             {
                 _log.warn((((((("Unsynchronized position for entity " + this.id) + ", jumping from ") + this.position) + " to ") + path.start) + "."));
                 this.jump(path.start);
             };
             var distance:uint = (path.path.length + 1);
             this._movementBehavior = movementBehavior;
-            if (!(this._movementBehavior))
+            if (!this._movementBehavior)
             {
                 if (Kernel.getWorker().contains(RoleplayEntitiesFrame))
                 {
@@ -344,7 +522,7 @@
                         };
                     };
                 };
-                if (!(this._movementBehavior))
+                if (!this._movementBehavior)
                 {
                     if (distance > 3)
                     {
@@ -375,11 +553,10 @@
                     };
                 };
             };
-            var followerDirection:uint = path.end.advancedOrientationTo(this.position);
             var mapData:IDataMapProvider = DataMapProvider.getInstance();
             if (this._followers.length > 0)
             {
-                forbidenCellsId = new Array();
+                forbidenCellsId = [];
                 rpContextFrame = (Kernel.getWorker().getFrame(RoleplayContextFrame) as RoleplayContextFrame);
                 if (rpContextFrame != null)
                 {
@@ -398,31 +575,24 @@
                     };
                 };
             };
-            this._followersMovPath = new Vector.<MovementPath>();
+            var followersMovPath:Vector.<MovementPath> = new Vector.<MovementPath>();
             for each (follower in this._followers)
             {
-                avaibleDirectionCount = this.getFollowerAvailiableDirectionNumber(follower);
+                avaibleDirectionCount = getFollowerAvailiableDirectionNumber(follower);
                 endpoint = path.end;
                 forbidenCellsId.push(endpoint.cellId);
-                if (((!((follower.type == Follower.TYPE_MONSTER))) && ((((((!(avaibleDirectionCount) < 8)) && (!((this._followers.indexOf(follower) == 0))))) && ((this._followersMovPath.length > 0))))))
+                if (((!(follower.type == Follower.TYPE_MONSTER)) && ((((!(avaibleDirectionCount)) < 8) && (!(this._followers.indexOf(follower) == 0))) && (followersMovPath.length > 0))))
                 {
-                    endpoint = this._followersMovPath[(this._followersMovPath.length - 1)].end;
+                    endpoint = followersMovPath[(followersMovPath.length - 1)].end;
                 };
                 followerDirection = endpoint.advancedOrientationTo(this.position);
-                followerPoint = null;
-                tryCount = 0;
-                do 
-                {
-                    followerPoint = endpoint.getNearestFreeCellInDirection(followerDirection, mapData, false, false, true, forbidenCellsId);
-                    followerDirection++;
-                    followerDirection = (followerDirection % 8);
-                } while (((!(followerPoint)) && ((++tryCount < 8))));
+                followerPoint = endpoint.getNearestFreeCellInDirection(followerDirection, mapData, false, true, true, forbidenCellsId);
                 if (followerPoint)
                 {
-                    if (((!((avaibleDirectionCount < 8))) && (!((follower.type == Follower.TYPE_MONSTER)))))
+                    if (((!(avaibleDirectionCount < 8)) && (!(follower.type == Follower.TYPE_MONSTER))))
                     {
                         followerPath = new MovementPath();
-                        if ((((this._followers.indexOf(follower) == 0)) || ((this._followersMovPath.length <= 0))))
+                        if (((this._followers.indexOf(follower) == 0) || (followersMovPath.length <= 0)))
                         {
                             followedMovPath = path;
                             firstDrawPath = followedMovPath.path.concat();
@@ -438,7 +608,7 @@
                         }
                         else
                         {
-                            followedMovPath = this._followersMovPath[(this._followersMovPath.length - 1)];
+                            followedMovPath = followersMovPath[(followersMovPath.length - 1)];
                             firstDrawPath = followedMovPath.path.concat();
                             if (followedMovPath.length > 0)
                             {
@@ -477,18 +647,21 @@
                         storedMovementPath.path = followerPath.path.concat();
                         storedMovementPath.end = followerPath.end;
                         storedMovementPath.start = followerPath.start;
-                        this._followersMovPath.push(storedMovementPath);
+                        followersMovPath.push(storedMovementPath);
                         if (this._followers.indexOf(follower) == 0)
                         {
                             lastElement = followerPath.getPointAtIndex((followerPath.length - 1));
                             lastElement.orientation = followerPath.getPointAtIndex((followerPath.length - 1)).step.orientationTo(followerPoint);
                         };
-                        this.processMove(followerPath, new Array(follower.entity, followerPoint));
+                        this.processMove(followerPath, follower.entity, followerPoint);
                     }
                     else
                     {
-                        forbidenCellsId.push(followerPoint.cellId);
-                        Pathfinding.findPath(mapData, follower.entity.position, followerPoint, !((avaibleDirectionCount < 8)), true, this.processMove, new Array(follower.entity, followerPoint));
+                        if (forbidenCellsId.indexOf(followerPoint.cellId) == -1)
+                        {
+                            forbidenCellsId.push(followerPoint.cellId);
+                        };
+                        this.processMove(Pathfinding.findPath(mapData, follower.entity.position, followerPoint, (!(avaibleDirectionCount < 8)), true), follower.entity, followerPoint);
                     };
                 }
                 else
@@ -499,20 +672,17 @@
             this._movementBehavior.move(this, path, callback);
         }
 
-        private function processMove(followPath:MovementPath, args:Array):void
+        private function processMove(followPath:MovementPath, follower:IMovable, followerPoint:MapPoint):void
         {
-            var _local_4:MapPoint;
-            var follower:IMovable = args[0];
-            if (((followPath) && ((followPath.path.length > 0))))
+            if (((followPath) && (followPath.path.length > 0)))
             {
                 follower.movementBehavior = this._movementBehavior;
                 follower.move(followPath, null, this._movementBehavior);
             }
             else
             {
-                _local_4 = args[1];
-                _log.warn((((("There was no path from " + follower.position) + " to ") + _local_4) + " for a follower. Jumping !"));
-                follower.jump(_local_4);
+                _log.warn((((("There was no path from " + follower.position) + " to ") + followerPoint) + " for a follower. Jumping !"));
+                follower.jump(followerPoint);
             };
         }
 
@@ -526,10 +696,10 @@
             {
                 mdp = DataMapProvider.getInstance();
                 mp = this.position.getNearestFreeCell(mdp, false);
-                if (!(mp))
+                if (!mp)
                 {
                     mp = this.position.getNearestFreeCell(mdp, true);
-                    if (!(mp))
+                    if (!mp)
                     {
                         return;
                     };
@@ -555,15 +725,39 @@
             this._displayed = true;
             for each (f in this._followers)
             {
-                if ((((f.entity is IDisplayable)) && (!(IDisplayable(f.entity).displayed))))
+                if (((f.entity is IDisplayable) && (!(IDisplayable(f.entity).displayed))))
                 {
                     IDisplayable(f.entity).display();
                 };
             };
         }
 
+        public function hide(redrawMovement:Boolean=true):void
+        {
+            this.alpha = 0;
+            this._displayed = false;
+            this.hideAllFollowers();
+            if (redrawMovement)
+            {
+                this._displayBehavior.remove(this);
+                this._deleteBehavior.entityDeleted(this);
+            };
+        }
+
+        public function show(redrawMovement:Boolean=true):void
+        {
+            this.alpha = 1;
+            this._displayed = true;
+            this.showAllFollowers();
+            if (redrawMovement)
+            {
+                this._displayBehavior.display(this);
+            };
+        }
+
         public function remove():void
         {
+            var fightTurnFrame:FightTurnFrame;
             var fef:FightEntitiesFrame = (Kernel.getWorker().getFrame(FightEntitiesFrame) as FightEntitiesFrame);
             if (((fef) && (fef.justSwitchingCreaturesFightMode)))
             {
@@ -573,6 +767,21 @@
             this._displayed = false;
             this._movementBehavior.stop(this, true);
             this._displayBehavior.remove(this);
+            this._deleteBehavior.entityDeleted(this);
+            this._auraEntity = null;
+            clearAnimation();
+            if (Kernel.getWorker().terminating)
+            {
+                return;
+            };
+            if (this._redrawMovementArea)
+            {
+                fightTurnFrame = (Kernel.getWorker().getFrame(FightTurnFrame) as FightTurnFrame);
+                if (((fightTurnFrame) && (fightTurnFrame.myTurn)))
+                {
+                    fightTurnFrame.drawMovementArea();
+                };
+            };
         }
 
         override public function destroy():void
@@ -580,6 +789,12 @@
             this._followed = null;
             this.remove();
             super.destroy();
+        }
+
+        public function quickDestroy():void
+        {
+            this._redrawMovementArea = false;
+            this.destroy();
         }
 
         public function getRootEntity():AnimatedCharacter
@@ -596,11 +811,8 @@
             var iFollower:Follower;
             var dfollower:IDisplayable;
             var sprite:TiphonSprite;
-            var num:int = this._followers.length;
-            var i:int;
-            while (i < num)
+            for each (iFollower in this._followers)
             {
-                iFollower = this._followers[i];
                 dfollower = (iFollower.entity as IDisplayable);
                 if (dfollower)
                 {
@@ -611,45 +823,64 @@
                 {
                     sprite.destroy();
                 };
-                i++;
             };
             this._followers = new Vector.<Follower>();
         }
 
-        public function removeFollower(follower:Follower):void
+        public function hideAllFollowers():void
         {
             var iFollower:Follower;
+            var sprite:TiphonSprite;
+            for each (iFollower in this._followers)
+            {
+                sprite = (iFollower.entity as TiphonSprite);
+                if (sprite)
+                {
+                    sprite.alpha = 0;
+                };
+            };
+        }
+
+        public function showAllFollowers():void
+        {
+            var iFollower:Follower;
+            var sprite:TiphonSprite;
+            for each (iFollower in this._followers)
+            {
+                sprite = (iFollower.entity as TiphonSprite);
+                if (sprite)
+                {
+                    sprite.alpha = 1;
+                };
+            };
+        }
+
+        public function removeFollower(follower:Follower):void
+        {
             var dfollower:IDisplayable;
             var sprite:TiphonSprite;
-            var num:int = this._followers.length;
-            var i:int;
-            while (i < num)
+            var index:int = this._followers.indexOf(follower);
+            if (index != -1)
             {
-                iFollower = this._followers[i];
-                if (follower == iFollower)
+                dfollower = (follower.entity as IDisplayable);
+                if (dfollower)
                 {
-                    dfollower = (iFollower.entity as IDisplayable);
-                    if (dfollower)
-                    {
-                        dfollower.remove();
-                    };
-                    sprite = (iFollower.entity as TiphonSprite);
-                    if (sprite)
-                    {
-                        sprite.destroy();
-                    };
-                    this._followers.splice(i, 1);
-                    return;
+                    dfollower.remove();
                 };
-                i++;
+                sprite = (follower.entity as TiphonSprite);
+                if (sprite)
+                {
+                    sprite.destroy();
+                };
+                this._followers.splice(index, 1);
             };
         }
 
         public function addFollower(follower:Follower, instantSync:Boolean=false):void
         {
-            var followerIndex:*;
+            var followerIndex:int;
             var f:Follower;
-            var _local_8:uint;
+            var avaibleDirectionCount:uint;
             var dfollower:IDisplayable;
             var found:Boolean;
             for each (f in this._followers)
@@ -660,7 +891,7 @@
                     break;
                 };
             };
-            if (!(found))
+            if (!found)
             {
                 if (follower.type == Follower.TYPE_PET)
                 {
@@ -668,14 +899,14 @@
                 }
                 else
                 {
-                    _local_8 = this.getFollowerAvailiableDirectionNumber(follower);
-                    if ((((_local_8 < 8)) || ((follower.type == Follower.TYPE_MONSTER))))
+                    avaibleDirectionCount = getFollowerAvailiableDirectionNumber(follower);
+                    if (((avaibleDirectionCount < 8) || (follower.type == Follower.TYPE_MONSTER)))
                     {
                         this._followers.push(follower);
                     }
                     else
                     {
-                        if ((((this._followers.length == 0)) || (!((this._followers[0].type == Follower.TYPE_PET)))))
+                        if (((this._followers.length == 0) || (!(this._followers[0].type == Follower.TYPE_PET))))
                         {
                             followerIndex = 0;
                         };
@@ -683,16 +914,16 @@
                     };
                 };
             };
-            if (!(this.position))
+            if (!this.position)
             {
                 return;
             };
             var mdp:IDataMapProvider = DataMapProvider.getInstance();
             var mp:MapPoint = this.position.getNearestFreeCell(mdp, false);
-            if (!(mp))
+            if (!mp)
             {
                 mp = this.position.getNearestFreeCell(mdp, true);
-                if (!(mp))
+                if (!mp)
                 {
                     return;
                 };
@@ -730,54 +961,11 @@
             };
         }
 
-        private function getFollowerAvailiableDirectionNumber(follower:Follower):uint
-        {
-            var b:Boolean;
-            var avaibleDirection:Array = [];
-            if ((follower.entity is TiphonSprite))
-            {
-                avaibleDirection = TiphonSprite(follower.entity).getAvaibleDirection();
-            };
-            var avaibleDirectionCount:uint;
-            for each (b in avaibleDirection)
-            {
-                if (b)
-                {
-                    avaibleDirectionCount++;
-                };
-            };
-            if (((avaibleDirection[1]) && (!(avaibleDirection[3]))))
-            {
-                avaibleDirectionCount++;
-            };
-            if (((!(avaibleDirection[1])) && (avaibleDirection[3])))
-            {
-                avaibleDirectionCount++;
-            };
-            if (((avaibleDirection[7]) && (!(avaibleDirection[5]))))
-            {
-                avaibleDirectionCount++;
-            };
-            if (((!(avaibleDirection[7])) && (avaibleDirection[5])))
-            {
-                avaibleDirectionCount++;
-            };
-            if (((!(avaibleDirection[0])) && (avaibleDirection[4])))
-            {
-                avaibleDirectionCount++;
-            };
-            if (((avaibleDirection[0]) && (!(avaibleDirection[4]))))
-            {
-                avaibleDirectionCount++;
-            };
-            return (avaibleDirectionCount);
-        }
-
         public function followersEqual(pEntityLooks:Vector.<EntityLook>):Boolean
         {
             var i:int;
-            var _local_5:Follower;
-            if (!(pEntityLooks))
+            var ac:Follower;
+            if (!pEntityLooks)
             {
                 return (false);
             };
@@ -787,12 +975,12 @@
             {
                 return (false);
             };
-            for each (_local_5 in this._followers)
+            for each (ac in this._followers)
             {
                 i = 0;
                 while (i < nbLooks)
                 {
-                    if ((_local_5.entity as AnimatedCharacter).look.equals(EntityLookAdapter.fromNetwork(pEntityLooks[i])))
+                    if ((ac.entity as AnimatedCharacter).look.equals(EntityLookAdapter.fromNetwork(pEntityLooks[i])))
                     {
                         nbEqual++;
                         break;
@@ -809,17 +997,13 @@
 
         public function isMounted():Boolean
         {
-            var subEntities:Array = this.look.getSubEntities(true);
-            if (!(subEntities))
+            var subEntities:Dictionary = this.look.getSubEntities(true);
+            if (!subEntities)
             {
                 return (false);
             };
             var mountedEntities:Array = subEntities[SubEntityBindingPointCategoryEnum.HOOK_POINT_CATEGORY_MOUNT_DRIVER];
-            if (((!(mountedEntities)) || ((mountedEntities.length == 0))))
-            {
-                return (false);
-            };
-            return (true);
+            return ((mountedEntities) && (mountedEntities.length > 0));
         }
 
         public function highLightCharacterAndFollower(value:Boolean):void
@@ -847,7 +1031,7 @@
             }
             else
             {
-                if (Atouin.getInstance().options.transparentOverlayMode)
+                if (Atouin.getInstance().options.getOption("transparentOverlayMode"))
                 {
                     transform.colorTransform = TRANSPARENCY_TRANSFORM;
                 }
@@ -879,7 +1063,7 @@
         public function hideBitmapAlpha():void
         {
             visible = true;
-            if (((!((this._bmpAlpha == null))) && (StageShareManager.stage.contains(this._bmpAlpha))))
+            if (((!(this._bmpAlpha == null)) && (StageShareManager.stage.contains(this._bmpAlpha))))
             {
                 this.parent.removeChild(this._bmpAlpha);
                 this._bmpAlpha = null;
@@ -888,37 +1072,100 @@
 
         override public function addSubEntity(entity:DisplayObject, category:uint, slot:uint):void
         {
-            if ((((((category == SubEntityBindingPointCategoryEnum.HOOK_POINT_CATEGORY_BASE_FOREGROUND)) && ((slot == 0)))) && (!(this._visibleAura))))
+            if (((((category == SubEntityBindingPointCategoryEnum.HOOK_POINT_CATEGORY_BASE_FOREGROUND) && (slot == 0)) && (!(this._visibleAura))) && (!(this.auraEntity))))
             {
-                this._auraEntity = (entity as TiphonSprite);
-                return;
+                this.auraEntity = (entity as TiphonSprite);
+            }
+            else
+            {
+                super.addSubEntity(entity, category, slot);
             };
-            super.addSubEntity(entity, category, slot);
         }
 
-        override protected function onAdded(e:Event):void
+        override public function removeSubEntity(entity:DisplayObject):void
         {
-            var name:String;
-            var vsa:Vector.<SoundAnimation>;
-            var sa:SoundAnimation;
-            var dataSoundLabel:String;
-            super.onAdded(e);
-            var animation:TiphonAnimation = (e.target as TiphonAnimation);
-            var soundBones:SoundBones = SoundBones.getSoundBonesById(look.getBone());
-            if (soundBones)
+            super.removeSubEntity(entity);
+        }
+
+        override public function setAnimationAndDirection(animation:String, direction:uint, pDisableAnimModifier:Boolean=false):void
+        {
+            super.setAnimationAndDirection(animation, direction, pDisableAnimModifier);
+            if (this._shadow)
             {
-                name = getQualifiedClassName(animation);
-                vsa = soundBones.getSoundAnimations(name);
-                animation.spriteHandler.tiphonEventManager.removeEvents(TiphonEventsManager.BALISE_SOUND, name);
-                for each (sa in vsa)
-                {
-                    dataSoundLabel = (((TiphonEventsManager.BALISE_DATASOUND + TiphonEventsManager.BALISE_PARAM_BEGIN) + ((((!((sa.label == null))) && (!((sa.label == "null"))))) ? sa.label : "")) + TiphonEventsManager.BALISE_PARAM_END);
-                    animation.spriteHandler.tiphonEventManager.addEvent(dataSoundLabel, sa.startFrame, name);
-                };
+                this.processShadow();
             };
+        }
+
+        public function getCreatureBounds():IRectangle
+        {
+            var minX:Number;
+            var minY:Number;
+            var maxX:Number;
+            var maxY:Number;
+            var index:uint;
+            var child:DisplayObject;
+            var childName:String;
+            var childBounds:Rectangle;
+            var currentChildMaxX:Number;
+            var currentChildMaxY:Number;
+            var fightEntitiesFrame:FightEntitiesFrame = (Kernel.getWorker().getFrame(FightEntitiesFrame) as FightEntitiesFrame);
+            if (((fightEntitiesFrame === null) || (!(fightEntitiesFrame.isInCreaturesFightMode()))))
+            {
+                return (null);
+            };
+            var targetBounds:IRectangle = new Rectangle2();
+            minX = (minY = Infinity);
+            maxX = (maxY = -(Infinity));
+            if (((!(_animMovieClip === null)) && (numChildren > 0)))
+            {
+                index = 0;
+                while (index < _animMovieClip.numChildren)
+                {
+                    child = _animMovieClip.getChildAt(index);
+                    childName = getQualifiedClassName(child);
+                    if (((child === null) || (!(childName.indexOf("carried") === -1))))
+                    {
+                    }
+                    else
+                    {
+                        childBounds = child.getBounds(StageShareManager.stage);
+                        if (((childBounds.width <= 0) || (childBounds.height <= 0)))
+                        {
+                        }
+                        else
+                        {
+                            currentChildMaxX = (childBounds.x + childBounds.width);
+                            currentChildMaxY = (childBounds.y + childBounds.height);
+                            if (minX > childBounds.x)
+                            {
+                                minX = childBounds.x;
+                            };
+                            if (minY > childBounds.y)
+                            {
+                                minY = childBounds.y;
+                            };
+                            if (maxX < currentChildMaxX)
+                            {
+                                maxX = currentChildMaxX;
+                            };
+                            if (maxY < currentChildMaxY)
+                            {
+                                maxY = currentChildMaxY;
+                            };
+                        };
+                    };
+                    index++;
+                };
+                targetBounds.x = minX;
+                targetBounds.y = minY;
+                targetBounds.width = (maxX - minX);
+                targetBounds.height = (maxY - minY);
+                return (targetBounds);
+            };
+            return (null);
         }
 
 
     }
-}//package com.ankamagames.dofus.types.entities
+} com.ankamagames.dofus.types.entities
 

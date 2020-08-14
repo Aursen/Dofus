@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.common.steps
+package com.ankamagames.dofus.logic.game.common.steps
 {
     import com.ankamagames.jerakine.sequencer.AbstractSequencable;
     import com.ankamagames.dofus.misc.utils.Camera;
@@ -30,8 +30,8 @@
 
         override public function start():void
         {
-            var _local_4:Object;
-            var _local_5:TweenLite;
+            var zoomObj:Object;
+            var t:TweenLite;
             var mp:MapPoint = ScriptsUtil.getMapPoint(this._args);
             var cell:GraphicCell = InteractiveCellManager.getInstance().getCell(mp.cellId);
             var cellPos:Point = cell.parent.localToGlobal(new Point((cell.x + (cell.width / 2)), (cell.y + (cell.height / 2))));
@@ -43,11 +43,11 @@
             }
             else
             {
-                _local_4 = {"zoom":Atouin.getInstance().currentZoom};
-                _local_5 = new TweenLite(_local_4, 1, {
+                zoomObj = {"zoom":Atouin.getInstance().currentZoom};
+                t = new TweenLite(zoomObj, 1, {
                     "zoom":this._camera.currentZoom,
                     "onUpdate":this.updateZoom,
-                    "onUpdateParams":[_local_4],
+                    "onUpdateParams":[zoomObj],
                     "onComplete":this.zoomComplete
                 });
             };
@@ -65,5 +65,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.steps
+} com.ankamagames.dofus.logic.game.common.steps
 

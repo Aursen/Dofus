@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.ui
+package com.ankamagames.dofus.network.messages.game.ui
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class ClientUIOpenedMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -27,9 +27,9 @@
             return (6459);
         }
 
-        public function initClientUIOpenedMessage(type:uint=0):ClientUIOpenedMessage
+        public function initClientUIOpenedMessage(_arg_1:uint=0):ClientUIOpenedMessage
         {
-            this.type = type;
+            this.type = _arg_1;
             this._isInitialized = true;
             return (this);
         }
@@ -52,6 +52,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_ClientUIOpenedMessage(output);
@@ -69,6 +77,21 @@
 
         public function deserializeAs_ClientUIOpenedMessage(input:ICustomDataInput):void
         {
+            this._typeFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_ClientUIOpenedMessage(tree);
+        }
+
+        public function deserializeAsyncAs_ClientUIOpenedMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._typeFunc);
+        }
+
+        private function _typeFunc(input:ICustomDataInput):void
+        {
             this.type = input.readByte();
             if (this.type < 0)
             {
@@ -78,5 +101,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.ui
+} com.ankamagames.dofus.network.messages.game.ui
 

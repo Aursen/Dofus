@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.common.managers
+package com.ankamagames.dofus.logic.game.common.managers
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
@@ -20,21 +20,19 @@
 
         private var _enabled:Boolean;
         private var _confirm:Boolean;
-        private var _afkSecurity:Timer;
+        private var _afkSecurity:Timer = new Timer(5000);
         private var _securityTimerUp:Boolean;
         public var lastTurnSkip:int;
 
         public function AFKFightManager()
         {
-            this._afkSecurity = new Timer(5000);
-            super();
             this._enabled = false;
             this._afkSecurity.addEventListener(TimerEvent.TIMER, this.onTimer);
         }
 
         public static function getInstance():AFKFightManager
         {
-            if (!(_self))
+            if (!_self)
             {
                 _self = new (AFKFightManager)();
             };
@@ -54,7 +52,7 @@
             {
                 return;
             };
-            if (!(e))
+            if (!e)
             {
                 this.confirm = false;
             };
@@ -97,9 +95,6 @@
                     {
                         _log.info("AFK mode disabled");
                     };
-                    if (confirmed)
-                    {
-                    };
                     KernelEventsManager.getInstance().processCallback(FightHookList.AfkModeChanged, confirmed);
                 };
                 this._confirm = confirmed;
@@ -108,7 +103,7 @@
 
         public function get isAfk():Boolean
         {
-            return (((this._enabled) && (this._confirm)));
+            return ((this._enabled) && (this._confirm));
         }
 
         public function get enabled():Boolean
@@ -130,5 +125,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.managers
+} com.ankamagames.dofus.logic.game.common.managers
 

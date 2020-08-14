@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.common.utils
+package com.ankamagames.dofus.logic.common.utils
 {
     import com.ankamagames.jerakine.network.ILagometer;
     import com.ankamagames.jerakine.logger.Logger;
@@ -7,6 +7,7 @@
     import flash.utils.Timer;
     import flash.events.TimerEvent;
     import com.ankamagames.jerakine.network.INetworkMessage;
+    import com.ankamagames.berilia.frames.UiStatsFrame;
     import com.ankamagames.berilia.managers.KernelEventsManager;
     import com.ankamagames.dofus.misc.lists.HookList;
 
@@ -57,6 +58,11 @@
 
         protected function startLag():void
         {
+            if (!this._lagging)
+            {
+                UiStatsFrame.addStat("server_lag");
+                UiStatsFrame.setDateStat("last_server_lag");
+            };
             this._lagging = true;
             this.updateUi();
         }
@@ -74,5 +80,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.common.utils
+} com.ankamagames.dofus.logic.common.utils
 

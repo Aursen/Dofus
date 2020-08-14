@@ -1,4 +1,4 @@
-﻿package com.ankamagames.tubul.events
+package com.ankamagames.tubul.events
 {
     import flash.events.Event;
 
@@ -7,9 +7,9 @@
 
         public static const SOON_END_OF_FILE:String = "soon_end_of_file";
 
-        public function SoundWrapperEvent(type:String, bubbles:Boolean=false, cancelable:Boolean=false)
+        public function SoundWrapperEvent(_arg_1:String, bubbles:Boolean=false, cancelable:Boolean=false)
         {
-            super(type, bubbles, cancelable);
+            super(_arg_1, bubbles, cancelable);
         }
 
         override public function clone():Event
@@ -20,5 +20,5 @@
 
 
     }
-}//package com.ankamagames.tubul.events
+} com.ankamagames.tubul.events
 

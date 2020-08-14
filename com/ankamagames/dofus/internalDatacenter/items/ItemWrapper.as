@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.internalDatacenter.items
+package com.ankamagames.dofus.internalDatacenter.items
 {
     import com.ankamagames.dofus.datacenter.items.Item;
     import com.ankamagames.jerakine.interfaces.ISlotData;
@@ -13,13 +13,17 @@
     import __AS3__.vec.Vector;
     import com.ankamagames.dofus.datacenter.effects.EffectInstance;
     import com.ankamagames.dofus.network.types.game.data.items.effects.ObjectEffect;
+    import com.ankamagames.jerakine.utils.misc.StringUtils;
+    import com.ankamagames.dofus.internalDatacenter.DataEnum;
     import com.ankamagames.jerakine.data.XmlConfig;
+    import com.ankama.dofus.enums.ActionIds;
+    import com.ankamagames.dofus.datacenter.effects.instances.EffectInstanceInteger;
+    import com.ankamagames.dofus.network.types.game.data.items.ObjectItem;
     import com.ankamagames.dofus.network.types.game.data.items.effects.ObjectEffectInteger;
     import com.ankamagames.jerakine.utils.display.spellZone.ZoneEffect;
     import com.ankamagames.jerakine.utils.display.spellZone.IZoneShape;
+    import com.ankamagames.dofus.types.enums.ItemCategoryEnum;
     import com.ankamagames.dofus.logic.game.common.managers.PlayedCharacterManager;
-    import com.ankamagames.dofus.datacenter.effects.Effect;
-    import com.ankamagames.dofus.datacenter.effects.instances.EffectInstanceInteger;
     import com.ankamagames.jerakine.data.I18n;
     import com.ankamagames.dofus.datacenter.monsters.Monster;
     import com.ankamagames.dofus.datacenter.monsters.MonsterGrade;
@@ -27,54 +31,44 @@
     import com.ankamagames.dofus.datacenter.livingObjects.LivingObjectSkinJntMood;
     import com.ankamagames.jerakine.interfaces.ISlotDataHolder;
     import com.ankamagames.dofus.misc.ObjectEffectAdapter;
+    import com.ankamagames.dofus.logic.game.fight.miscs.ActionIdProtocol;
+    import com.ankamagames.dofus.datacenter.effects.instances.EffectInstanceDice;
+    import com.ankamagames.dofus.datacenter.items.LegendaryPowerCategory;
     import __AS3__.vec.*;
 
     public class ItemWrapper extends Item implements ISlotData, ICellZoneProvider, IDataCenter 
     {
 
         private static const _log:Logger = Log.getLogger(getQualifiedClassName(ItemWrapper));
-        public static const ITEM_TYPE_CERTIFICATE:uint = 97;
-        public static const ITEM_TYPE_LIVING_OBJECT:uint = 113;
-        public static const ACTION_ID_LIVING_OBJECT_FOOD_DATE:uint = 808;
-        public static const ACTION_ID_LIVING_OBJECT_ID:uint = 970;
-        public static const ACTION_ID_LIVING_OBJECT_MOOD:uint = 971;
-        public static const ACTION_ID_LIVING_OBJECT_SKIN:uint = 972;
-        public static const ACTION_ID_LIVING_OBJECT_CATEGORY:uint = 973;
-        public static const ACTION_ID_LIVING_OBJECT_LEVEL:uint = 974;
-        public static const ACTION_ID_USE_PRESET:uint = 707;
-        public static const ACTION_ID_SPEAKING_OBJECT:uint = 1102;
-        public static const ACTION_ITEM_SKIN_ITEM:uint = 1151;
-        public static const ACTION_ID_WRAPPER_OBJECT_CATEGORY:uint = 1179;
-        public static const ACTION_ID_WRAPPER_OBJECT_GID:uint = 1176;
-        public static const GID_PRESET_SHORTCUT_ITEM:int = 11589;
         private static const LEVEL_STEP:Array = [0, 10, 21, 33, 46, 60, 75, 91, 108, 126, 145, 165, 186, 208, 231, 0xFF, 280, 306, 333, 361];
-        private static const EQUIPMENT_SUPER_TYPES:Array = [1, 2, 3, 4, 5, 7, 8, 10, 11, 12, 13, 23];
-        private static const OBJECT_GID_SOULSTONE:uint = 7010;
-        private static const OBJECT_GID_SOULSTONE_BOSS:uint = 10417;
-        private static const OBJECT_GID_SOULSTONE_MINIBOSS:uint = 10418;
+        private static const COSMETIC_WRAPPER_TEXTURE_URI:String = "texture/slot/blueSlot_40.png";
+        private static const HARNESS_TYPE_ID:int = 190;
         public static var MEMORY_LOG:Dictionary = new Dictionary(true);
-        private static var _cache:Array = new Array();
-        private static var _cacheGId:Array = new Array();
+        private static var _cache:Dictionary = new Dictionary();
+        private static var _cacheGId:Dictionary = new Dictionary();
         private static var _errorIconUri:Uri;
         private static var _fullSizeErrorIconUri:Uri;
         private static var _uriLoaderContext:LoaderContext;
         private static var _uniqueIndex:int;
-        private static var _properties:Array;
+        private static var cosmecticWrapperBlueBorderUri:Uri = null;
 
         private var _uriPngMode:Uri;
         private var _backGroundIconUri:Uri;
+        private var _forcedBackGroundIconUri:Uri;
         private var _active:Boolean = true;
         private var _uri:Uri;
         private var _shortName:String;
+        private var _nameWithoutAccent:String;
         private var _mimicryItemSkinGID:int;
         private var _wrapperItemSkinGID:int;
         private var _setCount:int = 0;
+        private var _searchContent:String;
         public var position:uint = 63;
         public var sortOrder:uint = 0;
         public var objectUID:uint = 0;
         public var objectGID:uint = 0;
         public var quantity:uint = 0;
-        public var effects:Vector.<EffectInstance>;
+        public var effects:Vector.<EffectInstance> = new Vector.<EffectInstance>();
         public var effectsList:Vector.<ObjectEffect>;
         public var livingObjectId:uint;
         public var livingObjectMood:uint;
@@ -90,18 +84,18 @@
         public var exchangeAllowed:Boolean;
         public var isPresetObject:Boolean;
         public var isOkForMultiUse:Boolean;
+        public var givenExperienceAsSuperFood:Number = 0;
+        public var experiencePoints:int = 0;
+        public var evolutiveLevel:int = 0;
+        public var customTextureUri:Uri;
 
-        public function ItemWrapper()
-        {
-            this.effects = new Vector.<EffectInstance>();
-            super();
-        }
 
         public static function create(position:uint, objectUID:uint, objectGID:uint, quantity:uint, newEffects:Vector.<ObjectEffect>, useCache:Boolean=true):ItemWrapper
         {
             var item:ItemWrapper;
+            var effect:EffectInstance;
             var refItem:Item = Item.getItemById(objectGID);
-            var cachedItem:ItemWrapper = (((objectUID > 0)) ? _cache[objectUID] : _cacheGId[objectGID]);
+            var cachedItem:ItemWrapper = ((objectUID > 0) ? _cache[objectUID] : _cacheGId[objectGID]);
             if (((!(cachedItem)) || (!(useCache))))
             {
                 if (refItem.isWeapon)
@@ -130,8 +124,9 @@
                 item = cachedItem;
             };
             MEMORY_LOG[item] = 1;
+            item._nameWithoutAccent = StringUtils.noAccent(refItem.name);
             item.effectsList = newEffects;
-            item.isPresetObject = (objectGID == GID_PRESET_SHORTCUT_ITEM);
+            item.isPresetObject = (objectGID == DataEnum.ITEM_GID_PRESET_SHORTCUT);
             if (item.objectGID != objectGID)
             {
                 item._uri = null;
@@ -148,13 +143,87 @@
             item.effects = new Vector.<EffectInstance>();
             item.exchangeAllowed = true;
             item.updateEffects(newEffects);
+            if ((((item.isWrapperObject) || (item.isLivingObject)) || (item.isHarness)))
+            {
+                if (cosmecticWrapperBlueBorderUri == null)
+                {
+                    cosmecticWrapperBlueBorderUri = new Uri((XmlConfig.getInstance().getEntry("config.ui.skin") + COSMETIC_WRAPPER_TEXTURE_URI));
+                };
+                item.customTextureUri = cosmecticWrapperBlueBorderUri;
+            }
+            else
+            {
+                item.customTextureUri = null;
+            };
+            for each (effect in item.effects)
+            {
+                if (effect.effectId == ActionIds.ACTION_SUPERFOOD_EXPERIENCE)
+                {
+                    item.givenExperienceAsSuperFood = (item.givenExperienceAsSuperFood + (effect as EffectInstanceInteger).value);
+                };
+            };
+            return (item);
+        }
+
+        public static function createFromServer(itemFromServer:ObjectItem, useCache:Boolean=true):ItemWrapper
+        {
+            var item:ItemWrapper;
+            var refItem:Item = Item.getItemById(itemFromServer.objectGID);
+            var cachedItem:ItemWrapper = ((itemFromServer.objectUID > 0) ? _cache[itemFromServer.objectUID] : _cacheGId[itemFromServer.objectGID]);
+            if (((!(cachedItem)) || (!(useCache))))
+            {
+                if (refItem.isWeapon)
+                {
+                    item = new WeaponWrapper();
+                }
+                else
+                {
+                    item = new (ItemWrapper)();
+                };
+                item.objectUID = itemFromServer.objectUID;
+                if (useCache)
+                {
+                    if (item.objectUID > 0)
+                    {
+                        _cache[itemFromServer.objectUID] = item;
+                    }
+                    else
+                    {
+                        _cacheGId[itemFromServer.objectGID] = item;
+                    };
+                };
+            }
+            else
+            {
+                item = cachedItem;
+            };
+            MEMORY_LOG[item] = 1;
+            item._nameWithoutAccent = StringUtils.noAccent(refItem.name);
+            item.effectsList = itemFromServer.effects;
+            item.isPresetObject = (itemFromServer.objectGID == DataEnum.ITEM_GID_PRESET_SHORTCUT);
+            if (item.objectGID != itemFromServer.objectGID)
+            {
+                item._uri = null;
+                item._uriPngMode = null;
+            };
+            refItem.copy(refItem, item);
+            item.position = itemFromServer.position;
+            item.objectGID = itemFromServer.objectGID;
+            item.quantity = itemFromServer.quantity;
+            _uniqueIndex++;
+            item.sortOrder = _uniqueIndex;
+            item.livingObjectCategory = 0;
+            item.wrapperObjectCategory = 0;
+            item.effects = new Vector.<EffectInstance>();
+            item.exchangeAllowed = true;
+            item.updateEffects(item.effectsList);
             return (item);
         }
 
         public static function clearCache():void
         {
-            _cache = new Array();
-            _cacheGId = new Array();
+            _cache = new Dictionary();
+            _cacheGId = new Dictionary();
         }
 
         public static function getItemFromUId(objectUID:uint):ItemWrapper
@@ -173,9 +242,9 @@
             var i:EffectInstance;
             for each (i in this.effects)
             {
-                if (i.effectId == 1081)
+                if (i.effectId == ActionIds.ACTION_ITEM_EXTRA_PODS)
                 {
-                    return ((realWeight + i.parameter0));
+                    return (realWeight + i.parameter0);
                 };
             };
             return (realWeight);
@@ -190,11 +259,11 @@
         {
             if (this.linked)
             {
-                this._backGroundIconUri = new Uri(XmlConfig.getInstance().getEntry("config.ui.skin").concat("bitmap/linkedSlot.png"));
+                this._backGroundIconUri = new Uri(XmlConfig.getInstance().getEntry("config.ui.skin").concat("texture/slot/linkedSlot.png"));
             };
-            if (!(this._backGroundIconUri))
+            if (!this._backGroundIconUri)
             {
-                this._backGroundIconUri = new Uri(XmlConfig.getInstance().getEntry("config.ui.skin").concat("bitmap/emptySlot.png"));
+                this._backGroundIconUri = new Uri(XmlConfig.getInstance().getEntry("config.ui.skin").concat("texture/slot/emptySlot.png"));
             };
             return (this._backGroundIconUri);
         }
@@ -204,9 +273,25 @@
             this._backGroundIconUri = bgUri;
         }
 
+        [Uri]
+        public function get forcedBackGroundIconUri():Uri
+        {
+            if (this.linked)
+            {
+                this._forcedBackGroundIconUri = new Uri(XmlConfig.getInstance().getEntry("config.ui.skin").concat("texture/slot/linkedSlot.png"));
+            };
+            return (this._forcedBackGroundIconUri);
+        }
+
+        [Uri]
+        public function set forcedBackGroundIconUri(bgUri:Uri):void
+        {
+            this._forcedBackGroundIconUri = bgUri;
+        }
+
         public function get errorIconUri():Uri
         {
-            if (!(_errorIconUri))
+            if (!_errorIconUri)
             {
                 _errorIconUri = new Uri(XmlConfig.getInstance().getEntry("config.gfx.path.item.bitmap").concat("error.png"));
             };
@@ -215,7 +300,7 @@
 
         public function get fullSizeErrorIconUri():Uri
         {
-            if (!(_fullSizeErrorIconUri))
+            if (!_fullSizeErrorIconUri)
             {
                 _fullSizeErrorIconUri = new Uri(XmlConfig.getInstance().getEntry("config.gfx.path.item.vector").concat("error.swf"));
             };
@@ -231,7 +316,7 @@
             };
             for each (effect in this.effectsList)
             {
-                if (effect.actionId == ACTION_ID_SPEAKING_OBJECT)
+                if (effect.actionId == ActionIds.ACTION_SPEAKING_ITEM)
                 {
                     return (true);
                 };
@@ -241,12 +326,17 @@
 
         public function get isLivingObject():Boolean
         {
-            return (!((this.livingObjectCategory == 0)));
+            return (!(this.livingObjectCategory == 0));
         }
 
         public function get isWrapperObject():Boolean
         {
-            return (!((this.wrapperObjectCategory == 0)));
+            return (!(this.wrapperObjectCategory == 0));
+        }
+
+        public function get isHarness():Boolean
+        {
+            return (type.id == HARNESS_TYPE_ID);
         }
 
         public function get isObjectWrapped():Boolean
@@ -258,7 +348,7 @@
             };
             for each (effect in this.effectsList)
             {
-                if (effect.actionId == ACTION_ID_WRAPPER_OBJECT_GID)
+                if (effect.actionId == ActionIds.ACTION_ITEM_WRAPPER_LOOK_OBJ_GID)
                 {
                     this._wrapperItemSkinGID = (effect as ObjectEffectInteger).value;
                     return (true);
@@ -274,15 +364,12 @@
             {
                 return (false);
             };
-            if (((type) && (type.mimickable)))
+            for each (effect in this.effectsList)
             {
-                for each (effect in this.effectsList)
+                if (effect.actionId == ActionIds.ACTION_ITEM_MIMICRY_OBJ_GID)
                 {
-                    if (effect.actionId == ACTION_ITEM_SKIN_ITEM)
-                    {
-                        this._mimicryItemSkinGID = (effect as ObjectEffectInteger).value;
-                        return (true);
-                    };
+                    this._mimicryItemSkinGID = (effect as ObjectEffectInteger).value;
+                    return (true);
                 };
             };
             return (false);
@@ -290,7 +377,7 @@
 
         public function get info1():String
         {
-            return ((((this.quantity > 1)) ? this.quantity.toString() : null));
+            return ((this.quantity > 1) ? this.quantity.toString() : null);
         }
 
         public function get startTime():int
@@ -328,7 +415,7 @@
 
         public function get minimalRange():uint
         {
-            return (((hasOwnProperty("minRange")) ? this["minRange"] : 0));
+            return ((hasOwnProperty("minRange")) ? this["minRange"] : 0);
         }
 
         public function set maximalRange(pRange:uint):void
@@ -337,7 +424,7 @@
 
         public function get maximalRange():uint
         {
-            return (((hasOwnProperty("range")) ? this["range"] : 0));
+            return ((hasOwnProperty("range")) ? this["range"] : 0);
         }
 
         public function set castZoneInLine(pCastInLine:Boolean):void
@@ -346,7 +433,7 @@
 
         public function get castZoneInLine():Boolean
         {
-            return (((hasOwnProperty("castInLine")) ? this["castInLine"] : 0));
+            return ((hasOwnProperty("castInLine")) ? this["castInLine"] : 0);
         }
 
         public function set castZoneInDiagonal(pCastInDiagonal:Boolean):void
@@ -355,7 +442,7 @@
 
         public function get castZoneInDiagonal():Boolean
         {
-            return (((hasOwnProperty("castInDiagonal")) ? this["castInDiagonal"] : 0));
+            return ((hasOwnProperty("castInDiagonal")) ? this["castInDiagonal"] : 0);
         }
 
         public function get spellZoneEffects():Vector.<IZoneShape>
@@ -373,31 +460,30 @@
 
         public function toString():String
         {
-            return ((((("[ItemWrapper#" + this.objectUID) + "_") + this.name) + "]"));
+            return (((("[ItemWrapper#" + this.objectUID) + "_") + this.name) + "]");
         }
 
         public function get isCertificate():Boolean
         {
             var itbt:Item = Item.getItemById(this.objectGID);
-            return (((itbt) && ((itbt.typeId == ITEM_TYPE_CERTIFICATE))));
+            return ((itbt) && (((itbt.typeId == DataEnum.ITEM_TYPE_DRAGOTURKEY_CERTIFICATE) || (itbt.typeId == DataEnum.ITEM_TYPE_MULDO_CERTIFICATE)) || (itbt.typeId == DataEnum.ITEM_TYPE_FLYHORN_CERTIFICATE)));
         }
 
         public function get isEquipment():Boolean
         {
-            var itbt:Item = Item.getItemById(this.objectGID);
-            return (((itbt) && (!((EQUIPMENT_SUPER_TYPES.indexOf(itbt.type.superTypeId) == -1)))));
+            return (category == ItemCategoryEnum.EQUIPMENT_CATEGORY);
         }
 
         public function get isUsable():Boolean
         {
             var itbt:Item = Item.getItemById(this.objectGID);
-            return (((itbt) && (((itbt.usable) || (itbt.targetable)))));
+            return ((itbt) && ((itbt.usable) || (itbt.targetable)));
         }
 
         public function get belongsToSet():Boolean
         {
             var itbt:Item = Item.getItemById(this.objectGID);
-            return (((itbt) && (!((itbt.itemSetId == -1)))));
+            return ((itbt) && (!(itbt.itemSetId == -1)));
         }
 
         public function get favoriteEffect():Vector.<EffectInstance>
@@ -407,17 +493,17 @@
             var boostedEffect:EffectInstance;
             var effect:EffectInstance;
             var result:Vector.<EffectInstance> = new Vector.<EffectInstance>();
-            if (PlayedCharacterManager.getInstance())
+            if (((PlayedCharacterManager.getInstance()) && (this.objectGID > 0)))
             {
                 saO = PlayedCharacterManager.getInstance().currentSubArea;
                 itbt = Item.getItemById(this.objectGID);
-                if (((saO) && (!((itbt.favoriteSubAreas.indexOf(saO.id) == -1)))))
+                if (((saO) && (!(itbt.favoriteSubAreas.indexOf(saO.id) == -1))))
                 {
-                    if (((((itbt.favoriteSubAreas) && (itbt.favoriteSubAreas.length))) && (itbt.favoriteSubAreasBonus)))
+                    if ((((itbt.favoriteSubAreas) && (itbt.favoriteSubAreas.length)) && (itbt.favoriteSubAreasBonus)))
                     {
                         for each (effect in this.effects)
                         {
-                            if ((((effect is EffectInstanceInteger)) && ((Effect.getEffectById(effect.effectId).bonusType == 1))))
+                            if (((effect is EffectInstanceInteger) && (effect.bonusType == 1)))
                             {
                                 boostedEffect = effect.clone();
                                 EffectInstanceInteger(boostedEffect).value = Math.floor(((EffectInstanceInteger(boostedEffect).value * itbt.favoriteSubAreasBonus) / 100));
@@ -446,87 +532,96 @@
             };
             switch (this.objectGID)
             {
-                case OBJECT_GID_SOULSTONE_MINIBOSS:
-                    return (((I18n.getUiText("ui.item.miniboss") + I18n.getUiText("ui.common.colon")) + this.shortName));
-                case OBJECT_GID_SOULSTONE_BOSS:
-                    return (((I18n.getUiText("ui.item.boss") + I18n.getUiText("ui.common.colon")) + this.shortName));
-                case OBJECT_GID_SOULSTONE:
-                    return (((I18n.getUiText("ui.item.soul") + I18n.getUiText("ui.common.colon")) + this.shortName));
+                case DataEnum.ITEM_GID_SOULSTONE_MINIBOSS:
+                    return ((I18n.getUiText("ui.item.miniboss") + I18n.getUiText("ui.common.colon")) + this.shortName);
+                case DataEnum.ITEM_GID_SOULSTONE_BOSS:
+                    return ((I18n.getUiText("ui.item.boss") + I18n.getUiText("ui.common.colon")) + this.shortName);
+                case DataEnum.ITEM_GID_SOULSTONE:
+                    return ((I18n.getUiText("ui.item.soul") + I18n.getUiText("ui.common.colon")) + this.shortName);
                 default:
                     return (super.name);
             };
         }
 
+        public function get nameWithoutAccent():String
+        {
+            if (!this._nameWithoutAccent)
+            {
+                this._nameWithoutAccent = StringUtils.noAccent(this.name);
+            };
+            return (this._nameWithoutAccent);
+        }
+
         public function get shortName():String
         {
-            var _local_1:int;
-            var _local_2:String;
-            var _local_3:Array;
-            var _local_4:Array;
+            var bestLevel:int;
+            var bestName:String;
+            var miniboss:Array;
+            var boss:Array;
             var effect:EffectInstance;
             var monster:Monster;
             var gradeId:int;
             var grade:MonsterGrade;
-            if (!(this._shortName))
+            if (!this._shortName)
             {
                 switch (this.objectGID)
                 {
-                    case OBJECT_GID_SOULSTONE:
-                        _local_1 = 0;
-                        _local_2 = null;
+                    case DataEnum.ITEM_GID_SOULSTONE:
+                        bestLevel = 0;
+                        bestName = null;
                         for each (effect in this.effects)
                         {
                             monster = Monster.getMonsterById(int(effect.parameter2));
                             if (monster)
                             {
                                 gradeId = int(effect.parameter0);
-                                if ((((gradeId < 1)) || ((gradeId > monster.grades.length))))
+                                if (((gradeId < 1) || (gradeId > monster.grades.length)))
                                 {
                                     gradeId = monster.grades.length;
                                 };
                                 grade = monster.grades[(gradeId - 1)];
-                                if (((grade) && ((grade.level > _local_1))))
+                                if (((grade) && (grade.level > bestLevel)))
                                 {
-                                    _local_1 = grade.level;
-                                    _local_2 = monster.name;
+                                    bestLevel = grade.level;
+                                    bestName = monster.name;
                                 };
                             };
                         };
-                        this._shortName = _local_2;
+                        this._shortName = bestName;
                         break;
-                    case OBJECT_GID_SOULSTONE_MINIBOSS:
-                        _local_3 = new Array();
+                    case DataEnum.ITEM_GID_SOULSTONE_MINIBOSS:
+                        miniboss = new Array();
                         for each (effect in this.effects)
                         {
                             monster = Monster.getMonsterById(int(effect.parameter2));
                             if (((monster) && (monster.isMiniBoss)))
                             {
-                                _local_3.push(monster.name);
+                                miniboss.push(monster.name);
                             };
                         };
-                        if (_local_3.length)
+                        if (miniboss.length)
                         {
-                            this._shortName = _local_3.join(", ");
+                            this._shortName = miniboss.join(", ");
                         };
                         break;
-                    case OBJECT_GID_SOULSTONE_BOSS:
-                        _local_4 = new Array();
+                    case DataEnum.ITEM_GID_SOULSTONE_BOSS:
+                        boss = new Array();
                         for each (effect in this.effects)
                         {
                             monster = Monster.getMonsterById(int(effect.parameter2));
                             if (((monster) && (monster.isBoss)))
                             {
-                                _local_4.push(monster.name);
+                                boss.push(monster.name);
                             };
                         };
-                        if (_local_4.length)
+                        if (boss.length)
                         {
-                            this._shortName = _local_4.join(", ");
+                            this._shortName = boss.join(", ");
                         };
                         break;
                 };
             };
-            if (!(this._shortName))
+            if (!this._shortName)
             {
                 this._shortName = super.name;
             };
@@ -540,12 +635,64 @@
 
         public function get linked():Boolean
         {
-            return (((!(exchangeable)) || (!(this.exchangeAllowed))));
+            return ((!(exchangeable)) || (!(this.exchangeAllowed)));
+        }
+
+        public function get searchContent():String
+        {
+            var effect:Object;
+            var monster:Monster;
+            if (!this._searchContent)
+            {
+                this._searchContent = "";
+                switch (this.objectGID)
+                {
+                    case DataEnum.ITEM_GID_SOULSTONE:
+                    case DataEnum.ITEM_GID_SOULSTONE_BOSS:
+                    case DataEnum.ITEM_GID_SOULSTONE_MINIBOSS:
+                        for each (effect in this.effectsList)
+                        {
+                            if (effect.actionId == ActionIds.ACTION_CHARACTER_SUMMON_MONSTER_GROUP)
+                            {
+                                monster = Monster.getMonsterById(effect.diceConst);
+                                if (monster)
+                                {
+                                    this._searchContent = (this._searchContent + monster.undiatricalName);
+                                };
+                            };
+                        };
+                        break;
+                };
+            };
+            return (this._searchContent);
+        }
+
+        public function get isMimiCryWithWrapperObject():Boolean
+        {
+            var effectInstance:EffectInstance;
+            if (!this._mimicryItemSkinGID)
+            {
+                return (false);
+            };
+            var mimicryItem:Item = Item.getItemById(this._mimicryItemSkinGID);
+            for each (effectInstance in mimicryItem.possibleEffects)
+            {
+                if (effectInstance.effectId == ActionIds.ACTION_ITEM_WRAPPER_COMPATIBLE_OBJ_TYPE)
+                {
+                    return (true);
+                };
+            };
+            return (false);
+        }
+
+        public function get displayedLevel():int
+        {
+            return (this.evolutiveLevel - 1);
         }
 
         public function update(position:uint, objectUID:uint, objectGID:uint, quantity:uint, newEffects:Vector.<ObjectEffect>):void
         {
-            if (((!((this.objectGID == objectGID))) || (!((this.effectsList == newEffects)))))
+            if (((!(this.objectGID == objectGID)) || (!(this.effectsList == newEffects))))
             {
                 this._uri = (this._uriPngMode = null);
             };
@@ -580,7 +727,7 @@
             if (this.presetIcon != -1)
             {
                 this._uri = new Uri(XmlConfig.getInstance().getEntry("config.gfx.path").concat("presets/icons.swf|icon_").concat(this.presetIcon));
-                if (!(_uriLoaderContext))
+                if (!_uriLoaderContext)
                 {
                     _uriLoaderContext = new LoaderContext();
                     AirScanner.allowByteCodeExecution(_uriLoaderContext, true);
@@ -618,7 +765,7 @@
                 return (this._uriPngMode);
             };
             this._uri = new Uri(XmlConfig.getInstance().getEntry("config.gfx.path.item.vector").concat(iconId).concat(".swf"));
-            if (!(_uriLoaderContext))
+            if (!_uriLoaderContext)
             {
                 _uriLoaderContext = new LoaderContext();
                 AirScanner.allowByteCodeExecution(_uriLoaderContext, true);
@@ -654,6 +801,10 @@
             item.exchangeAllowed = this.exchangeAllowed;
             item.isOkForMultiUse = this.isOkForMultiUse;
             item.sortOrder = this.sortOrder;
+            item.givenExperienceAsSuperFood = this.givenExperienceAsSuperFood;
+            item.experiencePoints = this.experiencePoints;
+            item.evolutiveLevel = this.evolutiveLevel;
+            item.customTextureUri = this.customTextureUri;
             return (item);
         }
 
@@ -669,26 +820,26 @@
         {
             switch (effect.effectId)
             {
-                case ACTION_ID_LIVING_OBJECT_FOOD_DATE:
+                case ActionIds.ACTION_PETS_LAST_MEAL:
                     this.livingObjectFoodDate = effect.description;
                     return;
-                case ACTION_ID_LIVING_OBJECT_ID:
+                case ActionIds.ACTION_ITEM_LIVING_ID:
                     this.livingObjectId = EffectInstanceInteger(effect).value;
-                    return;
-                case ACTION_ID_LIVING_OBJECT_MOOD:
+                    break;
+                case ActionIds.ACTION_ITEM_LIVING_MOOD:
                     this.livingObjectMood = EffectInstanceInteger(effect).value;
-                    return;
-                case ACTION_ID_LIVING_OBJECT_SKIN:
+                    break;
+                case ActionIds.ACTION_ITEM_LIVING_SKIN:
                     this.livingObjectSkin = EffectInstanceInteger(effect).value;
-                    return;
-                case ACTION_ID_LIVING_OBJECT_CATEGORY:
+                    break;
+                case ActionIds.ACTION_ITEM_LIVING_CATEGORY:
                     this.livingObjectCategory = EffectInstanceInteger(effect).value;
-                    return;
-                case ACTION_ID_LIVING_OBJECT_LEVEL:
+                    break;
+                case ActionIds.ACTION_ITEM_LIVING_LEVEL:
                     this.livingObjectLevel = this.getLivingObjectLevel(EffectInstanceInteger(effect).value);
                     this.livingObjectXp = (EffectInstanceInteger(effect).value - LEVEL_STEP[(this.livingObjectLevel - 1)]);
                     this.livingObjectMaxXp = (LEVEL_STEP[this.livingObjectLevel] - LEVEL_STEP[(this.livingObjectLevel - 1)]);
-                    return;
+                    break;
             };
         }
 
@@ -696,7 +847,7 @@
         {
             switch (effect.effectId)
             {
-                case ACTION_ID_USE_PRESET:
+                case ActionIds.ACTION_ITEM_EQUIP_PRESET:
                     this.presetIcon = int(effect.parameter0);
                     return;
             };
@@ -716,7 +867,7 @@
             return (LEVEL_STEP.length);
         }
 
-        private function updateEffects(updateEffects:Vector.<ObjectEffect>):void
+        public function updateEffects(updateEffects:Vector.<ObjectEffect>):void
         {
             var effect:ObjectEffect;
             var effectInstance:EffectInstance;
@@ -727,26 +878,26 @@
             {
                 switch (itbt.typeId)
                 {
-                    case 7:
+                    case DataEnum.ITEM_TYPE_HAMMER:
                         shape = 88;
                         ray = 1;
                         break;
-                    case 4:
+                    case DataEnum.ITEM_TYPE_STAFF:
                         shape = 84;
                         ray = 1;
                         break;
-                    case 8:
+                    case DataEnum.ITEM_TYPE_SHOVEL:
                         shape = 76;
                         ray = 1;
                         break;
                 };
             };
             this.exchangeAllowed = true;
-            this.isOkForMultiUse = false;
+            var multiUseCheck:int;
             for each (effect in updateEffects)
             {
                 effectInstance = ObjectEffectAdapter.fromNetwork(effect);
-                if (((shape) && ((effectInstance.category == 2))))
+                if (((shape) && (effectInstance.category == DataEnum.ACTION_TYPE_DAMAGES)))
                 {
                     effectInstance.zoneShape = shape;
                     effectInstance.zoneSize = ray;
@@ -754,26 +905,99 @@
                 this.effects.push(effectInstance);
                 this.updateLivingObjects(effectInstance);
                 this.updatePresets(effectInstance);
-                if ((((effectInstance.effectId == 139)) || ((effectInstance.effectId == 110))))
+                if (((!(multiUseCheck == -1)) && (((((effectInstance.effectId == ActionIds.ACTION_CHARACTER_ENERGY_POINTS_WIN) || (effectInstance.effectId == ActionIds.ACTION_CHARACTER_BOOST_LIFE_POINTS)) || (effectInstance.effectId == ActionIds.ACTION_CHARACTER_GAIN_XP)) || (effectInstance.effectId == ActionIds.ACTION_CHARACTER_INVENTORY_GAIN_KAMAS)) || (effectInstance.effectId == ActionIdProtocol.ACTION_CHARACTER_INVENTORY_ADD_ITEM_NOCHECK))))
                 {
-                    this.isOkForMultiUse = true;
+                    multiUseCheck = 1;
                 };
-                if (effectInstance.effectId == 983)
+                if ((((((((((!(multiUseCheck == -1)) && (!(effectInstance.effectId == ActionIds.ACTION_CHARACTER_ENERGY_POINTS_WIN))) && (!(effectInstance.effectId == ActionIds.ACTION_CHARACTER_BOOST_LIFE_POINTS))) && (!(effectInstance.effectId == ActionIds.ACTION_CHARACTER_GAIN_XP))) && (!(effectInstance.effectId == ActionIds.ACTION_CHARACTER_INVENTORY_GAIN_KAMAS))) && (!(effectInstance.effectId == ActionIdProtocol.ACTION_CHARACTER_INVENTORY_ADD_ITEM_NOCHECK))) && (!(effectInstance.effectId == ActionIds.ACTION_MARK_NEVER_TRADABLE_STRONG))) && (!(effectInstance.effectId == ActionIds.ACTION_MARK_NEVER_TRADABLE))) && (!(effectInstance.effectId == ActionIds.ACTION_MARK_NOT_TRADABLE))))
+                {
+                    multiUseCheck = -1;
+                };
+                if (effectInstance.effectId == ActionIds.ACTION_MARK_NOT_TRADABLE)
                 {
                     this.exchangeAllowed = false;
                 };
-                if ((((effectInstance.effectId == 981)) || ((effectInstance.effectId == 982))))
+                if (((effectInstance.effectId == ActionIds.ACTION_MARK_NEVER_TRADABLE_STRONG) || (effectInstance.effectId == ActionIds.ACTION_MARK_NEVER_TRADABLE)))
                 {
                     exchangeable = false;
                 };
-                if (effectInstance.effectId == ACTION_ID_WRAPPER_OBJECT_CATEGORY)
+                if (effectInstance.effectId == ActionIds.ACTION_ITEM_WRAPPER_COMPATIBLE_OBJ_TYPE)
                 {
                     this.wrapperObjectCategory = EffectInstanceInteger(effectInstance).value;
                 };
+                if (effectInstance.effectId == ActionIds.ACTION_EVOLUTIVE_OBJECT_EXPERIENCE)
+                {
+                    this.experiencePoints = EffectInstanceDice(effectInstance).value;
+                };
+                if (effectInstance.effectId == ActionIds.ACTION_EVOLUTIVE_PET_LEVEL)
+                {
+                    this.evolutiveLevel = EffectInstanceDice(effectInstance).value;
+                };
             };
+            if (multiUseCheck == 1)
+            {
+                this.isOkForMultiUse = true;
+            }
+            else
+            {
+                this.isOkForMultiUse = false;
+            };
+        }
+
+        public function get itemHoldsLegendaryPower():Boolean
+        {
+            var effect:EffectInstance;
+            for each (effect in this.effects)
+            {
+                if (effect.effectId == ActionIds.ACTION_LEGENDARY_POWER_SPELL)
+                {
+                    return (true);
+                };
+            };
+            return (false);
+        }
+
+        public function get itemHoldsLegendaryStatus():Boolean
+        {
+            var effect:EffectInstance;
+            for each (effect in this.effects)
+            {
+                if (effect.effectId == ActionIds.ACTION_LEGENDARY_STATUS)
+                {
+                    return (true);
+                };
+            };
+            return (false);
+        }
+
+        public function get itemHasLegendaryEffect():Boolean
+        {
+            return ((this.itemHoldsLegendaryPower) || (this.itemHoldsLegendaryStatus));
+        }
+
+        public function get itemHasLockedLegendarySpell():Boolean
+        {
+            var effect:EffectInstance;
+            var categories:Array;
+            var cat:LegendaryPowerCategory;
+            for each (effect in this.effects)
+            {
+                if (effect.effectId == ActionIds.ACTION_CAST_STARTING_SPELL)
+                {
+                    categories = LegendaryPowerCategory.getLegendaryPowersCategories();
+                    for each (cat in categories)
+                    {
+                        if (cat.categorySpells.indexOf((effect as EffectInstanceDice).diceNum) != -1)
+                        {
+                            return (!(cat.categoryOverridable));
+                        };
+                    };
+                };
+            };
+            return (false);
         }
 
 
     }
-}//package com.ankamagames.dofus.internalDatacenter.items
+} com.ankamagames.dofus.internalDatacenter.items
 

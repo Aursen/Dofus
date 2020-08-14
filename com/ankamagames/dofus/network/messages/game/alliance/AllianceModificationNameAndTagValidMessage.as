@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.alliance
+package com.ankamagames.dofus.network.messages.game.alliance
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class AllianceModificationNameAndTagValidMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -55,6 +55,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_AllianceModificationNameAndTagValidMessage(output);
@@ -73,11 +81,32 @@
 
         public function deserializeAs_AllianceModificationNameAndTagValidMessage(input:ICustomDataInput):void
         {
+            this._allianceNameFunc(input);
+            this._allianceTagFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_AllianceModificationNameAndTagValidMessage(tree);
+        }
+
+        public function deserializeAsyncAs_AllianceModificationNameAndTagValidMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._allianceNameFunc);
+            tree.addChild(this._allianceTagFunc);
+        }
+
+        private function _allianceNameFunc(input:ICustomDataInput):void
+        {
             this.allianceName = input.readUTF();
+        }
+
+        private function _allianceTagFunc(input:ICustomDataInput):void
+        {
             this.allianceTag = input.readUTF();
         }
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.alliance
+} com.ankamagames.dofus.network.messages.game.alliance
 

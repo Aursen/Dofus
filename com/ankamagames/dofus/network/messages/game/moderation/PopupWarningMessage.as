@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.moderation
+package com.ankamagames.dofus.network.messages.game.moderation
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class PopupWarningMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -58,6 +58,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_PopupWarningMessage(output);
@@ -65,7 +73,7 @@
 
         public function serializeAs_PopupWarningMessage(output:ICustomDataOutput):void
         {
-            if ((((this.lockDuration < 0)) || ((this.lockDuration > 0xFF))))
+            if (((this.lockDuration < 0) || (this.lockDuration > 0xFF)))
             {
                 throw (new Error((("Forbidden value (" + this.lockDuration) + ") on element lockDuration.")));
             };
@@ -81,16 +89,43 @@
 
         public function deserializeAs_PopupWarningMessage(input:ICustomDataInput):void
         {
+            this._lockDurationFunc(input);
+            this._authorFunc(input);
+            this._contentFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_PopupWarningMessage(tree);
+        }
+
+        public function deserializeAsyncAs_PopupWarningMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._lockDurationFunc);
+            tree.addChild(this._authorFunc);
+            tree.addChild(this._contentFunc);
+        }
+
+        private function _lockDurationFunc(input:ICustomDataInput):void
+        {
             this.lockDuration = input.readUnsignedByte();
-            if ((((this.lockDuration < 0)) || ((this.lockDuration > 0xFF))))
+            if (((this.lockDuration < 0) || (this.lockDuration > 0xFF)))
             {
                 throw (new Error((("Forbidden value (" + this.lockDuration) + ") on element of PopupWarningMessage.lockDuration.")));
             };
+        }
+
+        private function _authorFunc(input:ICustomDataInput):void
+        {
             this.author = input.readUTF();
+        }
+
+        private function _contentFunc(input:ICustomDataInput):void
+        {
             this.content = input.readUTF();
         }
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.moderation
+} com.ankamagames.dofus.network.messages.game.moderation
 

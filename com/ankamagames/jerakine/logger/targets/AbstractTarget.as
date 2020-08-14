@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.logger.targets
+package com.ankamagames.jerakine.logger.targets
 {
     import com.ankamagames.jerakine.logger.InvalidFilterError;
     import com.ankamagames.jerakine.logger.LogEvent;
@@ -10,19 +10,13 @@
 
         private static const FILTERS_FORBIDDEN_CHARS:String = "[]~$^&/(){}<>+=`!#%?,:;'\"@";
 
-        private var _loggers:Array;
-        private var _filters:Array;
+        private var _loggers:Array = new Array();
+        private var _filters:Array = new Array();
 
-        public function AbstractTarget()
-        {
-            this._loggers = new Array();
-            this._filters = new Array();
-            super();
-        }
 
         public function set filters(value:Array):void
         {
-            if (!(this.checkIsFiltersValid(value)))
+            if (!this.checkIsFiltersValid(value))
             {
                 throw (new InvalidFilterError(("These characters are invalid on a filter : " + FILTERS_FORBIDDEN_CHARS)));
             };
@@ -57,7 +51,7 @@
             var filter:LogTargetFilter;
             for each (filter in filters)
             {
-                if (!(this.checkIsFilterValid(filter.target)))
+                if (!this.checkIsFilterValid(filter.target))
                 {
                     return (false);
                 };
@@ -91,7 +85,7 @@
                 {
                     reg = new RegExp(filter.target.replace("*", ".*"), "i");
                     testResult = reg.test(e.category);
-                    if ((((e.category == filter.target)) && (!(filter.allow))))
+                    if (((e.category == filter.target) && (!(filter.allow))))
                     {
                         passing = false;
                         break;
@@ -114,5 +108,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.logger.targets
+} com.ankamagames.jerakine.logger.targets
 

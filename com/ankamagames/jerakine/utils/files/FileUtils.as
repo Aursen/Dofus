@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.utils.files
+package com.ankamagames.jerakine.utils.files
 {
     public class FileUtils 
     {
@@ -6,59 +6,42 @@
 
         public static function getExtension(sUrl:String):String
         {
-            if (sUrl == null)
+            if (((!(sUrl)) || (sUrl.lastIndexOf(".") == -1)))
             {
                 return (null);
             };
-            var aTmp:Array = sUrl.split(".");
-            if (((!((aTmp == null))) && ((aTmp.length > 1))))
-            {
-                return (aTmp[(aTmp.length - 1)]);
-            };
-            return (null);
+            return (sUrl.substring((sUrl.lastIndexOf(".") + 1)));
         }
 
         public static function getFileName(sUrl:String):String
         {
-            var aTmp:Array = sUrl.split("/");
-            return (aTmp[(aTmp.length - 1)]);
+            return (sUrl.substring((sUrl.lastIndexOf("/") + 1)));
         }
 
         public static function getFilePath(sUrl:String):String
         {
-            var aTmp:Array;
-            var aTmp2:Array;
             if (sUrl.indexOf("/") != -1)
             {
-                aTmp = sUrl.split("/");
-                aTmp.pop();
-                return (aTmp.join("/"));
+                return (sUrl.substring(0, sUrl.lastIndexOf("/")));
             };
             if (sUrl.indexOf("\\") != -1)
             {
-                aTmp2 = sUrl.split("\\");
-                aTmp2.pop();
-                return (aTmp2.join("\\"));
+                return (sUrl.substring(0, sUrl.lastIndexOf("\\")));
             };
             return ("");
         }
 
         public static function getFilePathStartName(sUrl:String):String
         {
-            var aTmp:Array = sUrl.split(".");
-            aTmp.pop();
-            return (aTmp.join("."));
+            return (sUrl.substring(0, sUrl.lastIndexOf(".")));
         }
 
         public static function getFileStartName(sUrl:String):String
         {
-            var aTmp:Array = sUrl.split(/(\/|\|)/);
-            aTmp = aTmp[(aTmp.length - 1)].split(".");
-            aTmp.pop();
-            return (aTmp.join("."));
+            return (sUrl.substring((sUrl.lastIndexOf("/") + 1), sUrl.lastIndexOf(".")));
         }
 
 
     }
-}//package com.ankamagames.jerakine.utils.files
+} com.ankamagames.jerakine.utils.files
 

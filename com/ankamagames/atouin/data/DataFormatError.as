@@ -1,4 +1,4 @@
-﻿package com.ankamagames.atouin.data
+package com.ankamagames.atouin.data
 {
     public class DataFormatError extends Error 
     {
@@ -9,5 +9,5 @@
         }
 
     }
-}//package com.ankamagames.atouin.data
+} com.ankamagames.atouin.data
 

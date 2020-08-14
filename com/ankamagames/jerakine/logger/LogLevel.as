@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.logger
+package com.ankamagames.jerakine.logger
 {
     public final class LogLevel 
     {
@@ -34,5 +34,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.logger
+} com.ankamagames.jerakine.logger
 

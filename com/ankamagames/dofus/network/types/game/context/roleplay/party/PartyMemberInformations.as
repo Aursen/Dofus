@@ -1,10 +1,11 @@
-﻿package com.ankamagames.dofus.network.types.game.context.roleplay.party
+package com.ankamagames.dofus.network.types.game.context.roleplay.party
 {
     import com.ankamagames.dofus.network.types.game.character.choice.CharacterBaseInformations;
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.dofus.network.types.game.character.status.PlayerStatus;
     import __AS3__.vec.Vector;
-    import com.ankamagames.dofus.network.types.game.context.roleplay.party.companion.PartyCompanionMemberInformations;
+    import com.ankamagames.dofus.network.types.game.context.roleplay.party.entity.PartyEntityBaseInformation;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import com.ankamagames.dofus.network.types.game.look.EntityLook;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
@@ -24,26 +25,22 @@
         public var alignmentSide:int = 0;
         public var worldX:int = 0;
         public var worldY:int = 0;
-        public var mapId:int = 0;
+        public var mapId:Number = 0;
         public var subAreaId:uint = 0;
-        public var status:PlayerStatus;
-        public var companions:Vector.<PartyCompanionMemberInformations>;
+        public var status:PlayerStatus = new PlayerStatus();
+        public var entities:Vector.<PartyEntityBaseInformation> = new Vector.<PartyEntityBaseInformation>();
+        private var _statustree:FuncTree;
+        private var _entitiestree:FuncTree;
 
-        public function PartyMemberInformations()
-        {
-            this.status = new PlayerStatus();
-            this.companions = new Vector.<PartyCompanionMemberInformations>();
-            super();
-        }
 
         override public function getTypeId():uint
         {
             return (90);
         }
 
-        public function initPartyMemberInformations(id:uint=0, level:uint=0, name:String="", entityLook:EntityLook=null, breed:int=0, sex:Boolean=false, lifePoints:uint=0, maxLifePoints:uint=0, prospecting:uint=0, regenRate:uint=0, initiative:uint=0, alignmentSide:int=0, worldX:int=0, worldY:int=0, mapId:int=0, subAreaId:uint=0, status:PlayerStatus=null, companions:Vector.<PartyCompanionMemberInformations>=null):PartyMemberInformations
+        public function initPartyMemberInformations(id:Number=0, name:String="", level:uint=0, entityLook:EntityLook=null, breed:int=0, sex:Boolean=false, lifePoints:uint=0, maxLifePoints:uint=0, prospecting:uint=0, regenRate:uint=0, initiative:uint=0, alignmentSide:int=0, worldX:int=0, worldY:int=0, mapId:Number=0, subAreaId:uint=0, status:PlayerStatus=null, entities:Vector.<PartyEntityBaseInformation>=null):PartyMemberInformations
         {
-            super.initCharacterBaseInformations(id, level, name, entityLook, breed, sex);
+            super.initCharacterBaseInformations(id, name, level, entityLook, breed, sex);
             this.lifePoints = lifePoints;
             this.maxLifePoints = maxLifePoints;
             this.prospecting = prospecting;
@@ -55,7 +52,7 @@
             this.mapId = mapId;
             this.subAreaId = subAreaId;
             this.status = status;
-            this.companions = companions;
+            this.entities = entities;
             return (this);
         }
 
@@ -98,7 +95,7 @@
                 throw (new Error((("Forbidden value (" + this.prospecting) + ") on element prospecting.")));
             };
             output.writeVarShort(this.prospecting);
-            if ((((this.regenRate < 0)) || ((this.regenRate > 0xFF))))
+            if (((this.regenRate < 0) || (this.regenRate > 0xFF)))
             {
                 throw (new Error((("Forbidden value (" + this.regenRate) + ") on element regenRate.")));
             };
@@ -109,17 +106,21 @@
             };
             output.writeVarShort(this.initiative);
             output.writeByte(this.alignmentSide);
-            if ((((this.worldX < -255)) || ((this.worldX > 0xFF))))
+            if (((this.worldX < -255) || (this.worldX > 0xFF)))
             {
                 throw (new Error((("Forbidden value (" + this.worldX) + ") on element worldX.")));
             };
             output.writeShort(this.worldX);
-            if ((((this.worldY < -255)) || ((this.worldY > 0xFF))))
+            if (((this.worldY < -255) || (this.worldY > 0xFF)))
             {
                 throw (new Error((("Forbidden value (" + this.worldY) + ") on element worldY.")));
             };
             output.writeShort(this.worldY);
-            output.writeInt(this.mapId);
+            if (((this.mapId < 0) || (this.mapId > 9007199254740992)))
+            {
+                throw (new Error((("Forbidden value (" + this.mapId) + ") on element mapId.")));
+            };
+            output.writeDouble(this.mapId);
             if (this.subAreaId < 0)
             {
                 throw (new Error((("Forbidden value (" + this.subAreaId) + ") on element subAreaId.")));
@@ -127,11 +128,12 @@
             output.writeVarShort(this.subAreaId);
             output.writeShort(this.status.getTypeId());
             this.status.serialize(output);
-            output.writeShort(this.companions.length);
+            output.writeShort(this.entities.length);
             var _i12:uint;
-            while (_i12 < this.companions.length)
+            while (_i12 < this.entities.length)
             {
-                (this.companions[_i12] as PartyCompanionMemberInformations).serializeAs_PartyCompanionMemberInformations(output);
+                output.writeShort((this.entities[_i12] as PartyEntityBaseInformation).getTypeId());
+                (this.entities[_i12] as PartyEntityBaseInformation).serialize(output);
                 _i12++;
             };
         }
@@ -143,65 +145,169 @@
 
         public function deserializeAs_PartyMemberInformations(input:ICustomDataInput):void
         {
-            var _item12:PartyCompanionMemberInformations;
+            var _id12:uint;
+            var _item12:PartyEntityBaseInformation;
             super.deserialize(input);
+            this._lifePointsFunc(input);
+            this._maxLifePointsFunc(input);
+            this._prospectingFunc(input);
+            this._regenRateFunc(input);
+            this._initiativeFunc(input);
+            this._alignmentSideFunc(input);
+            this._worldXFunc(input);
+            this._worldYFunc(input);
+            this._mapIdFunc(input);
+            this._subAreaIdFunc(input);
+            var _id11:uint = input.readUnsignedShort();
+            this.status = ProtocolTypeManager.getInstance(PlayerStatus, _id11);
+            this.status.deserialize(input);
+            var _entitiesLen:uint = input.readUnsignedShort();
+            var _i12:uint;
+            while (_i12 < _entitiesLen)
+            {
+                _id12 = input.readUnsignedShort();
+                _item12 = ProtocolTypeManager.getInstance(PartyEntityBaseInformation, _id12);
+                _item12.deserialize(input);
+                this.entities.push(_item12);
+                _i12++;
+            };
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_PartyMemberInformations(tree);
+        }
+
+        public function deserializeAsyncAs_PartyMemberInformations(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._lifePointsFunc);
+            tree.addChild(this._maxLifePointsFunc);
+            tree.addChild(this._prospectingFunc);
+            tree.addChild(this._regenRateFunc);
+            tree.addChild(this._initiativeFunc);
+            tree.addChild(this._alignmentSideFunc);
+            tree.addChild(this._worldXFunc);
+            tree.addChild(this._worldYFunc);
+            tree.addChild(this._mapIdFunc);
+            tree.addChild(this._subAreaIdFunc);
+            this._statustree = tree.addChild(this._statustreeFunc);
+            this._entitiestree = tree.addChild(this._entitiestreeFunc);
+        }
+
+        private function _lifePointsFunc(input:ICustomDataInput):void
+        {
             this.lifePoints = input.readVarUhInt();
             if (this.lifePoints < 0)
             {
                 throw (new Error((("Forbidden value (" + this.lifePoints) + ") on element of PartyMemberInformations.lifePoints.")));
             };
+        }
+
+        private function _maxLifePointsFunc(input:ICustomDataInput):void
+        {
             this.maxLifePoints = input.readVarUhInt();
             if (this.maxLifePoints < 0)
             {
                 throw (new Error((("Forbidden value (" + this.maxLifePoints) + ") on element of PartyMemberInformations.maxLifePoints.")));
             };
+        }
+
+        private function _prospectingFunc(input:ICustomDataInput):void
+        {
             this.prospecting = input.readVarUhShort();
             if (this.prospecting < 0)
             {
                 throw (new Error((("Forbidden value (" + this.prospecting) + ") on element of PartyMemberInformations.prospecting.")));
             };
+        }
+
+        private function _regenRateFunc(input:ICustomDataInput):void
+        {
             this.regenRate = input.readUnsignedByte();
-            if ((((this.regenRate < 0)) || ((this.regenRate > 0xFF))))
+            if (((this.regenRate < 0) || (this.regenRate > 0xFF)))
             {
                 throw (new Error((("Forbidden value (" + this.regenRate) + ") on element of PartyMemberInformations.regenRate.")));
             };
+        }
+
+        private function _initiativeFunc(input:ICustomDataInput):void
+        {
             this.initiative = input.readVarUhShort();
             if (this.initiative < 0)
             {
                 throw (new Error((("Forbidden value (" + this.initiative) + ") on element of PartyMemberInformations.initiative.")));
             };
+        }
+
+        private function _alignmentSideFunc(input:ICustomDataInput):void
+        {
             this.alignmentSide = input.readByte();
+        }
+
+        private function _worldXFunc(input:ICustomDataInput):void
+        {
             this.worldX = input.readShort();
-            if ((((this.worldX < -255)) || ((this.worldX > 0xFF))))
+            if (((this.worldX < -255) || (this.worldX > 0xFF)))
             {
                 throw (new Error((("Forbidden value (" + this.worldX) + ") on element of PartyMemberInformations.worldX.")));
             };
+        }
+
+        private function _worldYFunc(input:ICustomDataInput):void
+        {
             this.worldY = input.readShort();
-            if ((((this.worldY < -255)) || ((this.worldY > 0xFF))))
+            if (((this.worldY < -255) || (this.worldY > 0xFF)))
             {
                 throw (new Error((("Forbidden value (" + this.worldY) + ") on element of PartyMemberInformations.worldY.")));
             };
-            this.mapId = input.readInt();
+        }
+
+        private function _mapIdFunc(input:ICustomDataInput):void
+        {
+            this.mapId = input.readDouble();
+            if (((this.mapId < 0) || (this.mapId > 9007199254740992)))
+            {
+                throw (new Error((("Forbidden value (" + this.mapId) + ") on element of PartyMemberInformations.mapId.")));
+            };
+        }
+
+        private function _subAreaIdFunc(input:ICustomDataInput):void
+        {
             this.subAreaId = input.readVarUhShort();
             if (this.subAreaId < 0)
             {
                 throw (new Error((("Forbidden value (" + this.subAreaId) + ") on element of PartyMemberInformations.subAreaId.")));
             };
-            var _id11:uint = input.readUnsignedShort();
-            this.status = ProtocolTypeManager.getInstance(PlayerStatus, _id11);
-            this.status.deserialize(input);
-            var _companionsLen:uint = input.readUnsignedShort();
-            var _i12:uint;
-            while (_i12 < _companionsLen)
+        }
+
+        private function _statustreeFunc(input:ICustomDataInput):void
+        {
+            var _id:uint = input.readUnsignedShort();
+            this.status = ProtocolTypeManager.getInstance(PlayerStatus, _id);
+            this.status.deserializeAsync(this._statustree);
+        }
+
+        private function _entitiestreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
             {
-                _item12 = new PartyCompanionMemberInformations();
-                _item12.deserialize(input);
-                this.companions.push(_item12);
-                _i12++;
+                this._entitiestree.addChild(this._entitiesFunc);
+                i++;
             };
+        }
+
+        private function _entitiesFunc(input:ICustomDataInput):void
+        {
+            var _id:uint = input.readUnsignedShort();
+            var _item:PartyEntityBaseInformation = ProtocolTypeManager.getInstance(PartyEntityBaseInformation, _id);
+            _item.deserialize(input);
+            this.entities.push(_item);
         }
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.context.roleplay.party
+} com.ankamagames.dofus.network.types.game.context.roleplay.party
 

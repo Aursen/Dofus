@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.context.roleplay.fight
+package com.ankamagames.dofus.network.messages.game.context.roleplay.fight
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,17 +6,17 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class GameRolePlayFightRequestCanceledMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 5822;
 
         private var _isInitialized:Boolean = false;
-        public var fightId:int = 0;
-        public var sourceId:uint = 0;
-        public var targetId:int = 0;
+        public var fightId:uint = 0;
+        public var sourceId:Number = 0;
+        public var targetId:Number = 0;
 
 
         override public function get isInitialized():Boolean
@@ -29,7 +29,7 @@
             return (5822);
         }
 
-        public function initGameRolePlayFightRequestCanceledMessage(fightId:int=0, sourceId:uint=0, targetId:int=0):GameRolePlayFightRequestCanceledMessage
+        public function initGameRolePlayFightRequestCanceledMessage(fightId:uint=0, sourceId:Number=0, targetId:Number=0):GameRolePlayFightRequestCanceledMessage
         {
             this.fightId = fightId;
             this.sourceId = sourceId;
@@ -58,6 +58,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_GameRolePlayFightRequestCanceledMessage(output);
@@ -65,13 +73,21 @@
 
         public function serializeAs_GameRolePlayFightRequestCanceledMessage(output:ICustomDataOutput):void
         {
-            output.writeInt(this.fightId);
-            if (this.sourceId < 0)
+            if (this.fightId < 0)
+            {
+                throw (new Error((("Forbidden value (" + this.fightId) + ") on element fightId.")));
+            };
+            output.writeVarShort(this.fightId);
+            if (((this.sourceId < -9007199254740992) || (this.sourceId > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.sourceId) + ") on element sourceId.")));
             };
-            output.writeVarInt(this.sourceId);
-            output.writeInt(this.targetId);
+            output.writeDouble(this.sourceId);
+            if (((this.targetId < -9007199254740992) || (this.targetId > 9007199254740992)))
+            {
+                throw (new Error((("Forbidden value (" + this.targetId) + ") on element targetId.")));
+            };
+            output.writeDouble(this.targetId);
         }
 
         public function deserialize(input:ICustomDataInput):void
@@ -81,16 +97,51 @@
 
         public function deserializeAs_GameRolePlayFightRequestCanceledMessage(input:ICustomDataInput):void
         {
-            this.fightId = input.readInt();
-            this.sourceId = input.readVarUhInt();
-            if (this.sourceId < 0)
+            this._fightIdFunc(input);
+            this._sourceIdFunc(input);
+            this._targetIdFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GameRolePlayFightRequestCanceledMessage(tree);
+        }
+
+        public function deserializeAsyncAs_GameRolePlayFightRequestCanceledMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._fightIdFunc);
+            tree.addChild(this._sourceIdFunc);
+            tree.addChild(this._targetIdFunc);
+        }
+
+        private function _fightIdFunc(input:ICustomDataInput):void
+        {
+            this.fightId = input.readVarUhShort();
+            if (this.fightId < 0)
+            {
+                throw (new Error((("Forbidden value (" + this.fightId) + ") on element of GameRolePlayFightRequestCanceledMessage.fightId.")));
+            };
+        }
+
+        private function _sourceIdFunc(input:ICustomDataInput):void
+        {
+            this.sourceId = input.readDouble();
+            if (((this.sourceId < -9007199254740992) || (this.sourceId > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.sourceId) + ") on element of GameRolePlayFightRequestCanceledMessage.sourceId.")));
             };
-            this.targetId = input.readInt();
+        }
+
+        private function _targetIdFunc(input:ICustomDataInput):void
+        {
+            this.targetId = input.readDouble();
+            if (((this.targetId < -9007199254740992) || (this.targetId > 9007199254740992)))
+            {
+                throw (new Error((("Forbidden value (" + this.targetId) + ") on element of GameRolePlayFightRequestCanceledMessage.targetId.")));
+            };
         }
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.context.roleplay.fight
+} com.ankamagames.dofus.network.messages.game.context.roleplay.fight
 

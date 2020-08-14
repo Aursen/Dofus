@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.BalanceManager.type
+package com.ankamagames.jerakine.BalanceManager.type
 {
     import flash.events.EventDispatcher;
     import com.ankamagames.jerakine.BalanceManager.events.BalanceEvent;
@@ -41,5 +41,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.BalanceManager.type
+} com.ankamagames.jerakine.BalanceManager.type
 

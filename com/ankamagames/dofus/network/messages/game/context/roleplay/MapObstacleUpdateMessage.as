@@ -1,29 +1,25 @@
-﻿package com.ankamagames.dofus.network.messages.game.context.roleplay
+package com.ankamagames.dofus.network.messages.game.context.roleplay
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
     import __AS3__.vec.Vector;
     import com.ankamagames.dofus.network.types.game.interactive.MapObstacle;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
     import __AS3__.vec.*;
 
-    [Trusted]
     public class MapObstacleUpdateMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 6051;
 
         private var _isInitialized:Boolean = false;
-        public var obstacles:Vector.<MapObstacle>;
+        public var obstacles:Vector.<MapObstacle> = new Vector.<MapObstacle>();
+        private var _obstaclestree:FuncTree;
 
-        public function MapObstacleUpdateMessage()
-        {
-            this.obstacles = new Vector.<MapObstacle>();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
@@ -58,6 +54,14 @@
         override public function unpack(input:ICustomDataInput, length:uint):void
         {
             this.deserialize(input);
+        }
+
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
         }
 
         public function serialize(output:ICustomDataOutput):void
@@ -95,7 +99,35 @@
             };
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_MapObstacleUpdateMessage(tree);
+        }
+
+        public function deserializeAsyncAs_MapObstacleUpdateMessage(tree:FuncTree):void
+        {
+            this._obstaclestree = tree.addChild(this._obstaclestreeFunc);
+        }
+
+        private function _obstaclestreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._obstaclestree.addChild(this._obstaclesFunc);
+                i++;
+            };
+        }
+
+        private function _obstaclesFunc(input:ICustomDataInput):void
+        {
+            var _item:MapObstacle = new MapObstacle();
+            _item.deserialize(input);
+            this.obstacles.push(_item);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.context.roleplay
+} com.ankamagames.dofus.network.messages.game.context.roleplay
 

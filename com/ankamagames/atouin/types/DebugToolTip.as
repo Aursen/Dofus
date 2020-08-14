@@ -1,4 +1,4 @@
-﻿package com.ankamagames.atouin.types
+package com.ankamagames.atouin.types
 {
     import flash.display.Sprite;
     import flash.display.Shape;
@@ -44,7 +44,7 @@
 
         public static function getInstance():DebugToolTip
         {
-            if (!(_self))
+            if (!_self)
             {
                 _self = new (DebugToolTip)();
             };
@@ -63,8 +63,8 @@
             this._textfield.text = s;
             this._shape.x = (this._textfield.x - 4);
             this._shape.y = (this._textfield.y - 4);
-            var pw:Number = (((this._minWidth)<(this._textfield.textWidth + 8)) ? (this._textfield.textWidth + 8) : this._minWidth);
-            var ph:Number = (((this._minHeight)<(this._textfield.textHeight + 8)) ? (this._textfield.textHeight + 8) : this._minHeight);
+            var pw:Number = ((this._minWidth < (this._textfield.textWidth + 8)) ? (this._textfield.textWidth + 8) : this._minWidth);
+            var ph:Number = ((this._minHeight < (this._textfield.textHeight + 8)) ? (this._textfield.textHeight + 8) : this._minHeight);
             this._shape.graphics.clear();
             this._shape.graphics.beginFill(0xFFFFFF, 0.7);
             this._shape.graphics.drawRect(0, 0, pw, ph);
@@ -73,5 +73,5 @@
 
 
     }
-}//package com.ankamagames.atouin.types
+} com.ankamagames.atouin.types
 

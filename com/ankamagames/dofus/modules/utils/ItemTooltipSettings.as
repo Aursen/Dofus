@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.modules.utils
+package com.ankamagames.dofus.modules.utils
 {
     import com.ankamagames.jerakine.interfaces.IModuleUtil;
 
@@ -10,6 +10,10 @@
         private var _conditions:Boolean;
         private var _description:Boolean;
         private var _averagePrice:Boolean;
+        private var _showEffects:Boolean;
+        private var _contextual:Boolean;
+        private var _addTheoreticalEffects:Boolean;
+        private var _showDropPercentage:Boolean;
 
         public function ItemTooltipSettings()
         {
@@ -18,9 +22,12 @@
             this._conditions = true;
             this._description = true;
             this._averagePrice = true;
+            this._showEffects = false;
+            this._contextual = false;
+            this._addTheoreticalEffects = false;
+            this._showDropPercentage = false;
         }
 
-        [Untrusted]
         public function get header():Boolean
         {
             return (this._header);
@@ -31,7 +38,6 @@
             this._header = value;
         }
 
-        [Untrusted]
         public function get effects():Boolean
         {
             return (this._effects);
@@ -42,7 +48,6 @@
             this._effects = value;
         }
 
-        [Untrusted]
         public function get conditions():Boolean
         {
             return (this._conditions);
@@ -53,7 +58,6 @@
             this._conditions = value;
         }
 
-        [Untrusted]
         public function get description():Boolean
         {
             return (this._description);
@@ -64,7 +68,6 @@
             this._description = value;
         }
 
-        [Untrusted]
         public function get averagePrice():Boolean
         {
             return (this._averagePrice);
@@ -75,7 +78,55 @@
             this._averagePrice = value;
         }
 
+        public function get showEffects():Boolean
+        {
+            return (this._showEffects);
+        }
+
+        public function set showEffects(value:Boolean):void
+        {
+            this._showEffects = value;
+            if (value)
+            {
+                this._addTheoreticalEffects = (!(value));
+            };
+        }
+
+        public function get contextual():Boolean
+        {
+            return (this._contextual);
+        }
+
+        public function set contextual(value:Boolean):void
+        {
+            this._contextual = value;
+        }
+
+        public function get addTheoreticalEffects():Boolean
+        {
+            return (this._addTheoreticalEffects);
+        }
+
+        public function set addTheoreticalEffects(value:Boolean):void
+        {
+            this._addTheoreticalEffects = value;
+            if (value)
+            {
+                this._showEffects = (!(value));
+            };
+        }
+
+        public function get showDropPercentage():Boolean
+        {
+            return (this._showDropPercentage);
+        }
+
+        public function set showDropPercentage(value:Boolean):void
+        {
+            this._showDropPercentage = value;
+        }
+
 
     }
-}//package com.ankamagames.dofus.modules.utils
+} com.ankamagames.dofus.modules.utils
 

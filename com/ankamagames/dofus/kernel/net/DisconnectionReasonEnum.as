@@ -1,6 +1,5 @@
-﻿package com.ankamagames.dofus.kernel.net
+package com.ankamagames.dofus.kernel.net
 {
-    [Trusted]
     public final class DisconnectionReasonEnum 
     {
 
@@ -13,5 +12,5 @@
 
 
     }
-}//package com.ankamagames.dofus.kernel.net
+} com.ankamagames.dofus.kernel.net
 

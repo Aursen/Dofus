@@ -1,15 +1,15 @@
-﻿package com.ankamagames.dofus.network.messages.game.character.status
+package com.ankamagames.dofus.network.messages.game.character.status
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
     import com.ankamagames.dofus.network.types.game.character.status.PlayerStatus;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
     import com.ankamagames.dofus.network.ProtocolTypeManager;
 
-    [Trusted]
     public class PlayerStatusUpdateMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -17,14 +17,10 @@
 
         private var _isInitialized:Boolean = false;
         public var accountId:uint = 0;
-        public var playerId:uint = 0;
-        public var status:PlayerStatus;
+        public var playerId:Number = 0;
+        public var status:PlayerStatus = new PlayerStatus();
+        private var _statustree:FuncTree;
 
-        public function PlayerStatusUpdateMessage()
-        {
-            this.status = new PlayerStatus();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
@@ -36,7 +32,7 @@
             return (6386);
         }
 
-        public function initPlayerStatusUpdateMessage(accountId:uint=0, playerId:uint=0, status:PlayerStatus=null):PlayerStatusUpdateMessage
+        public function initPlayerStatusUpdateMessage(accountId:uint=0, playerId:Number=0, status:PlayerStatus=null):PlayerStatusUpdateMessage
         {
             this.accountId = accountId;
             this.playerId = playerId;
@@ -65,6 +61,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_PlayerStatusUpdateMessage(output);
@@ -77,11 +81,11 @@
                 throw (new Error((("Forbidden value (" + this.accountId) + ") on element accountId.")));
             };
             output.writeInt(this.accountId);
-            if (this.playerId < 0)
+            if (((this.playerId < 0) || (this.playerId > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.playerId) + ") on element playerId.")));
             };
-            output.writeVarInt(this.playerId);
+            output.writeVarLong(this.playerId);
             output.writeShort(this.status.getTypeId());
             this.status.serialize(output);
         }
@@ -93,22 +97,51 @@
 
         public function deserializeAs_PlayerStatusUpdateMessage(input:ICustomDataInput):void
         {
-            this.accountId = input.readInt();
-            if (this.accountId < 0)
-            {
-                throw (new Error((("Forbidden value (" + this.accountId) + ") on element of PlayerStatusUpdateMessage.accountId.")));
-            };
-            this.playerId = input.readVarUhInt();
-            if (this.playerId < 0)
-            {
-                throw (new Error((("Forbidden value (" + this.playerId) + ") on element of PlayerStatusUpdateMessage.playerId.")));
-            };
+            this._accountIdFunc(input);
+            this._playerIdFunc(input);
             var _id3:uint = input.readUnsignedShort();
             this.status = ProtocolTypeManager.getInstance(PlayerStatus, _id3);
             this.status.deserialize(input);
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_PlayerStatusUpdateMessage(tree);
+        }
+
+        public function deserializeAsyncAs_PlayerStatusUpdateMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._accountIdFunc);
+            tree.addChild(this._playerIdFunc);
+            this._statustree = tree.addChild(this._statustreeFunc);
+        }
+
+        private function _accountIdFunc(input:ICustomDataInput):void
+        {
+            this.accountId = input.readInt();
+            if (this.accountId < 0)
+            {
+                throw (new Error((("Forbidden value (" + this.accountId) + ") on element of PlayerStatusUpdateMessage.accountId.")));
+            };
+        }
+
+        private function _playerIdFunc(input:ICustomDataInput):void
+        {
+            this.playerId = input.readVarUhLong();
+            if (((this.playerId < 0) || (this.playerId > 9007199254740992)))
+            {
+                throw (new Error((("Forbidden value (" + this.playerId) + ") on element of PlayerStatusUpdateMessage.playerId.")));
+            };
+        }
+
+        private function _statustreeFunc(input:ICustomDataInput):void
+        {
+            var _id:uint = input.readUnsignedShort();
+            this.status = ProtocolTypeManager.getInstance(PlayerStatus, _id);
+            this.status.deserializeAsync(this._statustree);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.character.status
+} com.ankamagames.dofus.network.messages.game.character.status
 

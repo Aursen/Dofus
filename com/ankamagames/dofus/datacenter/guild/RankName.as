@@ -1,9 +1,10 @@
-﻿package com.ankamagames.dofus.datacenter.guild
+package com.ankamagames.dofus.datacenter.guild
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
+    import com.ankamagames.dofus.types.IdAccessors;
     import com.ankamagames.jerakine.data.GameData;
     import com.ankamagames.jerakine.data.I18n;
 
@@ -12,6 +13,7 @@
 
         public static const MODULE:String = "RankNames";
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(RankName));
+        public static var idAccessors:IdAccessors = new IdAccessors(getRankNameById, getRankNames);
 
         public var id:int;
         public var nameId:uint;
@@ -21,7 +23,7 @@
 
         public static function getRankNameById(id:int):RankName
         {
-            return ((GameData.getObject(MODULE, id) as RankName));
+            return (GameData.getObject(MODULE, id) as RankName);
         }
 
         public static function getRankNames():Array
@@ -32,7 +34,7 @@
 
         public function get name():String
         {
-            if (!(this._name))
+            if (!this._name)
             {
                 this._name = I18n.getText(this.nameId);
             };
@@ -41,5 +43,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.guild
+} com.ankamagames.dofus.datacenter.guild
 

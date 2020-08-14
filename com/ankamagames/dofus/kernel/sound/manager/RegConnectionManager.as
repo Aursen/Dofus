@@ -1,33 +1,39 @@
-﻿package com.ankamagames.dofus.kernel.sound.manager
+package com.ankamagames.dofus.kernel.sound.manager
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
+    import flash.system.MessageChannel;
+    import __AS3__.vec.Vector;
+    import flash.system.Worker;
     import flash.net.Socket;
+    import com.ankamagames.dofus.kernel.sound.SoundManager;
     import com.ankamagames.jerakine.protocolAudio.ProtocolEnum;
-    import com.ankamagames.jerakine.utils.system.AirScanner;
-    import com.ankamagames.jerakine.sound.FlashSoundSender;
-    import flash.events.ProgressEvent;
-    import flash.events.Event;
+    import flash.system.MessageChannelState;
+    import com.ankamagames.jerakine.utils.system.CommandLineArguments;
     import flash.events.IOErrorEvent;
     import flash.events.SecurityErrorEvent;
-    import com.ankamagames.jerakine.utils.system.CommandLineArguments;
-    import com.ankamagames.berilia.managers.UiModuleManager;
-    import com.ankamagames.jerakine.data.I18n;
-    import com.ankamagames.dofus.kernel.sound.SoundManager;
-    import com.ankamagames.jerakine.utils.misc.CallWithParameters;
+    import flash.events.ErrorEvent;
+    import flash.system.WorkerDomain;
+    import flash.events.Event;
+    import flash.filesystem.File;
+    import flash.utils.ByteArray;
+    import com.ankamagames.dofus.misc.utils.errormanager.DofusErrorHandler;
+    import __AS3__.vec.*;
 
     public class RegConnectionManager 
     {
 
         private static var _log:Logger = Log.getLogger(getQualifiedClassName(RegConnectionManager));
         private static var _self:RegConnectionManager;
+        private static var Reg:Class = RegConnectionManager_Reg;
 
-        private var _sock:Socket;
-        private var _socketClientID:uint;
-        private var _socketAvaible:Boolean;
-        private var _buffer:Array;
-        private var _isMain:Boolean = true;
+        private var _channelIn:MessageChannel;
+        private var _channelOut:MessageChannel;
+        private var _buffer:Vector.<String>;
+        private var _isMain:Boolean = false;
+        private var _worker:Worker;
+        private var _legacySock:Socket;
 
         public function RegConnectionManager(pSingletonEnforcer:SingletonEnforcer)
         {
@@ -42,208 +48,150 @@
         {
             if (_self == null)
             {
-                _self = new (RegConnectionManager)(new SingletonEnforcer());
+                _self = new RegConnectionManager(new SingletonEnforcer());
             };
             return (_self);
         }
 
-
-        public function get socketClientID():uint
-        {
-            return (this._socketClientID);
-        }
-
-        public function get socketAvailable():Boolean
-        {
-            return (this._socketAvaible);
-        }
 
         public function get isMain():Boolean
         {
             return (this._isMain);
         }
 
-        public function send(pMethodName:String, ... params):void
-        {
-            if (!(this._socketAvaible))
-            {
-                this._buffer.push({
-                    "method":pMethodName,
-                    "params":params
-                });
-                return;
-            };
-            if (pMethodName == ProtocolEnum.SAY_GOODBYE)
-            {
-                this._sock.writeUTFBytes(String(0));
-                this._sock.writeUTFBytes((((((("=>" + pMethodName) + "();") + this._socketClientID) + "=>") + ProtocolEnum.PLAY_SOUND) + "(10,100)"));
-                this._sock.writeUTFBytes("|");
-                this._sock.flush();
-            }
-            else
-            {
-                this._sock.writeUTFBytes(String(this._socketClientID));
-                this._sock.writeUTFBytes((((("=>" + pMethodName) + "(") + params) + ")"));
-                this._sock.writeUTFBytes("|");
-                this._sock.flush();
-            };
-        }
-
-        private function init():void
-        {
-            this._socketClientID = (uint.MAX_VALUE * Math.random());
-            if (AirScanner.isStreamingVersion())
-            {
-                _log.debug("init flash sound sender");
-                this._sock = new FlashSoundSender(Dofus.getInstance().REG_LOCAL_CONNECTION_ID);
-            }
-            else
-            {
-                _log.debug("init socket");
-                this._sock = new Socket();
-            };
-            this._sock.addEventListener(ProgressEvent.SOCKET_DATA, this.onData);
-            this._sock.addEventListener(Event.CONNECT, this.onSocketConnect);
-            this._sock.addEventListener(Event.CLOSE, this.onSocketClose);
-            this._sock.addEventListener(IOErrorEvent.IO_ERROR, this.onSocketError);
-            this._sock.addEventListener(SecurityErrorEvent.SECURITY_ERROR, this.onSocketSecurityError);
-            if (CommandLineArguments.getInstance().hasArgument("reg-client-port"))
-            {
-                this._sock.connect("localhost", int(CommandLineArguments.getInstance().getArgument("reg-client-port")));
-            }
-            else
-            {
-                this._sock.connect("localhost", 8081);
-            };
-            this._buffer = [];
-        }
-
-        private function showInformationPopup():void
-        {
-            var commonMod:Object;
-            if (UiModuleManager.getInstance().getModule("Ankama_Common"))
-            {
-                commonMod = UiModuleManager.getInstance().getModule("Ankama_Common").mainClass;
-                if (commonMod)
-                {
-                    commonMod.openPopup(I18n.getUiText("ui.popup.warning"), I18n.getUiText("ui.common.soundsDeactivated"), [I18n.getUiText("ui.common.ok")]);
-                };
-            };
-        }
-
-        private function setAsMain(pMain:Boolean):void
+        public function setAsMain(pMain:Boolean):void
         {
             if (pMain == this._isMain)
             {
                 return;
             };
             this._isMain = pMain;
-            if (pMain == true)
+            if (pMain)
             {
-                _log.warn((("[" + this._socketClientID) + "] Je passe en main"));
-                if ((SoundManager.getInstance().manager is RegSoundManager))
-                {
-                    (SoundManager.getInstance().manager as RegSoundManager).playMainClientSounds();
-                };
+                _log.warn("Je passe en main");
+                SoundManager.getInstance().manager.playMainClientSounds();
             }
             else
             {
-                _log.warn((("[" + this._socketClientID) + "] Je ne suis plus main"));
-                if ((SoundManager.getInstance().manager is RegSoundManager))
-                {
-                    (SoundManager.getInstance().manager as RegSoundManager).stopMainClientSounds();
-                };
+                _log.warn("Je ne suis plus main");
+                SoundManager.getInstance().manager.stopMainClientSounds();
             };
+            this.send(ProtocolEnum.SET_MAIN_CLIENT, this._isMain);
         }
 
-        private function onSocketClose(e:Event):void
+        public function send(pMethodName:String, ... params):void
         {
-            this._socketAvaible = false;
-            _log.error("The socket has been closed");
-            try
+            var data:* = (((pMethodName + "(") + params) + ")");
+            if (!this._channelOut)
             {
-                this.showInformationPopup();
-            }
-            catch(e:Error)
+                _log.info("No Out channel");
+                if (!this._buffer)
+                {
+                    this._buffer = new Vector.<String>();
+                };
+                this._buffer.push(data);
+                return;
+            };
+            if (this._channelOut.state == MessageChannelState.CLOSED)
             {
+                _log.error("Message Channel Closed !");
+                return;
+            };
+            this._channelOut.send(data);
+        }
+
+        private function init():void
+        {
+            _log.info("Init Reg...");
+            _log.info("Reg is Embed");
+            this.OnRegReady(new Reg());
+            if (CommandLineArguments.getInstance().hasArgument("reg-client-port"))
+            {
+                this._legacySock = new Socket();
+                this._legacySock.addEventListener(IOErrorEvent.IO_ERROR, function (e:IOErrorEvent):void
+                {
+                });
+                this._legacySock.addEventListener(SecurityErrorEvent.SECURITY_ERROR, function (e:SecurityErrorEvent):void
+                {
+                });
+                this._legacySock.connect("127.0.0.1", int(CommandLineArguments.getInstance().getArgument("reg-client-port")));
             };
         }
 
-        private function onData(pEvent:ProgressEvent):void
+        private function onError(event:ErrorEvent):void
+        {
+            _log.error(event.toString());
+        }
+
+        private function OnRegReady(reg:ByteArray):void
+        {
+            _log.info("Reg created.");
+            this._worker = WorkerDomain.current.createWorker(reg, true);
+            this._channelOut = Worker.current.createMessageChannel(this._worker);
+            this._channelIn = this._worker.createMessageChannel(Worker.current);
+            this._channelIn.addEventListener(Event.CHANNEL_MESSAGE, this.onData);
+            this._worker.setSharedProperty("DofusToRegChannel", this._channelOut);
+            this._worker.setSharedProperty("RegToDofusChannel", this._channelIn);
+            this._worker.start();
+            this.send(ProtocolEnum.CONFIG, File.applicationDirectory.nativePath);
+            if (this._buffer)
+            {
+                while (this._buffer.length)
+                {
+                    this._channelOut.send(this._buffer.shift());
+                };
+                this._buffer = null;
+            };
+        }
+
+        public function onExit():void
+        {
+            _log.info("Terminating Reg");
+            if (this._worker)
+            {
+                this._worker.terminate();
+            };
+        }
+
+        private function onData(pEvent:Event):void
         {
             var cmd:String;
             var functionName:String;
-            var _local_5:Number;
-            var cmds:Array = this._sock.readUTFBytes(pEvent.bytesLoaded).split("|");
-            for each (cmd in cmds)
+            var soundID:int;
+            var data:String;
+            while (this._channelIn.messageAvailable)
             {
+                cmd = (this._channelIn.receive() as String);
                 if (cmd == "")
                 {
                     return;
                 };
-                _log.info(("[REG->DOFUS] " + cmd));
                 functionName = cmd.split("(")[0];
                 switch (functionName)
                 {
-                    case ProtocolEnum.REG_SHUT_DOWN:
-                        this._socketAvaible = false;
-                        _log.error("The socket connection with REG has been lost");
-                        this.showInformationPopup();
-                        break;
-                    case ProtocolEnum.REG_IS_UP:
-                        this._socketAvaible = true;
-                        _log.info("The socket connection with REG has been established");
-                        break;
-                    case ProtocolEnum.PING:
-                        _log.info("receive ping request from reg, send pong");
-                        this.send(ProtocolEnum.PONG);
-                        break;
-                    case ProtocolEnum.MAIN_CLIENT_IS:
-                        _local_5 = Number(cmd.split(":")[1]);
-                        if (_local_5 == this._socketClientID)
+                    case ProtocolEnum.ENDOFSONG:
+                        soundID = Number(cmd.split(":")[1]);
+                        if (this._isMain)
                         {
-                            this.setAsMain(true);
-                        }
-                        else
-                        {
-                            this.setAsMain(false);
+                            SoundManager.getInstance().manager.endOfSound(soundID);
                         };
                         break;
-                };
-            };
-        }
-
-        private function onSocketError(e:Event):void
-        {
-            this._socketAvaible = false;
-            _log.error("Connection to Reg failed");
-        }
-
-        private function onSocketSecurityError(e:Event):void
-        {
-        }
-
-        private function onSocketConnect(e:Event):void
-        {
-            var cmd:Object;
-            this._socketAvaible = true;
-            if (this._buffer.length)
-            {
-                while (this._buffer.length)
-                {
-                    cmd = this._buffer.shift();
-                    CallWithParameters.call(this.send, ([cmd.method] as Array).concat(cmd.params));
+                    case ProtocolEnum.NEED_REG_LOGS:
+                        data = cmd.substr((cmd.indexOf(":") + 1));
+                        DofusErrorHandler.formatLogBufferReg(data);
+                        break;
                 };
             };
         }
 
 
     }
-}//package com.ankamagames.dofus.kernel.sound.manager
+} com.ankamagames.dofus.kernel.sound.manager
 
 class SingletonEnforcer 
 {
 
 
 }
+
 

@@ -1,15 +1,15 @@
-﻿package com.ankamagames.berilia.components
+package com.ankamagames.berilia.components
 {
     public class ComponentInternalAccessor 
     {
 
 
-        public static function access(target:*, to:String)
+        public static function access(target:*, _arg_2:String):*
         {
-            return (target[to]);
+            return (target[_arg_2]);
         }
 
 
     }
-}//package com.ankamagames.berilia.components
+} com.ankamagames.berilia.components
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.prism
+package com.ankamagames.dofus.network.messages.game.prism
 {
     import com.ankamagames.jerakine.network.INetworkMessage;
     import __AS3__.vec.Vector;
@@ -7,8 +7,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class PrismsListUpdateMessage extends PrismsListMessage implements INetworkMessage 
     {
 
@@ -19,7 +19,7 @@
 
         override public function get isInitialized():Boolean
         {
-            return (((super.isInitialized) && (this._isInitialized)));
+            return ((super.isInitialized) && (this._isInitialized));
         }
 
         override public function getMessageId():uint
@@ -52,6 +52,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         override public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_PrismsListUpdateMessage(output);
@@ -72,7 +80,17 @@
             super.deserialize(input);
         }
 
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_PrismsListUpdateMessage(tree);
+        }
+
+        public function deserializeAsyncAs_PrismsListUpdateMessage(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.prism
+} com.ankamagames.dofus.network.messages.game.prism
 

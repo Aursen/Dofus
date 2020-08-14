@@ -1,6 +1,7 @@
-﻿package com.ankamagames.dofus.network.types.game.context.fight
+package com.ankamagames.dofus.network.types.game.context.fight
 {
     import com.ankamagames.jerakine.network.INetworkType;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
 
@@ -11,13 +12,9 @@
 
         public var outcome:uint = 0;
         public var wave:uint = 0;
-        public var rewards:FightLoot;
+        public var rewards:FightLoot = new FightLoot();
+        private var _rewardstree:FuncTree;
 
-        public function FightResultListEntry()
-        {
-            this.rewards = new FightLoot();
-            super();
-        }
 
         public function getTypeId():uint
         {
@@ -62,21 +59,49 @@
 
         public function deserializeAs_FightResultListEntry(input:ICustomDataInput):void
         {
+            this._outcomeFunc(input);
+            this._waveFunc(input);
+            this.rewards = new FightLoot();
+            this.rewards.deserialize(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_FightResultListEntry(tree);
+        }
+
+        public function deserializeAsyncAs_FightResultListEntry(tree:FuncTree):void
+        {
+            tree.addChild(this._outcomeFunc);
+            tree.addChild(this._waveFunc);
+            this._rewardstree = tree.addChild(this._rewardstreeFunc);
+        }
+
+        private function _outcomeFunc(input:ICustomDataInput):void
+        {
             this.outcome = input.readVarUhShort();
             if (this.outcome < 0)
             {
                 throw (new Error((("Forbidden value (" + this.outcome) + ") on element of FightResultListEntry.outcome.")));
             };
+        }
+
+        private function _waveFunc(input:ICustomDataInput):void
+        {
             this.wave = input.readByte();
             if (this.wave < 0)
             {
                 throw (new Error((("Forbidden value (" + this.wave) + ") on element of FightResultListEntry.wave.")));
             };
+        }
+
+        private function _rewardstreeFunc(input:ICustomDataInput):void
+        {
             this.rewards = new FightLoot();
-            this.rewards.deserialize(input);
+            this.rewards.deserializeAsync(this._rewardstree);
         }
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.context.fight
+} com.ankamagames.dofus.network.types.game.context.fight
 

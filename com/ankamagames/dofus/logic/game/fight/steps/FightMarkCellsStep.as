@@ -1,36 +1,42 @@
-﻿package com.ankamagames.dofus.logic.game.fight.steps
+package com.ankamagames.dofus.logic.game.fight.steps
 {
     import com.ankamagames.jerakine.sequencer.AbstractSequencable;
-    import com.ankamagames.dofus.datacenter.spells.SpellLevel;
     import __AS3__.vec.Vector;
     import com.ankamagames.dofus.network.types.game.actions.fight.GameActionMarkedCell;
     import com.ankamagames.dofus.types.sequences.AddGlyphGfxStep;
+    import com.ankamagames.dofus.logic.game.fight.frames.FightTurnFrame;
+    import com.ankamagames.jerakine.types.positions.PathElement;
     import com.ankamagames.dofus.datacenter.spells.Spell;
-    import com.ankamagames.dofus.network.enums.GameActionMarkTypeEnum;
+    import com.ankamagames.dofus.datacenter.spells.SpellLevel;
+    import com.ankamagames.jerakine.utils.display.spellZone.SpellShapeEnum;
+    import tools.enumeration.GameActionMarkTypeEnum;
     import com.ankamagames.dofus.logic.game.fight.managers.MarkedCellsManager;
     import com.ankamagames.dofus.logic.game.fight.types.MarkInstance;
     import com.ankamagames.dofus.logic.game.fight.types.FightEventEnum;
     import com.ankamagames.dofus.logic.game.fight.fightEvents.FightEventsHelper;
+    import com.ankamagames.dofus.kernel.Kernel;
 
     public class FightMarkCellsStep extends AbstractSequencable implements IFightStep 
     {
 
+        private var _markCasterId:Number;
         private var _markId:int;
         private var _markType:int;
-        private var _markSpellLevel:SpellLevel;
+        private var _markSpellGrade:int;
         private var _cells:Vector.<GameActionMarkedCell>;
         private var _markSpellId:int;
         private var _markTeamId:int;
         private var _markImpactCell:int;
         private var _markActive:Boolean;
 
-        public function FightMarkCellsStep(markId:int, markType:int, cells:Vector.<GameActionMarkedCell>, markSpellId:int, markSpellLevel:SpellLevel, markTeamId:int, markImpactCell:int, markActive:Boolean=true)
+        public function FightMarkCellsStep(markId:int, markType:int, cells:Vector.<GameActionMarkedCell>, markSpellId:int, markSpellGrade:int, markTeamId:int, markImpactCell:int, markCasterId:Number, markActive:Boolean=true)
         {
+            this._markCasterId = markCasterId;
             this._markId = markId;
             this._markType = markType;
             this._cells = cells;
             this._markSpellId = markSpellId;
-            this._markSpellLevel = markSpellLevel;
+            this._markSpellGrade = markSpellGrade;
             this._markTeamId = markTeamId;
             this._markImpactCell = markImpactCell;
             this._markActive = markActive;
@@ -46,8 +52,12 @@
             var cellZone:GameActionMarkedCell;
             var step:AddGlyphGfxStep;
             var evt:String;
+            var ftf:FightTurnFrame;
+            var pe:PathElement;
+            var updatePath:Boolean;
             var spell:Spell = Spell.getSpellById(this._markSpellId);
-            if (this._markType == GameActionMarkTypeEnum.WALL)
+            var originMarkSpellLevel:SpellLevel = spell.getSpellLevel(this._markSpellGrade);
+            if (((this._markType == GameActionMarkTypeEnum.WALL) || (originMarkSpellLevel.hasZoneShape(SpellShapeEnum.semicolon))))
             {
                 if (((spell.getParamByName("glyphGfxId")) || (true)))
                 {
@@ -60,13 +70,13 @@
             }
             else
             {
-                if (((((spell.getParamByName("glyphGfxId")) && (!(MarkedCellsManager.getInstance().getGlyph(this._markId))))) && (!((this._markImpactCell == -1)))))
+                if ((((spell.getParamByName("glyphGfxId")) && (!(MarkedCellsManager.getInstance().getGlyph(this._markId)))) && (!(this._markImpactCell == -1))))
                 {
                     step = new AddGlyphGfxStep(spell.getParamByName("glyphGfxId"), this._markImpactCell, this._markId, this._markType, this._markTeamId);
                     step.start();
                 };
             };
-            MarkedCellsManager.getInstance().addMark(this._markId, this._markType, spell, this._markSpellLevel, this._cells, this._markTeamId, this._markActive);
+            MarkedCellsManager.getInstance().addMark(this._markCasterId, this._markId, this._markType, spell, originMarkSpellLevel, this._cells, this._markTeamId, this._markActive, this._markImpactCell);
             var mi:MarkInstance = MarkedCellsManager.getInstance().getMarkDatas(this._markId);
             if (mi)
             {
@@ -86,11 +96,32 @@
                         _log.warn((("Unknown mark type (" + mi.markType) + ")."));
                 };
                 FightEventsHelper.sendFightEvent(evt, [mi.associatedSpell.id], 0, castingSpellId);
+                ftf = (Kernel.getWorker().getFrame(FightTurnFrame) as FightTurnFrame);
+                if ((((ftf) && (ftf.myTurn)) && (ftf.lastPath)))
+                {
+                    for each (pe in ftf.lastPath.path)
+                    {
+                        if (mi.cells.indexOf(pe.cellId) != -1)
+                        {
+                            updatePath = true;
+                            break;
+                        };
+                    };
+                    if (updatePath)
+                    {
+                        ftf.updatePath();
+                    };
+                };
             };
             executeCallbacks();
         }
 
+        public function get targets():Vector.<Number>
+        {
+            return (new <Number>[(this._markId as Number)]);
+        }
+
 
     }
-}//package com.ankamagames.dofus.logic.game.fight.steps
+} com.ankamagames.dofus.logic.game.fight.steps
 

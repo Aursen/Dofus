@@ -1,7 +1,8 @@
-﻿package com.ankamagames.dofus.network.types.game.context.roleplay
+package com.ankamagames.dofus.network.types.game.context.roleplay
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import __AS3__.vec.Vector;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
     import __AS3__.vec.*;
@@ -11,13 +12,9 @@
 
         public static const protocolId:uint = 396;
 
-        public var alternatives:Vector.<AlternativeMonstersInGroupLightInformations>;
+        public var alternatives:Vector.<AlternativeMonstersInGroupLightInformations> = new Vector.<AlternativeMonstersInGroupLightInformations>();
+        private var _alternativestree:FuncTree;
 
-        public function GroupMonsterStaticInformationsWithAlternatives()
-        {
-            this.alternatives = new Vector.<AlternativeMonstersInGroupLightInformations>();
-            super();
-        }
 
         override public function getTypeId():uint
         {
@@ -74,7 +71,36 @@
             };
         }
 
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GroupMonsterStaticInformationsWithAlternatives(tree);
+        }
+
+        public function deserializeAsyncAs_GroupMonsterStaticInformationsWithAlternatives(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            this._alternativestree = tree.addChild(this._alternativestreeFunc);
+        }
+
+        private function _alternativestreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._alternativestree.addChild(this._alternativesFunc);
+                i++;
+            };
+        }
+
+        private function _alternativesFunc(input:ICustomDataInput):void
+        {
+            var _item:AlternativeMonstersInGroupLightInformations = new AlternativeMonstersInGroupLightInformations();
+            _item.deserialize(input);
+            this.alternatives.push(_item);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.types.game.context.roleplay
+} com.ankamagames.dofus.network.types.game.context.roleplay
 

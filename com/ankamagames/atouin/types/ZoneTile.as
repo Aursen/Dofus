@@ -1,32 +1,37 @@
-﻿package com.ankamagames.atouin.types
+package com.ankamagames.atouin.types
 {
     import flash.display.Sprite;
     import com.ankamagames.jerakine.entities.interfaces.IDisplayable;
     import com.ankamagames.jerakine.interfaces.ITransparency;
+    import com.ankamagames.jerakine.logger.Logger;
+    import com.ankamagames.jerakine.logger.Log;
+    import flash.utils.getQualifiedClassName;
     import com.ankamagames.jerakine.entities.behaviours.IDisplayBehavior;
-    import flash.geom.Point;
     import flash.text.TextField;
+    import com.ankamagames.jerakine.types.Color;
     import flash.text.TextFormat;
     import com.ankamagames.jerakine.interfaces.IRectangle;
-    import com.ankamagames.jerakine.managers.FontManager;
-    import flash.text.TextFormatAlign;
-    import com.ankamagames.atouin.AtouinConstants;
     import flash.geom.ColorTransform;
+    import com.ankamagames.jerakine.types.ARGBColor;
     import com.ankamagames.atouin.managers.EntitiesDisplayManager;
     import com.ankamagames.jerakine.types.positions.MapPoint;
+    import com.ankamagames.jerakine.managers.FontManager;
+    import com.ankamagames.jerakine.types.UserFont;
+    import flash.text.TextFormatAlign;
+    import com.ankamagames.atouin.AtouinConstants;
 
     public class ZoneTile extends Sprite implements IDisplayable, ITransparency 
     {
 
+        protected static const _log:Logger = Log.getLogger(getQualifiedClassName(ZoneTile));
         private static const _cell:Class = ZoneTile__cell;
 
         private var _displayBehavior:IDisplayBehavior;
         protected var _displayed:Boolean;
-        private var _currentCell:Point;
         private var _cellId:uint;
         protected var _cellInstance:Sprite;
         private var _tf:TextField;
-        private var _color:uint;
+        private var _color:Color;
         public var text:String;
         public var format:TextFormat;
         public var strata:uint = 0;
@@ -47,16 +52,6 @@
             this._displayBehavior = oValue;
         }
 
-        public function get currentCellPosition():Point
-        {
-            return (this._currentCell);
-        }
-
-        public function set currentCellPosition(pValue:Point):void
-        {
-            this._currentCell = pValue;
-        }
-
         public function get displayed():Boolean
         {
             return (this._displayed);
@@ -67,12 +62,12 @@
             return (this._displayBehavior.getAbsoluteBounds(this));
         }
 
-        public function set color(c:uint):void
+        public function set color(c:Color):void
         {
             this._color = c;
         }
 
-        public function get color():uint
+        public function get color():Color
         {
             return (this._color);
         }
@@ -91,36 +86,36 @@
         {
             if (this.text)
             {
-                if (!(this.format))
+                if (this._tf == null)
                 {
-                    this.format = new TextFormat(FontManager.getInstance().getRealFontName("Verdana"), 20, 0xFFFFFF, true);
-                    this.format.align = TextFormatAlign.CENTER;
+                    this.initTextField();
                 };
-                this._tf = new TextField();
-                this._tf.selectable = false;
-                this._tf.defaultTextFormat = this.format;
-                this._tf.setTextFormat(this.format);
-                this._tf.embedFonts = true;
                 this._tf.text = this.text;
-                this._tf.width = AtouinConstants.CELL_WIDTH;
-                this._tf.height = AtouinConstants.CELL_HEIGHT;
-                this._tf.x = -(AtouinConstants.CELL_HALF_WIDTH);
-                this._tf.y = (-(AtouinConstants.CELL_HALF_HEIGHT) + 7);
-                this._tf.alpha = 0.8;
+                addChild(this._tf);
             }
             else
             {
-                this._tf = null;
+                if (((this._tf) && (contains(this._tf))))
+                {
+                    removeChild(this._tf);
+                };
             };
-            this._cellInstance = new _cell();
-            var ct:ColorTransform = new ColorTransform();
-            ct.color = this._color;
-            this._cellInstance.transform.colorTransform = ct;
-            addChild(this._cellInstance);
-            if (this._tf)
+            if (this._cellInstance == null)
             {
-                addChild(this._tf);
+                this._cellInstance = new _cell();
             };
+            var ct:ColorTransform = this._cellInstance.transform.colorTransform;
+            if (!ct)
+            {
+                ct = new ColorTransform();
+            };
+            ct.color = this._color.color;
+            if ((this._color is ARGBColor))
+            {
+                ct.alphaMultiplier = (this._color as ARGBColor).alpha;
+            };
+            this._cellInstance.transform.colorTransform = ct;
+            addChildAt(this._cellInstance, 0);
             EntitiesDisplayManager.getInstance().displayEntity(this, MapPoint.fromCellId(this._cellId), this.strata);
             this._displayed = true;
         }
@@ -128,11 +123,7 @@
         public function remove():void
         {
             this._displayed = false;
-            if (this._tf)
-            {
-                removeChild(this._tf);
-            };
-            removeChild(this._cellInstance);
+            this.removeAllChildren();
             EntitiesDisplayManager.getInstance().removeEntity(this);
         }
 
@@ -141,7 +132,53 @@
             return (false);
         }
 
+        private function removeAllChildren():void
+        {
+            while (numChildren > 0)
+            {
+                removeChildAt(0);
+            };
+        }
+
+        private function initTextField():void
+        {
+            var fm:FontManager;
+            var fontInfo:UserFont;
+            if (!this.format)
+            {
+                fm = FontManager.getInstance();
+                if (!fm)
+                {
+                    _log.debug("font manager doesn't exist");
+                };
+                if (fm)
+                {
+                    fontInfo = fm.getFontInfo("Verdana");
+                    if (!fontInfo)
+                    {
+                        _log.debug("font info doesn't exist");
+                    }
+                    else
+                    {
+                        _log.debug(("fontInfo className : " + fontInfo.className));
+                    };
+                };
+                this.format = new TextFormat(fm.getFontInfo("Verdana").className, 20, 0xFFFFFF, true);
+                this.format.align = TextFormatAlign.CENTER;
+            };
+            this._tf = new TextField();
+            this._tf.selectable = false;
+            this._tf.defaultTextFormat = this.format;
+            this._tf.setTextFormat(this.format);
+            this._tf.embedFonts = true;
+            this._tf.width = AtouinConstants.CELL_WIDTH;
+            this._tf.height = AtouinConstants.CELL_HEIGHT;
+            this._tf.x = -(AtouinConstants.CELL_HALF_WIDTH);
+            this._tf.y = (-(AtouinConstants.CELL_HALF_HEIGHT) + 7);
+            this._tf.alpha = 0.8;
+        }
+
 
     }
-}//package com.ankamagames.atouin.types
+} com.ankamagames.atouin.types
 

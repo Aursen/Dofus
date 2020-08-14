@@ -1,59 +1,26 @@
-﻿package com.ankamagames.jerakine.json
+package com.ankamagames.jerakine.json
 {
     import flash.utils.Dictionary;
-    import flash.utils.describeType;
+    import __AS3__.vec.Vector;
+    import com.ankamagames.jerakine.utils.misc.classInfo.MetadataInfo;
     import flash.utils.getQualifiedClassName;
+    import com.ankamagames.jerakine.utils.misc.DescribeTypeCache;
     import __AS3__.vec.*;
 
     public class JSONEncoder 
     {
 
-        private var _depthLimit:uint = 0;
-        private var _showObjectType:Boolean = false;
-        private var jsonString:String;
+        protected var _depthLimit:uint = 0;
+        protected var _showObjectType:Boolean = false;
+        protected var _processDictionaryKeys:Boolean = false;
+        protected var jsonString:String;
 
-        public function JSONEncoder(value:*, pMaxDepth:uint=0, pShowObjectType:Boolean=false)
+        public function JSONEncoder(value:*, pMaxDepth:uint=0, pShowObjectType:Boolean=false, processDictionaryKeys:Boolean=false)
         {
-            this._depthLimit = pMaxDepth;
-            this._showObjectType = pShowObjectType;
-            this.jsonString = this.convertToString(value);
+            this.init(value, pMaxDepth, pShowObjectType, processDictionaryKeys);
         }
 
-        public function getString():String
-        {
-            return (this.jsonString);
-        }
-
-        private function convertToString(value:*, depth:int=0):String
-        {
-            if (((!((this._depthLimit == 0))) && ((depth > this._depthLimit))))
-            {
-                return ("");
-            };
-            if ((value is String))
-            {
-                return (this.escapeString((value as String)));
-            };
-            if ((value is Number))
-            {
-                return (((isFinite((value as Number))) ? value.toString() : "null"));
-            };
-            if ((value is Boolean))
-            {
-                return (((value) ? "true" : "false"));
-            };
-            if ((((((((((((((value is Array)) || ((value is Vector.<int>)))) || ((value is Vector.<uint>)))) || ((value is Vector.<String>)))) || ((value is Vector.<Boolean>)))) || ((value is Vector.<*>)))) || ((value is Dictionary))))
-            {
-                return (this.arrayToString(value, (depth + 1)));
-            };
-            if ((((value is Object)) && (!((value == null)))))
-            {
-                return (this.objectToString(value, (depth + 1)));
-            };
-            return ("null");
-        }
-
-        private function escapeString(str:String):String
+        private static function escapeString(str:String):String
         {
             var ch:String;
             var hexCode:String;
@@ -91,7 +58,7 @@
                         if (ch < " ")
                         {
                             hexCode = ch.charCodeAt(0).toString(16);
-                            zeroPad = (((hexCode.length == 2)) ? "00" : "000");
+                            zeroPad = ((hexCode.length == 2) ? "00" : "000");
                             s = (s + (("\\u" + zeroPad) + hexCode));
                         }
                         else
@@ -101,13 +68,60 @@
                 };
                 i++;
             };
-            return ((('"' + s) + '"'));
+            return (('"' + s) + '"');
+        }
+
+
+        protected function init(value:*, pMaxDepth:uint=0, pShowObjectType:Boolean=false, processDictionaryKeys:Boolean=false):void
+        {
+            this._depthLimit = pMaxDepth;
+            this._showObjectType = pShowObjectType;
+            this._processDictionaryKeys = processDictionaryKeys;
+            this.jsonString = this.convertToString(value, 0);
+        }
+
+        public function getString():String
+        {
+            return (this.jsonString);
+        }
+
+        private function convertToString(value:*, depth:int=0):String
+        {
+            if (((!(this._depthLimit == 0)) && (depth > this._depthLimit)))
+            {
+                return ("");
+            };
+            if ((value is String))
+            {
+                return (escapeString((value as String)));
+            };
+            if ((value is Number))
+            {
+                return ((isFinite((value as Number))) ? value.toString() : "null");
+            };
+            if ((value is Boolean))
+            {
+                return ((value) ? "true" : "false");
+            };
+            if ((((((((value is Array) || (value is Vector.<int>)) || (value is Vector.<uint>)) || (value is Vector.<String>)) || (value is Vector.<Boolean>)) || (value is Vector.<*>)) || ((value is Dictionary) && (!(this._processDictionaryKeys)))))
+            {
+                return (this.arrayToString(value, (depth + 1)));
+            };
+            if (((value is Dictionary) && (this._processDictionaryKeys)))
+            {
+                return (this.dictionaryToString(value, (depth + 1)));
+            };
+            if (((value is Object) && (!(value == null))))
+            {
+                return (this.objectToString(value, (depth + 1)));
+            };
+            return ("null");
         }
 
         private function arrayToString(a:*, depth:int):String
         {
             var value:*;
-            if (((!((this._depthLimit == 0))) && ((depth > this._depthLimit))))
+            if (((!(this._depthLimit == 0)) && (depth > this._depthLimit)))
             {
                 return ("");
             };
@@ -120,7 +134,26 @@
                 };
                 s = (s + this.convertToString(value));
             };
-            return ((("[" + s) + "]"));
+            return (("[" + s) + "]");
+        }
+
+        private function dictionaryToString(a:*, depth:int):String
+        {
+            var key:*;
+            if (((!(this._depthLimit == 0)) && (depth > this._depthLimit)))
+            {
+                return ("");
+            };
+            var s:String = "";
+            for (key in a)
+            {
+                if (s.length > 0)
+                {
+                    s = (s + ",");
+                };
+                s = (s + ((escapeString(key) + ":") + this.convertToString(a[key])));
+            };
+            return (("{" + s) + "}");
         }
 
         private function objectToString(o:Object, depth:int):String
@@ -128,14 +161,15 @@
             var className:Array;
             var value:Object;
             var key:String;
-            var v:XML;
-            if (((!((this._depthLimit == 0))) && ((depth > this._depthLimit))))
+            var classInfo:Vector.<String>;
+            var v:String;
+            var metadatas:Vector.<MetadataInfo>;
+            if (((!(this._depthLimit == 0)) && (depth > this._depthLimit)))
             {
                 return ("");
             };
             var s:String = "";
-            var classInfo:XML = describeType(o);
-            if (classInfo.@name.toString() == "Object")
+            if (getQualifiedClassName(o) == "Object")
             {
                 for (key in o)
                 {
@@ -149,15 +183,17 @@
                         {
                             s = (s + ",");
                         };
-                        s = (s + ((this.escapeString(key) + ":") + this.convertToString(value)));
+                        s = (s + ((escapeString(key) + ":") + this.convertToString(value)));
                     };
                 };
             }
             else
             {
-                for each (v in classInfo..*.(((name() == "variable")) || ((((name() == "accessor")) && ((attribute("access").charAt(0) == "r"))))))
+                classInfo = DescribeTypeCache.getVariables(o, false, true, false, true);
+                for each (v in classInfo)
                 {
-                    if (((v.metadata) && ((v.metadata.(@name == "Transient").length() > 0))))
+                    metadatas = DescribeTypeCache.getVariableMetadata(o, v);
+                    if ((((metadatas) && (metadatas.length > 0)) && (metadatas[0].name == "Transient")))
                     {
                     }
                     else
@@ -168,7 +204,7 @@
                         };
                         try
                         {
-                            s = (s + ((this.escapeString(v.@name.toString()) + ":") + this.convertToString(o[v.@name])));
+                            s = (s + ((escapeString(v) + ":") + this.convertToString(o[v])));
                         }
                         catch(e:Error)
                         {
@@ -182,12 +218,12 @@
             };
             if (className != null)
             {
-                return ((((((((("{" + this.escapeString("type")) + ":") + this.escapeString(className.pop())) + ", ") + this.escapeString("value")) + ":{") + s) + "}}"));
+                return (((((((("{" + escapeString("type")) + ":") + escapeString(className.pop())) + ", ") + escapeString("value")) + ":{") + s) + "}}");
             };
-            return ((("{" + s) + "}"));
+            return (("{" + s) + "}");
         }
 
 
     }
-}//package com.ankamagames.jerakine.json
+} com.ankamagames.jerakine.json
 

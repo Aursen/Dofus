@@ -1,10 +1,9 @@
-﻿package com.ankamagames.jerakine.managers
+package com.ankamagames.jerakine.managers
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
     import flash.utils.Dictionary;
-    import com.ankamagames.jerakine.utils.misc.DescribeTypeCache;
     import com.ankamagames.jerakine.utils.errors.SingletonError;
     import com.ankamagames.jerakine.JerakineConstants;
     import com.ankamagames.jerakine.utils.crypto.Base64;
@@ -18,6 +17,8 @@
     import com.ankamagames.jerakine.interfaces.Secure;
     import by.blooddy.crypto.MD5;
     import flash.net.ObjectEncoding;
+    import com.ankamagames.jerakine.utils.misc.DescribeTypeCache;
+    import __AS3__.vec.Vector;
     import __AS3__.vec.*;
 
     public class StoreDataManager 
@@ -32,26 +33,22 @@
         private var _aStoreSequence:Array;
         private var _aSharedObjectCache:Array;
         private var _aRegisteredClassAlias:Dictionary;
-        private var _describeType:Function;
 
         public function StoreDataManager()
         {
             var oClass:Class;
             var className:String;
             var s:String;
-            this._describeType = DescribeTypeCache.typeDescription;
             super();
             if (_self != null)
             {
                 throw (new SingletonError("DataManager is a singleton and should not be instanciated directly."));
             };
             this._bStoreSequence = false;
-            this._aData = new Array();
-            this._aSharedObjectCache = new Array();
+            this._aData = [];
+            this._aSharedObjectCache = [];
             this._aRegisteredClassAlias = new Dictionary();
             var aClass:Array = this.getData(JerakineConstants.DATASTORE_CLASS_ALIAS, "classAliasList");
-            var nonVectorClass:Array = [];
-            var vectorClass:Array = [];
             for (s in aClass)
             {
                 className = Base64.decode(s);
@@ -78,17 +75,39 @@
             return (_self);
         }
 
-
-        public function getData(dataType:DataStoreType, sKey:String)
+        private static function isComplexType(o:*):Boolean
         {
-            var _local_3:CustomSharedObject;
+            switch (true)
+            {
+                case (o is int):
+                case (o is uint):
+                case (o is Number):
+                case (o is Boolean):
+                case (o is Array):
+                case (o is String):
+                case (o == null):
+                case (o == undefined):
+                    return (false);
+                default:
+                    return (true);
+            };
+        }
+
+
+        public function getData(dataType:DataStoreType, sKey:String):*
+        {
+            var so:CustomSharedObject;
             if (dataType.persistant)
             {
                 switch (dataType.location)
                 {
                     case DataStoreEnum.LOCATION_LOCAL:
-                        _local_3 = this.getSharedObject(dataType.category);
-                        return (_local_3.data[sKey]);
+                        so = this.getSharedObject(dataType.category);
+                        if (so.data)
+                        {
+                            return (so.data[sKey]);
+                        };
+                        break;
                     case DataStoreEnum.LOCATION_SERVER:
                         break;
                 };
@@ -101,6 +120,7 @@
                 };
                 return (null);
             };
+            return (null);
         }
 
         public function registerClass(oInstance:*, deepClassScan:Boolean=false, keepClassInSo:Boolean=true):void
@@ -120,7 +140,7 @@
             {
                 throw (new ArgumentError("Can't store a Secure class"));
             };
-            if (this.isComplexType(oInstance))
+            if (isComplexType(oInstance))
             {
                 className = getQualifiedClassName(oInstance);
                 if (this._aRegisteredClassAlias[className] == null)
@@ -140,7 +160,7 @@
                     };
                     if (keepClassInSo)
                     {
-                        aClassAlias = this.getSetData(JerakineConstants.DATASTORE_CLASS_ALIAS, "classAliasList", new Array());
+                        aClassAlias = this.getSetData(JerakineConstants.DATASTORE_CLASS_ALIAS, "classAliasList", []);
                         aClassAlias[Base64.encode(className)] = sAlias;
                         this.setData(JerakineConstants.DATASTORE_CLASS_ALIAS, "classAliasList", aClassAlias);
                     };
@@ -153,7 +173,7 @@
             };
             if (deepClassScan)
             {
-                if ((((((((oInstance is Dictionary)) || ((oInstance is Array)))) || ((oInstance is Vector.<*>)))) || ((oInstance is Vector.<uint>))))
+                if (((((oInstance is Dictionary) || (oInstance is Array)) || (oInstance is Vector.<*>)) || (oInstance is Vector.<uint>)))
                 {
                     desc = oInstance;
                     if ((oInstance is Vector.<*>))
@@ -170,7 +190,7 @@
                 };
                 for (key in desc)
                 {
-                    if (this.isComplexType(oInstance[key]))
+                    if (isComplexType(oInstance[key]))
                     {
                         this.registerClass(oInstance[key], true);
                     };
@@ -179,23 +199,9 @@
             };
         }
 
-        public function getClass(item:Object):void
-        {
-            var s:*;
-            var description:XML = this._describeType(item);
-            this.registerClass(item);
-            for (s in description..accessor)
-            {
-                if (this.isComplexType(s))
-                {
-                    this.getClass(s);
-                };
-            };
-        }
-
         public function setData(dataType:DataStoreType, sKey:String, oValue:*, deepClassScan:Boolean=false):Boolean
         {
-            var _local_5:CustomSharedObject;
+            var so:CustomSharedObject;
             if (this._aData[dataType.category] == null)
             {
                 this._aData[dataType.category] = new Dictionary(true);
@@ -207,11 +213,15 @@
                 {
                     case DataStoreEnum.LOCATION_LOCAL:
                         this.registerClass(oValue, deepClassScan);
-                        _local_5 = this.getSharedObject(dataType.category);
-                        _local_5.data[sKey] = oValue;
-                        if (!(this._bStoreSequence))
+                        so = this.getSharedObject(dataType.category);
+                        if (!so.data)
                         {
-                            if (!(_local_5.flush()))
+                            so.data = {};
+                        };
+                        so.data[sKey] = oValue;
+                        if (!this._bStoreSequence)
+                        {
+                            if (!so.flush())
                             {
                                 return (false);
                             };
@@ -228,7 +238,42 @@
             return (true);
         }
 
-        public function getSetData(dataType:DataStoreType, sKey:String, oValue:*)
+        public function getKeys(dataType:DataStoreType):Array
+        {
+            var data:Object;
+            var so:CustomSharedObject;
+            var key:String;
+            var result:Array = [];
+            if (dataType.persistant)
+            {
+                switch (dataType.location)
+                {
+                    case DataStoreEnum.LOCATION_LOCAL:
+                        so = this.getSharedObject(dataType.category);
+                        data = so.data;
+                        break;
+                    case DataStoreEnum.LOCATION_SERVER:
+                        break;
+                };
+            }
+            else
+            {
+                if (this._aData[dataType.category] != null)
+                {
+                    data = this._aData[dataType.category];
+                };
+            };
+            if (data)
+            {
+                for (key in data)
+                {
+                    result.push(key);
+                };
+            };
+            return (result);
+        }
+
+        public function getSetData(dataType:DataStoreType, sKey:String, oValue:*):*
         {
             var o:* = this.getData(dataType, sKey);
             if (o != null)
@@ -242,9 +287,9 @@
         public function startStoreSequence():void
         {
             this._bStoreSequence = true;
-            if (!(this._nCurrentSequenceNum))
+            if (!this._nCurrentSequenceNum)
             {
-                this._aStoreSequence = new Array();
+                this._aStoreSequence = [];
             };
             this._nCurrentSequenceNum++;
         }
@@ -253,7 +298,7 @@
         {
             var dt:DataStoreType;
             var s:String;
-            this._bStoreSequence = !((--this._nCurrentSequenceNum == 0));
+            this._bStoreSequence = (!(--this._nCurrentSequenceNum == 0));
             if (this._bStoreSequence)
             {
                 return;
@@ -275,10 +320,9 @@
 
         public function clear(dataType:DataStoreType):void
         {
-            this._aData = new Array();
+            this._aData = [];
             var so:CustomSharedObject = this.getSharedObject(dataType.category);
             so.clear();
-            so.flush();
         }
 
         public function reset():void
@@ -286,10 +330,9 @@
             var s:CustomSharedObject;
             for each (s in this._aSharedObjectCache)
             {
-                s.clear();
                 try
                 {
-                    s.flush();
+                    s.clear();
                     s.close();
                 }
                 catch(e:Error)
@@ -307,7 +350,7 @@
                 case DataStoreEnum.LOCATION_LOCAL:
                     this._aSharedObjectCache[dataType.category].close();
                     delete this._aSharedObjectCache[dataType.category];
-                    return;
+                    break;
             };
         }
 
@@ -323,27 +366,8 @@
             return (so);
         }
 
-        private function isComplexType(o:*):Boolean
-        {
-            switch (true)
-            {
-                case (o is int):
-                case (o is uint):
-                case (o is Number):
-                case (o is Boolean):
-                case (o is Array):
-                case (o is String):
-                case (o == null):
-                case (o == undefined):
-                    return (false);
-                default:
-                    return (true);
-            };
-        }
-
         private function isComplexTypeFromString(name:String):Boolean
         {
-            var _local_2:*;
             switch (name)
             {
                 case "int":
@@ -352,35 +376,23 @@
                 case "Boolean":
                 case "Array":
                 case "String":
+                case null:
                     return (false);
                 default:
-                    _local_2 = this._aRegisteredClassAlias[name];
-                    if (this._aRegisteredClassAlias[name] === true)
-                    {
-                        return (false);
-                    };
-                    return (true);
+                    return (!(this._aRegisteredClassAlias[name] === true));
             };
         }
 
         private function scanType(obj:*):Object
         {
-            var accessor:XML;
-            var variable:XML;
-            var result:Object = new Object();
-            var def:XML = this._describeType(obj);
-            for each (accessor in def..accessor)
+            var name:String;
+            var result:Object = {};
+            var desc:Vector.<String> = DescribeTypeCache.getVariables(obj, false, true, true, true);
+            for each (name in desc)
             {
-                if (this.isComplexTypeFromString(accessor.@type))
+                if (this.isComplexTypeFromString(getQualifiedClassName(obj[name])))
                 {
-                    result[accessor.@name] = true;
-                };
-            };
-            for each (variable in def..variable)
-            {
-                if (this.isComplexTypeFromString(variable.@type))
-                {
-                    result[variable.@name] = true;
+                    result[name] = true;
                 };
             };
             return (result);
@@ -388,5 +400,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.managers
+} com.ankamagames.jerakine.managers
 

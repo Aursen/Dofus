@@ -1,10 +1,10 @@
-﻿package com.ankamagames.dofus.misc.interClient
+package com.ankamagames.dofus.misc.interClient
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
     import com.ankamagames.jerakine.utils.errors.SingletonError;
-    import com.ankamagames.jerakine.types.CustomSharedObject;
+    import com.ankamagames.dofus.kernel.sound.manager.RegConnectionManager;
     import com.ankamagames.dofus.logic.common.managers.DofusFpsManager;
 
     public class InterClientManager 
@@ -15,15 +15,13 @@
 
         private var _client:InterClientSlave;
         private var _master:InterClientMaster;
-        private var hex_chars:Array;
         private var _identity:String;
-        public var clientListInfo:Array;
+        private var _clientId:uint;
+        private var _numClients:uint;
+        public var clientListInfo:Array = new Array("_dofus", 0);
 
         public function InterClientManager()
         {
-            this.hex_chars = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F"];
-            this.clientListInfo = new Array("_dofus", 0);
-            super();
             if (_self)
             {
                 throw (new SingletonError());
@@ -32,7 +30,7 @@
 
         public static function getInstance():InterClientManager
         {
-            if (!(_self))
+            if (!_self)
             {
                 _self = new (InterClientManager)();
             };
@@ -63,16 +61,12 @@
 
         public static function isMaster():Boolean
         {
-            return (!((getInstance()._master == null)));
+            return (!(getInstance()._master == null));
         }
 
 
         public function get flashKey():String
         {
-            if (!(this._identity))
-            {
-                return (this.getRandomFlashKey());
-            };
             return (this._identity);
         }
 
@@ -83,32 +77,40 @@
 
         public function get isAlone():Boolean
         {
-            return (((isMaster()) && (this._master.isAlone)));
+            return ((isMaster()) && (this._master.isAlone));
         }
 
-        public function identifyFromFlashKey():void
+        public function get clientId():uint
         {
-            var so:CustomSharedObject = CustomSharedObject.getLocal("uid");
-            if (!(so.data["identity"]))
-            {
-                this._identity = this.getRandomFlashKey();
-                so.data["identity"] = this._identity;
-                so.flush();
-            }
-            else
-            {
-                this._identity = so.data["identity"];
-            };
-            so.close();
+            return (this._clientId);
+        }
+
+        public function set clientId(pClientId:uint):void
+        {
+            this._clientId = pClientId;
+        }
+
+        public function get numClients():uint
+        {
+            return (this._numClients);
+        }
+
+        public function set numClients(pNumClients:uint):void
+        {
+            this._numClients = pNumClients;
         }
 
         public function update():void
         {
+            if (!this._identity)
+            {
+                InterClientKeyManager.getInstance().getKey();
+            };
             this._master = InterClientMaster.etreLeCalif();
+            RegConnectionManager.getInstance().setAsMain((!(this._master == null)));
             if (((!(this._master)) && (!(this._client))))
             {
                 this._client = new InterClientSlave();
-                this._client.retreiveUid();
             };
             if (((this._master) && (this._client)))
             {
@@ -162,46 +164,7 @@
             DofusFpsManager.updateFocusList(this.clientListInfo, clientId);
         }
 
-        private function getRandomFlashKey():String
-        {
-            var sSentance:String = "";
-            var nLen:Number = 20;
-            var i:Number = 0;
-            while (i < nLen)
-            {
-                sSentance = (sSentance + this.getRandomChar());
-                i++;
-            };
-            return ((sSentance + this.checksum(sSentance)));
-        }
-
-        private function checksum(s:String):String
-        {
-            var r:Number = 0;
-            var i:Number = 0;
-            while (i < s.length)
-            {
-                r = (r + (s.charCodeAt(i) % 16));
-                i++;
-            };
-            return (this.hex_chars[(r % 16)]);
-        }
-
-        private function getRandomChar():String
-        {
-            var n:Number = Math.ceil((Math.random() * 100));
-            if (n <= 40)
-            {
-                return (String.fromCharCode((Math.floor((Math.random() * 26)) + 65)));
-            };
-            if (n <= 80)
-            {
-                return (String.fromCharCode((Math.floor((Math.random() * 26)) + 97)));
-            };
-            return (String.fromCharCode((Math.floor((Math.random() * 10)) + 48)));
-        }
-
 
     }
-}//package com.ankamagames.dofus.misc.interClient
+} com.ankamagames.dofus.misc.interClient
 

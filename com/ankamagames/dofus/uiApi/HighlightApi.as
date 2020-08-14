@@ -1,12 +1,13 @@
-﻿package com.ankamagames.dofus.uiApi
+package com.ankamagames.dofus.uiApi
 {
     import com.ankamagames.berilia.interfaces.IApi;
     import flash.utils.Timer;
+    import com.ankamagames.jerakine.types.Callback;
+    import flash.events.TimerEvent;
     import com.ankamagames.dofus.logic.common.managers.HyperlinkShowCellManager;
     import flash.events.Event;
     import com.ankamagames.dofus.logic.common.managers.HyperlinkDisplayArrowManager;
     import flash.geom.Point;
-    import flash.events.TimerEvent;
     import flash.geom.Rectangle;
     import com.ankamagames.dofus.logic.common.managers.HyperlinkShowNpcManager;
     import com.ankamagames.dofus.logic.common.managers.HyperlinkShowMonsterManager;
@@ -19,9 +20,22 @@
         private static var _cellIds:Array;
         private static var _currentCell:int;
 
+        private var _nextDelayBeforeShow:uint = 0;
+        private var _delayBeforeShowTimer:Timer;
+        private var _delayBeforeShowCallback:Callback;
+
+        public function HighlightApi()
+        {
+            this._delayBeforeShowTimer = new Timer(0);
+            this._delayBeforeShowTimer.addEventListener(TimerEvent.TIMER, this.onDelayBeforeShowTimer, false, 0, true);
+        }
 
         private static function onCellTimer(e:Event):void
         {
+            if ((((e == null) && (_showCellTimer)) && (!(_showCellTimer.running))))
+            {
+                _showCellTimer.start();
+            };
             HyperlinkShowCellManager.showCell(_cellIds[_currentCell]);
             _currentCell++;
             if (_currentCell >= _cellIds.length)
@@ -31,24 +45,26 @@
         }
 
 
-        [Untrusted]
+        public function setDisplayDelay(milleseconds:uint):void
+        {
+            this._nextDelayBeforeShow = milleseconds;
+        }
+
         public function forceArrowPosition(pUiName:String, pComponentName:String, pPosition:Point):void
         {
-            HyperlinkDisplayArrowManager.setArrowPosition(pUiName, pComponentName, pPosition);
+            this.show(HyperlinkDisplayArrowManager.setArrowPosition, pUiName, pComponentName, pPosition);
         }
 
-        [Untrusted]
         public function highlightUi(uiName:String, componentName:String, pos:int=0, reverse:int=0, strata:int=5, loop:Boolean=false):void
         {
-            HyperlinkDisplayArrowManager.showArrow(uiName, componentName, pos, reverse, strata, ((loop) ? 1 : 0));
+            this.show(HyperlinkDisplayArrowManager.showArrow, uiName, componentName, pos, reverse, strata, ((loop) ? 1 : 0));
         }
 
-        [Untrusted]
         public function highlightCell(cellIds:Array, loop:Boolean=false):void
         {
             if (loop)
             {
-                if (!(_showCellTimer))
+                if (!_showCellTimer)
                 {
                     _showCellTimer = new Timer(2000);
                     _showCellTimer.addEventListener(TimerEvent.TIMER, onCellTimer);
@@ -56,8 +72,7 @@
                 _cellIds = cellIds;
                 _currentCell = 0;
                 _showCellTimer.reset();
-                _showCellTimer.start();
-                onCellTimer(null);
+                this.show(onCellTimer, null);
             }
             else
             {
@@ -65,37 +80,33 @@
                 {
                     _showCellTimer.reset();
                 };
-                HyperlinkShowCellManager.showCell(cellIds);
+                this.show(HyperlinkShowCellManager.showCell, cellIds);
             };
         }
 
-        [Untrusted]
         public function highlightAbsolute(targetRect:Rectangle, pos:uint, reverse:int=0, strata:int=5, loop:Boolean=false):void
         {
-            HyperlinkDisplayArrowManager.showAbsoluteArrow(targetRect, pos, reverse, strata, ((loop) ? 1 : 0));
+            this.show(HyperlinkDisplayArrowManager.showAbsoluteArrow, targetRect, pos, reverse, strata, ((loop) ? 1 : 0));
         }
 
-        [Untrusted]
-        public function highlightMapTransition(mapId:int, shapeOrientation:int, position:int, reverse:Boolean=false, strata:int=5, loop:Boolean=false):void
+        public function highlightMapTransition(mapId:Number, shapeOrientation:int, position:int, reverse:Boolean=false, strata:int=5, loop:Boolean=false):void
         {
-            HyperlinkDisplayArrowManager.showMapTransition(mapId, shapeOrientation, position, ((reverse) ? 1 : 0), strata, ((loop) ? 1 : 0));
+            this.show(HyperlinkDisplayArrowManager.showMapTransition, mapId, shapeOrientation, position, ((reverse) ? 1 : 0), strata, ((loop) ? 1 : 0));
         }
 
-        [Untrusted]
         public function highlightNpc(npcId:int, loop:Boolean=false):void
         {
-            HyperlinkShowNpcManager.showNpc(npcId, ((loop) ? 1 : 0));
+            this.show(HyperlinkShowNpcManager.showNpc, npcId, ((loop) ? 1 : 0));
         }
 
-        [Untrusted]
-        public function highlightMonster(monsterId:int, loop:Boolean=false):void
+        public function highlightMonster(monsterId:Number, loop:Boolean=false):void
         {
-            HyperlinkShowMonsterManager.showMonster(monsterId, ((loop) ? 1 : 0));
+            this.show(HyperlinkShowMonsterManager.showMonster, monsterId, ((loop) ? 1 : 0));
         }
 
-        [Untrusted]
         public function stop():void
         {
+            this.clearDelayedShow();
             HyperlinkDisplayArrowManager.destroyArrow();
             if (_showCellTimer)
             {
@@ -103,7 +114,49 @@
             };
         }
 
+        public function getArrowUiProperties():Object
+        {
+            return (HyperlinkDisplayArrowManager.getArrowUiProperties());
+        }
+
+        protected function onDelayBeforeShowTimer(event:TimerEvent):void
+        {
+            if (this._delayBeforeShowCallback)
+            {
+                try
+                {
+                    this._delayBeforeShowCallback.exec();
+                }
+                catch(e:Error)
+                {
+                };
+            };
+            this._delayBeforeShowCallback = null;
+        }
+
+        private function show(fct:Function, ... args):void
+        {
+            this.clearDelayedShow();
+            this._delayBeforeShowCallback = Callback.argFromArray(fct, args);
+            if (this._nextDelayBeforeShow == 0)
+            {
+                this.onDelayBeforeShowTimer(null);
+            }
+            else
+            {
+                this._delayBeforeShowTimer.delay = this._nextDelayBeforeShow;
+                this._delayBeforeShowTimer.start();
+            };
+            this._nextDelayBeforeShow = 0;
+        }
+
+        private function clearDelayedShow():void
+        {
+            this._delayBeforeShowCallback = null;
+            this._delayBeforeShowTimer.reset();
+        }
+
 
     }
-}//package com.ankamagames.dofus.uiApi
+} com.ankamagames.dofus.uiApi
 

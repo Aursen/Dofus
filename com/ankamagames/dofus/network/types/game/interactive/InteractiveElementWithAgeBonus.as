@@ -1,11 +1,11 @@
-﻿package com.ankamagames.dofus.network.types.game.interactive
+package com.ankamagames.dofus.network.types.game.interactive
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import __AS3__.vec.Vector;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class InteractiveElementWithAgeBonus extends InteractiveElement implements INetworkType 
     {
 
@@ -19,9 +19,9 @@
             return (398);
         }
 
-        public function initInteractiveElementWithAgeBonus(elementId:uint=0, elementTypeId:int=0, enabledSkills:Vector.<InteractiveElementSkill>=null, disabledSkills:Vector.<InteractiveElementSkill>=null, ageBonus:int=0):InteractiveElementWithAgeBonus
+        public function initInteractiveElementWithAgeBonus(elementId:uint=0, elementTypeId:int=0, enabledSkills:Vector.<InteractiveElementSkill>=null, disabledSkills:Vector.<InteractiveElementSkill>=null, onCurrentMap:Boolean=false, ageBonus:int=0):InteractiveElementWithAgeBonus
         {
-            super.initInteractiveElement(elementId, elementTypeId, enabledSkills, disabledSkills);
+            super.initInteractiveElement(elementId, elementTypeId, enabledSkills, disabledSkills, onCurrentMap);
             this.ageBonus = ageBonus;
             return (this);
         }
@@ -40,7 +40,7 @@
         public function serializeAs_InteractiveElementWithAgeBonus(output:ICustomDataOutput):void
         {
             super.serializeAs_InteractiveElement(output);
-            if ((((this.ageBonus < -1)) || ((this.ageBonus > 1000))))
+            if (((this.ageBonus < -1) || (this.ageBonus > 1000)))
             {
                 throw (new Error((("Forbidden value (" + this.ageBonus) + ") on element ageBonus.")));
             };
@@ -55,8 +55,24 @@
         public function deserializeAs_InteractiveElementWithAgeBonus(input:ICustomDataInput):void
         {
             super.deserialize(input);
+            this._ageBonusFunc(input);
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_InteractiveElementWithAgeBonus(tree);
+        }
+
+        public function deserializeAsyncAs_InteractiveElementWithAgeBonus(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._ageBonusFunc);
+        }
+
+        private function _ageBonusFunc(input:ICustomDataInput):void
+        {
             this.ageBonus = input.readShort();
-            if ((((this.ageBonus < -1)) || ((this.ageBonus > 1000))))
+            if (((this.ageBonus < -1) || (this.ageBonus > 1000)))
             {
                 throw (new Error((("Forbidden value (" + this.ageBonus) + ") on element of InteractiveElementWithAgeBonus.ageBonus.")));
             };
@@ -64,5 +80,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.interactive
+} com.ankamagames.dofus.network.types.game.interactive
 

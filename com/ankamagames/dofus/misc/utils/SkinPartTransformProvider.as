@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.misc.utils
+package com.ankamagames.dofus.misc.utils
 {
     import com.ankamagames.tiphon.types.ISkinPartTransformProvider;
     import com.ankamagames.dofus.datacenter.appearance.SkinPosition;
@@ -30,5 +30,5 @@
 
 
     }
-}//package com.ankamagames.dofus.misc.utils
+} com.ankamagames.dofus.misc.utils
 

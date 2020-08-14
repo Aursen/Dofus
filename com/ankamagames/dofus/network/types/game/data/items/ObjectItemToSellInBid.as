@@ -1,10 +1,11 @@
-﻿package com.ankamagames.dofus.network.types.game.data.items
+package com.ankamagames.dofus.network.types.game.data.items
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import __AS3__.vec.Vector;
     import com.ankamagames.dofus.network.types.game.data.items.effects.ObjectEffect;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
     public class ObjectItemToSellInBid extends ObjectItemToSell implements INetworkType 
     {
@@ -19,7 +20,7 @@
             return (164);
         }
 
-        public function initObjectItemToSellInBid(objectGID:uint=0, effects:Vector.<ObjectEffect>=null, objectUID:uint=0, quantity:uint=0, objectPrice:uint=0, unsoldDelay:uint=0):ObjectItemToSellInBid
+        public function initObjectItemToSellInBid(objectGID:uint=0, effects:Vector.<ObjectEffect>=null, objectUID:uint=0, quantity:uint=0, objectPrice:Number=0, unsoldDelay:uint=0):ObjectItemToSellInBid
         {
             super.initObjectItemToSell(objectGID, effects, objectUID, quantity, objectPrice);
             this.unsoldDelay = unsoldDelay;
@@ -55,6 +56,22 @@
         public function deserializeAs_ObjectItemToSellInBid(input:ICustomDataInput):void
         {
             super.deserialize(input);
+            this._unsoldDelayFunc(input);
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_ObjectItemToSellInBid(tree);
+        }
+
+        public function deserializeAsyncAs_ObjectItemToSellInBid(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._unsoldDelayFunc);
+        }
+
+        private function _unsoldDelayFunc(input:ICustomDataInput):void
+        {
             this.unsoldDelay = input.readInt();
             if (this.unsoldDelay < 0)
             {
@@ -64,5 +81,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.data.items
+} com.ankamagames.dofus.network.types.game.data.items
 

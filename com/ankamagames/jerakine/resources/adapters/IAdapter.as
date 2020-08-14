@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.resources.adapters
+package com.ankamagames.jerakine.resources.adapters
 {
     import com.ankamagames.jerakine.pools.Poolable;
     import com.ankamagames.jerakine.types.Uri;
@@ -13,5 +13,5 @@
         function getResourceType():uint;
 
     }
-}//package com.ankamagames.jerakine.resources.adapters
+} com.ankamagames.jerakine.resources.adapters
 

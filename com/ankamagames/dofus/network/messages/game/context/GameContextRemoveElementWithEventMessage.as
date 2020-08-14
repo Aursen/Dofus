@@ -1,12 +1,12 @@
-﻿package com.ankamagames.dofus.network.messages.game.context
+package com.ankamagames.dofus.network.messages.game.context
 {
     import com.ankamagames.jerakine.network.INetworkMessage;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class GameContextRemoveElementWithEventMessage extends GameContextRemoveElementMessage implements INetworkMessage 
     {
 
@@ -18,7 +18,7 @@
 
         override public function get isInitialized():Boolean
         {
-            return (((super.isInitialized) && (this._isInitialized)));
+            return ((super.isInitialized) && (this._isInitialized));
         }
 
         override public function getMessageId():uint
@@ -26,7 +26,7 @@
             return (6412);
         }
 
-        public function initGameContextRemoveElementWithEventMessage(id:int=0, elementEventId:uint=0):GameContextRemoveElementWithEventMessage
+        public function initGameContextRemoveElementWithEventMessage(id:Number=0, elementEventId:uint=0):GameContextRemoveElementWithEventMessage
         {
             super.initGameContextRemoveElementMessage(id);
             this.elementEventId = elementEventId;
@@ -53,6 +53,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         override public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_GameContextRemoveElementWithEventMessage(output);
@@ -76,6 +84,22 @@
         public function deserializeAs_GameContextRemoveElementWithEventMessage(input:ICustomDataInput):void
         {
             super.deserialize(input);
+            this._elementEventIdFunc(input);
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GameContextRemoveElementWithEventMessage(tree);
+        }
+
+        public function deserializeAsyncAs_GameContextRemoveElementWithEventMessage(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._elementEventIdFunc);
+        }
+
+        private function _elementEventIdFunc(input:ICustomDataInput):void
+        {
             this.elementEventId = input.readByte();
             if (this.elementEventId < 0)
             {
@@ -85,5 +109,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.context
+} com.ankamagames.dofus.network.messages.game.context
 

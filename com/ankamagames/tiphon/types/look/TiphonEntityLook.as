@@ -1,4 +1,4 @@
-﻿package com.ankamagames.tiphon.types.look
+package com.ankamagames.tiphon.types.look
 {
     import com.ankamagames.jerakine.interfaces.ISecurizable;
     import flash.utils.Dictionary;
@@ -6,6 +6,7 @@
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
     import __AS3__.vec.Vector;
+    import com.ankamagames.tiphon.types.ISkinModifier;
     import com.ankamagames.jerakine.types.DefaultableColor;
     import __AS3__.vec.*;
 
@@ -27,8 +28,9 @@
         private var _colors:Array;
         private var _scaleX:Number = 1;
         private var _scaleY:Number = 1;
-        private var _subEntities:Array;
+        private var _subEntities:Dictionary;
         private var _defaultSkin:int = -1;
+        private var _skinModifier:ISkinModifier;
 
         public function TiphonEntityLook(sLook:String=null)
         {
@@ -41,7 +43,7 @@
 
         public static function fromString(str:String, tiphonInstance:TiphonEntityLook=null):TiphonEntityLook
         {
-            return (EntityLookParser.fromString(str, EntityLookParser.CURRENT_FORMAT_VERSION, EntityLookParser.DEFAULT_NUMBER_BASE, tiphonInstance));
+            return (EntityLookParser.fromString(str, EntityLookParser.DEFAULT_NUMBER_BASE, tiphonInstance));
         }
 
 
@@ -52,16 +54,16 @@
 
         public function set defaultSkin(id:int):void
         {
-            if (((!((this._defaultSkin == -1))) && (this._skins)))
+            if (((!(this._defaultSkin == -1)) && (this._skins)))
             {
                 this._skins.shift();
             };
-            if (!(this._skins))
+            if (!this._skins)
             {
                 this._skins = new Vector.<uint>(0, false);
             };
             this._defaultSkin = id;
-            if (((!(this._skins.length)) || (!((this._skins[0] == this._defaultSkin)))))
+            if (((!(this._skins.length)) || (!(this._skins[0] == this._defaultSkin))))
             {
                 this._skins.unshift(id);
             };
@@ -73,7 +75,7 @@
             {
                 return (0);
             };
-            if (((!((this._defaultSkin == -1))) && ((this._skins.length > 1))))
+            if (((!(this._defaultSkin == -1)) && (this._skins.length > 1)))
             {
                 return (this._skins[1]);
             };
@@ -83,6 +85,16 @@
         public function get defaultSkin():int
         {
             return (this._defaultSkin);
+        }
+
+        public function set skinModifier(sm:ISkinModifier):void
+        {
+            this._skinModifier = sm;
+        }
+
+        public function get skinModifier():ISkinModifier
+        {
+            return (this._skinModifier);
         }
 
         public function getBone():uint
@@ -98,7 +110,7 @@
                 return;
             };
             this._bone = bone;
-            if (!(this._locked))
+            if (!this._locked)
             {
                 for (elo in this._observers)
                 {
@@ -113,7 +125,7 @@
 
         public function getSkins(byRef:Boolean=false, keepDefaultSkin:Boolean=true):Vector.<uint>
         {
-            if (!(this._skins))
+            if (!this._skins)
             {
                 return (null);
             };
@@ -123,11 +135,11 @@
             };
             var skinsLength:uint = this._skins.length;
             var offset:uint;
-            if (((!(keepDefaultSkin)) && (!((this._defaultSkin == -1)))))
+            if (((!(keepDefaultSkin)) && (!(this._defaultSkin == -1))))
             {
                 offset = 1;
             };
-            var skinsDeepCopy:Vector.<uint> = new Vector.<uint>(skinsLength, true);
+            var skinsDeepCopy:Vector.<uint> = new Vector.<uint>((skinsLength - offset), true);
             var i:uint = offset;
             while (i < skinsLength)
             {
@@ -140,12 +152,12 @@
         public function resetSkins():void
         {
             var elo:Object;
-            if (((!(this._skins)) || ((this._skins.length == 0))))
+            if (((!(this._skins)) || (this._skins.length == 0)))
             {
                 return;
             };
             this._skins = null;
-            if (!(this._locked))
+            if (!this._locked)
             {
                 for (elo in this._observers)
                 {
@@ -161,11 +173,11 @@
         public function addSkin(skin:uint, addInFirstPosition:Boolean=false):void
         {
             var elo:Object;
-            if (!(this._skins))
+            if (!this._skins)
             {
                 this._skins = new Vector.<uint>(0, false);
             };
-            if (!(addInFirstPosition))
+            if (!addInFirstPosition)
             {
                 this._skins.push(skin);
             }
@@ -173,7 +185,7 @@
             {
                 this._skins.unshift(skin);
             };
-            if (!(this._locked))
+            if (!this._locked)
             {
                 for (elo in this._observers)
                 {
@@ -189,7 +201,7 @@
         public function removeSkin(skin:uint):void
         {
             var elo:Object;
-            if (!(this._skins))
+            if (!this._skins)
             {
                 return;
             };
@@ -199,7 +211,7 @@
                 return;
             };
             this._skins = this._skins.slice(0, skinPos).concat(this._skins.slice((skinPos + 1)));
-            if (!(this._locked))
+            if (!this._locked)
             {
                 for (elo in this._observers)
                 {
@@ -215,7 +227,7 @@
         public function getColors(byRef:Boolean=false):Array
         {
             var colorIndex:String;
-            if (!(this._colors))
+            if (!this._colors)
             {
                 return (null);
             };
@@ -245,7 +257,7 @@
 
         public function hasColor(index:uint):Boolean
         {
-            return (((this._colors) && (this._colors[index])));
+            return ((this._colors) && (this._colors[index]));
         }
 
         public function resetColor(index:uint):void
@@ -256,7 +268,7 @@
                 return;
             };
             delete this._colors[index];
-            if (!(this._locked))
+            if (!this._locked)
             {
                 for (elo in this._observers)
                 {
@@ -272,12 +284,12 @@
         public function resetColors():void
         {
             var elo:Object;
-            if (!(this._colors))
+            if (!this._colors)
             {
                 return;
             };
             this._colors = null;
-            if (!(this._locked))
+            if (!this._locked)
             {
                 for (elo in this._observers)
                 {
@@ -292,12 +304,13 @@
 
         public function setColor(index:uint, color:uint):void
         {
+            var colorIndex:*;
             var elo:Object;
-            if (!(this._colors))
+            if (!this._colors)
             {
                 this._colors = new Array();
             };
-            if (((this._colors[index]) && ((this._colors[index] == color))))
+            if (((this._colors[index]) && (this._colors[index] == color)))
             {
                 return;
             };
@@ -309,7 +322,20 @@
             {
                 this._colors[index] = color;
             };
-            if (!(this._locked))
+            var sortedIndex:Array = new Array();
+            var copy:Array = new Array();
+            for (colorIndex in this._colors)
+            {
+                sortedIndex.push(colorIndex);
+                copy[colorIndex] = this._colors[colorIndex];
+                delete this._colors[colorIndex];
+            };
+            sortedIndex.sort(Array.NUMERIC);
+            for each (colorIndex in sortedIndex)
+            {
+                this._colors[colorIndex] = copy[colorIndex];
+            };
+            if (!this._locked)
             {
                 for (elo in this._observers)
                 {
@@ -335,7 +361,7 @@
                 return;
             };
             this._scaleX = value;
-            if (!(this._locked))
+            if (!this._locked)
             {
                 for (elo in this._observers)
                 {
@@ -361,7 +387,7 @@
                 return;
             };
             this._scaleY = value;
-            if (!(this._locked))
+            if (!this._locked)
             {
                 for (elo in this._observers)
                 {
@@ -377,13 +403,13 @@
         public function setScales(x:Number, y:Number):void
         {
             var elo:Object;
-            if ((((this._scaleX == x)) && ((this._scaleY == y))))
+            if (((this._scaleX == x) && (this._scaleY == y)))
             {
                 return;
             };
             this._scaleX = x;
             this._scaleY = y;
-            if (!(this._locked))
+            if (!this._locked)
             {
                 for (elo in this._observers)
                 {
@@ -396,13 +422,13 @@
             };
         }
 
-        public function getSubEntities(byRef:Boolean=false):Array
+        public function getSubEntities(byRef:Boolean=false):Dictionary
         {
             var subEntityCategory:String;
             var category:uint;
             var subEntityIndex:String;
             var index:uint;
-            if (!(this._subEntities))
+            if (!this._subEntities)
             {
                 return (null);
             };
@@ -410,11 +436,11 @@
             {
                 return (this._subEntities);
             };
-            var subEntitesDeepCopy:Array = new Array();
+            var subEntitesDeepCopy:Dictionary = new Dictionary(true);
             for (subEntityCategory in this._subEntities)
             {
                 category = uint(subEntityCategory);
-                if (!(subEntitesDeepCopy[category]))
+                if (!subEntitesDeepCopy[category])
                 {
                     subEntitesDeepCopy[category] = new Array();
                 };
@@ -431,7 +457,7 @@
         {
             var subEntityIndex:String;
             var index:uint;
-            if (!(this._subEntities))
+            if (!this._subEntities)
             {
                 return (null);
             };
@@ -446,11 +472,11 @@
 
         public function getSubEntity(category:uint, index:uint):TiphonEntityLook
         {
-            if (!(this._subEntities))
+            if (!this._subEntities)
             {
                 return (null);
             };
-            if (!(this._subEntities[category]))
+            if (!this._subEntities[category])
             {
                 return (null);
             };
@@ -463,7 +489,7 @@
             var subEntityIndex:String;
             var subEntity:TiphonEntityLook;
             var elo:Object;
-            if (!(this._subEntities))
+            if (!this._subEntities)
             {
                 return;
             };
@@ -476,7 +502,7 @@
                 };
             };
             this._subEntities = null;
-            if (!(this._locked))
+            if (!this._locked)
             {
                 for (elo in this._observers)
                 {
@@ -492,17 +518,17 @@
         public function addSubEntity(category:uint, index:uint, subEntity:TiphonEntityLook):void
         {
             var elo:Object;
-            if (!(this._subEntities))
+            if (!this._subEntities)
             {
-                this._subEntities = new Array();
+                this._subEntities = new Dictionary();
             };
-            if (!(this._subEntities[category]))
+            if (!this._subEntities[category])
             {
                 this._subEntities[category] = new Array();
             };
             subEntity.addObserver(this);
             this._subEntities[category][index] = subEntity;
-            if (!(this._locked))
+            if (!this._locked)
             {
                 for (elo in this._observers)
                 {
@@ -518,7 +544,7 @@
         public function removeSubEntity(category:uint, index:uint=0):void
         {
             var elo:Object;
-            if (((((!(this._subEntities)) || (!(this._subEntities[category])))) || (!(this._subEntities[category][index]))))
+            if ((((!(this._subEntities)) || (!(this._subEntities[category]))) || (!(this._subEntities[category][index]))))
             {
                 return;
             };
@@ -527,7 +553,7 @@
             {
                 delete this._subEntities[category];
             };
-            if (!(this._locked))
+            if (!this._locked)
             {
                 for (elo in this._observers)
                 {
@@ -561,12 +587,12 @@
             var elo2:Object;
             var elo3:Object;
             var elo4:Object;
-            if (!(this._locked))
+            if (!this._locked)
             {
                 return;
             };
             this._locked = false;
-            if (!(silentUnlock))
+            if (!silentUnlock)
             {
                 if (this._boneChangedWhileLocked)
                 {
@@ -613,7 +639,7 @@
 
         public function addObserver(elo:EntityLookObserver):void
         {
-            if (!(this._observers))
+            if (!this._observers)
             {
                 this._observers = new Dictionary(true);
             };
@@ -622,7 +648,7 @@
 
         public function removeObserver(elo:EntityLookObserver):void
         {
-            if (!(this._observers))
+            if (!this._observers)
             {
                 return;
             };
@@ -660,7 +686,7 @@
             {
                 return (false);
             };
-            if ((((((this._skins == null)) && (!((el._skins == null))))) || (((!((this._skins == null))) && ((el._skins == null))))))
+            if ((((this._skins == null) && (!(el._skins == null))) || ((!(this._skins == null)) && (el._skins == null))))
             {
                 return (false);
             };
@@ -678,7 +704,7 @@
                     };
                 };
             };
-            if ((((((this._colors == null)) && (!((el._colors == null))))) || (((!((this._colors == null))) && ((el._colors == null))))))
+            if ((((this._colors == null) && (!(el._colors == null))) || ((!(this._colors == null)) && (el._colors == null))))
             {
                 return (false);
             };
@@ -723,7 +749,7 @@
             {
                 for (subEntityCatStr in this._subEntities)
                 {
-                    if (((!(el._subEntities)) || ((el._subEntities[subEntityCatStr] == null))))
+                    if (((!(el._subEntities)) || (el._subEntities[subEntityCatStr] == null)))
                     {
                         return (false);
                     };
@@ -734,7 +760,7 @@
                         {
                             return (false);
                         };
-                        if (!(se.equals(this._subEntities[subEntityCatStr][subEntityCatIndexStr])))
+                        if (!se.equals(this._subEntities[subEntityCatStr][subEntityCatIndexStr]))
                         {
                             return (false);
                         };
@@ -742,7 +768,7 @@
                 };
                 for (subEntityCatStr2 in el._subEntities)
                 {
-                    if (((!(this._subEntities)) || ((this._subEntities[subEntityCatStr2] == null))))
+                    if (((!(this._subEntities)) || (this._subEntities[subEntityCatStr2] == null)))
                     {
                         return (false);
                     };
@@ -753,7 +779,7 @@
                         {
                             return (false);
                         };
-                        if (!(se2.equals(el._subEntities[subEntityCatStr2][subEntityCatIndexStr2])))
+                        if (!se2.equals(el._subEntities[subEntityCatStr2][subEntityCatIndexStr2]))
                         {
                             return (false);
                         };
@@ -770,27 +796,68 @@
                 return;
             };
             this.lock();
-            this._boneChangedWhileLocked = true;
             this.setBone(el.getBone());
-            this.resetColors();
             this._colorsChangedWhileLocked = true;
             this._colors = el.getColors();
-            this.resetSkins();
-            this._skinsChangedWhileLocked = true;
-            this._skins = el.getSkins();
-            this._defaultSkin = el.defaultSkin;
-            this.resetSubEntities();
-            this._subEntitiesChangedWhileLocked = true;
-            this._subEntities = el.getSubEntities();
+            var skins:Vector.<uint> = el.getSkins();
+            if (((!(this.equalsToCurrentSkins(skins))) || (!(this._defaultSkin == el.defaultSkin))))
+            {
+                this._skinsChangedWhileLocked = true;
+                this._skins = skins;
+                this._defaultSkin = el.defaultSkin;
+            };
+            var newSubEntities:Dictionary = el.getSubEntities();
+            if (!this.equalsToCurrentSubEntities(newSubEntities))
+            {
+                this.resetSubEntities();
+                this._subEntitiesChangedWhileLocked = true;
+                this._subEntities = newSubEntities;
+            };
             this.setScales(el.getScaleX(), el.getScaleY());
-            this._scalesChangedWhileLocked = true;
             this.unlock(false);
+        }
+
+        public function equalsToCurrentSkins(skins:Vector.<uint>):Boolean
+        {
+            var equals:Function;
+            if ((((skins) && (this._skins)) && (skins.length == this._skins.length)))
+            {
+                equals = function (item:uint, index:int, vector:Vector.<uint>):Boolean
+                {
+                    return (internal::skins[index] == _skins[index]);
+                };
+                return (skins.every(equals));
+            };
+            return (false);
+        }
+
+        public function equalsToCurrentSubEntities(subentities:Dictionary):Boolean
+        {
+            var key:String;
+            var nbKeys:int;
+            if (((subentities) && (this._subEntities)))
+            {
+                for (key in subentities)
+                {
+                    if (subentities[key] != this._subEntities[key])
+                    {
+                        return (false);
+                    };
+                    nbKeys++;
+                };
+                for (key in this._subEntities)
+                {
+                    nbKeys--;
+                };
+                return (nbKeys == 0);
+            };
+            return (subentities == this._subEntities);
         }
 
         public function boneChanged(look:TiphonEntityLook):void
         {
             var elo:Object;
-            if (!(this._locked))
+            if (!this._locked)
             {
                 for (elo in this._observers)
                 {
@@ -806,7 +873,7 @@
         public function skinsChanged(look:TiphonEntityLook):void
         {
             var elo:Object;
-            if (!(this._locked))
+            if (!this._locked)
             {
                 for (elo in this._observers)
                 {
@@ -822,7 +889,7 @@
         public function colorsChanged(look:TiphonEntityLook):void
         {
             var elo:Object;
-            if (!(this._locked))
+            if (!this._locked)
             {
                 for (elo in this._observers)
                 {
@@ -838,7 +905,7 @@
         public function scalesChanged(look:TiphonEntityLook):void
         {
             var elo:Object;
-            if (!(this._locked))
+            if (!this._locked)
             {
                 for (elo in this._observers)
                 {
@@ -854,7 +921,7 @@
         public function subEntitiesChanged(look:TiphonEntityLook):void
         {
             var elo:Object;
-            if (!(this._locked))
+            if (!this._locked)
             {
                 for (elo in this._observers)
                 {
@@ -878,9 +945,10 @@
             o._defaultSkin = this._defaultSkin;
             o._scaleX = this._scaleX;
             o._scaleY = this._scaleY;
+            o._skinModifier = this._skinModifier;
             if (this._subEntities)
             {
-                o._subEntities = [];
+                o._subEntities = new Dictionary(true);
                 for (i in this._subEntities)
                 {
                     o._subEntities[i] = [];
@@ -896,12 +964,12 @@
             return (o);
         }
 
-        public function getSecureObject()
+        public function getSecureObject():*
         {
             return (this);
         }
 
 
     }
-}//package com.ankamagames.tiphon.types.look
+} com.ankamagames.tiphon.types.look
 

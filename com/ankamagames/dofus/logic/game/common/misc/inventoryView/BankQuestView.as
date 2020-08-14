@@ -1,8 +1,9 @@
-﻿package com.ankamagames.dofus.logic.game.common.misc.inventoryView
+package com.ankamagames.dofus.logic.game.common.misc.inventoryView
 {
     import com.ankamagames.dofus.logic.game.common.misc.HookLock;
-    import com.ankamagames.dofus.logic.game.common.managers.StorageOptionManager;
+    import com.ankamagames.dofus.types.enums.ItemCategoryEnum;
     import com.ankamagames.dofus.internalDatacenter.items.ItemWrapper;
+    import com.ankamagames.dofus.logic.game.common.managers.StorageOptionManager;
     import com.ankamagames.dofus.misc.lists.InventoryHookList;
     import com.ankamagames.dofus.logic.game.common.managers.InventoryManager;
 
@@ -21,13 +22,13 @@
 
         override public function isListening(item:ItemWrapper):Boolean
         {
-            return (((super.isListening(item)) && ((item.category == StorageOptionManager.QUEST_CATEGORY))));
+            return ((super.isListening(item)) && (item.category == ItemCategoryEnum.QUEST_CATEGORY));
         }
 
         override public function updateView():void
         {
             super.updateView();
-            if ((((StorageOptionManager.getInstance().bankCategory == StorageOptionManager.QUEST_CATEGORY)) && (!(StorageOptionManager.getInstance().hasBankFilter()))))
+            if (((StorageOptionManager.getInstance().bankCategory == ItemCategoryEnum.QUEST_CATEGORY) && (!(StorageOptionManager.getInstance().hasBankFilter()))))
             {
                 _hookLock.addHook(InventoryHookList.BankViewContent, [content, InventoryManager.getInstance().bankInventory.localKamas]);
             };
@@ -45,5 +46,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.misc.inventoryView
+} com.ankamagames.dofus.logic.game.common.misc.inventoryView
 

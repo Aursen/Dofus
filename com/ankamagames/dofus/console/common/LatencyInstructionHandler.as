@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.console.common
+package com.ankamagames.dofus.console.common
 {
     import com.ankamagames.jerakine.console.ConsoleInstructionHandler;
     import com.ankamagames.dofus.logic.common.frames.LatencyFrame;
@@ -16,26 +16,26 @@
 
         public function handle(console:ConsoleHandler, cmd:String, args:Array):void
         {
-            var _local_4:LatencyFrame;
-            var _local_5:BasicPingMessage;
-            var _local_6:IServerConnection;
+            var latencyFrame:LatencyFrame;
+            var ping:BasicPingMessage;
+            var connection:IServerConnection;
             switch (cmd)
             {
                 case "ping":
-                    _local_4 = (Kernel.getWorker().getFrame(LatencyFrame) as LatencyFrame);
-                    if (_local_4.pingRequested != 0)
+                    latencyFrame = (Kernel.getWorker().getFrame(LatencyFrame) as LatencyFrame);
+                    if (latencyFrame.pingRequested != 0)
                     {
-                        return;
+                        break;
                     };
-                    _local_5 = new BasicPingMessage().initBasicPingMessage();
-                    ConnectionsHandler.getConnection().send(_local_5);
-                    _local_4.pingRequested = getTimer();
+                    ping = new BasicPingMessage().initBasicPingMessage();
+                    ConnectionsHandler.getConnection().send(ping);
+                    latencyFrame.pingRequested = getTimer();
                     console.output("Ping...");
-                    return;
+                    break;
                 case "aping":
-                    _local_6 = ConnectionsHandler.getConnection().mainConnection;
-                    console.output((((((("Avg ping : " + _local_6.latencyAvg) + "ms for the last ") + _local_6.latencySamplesCount) + " packets (max : ") + _local_6.latencySamplesMax) + ")"));
-                    return;
+                    connection = ConnectionsHandler.getConnection().mainConnection;
+                    console.output((((((("Avg ping : " + connection.latencyAvg) + "ms for the last ") + connection.latencySamplesCount) + " packets (max : ") + connection.latencySamplesMax) + ")"));
+                    break;
             };
         }
 
@@ -58,5 +58,5 @@
 
 
     }
-}//package com.ankamagames.dofus.console.common
+} com.ankamagames.dofus.console.common
 

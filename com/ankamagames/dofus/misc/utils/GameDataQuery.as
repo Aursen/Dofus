@@ -1,8 +1,8 @@
-﻿package com.ankamagames.dofus.misc.utils
+package com.ankamagames.dofus.misc.utils
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
-    import avmplus.getQualifiedClassName;
+    import flash.utils.getQualifiedClassName;
     import com.ankamagames.jerakine.data.GameDataFileAccessor;
     import __AS3__.vec.Vector;
     import flash.utils.Dictionary;
@@ -10,9 +10,8 @@
     import com.ankamagames.jerakine.data.GameData;
     import com.ankamagames.jerakine.data.I18nFileAccessor;
     import com.ankamagames.jerakine.enum.GameDataTypeEnum;
-    import com.ankamagames.jerakine.utils.misc.DescribeTypeCache;
     import com.ankamagames.dofus.misc.lists.GameDataList;
-    import flash.utils.getDefinitionByName;
+    import com.ankamagames.jerakine.data.GameDataField;
     import __AS3__.vec.*;
 
     public class GameDataQuery 
@@ -45,7 +44,7 @@
                     while (ind < idsVectors[i].length)
                     {
                         id = idsVectors[i][ind];
-                        if (!(added[id]))
+                        if (!added[id])
                         {
                             result.push(id);
                             added[id] = true;
@@ -101,12 +100,12 @@
         {
             target = checkPackage(target);
             fieldName = checkField(target, fieldName);
-            if (!(fieldName))
+            if (!fieldName)
             {
                 return (new Vector.<uint>());
             };
             var result:Vector.<uint> = GameDataFileAccessor.getInstance().getDataProcessor(target["MODULE"]).queryEquals(fieldName, value);
-            var iterable:Boolean = !((((((((((((value is uint)) || ((value is int)))) || ((value is Number)))) || ((value is String)))) || ((value is Boolean)))) || ((value == null))));
+            var iterable:* = (!((((((value is uint) || (value is int)) || (value is Number)) || (value is String)) || (value is Boolean)) || (value == null)));
             if (iterable)
             {
                 return (union(result));
@@ -118,11 +117,11 @@
         {
             target = checkPackage(target);
             fieldName = checkField(target, fieldName);
-            if (!(fieldName))
+            if (!fieldName)
             {
                 return (new Vector.<uint>());
             };
-            if (!(value))
+            if (!value)
             {
                 throw (new ArgumentError("value arg cannot be null"));
             };
@@ -133,7 +132,7 @@
         {
             target = checkPackage(target);
             fieldName = checkField(target, fieldName);
-            if (!(fieldName))
+            if (!fieldName)
             {
                 return (new Vector.<uint>());
             };
@@ -144,7 +143,7 @@
         {
             target = checkPackage(target);
             fieldName = checkField(target, fieldName);
-            if (!(fieldName))
+            if (!fieldName)
             {
                 return (new Vector.<uint>());
             };
@@ -176,7 +175,7 @@
             var i:uint;
             var field:String;
             target = checkPackage(target);
-            if (!((fieldNames is String)))
+            if (!(fieldNames is String))
             {
                 cleanedFieldNames = new Vector.<String>();
                 i = 0;
@@ -195,14 +194,14 @@
             {
                 fieldNames = checkField(target, fieldNames);
             };
-            if (((!(fieldNames)) || ((fieldNames.length == 0))))
+            if (((!(fieldNames)) || (fieldNames.length == 0)))
             {
                 return (new Vector.<uint>());
             };
             return (GameDataFileAccessor.getInstance().getDataProcessor(target["MODULE"]).sort(fieldNames, ids, ascending));
         }
 
-        public static function sortI18n(datas:*, fields:*, ascending:*)
+        public static function sortI18n(datas:*, fields:*, ascending:*):*
         {
             datas.sort(getSortFunction(datas, fields, ascending));
             return (datas);
@@ -267,7 +266,7 @@
         {
             return (function (str:String):Boolean
             {
-                return (((str) ? !((str.toLowerCase().indexOf(pattern) == -1)) : false));
+                return ((str) ? (!(StringUtils.noAccent(str).toLowerCase().indexOf(pattern) == -1)) : false);
             });
         }
 
@@ -275,7 +274,7 @@
         {
             return (function (value:*):Boolean
             {
-                return ((value > cmpValue));
+                return (value > cmpValue);
             });
         }
 
@@ -283,7 +282,7 @@
         {
             return (function (value:*):Boolean
             {
-                return ((value < cmpValue));
+                return (value < cmpValue);
             });
         }
 
@@ -292,7 +291,7 @@
             var fields:Vector.<String> = GameDataFileAccessor.getInstance().getDataProcessor(target["MODULE"]).getQueryableField();
             if (fields.indexOf(name) == -1)
             {
-                if ((((fields.indexOf((name + "Id")) == -1)) || (!((GameDataFileAccessor.getInstance().getDataProcessor(target["MODULE"]).getFieldType((name + "Id")) == GameDataTypeEnum.I18N)))))
+                if (((fields.indexOf((name + "Id")) == -1) || (!(GameDataFileAccessor.getInstance().getDataProcessor(target["MODULE"]).getFieldType((name + "Id")) == GameDataTypeEnum.I18N))))
                 {
                     _log.error(((("Field " + name) + " not found in ") + target));
                     return (null);
@@ -305,21 +304,21 @@
         private static function checkPackage(target:Class):Class
         {
             var className:String;
-            var desc:XML;
-            var constant:XML;
+            var gameDataClass:Class;
+            var gameDataClassName:String;
             var classInfo:Array;
             var tmp:Array = getQualifiedClassName(target).split("::");
             var packageName:String = tmp[0];
             if (packageName == "d2data")
             {
                 className = tmp[1];
-                desc = DescribeTypeCache.typeDescription(GameDataList);
-                for each (constant in desc..constant)
+                for each (gameDataClass in GameDataList.CLASSES)
                 {
-                    classInfo = constant.@type.toString().split("::");
-                    if (classInfo[1] == className)
+                    gameDataClassName = getQualifiedClassName(gameDataClass);
+                    classInfo = gameDataClassName.split("::");
+                    if (classInfo[(classInfo.length - 1)] == className)
                     {
-                        return ((getDefinitionByName(constant.@type.toString()) as Class));
+                        return (GameDataField.getClassByName(gameDataClassName));
                     };
                 };
             }
@@ -335,5 +334,5 @@
 
 
     }
-}//package com.ankamagames.dofus.misc.utils
+} com.ankamagames.dofus.misc.utils
 

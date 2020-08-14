@@ -1,4 +1,4 @@
-﻿package com.ankamagames.tiphon.events
+package com.ankamagames.tiphon.events
 {
     import flash.events.Event;
     import com.ankamagames.tiphon.types.ITiphonEvent;
@@ -14,6 +14,7 @@
         public static const EVENT_END:String = "END";
         public static const PLAYER_STOP:String = "STOP";
         public static const ANIMATION_END:String = "animation_event_end";
+        public static const ANIMATION_TRANSITION_END:String = "animation_event_transition_end";
         public static const ANIMATION_DESTROY:String = "animation_event_destroy";
         public static const ANIMATION_SHOT:String = "SHOT";
         public static const ANIMATION_EVENT:String = "animation_event";
@@ -24,9 +25,12 @@
         public static const SPRITE_INIT_FAILED:String = "sprite_init_failed";
         public static const ANIMATION_ADDED:String = "animation_added";
         public static const SUB_ENTITY_ADDED:String = "new_sub_entity_added";
+        public static const ADDED_IN_POOL:String = "added_in_pool";
+        public static const ANIMATION_PICKUP_END:String = "animation_pickup";
+        public static const ANIMATION_PICKUP_START:String = "animation_pickup_start";
 
         private var _label:String;
-        private var _sprite;
+        private var _sprite:*;
         private var _params:Object;
         private var _animationType:String;
         private var _direction:int = -1;
@@ -48,7 +52,7 @@
             return (this._label);
         }
 
-        public function get sprite()
+        public function get sprite():*
         {
             return (this._sprite);
         }
@@ -74,12 +78,12 @@
 
         public function get animationName():String
         {
-            return (((this._animationType + "_") + this._direction));
+            return ((this._animationType + "_") + this._direction);
         }
 
         public function set animationName(pAnimationName:String):void
         {
-            this._animationType = pAnimationName.split("_")[0];
+            this._animationType = pAnimationName.substring(0, pAnimationName.indexOf("_"));
             this._direction = pAnimationName.split("_")[1];
             if (this._direction == 3)
             {
@@ -98,5 +102,5 @@
 
 
     }
-}//package com.ankamagames.tiphon.events
+} com.ankamagames.tiphon.events
 

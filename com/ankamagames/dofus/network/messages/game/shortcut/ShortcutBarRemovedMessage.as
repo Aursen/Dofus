@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.shortcut
+package com.ankamagames.dofus.network.messages.game.shortcut
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class ShortcutBarRemovedMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -55,6 +55,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_ShortcutBarRemovedMessage(output);
@@ -63,7 +71,7 @@
         public function serializeAs_ShortcutBarRemovedMessage(output:ICustomDataOutput):void
         {
             output.writeByte(this.barType);
-            if ((((this.slot < 0)) || ((this.slot > 99))))
+            if (((this.slot < 0) || (this.slot > 99)))
             {
                 throw (new Error((("Forbidden value (" + this.slot) + ") on element slot.")));
             };
@@ -77,13 +85,34 @@
 
         public function deserializeAs_ShortcutBarRemovedMessage(input:ICustomDataInput):void
         {
+            this._barTypeFunc(input);
+            this._slotFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_ShortcutBarRemovedMessage(tree);
+        }
+
+        public function deserializeAsyncAs_ShortcutBarRemovedMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._barTypeFunc);
+            tree.addChild(this._slotFunc);
+        }
+
+        private function _barTypeFunc(input:ICustomDataInput):void
+        {
             this.barType = input.readByte();
             if (this.barType < 0)
             {
                 throw (new Error((("Forbidden value (" + this.barType) + ") on element of ShortcutBarRemovedMessage.barType.")));
             };
+        }
+
+        private function _slotFunc(input:ICustomDataInput):void
+        {
             this.slot = input.readByte();
-            if ((((this.slot < 0)) || ((this.slot > 99))))
+            if (((this.slot < 0) || (this.slot > 99)))
             {
                 throw (new Error((("Forbidden value (" + this.slot) + ") on element of ShortcutBarRemovedMessage.slot.")));
             };
@@ -91,5 +120,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.shortcut
+} com.ankamagames.dofus.network.messages.game.shortcut
 

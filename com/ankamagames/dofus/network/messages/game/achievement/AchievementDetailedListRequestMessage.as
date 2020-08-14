@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.achievement
+package com.ankamagames.dofus.network.messages.game.achievement
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class AchievementDetailedListRequestMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -52,6 +52,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_AchievementDetailedListRequestMessage(output);
@@ -73,6 +81,21 @@
 
         public function deserializeAs_AchievementDetailedListRequestMessage(input:ICustomDataInput):void
         {
+            this._categoryIdFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_AchievementDetailedListRequestMessage(tree);
+        }
+
+        public function deserializeAsyncAs_AchievementDetailedListRequestMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._categoryIdFunc);
+        }
+
+        private function _categoryIdFunc(input:ICustomDataInput):void
+        {
             this.categoryId = input.readVarUhShort();
             if (this.categoryId < 0)
             {
@@ -82,5 +105,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.achievement
+} com.ankamagames.dofus.network.messages.game.achievement
 

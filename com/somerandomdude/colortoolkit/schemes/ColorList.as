@@ -1,4 +1,4 @@
-﻿package com.somerandomdude.colortoolkit.schemes
+package com.somerandomdude.colortoolkit.schemes
 {
     import com.somerandomdude.colortoolkit.spaces.RGB;
     import com.somerandomdude.colortoolkit.spaces.IColorSpace;
@@ -27,7 +27,7 @@
             var i:int;
             while (i < this.length)
             {
-                rgb.color = (((this[i] is IColorSpace)) ? this[i].color : this[i]);
+                rgb.color = ((this[i] is IColorSpace) ? this[i].color : this[i]);
                 list.push(rgb.toRGB());
                 i++;
             };
@@ -41,7 +41,7 @@
             var i:int;
             while (i < this.length)
             {
-                rgb.color = (((this[i] is IColorSpace)) ? this[i].color : this[i]);
+                rgb.color = ((this[i] is IColorSpace) ? this[i].color : this[i]);
                 list.push(rgb.toHSB());
                 i++;
             };
@@ -55,7 +55,7 @@
             var i:int;
             while (i < this.length)
             {
-                rgb.color = (((this[i] is IColorSpace)) ? this[i].color : this[i]);
+                rgb.color = ((this[i] is IColorSpace) ? this[i].color : this[i]);
                 list.push(rgb.toCMYK());
                 i++;
             };
@@ -69,7 +69,7 @@
             var i:int;
             while (i < this.length)
             {
-                list.push(new Color((((this[i] is IColorSpace)) ? this[i].color : this[i])));
+                list.push(new Color(((this[i] is IColorSpace) ? this[i].color : this[i])));
                 i++;
             };
             return (list);
@@ -82,7 +82,7 @@
             var i:int;
             while (i < this.length)
             {
-                rgb.color = (((this[i] is IColorSpace)) ? this[i].color : this[i]);
+                rgb.color = ((this[i] is IColorSpace) ? this[i].color : this[i]);
                 list.push(rgb.color);
                 i++;
             };
@@ -96,7 +96,7 @@
             var i:int;
             while (i < this.length)
             {
-                rgb.color = (((this[i] is IColorSpace)) ? this[i].color : this[i]);
+                rgb.color = ((this[i] is IColorSpace) ? this[i].color : this[i]);
                 list.push(rgb.toLab());
                 i++;
             };
@@ -110,7 +110,7 @@
             var i:int;
             while (i < this.length)
             {
-                rgb.color = (((this[i] is IColorSpace)) ? this[i].color : this[i]);
+                rgb.color = ((this[i] is IColorSpace) ? this[i].color : this[i]);
                 list.push(rgb.toXYZ());
                 i++;
             };
@@ -124,7 +124,7 @@
             var i:int;
             while (i < this.length)
             {
-                rgb.color = (((this[i] is IColorSpace)) ? this[i].color : this[i]);
+                rgb.color = ((this[i] is IColorSpace) ? this[i].color : this[i]);
                 list.push(rgb.toHSL()());
                 i++;
             };
@@ -133,5 +133,5 @@
 
 
     }
-}//package com.somerandomdude.colortoolkit.schemes
+} com.somerandomdude.colortoolkit.schemes
 

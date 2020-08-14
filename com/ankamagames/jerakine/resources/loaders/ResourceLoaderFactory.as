@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.resources.loaders
+package com.ankamagames.jerakine.resources.loaders
 {
     import com.ankamagames.jerakine.resources.loaders.impl.ParallelRessourceLoader;
     import com.ankamagames.jerakine.JerakineConstants;
@@ -8,9 +8,9 @@
     {
 
 
-        public static function getLoader(type:uint):IResourceLoader
+        public static function getLoader(_arg_1:uint):IResourceLoader
         {
-            switch (type)
+            switch (_arg_1)
             {
                 case ResourceLoaderType.PARALLEL_LOADER:
                     return (new ParallelRessourceLoader(JerakineConstants.MAX_PARALLEL_LOADINGS));
@@ -19,10 +19,10 @@
                 case ResourceLoaderType.SINGLE_LOADER:
                     return (new SingleRessourceLoader());
             };
-            throw (new ArgumentError((("Unknown loader type " + type) + ".")));
+            throw (new ArgumentError((("Unknown loader type " + _arg_1) + ".")));
         }
 
 
     }
-}//package com.ankamagames.jerakine.resources.loaders
+} com.ankamagames.jerakine.resources.loaders
 

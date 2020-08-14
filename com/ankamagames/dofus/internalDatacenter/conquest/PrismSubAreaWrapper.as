@@ -1,9 +1,10 @@
-﻿package com.ankamagames.dofus.internalDatacenter.conquest
+package com.ankamagames.dofus.internalDatacenter.conquest
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import flash.utils.Dictionary;
     import com.ankamagames.dofus.internalDatacenter.guild.AllianceWrapper;
     import __AS3__.vec.Vector;
+    import com.ankamagames.dofus.network.types.game.data.items.ObjectItem;
     import com.ankamagames.dofus.network.types.game.prism.PrismGeolocalizedInformation;
     import com.ankamagames.dofus.network.types.game.prism.AllianceInsiderPrismInformation;
     import com.ankamagames.dofus.network.types.game.prism.PrismSubareaEmptyInfo;
@@ -24,7 +25,7 @@
         private static var _cache:Array = new Array();
 
         private var _subAreaId:uint;
-        private var _mapId:int = -1;
+        private var _mapId:Number = -1;
         private var _worldX:int = 0;
         private var _worldY:int = 0;
         private var _prismType:uint = 0;
@@ -36,18 +37,13 @@
         private var _timeSlotQuarter:uint = 0;
         private var _lastTimeSlotModificationDate:uint = 0;
         private var _lastTimeSlotModificationAuthorGuildId:uint = 0;
-        private var _lastTimeSlotModificationAuthorId:uint = 0;
+        private var _lastTimeSlotModificationAuthorId:Number = 0;
         private var _lastTimeSlotModificationAuthorName:String = "";
         private var _isVillage:int = -1;
         private var _subAreaName:String = "";
         private var _rewardTokenCount:uint;
-        private var _modulesItemIds:Vector.<uint>;
+        private var _modulesObjects:Vector.<ObjectItem> = new Vector.<ObjectItem>();
 
-        public function PrismSubAreaWrapper()
-        {
-            this._modulesItemIds = new Vector.<uint>();
-            super();
-        }
 
         public static function reset():void
         {
@@ -65,7 +61,7 @@
             var pgi:PrismGeolocalizedInformation;
             var date:Date;
             var aipi:AllianceInsiderPrismInformation;
-            if (((!(_ref[msg.subAreaId])) || ((Object(msg).constructor == PrismSubareaEmptyInfo))))
+            if (((!(_ref[msg.subAreaId])) || (Object(msg).constructor == PrismSubareaEmptyInfo)))
             {
                 _ref[msg.subAreaId] = new (PrismSubAreaWrapper)();
             };
@@ -103,7 +99,7 @@
                     prism._lastTimeSlotModificationAuthorId = aipi.lastTimeSlotModificationAuthorId;
                     prism._lastTimeSlotModificationAuthorName = aipi.lastTimeSlotModificationAuthorName;
                     prism._lastTimeSlotModificationAuthorGuildId = aipi.lastTimeSlotModificationAuthorGuildId;
-                    prism._modulesItemIds = aipi.modulesItemIds;
+                    prism._modulesObjects = aipi.modulesObjects;
                 }
                 else
                 {
@@ -111,7 +107,7 @@
                     prism._lastTimeSlotModificationAuthorId = 0;
                     prism._lastTimeSlotModificationAuthorName = null;
                     prism._lastTimeSlotModificationAuthorGuildId = 0;
-                    prism._modulesItemIds = new Vector.<uint>();
+                    prism._modulesObjects = new Vector.<ObjectItem>();
                     if ((pgi.prism is AlliancePrismInformation))
                     {
                         prism._alliance = AllianceWrapper.getFromNetwork(AlliancePrismInformation(pgi.prism).alliance);
@@ -130,7 +126,7 @@
                     prism._alliance = (Kernel.getWorker().getFrame(AllianceFrame) as AllianceFrame).getAllianceById(msg.allianceId);
                 };
             };
-            if (((PlayedCharacterManager.getInstance().currentSubArea) && ((prism.subAreaId == PlayedCharacterManager.getInstance().currentSubArea.id))))
+            if (((PlayedCharacterManager.getInstance().currentSubArea) && (prism.subAreaId == PlayedCharacterManager.getInstance().currentSubArea.id)))
             {
                 KernelEventsManager.getInstance().processCallback(PrismHookList.KohState, prism);
             };
@@ -143,7 +139,7 @@
             return (this._subAreaId);
         }
 
-        public function get mapId():int
+        public function get mapId():Number
         {
             return (this._mapId);
         }
@@ -173,9 +169,9 @@
             return (this._rewardTokenCount);
         }
 
-        public function get modulesItemIds():Vector.<uint>
+        public function get modulesObjects():Vector.<ObjectItem>
         {
-            return (this._modulesItemIds);
+            return (this._modulesObjects);
         }
 
         public function get nextVulnerabilityDate():uint
@@ -213,7 +209,7 @@
             return (this._lastTimeSlotModificationAuthorGuildId);
         }
 
-        public function get lastTimeSlotModificationAuthorId():uint
+        public function get lastTimeSlotModificationAuthorId():Number
         {
             return (this._lastTimeSlotModificationAuthorId);
         }
@@ -227,13 +223,13 @@
         {
             if (this._isVillage == -1)
             {
-                if (!(SubArea.getSubAreaById(this.subAreaId)))
+                if (!SubArea.getSubAreaById(this.subAreaId))
                 {
                     return (false);
                 };
                 this._isVillage = int(SubArea.getSubAreaById(this.subAreaId).isConquestVillage);
             };
-            return ((this._isVillage == 1));
+            return (this._isVillage == 1);
         }
 
         public function get subAreaName():String
@@ -269,5 +265,5 @@
 
 
     }
-}//package com.ankamagames.dofus.internalDatacenter.conquest
+} com.ankamagames.dofus.internalDatacenter.conquest
 

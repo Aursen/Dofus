@@ -1,4 +1,4 @@
-﻿package com.hurlant.crypto.prng
+package com.hurlant.crypto.prng
 {
     import flash.utils.ByteArray;
     import flash.text.Font;
@@ -31,10 +31,10 @@
             this.pptr = 0;
             while (this.pptr < this.psize)
             {
-                t = (65536 * Math.random());
-                var _local_3 = this.pptr++;
+                t = uint((0x10000 * Math.random()));
+                var _local_3:* = this.pptr++;
                 this.pool[_local_3] = (t >>> 8);
-                var _local_4 = this.pptr++;
+                var _local_4:* = this.pptr++;
                 this.pool[_local_4] = (t & 0xFF);
             };
             this.pptr = 0;
@@ -47,13 +47,13 @@
             {
                 x = new Date().getTime();
             };
-            var _local_2 = this.pptr++;
+            var _local_2:* = this.pptr++;
             this.pool[_local_2] = (this.pool[_local_2] ^ (x & 0xFF));
-            var _local_3 = this.pptr++;
+            var _local_3:* = this.pptr++;
             this.pool[_local_3] = (this.pool[_local_3] ^ ((x >> 8) & 0xFF));
-            var _local_4 = this.pptr++;
+            var _local_4:* = this.pptr++;
             this.pool[_local_4] = (this.pool[_local_4] ^ ((x >> 16) & 0xFF));
-            var _local_5 = this.pptr++;
+            var _local_5:* = this.pptr++;
             this.pool[_local_5] = (this.pool[_local_5] ^ ((x >> 24) & 0xFF));
             this.pptr = (this.pptr % this.psize);
             this.seeded = true;
@@ -91,9 +91,9 @@
 
         public function nextByte():int
         {
-            if (!(this.ready))
+            if (!this.ready)
             {
-                if (!(this.seeded))
+                if (!this.seeded)
                 {
                     this.autoSeed();
                 };
@@ -124,10 +124,10 @@
 
         public function toString():String
         {
-            return (("random-" + this.state.toString()));
+            return ("random-" + this.state.toString());
         }
 
 
     }
-}//package com.hurlant.crypto.prng
+} com.hurlant.crypto.prng
 

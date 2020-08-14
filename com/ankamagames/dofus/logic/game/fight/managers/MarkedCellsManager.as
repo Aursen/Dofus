@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.fight.managers
+package com.ankamagames.dofus.logic.game.fight.managers
 {
     import com.ankamagames.jerakine.interfaces.IDestroyable;
     import com.ankamagames.jerakine.logger.Logger;
@@ -6,13 +6,15 @@
     import flash.utils.getQualifiedClassName;
     import flash.utils.Dictionary;
     import com.ankamagames.jerakine.utils.errors.SingletonError;
+    import com.ankamagames.atouin.Atouin;
+    import com.ankamagames.jerakine.types.events.PropertyChangeEvent;
     import com.ankamagames.dofus.logic.game.fight.types.MarkInstance;
     import com.ankamagames.dofus.network.types.game.actions.fight.GameActionMarkedCell;
     import com.ankamagames.atouin.types.Selection;
     import __AS3__.vec.Vector;
     import com.ankamagames.jerakine.types.Color;
-    import com.ankamagames.dofus.network.enums.GameActionMarkTypeEnum;
     import com.ankamagames.atouin.enums.PlacementStrataEnums;
+    import tools.enumeration.GameActionMarkTypeEnum;
     import com.ankamagames.atouin.renderers.TrapZoneRenderer;
     import com.ankamagames.dofus.network.enums.GameActionMarkCellsTypeEnum;
     import com.ankamagames.jerakine.types.zones.Cross;
@@ -25,6 +27,10 @@
     import com.ankamagames.dofus.network.enums.TeamEnum;
     import com.ankamagames.dofus.types.entities.Glyph;
     import com.ankamagames.jerakine.types.positions.MapPoint;
+    import com.ankamagames.atouin.types.CellLink;
+    import com.ankamagames.atouin.managers.EntitiesDisplayManager;
+    import com.ankamagames.jerakine.entities.interfaces.IDisplayable;
+    import com.ankamagames.atouin.renderers.CellLinkRenderer;
     import com.ankamagames.atouin.AtouinConstants;
     import __AS3__.vec.*;
 
@@ -48,6 +54,7 @@
             this._marks = new Dictionary(true);
             this._glyphs = new Dictionary(true);
             this._markUid = 0;
+            Atouin.getInstance().options.addEventListener(PropertyChangeEvent.PROPERTY_CHANGED, this.onPropertyChanged);
         }
 
         public static function getInstance():MarkedCellsManager
@@ -60,7 +67,7 @@
         }
 
 
-        public function addMark(markId:int, markType:int, associatedSpell:Spell, associatedSpellLevel:SpellLevel, cells:Vector.<GameActionMarkedCell>, teamId:int=2, markActive:Boolean=true):void
+        public function addMark(markCasterId:Number, markId:int, markType:int, associatedSpell:Spell, associatedSpellLevel:SpellLevel, cells:Vector.<GameActionMarkedCell>, teamId:int=2, markActive:Boolean=true, markImpactCellId:int=-1):void
         {
             var mi:MarkInstance;
             var markedCell:GameActionMarkedCell;
@@ -69,9 +76,10 @@
             var cellsId:Vector.<uint>;
             var gamcell:GameActionMarkedCell;
             var cell:uint;
-            if (((!(this._marks[markId])) || ((this._marks[markId].cells.length == 0))))
+            if (((!(this._marks[markId])) || (this._marks[markId].cells.length == 0)))
             {
                 mi = new MarkInstance();
+                mi.markCasterId = markCasterId;
                 mi.markId = markId;
                 mi.markType = markType;
                 mi.associatedSpell = associatedSpell;
@@ -80,12 +88,27 @@
                 mi.cells = new Vector.<uint>(0, false);
                 mi.teamId = teamId;
                 mi.active = markActive;
+                if (markImpactCellId != -1)
+                {
+                    mi.markImpactCellId = markImpactCellId;
+                }
+                else
+                {
+                    if ((((cells) && (cells.length)) && (cells[0])))
+                    {
+                        mi.markImpactCellId = cells[0].cellId;
+                    }
+                    else
+                    {
+                        _log.warn("Adding a mark with unknown markImpactCellId!");
+                    };
+                };
                 if (cells.length > 0)
                 {
                     markedCell = cells[0];
                     s = new Selection();
                     s.color = new Color(markedCell.cellColor);
-                    selectionStrata = (((markType == GameActionMarkTypeEnum.PORTAL)) ? PlacementStrataEnums.STRATA_PORTAL : PlacementStrataEnums.STRATA_GLYPH);
+                    selectionStrata = ((Atouin.getInstance().options.getOption("transparentOverlayMode")) ? PlacementStrataEnums.STRATA_NO_Z_ORDER : (((markType == GameActionMarkTypeEnum.PORTAL) ? PlacementStrataEnums.STRATA_PORTAL : PlacementStrataEnums.STRATA_GLYPH)));
                     s.renderer = new TrapZoneRenderer(selectionStrata);
                     cellsId = new Vector.<uint>();
                     for each (gamcell in cells)
@@ -111,6 +134,10 @@
                     for each (cell in s.cells)
                     {
                         mi.cells.push(cell);
+                        if (mi.markType == GameActionMarkTypeEnum.TRAP)
+                        {
+                            DataMapProvider.getInstance().obstaclesCells.push(cell);
+                        };
                     };
                     mi.selections.push(s);
                 };
@@ -125,12 +152,17 @@
             var marks:Vector.<MarkInstance> = new Vector.<MarkInstance>();
             for each (mi in this._marks)
             {
-                if ((((((mi.markType == pMarkType)) && ((((pTeamId == TeamEnum.TEAM_SPECTATOR)) || ((mi.teamId == pTeamId)))))) && (((!(pActiveOnly)) || (mi.active)))))
+                if (((((pMarkType == 0) || (mi.markType == pMarkType)) && ((pTeamId == TeamEnum.TEAM_SPECTATOR) || (mi.teamId == pTeamId))) && ((!(pActiveOnly)) || (mi.active))))
                 {
                     marks.push(mi);
                 };
             };
             return (marks);
+        }
+
+        public function getAllMarks():Dictionary
+        {
+            return (this._marks);
         }
 
         public function getMarkDatas(markId:int):MarkInstance
@@ -140,11 +172,24 @@
 
         public function removeMark(markId:int):void
         {
+            var cell:uint;
+            var cellIndex:int;
             var s:Selection;
             var selections:Vector.<Selection> = (this._marks[markId] as MarkInstance).selections;
             for each (s in selections)
             {
                 s.remove();
+                if (this._marks[markId].markType == GameActionMarkTypeEnum.TRAP)
+                {
+                    for each (cell in s.cells)
+                    {
+                        cellIndex = DataMapProvider.getInstance().obstaclesCells.indexOf(cell);
+                        if (cellIndex != -1)
+                        {
+                            DataMapProvider.getInstance().obstaclesCells.splice(cellIndex, 1);
+                        };
+                    };
+                };
             };
             delete this._marks[markId];
             this.updateDataMapProvider();
@@ -152,19 +197,57 @@
 
         public function addGlyph(glyph:Glyph, markId:int):void
         {
-            this._glyphs[markId] = glyph;
+            var glyphList:Vector.<Glyph>;
+            var currentGlyph:* = this._glyphs[markId];
+            if (currentGlyph)
+            {
+                if ((currentGlyph is Glyph))
+                {
+                    glyphList = Vector.<Glyph>([this._glyphs[markId], glyph]);
+                    this._glyphs[markId] = glyphList;
+                }
+                else
+                {
+                    this._glyphs[markId].push(glyph);
+                };
+            }
+            else
+            {
+                this._glyphs[markId] = glyph;
+            };
         }
 
         public function getGlyph(markId:int):Glyph
         {
-            return ((this._glyphs[markId] as Glyph));
+            if ((this._glyphs[markId] is Vector.<Glyph>))
+            {
+                if (this._glyphs[markId].length)
+                {
+                    return (this._glyphs[markId][0]);
+                };
+                return (null);
+            };
+            return (this._glyphs[markId] as Glyph);
         }
 
         public function removeGlyph(markId:int):void
         {
+            var i:int;
             if (this._glyphs[markId])
             {
-                Glyph(this._glyphs[markId]).remove();
+                if ((this._glyphs[markId] is Glyph))
+                {
+                    Glyph(this._glyphs[markId]).remove();
+                }
+                else
+                {
+                    i = 0;
+                    while (i < this._glyphs[markId].length)
+                    {
+                        Glyph(this._glyphs[markId][i]).remove();
+                        i++;
+                    };
+                };
                 delete this._glyphs[markId];
             };
         }
@@ -175,7 +258,7 @@
             var mapPoints:Vector.<MapPoint> = new Vector.<MapPoint>();
             for each (mi in this._marks)
             {
-                if ((((((mi.markType == markType)) && ((((teamId == TeamEnum.TEAM_SPECTATOR)) || ((mi.teamId == teamId)))))) && (((!(activeOnly)) || (mi.active)))))
+                if ((((mi.markType == markType) && ((teamId == TeamEnum.TEAM_SPECTATOR) || (mi.teamId == teamId))) && ((!(activeOnly)) || (mi.active))))
                 {
                     mapPoints.push(MapPoint.fromCellId(mi.cells[0]));
                 };
@@ -188,12 +271,25 @@
             var mark:MarkInstance;
             for each (mark in this._marks)
             {
-                if (((((mark.cells.length) && ((mark.cells[0] == cellId)))) && ((((markType == -1)) || ((markType == mark.markType))))))
+                if (((mark.markImpactCellId == cellId) && ((markType == -1) || (markType == mark.markType))))
                 {
                     return (mark);
                 };
             };
             return (null);
+        }
+
+        public function cellHasTrap(cellId:uint):Boolean
+        {
+            var mark:MarkInstance;
+            for each (mark in this._marks)
+            {
+                if (((mark.markImpactCellId == cellId) && (mark.markType == GameActionMarkTypeEnum.TRAP)))
+                {
+                    return (true);
+                };
+            };
+            return (false);
         }
 
         public function getCellIdsFromMarkIds(markIds:Vector.<int>):Vector.<int>
@@ -202,7 +298,7 @@
             var cellIds:Vector.<int> = new Vector.<int>();
             for each (markId in markIds)
             {
-                if (((((this._marks[markId]) && (this._marks[markId].cells))) && ((this._marks[markId].cells.length == 1))))
+                if ((((this._marks[markId]) && (this._marks[markId].cells)) && (this._marks[markId].cells.length == 1)))
                 {
                     cellIds.push(this._marks[markId].cells[0]);
                 }
@@ -221,7 +317,7 @@
             var mapPoints:Vector.<MapPoint> = new Vector.<MapPoint>();
             for each (markId in markIds)
             {
-                if (((((this._marks[markId]) && (this._marks[markId].cells))) && ((this._marks[markId].cells.length == 1))))
+                if ((((this._marks[markId]) && (this._marks[markId].cells)) && (this._marks[markId].cells.length == 1)))
                 {
                     mapPoints.push(MapPoint.fromCellId(this._marks[markId].cells[0]));
                 }
@@ -240,7 +336,7 @@
             var count:uint;
             for each (mi in this._marks)
             {
-                if ((((((mi.markType == GameActionMarkTypeEnum.PORTAL)) && ((((teamId == TeamEnum.TEAM_SPECTATOR)) || ((mi.teamId == teamId)))))) && (mi.active)))
+                if ((((mi.markType == GameActionMarkTypeEnum.PORTAL) && ((teamId == TeamEnum.TEAM_SPECTATOR) || (mi.teamId == teamId))) && (mi.active)))
                 {
                     count++;
                 };
@@ -279,9 +375,61 @@
             _self = null;
         }
 
+        private function onPropertyChanged(pEvent:PropertyChangeEvent):void
+        {
+            var mi:MarkInstance;
+            var strata:uint;
+            var markId:*;
+            var selection:Selection;
+            var glyph:Glyph;
+            var glyphs:*;
+            var portalsLinks:Selection;
+            var cellLink:CellLink;
+            if (pEvent.propertyName == "transparentOverlayMode")
+            {
+                for (markId in this._marks)
+                {
+                    mi = this._marks[markId];
+                    if (pEvent.propertyValue == true)
+                    {
+                        strata = PlacementStrataEnums.STRATA_NO_Z_ORDER;
+                    }
+                    else
+                    {
+                        strata = ((mi.markType == GameActionMarkTypeEnum.PORTAL) ? PlacementStrataEnums.STRATA_PORTAL : PlacementStrataEnums.STRATA_GLYPH);
+                    };
+                    for each (selection in mi.selections)
+                    {
+                        (selection.renderer as TrapZoneRenderer).strata = strata;
+                        selection.update(true);
+                    };
+                    glyphs = this._glyphs[markId];
+                    if ((glyphs is Glyph))
+                    {
+                        EntitiesDisplayManager.getInstance().displayEntity((glyphs as IDisplayable), glyphs.position, strata, false);
+                    }
+                    else
+                    {
+                        for each (glyph in glyphs)
+                        {
+                            EntitiesDisplayManager.getInstance().displayEntity((glyph as IDisplayable), glyph.position, strata, false);
+                        };
+                    };
+                };
+                portalsLinks = SelectionManager.getInstance().getSelection("eliaPortals");
+                if (portalsLinks)
+                {
+                    for each (cellLink in (portalsLinks.renderer as CellLinkRenderer).getCellLinks())
+                    {
+                        cellLink.display(((pEvent.propertyValue == true) ? strata : PlacementStrataEnums.STRATA_LINK));
+                    };
+                };
+            };
+        }
+
         private function getSelectionUid():String
         {
-            return ((MARK_SELECTIONS_PREFIX + this._markUid++));
+            return (MARK_SELECTIONS_PREFIX + this._markUid++);
         }
 
         private function updateDataMapProvider():void
@@ -304,7 +452,7 @@
             while (i < AtouinConstants.MAP_CELLS_COUNT)
             {
                 mp = MapPoint.fromCellId(i);
-                dmp.setSpecialEffects(i, ((dmp.pointSpecialEffects(mp.x, mp.y) | 3) ^ 3));
+                dmp.setSpecialEffects(i, ((dmp.pointSpecialEffects(mp.x, mp.y) | 0x03) ^ 0x03));
                 if (markedCells[i])
                 {
                     dmp.setSpecialEffects(i, (dmp.pointSpecialEffects(mp.x, mp.y) | markedCells[i]));
@@ -327,7 +475,7 @@
             {
                 if (mi.markType == marktype)
                 {
-                    if (!(markInstanceToNumber[mi.teamId]))
+                    if (!markInstanceToNumber[mi.teamId])
                     {
                         markInstanceToNumber[mi.teamId] = new Array();
                         teamIds.push(mi.teamId);
@@ -344,7 +492,10 @@
                     if (this._glyphs[mitn.markId])
                     {
                         color = mitn.selections[0].color;
-                        Glyph(this._glyphs[mitn.markId]).addNumber(num, color);
+                        if ((this._glyphs[mitn.markId] is Glyph))
+                        {
+                            Glyph(this._glyphs[mitn.markId]).addNumber(num, color);
+                        };
                     };
                     num++;
                 };
@@ -353,5 +504,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.fight.managers
+} com.ankamagames.dofus.logic.game.fight.managers
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.tubul.types
+package com.ankamagames.tubul.types
 {
     import flash.events.EventDispatcher;
     import com.ankamagames.jerakine.logger.Logger;
@@ -69,7 +69,7 @@
                 _log.warn("L'effet de fade ne peut être lancé car le son auquel il est attaché ne peut être trouvé");
                 return;
             };
-            if ((((this._endingValue < 0)) || ((this._endingValue > 1))))
+            if (((this._endingValue < 0) || (this._endingValue > 1)))
             {
                 _log.warn("Le paramètre 'endingValue' n'est pas valide !");
                 return;
@@ -84,7 +84,7 @@
             };
             _log.warn((((((logInfo + " / => ") + this._endingValue) + " en ") + this._timeFade) + " sec."));
             this.clearTween();
-            if (((pUseBeginningValue) && ((this._beginningValue >= 0))))
+            if (((pUseBeginningValue) && (this._beginningValue >= 0)))
             {
                 this.soundSource.currentFadeVolume = this._beginningValue;
             };
@@ -120,7 +120,7 @@
         {
             if (this._tween)
             {
-                this._tween.clear();
+                this._tween.kill();
                 this._tween = null;
             };
             this._running = false;
@@ -136,5 +136,5 @@
 
 
     }
-}//package com.ankamagames.tubul.types
+} com.ankamagames.tubul.types
 

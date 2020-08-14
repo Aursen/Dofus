@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.approach
+package com.ankamagames.dofus.network.messages.game.approach
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class AuthenticationTicketMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -55,6 +55,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_AuthenticationTicketMessage(output);
@@ -73,11 +81,32 @@
 
         public function deserializeAs_AuthenticationTicketMessage(input:ICustomDataInput):void
         {
+            this._langFunc(input);
+            this._ticketFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_AuthenticationTicketMessage(tree);
+        }
+
+        public function deserializeAsyncAs_AuthenticationTicketMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._langFunc);
+            tree.addChild(this._ticketFunc);
+        }
+
+        private function _langFunc(input:ICustomDataInput):void
+        {
             this.lang = input.readUTF();
+        }
+
+        private function _ticketFunc(input:ICustomDataInput):void
+        {
             this.ticket = input.readUTF();
         }
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.approach
+} com.ankamagames.dofus.network.messages.game.approach
 

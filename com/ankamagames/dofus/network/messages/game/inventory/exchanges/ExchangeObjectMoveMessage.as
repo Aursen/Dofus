@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.inventory.exchanges
+package com.ankamagames.dofus.network.messages.game.inventory.exchanges
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class ExchangeObjectMoveMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -47,12 +47,24 @@
         {
             var data:ByteArray = new ByteArray();
             this.serialize(new CustomDataWrapper(data));
+            if (HASH_FUNCTION != null)
+            {
+                HASH_FUNCTION(data);
+            };
             writePacket(output, this.getMessageId(), data);
         }
 
         override public function unpack(input:ICustomDataInput, length:uint):void
         {
             this.deserialize(input);
+        }
+
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
         }
 
         public function serialize(output:ICustomDataOutput):void
@@ -77,15 +89,36 @@
 
         public function deserializeAs_ExchangeObjectMoveMessage(input:ICustomDataInput):void
         {
+            this._objectUIDFunc(input);
+            this._quantityFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_ExchangeObjectMoveMessage(tree);
+        }
+
+        public function deserializeAsyncAs_ExchangeObjectMoveMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._objectUIDFunc);
+            tree.addChild(this._quantityFunc);
+        }
+
+        private function _objectUIDFunc(input:ICustomDataInput):void
+        {
             this.objectUID = input.readVarUhInt();
             if (this.objectUID < 0)
             {
                 throw (new Error((("Forbidden value (" + this.objectUID) + ") on element of ExchangeObjectMoveMessage.objectUID.")));
             };
+        }
+
+        private function _quantityFunc(input:ICustomDataInput):void
+        {
             this.quantity = input.readVarInt();
         }
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.inventory.exchanges
+} com.ankamagames.dofus.network.messages.game.inventory.exchanges
 

@@ -1,27 +1,23 @@
-﻿package com.ankamagames.dofus.network.messages.game.interactive
+package com.ankamagames.dofus.network.messages.game.interactive
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
     import com.ankamagames.dofus.network.types.game.interactive.StatedElement;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
 
-    [Trusted]
     public class StatedElementUpdatedMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 5709;
 
         private var _isInitialized:Boolean = false;
-        public var statedElement:StatedElement;
+        public var statedElement:StatedElement = new StatedElement();
+        private var _statedElementtree:FuncTree;
 
-        public function StatedElementUpdatedMessage()
-        {
-            this.statedElement = new StatedElement();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
@@ -58,6 +54,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_StatedElementUpdatedMessage(output);
@@ -79,7 +83,23 @@
             this.statedElement.deserialize(input);
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_StatedElementUpdatedMessage(tree);
+        }
+
+        public function deserializeAsyncAs_StatedElementUpdatedMessage(tree:FuncTree):void
+        {
+            this._statedElementtree = tree.addChild(this._statedElementtreeFunc);
+        }
+
+        private function _statedElementtreeFunc(input:ICustomDataInput):void
+        {
+            this.statedElement = new StatedElement();
+            this.statedElement.deserializeAsync(this._statedElementtree);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.interactive
+} com.ankamagames.dofus.network.messages.game.interactive
 

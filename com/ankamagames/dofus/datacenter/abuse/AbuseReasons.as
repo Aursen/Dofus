@@ -1,9 +1,10 @@
-﻿package com.ankamagames.dofus.datacenter.abuse
+package com.ankamagames.dofus.datacenter.abuse
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
+    import com.ankamagames.dofus.types.IdAccessors;
     import com.ankamagames.jerakine.data.GameData;
     import com.ankamagames.jerakine.data.I18n;
 
@@ -12,6 +13,7 @@
 
         public static const MODULE:String = "AbuseReasons";
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(AbuseReasons));
+        public static var idAccessors:IdAccessors = new IdAccessors(getReasonNameById, getReasonNames);
 
         public var _abuseReasonId:uint;
         public var _mask:uint;
@@ -21,7 +23,7 @@
 
         public static function getReasonNameById(id:uint):AbuseReasons
         {
-            return ((GameData.getObject(MODULE, id) as AbuseReasons));
+            return (GameData.getObject(MODULE, id) as AbuseReasons);
         }
 
         public static function getReasonNames():Array
@@ -32,7 +34,7 @@
 
         public function get name():String
         {
-            if (!(this._name))
+            if (!this._name)
             {
                 this._name = I18n.getText(this._reasonTextId);
             };
@@ -41,5 +43,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.abuse
+} com.ankamagames.dofus.datacenter.abuse
 

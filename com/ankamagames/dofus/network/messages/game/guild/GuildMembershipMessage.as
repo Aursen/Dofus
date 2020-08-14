@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.guild
+package com.ankamagames.dofus.network.messages.game.guild
 {
     import com.ankamagames.jerakine.network.INetworkMessage;
     import com.ankamagames.dofus.network.types.game.context.roleplay.GuildInformations;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class GuildMembershipMessage extends GuildJoinedMessage implements INetworkMessage 
     {
 
@@ -18,7 +18,7 @@
 
         override public function get isInitialized():Boolean
         {
-            return (((super.isInitialized) && (this._isInitialized)));
+            return ((super.isInitialized) && (this._isInitialized));
         }
 
         override public function getMessageId():uint
@@ -26,9 +26,9 @@
             return (5835);
         }
 
-        public function initGuildMembershipMessage(guildInfo:GuildInformations=null, memberRights:uint=0, enabled:Boolean=false):GuildMembershipMessage
+        public function initGuildMembershipMessage(guildInfo:GuildInformations=null, memberRights:uint=0):GuildMembershipMessage
         {
-            super.initGuildJoinedMessage(guildInfo, memberRights, enabled);
+            super.initGuildJoinedMessage(guildInfo, memberRights);
             this._isInitialized = true;
             return (this);
         }
@@ -51,6 +51,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         override public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_GuildMembershipMessage(output);
@@ -71,7 +79,17 @@
             super.deserialize(input);
         }
 
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GuildMembershipMessage(tree);
+        }
+
+        public function deserializeAsyncAs_GuildMembershipMessage(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.guild
+} com.ankamagames.dofus.network.messages.game.guild
 

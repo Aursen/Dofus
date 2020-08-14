@@ -1,4 +1,4 @@
-﻿package com.ankamagames.tubul.interfaces
+package com.ankamagames.tubul.interfaces
 {
     import __AS3__.vec.Vector;
     import com.ankamagames.tubul.types.VolumeFadeEffect;
@@ -20,5 +20,5 @@
         function clearCache():void;
 
     }
-}//package com.ankamagames.tubul.interfaces
+} com.ankamagames.tubul.interfaces
 

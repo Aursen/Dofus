@@ -1,7 +1,6 @@
-﻿package com.ankamagames.dofus.console.debug
+package com.ankamagames.dofus.console.debug
 {
     import com.ankamagames.jerakine.console.ConsoleInstructionHandler;
-    import com.ankamagames.berilia.Berilia;
     import com.ankamagames.jerakine.console.ConsoleHandler;
 
     public class ClearTextureCacheInstructionHandler implements ConsoleInstructionHandler 
@@ -17,9 +16,8 @@
                     {
                         console.output("No arguments needed.");
                     };
-                    Berilia.getInstance().cache.clear();
                     console.output("Texture cache cleared.");
-                    return;
+                    break;
             };
         }
 
@@ -30,7 +28,7 @@
                 case "cleartexturecache":
                     return ("Empty the textures cache.");
             };
-            return ((("No help for command '" + cmd) + "'"));
+            return (("No help for command '" + cmd) + "'");
         }
 
         public function getParamPossibilities(cmd:String, paramIndex:uint=0, currentParams:Array=null):Array
@@ -40,5 +38,5 @@
 
 
     }
-}//package com.ankamagames.dofus.console.debug
+} com.ankamagames.dofus.console.debug
 

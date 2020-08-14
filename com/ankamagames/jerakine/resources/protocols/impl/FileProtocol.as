@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.resources.protocols.impl
+package com.ankamagames.jerakine.resources.protocols.impl
 {
     import com.ankamagames.jerakine.resources.protocols.AbstractFileProtocol;
     import com.ankamagames.jerakine.logger.Logger;
@@ -20,20 +20,22 @@
 
         override public function load(uri:Uri, observer:IResourceObserver, dispatchProgress:Boolean, cache:ICache, forcedAdapter:Class, singleFile:Boolean):void
         {
-            if (((singleFile) && (((((!((uri.fileType == "swf"))) || (!(uri.subPath)))) || ((uri.subPath.length == 0))))))
+            var url:String;
+            if (((singleFile) && (((!(uri.fileType == "swf")) || (!(uri.subPath))) || (uri.subPath.length == 0))))
             {
-                singleLoadingFile[uri] = observer;
+                _singleFileObserver = observer;
                 this.loadDirectly(uri, this, dispatchProgress, forcedAdapter);
             }
             else
             {
-                if (loadingFile[getUrl(uri)])
+                url = getUrl(uri);
+                if (loadingFile[url])
                 {
-                    loadingFile[getUrl(uri)].push(observer);
+                    loadingFile[url].push(observer);
                 }
                 else
                 {
-                    loadingFile[getUrl(uri)] = [observer];
+                    loadingFile[url] = [observer];
                     this.loadDirectly(uri, this, dispatchProgress, forcedAdapter);
                 };
             };
@@ -74,11 +76,11 @@
             {
                 path = ("file://" + path.substr(path.indexOf("\\\\")));
             };
-            if (((!((localDirectory == null))) && ((path.indexOf("./") == 0))))
+            if (((!(localDirectory == null)) && (path.indexOf("./") == 0)))
             {
                 path = (localDirectory + path.substr(2));
             };
-            if (((((!((SystemManager.getSingleton().os == OperatingSystem.WINDOWS))) && ((path.charAt(0) == "/")))) && (!((path.charAt(1) == "/")))))
+            if ((((!(SystemManager.getSingleton().os == OperatingSystem.WINDOWS)) && (path.charAt(0) == "/")) && (!(path.charAt(1) == "/"))))
             {
                 path = ("/" + path);
             };
@@ -87,19 +89,21 @@
 
         override public function onLoaded(uri:Uri, resourceType:uint, resource:*):void
         {
+            var url:String;
             var waiting:Array;
-            var observer:IResourceObserver = singleLoadingFile[uri];
+            var observer:IResourceObserver = _singleFileObserver;
             if (observer)
             {
                 observer.onLoaded(uri, resourceType, resource);
-                delete singleLoadingFile[uri];
+                _singleFileObserver = null;
             }
             else
             {
-                if (((loadingFile[getUrl(uri)]) && (loadingFile[getUrl(uri)].length)))
+                url = getUrl(uri);
+                if (((loadingFile[url]) && (loadingFile[url].length)))
                 {
-                    waiting = loadingFile[getUrl(uri)];
-                    delete loadingFile[getUrl(uri)];
+                    waiting = loadingFile[url];
+                    delete loadingFile[url];
                     for each (observer in waiting)
                     {
                         IResourceObserver(observer).onLoaded(uri, resourceType, resource);
@@ -110,20 +114,22 @@
 
         override public function onFailed(uri:Uri, errorMsg:String, errorCode:uint):void
         {
+            var url:String;
             var waiting:Array;
             _log.warn(("onFailed " + uri));
-            var observer:IResourceObserver = singleLoadingFile[uri];
+            var observer:IResourceObserver = _singleFileObserver;
             if (observer)
             {
                 observer.onFailed(uri, errorMsg, errorCode);
-                delete singleLoadingFile[uri];
+                _singleFileObserver = null;
             }
             else
             {
-                if (((loadingFile[getUrl(uri)]) && (loadingFile[getUrl(uri)].length)))
+                url = getUrl(uri);
+                if (((loadingFile[url]) && (loadingFile[url].length)))
                 {
-                    waiting = loadingFile[getUrl(uri)];
-                    delete loadingFile[getUrl(uri)];
+                    waiting = loadingFile[url];
+                    delete loadingFile[url];
                     for each (observer in waiting)
                     {
                         IResourceObserver(observer).onFailed(uri, errorMsg, errorCode);
@@ -134,19 +140,21 @@
 
         override public function onProgress(uri:Uri, bytesLoaded:uint, bytesTotal:uint):void
         {
+            var url:String;
             var waiting:Array;
-            var observer:IResourceObserver = singleLoadingFile[uri];
+            var observer:IResourceObserver = _singleFileObserver;
             if (observer)
             {
                 observer.onProgress(uri, bytesLoaded, bytesTotal);
-                delete singleLoadingFile[uri];
+                _singleFileObserver = null;
             }
             else
             {
-                if (((((loadingFile[getUrl(uri)]) && (loadingFile[getUrl(uri)]))) && (loadingFile[getUrl(uri)].length)))
+                url = getUrl(uri);
+                if (((loadingFile[url]) && (loadingFile[url].length)))
                 {
-                    waiting = loadingFile[getUrl(uri)];
-                    delete loadingFile[getUrl(uri)];
+                    waiting = loadingFile[url];
+                    delete loadingFile[url];
                     for each (observer in waiting)
                     {
                         IResourceObserver(observer).onProgress(uri, bytesLoaded, bytesTotal);
@@ -157,5 +165,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.resources.protocols.impl
+} com.ankamagames.jerakine.resources.protocols.impl
 

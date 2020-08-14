@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.types.data
+package com.ankamagames.berilia.types.data
 {
     import com.ankamagames.jerakine.interfaces.IModuleUtil;
     import com.ankamagames.berilia.utils.errors.BeriliaError;
@@ -55,7 +55,6 @@
             return (this._uiGroupName);
         }
 
-        [HideInFakeClass]
         public function set xml(v:String):void
         {
             if (this._xml)
@@ -65,23 +64,16 @@
             this._xml = v;
         }
 
-        [HideInFakeClass]
         public function get uiClass():Class
         {
             return (this._uiClass);
         }
 
-        [HideInFakeClass]
         public function set uiClass(c:Class):void
         {
-            if (this._uiClass)
-            {
-                throw (new BeriliaError("uiClass cannot be set twice"));
-            };
             this._uiClass = c;
         }
 
-        [HideInFakeClass]
         public function updateXml(xml:XML, accessKey:Object):void
         {
             if (accessKey != SecureCenter.ACCESS_KEY)
@@ -93,5 +85,5 @@
 
 
     }
-}//package com.ankamagames.berilia.types.data
+} com.ankamagames.berilia.types.data
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.types.characteristicContextual
+package com.ankamagames.dofus.types.characteristicContextual
 {
     import flash.events.EventDispatcher;
     import com.ankamagames.jerakine.logger.Logger;
@@ -11,9 +11,13 @@
     import com.ankamagames.berilia.Berilia;
     import com.ankamagames.jerakine.utils.display.EnterFrameDispatcher;
     import com.ankamagames.berilia.components.Texture;
+    import flash.display.DisplayObjectContainer;
     import com.ankamagames.jerakine.entities.interfaces.IDisplayable;
     import com.ankamagames.jerakine.interfaces.IRectangle;
     import com.ankamagames.jerakine.utils.display.StageShareManager;
+    import com.ankamagames.dofus.kernel.Kernel;
+    import com.ankamagames.dofus.logic.game.roleplay.frames.RoleplayContextFrame;
+    import com.ankamagames.dofus.network.enums.GameContextEnum;
     import flash.utils.getTimer;
     import flash.display.DisplayObject;
     import flash.events.Event;
@@ -56,16 +60,16 @@
         }
 
 
-        public function addStatContextual(sText:String, oEntity:IEntity, format:TextFormat, type:uint, pScrollSpeed:Number=1, pScrollDuration:uint=2500):CharacteristicContextual
+        public function addStatContextual(sText:String, oEntity:IEntity, format:TextFormat, _arg_4:uint, pGameContext:uint, pScrollSpeed:Number=1, pScrollDuration:uint=2500):CharacteristicContextual
         {
             var txtCxt:TextContextual;
             var txtSCxt:StyledTextContextual;
             var data:TweenData;
-            if (((!(oEntity)) || ((oEntity.position.cellId == -1))))
+            if (((!(oEntity)) || (oEntity.position.cellId == -1)))
             {
                 return (null);
             };
-            this._type = type;
+            this._type = _arg_4;
             var dist:Array = [Math.abs((0xFF0000 - (format.color as uint))), Math.abs((0xFF - (format.color as uint))), Math.abs((0x6600 - (format.color as uint))), Math.abs((10053324 - (format.color as uint)))];
             var style:uint = dist.indexOf(Math.min(dist[0], dist[1], dist[2], dist[3]));
             switch (this._type)
@@ -75,8 +79,9 @@
                     txtCxt.referedEntity = oEntity;
                     txtCxt.text = sText;
                     txtCxt.textFormat = format;
+                    txtCxt.gameContext = pGameContext;
                     txtCxt.finalize();
-                    if (!(this._tweenByEntities[oEntity]))
+                    if (!this._tweenByEntities[oEntity])
                     {
                         this._tweenByEntities[oEntity] = new Array();
                     };
@@ -92,7 +97,8 @@
                 case 2:
                     txtSCxt = new StyledTextContextual(sText, style);
                     txtSCxt.referedEntity = oEntity;
-                    if (!(this._tweenByEntities[oEntity]))
+                    txtSCxt.gameContext = pGameContext;
+                    if (!this._tweenByEntities[oEntity])
                     {
                         this._tweenByEntities[oEntity] = new Array();
                     };
@@ -106,13 +112,13 @@
                     this.beginTween(txtSCxt);
                     break;
             };
-            return (((txtCxt) ? txtCxt : txtSCxt));
+            return ((txtCxt) ? txtCxt : txtSCxt);
         }
 
-        public function addStatContextualWithIcon(pIcon:Texture, pText:String, pEntity:IEntity, pTextFormat:TextFormat, pType:uint, pScrollSpeed:Number=1, pScrollDuration:Number=2500):void
+        public function addStatContextualWithIcon(pIcon:Texture, pText:String, pEntity:IEntity, pTextFormat:TextFormat, pType:uint, pGameContext:uint, pScrollSpeed:Number=1, pScrollDuration:Number=2500):void
         {
             var enterFrameNeeded:Boolean = this._bEnterFrameNeeded;
-            var statTxt:CharacteristicContextual = this.addStatContextual(pText, pEntity, pTextFormat, pType, pScrollSpeed, pScrollDuration);
+            var statTxt:CharacteristicContextual = this.addStatContextual(pText, pEntity, pTextFormat, pType, pGameContext, pScrollSpeed, pScrollDuration);
             if (statTxt)
             {
                 this._statsIcons[statTxt] = pIcon;
@@ -132,7 +138,7 @@
             var iconDisplayed:Boolean;
             for (statTxt in this._statsIcons)
             {
-                if ((((this._statsIcons[statTxt] == pIcon)) && (!((statTxt == pCurrentContext)))))
+                if (((this._statsIcons[statTxt] == pIcon) && (!(statTxt == pCurrentContext))))
                 {
                     iconDisplayed = true;
                     break;
@@ -144,21 +150,38 @@
         private function removeStatContextual(nIndex:Number):void
         {
             var entity:CharacteristicContextual;
+            var container:DisplayObjectContainer;
             if (_aEntitiesTweening[nIndex] != null)
             {
                 entity = _aEntitiesTweening[nIndex].context;
                 entity.remove();
-                Berilia.getInstance().strataLow.removeChild(entity);
+                container = Berilia.getInstance().strataLow;
+                if (container.contains(entity))
+                {
+                    container.removeChild(entity);
+                };
                 _aEntitiesTweening[nIndex] = null;
                 delete _aEntitiesTweening[nIndex];
                 if (this._statsIcons[entity])
                 {
-                    if (!(this.isIconDisplayed(this._statsIcons[entity], entity)))
+                    if (((!(this.isIconDisplayed(this._statsIcons[entity], entity))) && (container.contains(this._statsIcons[entity]))))
                     {
-                        Berilia.getInstance().strataLow.removeChild(this._statsIcons[entity]);
+                        container.removeChild(this._statsIcons[entity]);
                     };
                     delete this._statsIcons[entity];
                 };
+            };
+        }
+
+        private function removeTween(pStatContextualId:int):void
+        {
+            this.removeStatContextual(pStatContextualId);
+            this._tweeningCount--;
+            if (this._tweeningCount == 0)
+            {
+                this._bEnterFrameNeeded = true;
+                EnterFrameDispatcher.removeEventListener(this.onScroll);
+                EnterFrameDispatcher.removeEventListener(this.onIconScroll);
             };
         }
 
@@ -184,16 +207,17 @@
             var entityTweenList:Array;
             var display:IRectangle;
             var addToNextTween:Array = [];
+            var gameContext:uint = ((Kernel.getWorker().getFrame(RoleplayContextFrame)) ? GameContextEnum.ROLE_PLAY : GameContextEnum.FIGHT);
             for (index in _aEntitiesTweening)
             {
                 tweenData = _aEntitiesTweening[index];
-                if (!!(tweenData))
+                if (tweenData)
                 {
                     entity = tweenData.context;
                     entity.y = (entity.y - tweenData.scrollSpeed);
                     tweenData._tweeningCurrentDistance = ((getTimer() - tweenData.startTime) / tweenData.scrollDuration);
                     entityTweenList = this._tweenByEntities[tweenData.entity];
-                    if (((((entityTweenList) && ((entityTweenList[(entityTweenList.length - 1)] == tweenData)))) && ((tweenData._tweeningCurrentDistance > 0.5))))
+                    if ((((entityTweenList) && (entityTweenList[(entityTweenList.length - 1)] == tweenData)) && (tweenData._tweeningCurrentDistance > 0.5)))
                     {
                         entityTweenList.pop();
                         if (entityTweenList.length)
@@ -206,31 +230,21 @@
                             delete this._tweenByEntities[tweenData.entity];
                         };
                     };
-                    if (tweenData._tweeningCurrentDistance < (1 / 8))
+                    if (entity.gameContext != gameContext)
                     {
-                        entity.alpha = (tweenData._tweeningCurrentDistance * 4);
-                        if (this._type == 2)
-                        {
-                            entity.scaleX = (tweenData._tweeningCurrentDistance * 24);
-                            entity.scaleY = (tweenData._tweeningCurrentDistance * 24);
-                            display = IDisplayable(entity.referedEntity).absoluteBounds;
-                            if (((!((entity.referedEntity is DisplayObject))) || (DisplayObject(entity.referedEntity).parent)))
-                            {
-                                entity.x = ((((display.x + (display.width / 2)) - (entity.width / 2)) - StageShareManager.stageOffsetX) / StageShareManager.stageScaleX);
-                            };
-                        };
+                        this.removeTween(int(index));
                     }
                     else
                     {
-                        if (tweenData._tweeningCurrentDistance < (1 / 4))
+                        if (tweenData._tweeningCurrentDistance < (1 / 8))
                         {
                             entity.alpha = (tweenData._tweeningCurrentDistance * 4);
                             if (this._type == 2)
                             {
-                                entity.scaleX = (3 - (tweenData._tweeningCurrentDistance * 8));
-                                entity.scaleY = (3 - (tweenData._tweeningCurrentDistance * 8));
+                                entity.scaleX = (tweenData._tweeningCurrentDistance * 24);
+                                entity.scaleY = (tweenData._tweeningCurrentDistance * 24);
                                 display = IDisplayable(entity.referedEntity).absoluteBounds;
-                                if (((!((entity.referedEntity is DisplayObject))) || (DisplayObject(entity.referedEntity).parent)))
+                                if (((!(entity.referedEntity is DisplayObject)) || (DisplayObject(entity.referedEntity).parent)))
                                 {
                                     entity.x = ((((display.x + (display.width / 2)) - (entity.width / 2)) - StageShareManager.stageOffsetX) / StageShareManager.stageScaleX);
                                 };
@@ -238,26 +252,36 @@
                         }
                         else
                         {
-                            if ((((tweenData._tweeningCurrentDistance >= (3 / 4))) && ((tweenData._tweeningCurrentDistance < 1))))
+                            if (tweenData._tweeningCurrentDistance < (1 / 4))
                             {
-                                entity.alpha = (1 - tweenData._tweeningCurrentDistance);
+                                entity.alpha = (tweenData._tweeningCurrentDistance * 4);
+                                if (this._type == 2)
+                                {
+                                    entity.scaleX = (3 - (tweenData._tweeningCurrentDistance * 8));
+                                    entity.scaleY = (3 - (tweenData._tweeningCurrentDistance * 8));
+                                    display = IDisplayable(entity.referedEntity).absoluteBounds;
+                                    if (((!(entity.referedEntity is DisplayObject)) || (DisplayObject(entity.referedEntity).parent)))
+                                    {
+                                        entity.x = ((((display.x + (display.width / 2)) - (entity.width / 2)) - StageShareManager.stageOffsetX) / StageShareManager.stageScaleX);
+                                    };
+                                };
                             }
                             else
                             {
-                                if (tweenData._tweeningCurrentDistance >= 1)
+                                if (((tweenData._tweeningCurrentDistance >= (3 / 4)) && (tweenData._tweeningCurrentDistance < 1)))
                                 {
-                                    this.removeStatContextual(int(index));
-                                    this._tweeningCount--;
-                                    if (this._tweeningCount == 0)
-                                    {
-                                        this._bEnterFrameNeeded = true;
-                                        EnterFrameDispatcher.removeEventListener(this.onScroll);
-                                        EnterFrameDispatcher.removeEventListener(this.onIconScroll);
-                                    };
+                                    entity.alpha = (1 - tweenData._tweeningCurrentDistance);
                                 }
                                 else
                                 {
-                                    entity.alpha = 1;
+                                    if (tweenData._tweeningCurrentDistance >= 1)
+                                    {
+                                        this.removeTween(int(index));
+                                    }
+                                    else
+                                    {
+                                        entity.alpha = 1;
+                                    };
                                 };
                             };
                         };
@@ -276,7 +300,7 @@
             for (index in _aEntitiesTweening)
             {
                 tweenData = _aEntitiesTweening[index];
-                if (!!(tweenData))
+                if (tweenData)
                 {
                     statTxt = tweenData.context;
                     icon = this._statsIcons[statTxt];
@@ -292,7 +316,7 @@
 
 
     }
-}//package com.ankamagames.dofus.types.characteristicContextual
+} com.ankamagames.dofus.types.characteristicContextual
 
 import com.ankamagames.jerakine.entities.interfaces.IEntity;
 import com.ankamagames.dofus.types.characteristicContextual.CharacteristicContextual;
@@ -308,12 +332,10 @@ class TweenData
     public var _tweeningTotalDistance:uint = 40;
     public var _tweeningCurrentDistance:Number = 0;
     public var alpha:Number = 0;
-    public var startTime:int;
+    public var startTime:int = getTimer();
 
     public function TweenData(oEntity:CharacteristicContextual, entity:IEntity, pScrollSpeed:Number, pScrollDuration:uint)
     {
-        this.startTime = getTimer();
-        super();
         this.context = oEntity;
         this.entity = entity;
         this.scrollSpeed = pScrollSpeed;
@@ -321,4 +343,5 @@ class TweenData
     }
 
 }
+
 

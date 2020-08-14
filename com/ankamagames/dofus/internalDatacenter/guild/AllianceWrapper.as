@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.internalDatacenter.guild
+package com.ankamagames.dofus.internalDatacenter.guild
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import flash.utils.Dictionary;
@@ -28,24 +28,28 @@
         public var allianceId:uint;
         public var upEmblem:EmblemWrapper;
         public var backEmblem:EmblemWrapper;
-        public var enabled:Boolean;
         public var creationDate:uint;
         public var nbGuilds:uint = 0;
         public var nbMembers:uint = 0;
         public var nbSubareas:uint = 0;
-        public var leaderGuildId:uint = 0;
-        public var leaderCharacterId:uint = 0;
+        public var leadingGuildId:uint = 0;
+        public var leaderCharacterId:Number = 0;
         public var leaderCharacterName:String = "";
-        public var guilds:Vector.<GuildFactSheetWrapper>;
-        public var prismIds:Vector.<uint>;
+        public var motd:String = "";
+        public var formattedMotd:String = "";
+        public var motdWriterId:Number;
+        public var motdWriterName:String = "";
+        public var motdTimestamp:Number;
+        public var bulletin:String = "";
+        public var formattedBulletin:String = "";
+        public var bulletinWriterId:Number;
+        public var bulletinWriterName:String = "";
+        public var bulletinTimestamp:Number;
+        public var lastNotifiedTimestamp:Number;
+        public var guilds:Vector.<GuildFactSheetWrapper> = new Vector.<GuildFactSheetWrapper>();
+        public var prismIds:Vector.<uint> = new Vector.<uint>();
         private var _memberRightsNumber:uint;
 
-        public function AllianceWrapper()
-        {
-            this.guilds = new Vector.<GuildFactSheetWrapper>();
-            this.prismIds = new Vector.<uint>();
-            super();
-        }
 
         public static function getAllianceById(id:int):AllianceWrapper
         {
@@ -83,17 +87,16 @@
         private static function getFromAllianceFactsMessage(o:AllianceFactsMessage):AllianceWrapper
         {
             var aw:AllianceWrapper = getFromBasicAllianceInformations(o.infos);
-            if (((o.guilds) && ((o.guilds.length > 0))))
+            if (((o.guilds) && (o.guilds.length > 0)))
             {
-                aw.leaderGuildId = o.guilds[0].guildId;
-                if (((((SocialFrame.getInstance().hasGuild) && ((SocialFrame.getInstance().guild.guildId == o.guilds[0].guildId)))) && (SocialFrame.getInstance().guild.hasRight("isBoss"))))
+                aw.leadingGuildId = o.guilds[0].guildId;
+                if ((((SocialFrame.getInstance().hasGuild) && (SocialFrame.getInstance().guild.guildId == o.guilds[0].guildId)) && (SocialFrame.getInstance().guild.hasRight("isBoss"))))
                 {
                     aw._memberRightsNumber = AllianceRightsBitEnum.ALLIANCE_RIGHT_BOSS;
                 };
             };
             aw.nbGuilds = o.guilds.length;
             aw.nbMembers = 0;
-            aw.enabled = false;
             aw.guilds.length = 0;
             aw.leaderCharacterId = o.leaderCharacterId;
             aw.leaderCharacterName = o.leaderCharacterName;
@@ -101,7 +104,6 @@
             while (i < o.guilds.length)
             {
                 aw.nbMembers = (aw.nbMembers + o.guilds[i].nbMembers);
-                aw.enabled = ((aw.enabled) || (o.guilds[i].enabled));
                 i++;
             };
             return (aw);
@@ -148,8 +150,8 @@
             if ((o is AllianceInformations))
             {
                 emblem = AllianceInformations(o).allianceEmblem;
-                aw.upEmblem = EmblemWrapper.fromNetwork(emblem, false);
-                aw.backEmblem = EmblemWrapper.fromNetwork(emblem, true);
+                aw.upEmblem = EmblemWrapper.fromNetwork(emblem, false, true);
+                aw.backEmblem = EmblemWrapper.fromNetwork(emblem, true, true);
             };
             if ((o is AllianceFactSheetInformations))
             {
@@ -158,29 +160,29 @@
             return (aw);
         }
 
-        public static function create(pAllianceId:uint, pAllianceTag:String, pAllianceName:String, pAllianceEmblem:GuildEmblem, creationDate:Number=0, nbGuilds:uint=0, nbMembers:uint=0, guilds:Vector.<GuildFactSheetWrapper>=null, prismIds:Vector.<uint>=null, pAllianceLeaderId:int=0, pAllianceLeaderName:String=""):AllianceWrapper
+        public static function create(pAllianceId:uint, pAllianceTag:String, pAllianceName:String, pAllianceEmblem:GuildEmblem, leadingGuildId:int=0, creationDate:Number=0, nbGuilds:uint=0, nbMembers:uint=0, guilds:Vector.<GuildFactSheetWrapper>=null, prismIds:Vector.<uint>=null, pAllianceLeaderId:Number=0, pAllianceLeaderName:String=""):AllianceWrapper
         {
             var item:AllianceWrapper;
-            var g:GuildFactSheetWrapper;
             item = new (AllianceWrapper)();
             item.allianceId = pAllianceId;
             item._allianceTag = pAllianceTag;
             item._allianceName = pAllianceName;
+            item.leadingGuildId = leadingGuildId;
             item.leaderCharacterId = pAllianceLeaderId;
             item.leaderCharacterName = pAllianceLeaderName;
             if (pAllianceEmblem != null)
             {
-                item.upEmblem = EmblemWrapper.create(pAllianceEmblem.symbolShape, EmblemWrapper.UP, pAllianceEmblem.symbolColor);
-                item.backEmblem = EmblemWrapper.create(pAllianceEmblem.backgroundShape, EmblemWrapper.BACK, pAllianceEmblem.backgroundColor);
+                item.upEmblem = EmblemWrapper.create(pAllianceEmblem.symbolShape, EmblemWrapper.UP, pAllianceEmblem.symbolColor, true);
+                item.backEmblem = EmblemWrapper.create(pAllianceEmblem.backgroundShape, EmblemWrapper.BACK, pAllianceEmblem.backgroundColor, true);
             };
             item.creationDate = creationDate;
             item.nbGuilds = nbGuilds;
             item.nbMembers = nbMembers;
             item.guilds = guilds;
-            if (((guilds) && ((guilds.length > 0))))
+            if (((guilds) && (guilds.length > 0)))
             {
-                item.leaderGuildId = guilds[0].guildId;
-                if (((((SocialFrame.getInstance().hasGuild) && ((SocialFrame.getInstance().guild.guildId == guilds[0].guildId)))) && (SocialFrame.getInstance().guild.hasRight("isBoss"))))
+                item.leadingGuildId = guilds[0].guildId;
+                if ((((SocialFrame.getInstance().hasGuild) && (SocialFrame.getInstance().guild.guildId == guilds[0].guildId)) && (SocialFrame.getInstance().guild.hasRight("isBoss"))))
                 {
                     item._memberRightsNumber = AllianceRightsBitEnum.ALLIANCE_RIGHT_BOSS;
                 };
@@ -188,15 +190,6 @@
             if (prismIds)
             {
                 item.prismIds = prismIds;
-            };
-            item.enabled = false;
-            for each (g in guilds)
-            {
-                if (g.enabled)
-                {
-                    item.enabled = true;
-                    break;
-                };
             };
             return (item);
         }
@@ -269,23 +262,23 @@
 
         public function get isBoss():Boolean
         {
-            return (((1 & this._memberRightsNumber) > 0));
+            return ((0x01 & this._memberRightsNumber) > 0);
         }
 
         public function clone():AllianceWrapper
         {
-            var wrapper:AllianceWrapper = create(this.allianceId, this.allianceTag, this.allianceName, null, this.creationDate, this.nbGuilds, this.nbMembers, this.guilds, this.prismIds, this.leaderCharacterId, this.leaderCharacterName);
+            var wrapper:AllianceWrapper = create(this.allianceId, this.allianceTag, this.allianceName, null, this.leadingGuildId, this.creationDate, this.nbGuilds, this.nbMembers, this.guilds, this.prismIds, this.leaderCharacterId, this.leaderCharacterName);
             wrapper.upEmblem = this.upEmblem;
             wrapper.backEmblem = this.backEmblem;
             return (wrapper);
         }
 
-        public function update(pAllianceId:uint, pAllianceTag:String, pAllianceName:String, pAllianceEmblem:GuildEmblem, creationDate:Number=0, nbGuilds:uint=0, nbMembers:uint=0, guilds:Vector.<GuildFactSheetWrapper>=null, prismIds:Vector.<uint>=null, pAllianceLeaderId:int=0, pAllianceLeaderName:String=""):void
+        public function update(pAllianceId:uint, pAllianceTag:String, pAllianceName:String, pAllianceEmblem:GuildEmblem, leadingGuildId:int=0, creationDate:Number=0, nbGuilds:uint=0, nbMembers:uint=0, guilds:Vector.<GuildFactSheetWrapper>=null, prismIds:Vector.<uint>=null, pAllianceLeaderId:Number=0, pAllianceLeaderName:String=""):void
         {
-            var g:GuildFactSheetWrapper;
             this.allianceId = pAllianceId;
             this._allianceTag = pAllianceTag;
             this._allianceName = pAllianceName;
+            this.leadingGuildId = leadingGuildId;
             this.leaderCharacterId = pAllianceLeaderId;
             this.leaderCharacterName = pAllianceLeaderName;
             this.upEmblem.update(pAllianceEmblem.symbolShape, EmblemWrapper.UP, pAllianceEmblem.symbolColor);
@@ -294,10 +287,10 @@
             this.nbGuilds = nbGuilds;
             this.nbMembers = nbMembers;
             this.guilds = guilds;
-            if (((guilds) && ((guilds.length > 0))))
+            if (((guilds) && (guilds.length > 0)))
             {
-                this.leaderGuildId = guilds[0].guildId;
-                if (((((SocialFrame.getInstance().hasGuild) && ((SocialFrame.getInstance().guild.guildId == guilds[0].guildId)))) && (SocialFrame.getInstance().guild.hasRight("isBoss"))))
+                this.leadingGuildId = guilds[0].guildId;
+                if ((((SocialFrame.getInstance().hasGuild) && (SocialFrame.getInstance().guild.guildId == guilds[0].guildId)) && (SocialFrame.getInstance().guild.hasRight("isBoss"))))
                 {
                     this._memberRightsNumber = AllianceRightsBitEnum.ALLIANCE_RIGHT_BOSS;
                 };
@@ -305,15 +298,6 @@
             if (prismIds)
             {
                 this.prismIds = prismIds;
-            };
-            this.enabled = false;
-            for each (g in guilds)
-            {
-                if (g.enabled)
-                {
-                    this.enabled = true;
-                    break;
-                };
             };
         }
 
@@ -336,5 +320,5 @@
 
 
     }
-}//package com.ankamagames.dofus.internalDatacenter.guild
+} com.ankamagames.dofus.internalDatacenter.guild
 

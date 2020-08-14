@@ -1,9 +1,10 @@
-﻿package com.ankamagames.dofus.logic.common.managers
+package com.ankamagames.dofus.logic.common.managers
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
-    import avmplus.getQualifiedClassName;
+    import flash.utils.getQualifiedClassName;
     import com.ankamagames.dofus.network.types.game.context.roleplay.GameRolePlayCharacterInformations;
+    import com.ankamagames.jerakine.utils.misc.StringUtils;
     import com.ankamagames.berilia.managers.UiModuleManager;
     import com.ankamagames.dofus.kernel.Kernel;
     import com.ankamagames.dofus.logic.game.roleplay.frames.RoleplayEntitiesFrame;
@@ -22,15 +23,15 @@
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(HyperlinkShowPlayerMenuManager));
 
 
-        public static function showPlayerMenu(playerName:String, playerId:int=0, timestamp:Number=0, fingerprint:String=null, chan:uint=0):void
+        public static function showPlayerMenu(playerName:String, playerId:Number=0, timestamp:Number=0, fingerprint:String=null, chan:uint=0, accountId:uint=0):void
         {
             var playerInfo:GameRolePlayCharacterInformations;
             if (playerName)
             {
-                playerName = unescape(playerName);
+                playerName = StringUtils.unescapeAllowedChar(playerName);
             };
             var _modContextMenu:Object = UiModuleManager.getInstance().getModule("Ankama_ContextMenu").mainClass;
-            if (((playerName) && ((playerName.indexOf("★") == 0))))
+            if (((playerName) && (playerName.indexOf("★") == 0)))
             {
                 playerName = playerName.substr(1);
             };
@@ -38,11 +39,12 @@
             if (((roleplayEntitiesFrame) && (playerId)))
             {
                 playerInfo = (roleplayEntitiesFrame.getEntityInfos(playerId) as GameRolePlayCharacterInformations);
-                if (!(playerInfo))
+                if (!playerInfo)
                 {
                     playerInfo = new GameRolePlayCharacterInformations();
                     playerInfo.contextualId = playerId;
                     playerInfo.name = playerName;
+                    playerInfo.accountId = accountId;
                 };
                 _modContextMenu.createContextMenu(MenusFactory.create(playerInfo, null, [{
                     "id":playerId,
@@ -57,9 +59,10 @@
             };
         }
 
-        public static function getPlayerName(playerName:String, playerId:int=0, timestamp:Number=0, fingerprint:String=null, chan:uint=0):String
+        public static function getPlayerName(pPlayerName:String, playerId:Number=0, timestamp:Number=0, fingerprint:String=null, chan:uint=0):String
         {
             var priority:int;
+            var playerName:String = unescape(pPlayerName);
             switch (chan)
             {
                 case ChatActivableChannelsEnum.CHANNEL_TEAM:
@@ -75,7 +78,7 @@
                 default:
                     priority = 1;
             };
-            if (((playerName) && ((playerName.indexOf("★") == 0))))
+            if (((playerName) && (playerName.indexOf("★") == 0)))
             {
                 playerName = playerName.substr(1);
             };
@@ -83,7 +86,7 @@
             return (playerName);
         }
 
-        public static function rollOverPlayer(pX:int, pY:int, playerName:String, playerId:int=0, timestamp:Number=0, fingerprint:String=null, chan:uint=0):void
+        public static function rollOverPlayer(pX:int, pY:int, playerName:String, playerId:Number=0, timestamp:Number=0, fingerprint:String=null, chan:uint=0):void
         {
             var target:Rectangle = new Rectangle(pX, pY, 10, 10);
             var info:TextTooltipInfo = new TextTooltipInfo(I18n.getUiText("ui.tooltip.chat.player"));
@@ -92,5 +95,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.common.managers
+} com.ankamagames.dofus.logic.common.managers
 

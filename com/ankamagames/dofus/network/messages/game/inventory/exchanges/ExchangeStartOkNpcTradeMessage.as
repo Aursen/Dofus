@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.inventory.exchanges
+package com.ankamagames.dofus.network.messages.game.inventory.exchanges
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,15 +6,15 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class ExchangeStartOkNpcTradeMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 5785;
 
         private var _isInitialized:Boolean = false;
-        public var npcId:int = 0;
+        public var npcId:Number = 0;
 
 
         override public function get isInitialized():Boolean
@@ -27,7 +27,7 @@
             return (5785);
         }
 
-        public function initExchangeStartOkNpcTradeMessage(npcId:int=0):ExchangeStartOkNpcTradeMessage
+        public function initExchangeStartOkNpcTradeMessage(npcId:Number=0):ExchangeStartOkNpcTradeMessage
         {
             this.npcId = npcId;
             this._isInitialized = true;
@@ -52,6 +52,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_ExchangeStartOkNpcTradeMessage(output);
@@ -59,7 +67,11 @@
 
         public function serializeAs_ExchangeStartOkNpcTradeMessage(output:ICustomDataOutput):void
         {
-            output.writeInt(this.npcId);
+            if (((this.npcId < -9007199254740992) || (this.npcId > 9007199254740992)))
+            {
+                throw (new Error((("Forbidden value (" + this.npcId) + ") on element npcId.")));
+            };
+            output.writeDouble(this.npcId);
         }
 
         public function deserialize(input:ICustomDataInput):void
@@ -69,10 +81,29 @@
 
         public function deserializeAs_ExchangeStartOkNpcTradeMessage(input:ICustomDataInput):void
         {
-            this.npcId = input.readInt();
+            this._npcIdFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_ExchangeStartOkNpcTradeMessage(tree);
+        }
+
+        public function deserializeAsyncAs_ExchangeStartOkNpcTradeMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._npcIdFunc);
+        }
+
+        private function _npcIdFunc(input:ICustomDataInput):void
+        {
+            this.npcId = input.readDouble();
+            if (((this.npcId < -9007199254740992) || (this.npcId > 9007199254740992)))
+            {
+                throw (new Error((("Forbidden value (" + this.npcId) + ") on element of ExchangeStartOkNpcTradeMessage.npcId.")));
+            };
         }
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.inventory.exchanges
+} com.ankamagames.dofus.network.messages.game.inventory.exchanges
 

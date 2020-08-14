@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.BalanceManager
+package com.ankamagames.jerakine.BalanceManager
 {
     import __AS3__.vec.Vector;
     import com.ankamagames.jerakine.BalanceManager.type.BalancedObject;
@@ -79,7 +79,7 @@
         public function callItem():Object
         {
             var objetEnCours:BalancedObject;
-            var random:uint = (Math.random() * 10000);
+            var random:uint = uint((Math.random() * 10000));
             var itemIndex:uint;
             var objectToReturn:Object;
             if (this._balancedObjects.length == 0)
@@ -109,7 +109,7 @@
                     }
                     else
                     {
-                        if ((((random > total)) && ((random < (total + (objetEnCours.chanceToBeCall * 100))))))
+                        if (((random > total) && (random < (total + (objetEnCours.chanceToBeCall * 100)))))
                         {
                             objetEnCours.increment();
                             objectToReturn = objetEnCours.item;
@@ -150,10 +150,10 @@
         private function balanceItems():void
         {
             var objectToCall:BalancedObject;
-            var _local_2:BalancedObject;
-            var _local_3:Number;
-            var _local_4:BalancedObject;
-            var _local_5:BalancedObject;
+            var objectToCall2:BalancedObject;
+            var temp:Number;
+            var objectToCall3:BalancedObject;
+            var objectToCall4:BalancedObject;
             if (this._nbCall == 0)
             {
                 for each (objectToCall in this._balancedObjects)
@@ -163,18 +163,18 @@
             }
             else
             {
-                for each (_local_2 in this._balancedObjects)
+                for each (objectToCall2 in this._balancedObjects)
                 {
-                    _local_2.chanceToBeNonCall = (((_local_2.nbCall + 1) / (this._nbCall + this._balancedObjects.length)) * 100);
+                    objectToCall2.chanceToBeNonCall = (((objectToCall2.nbCall + 1) / (this._nbCall + this._balancedObjects.length)) * 100);
                 };
-                _local_3 = 0;
-                for each (_local_4 in this._balancedObjects)
+                temp = 0;
+                for each (objectToCall3 in this._balancedObjects)
                 {
-                    _local_3 = (_local_3 + (1 / _local_4.chanceToBeNonCall));
+                    temp = (temp + (1 / objectToCall3.chanceToBeNonCall));
                 };
-                for each (_local_5 in this._balancedObjects)
+                for each (objectToCall4 in this._balancedObjects)
                 {
-                    _local_5.chanceToBeCall = (((1 / _local_5.chanceToBeNonCall) / _local_3) * 100);
+                    objectToCall4.chanceToBeCall = (((1 / objectToCall4.chanceToBeNonCall) / temp) * 100);
                 };
             };
         }
@@ -200,5 +200,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.BalanceManager
+} com.ankamagames.jerakine.BalanceManager
 

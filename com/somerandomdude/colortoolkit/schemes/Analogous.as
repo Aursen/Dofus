@@ -1,4 +1,4 @@
-﻿package com.somerandomdude.colortoolkit.schemes
+package com.somerandomdude.colortoolkit.schemes
 {
     import com.somerandomdude.colortoolkit.spaces.HSB;
     import com.somerandomdude.colortoolkit.ColorUtil;
@@ -72,5 +72,5 @@
 
 
     }
-}//package com.somerandomdude.colortoolkit.schemes
+} com.somerandomdude.colortoolkit.schemes
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.scripts
+package com.ankamagames.dofus.scripts
 {
     import com.ankamagames.jerakine.script.runners.IRunner;
     import com.ankamagames.jerakine.logger.Logger;
@@ -37,7 +37,7 @@
             var scriptInstance:* = new (script)();
             try
             {
-                var _local_3 = scriptInstance;
+                var _local_3:* = scriptInstance;
                 (_local_3["__setRunner__"](this));
                 scriptInstance.main("");
             }
@@ -58,5 +58,5 @@
 
 
     }
-}//package com.ankamagames.dofus.scripts
+} com.ankamagames.dofus.scripts
 

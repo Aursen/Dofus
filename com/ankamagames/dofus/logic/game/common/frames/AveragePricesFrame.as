@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.common.frames
+package com.ankamagames.dofus.logic.game.common.frames
 {
     import com.ankamagames.jerakine.messages.Frame;
     import com.ankamagames.jerakine.logger.Logger;
@@ -14,10 +14,9 @@
     import com.ankamagames.dofus.network.messages.game.inventory.ObjectAveragePricesErrorMessage;
     import com.ankamagames.dofus.network.enums.GameContextEnum;
     import com.ankamagames.jerakine.messages.Message;
+    import flash.utils.Dictionary;
     import __AS3__.vec.Vector;
-    import com.ankamagames.dofus.kernel.Kernel;
-    import com.ankamagames.dofus.logic.common.frames.MiscFrame;
-    import com.ankamagames.dofus.datacenter.misc.OptionalFeature;
+    import com.ankamagames.dofus.logic.common.managers.FeatureManager;
     import com.ankamagames.dofus.logic.game.common.managers.TimeManager;
     import com.ankamagames.dofus.network.messages.game.inventory.ObjectAveragePricesGetMessage;
     import com.ankamagames.dofus.kernel.net.ConnectionsHandler;
@@ -27,6 +26,7 @@
 
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(AveragePricesFrame));
         private static var _dataStoreType:DataStoreType;
+        private static var _instance:AveragePricesFrame;
 
         private var _serverName:String;
         private var _pricesData:Object;
@@ -34,11 +34,17 @@
         public function AveragePricesFrame()
         {
             this._serverName = PlayerManager.getInstance().server.name;
-            if (!(_dataStoreType))
+            if (!_dataStoreType)
             {
-                _dataStoreType = new DataStoreType("averagePrices", true, DataStoreEnum.LOCATION_LOCAL, DataStoreEnum.BIND_COMPUTER);
+                _dataStoreType = new DataStoreType("itemAveragePrices", true, DataStoreEnum.LOCATION_LOCAL, DataStoreEnum.BIND_COMPUTER);
             };
         }
+
+        public static function getInstance():AveragePricesFrame
+        {
+            return (_instance);
+        }
+
 
         public function get priority():int
         {
@@ -57,51 +63,53 @@
 
         public function pushed():Boolean
         {
+            _instance = this;
             this._pricesData = StoreDataManager.getInstance().getData(_dataStoreType, this._serverName);
             return (true);
         }
 
         public function pulled():Boolean
         {
+            _instance = null;
             return (true);
         }
 
         public function process(pMsg:Message):Boolean
         {
-            var _local_2:GameContextCreateMessage;
-            var _local_3:ObjectAveragePricesMessage;
-            var _local_4:ObjectAveragePricesErrorMessage;
+            var gccm:GameContextCreateMessage;
+            var oapm:ObjectAveragePricesMessage;
+            var oapem:ObjectAveragePricesErrorMessage;
             switch (true)
             {
                 case (pMsg is GameContextCreateMessage):
-                    _local_2 = (pMsg as GameContextCreateMessage);
-                    if ((((_local_2.context == GameContextEnum.ROLE_PLAY)) && (this.updateAllowed())))
+                    gccm = (pMsg as GameContextCreateMessage);
+                    if (((gccm.context == GameContextEnum.ROLE_PLAY) && (this.updateAllowed())))
                     {
                         this.askPricesData();
                     };
                     return (false);
                 case (pMsg is ObjectAveragePricesMessage):
-                    _local_3 = (pMsg as ObjectAveragePricesMessage);
-                    this.updatePricesData(_local_3.ids, _local_3.avgPrices);
+                    oapm = (pMsg as ObjectAveragePricesMessage);
+                    this.updatePricesData(oapm.ids, oapm.avgPrices);
                     return (true);
                 case (pMsg is ObjectAveragePricesErrorMessage):
-                    _local_4 = (pMsg as ObjectAveragePricesErrorMessage);
+                    oapem = (pMsg as ObjectAveragePricesErrorMessage);
                     return (true);
             };
             return (false);
         }
 
-        private function updatePricesData(pItemsIds:Vector.<uint>, pItemsAvgPrices:Vector.<uint>):void
+        private function updatePricesData(pItemsIds:Vector.<uint>, pItemsAvgPrices:Vector.<Number>):void
         {
             var nbItems:int = pItemsIds.length;
             this._pricesData = {
                 "lastUpdate":new Date(),
-                "items":{}
+                "items":new Dictionary(true)
             };
             var i:int;
             while (i < nbItems)
             {
-                this._pricesData.items[("item" + pItemsIds[i])] = pItemsAvgPrices[i];
+                this._pricesData.items[pItemsIds[i]] = pItemsAvgPrices[i];
                 i++;
             };
             StoreDataManager.getInstance().setData(_dataStoreType, this._serverName, this._pricesData);
@@ -111,9 +119,8 @@
         {
             var now:Date;
             var lastUpdateHour:String;
-            var misc:MiscFrame = (Kernel.getWorker().getFrame(MiscFrame) as MiscFrame);
-            var feature:OptionalFeature = OptionalFeature.getOptionalFeatureByKeyword("biz.prices");
-            if (!(misc.isOptionalFeatureActive(feature.id)))
+            var featureManager:FeatureManager = FeatureManager.getInstance();
+            if (((!(featureManager)) || (!(featureManager.isFeatureWithKeywordEnabled("trade.averagePricesAutoUpdate")))))
             {
                 return (false);
             };
@@ -121,7 +128,7 @@
             {
                 now = new Date();
                 lastUpdateHour = TimeManager.getInstance().formatClock(this._pricesData.lastUpdate.getTime());
-                if ((((((now.getFullYear() == this._pricesData.lastUpdate.getFullYear())) && ((now.getMonth() == this._pricesData.lastUpdate.getMonth())))) && ((now.getDate() == this._pricesData.lastUpdate.getDate()))))
+                if ((((now.getFullYear() == this._pricesData.lastUpdate.getFullYear()) && (now.getMonth() == this._pricesData.lastUpdate.getMonth())) && (now.getDate() == this._pricesData.lastUpdate.getDate())))
                 {
                     return (false);
                 };
@@ -138,5 +145,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.frames
+} com.ankamagames.dofus.logic.game.common.frames
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.resources.protocols.impl
+package com.ankamagames.jerakine.resources.protocols.impl
 {
     import com.ankamagames.jerakine.resources.protocols.AbstractProtocol;
     import com.ankamagames.jerakine.resources.protocols.IProtocol;
@@ -144,5 +144,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.resources.protocols.impl
+} com.ankamagames.jerakine.resources.protocols.impl
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.types.uiDefinition
+package com.ankamagames.berilia.types.uiDefinition
 {
     import flash.utils.Dictionary;
 
@@ -20,6 +20,9 @@
         public var giveFocus:Boolean = true;
         public var transmitFocus:Boolean = true;
         public var scalable:Boolean = true;
+        public var labelDebug:Boolean = false;
+        public var fullscreen:Boolean = false;
+        public var setOnTopOnClick:Boolean = true;
 
         public function UiDefinition()
         {
@@ -31,5 +34,5 @@
         }
 
     }
-}//package com.ankamagames.berilia.types.uiDefinition
+} com.ankamagames.berilia.types.uiDefinition
 

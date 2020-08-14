@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.console.debug.frames
+package com.ankamagames.dofus.console.debug.frames
 {
     import com.ankamagames.jerakine.messages.Frame;
     import flash.utils.ByteArray;
@@ -77,5 +77,5 @@
 
 
     }
-}//package com.ankamagames.dofus.console.debug.frames
+} com.ankamagames.dofus.console.debug.frames
 

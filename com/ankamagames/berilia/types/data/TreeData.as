@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.types.data
+package com.ankamagames.berilia.types.data
 {
     import __AS3__.vec.Vector;
     import __AS3__.vec.*;
@@ -6,7 +6,7 @@
     public class TreeData 
     {
 
-        public var value;
+        public var value:*;
         public var label:String;
         public var expend:Boolean;
         public var children:Vector.<TreeData>;
@@ -23,7 +23,7 @@
 
         public static function fromArray(a:Object):Vector.<TreeData>
         {
-            var root:TreeData = new (TreeData)(null, null, true);
+            var root:TreeData = new TreeData(null, null, true);
             root.children = _fromArray(a, root);
             return (root.children);
         }
@@ -44,7 +44,7 @@
                 {
                     children = null;
                 };
-                td = new (TreeData)(data, data.label, ((Object(data).hasOwnProperty("expend")) ? Object(data).expend : false));
+                td = new TreeData(data, data.label, ((Object(data).hasOwnProperty("expend")) ? Object(data).expend : false));
                 td.parent = parent;
                 td.children = _fromArray(children, td);
                 res.push(td);
@@ -57,12 +57,12 @@
         {
             if (this.parent)
             {
-                return ((this.parent.depth + 1));
+                return (this.parent.depth + 1);
             };
             return (0);
         }
 
 
     }
-}//package com.ankamagames.berilia.types.data
+} com.ankamagames.berilia.types.data
 

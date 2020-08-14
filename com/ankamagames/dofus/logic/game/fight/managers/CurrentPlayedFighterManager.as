@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.fight.managers
+package com.ankamagames.dofus.logic.game.fight.managers
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
@@ -11,23 +11,27 @@
     import com.ankamagames.dofus.misc.lists.FightHookList;
     import com.ankamagames.dofus.logic.game.common.managers.InventoryManager;
     import com.ankamagames.dofus.misc.lists.HookList;
+    import com.ankamagames.dofus.kernel.Kernel;
+    import com.ankamagames.dofus.logic.game.fight.frames.FightSpellCastFrame;
     import com.ankamagames.dofus.misc.lists.InventoryHookList;
     import com.ankamagames.dofus.network.enums.ShortcutBarEnum;
     import com.ankamagames.dofus.network.types.game.character.characteristic.CharacterCharacteristicsInformations;
+    import com.ankamagames.dofus.network.types.game.character.characteristic.CharacterBaseCharacteristic;
     import com.ankamagames.dofus.internalDatacenter.spells.SpellWrapper;
     import com.ankamagames.dofus.logic.game.fight.types.SpellCastInFightManager;
+    import com.ankamagames.dofus.logic.game.common.misc.SpellModificator;
     import com.ankamagames.dofus.network.types.game.character.characteristic.CharacterSpellModification;
     import com.ankamagames.dofus.datacenter.items.Weapon;
     import com.ankamagames.dofus.datacenter.spells.SpellState;
     import com.ankamagames.dofus.datacenter.spells.Spell;
     import com.ankamagames.dofus.datacenter.spells.SpellLevel;
+    import com.ankamagames.jerakine.data.I18n;
+    import com.ankamagames.dofus.network.ProtocolConstantsEnum;
+    import com.ankamagames.dofus.internalDatacenter.fight.FighterInformations;
     import com.ankamagames.dofus.datacenter.items.Item;
-    import com.ankamagames.dofus.logic.game.common.misc.SpellModificator;
     import com.ankamagames.dofus.network.enums.CharacterSpellModificationTypeEnum;
+    import com.ankamagames.dofus.internalDatacenter.DataEnum;
     import com.ankamagames.dofus.logic.game.fight.types.castSpellManager.SpellManager;
-    import com.ankamagames.dofus.logic.game.fight.frames.FightEntitiesFrame;
-    import com.ankamagames.dofus.network.types.game.context.fight.GameFightFighterInformations;
-    import com.ankamagames.dofus.logic.game.fight.miscs.FightReachableCellsMaker;
 
     public final class CurrentPlayedFighterManager 
     {
@@ -35,21 +39,13 @@
         private static const _log:Logger = Log.getLogger(getQualifiedClassName(CurrentPlayedFighterManager));
         private static var _self:CurrentPlayedFighterManager;
 
-        private var _currentFighterId:int = 0;
+        private var _currentFighterId:Number = 0;
         private var _currentFighterIsRealPlayer:Boolean = true;
-        private var _characteristicsInformationsList:Dictionary;
-        private var _spellCastInFightManagerList:Dictionary;
-        private var _currentSummonedCreature:Dictionary;
-        private var _currentSummonedBomb:Dictionary;
+        private var _characteristicsInformationsList:Dictionary = new Dictionary();
+        private var _spellCastInFightManagerList:Dictionary = new Dictionary();
+        private var _currentSummonedCreature:Dictionary = new Dictionary();
+        private var _currentSummonedBomb:Dictionary = new Dictionary();
 
-        public function CurrentPlayedFighterManager()
-        {
-            this._characteristicsInformationsList = new Dictionary();
-            this._spellCastInFightManagerList = new Dictionary();
-            this._currentSummonedCreature = new Dictionary();
-            this._currentSummonedBomb = new Dictionary();
-            super();
-        }
 
         public static function getInstance():CurrentPlayedFighterManager
         {
@@ -62,18 +58,18 @@
         }
 
 
-        public function get currentFighterId():int
+        public function get currentFighterId():Number
         {
             return (this._currentFighterId);
         }
 
-        public function set currentFighterId(id:int):void
+        public function set currentFighterId(id:Number):void
         {
             if (id == this._currentFighterId)
             {
                 return;
             };
-            var lastFighterId:int = this._currentFighterId;
+            var lastFighterId:Number = this._currentFighterId;
             this._currentFighterId = id;
             var playerManager:PlayedCharacterManager = PlayedCharacterManager.getInstance();
             this._currentFighterIsRealPlayer = (this._currentFighterId == playerManager.id);
@@ -81,29 +77,33 @@
             if (lastFighterEntity)
             {
                 lastFighterEntity.setCanSeeThrough(false);
+                lastFighterEntity.setCanWalkThrough(false);
+                lastFighterEntity.setCanWalkTo(false);
             };
             var currentFighterEntity:AnimatedCharacter = (DofusEntities.getEntity(this._currentFighterId) as AnimatedCharacter);
             if (currentFighterEntity)
             {
                 currentFighterEntity.setCanSeeThrough(true);
+                currentFighterEntity.setCanWalkThrough(true);
+                currentFighterEntity.setCanWalkTo(true);
             };
             if (playerManager.isFighting)
             {
                 this.updatePortrait(currentFighterEntity);
-                if (((!((playerManager.id == id))) || (lastFighterId)))
+                if (((!(playerManager.id == id)) || (lastFighterId)))
                 {
                     KernelEventsManager.getInstance().processCallback(FightHookList.SlaveStatsList, this.getCharacteristicsInformations());
                 };
             };
         }
 
-        public function checkPlayableEntity(id:int):Boolean
+        public function checkPlayableEntity(id:Number):Boolean
         {
             if (id == PlayedCharacterManager.getInstance().id)
             {
                 return (true);
             };
-            return (!((this._characteristicsInformationsList[id] == null)));
+            return (!(this._characteristicsInformationsList[id] == null));
         }
 
         public function isRealPlayer():Boolean
@@ -117,8 +117,13 @@
             var inventoryManager:InventoryManager = InventoryManager.getInstance();
             if (playerManager.spellsInventory != playerManager.playerSpellList)
             {
+                _log.info("Remise à jour de la liste des sorts du joueur");
                 playerManager.spellsInventory = playerManager.playerSpellList;
-                KernelEventsManager.getInstance().processCallback(HookList.SpellList, playerManager.playerSpellList);
+                KernelEventsManager.getInstance().processCallback(HookList.SpellListUpdate, playerManager.playerSpellList);
+                if (Kernel.getWorker().contains(FightSpellCastFrame))
+                {
+                    Kernel.getWorker().removeFrame(Kernel.getWorker().getFrame(FightSpellCastFrame));
+                };
             };
             if (inventoryManager.shortcutBarSpells != playerManager.playerShortcutList)
             {
@@ -127,12 +132,12 @@
             };
         }
 
-        public function setCharacteristicsInformations(id:int, characteristics:CharacterCharacteristicsInformations):void
+        public function setCharacteristicsInformations(id:Number, characteristics:CharacterCharacteristicsInformations):void
         {
             this._characteristicsInformationsList[id] = characteristics;
         }
 
-        public function getCharacteristicsInformations(id:int=0):CharacterCharacteristicsInformations
+        public function getCharacteristicsInformations(id:Number=0):CharacterCharacteristicsInformations
         {
             var player:PlayedCharacterManager = PlayedCharacterManager.getInstance();
             if (id)
@@ -148,6 +153,25 @@
                 return (player.characteristics);
             };
             return (this._characteristicsInformationsList[this._currentFighterId]);
+        }
+
+        public function getBasicTurnDuration():int
+        {
+            var carac:CharacterCharacteristicsInformations;
+            var ap:CharacterBaseCharacteristic;
+            var mp:CharacterBaseCharacteristic;
+            var totalTurnDurationInSeconds:int = 15;
+            if (this._characteristicsInformationsList)
+            {
+                carac = this._characteristicsInformationsList[this._currentFighterId];
+                if (carac)
+                {
+                    ap = carac.actionPoints;
+                    mp = carac.movementPoints;
+                    totalTurnDurationInSeconds = (totalTurnDurationInSeconds + (((((ap.base + ap.additionnal) + ap.objectsAndMountBonus) + mp.base) + mp.additionnal) + mp.objectsAndMountBonus));
+                };
+            };
+            return (totalTurnDurationInSeconds);
         }
 
         public function getSpellById(spellId:uint):SpellWrapper
@@ -168,7 +192,7 @@
         public function getSpellCastManager():SpellCastInFightManager
         {
             var scm:SpellCastInFightManager = this._spellCastInFightManagerList[this._currentFighterId];
-            if (!(scm))
+            if (!scm)
             {
                 scm = new SpellCastInFightManager(this._currentFighterId);
                 this._spellCastInFightManagerList[this._currentFighterId] = scm;
@@ -176,10 +200,10 @@
             return (scm);
         }
 
-        public function getSpellCastManagerById(id:int):SpellCastInFightManager
+        public function getSpellCastManagerById(id:Number):SpellCastInFightManager
         {
             var scm:SpellCastInFightManager = this._spellCastInFightManagerList[id];
-            if (!(scm))
+            if (!scm)
             {
                 scm = new SpellCastInFightManager(id);
                 this._spellCastInFightManagerList[id] = scm;
@@ -187,52 +211,99 @@
             return (scm);
         }
 
-        public function canCastThisSpell(spellId:uint, lvl:uint, pTargetId:int=2147483647):Boolean
+        public function canCastThisSpell(spellId:uint, lvl:uint, pTargetId:Number=0, result:Array=null):Boolean
         {
             var thisSpell:SpellWrapper;
+            var spellName:String;
             var spellKnown:SpellWrapper;
             var apCost:uint;
             var maxCastPerTurn:uint;
+            var spellModifs:SpellModificator;
             var spellModification:CharacterSpellModification;
             var state:int;
             var stateRequired:int;
             var weapon:Weapon;
             var currentState:SpellState;
             var weapon2:Weapon;
-            var _local_23:uint;
+            var stateReq:SpellState;
+            var cooldown:int;
+            var numberCastOnTarget:uint;
+            var bonus:int;
             var spell:Spell = Spell.getSpellById(spellId);
             var spellLevel:SpellLevel = spell.getSpellLevel(lvl);
             if (spellLevel == null)
             {
+                if (result)
+                {
+                    result[0] = I18n.getUiText("ui.fightAutomsg.spellcast.noSpell", [spellName]);
+                };
                 return (false);
             };
             var player:PlayedCharacterManager = PlayedCharacterManager.getInstance();
+            if (spellId == 0)
+            {
+                if (((this._currentFighterIsRealPlayer) && (player.currentWeapon)))
+                {
+                    spellName = player.currentWeapon.name;
+                }
+                else
+                {
+                    spellName = spell.name;
+                };
+            }
+            else
+            {
+                spellName = (((("{spell," + spellId) + ",") + lvl) + "}");
+            };
             if (spellLevel.minPlayerLevel > player.infos.level)
             {
+                if (result)
+                {
+                    if (player.infos.level > ProtocolConstantsEnum.MAX_LEVEL)
+                    {
+                        result[0] = I18n.getUiText("ui.fightAutomsg.spellcast.prestigeTooLow", [spellName, (player.infos.level - ProtocolConstantsEnum.MAX_LEVEL)]);
+                    }
+                    else
+                    {
+                        result[0] = I18n.getUiText("ui.fightAutomsg.spellcast.levelTooLow", [spellName, player.infos.level]);
+                    };
+                };
                 return (false);
             };
             for each (spellKnown in player.spellsInventory)
             {
-                if (spellKnown.id == spellId)
+                if (((spellKnown) && (spellKnown.id == spellId)))
                 {
                     thisSpell = spellKnown;
                 };
             };
-            if (!(thisSpell))
+            if (!thisSpell)
             {
+                if (result)
+                {
+                    result[0] = I18n.getUiText("ui.fightAutomsg.spellcast.notAvailable", [spellName]);
+                };
                 return (false);
             };
             var characteristics:CharacterCharacteristicsInformations = this.getCharacteristicsInformations();
-            if (!(characteristics))
+            if (!characteristics)
             {
+                if (result)
+                {
+                    result[0] = I18n.getUiText("ui.fightAutomsg.spellcast.notAvailableWithoutStats", [spellName]);
+                };
                 return (false);
             };
-            var currentPA:int = characteristics.actionPointsCurrent;
-            if ((((spellId == 0)) && (!((player.currentWeapon == null)))))
+            var currentPA:int = new FighterInformations(this.currentFighterId).actionPoints;
+            if (((spellId == 0) && (!(player.currentWeapon == null))))
             {
                 weapon = (Item.getItemById(player.currentWeapon.objectGID) as Weapon);
-                if (!(weapon))
+                if (!weapon)
                 {
+                    if (result)
+                    {
+                        result[0] = I18n.getUiText("ui.fightAutomsg.spellcast.notAWeapon", [spellName]);
+                    };
                     return (false);
                 };
                 apCost = weapon.apCost;
@@ -243,11 +314,14 @@
                 apCost = thisSpell.apCost;
                 maxCastPerTurn = thisSpell.maxCastPerTurn;
             };
-            var spellModifs:SpellModificator = new SpellModificator();
             for each (spellModification in characteristics.spellModifications)
             {
                 if (spellModification.spellId == spellId)
                 {
+                    if (!spellModifs)
+                    {
+                        spellModifs = new SpellModificator();
+                    };
                     switch (spellModification.modificationType)
                     {
                         case CharacterSpellModificationTypeEnum.AP_COST:
@@ -270,43 +344,67 @@
             };
             if (apCost > currentPA)
             {
+                if (result)
+                {
+                    result[0] = I18n.getUiText("ui.fightAutomsg.spellcast.needAP", [spellName, apCost]);
+                };
                 return (false);
             };
             var states:Array = FightersStateManager.getInstance().getStates(this._currentFighterId);
-            if (!(states))
+            if (!states)
             {
                 states = new Array();
             };
             for each (state in states)
             {
                 currentState = SpellState.getSpellStateById(state);
-                if (((currentState.preventsFight) && ((spellId == 0))))
+                if (((currentState.preventsFight) && (spellId == 0)))
                 {
+                    if (result)
+                    {
+                        result[0] = I18n.getUiText("ui.fightAutomsg.spellcast.stateForbidden", [spellName, currentState.name]);
+                    };
                     return (false);
                 };
-                if ((((currentState.id == 101)) && ((spellId == 0))))
+                if (((currentState.id == DataEnum.SPELL_STATE_ARCHER) && (spellId == 0)))
                 {
                     weapon2 = (Item.getItemById(player.currentWeapon.objectGID) as Weapon);
-                    if (weapon2.typeId != 2)
+                    if (weapon2.typeId != DataEnum.ITEM_TYPE_BOW)
                     {
+                        if (result)
+                        {
+                            result[0] = I18n.getUiText("ui.fightAutomsg.spellcast.stateForbidden", [spellName, currentState.name]);
+                        };
                         return (false);
                     };
                 };
-                if (((spellLevel.statesForbidden) && (!((spellLevel.statesForbidden.indexOf(state) == -1)))))
+                if (((spellLevel.statesForbidden) && (!(spellLevel.statesForbidden.indexOf(state) == -1))))
                 {
+                    if (result)
+                    {
+                        result[0] = I18n.getUiText("ui.fightAutomsg.spellcast.stateForbidden", [spellName, currentState.name]);
+                    };
                     return (false);
                 };
                 if (currentState.preventsSpellCast)
                 {
-                    if (spellLevel.statesRequired)
+                    if (((spellLevel.statesRequired) || (spellLevel.statesAuthorized)))
                     {
-                        if (spellLevel.statesRequired.indexOf(state) == -1)
+                        if (((((!(spellLevel.statesRequired)) || (spellLevel.statesRequired.length == 0)) || (spellLevel.statesRequired.indexOf(state) == -1)) && (((!(spellLevel.statesAuthorized)) || (spellLevel.statesAuthorized.length == 0)) || (spellLevel.statesAuthorized.indexOf(state) == -1))))
                         {
+                            if (result)
+                            {
+                                result[0] = I18n.getUiText("ui.fightAutomsg.spellcast.stateForbidden", [spellName, currentState.name]);
+                            };
                             return (false);
                         };
                     }
                     else
                     {
+                        if (result)
+                        {
+                            result[0] = I18n.getUiText("ui.fightAutomsg.spellcast.stateForbidden", [spellName, currentState.name]);
+                        };
                         return (false);
                     };
                 };
@@ -315,39 +413,99 @@
             {
                 if (states.indexOf(stateRequired) == -1)
                 {
+                    stateReq = SpellState.getSpellStateById(stateRequired);
+                    if (result)
+                    {
+                        result[0] = I18n.getUiText("ui.fightAutomsg.spellcast.stateRequired", [spellName, stateReq.name]);
+                    };
                     return (false);
                 };
             };
-            if (((spellLevel.canSummon) && (!(this.canSummon()))))
+            if ((((!(spell.bypassSummoningLimit)) && (spellLevel.canSummon)) && (!(this.canSummon()))))
             {
+                if (result)
+                {
+                    result[0] = I18n.getUiText("ui.fightAutomsg.spellcast.tooManySummon", [spellName]);
+                };
                 return (false);
             };
             if (((spellLevel.canBomb) && (!(this.canBomb()))))
             {
+                if (result)
+                {
+                    result[0] = I18n.getUiText("ui.fightAutomsg.spellcast.tooManyBomb", [spellName]);
+                };
                 return (false);
             };
-            if (!(player.isFighting))
+            if (!player.isFighting)
             {
+                if (result)
+                {
+                    result[0] = I18n.getUiText("ui.fightAutomsg.spellcast.available", [spellName]);
+                };
                 return (true);
             };
             var spellCastManager:SpellCastInFightManager = this.getSpellCastManager();
             var spellManager:SpellManager = spellCastManager.getSpellManagerBySpellId(spellId);
+            if (spellLevel.initialCooldown > 0)
+            {
+                if (spellLevel.initialCooldown > spellCastManager.currentTurn)
+                {
+                    if (spellManager === null)
+                    {
+                        spellCastManager.resetSpellInitialCooldown(spellLevel.spellId);
+                    };
+                    return (false);
+                };
+            };
             if (spellManager == null)
             {
+                if (result)
+                {
+                    result[0] = I18n.getUiText("ui.fightAutomsg.spellcast.available", [spellName]);
+                };
                 return (true);
             };
-            if ((((maxCastPerTurn <= spellManager.numberCastThisTurn)) && ((maxCastPerTurn > 0))))
+            if (((maxCastPerTurn <= spellManager.numberCastThisTurn) && (maxCastPerTurn > 0)))
             {
+                if (result)
+                {
+                    result[0] = I18n.getUiText("ui.fightAutomsg.spellcast.castPerTurn", [spellName, maxCastPerTurn]);
+                };
                 return (false);
             };
-            if ((((spellManager.cooldown > 0)) || ((thisSpell.actualCooldown > 0))))
+            if (((spellManager.cooldown > 0) || (thisSpell.actualCooldown > 0)))
             {
+                cooldown = Math.max(spellManager.cooldown, thisSpell.actualCooldown);
+                if (result)
+                {
+                    if (cooldown == 63)
+                    {
+                        result[0] = I18n.getUiText("ui.fightAutomsg.spellcast.noCast", [spellName]);
+                    }
+                    else
+                    {
+                        result[0] = I18n.getUiText("ui.fightAutomsg.spellcast.cooldown", [spellName, cooldown]);
+                    };
+                };
                 return (false);
             };
-            _local_23 = spellManager.getCastOnEntity(pTargetId);
-            if (((((spellLevel.maxCastPerTarget + spellModifs.getTotalBonus(spellModifs.maxCastPerTarget)) <= _local_23)) && ((spellLevel.maxCastPerTarget > 0))))
+            if (pTargetId != 0)
             {
-                return (false);
+                numberCastOnTarget = spellManager.getCastOnEntity(pTargetId);
+                bonus = ((spellModifs) ? spellModifs.getTotalBonus(spellModifs.maxCastPerTarget) : 0);
+                if ((((spellLevel.maxCastPerTarget + bonus) <= numberCastOnTarget) && (spellLevel.maxCastPerTarget > 0)))
+                {
+                    if (result)
+                    {
+                        result[0] = I18n.getUiText("ui.fightAutomsg.spellcast.castPerTarget", [spellName]);
+                    };
+                    return (false);
+                };
+            };
+            if (result)
+            {
+                result[0] = I18n.getUiText("ui.fightAutomsg.spellcast.available", [spellName]);
             };
             return (true);
         }
@@ -375,7 +533,7 @@
             {
                 for each (spellModification in characteristics.spellModifications)
                 {
-                    if ((((spellModification.spellId == spellId)) && ((spellModification.modificationType == carac))))
+                    if (((spellModification.spellId == spellId) && (spellModification.modificationType == carac)))
                     {
                         return (spellModification);
                     };
@@ -384,64 +542,53 @@
             return (null);
         }
 
-        public function canPlay():Boolean
+        public function getCurrentSummonedCreature(id:Number=0):uint
         {
-            var _local_5:FightEntitiesFrame;
-            var _local_6:GameFightFighterInformations;
-            var _local_7:FightReachableCellsMaker;
-            var _local_8:PlayedCharacterManager;
-            var _local_9:SpellWrapper;
-            var _local_10:Weapon;
-            return (true);
-        }
-
-        public function getCurrentSummonedCreature(id:int=0):uint
-        {
-            if (!(id))
+            if (!id)
             {
                 id = this._currentFighterId;
             };
             return (this._currentSummonedCreature[id]);
         }
 
-        public function setCurrentSummonedCreature(value:uint, id:int=0):void
+        public function setCurrentSummonedCreature(value:uint, id:Number=0):void
         {
-            if (!(id))
+            if (!id)
             {
                 id = this._currentFighterId;
             };
             this._currentSummonedCreature[id] = value;
         }
 
-        public function getCurrentSummonedBomb(id:int=0):uint
+        public function getCurrentSummonedBomb(id:Number=0):uint
         {
-            if (!(id))
+            if (!id)
             {
                 id = this._currentFighterId;
             };
             return (this._currentSummonedBomb[id]);
         }
 
-        public function setCurrentSummonedBomb(value:uint, id:int=0):void
+        public function setCurrentSummonedBomb(value:uint, id:Number=0):void
         {
-            if (!(id))
+            if (!id)
             {
                 id = this._currentFighterId;
             };
             this._currentSummonedBomb[id] = value;
         }
 
-        public function resetSummonedCreature(id:int=0):void
+        public function resetSummonedCreature(id:Number=0):void
         {
             this.setCurrentSummonedCreature(0, id);
         }
 
-        public function addSummonedCreature(id:int=0):void
+        public function addSummonedCreature(id:Number=0):void
         {
             this.setCurrentSummonedCreature((this.getCurrentSummonedCreature(id) + 1), id);
         }
 
-        public function removeSummonedCreature(id:int=0):void
+        public function removeSummonedCreature(id:Number=0):void
         {
             if (this.getCurrentSummonedCreature(id) > 0)
             {
@@ -449,28 +596,28 @@
             };
         }
 
-        public function getMaxSummonedCreature(id:int=0):uint
+        public function getMaxSummonedCreature(id:Number=0):uint
         {
             var characteristics:CharacterCharacteristicsInformations = this.getCharacteristicsInformations(id);
-            return ((((characteristics.summonableCreaturesBoost.base + characteristics.summonableCreaturesBoost.objectsAndMountBonus) + characteristics.summonableCreaturesBoost.alignGiftBonus) + characteristics.summonableCreaturesBoost.contextModif));
+            return (((characteristics.summonableCreaturesBoost.base + characteristics.summonableCreaturesBoost.objectsAndMountBonus) + characteristics.summonableCreaturesBoost.alignGiftBonus) + characteristics.summonableCreaturesBoost.contextModif);
         }
 
-        public function canSummon(id:int=0):Boolean
+        public function canSummon(id:Number=0):Boolean
         {
-            return ((this.getMaxSummonedCreature(id) > this.getCurrentSummonedCreature(id)));
+            return (this.getMaxSummonedCreature(id) > this.getCurrentSummonedCreature(id));
         }
 
-        public function resetSummonedBomb(id:int=0):void
+        public function resetSummonedBomb(id:Number=0):void
         {
             this.setCurrentSummonedBomb(0, id);
         }
 
-        public function addSummonedBomb(id:int=0):void
+        public function addSummonedBomb(id:Number=0):void
         {
             this.setCurrentSummonedBomb((this.getCurrentSummonedBomb(id) + 1), id);
         }
 
-        public function removeSummonedBomb(id:int=0):void
+        public function removeSummonedBomb(id:Number=0):void
         {
             if (this.getCurrentSummonedBomb(id) > 0)
             {
@@ -478,9 +625,9 @@
             };
         }
 
-        public function canBomb(id:int=0):Boolean
+        public function canBomb(id:Number=0):Boolean
         {
-            return ((this.getMaxSummonedBomb() > this.getCurrentSummonedBomb(id)));
+            return (this.getMaxSummonedBomb() > this.getCurrentSummonedBomb(id));
         }
 
         private function getMaxSummonedBomb():uint
@@ -505,5 +652,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.fight.managers
+} com.ankamagames.dofus.logic.game.fight.managers
 

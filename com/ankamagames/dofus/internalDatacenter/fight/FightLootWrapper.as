@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.internalDatacenter.fight
+package com.ankamagames.dofus.internalDatacenter.fight
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.dofus.internalDatacenter.items.ItemWrapper;
@@ -10,7 +10,7 @@
     {
 
         public var objects:Array;
-        public var kamas:uint;
+        public var kamas:Number = 0;
 
         public function FightLootWrapper(loot:FightLoot)
         {
@@ -25,5 +25,5 @@
         }
 
     }
-}//package com.ankamagames.dofus.internalDatacenter.fight
+} com.ankamagames.dofus.internalDatacenter.fight
 

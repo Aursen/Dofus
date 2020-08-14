@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.types.data
+package com.ankamagames.berilia.types.data
 {
     import com.ankamagames.jerakine.interfaces.IModuleUtil;
     import flash.utils.Dictionary;
@@ -58,7 +58,7 @@
 
         public function hasDefinition(ui:UiData):Boolean
         {
-            return (!((this._uiListPosition[ui.name] == null)));
+            return (!(this._uiListPosition[ui.name] == null));
         }
 
         public function getDefinition(ui:UiData):UiDefinition
@@ -76,7 +76,7 @@
 
         public function addUiDefinition(definition:UiDefinition, ui:UiData):void
         {
-            if (!(this._output))
+            if (!this._output)
             {
                 throw (new Error("Call method 'create' before using this method"));
             };
@@ -86,7 +86,7 @@
         public function flush(output:IDataOutput):void
         {
             var uiId:String;
-            if (!(this._output))
+            if (!this._output)
             {
                 throw (new Error("Call method 'create' before using this method"));
             };
@@ -143,5 +143,5 @@
 
 
     }
-}//package com.ankamagames.berilia.types.data
+} com.ankamagames.berilia.types.data
 

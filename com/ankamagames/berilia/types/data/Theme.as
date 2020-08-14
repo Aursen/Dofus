@@ -1,21 +1,51 @@
-﻿package com.ankamagames.berilia.types.data
+package com.ankamagames.berilia.types.data
 {
+    import com.ankamagames.jerakine.types.Uri;
+
     public class Theme 
     {
 
+        public static const TYPE_OLD:uint = 0;
+        public static const TYPE_NEW:uint = 1;
+
+        public var id:String;
         public var name:String;
+        public var author:String;
         public var description:String;
         public var previewUri:String;
         public var fileName:String;
+        public var type:uint;
+        public var folderFullPath:String;
+        public var official:Boolean;
+        public var version:Array;
+        public var dofusVersion:Array;
+        public var creationDate:String;
+        public var modificationDate:String;
+        public var data:Object;
 
-        public function Theme(fileName:String, name:String, description:String="", previewUri:String="")
+        public function Theme(id:String, fileName:String, folderFullPath:String, name:String, author:String, description:String="", previewUri:String="", _arg_8:uint=1, official:Boolean=false, version:Array=null, dofusVersion:Array=null, creationDate:String="", modificationDate:String="")
         {
+            this.id = id;
             this.name = name;
+            this.author = author;
             this.description = description;
             this.previewUri = previewUri;
             this.fileName = fileName;
+            this.type = _arg_8;
+            this.folderFullPath = folderFullPath;
+            this.official = official;
+            this.version = ((version == null) ? new Array(0, 0, 0) : version);
+            this.dofusVersion = ((dofusVersion == null) ? new Array(0, 0, 0) : dofusVersion);
+            this.creationDate = creationDate;
+            this.modificationDate = modificationDate;
         }
 
+        public function get previewRealUri():Uri
+        {
+            return (new Uri(((this.folderFullPath + "bitmap/") + this.previewUri), false));
+        }
+
+
     }
-}//package com.ankamagames.berilia.types.data
+} com.ankamagames.berilia.types.data
 

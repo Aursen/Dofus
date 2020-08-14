@@ -1,9 +1,10 @@
-﻿package com.ankamagames.dofus.network.messages.game.basic
+package com.ankamagames.dofus.network.messages.game.basic
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
     import __AS3__.vec.Vector;
     import com.ankamagames.dofus.network.types.game.social.AbstractSocialGroupInfos;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
@@ -12,7 +13,6 @@
     import com.ankamagames.dofus.network.ProtocolTypeManager;
     import __AS3__.vec.*;
 
-    [Trusted]
     public class BasicWhoIsMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -24,17 +24,15 @@
         public var accountNickname:String = "";
         public var accountId:uint = 0;
         public var playerName:String = "";
-        public var playerId:uint = 0;
+        public var playerId:Number = 0;
         public var areaId:int = 0;
-        public var socialGroups:Vector.<AbstractSocialGroupInfos>;
+        public var serverId:int = 0;
+        public var originServerId:int = 0;
+        public var socialGroups:Vector.<AbstractSocialGroupInfos> = new Vector.<AbstractSocialGroupInfos>();
         public var verbose:Boolean = false;
         public var playerState:uint = 99;
+        private var _socialGroupstree:FuncTree;
 
-        public function BasicWhoIsMessage()
-        {
-            this.socialGroups = new Vector.<AbstractSocialGroupInfos>();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
@@ -46,7 +44,7 @@
             return (180);
         }
 
-        public function initBasicWhoIsMessage(self:Boolean=false, position:int=-1, accountNickname:String="", accountId:uint=0, playerName:String="", playerId:uint=0, areaId:int=0, socialGroups:Vector.<AbstractSocialGroupInfos>=null, verbose:Boolean=false, playerState:uint=99):BasicWhoIsMessage
+        public function initBasicWhoIsMessage(self:Boolean=false, position:int=-1, accountNickname:String="", accountId:uint=0, playerName:String="", playerId:Number=0, areaId:int=0, serverId:int=0, originServerId:int=0, socialGroups:Vector.<AbstractSocialGroupInfos>=null, verbose:Boolean=false, playerState:uint=99):BasicWhoIsMessage
         {
             this.self = self;
             this.position = position;
@@ -55,6 +53,8 @@
             this.playerName = playerName;
             this.playerId = playerId;
             this.areaId = areaId;
+            this.serverId = serverId;
+            this.originServerId = originServerId;
             this.socialGroups = socialGroups;
             this.verbose = verbose;
             this.playerState = playerState;
@@ -71,6 +71,8 @@
             this.playerName = "";
             this.playerId = 0;
             this.areaId = 0;
+            this.serverId = 0;
+            this.originServerId = 0;
             this.socialGroups = new Vector.<AbstractSocialGroupInfos>();
             this.verbose = false;
             this.playerState = 99;
@@ -87,6 +89,14 @@
         override public function unpack(input:ICustomDataInput, length:uint):void
         {
             this.deserialize(input);
+        }
+
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
         }
 
         public function serialize(output:ICustomDataOutput):void
@@ -108,19 +118,21 @@
             };
             output.writeInt(this.accountId);
             output.writeUTF(this.playerName);
-            if (this.playerId < 0)
+            if (((this.playerId < 0) || (this.playerId > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.playerId) + ") on element playerId.")));
             };
-            output.writeVarInt(this.playerId);
+            output.writeVarLong(this.playerId);
             output.writeShort(this.areaId);
+            output.writeShort(this.serverId);
+            output.writeShort(this.originServerId);
             output.writeShort(this.socialGroups.length);
-            var _i8:uint;
-            while (_i8 < this.socialGroups.length)
+            var _i10:uint;
+            while (_i10 < this.socialGroups.length)
             {
-                output.writeShort((this.socialGroups[_i8] as AbstractSocialGroupInfos).getTypeId());
-                (this.socialGroups[_i8] as AbstractSocialGroupInfos).serialize(output);
-                _i8++;
+                output.writeShort((this.socialGroups[_i10] as AbstractSocialGroupInfos).getTypeId());
+                (this.socialGroups[_i10] as AbstractSocialGroupInfos).serialize(output);
+                _i10++;
             };
             output.writeByte(this.playerState);
         }
@@ -132,35 +144,126 @@
 
         public function deserializeAs_BasicWhoIsMessage(input:ICustomDataInput):void
         {
-            var _id8:uint;
-            var _item8:AbstractSocialGroupInfos;
+            var _id10:uint;
+            var _item10:AbstractSocialGroupInfos;
+            this.deserializeByteBoxes(input);
+            this._positionFunc(input);
+            this._accountNicknameFunc(input);
+            this._accountIdFunc(input);
+            this._playerNameFunc(input);
+            this._playerIdFunc(input);
+            this._areaIdFunc(input);
+            this._serverIdFunc(input);
+            this._originServerIdFunc(input);
+            var _socialGroupsLen:uint = input.readUnsignedShort();
+            var _i10:uint;
+            while (_i10 < _socialGroupsLen)
+            {
+                _id10 = input.readUnsignedShort();
+                _item10 = ProtocolTypeManager.getInstance(AbstractSocialGroupInfos, _id10);
+                _item10.deserialize(input);
+                this.socialGroups.push(_item10);
+                _i10++;
+            };
+            this._playerStateFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_BasicWhoIsMessage(tree);
+        }
+
+        public function deserializeAsyncAs_BasicWhoIsMessage(tree:FuncTree):void
+        {
+            tree.addChild(this.deserializeByteBoxes);
+            tree.addChild(this._positionFunc);
+            tree.addChild(this._accountNicknameFunc);
+            tree.addChild(this._accountIdFunc);
+            tree.addChild(this._playerNameFunc);
+            tree.addChild(this._playerIdFunc);
+            tree.addChild(this._areaIdFunc);
+            tree.addChild(this._serverIdFunc);
+            tree.addChild(this._originServerIdFunc);
+            this._socialGroupstree = tree.addChild(this._socialGroupstreeFunc);
+            tree.addChild(this._playerStateFunc);
+        }
+
+        private function deserializeByteBoxes(input:ICustomDataInput):void
+        {
             var _box0:uint = input.readByte();
             this.self = BooleanByteWrapper.getFlag(_box0, 0);
             this.verbose = BooleanByteWrapper.getFlag(_box0, 1);
+        }
+
+        private function _positionFunc(input:ICustomDataInput):void
+        {
             this.position = input.readByte();
+        }
+
+        private function _accountNicknameFunc(input:ICustomDataInput):void
+        {
             this.accountNickname = input.readUTF();
+        }
+
+        private function _accountIdFunc(input:ICustomDataInput):void
+        {
             this.accountId = input.readInt();
             if (this.accountId < 0)
             {
                 throw (new Error((("Forbidden value (" + this.accountId) + ") on element of BasicWhoIsMessage.accountId.")));
             };
+        }
+
+        private function _playerNameFunc(input:ICustomDataInput):void
+        {
             this.playerName = input.readUTF();
-            this.playerId = input.readVarUhInt();
-            if (this.playerId < 0)
+        }
+
+        private function _playerIdFunc(input:ICustomDataInput):void
+        {
+            this.playerId = input.readVarUhLong();
+            if (((this.playerId < 0) || (this.playerId > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.playerId) + ") on element of BasicWhoIsMessage.playerId.")));
             };
+        }
+
+        private function _areaIdFunc(input:ICustomDataInput):void
+        {
             this.areaId = input.readShort();
-            var _socialGroupsLen:uint = input.readUnsignedShort();
-            var _i8:uint;
-            while (_i8 < _socialGroupsLen)
+        }
+
+        private function _serverIdFunc(input:ICustomDataInput):void
+        {
+            this.serverId = input.readShort();
+        }
+
+        private function _originServerIdFunc(input:ICustomDataInput):void
+        {
+            this.originServerId = input.readShort();
+        }
+
+        private function _socialGroupstreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
             {
-                _id8 = input.readUnsignedShort();
-                _item8 = ProtocolTypeManager.getInstance(AbstractSocialGroupInfos, _id8);
-                _item8.deserialize(input);
-                this.socialGroups.push(_item8);
-                _i8++;
+                this._socialGroupstree.addChild(this._socialGroupsFunc);
+                i++;
             };
+        }
+
+        private function _socialGroupsFunc(input:ICustomDataInput):void
+        {
+            var _id:uint = input.readUnsignedShort();
+            var _item:AbstractSocialGroupInfos = ProtocolTypeManager.getInstance(AbstractSocialGroupInfos, _id);
+            _item.deserialize(input);
+            this.socialGroups.push(_item);
+        }
+
+        private function _playerStateFunc(input:ICustomDataInput):void
+        {
             this.playerState = input.readByte();
             if (this.playerState < 0)
             {
@@ -170,5 +273,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.basic
+} com.ankamagames.dofus.network.messages.game.basic
 

@@ -1,10 +1,10 @@
-﻿package com.ankamagames.dofus.network.types.game.data.items.effects
+package com.ankamagames.dofus.network.types.game.data.items.effects
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class ObjectEffectInteger extends ObjectEffect implements INetworkType 
     {
 
@@ -43,7 +43,7 @@
             {
                 throw (new Error((("Forbidden value (" + this.value) + ") on element value.")));
             };
-            output.writeVarShort(this.value);
+            output.writeVarInt(this.value);
         }
 
         override public function deserialize(input:ICustomDataInput):void
@@ -54,7 +54,23 @@
         public function deserializeAs_ObjectEffectInteger(input:ICustomDataInput):void
         {
             super.deserialize(input);
-            this.value = input.readVarUhShort();
+            this._valueFunc(input);
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_ObjectEffectInteger(tree);
+        }
+
+        public function deserializeAsyncAs_ObjectEffectInteger(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._valueFunc);
+        }
+
+        private function _valueFunc(input:ICustomDataInput):void
+        {
+            this.value = input.readVarUhInt();
             if (this.value < 0)
             {
                 throw (new Error((("Forbidden value (" + this.value) + ") on element of ObjectEffectInteger.value.")));
@@ -63,5 +79,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.data.items.effects
+} com.ankamagames.dofus.network.types.game.data.items.effects
 

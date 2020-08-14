@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.logger.targets
+package com.ankamagames.jerakine.logger.targets
 {
     import com.ankamagames.jerakine.logger.LogEvent;
 
@@ -29,5 +29,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.logger.targets
+} com.ankamagames.jerakine.logger.targets
 

@@ -1,9 +1,10 @@
-﻿package com.ankamagames.berilia.types.graphic
+package com.ankamagames.berilia.types.graphic
 {
     import flash.geom.Point;
+    import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.berilia.types.uiDefinition.SizeElement;
 
-    public class GraphicSize extends Point 
+    public class GraphicSize extends Point implements IDataCenter 
     {
 
         public static const SIZE_PIXEL:uint = 0;
@@ -43,12 +44,12 @@
         public function toSizeElement():SizeElement
         {
             var se:SizeElement = new SizeElement();
-            if (!(isNaN(x)))
+            if (!isNaN(x))
             {
                 se.x = x;
                 se.xUnit = this._nXUnit;
             };
-            if (!(isNaN(y)))
+            if (!isNaN(y))
             {
                 se.y = y;
                 se.yUnit = this._nYUnit;
@@ -58,5 +59,5 @@
 
 
     }
-}//package com.ankamagames.berilia.types.graphic
+} com.ankamagames.berilia.types.graphic
 

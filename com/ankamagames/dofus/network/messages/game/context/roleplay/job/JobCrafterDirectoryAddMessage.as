@@ -1,27 +1,23 @@
-﻿package com.ankamagames.dofus.network.messages.game.context.roleplay.job
+package com.ankamagames.dofus.network.messages.game.context.roleplay.job
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
     import com.ankamagames.dofus.network.types.game.context.roleplay.job.JobCrafterDirectoryListEntry;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
 
-    [Trusted]
     public class JobCrafterDirectoryAddMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 5651;
 
         private var _isInitialized:Boolean = false;
-        public var listEntry:JobCrafterDirectoryListEntry;
+        public var listEntry:JobCrafterDirectoryListEntry = new JobCrafterDirectoryListEntry();
+        private var _listEntrytree:FuncTree;
 
-        public function JobCrafterDirectoryAddMessage()
-        {
-            this.listEntry = new JobCrafterDirectoryListEntry();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
@@ -58,6 +54,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_JobCrafterDirectoryAddMessage(output);
@@ -79,7 +83,23 @@
             this.listEntry.deserialize(input);
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_JobCrafterDirectoryAddMessage(tree);
+        }
+
+        public function deserializeAsyncAs_JobCrafterDirectoryAddMessage(tree:FuncTree):void
+        {
+            this._listEntrytree = tree.addChild(this._listEntrytreeFunc);
+        }
+
+        private function _listEntrytreeFunc(input:ICustomDataInput):void
+        {
+            this.listEntry = new JobCrafterDirectoryListEntry();
+            this.listEntry.deserializeAsync(this._listEntrytree);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.context.roleplay.job
+} com.ankamagames.dofus.network.messages.game.context.roleplay.job
 

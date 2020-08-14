@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.utils.crypto
+package com.ankamagames.jerakine.utils.crypto
 {
     import flash.utils.ByteArray;
     import com.hurlant.util.der.PEM;
@@ -18,5 +18,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.utils.crypto
+} com.ankamagames.jerakine.utils.crypto
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.logger
+package com.ankamagames.jerakine.logger
 {
     public class LogTargetFilter 
     {
@@ -13,5 +13,5 @@
         }
 
     }
-}//package com.ankamagames.jerakine.logger
+} com.ankamagames.jerakine.logger
 

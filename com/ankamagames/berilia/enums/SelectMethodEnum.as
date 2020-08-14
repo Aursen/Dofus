@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.enums
+package com.ankamagames.berilia.enums
 {
     public class SelectMethodEnum 
     {
@@ -15,8 +15,10 @@
         public static const CTRL_DOUBLE_CLICK:uint = 9;
         public static const ALT_DOUBLE_CLICK:uint = 10;
         public static const SEARCH:uint = 11;
+        public static const FIRST_ITEM:uint = 12;
+        public static const LAST_ITEM:uint = 13;
 
 
     }
-}//package com.ankamagames.berilia.enums
+} com.ankamagames.berilia.enums
 

@@ -1,6 +1,5 @@
-﻿package com.ankamagames.dofus.network.enums
+package com.ankamagames.dofus.network.enums
 {
-    [Trusted]
     public class CharacterRemodelingEnum 
     {
 
@@ -10,8 +9,10 @@
         public static const CHARACTER_REMODELING_COSMETIC:uint = 4;
         public static const CHARACTER_REMODELING_BREED:uint = 8;
         public static const CHARACTER_REMODELING_GENDER:uint = 16;
+        public static const CHARACTER_OPT_REMODELING_NAME:uint = 32;
+        public static const CHARACTER_OPT_REMODELING_ALL:uint = 64;
 
 
     }
-}//package com.ankamagames.dofus.network.enums
+} com.ankamagames.dofus.network.enums
 

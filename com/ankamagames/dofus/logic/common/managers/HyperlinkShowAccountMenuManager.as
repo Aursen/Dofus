@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.common.managers
+package com.ankamagames.dofus.logic.common.managers
 {
     import com.ankamagames.berilia.managers.UiModuleManager;
     import com.ankamagames.berilia.factories.MenusFactory;
@@ -7,16 +7,17 @@
     {
 
 
-        public static function showAccountMenu(accountName:String, accountId:int):void
+        public static function showAccountMenu(accountName:String, accountId:int, category:uint=0):void
         {
             var _modContextMenu:Object = UiModuleManager.getInstance().getModule("Ankama_ContextMenu").mainClass;
             _modContextMenu.createContextMenu(MenusFactory.create({
                 "name":accountName,
-                "id":accountId
+                "id":accountId,
+                "category":category
             }, "account"));
         }
 
 
     }
-}//package com.ankamagames.dofus.logic.common.managers
+} com.ankamagames.dofus.logic.common.managers
 

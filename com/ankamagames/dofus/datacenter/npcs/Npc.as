@@ -1,9 +1,10 @@
-﻿package com.ankamagames.dofus.datacenter.npcs
+package com.ankamagames.dofus.datacenter.npcs
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
+    import com.ankamagames.dofus.types.IdAccessors;
     import __AS3__.vec.Vector;
     import com.ankamagames.jerakine.data.GameData;
     import com.ankamagames.jerakine.data.I18n;
@@ -13,6 +14,7 @@
 
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(Npc));
         public static const MODULE:String = "Npcs";
+        public static var idAccessors:IdAccessors = new IdAccessors(getNpcById, getNpcs);
 
         public var id:int;
         public var nameId:uint;
@@ -29,7 +31,7 @@
 
         public static function getNpcById(id:int):Npc
         {
-            return ((GameData.getObject(MODULE, id) as Npc));
+            return (GameData.getObject(MODULE, id) as Npc);
         }
 
         public static function getNpcs():Array
@@ -40,7 +42,7 @@
 
         public function get name():String
         {
-            if (!(this._name))
+            if (!this._name)
             {
                 this._name = I18n.getText(this.nameId);
             };
@@ -49,5 +51,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.npcs
+} com.ankamagames.dofus.datacenter.npcs
 

@@ -1,27 +1,23 @@
-﻿package com.ankamagames.dofus.network.messages.game.inventory.exchanges
+package com.ankamagames.dofus.network.messages.game.inventory.exchanges
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
     import com.ankamagames.dofus.network.types.game.data.items.SellerBuyerDescriptor;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
 
-    [Trusted]
     public class ExchangeStartedBidBuyerMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 5904;
 
         private var _isInitialized:Boolean = false;
-        public var buyerDescriptor:SellerBuyerDescriptor;
+        public var buyerDescriptor:SellerBuyerDescriptor = new SellerBuyerDescriptor();
+        private var _buyerDescriptortree:FuncTree;
 
-        public function ExchangeStartedBidBuyerMessage()
-        {
-            this.buyerDescriptor = new SellerBuyerDescriptor();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
@@ -58,6 +54,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_ExchangeStartedBidBuyerMessage(output);
@@ -79,7 +83,23 @@
             this.buyerDescriptor.deserialize(input);
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_ExchangeStartedBidBuyerMessage(tree);
+        }
+
+        public function deserializeAsyncAs_ExchangeStartedBidBuyerMessage(tree:FuncTree):void
+        {
+            this._buyerDescriptortree = tree.addChild(this._buyerDescriptortreeFunc);
+        }
+
+        private function _buyerDescriptortreeFunc(input:ICustomDataInput):void
+        {
+            this.buyerDescriptor = new SellerBuyerDescriptor();
+            this.buyerDescriptor.deserializeAsync(this._buyerDescriptortree);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.inventory.exchanges
+} com.ankamagames.dofus.network.messages.game.inventory.exchanges
 

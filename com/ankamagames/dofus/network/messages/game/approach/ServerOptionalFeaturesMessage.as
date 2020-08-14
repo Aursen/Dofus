@@ -1,28 +1,24 @@
-﻿package com.ankamagames.dofus.network.messages.game.approach
+package com.ankamagames.dofus.network.messages.game.approach
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
     import __AS3__.vec.Vector;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
     import __AS3__.vec.*;
 
-    [Trusted]
     public class ServerOptionalFeaturesMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 6305;
 
         private var _isInitialized:Boolean = false;
-        public var features:Vector.<uint>;
+        public var features:Vector.<uint> = new Vector.<uint>();
+        private var _featurestree:FuncTree;
 
-        public function ServerOptionalFeaturesMessage()
-        {
-            this.features = new Vector.<uint>();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
@@ -57,6 +53,14 @@
         override public function unpack(input:ICustomDataInput, length:uint):void
         {
             this.deserialize(input);
+        }
+
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
         }
 
         public function serialize(output:ICustomDataOutput):void
@@ -101,7 +105,38 @@
             };
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_ServerOptionalFeaturesMessage(tree);
+        }
+
+        public function deserializeAsyncAs_ServerOptionalFeaturesMessage(tree:FuncTree):void
+        {
+            this._featurestree = tree.addChild(this._featurestreeFunc);
+        }
+
+        private function _featurestreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._featurestree.addChild(this._featuresFunc);
+                i++;
+            };
+        }
+
+        private function _featuresFunc(input:ICustomDataInput):void
+        {
+            var _val:uint = input.readByte();
+            if (_val < 0)
+            {
+                throw (new Error((("Forbidden value (" + _val) + ") on elements of features.")));
+            };
+            this.features.push(_val);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.approach
+} com.ankamagames.dofus.network.messages.game.approach
 

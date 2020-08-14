@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.connection.search
+package com.ankamagames.dofus.network.messages.connection.search
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class AcquaintanceSearchMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -52,6 +52,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_AcquaintanceSearchMessage(output);
@@ -69,10 +77,25 @@
 
         public function deserializeAs_AcquaintanceSearchMessage(input:ICustomDataInput):void
         {
+            this._nicknameFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_AcquaintanceSearchMessage(tree);
+        }
+
+        public function deserializeAsyncAs_AcquaintanceSearchMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._nicknameFunc);
+        }
+
+        private function _nicknameFunc(input:ICustomDataInput):void
+        {
             this.nickname = input.readUTF();
         }
 
 
     }
-}//package com.ankamagames.dofus.network.messages.connection.search
+} com.ankamagames.dofus.network.messages.connection.search
 

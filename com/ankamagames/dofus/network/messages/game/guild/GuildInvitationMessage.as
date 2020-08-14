@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.guild
+package com.ankamagames.dofus.network.messages.game.guild
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,15 +6,15 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class GuildInvitationMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 5551;
 
         private var _isInitialized:Boolean = false;
-        public var targetId:uint = 0;
+        public var targetId:Number = 0;
 
 
         override public function get isInitialized():Boolean
@@ -27,7 +27,7 @@
             return (5551);
         }
 
-        public function initGuildInvitationMessage(targetId:uint=0):GuildInvitationMessage
+        public function initGuildInvitationMessage(targetId:Number=0):GuildInvitationMessage
         {
             this.targetId = targetId;
             this._isInitialized = true;
@@ -52,6 +52,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_GuildInvitationMessage(output);
@@ -59,11 +67,11 @@
 
         public function serializeAs_GuildInvitationMessage(output:ICustomDataOutput):void
         {
-            if (this.targetId < 0)
+            if (((this.targetId < 0) || (this.targetId > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.targetId) + ") on element targetId.")));
             };
-            output.writeVarInt(this.targetId);
+            output.writeVarLong(this.targetId);
         }
 
         public function deserialize(input:ICustomDataInput):void
@@ -73,8 +81,23 @@
 
         public function deserializeAs_GuildInvitationMessage(input:ICustomDataInput):void
         {
-            this.targetId = input.readVarUhInt();
-            if (this.targetId < 0)
+            this._targetIdFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GuildInvitationMessage(tree);
+        }
+
+        public function deserializeAsyncAs_GuildInvitationMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._targetIdFunc);
+        }
+
+        private function _targetIdFunc(input:ICustomDataInput):void
+        {
+            this.targetId = input.readVarUhLong();
+            if (((this.targetId < 0) || (this.targetId > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.targetId) + ") on element of GuildInvitationMessage.targetId.")));
             };
@@ -82,5 +105,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.guild
+} com.ankamagames.dofus.network.messages.game.guild
 

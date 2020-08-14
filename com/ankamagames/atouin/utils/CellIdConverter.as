@@ -1,4 +1,4 @@
-﻿package com.ankamagames.atouin.utils
+package com.ankamagames.atouin.utils
 {
     import com.ankamagames.atouin.AtouinConstants;
     import flash.geom.Point;
@@ -42,20 +42,20 @@
 
         public static function coordToCellId(x:int, y:int):uint
         {
-            if (!(_bInit))
+            if (!_bInit)
             {
                 init();
             };
-            return (((((x - y) * AtouinConstants.MAP_WIDTH) + y) + ((x - y) / 2)));
+            return ((((x - y) * AtouinConstants.MAP_WIDTH) + y) + ((x - y) / 2));
         }
 
         public static function cellIdToCoord(cellId:uint):Point
         {
-            if (!(_bInit))
+            if (!_bInit)
             {
                 init();
             };
-            if (!(CELLPOS[cellId]))
+            if (!CELLPOS[cellId])
             {
                 return (null);
             };
@@ -64,5 +64,5 @@
 
 
     }
-}//package com.ankamagames.atouin.utils
+} com.ankamagames.atouin.utils
 

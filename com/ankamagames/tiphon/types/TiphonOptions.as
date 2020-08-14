@@ -1,8 +1,8 @@
-﻿package com.ankamagames.tiphon.types
+package com.ankamagames.tiphon.types
 {
     import com.ankamagames.jerakine.managers.OptionManager;
 
-    public dynamic class TiphonOptions extends OptionManager 
+    public class TiphonOptions extends OptionManager 
     {
 
         public function TiphonOptions():void
@@ -12,8 +12,10 @@
             add("auraMode", 3);
             add("alwaysShowAuraOnFront", false);
             add("creaturesMode", 20);
+            add("useAnimationCache", false);
+            add("animationsInCache", 50);
         }
 
     }
-}//package com.ankamagames.tiphon.types
+} com.ankamagames.tiphon.types
 

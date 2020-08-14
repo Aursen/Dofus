@@ -1,7 +1,8 @@
-﻿package com.ankamagames.dofus.network.types.game.context.fight
+package com.ankamagames.dofus.network.types.game.context.fight
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import __AS3__.vec.Vector;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
     import com.ankamagames.dofus.network.ProtocolTypeManager;
@@ -12,20 +13,16 @@
 
         public static const protocolId:uint = 33;
 
-        public var teamMembers:Vector.<FightTeamMemberInformations>;
+        public var teamMembers:Vector.<FightTeamMemberInformations> = new Vector.<FightTeamMemberInformations>();
+        private var _teamMemberstree:FuncTree;
 
-        public function FightTeamInformations()
-        {
-            this.teamMembers = new Vector.<FightTeamMemberInformations>();
-            super();
-        }
 
         override public function getTypeId():uint
         {
             return (33);
         }
 
-        public function initFightTeamInformations(teamId:uint=2, leaderId:int=0, teamSide:int=0, teamTypeId:uint=0, nbWaves:uint=0, teamMembers:Vector.<FightTeamMemberInformations>=null):FightTeamInformations
+        public function initFightTeamInformations(teamId:uint=2, leaderId:Number=0, teamSide:int=0, teamTypeId:uint=0, nbWaves:uint=0, teamMembers:Vector.<FightTeamMemberInformations>=null):FightTeamInformations
         {
             super.initAbstractFightTeamInformations(teamId, leaderId, teamSide, teamTypeId, nbWaves);
             this.teamMembers = teamMembers;
@@ -78,7 +75,37 @@
             };
         }
 
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_FightTeamInformations(tree);
+        }
+
+        public function deserializeAsyncAs_FightTeamInformations(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            this._teamMemberstree = tree.addChild(this._teamMemberstreeFunc);
+        }
+
+        private function _teamMemberstreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._teamMemberstree.addChild(this._teamMembersFunc);
+                i++;
+            };
+        }
+
+        private function _teamMembersFunc(input:ICustomDataInput):void
+        {
+            var _id:uint = input.readUnsignedShort();
+            var _item:FightTeamMemberInformations = ProtocolTypeManager.getInstance(FightTeamMemberInformations, _id);
+            _item.deserialize(input);
+            this.teamMembers.push(_item);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.types.game.context.fight
+} com.ankamagames.dofus.network.types.game.context.fight
 

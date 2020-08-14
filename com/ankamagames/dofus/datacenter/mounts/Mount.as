@@ -1,23 +1,30 @@
-﻿package com.ankamagames.dofus.datacenter.mounts
+package com.ankamagames.dofus.datacenter.mounts
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
+    import com.ankamagames.dofus.types.IdAccessors;
+    import __AS3__.vec.Vector;
+    import com.ankamagames.dofus.datacenter.effects.EffectInstance;
     import com.ankamagames.jerakine.data.GameData;
     import com.ankamagames.jerakine.data.I18n;
 
     public class Mount implements IDataCenter 
     {
 
-        private static var MODULE:String = "Mounts";
+        public static const MODULE:String = "Mounts";
+        public static var idAccessors:IdAccessors = new IdAccessors(getMountById, getMounts);
 
         public var id:uint;
+        public var familyId:uint;
         public var nameId:uint;
         public var look:String;
+        public var certificateId:uint;
+        public var effects:Vector.<EffectInstance>;
         private var _name:String;
 
 
         public static function getMountById(id:uint):Mount
         {
-            return ((GameData.getObject(MODULE, id) as Mount));
+            return (GameData.getObject(MODULE, id) as Mount);
         }
 
         public static function getMounts():Array
@@ -28,7 +35,7 @@
 
         public function get name():String
         {
-            if (!(this._name))
+            if (!this._name)
             {
                 this._name = I18n.getText(this.nameId);
             };
@@ -37,5 +44,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.mounts
+} com.ankamagames.dofus.datacenter.mounts
 

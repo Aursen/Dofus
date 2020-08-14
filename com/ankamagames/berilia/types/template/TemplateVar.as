@@ -1,14 +1,15 @@
-﻿package com.ankamagames.berilia.types.template
+package com.ankamagames.berilia.types.template
 {
     public class TemplateVar 
     {
 
         public var name:String;
-        public var value:String;
+        public var value:*;
 
-        public function TemplateVar(varName:String)
+        public function TemplateVar(varName:String, value:*=null)
         {
             this.name = varName;
+            this.value = value;
         }
 
         public function clone():TemplateVar
@@ -20,5 +21,5 @@
 
 
     }
-}//package com.ankamagames.berilia.types.template
+} com.ankamagames.berilia.types.template
 

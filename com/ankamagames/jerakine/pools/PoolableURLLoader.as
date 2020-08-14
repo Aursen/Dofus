@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.pools
+package com.ankamagames.jerakine.pools
 {
     import flash.net.URLLoader;
     import com.ankamagames.jerakine.logger.Logger;
@@ -30,5 +30,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.pools
+} com.ankamagames.jerakine.pools
 

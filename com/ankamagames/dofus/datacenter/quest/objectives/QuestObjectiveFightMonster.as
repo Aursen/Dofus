@@ -1,9 +1,11 @@
-﻿package com.ankamagames.dofus.datacenter.quest.objectives
+package com.ankamagames.dofus.datacenter.quest.objectives
 {
     import com.ankamagames.dofus.datacenter.quest.QuestObjective;
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.dofus.datacenter.monsters.Monster;
+    import com.ankamagames.dofus.datacenter.idols.Idol;
     import com.ankamagames.jerakine.utils.pattern.PatternDecoder;
+    import com.ankamagames.jerakine.data.I18n;
 
     public class QuestObjectiveFightMonster extends QuestObjective implements IDataCenter 
     {
@@ -14,7 +16,7 @@
 
         public function get monsterId():uint
         {
-            if (!(this.parameters))
+            if (!this.parameters)
             {
                 return (0);
             };
@@ -23,7 +25,7 @@
 
         public function get monster():Monster
         {
-            if (!(this._monster))
+            if (!this._monster)
             {
                 this._monster = Monster.getMonsterById(this.monsterId);
             };
@@ -32,23 +34,71 @@
 
         public function get quantity():uint
         {
-            if (!(this.parameters))
+            if (!this.parameters)
             {
                 return (0);
             };
             return (this.parameters[1]);
         }
 
+        public function get idolsScore():uint
+        {
+            if (((this.parameters) && (this.parameters.length > 2)))
+            {
+                return (this.parameters[2]);
+            };
+            return (0);
+        }
+
+        public function get dungeonOnly():Boolean
+        {
+            if (!this.parameters)
+            {
+                return (false);
+            };
+            return (parameters.dungeonOnly);
+        }
+
+        public function get idolId():uint
+        {
+            if (((this.parameters) && (this.parameters.length > 4)))
+            {
+                return (this.parameters[4]);
+            };
+            return (0);
+        }
+
         override public function get text():String
         {
-            if (!(this._text))
+            var monsterLink:String;
+            var idol:Idol;
+            if (!this._text)
             {
-                this._text = PatternDecoder.getDescription(this.type.name, [this.monster.name, this.quantity]);
+                monsterLink = (("{chatmonster," + this.monsterId) + "}");
+                if (((this.idolsScore == 0) && (this.idolId == 0)))
+                {
+                    this._text = PatternDecoder.getDescription(this.type.name, [monsterLink, this.quantity]);
+                }
+                else
+                {
+                    if (((this.idolsScore > 0) && (this.idolId == 0)))
+                    {
+                        this._text = I18n.getUiText("ui.grimoire.quest.objectives.type6.score", [this.quantity, monsterLink, this.idolsScore]);
+                    }
+                    else
+                    {
+                        if (((this.idolsScore > 0) && (this.idolId > 0)))
+                        {
+                            idol = Idol.getIdolById(this.idolId);
+                            this._text = I18n.getUiText("ui.grimoire.quest.objectives.type6.scoreAndIdol", [this.quantity, monsterLink, (("{item," + idol.itemId) + "}"), this.idolsScore]);
+                        };
+                    };
+                };
             };
             return (this._text);
         }
 
 
     }
-}//package com.ankamagames.dofus.datacenter.quest.objectives
+} com.ankamagames.dofus.datacenter.quest.objectives
 

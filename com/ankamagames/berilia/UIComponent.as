@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia
+package com.ankamagames.berilia
 {
     import com.ankamagames.jerakine.messages.MessageHandler;
 
@@ -8,5 +8,5 @@
         function remove():void;
 
     }
-}//package com.ankamagames.berilia
+} com.ankamagames.berilia
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.common.frames
+package com.ankamagames.dofus.logic.game.common.frames
 {
     import com.ankamagames.jerakine.messages.Frame;
     import com.ankamagames.jerakine.logger.Logger;
@@ -6,10 +6,10 @@
     import flash.utils.getQualifiedClassName;
     import flash.utils.Dictionary;
     import com.ankamagames.dofus.misc.options.ChatOptions;
-    import com.ankamagames.jerakine.data.XmlConfig;
     import com.ankamagames.berilia.managers.CssManager;
     import com.ankamagames.jerakine.types.Callback;
     import com.ankamagames.dofus.datacenter.communication.Smiley;
+    import com.ankamagames.dofus.datacenter.communication.SmileyPack;
     import com.ankamagames.jerakine.managers.OptionManager;
     import com.ankamagames.dofus.internalDatacenter.communication.SmileyWrapper;
     import com.ankamagames.dofus.logic.game.common.actions.chat.MoodSmileyRequestAction;
@@ -18,6 +18,7 @@
     import com.ankamagames.jerakine.console.ConsoleHandler;
     import com.ankamagames.dofus.kernel.Kernel;
     import com.ankamagames.dofus.console.ChatConsoleInstructionRegistrar;
+    import com.ankamagames.jerakine.data.XmlConfig;
     import com.ankamagames.dofus.datacenter.communication.CensoredWord;
     import com.ankamagames.dofus.logic.game.common.managers.PlayedCharacterManager;
     import com.ankamagames.dofus.logic.game.roleplay.frames.RoleplayEntitiesFrame;
@@ -26,7 +27,6 @@
     import com.ankamagames.dofus.network.messages.game.basic.NumericWhoIsRequestMessage;
     import com.ankamagames.dofus.logic.game.common.actions.chat.ChatTextOutputAction;
     import __AS3__.vec.Vector;
-    import com.ankamagames.dofus.network.types.game.data.items.ObjectItem;
     import com.ankamagames.dofus.network.messages.game.chat.ChatServerWithObjectMessage;
     import com.ankamagames.dofus.internalDatacenter.items.ItemWrapper;
     import com.ankamagames.dofus.network.messages.game.chat.ChatAdminServerMessage;
@@ -48,14 +48,21 @@
     import com.ankamagames.dofus.uiApi.SystemApi;
     import com.ankamagames.dofus.network.messages.game.chat.smiley.MoodSmileyRequestMessage;
     import com.ankamagames.dofus.network.messages.game.chat.smiley.MoodSmileyResultMessage;
+    import com.ankamagames.dofus.network.messages.game.chat.smiley.ChatSmileyExtraPackListMessage;
     import com.ankamagames.dofus.network.messages.game.chat.channel.ChannelEnablingChangeMessage;
     import com.ankamagames.dofus.network.messages.game.chat.channel.ChannelEnablingMessage;
+    import com.ankamagames.dofus.network.messages.game.chat.community.ChatCommunityChannelCommunityMessage;
+    import com.ankamagames.dofus.logic.game.common.actions.chat.ChatCommunityChannelSetCommunityAction;
+    import com.ankamagames.dofus.network.messages.game.chat.community.ChatCommunityChannelSetCommunityRequestMessage;
     import com.ankamagames.dofus.logic.game.common.actions.chat.TabsUpdateAction;
     import com.ankamagames.dofus.logic.game.common.actions.chat.ChatCommandAction;
     import com.ankamagames.dofus.network.messages.game.chat.channel.EnabledChannelsMessage;
     import com.ankamagames.dofus.network.messages.game.basic.BasicTimeMessage;
     import com.ankamagames.dofus.network.messages.game.inventory.items.ObjectErrorMessage;
     import com.ankamagames.dofus.network.messages.game.basic.BasicWhoIsMessage;
+    import com.ankamagames.dofus.uiApi.DataApi;
+    import com.ankamagames.dofus.datacenter.servers.Server;
+    import com.ankamagames.dofus.network.messages.game.basic.BasicDateMessage;
     import com.ankamagames.dofus.network.messages.game.basic.NumericWhoIsMessage;
     import com.ankamagames.dofus.network.messages.game.basic.BasicWhoIsNoMatchMessage;
     import com.ankamagames.dofus.logic.game.common.actions.chat.LivingObjectMessageRequestAction;
@@ -65,11 +72,15 @@
     import com.ankamagames.dofus.logic.game.common.actions.chat.ChatLoadedAction;
     import com.ankamagames.dofus.network.messages.game.context.notification.NotificationByServerMessage;
     import com.ankamagames.dofus.datacenter.notifications.Notification;
-    import com.ankamagames.dofus.network.messages.game.inventory.exchanges.ExchangeGuildTaxCollectorGetMessage;
     import com.ankamagames.dofus.network.messages.web.ankabox.MailStatusMessage;
+    import com.ankamagames.dofus.network.messages.game.inventory.exchanges.ExchangeBidHouseUnsoldItemsMessage;
+    import com.ankamagames.dofus.network.messages.game.inventory.exchanges.ExchangeOfflineSoldItemsMessage;
+    import com.ankamagames.dofus.network.types.game.data.items.ObjectItemQuantityPriceDateEffects;
+    import com.ankamagames.dofus.internalDatacenter.sales.OfflineSaleWrapper;
     import com.ankamagames.dofus.network.messages.game.basic.BasicWhoIsRequestMessage;
     import com.ankamagames.dofus.network.types.game.character.characteristic.CharacterCharacteristicsInformations;
     import com.ankamagames.dofus.network.types.game.character.choice.CharacterBaseInformations;
+    import com.ankamagames.dofus.network.types.game.data.items.ObjectItem;
     import com.ankamagames.dofus.network.messages.game.chat.ChatClientMultiWithObjectMessage;
     import com.ankamagames.dofus.network.messages.game.chat.ChatClientMultiMessage;
     import com.ankamagames.dofus.network.messages.game.chat.ChatClientPrivateWithObjectMessage;
@@ -83,13 +94,12 @@
     import com.ankamagames.dofus.internalDatacenter.communication.ChatBubble;
     import com.ankamagames.dofus.network.types.game.context.GameContextActorInformations;
     import com.ankamagames.dofus.network.types.game.social.AbstractSocialGroupInfos;
-    import com.ankamagames.dofus.network.types.game.data.items.ObjectItemQuantity;
-    import com.ankamagames.dofus.internalDatacenter.sales.OfflineSaleWrapper;
     import com.ankamagames.dofus.network.ProtocolConstantsEnum;
     import com.ankamagames.dofus.kernel.net.ConnectionsHandler;
     import com.ankamagames.jerakine.utils.misc.StringUtils;
     import com.ankamagames.jerakine.data.I18n;
-    import com.ankamagames.berilia.managers.SecureCenter;
+    import com.ankamagames.dofus.logic.common.managers.HyperlinkShowGuildManager;
+    import com.ankamagames.dofus.logic.common.managers.HyperlinkShowAllianceManager;
     import com.ankamagames.dofus.network.types.game.data.items.effects.ObjectEffect;
     import com.ankamagames.berilia.managers.KernelEventsManager;
     import com.ankamagames.dofus.misc.lists.ChatHookList;
@@ -107,6 +117,7 @@
     import com.ankamagames.berilia.enums.StrataEnum;
     import com.ankamagames.dofus.logic.common.managers.PlayerManager;
     import com.ankamagames.dofus.datacenter.communication.InfoMessage;
+    import com.ankamagames.berilia.frames.UiStatsFrame;
     import com.ankamagames.dofus.network.enums.TextInformationTypeEnum;
     import com.ankamagames.dofus.misc.utils.ParamsDecoder;
     import com.ankamagames.dofus.logic.game.common.actions.chat.FightOutputAction;
@@ -123,19 +134,15 @@
     import com.ankamagames.berilia.managers.HtmlManager;
     import com.ankamagames.dofus.network.enums.PlayerStateEnum;
     import com.ankamagames.dofus.network.types.game.context.roleplay.BasicGuildInformations;
-    import com.ankamagames.dofus.logic.common.managers.HyperlinkShowGuildManager;
     import com.ankamagames.dofus.network.types.game.context.roleplay.BasicAllianceInformations;
-    import com.ankamagames.dofus.logic.common.managers.HyperlinkShowAllianceManager;
+    import com.ankamagames.dofus.datacenter.misc.Month;
     import com.ankamagames.dofus.logic.game.common.managers.SpeakingItemManager;
+    import com.ankamagames.dofus.internalDatacenter.DataEnum;
     import com.ankamagames.dofus.types.enums.NotificationTypeEnum;
     import com.ankamagames.dofus.logic.common.managers.NotificationManager;
-    import com.ankamagames.dofus.datacenter.npcs.TaxCollectorFirstname;
-    import com.ankamagames.dofus.datacenter.npcs.TaxCollectorName;
-    import com.ankamagames.dofus.datacenter.items.Item;
     import com.ankamagames.dofus.network.messages.web.ankabox.NewMailMessage;
     import com.ankamagames.dofus.logic.game.common.actions.chat.ClearChatAction;
     import com.ankamagames.jerakine.utils.pattern.PatternDecoder;
-    import com.ankamagames.dofus.network.messages.game.context.roleplay.MapComplementaryInformationsDataMessage;
     import com.ankamagames.jerakine.messages.Message;
     import com.ankamagames.berilia.types.data.ExtendedStyleSheet;
     import com.ankamagames.dofus.network.types.game.character.characteristic.CharacterBaseCharacteristic;
@@ -147,15 +154,13 @@
     import com.ankamagames.dofus.internalDatacenter.communication.ChatSentenceWithSource;
     import com.ankamagames.dofus.internalDatacenter.communication.ChatInformationSentence;
     import com.ankamagames.dofus.internalDatacenter.communication.BasicChatSentence;
-    import com.ankamagames.dofus.console.moduleLogger.Console;
     import __AS3__.vec.*;
 
     public class ChatFrame implements Frame 
     {
 
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(ChatFrame));
-        private static const MERCHANT_SOLD_OFFLINE_MSG_ID:uint = 226;
-        private static const BID_SOLD_OFFLINE_MSG_ID:uint = 73;
+        private static const MAX_NUMBER_LAST_USED_SMILEY:uint = 77;
         public static const GUILD_SOUND:uint = 0;
         public static const PARTY_SOUND:uint = 1;
         public static const PRIVATE_SOUND:uint = 2;
@@ -163,6 +168,8 @@
         public static const RED_CHANNEL_ID:uint = 666;
         public static const URL_MATCHER:RegExp = /\b((http|https|ftp):\/\/)?(([^:@ ]*)(:([^@ ]*))?@)?((www\.)?(([a-z0-9\-\.]{2,})(\.[a-z0-9\-]{2,})))(:([0-9]+))?(\/[^\s`!()\[\]{};:'",<>?«»“”‘’#]*)?(\?([^\s`!()\[\]{};:'".,<>?«»“”‘’]*))?(#(.*))?/gi;
         public static const LINK_TLDS:Array = new Array(".com", ".edu", ".org", ".fr", ".info", ".net", ".de", ".ja", ".uk", ".us", ".it", ".nl", ".ru", ".es", ".pt", ".br");
+        public static const CHAT_FAIL_TEXTS_IDS:Array = [5259, 5359, 5338, 5373];
+        private static const SPLIT_CODE:String = String.fromCharCode(65533);
 
         private var _aChannels:Array;
         private var _aDisallowedChannels:Array;
@@ -170,35 +177,40 @@
         private var _aParagraphesByChannel:Array;
         private var _aHistoryMessagesByChannel:Array;
         private var _msgUId:uint = 0;
-        private var _maxMessagesStored:uint = 40;
+        private var _maxMessagesStored:uint = 80;
         private var _aCensoredWords:Dictionary;
         private var _smileyMood:int = -1;
+        private var _communityIdForCommunityChannel:int = -1;
         private var _options:ChatOptions;
-        private var _cssUri:String;
-        private var _aChatColors:Array;
+        private var _aChatColors:Array = new Array();
         private var _ankaboxEnabled:Boolean = false;
         private var _aSmilies:Array;
-        private var _offlineSales:Array;
-        private var _offlineSalesInit:Boolean;
+        private var _aSmileyPacks:Array;
+        private var _offlineSales:Array = new Array();
+        private var _unsoldItems:Dictionary = new Dictionary();
+        private var _sendingSplittedContent:Boolean;
+        private var _splittedContent:String = "";
+        private var _splittedContentLength:uint;
+        private var _numUnsoldItemsLinks:uint;
 
         public function ChatFrame()
         {
-            this._cssUri = (XmlConfig.getInstance().getEntry("config.ui.skin") + "css/chat.css");
-            this._aChatColors = new Array();
-            super();
-            CssManager.getInstance().askCss(this._cssUri, new Callback(this.onCssLoaded));
+            var cssUrl:String = "theme://css/chat.css";
+            CssManager.getInstance().askCss(cssUrl, new Callback(this.onCssLoaded, cssUrl));
         }
 
         public function pushed():Boolean
         {
-            var i:Object;
             var smiley:Smiley;
+            var pack:SmileyPack;
+            var i:Object;
             var lang:String;
             var censoreds:Array;
             var wordCount:uint;
             var word:*;
             var chatOpt:OptionManager;
-            var id:int;
+            var id:Number;
+            var smileypId:int;
             var smileyW:SmileyWrapper;
             var date:Date;
             var arrayMood:Array;
@@ -210,8 +222,22 @@
             this._aMessagesByChannel = new Array();
             this._aHistoryMessagesByChannel = new Array();
             this._aParagraphesByChannel = new Array();
-            this._aSmilies = new Array();
             this._aCensoredWords = new Dictionary();
+            this._aSmilies = new Array();
+            this._aSmileyPacks = new Array();
+            this._aSmileyPacks.push(SmileyPack.getSmileyPackById(0));
+            for each (pack in this._aSmileyPacks)
+            {
+                for each (smileypId in pack.smileys)
+                {
+                    smiley = Smiley.getSmileyById(smileypId);
+                    if (smiley)
+                    {
+                        smileyW = SmileyWrapper.create(smiley.id, smiley.gfxId, pack.id, smiley.categoryId);
+                        this._aSmilies.push(smileyW);
+                    };
+                };
+            };
             for (i in this._aChannels)
             {
                 this._aMessagesByChannel[this._aChannels[i].id] = new Array();
@@ -220,15 +246,6 @@
             this._aMessagesByChannel[RED_CHANNEL_ID] = new Array();
             this._aParagraphesByChannel[RED_CHANNEL_ID] = new Array();
             ConsolesManager.registerConsole("chat", new ConsoleHandler(Kernel.getWorker(), false, true), new ChatConsoleInstructionRegistrar());
-            for each (smiley in Smiley.getSmileys())
-            {
-                if (smiley.forPlayers)
-                {
-                    smileyW = SmileyWrapper.create(smiley.id, smiley.gfxId, smiley.order);
-                    this._aSmilies.push(smileyW);
-                };
-            };
-            this._aSmilies.sortOn("order", Array.NUMERIC);
             lang = XmlConfig.getInstance().getEntry("config.lang.current");
             censoreds = CensoredWord.getCensoredWords();
             wordCount = 0;
@@ -241,27 +258,31 @@
                         wordCount++;
                         if (word.deepLooking)
                         {
-                            this._aCensoredWords[word.word] = 2;
+                            this._aCensoredWords[word.word.toLowerCase()] = 2;
                         }
                         else
                         {
-                            this._aCensoredWords[word.word] = 1;
+                            this._aCensoredWords[word.word.toLowerCase()] = 1;
                         };
                     };
                 };
             };
             chatOpt = OptionManager.getOptionManager("chat");
             id = PlayedCharacterManager.getInstance().id;
-            if (!(chatOpt[("moodSmiley_" + id)]))
+            if (!chatOpt.getOption("favoriteSmileys"))
             {
-                chatOpt.add(("moodSmiley_" + id), "");
+                chatOpt.setOption("favoriteSmileys", []);
             };
-            var moodSmileyId:String = chatOpt[("moodSmiley_" + id)];
-            if (((moodSmileyId) && (!((moodSmileyId == "")))))
+            if (!chatOpt.getOption(("moodSmiley_" + id)))
+            {
+                chatOpt.setOption(("moodSmiley_" + id), "");
+            };
+            var moodSmileyId:String = chatOpt.getOption(("moodSmiley_" + id));
+            if (((moodSmileyId) && (!(moodSmileyId == ""))))
             {
                 date = new Date();
                 arrayMood = moodSmileyId.split("_");
-                if ((((int(arrayMood[0]) > 0)) && ((Number(arrayMood[1]) < (date.time + 0x240C8400)))))
+                if (((int(arrayMood[0]) > 0) && (Number(arrayMood[1]) < (date.time + 0x240C8400))))
                 {
                     action = new MoodSmileyRequestAction();
                     action.smileyId = int(arrayMood[0]);
@@ -273,12 +294,17 @@
 
         public function get entitiesFrame():RoleplayEntitiesFrame
         {
-            return ((Kernel.getWorker().getFrame(RoleplayEntitiesFrame) as RoleplayEntitiesFrame));
+            return (Kernel.getWorker().getFrame(RoleplayEntitiesFrame) as RoleplayEntitiesFrame);
         }
 
         public function get socialFrame():SocialFrame
         {
-            return ((Kernel.getWorker().getFrame(SocialFrame) as SocialFrame));
+            return (Kernel.getWorker().getFrame(SocialFrame) as SocialFrame);
+        }
+
+        public function get allianceFrame():AllianceFrame
+        {
+            return (Kernel.getWorker().getFrame(AllianceFrame) as AllianceFrame);
         }
 
         public function get priority():int
@@ -306,6 +332,11 @@
             return (this._aSmilies);
         }
 
+        public function get smileyPacks():Array
+        {
+            return (this._aSmileyPacks);
+        }
+
         public function set maxMessagesStored(val:int):void
         {
             this._maxMessagesStored = val;
@@ -321,6 +352,11 @@
             return (this._smileyMood);
         }
 
+        public function get communityIdForCommunityChannel():int
+        {
+            return (this._communityIdForCommunityChannel);
+        }
+
         public function get ankaboxEnabled():Boolean
         {
             return (this._ankaboxEnabled);
@@ -331,9 +367,46 @@
             return (this._offlineSales);
         }
 
+        public function getUnsoldItems(pLinkId:uint):Array
+        {
+            return (this._unsoldItems[pLinkId]);
+        }
+
+        public function get sendingSplittedContent():Boolean
+        {
+            return (this._sendingSplittedContent);
+        }
+
+        public function set sendingSplittedContent(pValue:Boolean):void
+        {
+            this._sendingSplittedContent = pValue;
+        }
+
+        public function get splittedContent():String
+        {
+            return (this._splittedContent);
+        }
+
+        public function set splittedContent(pValue:String):void
+        {
+            this._splittedContent = pValue;
+        }
+
+        public function get splittedContentLength():uint
+        {
+            return (this._splittedContentLength);
+        }
+
+        public function set splittedContentLength(pValue:uint):void
+        {
+            this._splittedContentLength = pValue;
+        }
+
         public function process(msg:Message):Boolean
         {
+            var msgContent:String;
             var content:String;
+            var i:int;
             var bwira:BasicWhoIsRequestAction;
             var search:String;
             var nwira:NumericWhoIsRequestAction;
@@ -343,7 +416,7 @@
             var pattern:RegExp;
             var charTempL:String;
             var charTempR:String;
-            var objects:Vector.<ObjectItem>;
+            var splittedContentTab:Vector.<String>;
             var scwomsg:ChatServerWithObjectMessage;
             var numItem:int;
             var listItem:Vector.<ItemWrapper>;
@@ -360,7 +433,6 @@
             var cscmsg:ChatServerCopyMessage;
             var timsg:TextInformationMessage;
             var param:Array;
-            var msgContent:String;
             var textId:uint;
             var params:Array;
             var timestampf:Number;
@@ -386,10 +458,15 @@
             var msrmsg:MoodSmileyRequestMessage;
             var msrtmsg:MoodSmileyResultMessage;
             var date:Date;
-            var id:int;
+            var id:Number;
             var chatOpt:OptionManager;
+            var cseplmsg:ChatSmileyExtraPackListMessage;
+            var smiley:Smiley;
             var cecmsg:ChannelEnablingChangeMessage;
             var cebmsg:ChannelEnablingMessage;
+            var ccccmsg:ChatCommunityChannelCommunityMessage;
+            var cccsca:ChatCommunityChannelSetCommunityAction;
+            var cccscrmsg:ChatCommunityChannelSetCommunityRequestMessage;
             var tua:TabsUpdateAction;
             var cca:ChatCommandAction;
             var ecmsg:EnabledChannelsMessage;
@@ -399,8 +476,17 @@
             var objectErrorText:String;
             var bwimsg:BasicWhoIsMessage;
             var areaName:String;
+            var dataApi:DataApi;
+            var server:Server;
+            var serverName:String;
+            var originServer:Server;
+            var originServerName:String;
             var notice:String;
             var text:String;
+            var bdmsg:BasicDateMessage;
+            var textToDisplay:String;
+            var month:String;
+            var time:String;
             var nwimsg:NumericWhoIsMessage;
             var bwnmmsg:BasicWhoIsNoMatchMessage;
             var lomra:LivingObjectMessageRequestAction;
@@ -412,22 +498,24 @@
             var a:Array;
             var notification:Notification;
             var title:String;
-            var egtcgmsg:ExchangeGuildTaxCollectorGetMessage;
-            var idFName:Number;
-            var idName:Number;
-            var taxCollectorName:String;
-            var textObjects:String;
-            var objectsAndExp:String;
             var nmmsg:MailStatusMessage;
             var msmsg:MailStatusMessage;
             var chans:Array;
             var indTabChan:int;
+            var ebhuimsg:ExchangeBidHouseUnsoldItemsMessage;
+            var nbUnsoldLots:uint;
+            var unsoldItemsMsg:String;
+            var eosimsg:ExchangeOfflineSoldItemsMessage;
+            var soldLot:ObjectItemQuantityPriceDateEffects;
+            var totalKamas:Number;
+            var nbOfflineSales:uint;
+            var offlineSale:OfflineSaleWrapper;
+            var offlineSalesMsg:String;
             var bwirmsg:BasicWhoIsRequestMessage;
             var charas:CharacterCharacteristicsInformations;
             var infos:CharacterBaseInformations;
             var variables:Array;
             var variable:String;
-            var guilde:String;
             var leftIndex:int;
             var rightIndex:int;
             var leftBlock:String;
@@ -438,6 +526,10 @@
             var posX:Number;
             var posY:Number;
             var worldMapId:Number;
+            var ok:Boolean;
+            var remnant:String;
+            var str:String;
+            var objects:Vector.<ObjectItem>;
             var nb:int;
             var o:int;
             var ccmwomsg:ChatClientMultiWithObjectMessage;
@@ -450,7 +542,6 @@
             var itemWrapper2:ItemWrapper;
             var objectItem2:ObjectItem;
             var ccpmsg:ChatClientPrivateMessage;
-            var i:int;
             var oi:ObjectItem;
             var speakerEntity:IDisplayable;
             var targetBounds:IRectangle;
@@ -465,27 +556,29 @@
             var bubble:ChatBubble;
             var oic:ObjectItem;
             var iTimsg:* = undefined;
-            var saleType:uint;
             var channel:uint;
             var timestamp:Number;
             var iTaimsg:* = undefined;
+            var chatOptS:OptionManager;
+            var oldFavSmileys:Array;
+            var favSmileys:Array;
+            var smileyId:int;
             var entityInfo:GameContextActorInformations;
+            var packId:int;
+            var pack:SmileyPack;
+            var smileypId:int;
+            var smileyW:SmileyWrapper;
             var chanId:* = undefined;
             var socGroup:AbstractSocialGroupInfos;
             var parameter:String;
             var type:uint;
             var nbsmsgNid:uint;
-            var object:ObjectItemQuantity;
-            var totalKamas:uint;
-            var nbOfflineSales:uint;
-            var offlineSale:OfflineSaleWrapper;
-            var offlineSalesMsg:String;
             switch (true)
             {
                 case (msg is BasicWhoIsRequestAction):
                     bwira = (msg as BasicWhoIsRequestAction);
                     search = bwira.playerName;
-                    if ((((search.length >= 1)) && ((search.length <= ProtocolConstantsEnum.MAX_PLAYER_OR_ACCOUNT_NAME_LEN))))
+                    if (((search.length >= 1) && (search.length <= ProtocolConstantsEnum.MAX_PLAYER_OR_ACCOUNT_NAME_LEN)))
                     {
                         bwirmsg = new BasicWhoIsRequestMessage();
                         bwirmsg.initBasicWhoIsRequestMessage(bwira.verbose, bwira.playerName);
@@ -504,11 +597,6 @@
                     content = ctoa.content;
                     content = StringUtils.concatSameString(content, " ");
                     content = content.split("\r").join(" ");
-                    if (content.length > 0x0100)
-                    {
-                        _log.error("Too long message has been truncated before sending.");
-                        content = content.substr(0, 0xFF);
-                    };
                     pattern = /%[a-z]+%/;
                     if (content.match(pattern) != null)
                     {
@@ -522,7 +610,7 @@
                         variables = I18n.getUiText("ui.chat.variable.level").split(",");
                         for each (variable in variables)
                         {
-                            content = content.replace(new RegExp(variable, "g"), infos.level);
+                            content = content.replace(new RegExp(variable, "g"), ((infos.level > ProtocolConstantsEnum.MAX_LEVEL) ? ((I18n.getUiText("ui.common.short.prestige") + (infos.level - ProtocolConstantsEnum.MAX_LEVEL))) : ((I18n.getUiText("ui.common.short.level") + infos.level))));
                         };
                         variables = I18n.getUiText("ui.chat.variable.life").split(",");
                         for each (variable in variables)
@@ -568,13 +656,17 @@
                         variables = I18n.getUiText("ui.chat.variable.position").split(",");
                         for each (variable in variables)
                         {
-                            content = content.replace(new RegExp(variable, "g"), (((((("[" + PlayedCharacterManager.getInstance().currentMap.outdoorX) + ",") + PlayedCharacterManager.getInstance().currentMap.outdoorY) + ",") + PlayedCharacterManager.getInstance().currentWorldMap.id) + "]"));
+                            content = content.replace(new RegExp(variable, "g"), (((((("[" + PlayedCharacterManager.getInstance().currentMap.outdoorX) + ",") + PlayedCharacterManager.getInstance().currentMap.outdoorY) + ",") + PlayedCharacterManager.getInstance().currentWorldMapId) + "]"));
                         };
                         variables = I18n.getUiText("ui.chat.variable.guild").split(",");
-                        guilde = (((this.socialFrame.guild == null)) ? (I18n.getUiText("ui.chat.variable.guilderror")) : this.socialFrame.guild.guildName);
                         for each (variable in variables)
                         {
-                            content = content.replace(new RegExp(variable, "g"), guilde);
+                            content = content.replace(new RegExp(variable, "g"), ((this.socialFrame.guild) ? HyperlinkShowGuildManager.getLink(this.socialFrame.guild) : I18n.getUiText("ui.chat.variable.guilderror")));
+                        };
+                        variables = I18n.getUiText("ui.chat.variable.alliance").split(",");
+                        for each (variable in variables)
+                        {
+                            content = content.replace(new RegExp(variable, "g"), ((this.allianceFrame.hasAlliance) ? HyperlinkShowAllianceManager.getLink(this.allianceFrame.alliance) : I18n.getUiText("ui.chat.variable.allianceError")));
                         };
                         variables = I18n.getUiText("ui.chat.variable.achievement").split(",");
                         for each (variable in variables)
@@ -615,16 +707,16 @@
                         };
                         if (mapInfo.length == 3)
                         {
-                            worldMapId = int(mapInfo[2]);
+                            worldMapId = Number(mapInfo[2]);
                         }
                         else
                         {
                             if (mapInfo.length == 2)
                             {
-                                worldMapId = PlayedCharacterManager.getInstance().currentWorldMap.id;
+                                worldMapId = PlayedCharacterManager.getInstance().currentWorldMapId;
                             };
                         };
-                        if (((((!(isNaN(posX))) && (!(isNaN(posY))))) && (!(isNaN(worldMapId)))))
+                        if ((((!(isNaN(posX))) && (!(isNaN(posY)))) && (!(isNaN(worldMapId)))))
                         {
                             replace = false;
                             content = ((((((((leftBlock + "{map,") + int(posX)) + ",") + int(posY)) + ",") + worldMapId) + "}") + rightBlock);
@@ -635,72 +727,104 @@
                         };
                     };
                     content = content.split(charTempL).join("[").split(charTempR).join("]");
+                    splittedContentTab = new Vector.<String>(0);
                     if (content.length > 0x0100)
                     {
-                        content = (content.substr(0, 253) + "...");
-                    };
-                    objects = new Vector.<ObjectItem>();
-                    if (!(this._aChannels[ch].isPrivate))
-                    {
-                        if (ctoa.objects)
+                        while ((!(ok)))
                         {
-                            nb = ctoa.objects.length;
-                            o = 0;
-                            while (o < nb)
+                            str = content.substr(0, 0x0100);
+                            if (str.length == 0x0100)
                             {
-                                itemWrapper = SecureCenter.unsecure(ctoa.objects[o]);
-                                objectItem = new ObjectItem();
-                                objectItem.initObjectItem(itemWrapper.position, itemWrapper.objectGID, (((itemWrapper.effectsList == null)) ? new Vector.<ObjectEffect>() : (itemWrapper.effectsList)), itemWrapper.objectUID, itemWrapper.quantity);
-                                objects.push(objectItem);
-                                o = (o + 1);
+                                remnant = str.substr(0xFF, 1);
+                                str = (str.substr(0, 0xFF) + SPLIT_CODE);
                             };
-                            ccmwomsg = new ChatClientMultiWithObjectMessage();
-                            ccmwomsg.initChatClientMultiWithObjectMessage(content, ch, objects);
-                            ConnectionsHandler.getConnection().send(ccmwomsg);
-                        }
-                        else
-                        {
-                            ccmmsg = new ChatClientMultiMessage();
-                            ccmmsg.initChatClientMultiMessage(content, ch);
-                            ConnectionsHandler.getConnection().send(ccmmsg);
+                            splittedContentTab.push(str);
+                            if (content.length > str.length)
+                            {
+                                content = (((remnant) ? remnant : "") + content.substr(0x0100));
+                            }
+                            else
+                            {
+                                splittedContentTab[(splittedContentTab.length - 1)] = (splittedContentTab[(splittedContentTab.length - 1)] + SPLIT_CODE);
+                                splittedContentTab.push(SPLIT_CODE);
+                                ok = true;
+                            };
                         };
                     }
                     else
                     {
-                        if ((((ctoa.receiverName.length < 2)) || ((ctoa.receiverName.length > 31))))
+                        splittedContentTab.push(content);
+                    };
+                    this._splittedContentLength = ((splittedContentTab.length > 1) ? splittedContentTab.length : 0);
+                    this._sendingSplittedContent = (this._splittedContentLength > 0);
+                    i = 0;
+                    while (i < splittedContentTab.length)
+                    {
+                        content = splittedContentTab[i];
+                        objects = new Vector.<ObjectItem>();
+                        if (!this._aChannels[ch].isPrivate)
                         {
-                            KernelEventsManager.getInstance().processCallback(ChatHookList.TextInformation, I18n.getUiText("ui.chat.error.1"), ChatActivableChannelsEnum.PSEUDO_CHANNEL_INFO, this.getTimestamp());
-                            return (true);
-                        };
-                        if (ctoa.objects)
-                        {
-                            objects = new Vector.<ObjectItem>();
-                            nb2 = ctoa.objects.length;
-                            jo = 0;
-                            while (jo < nb2)
+                            if (ctoa.objects)
                             {
-                                itemWrapper2 = SecureCenter.unsecure(ctoa.objects[jo]);
-                                objectItem2 = new ObjectItem();
-                                objectItem2.initObjectItem(itemWrapper2.position, itemWrapper2.objectGID, (((itemWrapper2.effectsList == null)) ? new Vector.<ObjectEffect>() : (itemWrapper2.effectsList)), itemWrapper2.objectUID, itemWrapper2.quantity);
-                                objects.push(objectItem2);
-                                jo = (jo + 1);
+                                nb = ctoa.objects.length;
+                                o = 0;
+                                while (o < nb)
+                                {
+                                    itemWrapper = ctoa.objects[o];
+                                    objectItem = new ObjectItem();
+                                    objectItem.initObjectItem(itemWrapper.position, itemWrapper.objectGID, ((itemWrapper.effectsList == null) ? new Vector.<ObjectEffect>() : itemWrapper.effectsList), itemWrapper.objectUID, itemWrapper.quantity);
+                                    objects.push(objectItem);
+                                    o = (o + 1);
+                                };
+                                ccmwomsg = new ChatClientMultiWithObjectMessage();
+                                ccmwomsg.initChatClientMultiWithObjectMessage(content, ch, objects);
+                                ConnectionsHandler.getConnection().send(ccmwomsg);
+                            }
+                            else
+                            {
+                                ccmmsg = new ChatClientMultiMessage();
+                                ccmmsg.initChatClientMultiMessage(content, ch);
+                                ConnectionsHandler.getConnection().send(ccmmsg);
                             };
-                            ccpwomsg = new ChatClientPrivateWithObjectMessage();
-                            ccpwomsg.initChatClientPrivateWithObjectMessage(content, ctoa.receiverName, objects);
-                            ConnectionsHandler.getConnection().send(ccpwomsg);
                         }
                         else
                         {
-                            ccpmsg = new ChatClientPrivateMessage();
-                            ccpmsg.initChatClientPrivateMessage(content, ctoa.receiverName);
-                            ConnectionsHandler.getConnection().send(ccpmsg);
+                            if (((ctoa.receiverName.length < 2) || (ctoa.receiverName.length > 31)))
+                            {
+                                KernelEventsManager.getInstance().processCallback(ChatHookList.TextInformation, I18n.getUiText("ui.chat.error.1"), ChatActivableChannelsEnum.PSEUDO_CHANNEL_INFO, this.getTimestamp());
+                                return (true);
+                            };
+                            if (ctoa.objects)
+                            {
+                                objects = new Vector.<ObjectItem>();
+                                nb2 = ctoa.objects.length;
+                                jo = 0;
+                                while (jo < nb2)
+                                {
+                                    itemWrapper2 = ctoa.objects[jo];
+                                    objectItem2 = new ObjectItem();
+                                    objectItem2.initObjectItem(itemWrapper2.position, itemWrapper2.objectGID, ((itemWrapper2.effectsList == null) ? new Vector.<ObjectEffect>() : itemWrapper2.effectsList), itemWrapper2.objectUID, itemWrapper2.quantity);
+                                    objects.push(objectItem2);
+                                    jo = (jo + 1);
+                                };
+                                ccpwomsg = new ChatClientPrivateWithObjectMessage();
+                                ccpwomsg.initChatClientPrivateWithObjectMessage(content, ctoa.receiverName, objects);
+                                ConnectionsHandler.getConnection().send(ccpwomsg);
+                            }
+                            else
+                            {
+                                ccpmsg = new ChatClientPrivateMessage();
+                                ccpmsg.initChatClientPrivateMessage(content, ctoa.receiverName);
+                                ConnectionsHandler.getConnection().send(ccpmsg);
+                            };
                         };
+                        i = (i + 1);
                     };
                     return (true);
                 case (msg is ChatServerWithObjectMessage):
                     scwomsg = (msg as ChatServerWithObjectMessage);
                     AccountManager.getInstance().setAccount(scwomsg.senderName, scwomsg.senderAccountId);
-                    if (((((!((scwomsg.channel == RED_CHANNEL_ID))) && (!((scwomsg.channel == ChatActivableChannelsEnum.PSEUDO_CHANNEL_PRIVATE))))) && (((this.socialFrame.isIgnored(scwomsg.senderName, scwomsg.senderAccountId)) || (this.socialFrame.isEnemy(scwomsg.senderName))))))
+                    if ((((!(scwomsg.channel == RED_CHANNEL_ID)) && (!(scwomsg.channel == ChatActivableChannelsEnum.PSEUDO_CHANNEL_PRIVATE))) && ((this.socialFrame.isIgnored(scwomsg.senderName, scwomsg.senderAccountId)) || (this.socialFrame.isEnemy(scwomsg.senderName)))))
                     {
                         return (true);
                     };
@@ -710,7 +834,7 @@
                         {
                             this.playAlertSound(GUILD_SOUND);
                         };
-                        if ((((scwomsg.channel == ChatActivableChannelsEnum.CHANNEL_PARTY)) || ((scwomsg.channel == ChatActivableChannelsEnum.CHANNEL_ARENA))))
+                        if (((scwomsg.channel == ChatActivableChannelsEnum.CHANNEL_PARTY) || (scwomsg.channel == ChatActivableChannelsEnum.CHANNEL_ARENA)))
                         {
                             this.playAlertSound(PARTY_SOUND);
                         };
@@ -729,8 +853,8 @@
                         i = (i + 1);
                     };
                     content = this.checkCensored(scwomsg.content, scwomsg.channel, scwomsg.senderAccountId, scwomsg.senderName)[0];
-                    KernelEventsManager.getInstance().processCallback(ChatHookList.ChatServerWithObject, scwomsg.channel, scwomsg.senderId, scwomsg.senderName, content, this.getRealTimestamp(scwomsg.timestamp), scwomsg.fingerprint, listItem);
-                    this.saveMessage(scwomsg.channel, scwomsg.content, content, this.getRealTimestamp(scwomsg.timestamp), scwomsg.fingerprint, scwomsg.senderId, scwomsg.senderName, listItem);
+                    KernelEventsManager.getInstance().processCallback(ChatHookList.ChatServerWithObject, scwomsg.channel, scwomsg.senderId, scwomsg.prefix, scwomsg.senderName, content, this.getRealTimestamp(scwomsg.timestamp), scwomsg.fingerprint, listItem);
+                    this.saveMessage(scwomsg.channel, scwomsg.content, content, this.getRealTimestamp(scwomsg.timestamp), scwomsg.fingerprint, scwomsg.senderId, scwomsg.prefix, scwomsg.senderName, listItem);
                     return (true);
                 case (msg is ChatAdminServerMessage):
                     casmsg = (msg as ChatAdminServerMessage);
@@ -741,7 +865,7 @@
                         {
                             this.playAlertSound(GUILD_SOUND);
                         };
-                        if ((((casmsg.channel == ChatActivableChannelsEnum.CHANNEL_PARTY)) || ((casmsg.channel == ChatActivableChannelsEnum.CHANNEL_ARENA))))
+                        if (((casmsg.channel == ChatActivableChannelsEnum.CHANNEL_PARTY) || (casmsg.channel == ChatActivableChannelsEnum.CHANNEL_ARENA)))
                         {
                             this.playAlertSound(PARTY_SOUND);
                         };
@@ -750,8 +874,8 @@
                             this.playAlertSound(PRIVATE_SOUND);
                         };
                     };
-                    KernelEventsManager.getInstance().processCallback(ChatHookList.ChatServer, casmsg.channel, casmsg.senderId, casmsg.senderName, casmsg.content, this.getRealTimestamp(casmsg.timestamp), casmsg.fingerprint, true);
-                    this.saveMessage(casmsg.channel, casmsg.content, casmsg.content, this.getRealTimestamp(casmsg.timestamp), casmsg.fingerprint, casmsg.senderId, casmsg.senderName, null, "", 0, 0, null, true);
+                    KernelEventsManager.getInstance().processCallback(ChatHookList.ChatServer, casmsg.channel, casmsg.senderId, casmsg.prefix, casmsg.senderName, casmsg.content, this.getRealTimestamp(casmsg.timestamp), casmsg.fingerprint, true);
+                    this.saveMessage(casmsg.channel, casmsg.content, casmsg.content, this.getRealTimestamp(casmsg.timestamp), casmsg.fingerprint, casmsg.senderId, casmsg.prefix, casmsg.senderName, null, "", 0, 0, null, true);
                     return (true);
                 case (msg is PopupWarningMessage):
                     pwmsg = (msg as PopupWarningMessage);
@@ -761,7 +885,7 @@
                     csmsg = (msg as ChatServerMessage);
                     showBubble = true;
                     AccountManager.getInstance().setAccount(csmsg.senderName, csmsg.senderAccountId);
-                    if (((((!((csmsg.channel == RED_CHANNEL_ID))) && (!((csmsg.channel == ChatActivableChannelsEnum.PSEUDO_CHANNEL_PRIVATE))))) && (((this.socialFrame.isIgnored(csmsg.senderName, csmsg.senderAccountId)) || (this.socialFrame.isEnemy(csmsg.senderName))))))
+                    if ((((!(csmsg.channel == RED_CHANNEL_ID)) && (!(csmsg.channel == ChatActivableChannelsEnum.PSEUDO_CHANNEL_PRIVATE))) && ((this.socialFrame.isIgnored(csmsg.senderName, csmsg.senderAccountId)) || (this.socialFrame.isEnemy(csmsg.senderName)))))
                     {
                         return (true);
                     };
@@ -771,7 +895,7 @@
                         {
                             this.playAlertSound(GUILD_SOUND);
                         };
-                        if ((((csmsg.channel == ChatActivableChannelsEnum.CHANNEL_PARTY)) || ((csmsg.channel == ChatActivableChannelsEnum.CHANNEL_ARENA))))
+                        if (((csmsg.channel == ChatActivableChannelsEnum.CHANNEL_PARTY) || (csmsg.channel == ChatActivableChannelsEnum.CHANNEL_ARENA)))
                         {
                             this.playAlertSound(PARTY_SOUND);
                         };
@@ -780,11 +904,27 @@
                             this.playAlertSound(PRIVATE_SOUND);
                         };
                     };
-                    newContent = this.checkCensored(csmsg.content, csmsg.channel, csmsg.senderAccountId, csmsg.senderName);
+                    if (csmsg.content.indexOf(SPLIT_CODE) != -1)
+                    {
+                        this._splittedContentLength--;
+                        if (csmsg.content.length > 1)
+                        {
+                            this._splittedContent = (this._splittedContent + csmsg.content.substr(0, (csmsg.content.length - 1)));
+                            return (true);
+                        };
+                        msgContent = this._splittedContent;
+                        this._splittedContent = "";
+                    }
+                    else
+                    {
+                        msgContent = csmsg.content;
+                        this._splittedContent = "";
+                    };
+                    newContent = this.checkCensored(msgContent, csmsg.channel, csmsg.senderAccountId, csmsg.senderName);
                     content = newContent[0];
                     if (csmsg.channel == ChatChannelsMultiEnum.CHANNEL_ADS)
                     {
-                        content = csmsg.content;
+                        content = msgContent;
                     };
                     if (content.substr(0, 6).toLowerCase() == "/think")
                     {
@@ -793,18 +933,18 @@
                     }
                     else
                     {
-                        if ((((((content.charAt(0) == "*")) && ((content.charAt((content.length - 1)) == "*")))) || ((content.substr(0, 3).toLowerCase() == "/me"))))
+                        if ((((content.charAt(0) == "*") && (content.charAt((content.length - 1)) == "*")) || (content.substr(0, 3).toLowerCase() == "/me")))
                         {
                             showBubble = false;
                         };
                     };
-                    KernelEventsManager.getInstance().processCallback(ChatHookList.ChatServer, csmsg.channel, csmsg.senderId, csmsg.senderName, content, this.getRealTimestamp(csmsg.timestamp), csmsg.fingerprint, false);
-                    this.saveMessage(csmsg.channel, csmsg.content, content, this.getRealTimestamp(csmsg.timestamp), csmsg.fingerprint, csmsg.senderId, csmsg.senderName);
-                    if (((Kernel.getWorker().contains(FightBattleFrame)) || ((content.substr(0, 3).toLowerCase() == "/me"))))
+                    KernelEventsManager.getInstance().processCallback(ChatHookList.ChatServer, csmsg.channel, csmsg.senderId, csmsg.prefix, csmsg.senderName, content, this.getRealTimestamp(csmsg.timestamp), csmsg.fingerprint, false);
+                    this.saveMessage(csmsg.channel, msgContent, content, this.getRealTimestamp(csmsg.timestamp), csmsg.fingerprint, csmsg.senderId, csmsg.prefix, csmsg.senderName);
+                    if (((Kernel.getWorker().contains(FightBattleFrame)) || (content.substr(0, 3).toLowerCase() == "/me")))
                     {
                         return (true);
                     };
-                    if ((((csmsg.channel == ChatActivableChannelsEnum.CHANNEL_GLOBAL)) && (showBubble)))
+                    if (((csmsg.channel == ChatActivableChannelsEnum.CHANNEL_GLOBAL) && (showBubble)))
                     {
                         speakerEntity = (DofusEntities.getEntity(csmsg.senderId) as IDisplayable);
                         if (speakerEntity == null)
@@ -835,7 +975,7 @@
                                 targetBounds = r2;
                             };
                         };
-                        if (!(targetBounds))
+                        if (!targetBounds)
                         {
                             targetBounds = (speakerEntity as IDisplayable).absoluteBounds;
                         };
@@ -848,7 +988,7 @@
                         {
                             bubble = new ChatBubble(tooltipContent);
                         };
-                        TooltipManager.show(((thinking) ? thinkBubble : (bubble)), targetBounds, UiModuleManager.getInstance().getModule("Ankama_Tooltips"), true, ("msg" + csmsg.senderId), LocationEnum.POINT_BOTTOMLEFT, LocationEnum.POINT_TOPRIGHT, 0, true, null, null, null, null, false, StrataEnum.STRATA_WORLD);
+                        TooltipManager.show(((thinking) ? thinkBubble : bubble), targetBounds, UiModuleManager.getInstance().getModule("Ankama_Tooltips"), true, ("msg" + csmsg.senderId), LocationEnum.POINT_BOTTOMLEFT, LocationEnum.POINT_TOPRIGHT, 0, true, null, null, null, null, false, StrataEnum.STRATA_WORLD);
                     };
                     return (true);
                 case (msg is ChatServerCopyWithObjectMessage):
@@ -863,13 +1003,13 @@
                         i = (i + 1);
                     };
                     content = this.checkCensored(cscwomsg.content, cscwomsg.channel, PlayerManager.getInstance().accountId, PlayedCharacterManager.getInstance().infos.name)[0];
-                    this.saveMessage(cscwomsg.channel, cscwomsg.content, content, this.getRealTimestamp(cscwomsg.timestamp), cscwomsg.fingerprint, 0, "", listItemc, cscwomsg.receiverName, cscwomsg.receiverId);
+                    this.saveMessage(cscwomsg.channel, cscwomsg.content, content, this.getRealTimestamp(cscwomsg.timestamp), cscwomsg.fingerprint, 0, "", "", listItemc, cscwomsg.receiverName, cscwomsg.receiverId);
                     KernelEventsManager.getInstance().processCallback(ChatHookList.ChatServerCopyWithObject, cscwomsg.channel, cscwomsg.receiverName, content, this.getRealTimestamp(cscwomsg.timestamp), cscwomsg.fingerprint, cscwomsg.receiverId, listItemc);
                     return (true);
                 case (msg is ChatServerCopyMessage):
                     cscmsg = (msg as ChatServerCopyMessage);
                     content = this.checkCensored(cscmsg.content, cscmsg.channel, PlayerManager.getInstance().accountId, PlayedCharacterManager.getInstance().infos.name)[0];
-                    this.saveMessage(cscmsg.channel, cscmsg.content, content, this.getRealTimestamp(cscmsg.timestamp), cscmsg.fingerprint, 0, "", null, cscmsg.receiverName, cscmsg.receiverId);
+                    this.saveMessage(cscmsg.channel, cscmsg.content, content, this.getRealTimestamp(cscmsg.timestamp), cscmsg.fingerprint, 0, "", "", null, cscmsg.receiverName, cscmsg.receiverId);
                     KernelEventsManager.getInstance().processCallback(ChatHookList.ChatServerCopy, cscmsg.channel, cscmsg.receiverName, content, this.getRealTimestamp(cscmsg.timestamp), cscmsg.fingerprint, cscmsg.receiverId);
                     return (true);
                 case (msg is TextInformationMessage):
@@ -883,9 +1023,13 @@
                     if (InfoMessage.getInfoMessageById(((timsg.msgType * 10000) + timsg.msgId)))
                     {
                         textId = InfoMessage.getInfoMessageById(((timsg.msgType * 10000) + timsg.msgId)).textId;
+                        if (((timsg.msgId == 28) || (timsg.msgId == 29)))
+                        {
+                            UiStatsFrame.addStat("waiting_for_player");
+                        };
                         if (param != null)
                         {
-                            if (((param[0]) && (!((param[0].indexOf("~") == -1)))))
+                            if (((param[0]) && (!(param[0].indexOf("~") == -1))))
                             {
                                 params = param[0].split("~");
                             }
@@ -908,27 +1052,14 @@
                         };
                         params.push(timsg.msgId);
                     };
-                    if ((((timsg.msgId == BID_SOLD_OFFLINE_MSG_ID)) || ((timsg.msgId == MERCHANT_SOLD_OFFLINE_MSG_ID))))
-                    {
-                        if (!(this._offlineSales))
-                        {
-                            this._offlineSales = new Array();
-                            this._offlineSalesInit = true;
-                        };
-                        if (timsg.msgId == BID_SOLD_OFFLINE_MSG_ID)
-                        {
-                            saleType = OfflineSaleWrapper.TYPE_BIDHOUSE;
-                        }
-                        else
-                        {
-                            saleType = OfflineSaleWrapper.TYPE_MERCHANT;
-                        };
-                        this._offlineSales.push(OfflineSaleWrapper.create(saleType, parseInt(timsg.parameters[1]), parseInt(timsg.parameters[3]), parseInt(timsg.parameters[0])));
-                        return (true);
-                    };
                     msgContent = I18n.getText(textId);
                     if (msgContent)
                     {
+                        if ((((!(CHAT_FAIL_TEXTS_IDS.indexOf(textId) == -1)) && (!(this._sendingSplittedContent))) && (this._splittedContentLength > 0)))
+                        {
+                            this._splittedContentLength--;
+                            return (true);
+                        };
                         msgContent = ParamsDecoder.applyParams(msgContent, params);
                         timestamp = this.getTimestamp();
                         if (timsg.msgType == TextInformationTypeEnum.TEXT_INFORMATION_ERROR)
@@ -959,6 +1090,12 @@
                         };
                         this.saveMessage(channel, null, msgContent, timestamp);
                         KernelEventsManager.getInstance().processCallback(ChatHookList.TextInformation, msgContent, channel, timestamp, false);
+                        if (((!(CHAT_FAIL_TEXTS_IDS.indexOf(textId) == -1)) && (this._sendingSplittedContent)))
+                        {
+                            this._splittedContentLength--;
+                            this._sendingSplittedContent = false;
+                            this._splittedContent = "";
+                        };
                     }
                     else
                     {
@@ -989,10 +1126,15 @@
                     };
                     channel2 = ChatActivableChannelsEnum.PSEUDO_CHANNEL_FIGHT_LOG;
                     timestamp2 = this.getTimestamp();
-                    this.saveMessage(channel2, null, "", timestamp2, "", 0, "", null, "", 0, taimsg.textKey, paramTaimsg);
+                    this.saveMessage(channel2, null, "", timestamp2, "", 0, "", "", null, "", 0, taimsg.textKey, paramTaimsg);
                     KernelEventsManager.getInstance().processCallback(ChatHookList.TextActionInformation, taimsg.textKey, params, channel2, timestamp2, false);
                     return (true);
                 case (msg is ChatErrorMessage):
+                    if (((!(this._sendingSplittedContent)) && (this._splittedContentLength > 0)))
+                    {
+                        this._splittedContentLength--;
+                        return (true);
+                    };
                     cemsg = (msg as ChatErrorMessage);
                     timestampErr = this.getTimestamp();
                     switch (cemsg.reason)
@@ -1004,6 +1146,7 @@
                         case ChatErrorEnum.CHAT_ERROR_RECEIVER_NOT_FOUND:
                         case ChatErrorEnum.CHAT_ERROR_NO_PARTY_ARENA:
                         case ChatErrorEnum.CHAT_ERROR_NO_TEAM:
+                        case ChatErrorEnum.CHAT_ERROR_NO_CHANNEL_COMMUNITY:
                             contentErr = I18n.getUiText(("ui.chat.error." + cemsg.reason));
                             break;
                         case ChatErrorEnum.CHAT_ERROR_ALLIANCE:
@@ -1011,6 +1154,12 @@
                             contentErr = I18n.getUiText("ui.chat.error.0");
                     };
                     KernelEventsManager.getInstance().processCallback(ChatHookList.TextInformation, contentErr, ChatActivableChannelsEnum.PSEUDO_CHANNEL_INFO, timestampErr);
+                    if (this._sendingSplittedContent)
+                    {
+                        this._splittedContentLength--;
+                        this._sendingSplittedContent = false;
+                        this._splittedContent = "";
+                    };
                     return (true);
                 case (msg is SaveMessageAction):
                     sma = SaveMessageAction(msg);
@@ -1041,10 +1190,32 @@
                 case (msg is ChatSmileyMessage):
                     scmsg = (msg as ChatSmileyMessage);
                     AccountManager.getInstance().setAccountFromId(scmsg.entityId, scmsg.accountId);
+                    if (scmsg.entityId == PlayedCharacterManager.getInstance().id)
+                    {
+                        chatOptS = OptionManager.getOptionManager("chat");
+                        if (!chatOptS.getOption("favoriteSmileys"))
+                        {
+                            chatOptS.setOption("favoriteSmileys", [scmsg.smileyId]);
+                        }
+                        else
+                        {
+                            oldFavSmileys = chatOptS["favoriteSmileys"];
+                            favSmileys = new Array();
+                            favSmileys.push(scmsg.smileyId);
+                            for each (smileyId in oldFavSmileys)
+                            {
+                                if (((!(smileyId == scmsg.smileyId)) && (favSmileys.length < MAX_NUMBER_LAST_USED_SMILEY)))
+                                {
+                                    favSmileys.push(smileyId);
+                                };
+                            };
+                            chatOptS.setOption("favoriteSmileys", favSmileys);
+                        };
+                    };
                     if (this.entitiesFrame)
                     {
                         entityInfo = this.entitiesFrame.getEntityInfos(scmsg.entityId);
-                        if (((((entityInfo) && ((entityInfo is GameRolePlayCharacterInformations)))) && (this.socialFrame.isIgnored(GameRolePlayCharacterInformations(entityInfo).name, scmsg.accountId))))
+                        if ((((entityInfo) && (entityInfo is GameRolePlayCharacterInformations)) && (this.socialFrame.isIgnored(GameRolePlayCharacterInformations(entityInfo).name, scmsg.accountId))))
                         {
                             return (true);
                         };
@@ -1078,12 +1249,42 @@
                     date = new Date();
                     id = PlayedCharacterManager.getInstance().id;
                     chatOpt = OptionManager.getOptionManager("chat");
-                    if (!(chatOpt[("moodSmiley_" + id)]))
+                    if (!chatOpt.getOption(("moodSmiley_" + id)))
                     {
-                        chatOpt.add(("moodSmiley_" + id), "");
+                        chatOpt.setOption(("moodSmiley_" + id), "");
                     };
-                    chatOpt[("moodSmiley_" + id)] = ((this._smileyMood + "_") + date.time);
+                    chatOpt.setOption(("moodSmiley_" + id), ((this._smileyMood + "_") + date.time));
                     KernelEventsManager.getInstance().processCallback(ChatHookList.MoodResult, msrtmsg.resultCode, msrtmsg.smileyId);
+                    return (true);
+                case (msg is ChatSmileyExtraPackListMessage):
+                    cseplmsg = (msg as ChatSmileyExtraPackListMessage);
+                    this._aSmilies = new Array();
+                    this._aSmileyPacks = new Array();
+                    this._aSmileyPacks.push(SmileyPack.getSmileyPackById(0));
+                    for each (packId in cseplmsg.packIds)
+                    {
+                        this._aSmileyPacks.push(SmileyPack.getSmileyPackById(packId));
+                    };
+                    this._aSmileyPacks.sortOn("order", Array.NUMERIC);
+                    for each (pack in this._aSmileyPacks)
+                    {
+                        if (!pack)
+                        {
+                        }
+                        else
+                        {
+                            for each (smileypId in pack.smileys)
+                            {
+                                smiley = Smiley.getSmileyById(smileypId);
+                                if (smiley)
+                                {
+                                    smileyW = SmileyWrapper.create(smiley.id, smiley.gfxId, pack.id, smiley.categoryId);
+                                    this._aSmilies.push(smileyW);
+                                };
+                            };
+                        };
+                    };
+                    KernelEventsManager.getInstance().processCallback(ChatHookList.SmileyListUpdated);
                     return (true);
                 case (msg is ChannelEnablingChangeMessage):
                     cecmsg = (msg as ChannelEnablingChangeMessage);
@@ -1094,15 +1295,29 @@
                     cebmsg.initChannelEnablingMessage(ChannelEnablingAction(msg).channel, ChannelEnablingAction(msg).enable);
                     ConnectionsHandler.getConnection().send(cebmsg);
                     return (true);
+                case (msg is ChatCommunityChannelCommunityMessage):
+                    ccccmsg = (msg as ChatCommunityChannelCommunityMessage);
+                    if (ccccmsg.communityId != -1)
+                    {
+                        this._communityIdForCommunityChannel = ccccmsg.communityId;
+                        KernelEventsManager.getInstance().processCallback(ChatHookList.ChatCommunityChannelCommunity, ccccmsg.communityId);
+                    };
+                    return (true);
+                case (msg is ChatCommunityChannelSetCommunityAction):
+                    cccsca = (msg as ChatCommunityChannelSetCommunityAction);
+                    cccscrmsg = new ChatCommunityChannelSetCommunityRequestMessage();
+                    cccscrmsg.initChatCommunityChannelSetCommunityRequestMessage(cccsca.communityId);
+                    ConnectionsHandler.getConnection().send(cccscrmsg);
+                    return (true);
                 case (msg is TabsUpdateAction):
                     tua = (msg as TabsUpdateAction);
                     if (tua.tabs)
                     {
-                        OptionManager.getOptionManager("chat").channelTabs = tua.tabs;
+                        OptionManager.getOptionManager("chat").setOption("channelTabs", tua.tabs);
                     };
                     if (tua.tabsNames)
                     {
-                        OptionManager.getOptionManager("chat").tabsNames = tua.tabsNames;
+                        OptionManager.getOptionManager("chat").setOption("tabsNames", tua.tabsNames);
                     };
                     return (true);
                 case (msg is ChatCommandAction):
@@ -1113,7 +1328,7 @@
                     }
                     catch(ucie:UnhandledConsoleInstructionError)
                     {
-                        KernelEventsManager.getInstance().processCallback(ChatHookList.TextInformation, ucie.message, ChatActivableChannelsEnum.PSEUDO_CHANNEL_INFO, getTimestamp());
+                        KernelEventsManager.getInstance().processCallback(ChatHookList.TextInformation, StringUtils.unescapeAllowedChar(ucie.message), ChatActivableChannelsEnum.PSEUDO_CHANNEL_INFO, getTimestamp());
                     };
                     return (true);
                 case (msg is EnabledChannelsMessage):
@@ -1133,12 +1348,11 @@
                     return (true);
                 case (msg is ObjectErrorMessage):
                     oemsg = (msg as ObjectErrorMessage);
-                    if (oemsg.reason == ObjectErrorEnum.SYMBIOTIC_OBJECT_ERROR)
-                    {
-                        return (false);
-                    };
+                    this.playAlertSound(ALERT_SOUND);
                     switch (oemsg.reason)
                     {
+                        case ObjectErrorEnum.SYMBIOTIC_OBJECT_ERROR:
+                            return (false);
                         case ObjectErrorEnum.INVENTORY_FULL:
                             objectErrorText = I18n.getUiText("ui.objectError.InventoryFull");
                             break;
@@ -1146,7 +1360,7 @@
                             objectErrorText = I18n.getUiText("ui.objectError.CannotEquipTwice");
                             break;
                         case ObjectErrorEnum.NOT_TRADABLE:
-                            break;
+                            return (false);
                         case ObjectErrorEnum.CANNOT_DROP:
                             objectErrorText = I18n.getUiText("ui.objectError.CannotDrop");
                             break;
@@ -1162,20 +1376,28 @@
                         case ObjectErrorEnum.LIVING_OBJECT_REFUSED_FOOD:
                             objectErrorText = I18n.getUiText("ui.objectError.LivingObjectRefusedFood");
                             break;
+                        case ObjectErrorEnum.CRITERIONS:
+                            objectErrorText = I18n.getUiText("ui.objectError.criterions");
+                            break;
+                        case ObjectErrorEnum.CANNOT_EQUIP_HERE:
+                            objectErrorText = I18n.getUiText("ui.objectError.cannotEquipHere");
+                            break;
+                        case ObjectErrorEnum.CANNOT_UNEQUIP:
+                            objectErrorText = I18n.getUiText("ui.objectError.cannotUnequip");
+                            break;
                     };
-                    this.playAlertSound(ALERT_SOUND);
                     if (objectErrorText)
                     {
                         KernelEventsManager.getInstance().processCallback(ChatHookList.TextInformation, objectErrorText, RED_CHANNEL_ID, this.getTimestamp());
                     }
                     else
                     {
-                        _log.error((("Texte d'erreur objet " + oemsg.reason) + " manquant"));
+                        _log.error(("No text has been found to display for ObjectErrorMessage with reason " + oemsg.reason));
                     };
                     return (false);
                 case (msg is BasicWhoIsMessage):
                     bwimsg = (msg as BasicWhoIsMessage);
-                    if (!(bwimsg.verbose))
+                    if (!bwimsg.verbose)
                     {
                         KernelEventsManager.getInstance().processCallback(ChatHookList.SilentWhoIs, bwimsg.accountId, bwimsg.accountNickname, bwimsg.areaId, bwimsg.playerId, bwimsg.playerName, bwimsg.position, bwimsg.socialGroups);
                         return (true);
@@ -1187,6 +1409,22 @@
                     else
                     {
                         areaName = I18n.getUiText("ui.common.unknowArea");
+                    };
+                    dataApi = new DataApi();
+                    server = dataApi.getServer(bwimsg.serverId);
+                    serverName = "";
+                    if (server)
+                    {
+                        serverName = server.name;
+                    };
+                    if (bwimsg.originServerId > -1)
+                    {
+                        originServer = dataApi.getServer(bwimsg.originServerId);
+                    };
+                    originServerName = "";
+                    if (originServer)
+                    {
+                        originServerName = originServer.name;
                     };
                     notice = (((("{player," + bwimsg.playerName) + ",") + bwimsg.playerId) + "}");
                     if (bwimsg.position == GameHierarchyEnum.MODERATOR)
@@ -1218,12 +1456,20 @@
                             {
                                 if (bwimsg.position == GameHierarchyEnum.ADMIN)
                                 {
-                                    notice = (notice + " (");
-                                    notice = (notice + HtmlManager.addTag(I18n.getUiText("ui.common.administrator"), HtmlManager.SPAN, {
+                                    notice = (notice + ((" (" + HtmlManager.addTag(I18n.getUiText("ui.common.administrator"), HtmlManager.SPAN, {
                                         "color":XmlConfig.getInstance().getEntry("colors.hierarchy.administrator"),
                                         "bold":true
-                                    }));
-                                    notice = (notice + ")");
+                                    })) + ")"));
+                                }
+                                else
+                                {
+                                    if (bwimsg.position == GameHierarchyEnum.UNKNOWN_SPECIAL_USER)
+                                    {
+                                        notice = (notice + ((" (" + HtmlManager.addTag(I18n.getUiText("ui.common.officialAccount"), HtmlManager.SPAN, {
+                                            "color":XmlConfig.getInstance().getEntry("colors.hierarchy.moderator"),
+                                            "bold":true
+                                        })) + ")"));
+                                    };
                                 };
                             };
                         };
@@ -1234,7 +1480,14 @@
                     }
                     else
                     {
-                        text = I18n.getUiText("ui.common.whois", [bwimsg.accountNickname, notice, areaName]);
+                        if (originServer)
+                        {
+                            text = I18n.getUiText("ui.common.whoisWithOriginServer", [bwimsg.accountNickname, notice, areaName, serverName, originServerName]);
+                        }
+                        else
+                        {
+                            text = I18n.getUiText("ui.common.whois", [bwimsg.accountNickname, notice, areaName, serverName]);
+                        };
                     };
                     if (bwimsg.socialGroups.length > 0)
                     {
@@ -1254,6 +1507,13 @@
                         };
                     };
                     KernelEventsManager.getInstance().processCallback(ChatHookList.TextInformation, text, ChatActivableChannelsEnum.PSEUDO_CHANNEL_INFO, this.getTimestamp());
+                    return (true);
+                case (msg is BasicDateMessage):
+                    bdmsg = (msg as BasicDateMessage);
+                    month = Month.getMonthById(bdmsg.month).name;
+                    time = (" - " + TimeManager.getInstance().formatClock(0, false));
+                    textToDisplay = (I18n.getUiText("ui.time.dateLetters", [bdmsg.day, month, bdmsg.year]) + time);
+                    KernelEventsManager.getInstance().processCallback(ChatHookList.TextInformation, textToDisplay, ChatActivableChannelsEnum.PSEUDO_CHANNEL_INFO, this.getTimestamp());
                     return (true);
                 case (msg is NumericWhoIsMessage):
                     nwimsg = (msg as NumericWhoIsMessage);
@@ -1289,9 +1549,10 @@
                     notification = Notification.getNotificationById(nbsmsg.id);
                     title = I18n.getText(notification.titleId);
                     text = I18n.getText(notification.messageId, a);
+                    _log.debug(((("NotificationByServerMessage (" + nbsmsg.id) + ") : ") + text));
                     if (notification.id)
                     {
-                        if ((((((((notification.id == 34)) || ((notification.id == 24)))) || ((notification.id == 33)))) || ((notification.id == 36))))
+                        if (((((notification.id == DataEnum.TEXT_NOTIFICATION_SERVER_INFORMATION) || (notification.id == DataEnum.TEXT_NOTIFICATION_SERVER_GIFT)) || (notification.id == DataEnum.TEXT_NOTIFICATION_SERVER_KOLOSSIUM)) || (notification.id == DataEnum.TEXT_NOTIFICATION_SERVER_KOTH_SUPERIORITY)))
                         {
                             type = NotificationTypeEnum.SERVER_INFORMATION;
                         }
@@ -1303,31 +1564,6 @@
                         NotificationManager.getInstance().addCallbackToNotification(nbsmsgNid, "NotificationUpdateFlag", [notification.id]);
                         NotificationManager.getInstance().sendNotification(nbsmsgNid);
                     };
-                    return (true);
-                case (msg is ExchangeGuildTaxCollectorGetMessage):
-                    egtcgmsg = (msg as ExchangeGuildTaxCollectorGetMessage);
-                    idFName = parseInt(egtcgmsg.collectorName.split(",")[0], 36);
-                    idName = parseInt(egtcgmsg.collectorName.split(",")[1], 36);
-                    taxCollectorName = ((TaxCollectorFirstname.getTaxCollectorFirstnameById(idFName).firstname + " ") + TaxCollectorName.getTaxCollectorNameById(idName).name);
-                    textObjects = "";
-                    for each (object in egtcgmsg.objectsInfos)
-                    {
-                        if (textObjects != "")
-                        {
-                            textObjects = (textObjects + ", ");
-                        };
-                        textObjects = (textObjects + ((object.quantity + "x") + Item.getItemById(object.objectUID).name));
-                    };
-                    if (textObjects != "")
-                    {
-                        objectsAndExp = I18n.getUiText("ui.social.thingsTaxCollectorGet", [textObjects, egtcgmsg.experience]);
-                    }
-                    else
-                    {
-                        objectsAndExp = I18n.getUiText("ui.social.xpTaxCollectorGet", [egtcgmsg.experience]);
-                    };
-                    text = I18n.getUiText("ui.social.taxcollectorRecolted", [taxCollectorName, (((("(" + egtcgmsg.worldX) + ", ") + egtcgmsg.worldY) + ")"), egtcgmsg.userName, objectsAndExp]);
-                    KernelEventsManager.getInstance().processCallback(ChatHookList.TextInformation, text, ChatActivableChannelsEnum.CHANNEL_GUILD, this.getTimestamp());
                     return (true);
                 case (msg is NewMailMessage):
                     nmmsg = (msg as NewMailMessage);
@@ -1347,22 +1583,43 @@
                         this._aParagraphesByChannel[indTabChan] = new Array();
                     };
                     return (true);
-                case (msg is MapComplementaryInformationsDataMessage):
-                    if (((this._offlineSales) && (this._offlineSalesInit)))
+                case (msg is ExchangeBidHouseUnsoldItemsMessage):
+                    ebhuimsg = (msg as ExchangeBidHouseUnsoldItemsMessage);
+                    nbUnsoldLots = ebhuimsg.items.length;
+                    this._unsoldItems[this._numUnsoldItemsLinks] = new Array();
+                    i = 0;
+                    while (i < nbUnsoldLots)
                     {
-                        nbOfflineSales = this._offlineSales.length;
-                        i = 0;
-                        while (i < nbOfflineSales)
-                        {
-                            offlineSale = this._offlineSales[i];
-                            totalKamas = (totalKamas + offlineSale.kamas);
-                            i = (i + 1);
-                        };
-                        offlineSalesMsg = (("{offlineSales::" + PatternDecoder.combine(I18n.getUiText("ui.sell.offlineSales", [nbOfflineSales, StringUtils.kamasToString(totalKamas, "")]), "n", (nbOfflineSales <= 1))) + "}");
-                        KernelEventsManager.getInstance().processCallback(ChatHookList.TextInformation, offlineSalesMsg, ChatActivableChannelsEnum.PSEUDO_CHANNEL_INFO, this.getTimestamp(), false, true);
-                        this._offlineSalesInit = false;
+                        this._unsoldItems[this._numUnsoldItemsLinks].push(OfflineSaleWrapper.create((i + 1), OfflineSaleWrapper.TYPE_UNSOLD, ebhuimsg.items[i].objectGID, ebhuimsg.items[i].quantity, NaN, 0, null));
+                        i = (i + 1);
                     };
-                    return (false);
+                    unsoldItemsMsg = (((("{offlineSales,1," + this._numUnsoldItemsLinks) + "::") + PatternDecoder.combine(I18n.getUiText("ui.sell.unsoldItemsLink", [nbUnsoldLots]), "n", (nbUnsoldLots <= 1), (nbUnsoldLots == 0))) + "}");
+                    KernelEventsManager.getInstance().processCallback(ChatHookList.TextInformation, unsoldItemsMsg, ChatActivableChannelsEnum.PSEUDO_CHANNEL_INFO, this.getTimestamp(), false, true);
+                    this._numUnsoldItemsLinks++;
+                    return (true);
+                case (msg is ExchangeOfflineSoldItemsMessage):
+                    eosimsg = (msg as ExchangeOfflineSoldItemsMessage);
+                    this._offlineSales.length = 0;
+                    for each (soldLot in eosimsg.bidHouseItems)
+                    {
+                        this._offlineSales.push(OfflineSaleWrapper.create((this._offlineSales.length + 1), OfflineSaleWrapper.TYPE_BIDHOUSE, soldLot.objectGID, soldLot.quantity, soldLot.price, soldLot.date, soldLot.effects));
+                    };
+                    for each (soldLot in eosimsg.merchantItems)
+                    {
+                        this._offlineSales.push(OfflineSaleWrapper.create((this._offlineSales.length + 1), OfflineSaleWrapper.TYPE_MERCHANT, soldLot.objectGID, soldLot.quantity, soldLot.price, soldLot.date, soldLot.effects));
+                    };
+                    totalKamas = 0;
+                    nbOfflineSales = this._offlineSales.length;
+                    i = 0;
+                    while (i < nbOfflineSales)
+                    {
+                        offlineSale = this._offlineSales[i];
+                        totalKamas = (totalKamas + offlineSale.kamas);
+                        i = (i + 1);
+                    };
+                    offlineSalesMsg = (("{offlineSales,0,0::" + PatternDecoder.combine(I18n.getUiText("ui.sell.offlineSales", [nbOfflineSales, StringUtils.kamasToString(totalKamas, "")]), "n", (nbOfflineSales <= 1), (nbOfflineSales == 0))) + "}");
+                    KernelEventsManager.getInstance().processCallback(ChatHookList.TextInformation, offlineSalesMsg, ChatActivableChannelsEnum.PSEUDO_CHANNEL_INFO, this.getTimestamp(), false, true);
+                    return (true);
             };
             return (false);
         }
@@ -1402,12 +1659,12 @@
             this._options = opt;
         }
 
-        private function onCssLoaded():void
+        private function onCssLoaded(cssUrl:String):void
         {
             var styleObj:Object;
-            var _ssSheet:ExtendedStyleSheet = CssManager.getInstance().getCss(this._cssUri);
+            var _ssSheet:ExtendedStyleSheet = CssManager.getInstance().getCss(cssUrl);
             var i:int;
-            while (i < 13)
+            while (((_ssSheet.getStyle(("p" + i))) && (_ssSheet.getStyle(("p" + i))["color"])))
             {
                 styleObj = _ssSheet.getStyle(("p" + i));
                 this._aChatColors[i] = uint(this.color0x(styleObj["color"]));
@@ -1430,7 +1687,7 @@
             {
                 signe = "";
             };
-            return ((((((pCarac.base + pCarac.additionnal) + " (") + signe) + bonuses) + ")"));
+            return (((((pCarac.base + pCarac.additionnal) + " (") + signe) + bonuses) + ")");
         }
 
         private function playAlertSound(pType:uint):void
@@ -1447,39 +1704,39 @@
                     {
                         SoundManager.getInstance().manager.playUISound(UISoundEnum.GUILD_CHAT_MESSAGE);
                     };
-                    return;
+                    break;
                 case PARTY_SOUND:
                     if (sapi.playSoundForGuildMessage())
                     {
                         SoundManager.getInstance().manager.playUISound(UISoundEnum.PARTY_CHAT_MESSAGE);
                     };
-                    return;
+                    break;
                 case PRIVATE_SOUND:
                     if (sapi.playSoundForGuildMessage())
                     {
                         SoundManager.getInstance().manager.playUISound(UISoundEnum.PRIVATE_CHAT_MESSAGE);
                     };
-                    return;
+                    break;
                 case ALERT_SOUND:
                     SoundManager.getInstance().manager.playUISound(UISoundEnum.RED_CHAT_MESSAGE);
-                    return;
+                    break;
             };
         }
 
-        private function saveMessage(channel:int=0, baseContent:String="", content:String="", timestamp:Number=0, fingerprint:String="", senderId:uint=0, senderName:String="", objects:Vector.<ItemWrapper>=null, receiverName:String="", receiverId:uint=0, textKey:uint=0, params:Array=null, admin:Boolean=false):void
+        private function saveMessage(channel:int=0, baseContent:String="", content:String="", timestamp:Number=0, fingerprint:String="", senderId:Number=0, prefix:String="", senderName:String="", objects:Vector.<ItemWrapper>=null, receiverName:String="", receiverId:Number=0, textKey:uint=0, params:Array=null, admin:Boolean=false):void
         {
             var sentence:Object;
             var max:uint;
             var i:uint;
             if (receiverName != "")
             {
-                sentence = new ChatSentenceWithRecipient(this._msgUId, baseContent, content, channel, timestamp, fingerprint, senderId, senderName, receiverName, receiverId, objects);
+                sentence = new ChatSentenceWithRecipient(this._msgUId, baseContent, content, channel, timestamp, fingerprint, senderId, prefix, senderName, receiverName, receiverId, objects);
             }
             else
             {
                 if (senderName != "")
                 {
-                    sentence = new ChatSentenceWithSource(this._msgUId, baseContent, content, channel, timestamp, fingerprint, senderId, senderName, objects, admin);
+                    sentence = new ChatSentenceWithSource(this._msgUId, baseContent, content, channel, timestamp, fingerprint, senderId, prefix, senderName, objects, admin);
                 }
                 else
                 {
@@ -1509,39 +1766,6 @@
             KernelEventsManager.getInstance().processCallback(ChatHookList.NewMessage, channel, removedSentences);
         }
 
-        public function addParagraphToHistory(channel:int, p:Object):void
-        {
-            if (p != null)
-            {
-                p.id = this._msgUId;
-                this._aParagraphesByChannel[channel].push(p);
-            };
-        }
-
-        public function removeLinesFromHistory(value:int, channel:int):void
-        {
-            var i:int;
-            var saveHistoryForExternalChat:Boolean = ((Console.getInstance().opened) && (Console.getInstance().chatMode));
-            i = 0;
-            while (i < value)
-            {
-                if (!(this._aHistoryMessagesByChannel[channel]))
-                {
-                    this._aHistoryMessagesByChannel[channel] = new Array();
-                };
-                if (((saveHistoryForExternalChat) && ((i < this._maxMessagesStored))))
-                {
-                    this._aHistoryMessagesByChannel[channel].push(this._aMessagesByChannel[channel].shift());
-                }
-                else
-                {
-                    this._aMessagesByChannel[channel].shift();
-                };
-                this._aParagraphesByChannel[channel].shift();
-                i++;
-            };
-        }
-
         private function getTimestamp():Number
         {
             return (TimeManager.getInstance().getTimestamp());
@@ -1549,80 +1773,111 @@
 
         private function getRealTimestamp(time:Number):Number
         {
-            return (((time * 1000) + TimeManager.getInstance().timezoneOffset));
+            return ((time * 1000) + TimeManager.getInstance().timezoneOffset);
         }
 
         public function getTimestampServerByRealTimestamp(realTimeStamp:Number):Number
         {
-            return (((realTimeStamp - TimeManager.getInstance().timezoneOffset) / 1000));
+            return ((realTimeStamp - TimeManager.getInstance().timezoneOffset) / 1000);
         }
 
-        public function checkCensored(word:String, channel:uint, senderId:uint, senderName:String):Array
+        private function replaceCensoredWord(originalWord:String):String
+        {
+            var ichar:int;
+            var forbiddenWord:String;
+            var iichar:int;
+            var safeChars:Array = ["&", "%", "?", "#", "§", "!"];
+            var censoredWord:String = "";
+            if (this._aCensoredWords[originalWord.toLowerCase()])
+            {
+                ichar = 0;
+                while (ichar < originalWord.length)
+                {
+                    censoredWord = (censoredWord + safeChars[(originalWord.charCodeAt(ichar) % 5)]);
+                    ichar++;
+                };
+            }
+            else
+            {
+                for (forbiddenWord in this._aCensoredWords)
+                {
+                    if (this._aCensoredWords[forbiddenWord.toLowerCase()] == 2)
+                    {
+                        if (originalWord.indexOf(forbiddenWord.toLocaleLowerCase()) != -1)
+                        {
+                            iichar = 0;
+                            while (iichar < originalWord.length)
+                            {
+                                censoredWord = (censoredWord + safeChars[(originalWord.charCodeAt(iichar) % 5)]);
+                                iichar++;
+                            };
+                        };
+                    };
+                };
+            };
+            return ((censoredWord.length) ? censoredWord : originalWord);
+        }
+
+        public function checkCensored(word:String, channel:uint, senderId:Number, senderName:String):Array
         {
             var wordl:String;
             var nAddWarning:uint;
             var newContent:Array;
             var lang:String;
             var finalText:String;
-            var safeChars:Array;
             var indexOfMethod:Boolean;
+            var punctuationRegExp:RegExp;
             var wordsToCheck:Array;
             var wordi:String;
-            var testword:String;
             var finalWord:String;
+            var currentWord:String;
             var ichar:int;
-            var _local_24:String;
-            var iichar:int;
-            var _local_26:String;
-            var _local_27:String;
-            var _local_28:String;
+            var _local_25:String;
+            var isPunctuation:Boolean;
+            var safeReplace:String;
+            var upperContent:String;
+            var searchedWord:String;
             var pos:int;
             var finalWordl:String;
             var result:Object;
             var warning:String;
             var content:String = word;
-            if (((((((((OptionManager.getOptionManager("chat").filterInsult) && (!((channel == 8))))) && (!((channel == 10))))) && (!((channel == 11))))) && (!((channel == 666)))))
+            if ((((((OptionManager.getOptionManager("chat").getOption("filterInsult")) && (!(channel == 8))) && (!(channel == 10))) && (!(channel == 11))) && (!(channel == 666))))
             {
                 lang = XmlConfig.getInstance().getEntry("config.lang.current");
                 finalText = "";
-                safeChars = ["&", "%", "?", "#", "§", "!"];
                 indexOfMethod = (lang == "ja");
-                if (!(indexOfMethod))
+                punctuationRegExp = /[^\sa-zA-Z]{1}/g;
+                if (!indexOfMethod)
                 {
                     wordsToCheck = content.split(" ");
                     for each (wordi in wordsToCheck)
                     {
-                        testword = wordi.toLowerCase();
                         finalWord = "";
-                        if (this._aCensoredWords)
+                        currentWord = "";
+                        ichar = 0;
+                        while (ichar < wordi.length)
                         {
-                            if (this._aCensoredWords[testword])
+                            _local_25 = wordi.charAt(ichar);
+                            isPunctuation = (!(_local_25.search(punctuationRegExp) == -1));
+                            if (isPunctuation)
                             {
-                                ichar = 0;
-                                while (ichar < testword.length)
+                                if (currentWord.length)
                                 {
-                                    finalWord = (finalWord + safeChars[(testword.charCodeAt(ichar) % 5)]);
-                                    ichar++;
+                                    finalWord = (finalWord + this.replaceCensoredWord(currentWord));
+                                    currentWord = "";
                                 };
+                                finalWord = (finalWord + _local_25);
                             }
                             else
                             {
-                                for (_local_24 in this._aCensoredWords)
-                                {
-                                    if (this._aCensoredWords[_local_24] == 2)
-                                    {
-                                        if (testword.indexOf(_local_24) != -1)
-                                        {
-                                            iichar = 0;
-                                            while (iichar < testword.length)
-                                            {
-                                                finalWord = (finalWord + safeChars[(testword.charCodeAt(iichar) % 5)]);
-                                                iichar++;
-                                            };
-                                        };
-                                    };
-                                };
+                                currentWord = (currentWord + _local_25);
                             };
+                            ichar++;
+                        };
+                        if (currentWord.length)
+                        {
+                            finalWord = (finalWord + this.replaceCensoredWord(currentWord));
                         };
                         if (finalWord == "")
                         {
@@ -1634,23 +1889,27 @@
                 }
                 else
                 {
-                    _local_26 = "&%?§!&?&%§!&%!&%?#§!";
-                    _local_27 = content.toUpperCase();
-                    for (_local_28 in this._aCensoredWords)
+                    safeReplace = "&%?§!&?&%§!&%!&%?#§!";
+                    upperContent = content.toUpperCase();
+                    for (searchedWord in this._aCensoredWords)
                     {
                         pos = 0;
                         while (pos != -1)
                         {
-                            pos = _local_27.indexOf(_local_28);
+                            pos = upperContent.indexOf(searchedWord);
                             if (pos != -1)
                             {
-                                content = ((content.substr(0, pos) + _local_26.substr(0, _local_28.length)) + content.substr((pos + _local_28.length)));
-                                _local_27 = content.toUpperCase();
+                                content = ((content.substr(0, pos) + safeReplace.substr(0, searchedWord.length)) + content.substr((pos + searchedWord.length)));
+                                upperContent = content.toUpperCase();
                             };
                         };
                     };
                 };
             };
+            var lineBreakTypePattern:RegExp = /\n/gi;
+            content = content.replace(lineBreakTypePattern, " $&");
+            lineBreakTypePattern = /\r/gi;
+            content = content.replace(lineBreakTypePattern, " $&");
             var aText:Array = content.split(" ");
             var finalText2:String = "";
             var isLink:Boolean;
@@ -1692,7 +1951,7 @@
         public function needToFormateUrl(inStr:String):Object
         {
             var str:String = inStr.replace("&amp;amp;", "&");
-            var needReplaceAmp:Boolean = !((str == inStr));
+            var needReplaceAmp:* = (!(str == inStr));
             var myPattern:RegExp = new RegExp(URL_MATCHER);
             var result:Object = myPattern.exec(str);
             var objResult:Object = new Object();
@@ -1708,7 +1967,7 @@
                     objResult.url = result[0];
                 };
                 objResult.index = result.index;
-                if ((((((((result[2] == undefined)) && ((result[8] == undefined)))) && ((result[7].split(".").length >= 2)))) && ((LINK_TLDS.indexOf(result[11]) == -1))))
+                if (((((result[2] == undefined) && (result[8] == undefined)) && (result[7].split(".").length >= 2)) && (LINK_TLDS.indexOf(result[11]) == -1)))
                 {
                     objResult.formate = false;
                 }
@@ -1722,5 +1981,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.frames
+} com.ankamagames.dofus.logic.game.common.frames
 

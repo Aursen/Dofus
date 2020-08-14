@@ -1,4 +1,4 @@
-﻿package com.ankamagames.atouin.data.elements.subtypes
+package com.ankamagames.atouin.data.elements.subtypes
 {
     import com.ankamagames.atouin.data.elements.GraphicalElementData;
     import flash.utils.Dictionary;
@@ -58,5 +58,5 @@
 
 
     }
-}//package com.ankamagames.atouin.data.elements.subtypes
+} com.ankamagames.atouin.data.elements.subtypes
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.datacenter.items.criterion
+package com.ankamagames.dofus.datacenter.items.criterion
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.jerakine.data.I18n;
@@ -17,7 +17,7 @@
         override public function get text():String
         {
             var readableCriterionRef:String = I18n.getUiText("ui.criterion.setBonus");
-            return (((((readableCriterionRef + " ") + _operator.text) + " ") + _criterionValue));
+            return ((((readableCriterionRef + " ") + _operator.text) + " ") + _criterionValue);
         }
 
         override public function get isRespected():Boolean
@@ -39,7 +39,7 @@
             var sets:Dictionary = new Dictionary();
             for each (iw in InventoryManager.getInstance().inventory.getView("equipment").content)
             {
-                if (!(iw))
+                if (!iw)
                 {
                 }
                 else
@@ -54,7 +54,7 @@
                         {
                             sets[iw.itemSetId] = 1;
                         };
-                        if (!(sets[iw.itemSetId]))
+                        if (!sets[iw.itemSetId])
                         {
                             sets[iw.itemSetId] = -1;
                         };
@@ -73,5 +73,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.items.criterion
+} com.ankamagames.dofus.datacenter.items.criterion
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.common.steps
+package com.ankamagames.dofus.logic.game.common.steps
 {
     import com.ankamagames.jerakine.sequencer.AbstractSequencable;
     import com.ankamagames.dofus.types.entities.AnimatedCharacter;
@@ -49,19 +49,15 @@
             {
                 this._entity.stop();
             };
-            Pathfinding.findPath(DataMapProvider.getInstance(), this._entity.position, ScriptsUtil.getMapPoint(this._args), this._allowDiag, true, this.onPath);
-        }
-
-        private function onPath(pPath:MovementPath):void
-        {
+            var path:MovementPath = Pathfinding.findPath(DataMapProvider.getInstance(), this._entity.position, ScriptsUtil.getMapPoint(this._args), this._allowDiag, true);
             if (this._behavior)
             {
                 this._entity.movementBehavior = this._behavior;
-                this._behavior.move(this._entity, pPath, this.onMovementEnd);
+                this._behavior.move(this._entity, path, this.onMovementEnd);
             }
             else
             {
-                this._entity.move(pPath, this.onMovementEnd);
+                this._entity.move(path, this.onMovementEnd);
             };
         }
 
@@ -72,5 +68,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.steps
+} com.ankamagames.dofus.logic.game.common.steps
 

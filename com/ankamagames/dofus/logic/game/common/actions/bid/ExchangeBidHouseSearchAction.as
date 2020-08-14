@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.common.actions.bid
+package com.ankamagames.dofus.logic.game.common.actions.bid
 {
     import com.ankamagames.jerakine.handlers.messages.Action;
 
@@ -6,18 +6,20 @@
     {
 
         public var type:uint;
+        public var follow:Boolean = false;
         public var genId:uint;
 
 
-        public static function create(pType:uint, pGenId:uint):ExchangeBidHouseSearchAction
+        public static function create(pType:uint, pGenId:uint, follow:Boolean=false):ExchangeBidHouseSearchAction
         {
             var a:ExchangeBidHouseSearchAction = new (ExchangeBidHouseSearchAction)();
             a.type = pType;
+            a.follow = follow;
             a.genId = pGenId;
             return (a);
         }
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.actions.bid
+} com.ankamagames.dofus.logic.game.common.actions.bid
 

@@ -1,16 +1,17 @@
-﻿package com.ankamagames.dofus.logic.game.fight.steps
+package com.ankamagames.dofus.logic.game.fight.steps
 {
     import com.ankamagames.jerakine.sequencer.AbstractSequencable;
     import com.ankamagames.dofus.logic.game.fight.fightEvents.FightEventsHelper;
     import com.ankamagames.dofus.logic.game.fight.types.FightEventEnum;
+    import __AS3__.vec.Vector;
 
     public class FightReducedDamagesStep extends AbstractSequencable implements IFightStep 
     {
 
-        private var _fighterId:int;
+        private var _fighterId:Number;
         private var _amount:int;
 
-        public function FightReducedDamagesStep(fighterId:int, amount:int)
+        public function FightReducedDamagesStep(fighterId:Number, amount:int)
         {
             this._fighterId = fighterId;
             this._amount = amount;
@@ -27,7 +28,12 @@
             executeCallbacks();
         }
 
+        public function get targets():Vector.<Number>
+        {
+            return (new <Number>[this._fighterId]);
+        }
+
 
     }
-}//package com.ankamagames.dofus.logic.game.fight.steps
+} com.ankamagames.dofus.logic.game.fight.steps
 

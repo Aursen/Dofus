@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.datacenter.items.criterion
+package com.ankamagames.dofus.datacenter.items.criterion
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.jerakine.data.I18n;
@@ -21,7 +21,7 @@
             {
                 readableOperator = ":";
             };
-            return (((((readableCriterionRef + " ") + readableOperator) + " ") + _criterionValue));
+            return ((((readableCriterionRef + " ") + readableOperator) + " ") + _criterionValue);
         }
 
         override public function clone():IItemCriterion
@@ -37,5 +37,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.items.criterion
+} com.ankamagames.dofus.datacenter.items.criterion
 

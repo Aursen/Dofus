@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.kernel.sound.enum
+package com.ankamagames.dofus.kernel.sound.enum
 {
     public class UISoundEnum 
     {
@@ -104,5 +104,5 @@
 
 
     }
-}//package com.ankamagames.dofus.kernel.sound.enum
+} com.ankamagames.dofus.kernel.sound.enum
 

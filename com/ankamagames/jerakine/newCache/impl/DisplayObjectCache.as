@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.newCache.impl
+package com.ankamagames.jerakine.newCache.impl
 {
     import com.ankamagames.jerakine.newCache.ICache;
     import com.ankamagames.jerakine.logger.Logger;
@@ -13,16 +13,13 @@
 
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(DisplayObjectCache));
 
-        private var _cache:Dictionary;
+        private var _cache:Dictionary = new Dictionary(true);
         private var _size:uint = 0;
         private var _bounds:uint;
-        private var _useCount:Dictionary;
+        private var _useCount:Dictionary = new Dictionary(true);
 
         public function DisplayObjectCache(bound:uint)
         {
-            this._cache = new Dictionary(true);
-            this._useCount = new Dictionary(true);
-            super();
             this._bounds = bound;
         }
 
@@ -37,7 +34,7 @@
             var a:Array = this._cache[ref];
             for each (d in a)
             {
-                if (((d.resource) && ((((d.resource is ASwf)) || (((d.resource.hasOwnProperty("parent")) && (!(d.resource.parent))))))))
+                if (((d.resource) && ((d.resource is ASwf) || ((d.resource.hasOwnProperty("parent")) && (!(d.resource.parent))))))
                 {
                     return (true);
                 };
@@ -45,7 +42,7 @@
             return (false);
         }
 
-        public function extract(ref:*)
+        public function extract(ref:*):*
         {
             var foundRes:* = this.peek(ref);
             if (foundRes)
@@ -57,18 +54,15 @@
             return (foundRes);
         }
 
-        public function peek(ref:*)
+        public function peek(ref:*):*
         {
             var d:CacheableResource;
             var a:Array = this._cache[ref];
             for each (d in a)
             {
-                if (((d.resource) && ((((d.resource is ASwf)) || (((d.resource.hasOwnProperty("parent")) && (!(d.resource.parent))))))))
+                if (((d.resource) && ((d.resource is ASwf) || ((d.resource.hasOwnProperty("parent")) && (!(d.resource.parent))))))
                 {
-                    var _local_6 = this._useCount;
-                    var _local_7 = ref;
-                    var _local_8 = (_local_6[_local_7] + 1);
-                    _local_6[_local_7] = _local_8;
+                    this._useCount[ref]++;
                     return (d);
                 };
             };
@@ -77,13 +71,13 @@
 
         public function store(ref:*, obj:*):Boolean
         {
-            if (!((obj is CacheableResource)))
+            if (!(obj is CacheableResource))
             {
                 _log.error((("Tried to store something which is not a CacheableResource... Caching file " + ref) + " failed."));
                 return (false);
             };
-            var bb:Boolean = (obj.resource is ASwf);
-            if (!(this._cache[ref]))
+            var bb:* = (obj.resource is ASwf);
+            if (!this._cache[ref])
             {
                 this._cache[ref] = new Array();
                 this._useCount[ref] = 0;
@@ -93,10 +87,7 @@
                     this.garbage();
                 };
             };
-            var _local_4 = this._useCount;
-            var _local_5 = ref;
-            var _local_6 = (_local_4[_local_5] + 1);
-            _local_4[_local_5] = _local_6;
+            this._useCount[ref]++;
             this._cache[ref].push(obj);
             return (true);
         }
@@ -121,7 +112,7 @@
             var orderedUse:Array = new Array();
             for (resName in this._cache)
             {
-                if (((!((this._cache[resName] == null))) && (this._useCount[resName])))
+                if (((!(this._cache[resName] == null)) && (this._useCount[resName])))
                 {
                     orderedUse.push({
                         "ref":resName,
@@ -133,19 +124,19 @@
             bound = (this._bounds * 0.1);
             l = orderedUse.length;
             i = 0;
-            while ((((i < l)) && ((this._size > bound))))
+            while (((i < l) && (this._size > bound)))
             {
                 dontCollect = false;
                 a = this._cache[orderedUse[i].ref];
                 for each (ref in a)
                 {
-                    if (((((ref) && (ref.resource))) && ((((ref.resource is ASwf)) || (((ref.resource.hasOwnProperty("parent")) && (ref.resource.parent)))))))
+                    if ((((ref) && (ref.resource)) && ((ref.resource is ASwf) || ((ref.resource.hasOwnProperty("parent")) && (ref.resource.parent)))))
                     {
                         dontCollect = true;
                         break;
                     };
                 };
-                if (!(dontCollect))
+                if (!dontCollect)
                 {
                     delete this._cache[orderedUse[i].ref];
                     delete this._useCount[orderedUse[i].ref];
@@ -157,5 +148,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.newCache.impl
+} com.ankamagames.jerakine.newCache.impl
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.atlas.compass
+package com.ankamagames.dofus.network.messages.game.atlas.compass
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class CompassResetMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -27,9 +27,9 @@
             return (5584);
         }
 
-        public function initCompassResetMessage(type:uint=0):CompassResetMessage
+        public function initCompassResetMessage(_arg_1:uint=0):CompassResetMessage
         {
-            this.type = type;
+            this.type = _arg_1;
             this._isInitialized = true;
             return (this);
         }
@@ -52,6 +52,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_CompassResetMessage(output);
@@ -69,6 +77,21 @@
 
         public function deserializeAs_CompassResetMessage(input:ICustomDataInput):void
         {
+            this._typeFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_CompassResetMessage(tree);
+        }
+
+        public function deserializeAsyncAs_CompassResetMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._typeFunc);
+        }
+
+        private function _typeFunc(input:ICustomDataInput):void
+        {
             this.type = input.readByte();
             if (this.type < 0)
             {
@@ -78,5 +101,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.atlas.compass
+} com.ankamagames.dofus.network.messages.game.atlas.compass
 

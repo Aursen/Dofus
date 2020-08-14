@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.types.tooltip
+package com.ankamagames.berilia.types.tooltip
 {
     public class EmptyTooltip extends Tooltip 
     {
@@ -9,5 +9,5 @@
         }
 
     }
-}//package com.ankamagames.berilia.types.tooltip
+} com.ankamagames.berilia.types.tooltip
 

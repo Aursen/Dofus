@@ -1,12 +1,9 @@
-﻿package com.ankamagames.tubul.types.sounds
+package com.ankamagames.tubul.types.sounds
 {
     import com.ankamagames.tubul.interfaces.ISound;
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
-    import com.ankamagames.jerakine.newCache.impl.Cache;
-    import com.TubulConstants;
-    import com.ankamagames.jerakine.newCache.garbage.LruGarbageCollector;
     import flash.utils.Dictionary;
     import com.ankamagames.jerakine.types.Uri;
     import flash.media.Sound;
@@ -19,6 +16,7 @@
     import com.ankamagames.tubul.types.VolumeFadeEffect;
     import flash.utils.Timer;
     import com.ankamagames.tubul.interfaces.IEffect;
+    import flash.events.TimerEvent;
     import com.ankamagames.tubul.Tubul;
     import com.ankamagames.tubul.interfaces.IAudioBus;
     import com.ankamagames.tubul.events.AudioBusVolumeEvent;
@@ -26,7 +24,6 @@
     import flash.events.Event;
     import com.ankamagames.tubul.events.LoopEvent;
     import com.ankamagames.tubul.events.FadeEvent;
-    import com.ankamagames.tubul.events.SoundWrapperEvent;
     import com.ankamagames.jerakine.resources.loaders.ResourceLoaderFactory;
     import com.ankamagames.jerakine.resources.loaders.ResourceLoaderType;
     import com.ankamagames.jerakine.resources.events.ResourceLoadedEvent;
@@ -38,13 +35,14 @@
     import com.ankamagames.tubul.events.SoundCompleteEvent;
     import com.ankamagames.tubul.events.SoundSilenceEvent;
     import com.ankamagames.tubul.events.MP3SoundEvent;
+    import com.ankamagames.tubul.events.SoundWrapperEvent;
+    import com.ankamagames.tubul.events.SoundFadingOutEvent;
     import __AS3__.vec.*;
 
     public class MP3SoundDofus implements ISound 
     {
 
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(MP3SoundDofus));
-        protected static var cacheByteArray:Cache = new Cache(TubulConstants.BOUNDS_BYTEARRAY_CACHE, new LruGarbageCollector());
         public static var dicSound:Dictionary;
 
         protected var _uri:Uri;
@@ -69,8 +67,8 @@
         protected var _currentRunningFade:VolumeFadeEffect;
         protected var _loop:Boolean = false;
         protected var _currentLoop:uint;
-        protected var _totalLoop:int;
-        protected var _timer:Timer;
+        protected var _totalLoop:int = 1;
+        protected var _endTimer:Timer = new Timer(0.5, 1);
         protected var _effects:Vector.<IEffect>;
 
         public function MP3SoundDofus(id:uint, uri:Uri, isStereo:Boolean=false)
@@ -80,6 +78,7 @@
             this._id = id;
             this._effects = new Vector.<IEffect>();
             this._stereo = isStereo;
+            this._endTimer.addEventListener(TimerEvent.TIMER_COMPLETE, this.onStartFadeOut);
             if (dicSound == null)
             {
                 dicSound = new Dictionary(true);
@@ -143,11 +142,10 @@
                 pVolume = 0;
             };
             this._volume = pVolume;
-            if (((this._soundLoaded) && (!((this._previousVolume == this._volume)))))
+            if (((this._soundLoaded) && (!(this._previousVolume == this._volume))))
             {
                 this.applyParam();
             };
-            this._previousVolume = this._volume;
         }
 
         public function get busId():int
@@ -172,6 +170,11 @@
 
         public function set currentFadeVolume(pFadeVolume:Number):void
         {
+            var filname:String;
+            if (this._uri)
+            {
+                filname = this._uri.fileName;
+            };
             if (pFadeVolume > 1)
             {
                 pFadeVolume = 1;
@@ -181,16 +184,15 @@
                 pFadeVolume = 0;
             };
             this._fadeVolume = pFadeVolume;
-            if (((this._soundLoaded) && (!((this._previousFadeVolume == this._fadeVolume)))))
+            if (((this._soundLoaded) && (!(this._previousFadeVolume == this._fadeVolume))))
             {
                 this.applyParam();
             };
-            this._previousFadeVolume = this._fadeVolume;
         }
 
         public function get effectiveVolume():Number
         {
-            return (((this.busVolume * this.volume) * this.currentFadeVolume));
+            return ((this.busVolume * this.volume) * this.currentFadeVolume);
         }
 
         public function get soundChannel():SoundChannel
@@ -280,6 +282,11 @@
         public function play(pLoop:Boolean=false, pLoops:int=1, pFadeIn:VolumeFadeEffect=null, pFadeOut:VolumeFadeEffect=null):void
         {
             var playCallback:Callback;
+            var filname:String = this._uri.fileName;
+            if (((!(pFadeIn)) && (!(this._volume == 1))))
+            {
+                (this._volume == 1);
+            };
             if (this.bus == null)
             {
                 return;
@@ -293,20 +300,24 @@
             {
                 return;
             };
+            if (!this.bus.eventDispatcher.hasEventListener(AudioBusVolumeEvent.VOLUME_CHANGED))
+            {
+                this.bus.eventDispatcher.addEventListener(AudioBusVolumeEvent.VOLUME_CHANGED, this.onAudioBusVolumeChanged);
+            };
             this._loop = pLoop;
-            if (!(this._loop))
+            if (!this._loop)
             {
                 pLoops = 1;
             };
             this.setLoops(pLoops);
-            if (!(this._soundLoaded))
+            if (!this._soundLoaded)
             {
                 playCallback = new Callback(this.play, pLoop, pLoops, pFadeIn, pFadeOut);
                 this._onLoadingComplete.push(playCallback);
                 return;
             };
             this._playing = true;
-            if (((pFadeIn) && (!((pFadeIn.beginningValue == -1)))))
+            if (((pFadeIn) && (!(pFadeIn.beginningValue == -1))))
             {
                 this.currentFadeVolume = pFadeIn.beginningValue;
             };
@@ -333,7 +344,7 @@
             if (pFadeIn)
             {
                 this._currentRunningFade = pFadeIn;
-                if (!(this._currentRunningFade.hasEventListener(FadeEvent.COMPLETE)))
+                if (!this._currentRunningFade.hasEventListener(FadeEvent.COMPLETE))
                 {
                     this._currentRunningFade.addEventListener(FadeEvent.COMPLETE, this.onCurrentFadeComplete);
                 };
@@ -342,9 +353,9 @@
             };
             if (pFadeOut)
             {
-                this._soundWrapper.notifyWhenEndOfFile(true, pFadeOut.timeFade);
                 this._fadeOutFade = pFadeOut;
-                this._soundWrapper.addEventListener(SoundWrapperEvent.SOON_END_OF_FILE, this.onEndOfFile);
+                this._endTimer.delay = (this._sound.length - (this._fadeOutFade.timeFade * 1000));
+                this._endTimer.start();
             };
         }
 
@@ -356,24 +367,33 @@
             this._loader.load(this._uri, cache);
         }
 
-        public function stop(pFadeEffect:VolumeFadeEffect=null):void
+        public function stop(pFadeEffect:VolumeFadeEffect=null, mustStopCompletly:Boolean=false):void
         {
             this.clearLoader();
+            this._loop = false;
             if (this._silence)
             {
                 this._silence.clean();
             };
-            if (((!((this._soundWrapper == null))) && (pFadeEffect)))
+            if (this._soundWrapper != null)
             {
-                this._currentRunningFade = pFadeEffect;
-                this._currentRunningFade.attachToSoundSource(this);
-                this._currentRunningFade.addEventListener(FadeEvent.COMPLETE, this.onCurrentFadeComplete);
-                this._stopAfterCurrentFade = true;
-                pFadeEffect.start(false);
+                if (((pFadeEffect) && (pFadeEffect.timeFade > 0)))
+                {
+                    this._currentRunningFade = pFadeEffect;
+                    this._currentRunningFade.attachToSoundSource(this);
+                    this._currentRunningFade.addEventListener(FadeEvent.COMPLETE, this.onCurrentFadeComplete);
+                    this._stopAfterCurrentFade = true;
+                    pFadeEffect.start(false);
+                }
+                else
+                {
+                    this.onCurrentFadeComplete(null);
+                    Tubul.getInstance().soundMerger.removeSound(this._soundWrapper);
+                };
             }
             else
             {
-                this.finishPlay();
+                this.finishPlay(mustStopCompletly);
             };
         }
 
@@ -393,16 +413,16 @@
         public function clone():ISound
         {
             var sound:ISound;
-            var type:uint;
+            var _local_2:uint;
             if ((this is LocalizedSound))
             {
-                type = EnumSoundType.LOCALIZED_SOUND;
+                _local_2 = EnumSoundType.LOCALIZED_SOUND;
             }
             else
             {
-                type = EnumSoundType.UNLOCALIZED_SOUND;
+                _local_2 = EnumSoundType.UNLOCALIZED_SOUND;
             };
-            sound = SoundFactory.getSound(type, this.uri);
+            sound = SoundFactory.getSound(_local_2, this.uri);
             sound.busId = this.busId;
             sound.volume = this.volume;
             sound.currentFadeVolume = this.currentFadeVolume;
@@ -498,17 +518,18 @@
             this._uri = null;
         }
 
-        private function finishPlay():void
+        private function finishPlay(mustStopCompletly:Boolean=false):void
         {
             if (this._silence)
             {
                 this._silence.clean();
             };
+            this._endTimer.stop();
             if (this._soundWrapper != null)
             {
                 this._soundWrapper.removeEventListener(Event.SOUND_COMPLETE, this.onSoundComplete);
                 this._soundWrapper.removeEventListener(LoopEvent.SOUND_LOOP, this.onSoundLoop);
-                if (this._loop)
+                if (!this._loop)
                 {
                     Tubul.getInstance().soundMerger.removeSound(this._soundWrapper);
                 };
@@ -531,6 +552,10 @@
         protected function onSoundComplete(pEvent:Event):void
         {
             this._soundWrapper.currentLoop = 0;
+            if (((!(this._currentRunningFade == null)) && (this._currentRunningFade.hasEventListener(FadeEvent.COMPLETE))))
+            {
+                return;
+            };
             if (this._silence)
             {
                 _log.info((((((((("Playing silence (" + this._silence.silenceMin) + "/") + this._silence.silenceMax) + " sec) for the sound ") + this._id) + " (") + this._uri.fileName) + ")"));
@@ -558,7 +583,15 @@
         {
             var lse:LoadingSoundEvent = new LoadingSoundEvent(LoadingSoundEvent.LOADING_FAILED);
             lse.data = this;
-            _log.error(((("Cannot load " + pEvent.uri) + " : ") + pEvent.errorMsg));
+            var error:String = ((("Cannot load " + pEvent.uri) + " : ") + pEvent.errorMsg);
+            if (Tubul.errorOnMissingFile)
+            {
+                _log.error(((("Cannot load " + pEvent.uri) + " : ") + pEvent.errorMsg));
+            }
+            else
+            {
+                _log.warn(((("Cannot load " + pEvent.uri) + " : ") + pEvent.errorMsg));
+            };
             this._eventDispatcher.dispatchEvent(lse);
         }
 
@@ -567,7 +600,7 @@
             if (this._fadeOutFade)
             {
                 this._currentRunningFade = this._fadeOutFade;
-                if (!(this._currentRunningFade.hasEventListener(FadeEvent.COMPLETE)))
+                if (!this._currentRunningFade.hasEventListener(FadeEvent.COMPLETE))
                 {
                     this._currentRunningFade.addEventListener(FadeEvent.COMPLETE, this.onCurrentFadeComplete);
                 };
@@ -604,7 +637,7 @@
             this._currentRunningFade = null;
             if (this._stopAfterCurrentFade == true)
             {
-                this.stop();
+                this.finishPlay(false);
             };
             this._stopAfterCurrentFade = false;
         }
@@ -615,7 +648,33 @@
             this.finishPlay();
         }
 
+        private function onStartFadeOut(tEvent:TimerEvent):void
+        {
+            var sfoe:SoundFadingOutEvent;
+            this._endTimer.reset();
+            if (this._fadeOutFade)
+            {
+                this._currentRunningFade = this._fadeOutFade;
+                this._stopAfterCurrentFade = true;
+                if (!this._currentRunningFade.hasEventListener(FadeEvent.COMPLETE))
+                {
+                    this._currentRunningFade.addEventListener(FadeEvent.COMPLETE, this.onCurrentFadeComplete);
+                };
+                this._currentRunningFade.attachToSoundSource(this);
+                this._currentRunningFade.start();
+                this._fadeOutFade = null;
+                sfoe = new SoundFadingOutEvent(SoundFadingOutEvent.SOUND_FADING_OUT);
+                sfoe.sound = this;
+                if (this._eventDispatcher == null)
+                {
+                    this._eventDispatcher = new EventDispatcher();
+                };
+                this._eventDispatcher.dispatchEvent(sfoe);
+                sfoe = null;
+            };
+        }
+
 
     }
-}//package com.ankamagames.tubul.types.sounds
+} com.ankamagames.tubul.types.sounds
 

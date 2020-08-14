@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.context.roleplay
+package com.ankamagames.dofus.network.messages.game.context.roleplay
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,15 +6,15 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class TeleportOnSameMapMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 6048;
 
         private var _isInitialized:Boolean = false;
-        public var targetId:int = 0;
+        public var targetId:Number = 0;
         public var cellId:uint = 0;
 
 
@@ -28,7 +28,7 @@
             return (6048);
         }
 
-        public function initTeleportOnSameMapMessage(targetId:int=0, cellId:uint=0):TeleportOnSameMapMessage
+        public function initTeleportOnSameMapMessage(targetId:Number=0, cellId:uint=0):TeleportOnSameMapMessage
         {
             this.targetId = targetId;
             this.cellId = cellId;
@@ -55,6 +55,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_TeleportOnSameMapMessage(output);
@@ -62,8 +70,12 @@
 
         public function serializeAs_TeleportOnSameMapMessage(output:ICustomDataOutput):void
         {
-            output.writeInt(this.targetId);
-            if ((((this.cellId < 0)) || ((this.cellId > 559))))
+            if (((this.targetId < -9007199254740992) || (this.targetId > 9007199254740992)))
+            {
+                throw (new Error((("Forbidden value (" + this.targetId) + ") on element targetId.")));
+            };
+            output.writeDouble(this.targetId);
+            if (((this.cellId < 0) || (this.cellId > 559)))
             {
                 throw (new Error((("Forbidden value (" + this.cellId) + ") on element cellId.")));
             };
@@ -77,9 +89,34 @@
 
         public function deserializeAs_TeleportOnSameMapMessage(input:ICustomDataInput):void
         {
-            this.targetId = input.readInt();
+            this._targetIdFunc(input);
+            this._cellIdFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_TeleportOnSameMapMessage(tree);
+        }
+
+        public function deserializeAsyncAs_TeleportOnSameMapMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._targetIdFunc);
+            tree.addChild(this._cellIdFunc);
+        }
+
+        private function _targetIdFunc(input:ICustomDataInput):void
+        {
+            this.targetId = input.readDouble();
+            if (((this.targetId < -9007199254740992) || (this.targetId > 9007199254740992)))
+            {
+                throw (new Error((("Forbidden value (" + this.targetId) + ") on element of TeleportOnSameMapMessage.targetId.")));
+            };
+        }
+
+        private function _cellIdFunc(input:ICustomDataInput):void
+        {
             this.cellId = input.readVarUhShort();
-            if ((((this.cellId < 0)) || ((this.cellId > 559))))
+            if (((this.cellId < 0) || (this.cellId > 559)))
             {
                 throw (new Error((("Forbidden value (" + this.cellId) + ") on element of TeleportOnSameMapMessage.cellId.")));
             };
@@ -87,5 +124,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.context.roleplay
+} com.ankamagames.dofus.network.messages.game.context.roleplay
 

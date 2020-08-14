@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.chat
+package com.ankamagames.dofus.network.messages.game.chat
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class ChatAbstractClientMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -53,6 +53,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_ChatAbstractClientMessage(output);
@@ -70,10 +78,25 @@
 
         public function deserializeAs_ChatAbstractClientMessage(input:ICustomDataInput):void
         {
+            this._contentFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_ChatAbstractClientMessage(tree);
+        }
+
+        public function deserializeAsyncAs_ChatAbstractClientMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._contentFunc);
+        }
+
+        private function _contentFunc(input:ICustomDataInput):void
+        {
             this.content = input.readUTF();
         }
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.chat
+} com.ankamagames.dofus.network.messages.game.chat
 

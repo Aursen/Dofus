@@ -1,7 +1,6 @@
-﻿package com.ankamagames.jerakine.utils.files
+package com.ankamagames.jerakine.utils.files
 {
     import flash.events.EventDispatcher;
-    import com.ankamagames.jerakine.cache.ICachable;
     import nochump.util.zip.ZipFile;
     import flash.net.URLLoader;
     import flash.net.URLRequest;
@@ -14,25 +13,19 @@
     import flash.utils.ByteArray;
     import nochump.util.zip.ZipEntry;
 
-    public class ZipLoader extends EventDispatcher implements ICachable 
+    public class ZipLoader extends EventDispatcher 
     {
 
         private var _zipFile:ZipFile;
         private var _files:Array;
         private var _filesNames:Array;
-        private var _oExtraData;
-        private var _inUse:Boolean;
-        private var _name:String;
+        private var _oExtraData:*;
         private var _loader:URLLoader;
         public var url:String;
         public var loaded:Boolean;
 
         public function ZipLoader(fileRequest:URLRequest=null, oExtraData:*=null)
         {
-            if (fileRequest)
-            {
-                this._name = ("ZIP_" + fileRequest.url);
-            };
             this._oExtraData = oExtraData;
             if (fileRequest != null)
             {
@@ -40,27 +33,7 @@
             };
         }
 
-        public function get inUse():Boolean
-        {
-            return (this._inUse);
-        }
-
-        public function set inUse(value:Boolean):void
-        {
-            this._inUse = value;
-        }
-
-        public function get name():String
-        {
-            return (this._name);
-        }
-
-        public function set name(value:String):void
-        {
-            this._name = value;
-        }
-
-        public function get extraData()
+        public function get extraData():*
         {
             return (this._oExtraData);
         }
@@ -70,7 +43,6 @@
             this.loaded = false;
             this._files = new Array();
             this._filesNames = new Array();
-            this._name = ("ZIP_" + request.url);
             this._zipFile = null;
             this._loader = new URLLoader();
             this._loader.dataFormat = URLLoaderDataFormat.BINARY;
@@ -165,5 +137,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.utils.files
+} com.ankamagames.jerakine.utils.files
 

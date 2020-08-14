@@ -1,27 +1,23 @@
-﻿package com.ankamagames.dofus.network.messages.game.context.roleplay.fight
+package com.ankamagames.dofus.network.messages.game.context.roleplay.fight
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
     import com.ankamagames.dofus.network.types.game.context.fight.FightCommonInformations;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
 
-    [Trusted]
     public class GameRolePlayShowChallengeMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 301;
 
         private var _isInitialized:Boolean = false;
-        public var commonsInfos:FightCommonInformations;
+        public var commonsInfos:FightCommonInformations = new FightCommonInformations();
+        private var _commonsInfostree:FuncTree;
 
-        public function GameRolePlayShowChallengeMessage()
-        {
-            this.commonsInfos = new FightCommonInformations();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
@@ -58,6 +54,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_GameRolePlayShowChallengeMessage(output);
@@ -79,7 +83,23 @@
             this.commonsInfos.deserialize(input);
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GameRolePlayShowChallengeMessage(tree);
+        }
+
+        public function deserializeAsyncAs_GameRolePlayShowChallengeMessage(tree:FuncTree):void
+        {
+            this._commonsInfostree = tree.addChild(this._commonsInfostreeFunc);
+        }
+
+        private function _commonsInfostreeFunc(input:ICustomDataInput):void
+        {
+            this.commonsInfos = new FightCommonInformations();
+            this.commonsInfos.deserializeAsync(this._commonsInfostree);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.context.roleplay.fight
+} com.ankamagames.dofus.network.messages.game.context.roleplay.fight
 

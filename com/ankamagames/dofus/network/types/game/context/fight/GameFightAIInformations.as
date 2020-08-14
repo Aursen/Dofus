@@ -1,11 +1,12 @@
-﻿package com.ankamagames.dofus.network.types.game.context.fight
+package com.ankamagames.dofus.network.types.game.context.fight
 {
     import com.ankamagames.jerakine.network.INetworkType;
-    import com.ankamagames.dofus.network.types.game.look.EntityLook;
     import com.ankamagames.dofus.network.types.game.context.EntityDispositionInformations;
+    import com.ankamagames.dofus.network.types.game.look.EntityLook;
     import __AS3__.vec.Vector;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
     public class GameFightAIInformations extends GameFightFighterInformations implements INetworkType 
     {
@@ -18,9 +19,9 @@
             return (151);
         }
 
-        public function initGameFightAIInformations(contextualId:int=0, look:EntityLook=null, disposition:EntityDispositionInformations=null, teamId:uint=2, wave:uint=0, alive:Boolean=false, stats:GameFightMinimalStats=null, previousPositions:Vector.<uint>=null):GameFightAIInformations
+        public function initGameFightAIInformations(contextualId:Number=0, disposition:EntityDispositionInformations=null, look:EntityLook=null, spawnInfo:GameContextBasicSpawnInformation=null, wave:uint=0, stats:GameFightMinimalStats=null, previousPositions:Vector.<uint>=null):GameFightAIInformations
         {
-            super.initGameFightFighterInformations(contextualId, look, disposition, teamId, wave, alive, stats, previousPositions);
+            super.initGameFightFighterInformations(contextualId, disposition, look, spawnInfo, wave, stats, previousPositions);
             return (this);
         }
 
@@ -49,7 +50,17 @@
             super.deserialize(input);
         }
 
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GameFightAIInformations(tree);
+        }
+
+        public function deserializeAsyncAs_GameFightAIInformations(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.types.game.context.fight
+} com.ankamagames.dofus.network.types.game.context.fight
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.tiphon.types
+package com.ankamagames.tiphon.types
 {
     import com.ankamagames.jerakine.interfaces.IFLAEventHandler;
 
@@ -15,5 +15,5 @@
         }
 
     }
-}//package com.ankamagames.tiphon.types
+} com.ankamagames.tiphon.types
 

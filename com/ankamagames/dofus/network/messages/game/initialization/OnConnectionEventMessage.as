@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.initialization
+package com.ankamagames.dofus.network.messages.game.initialization
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class OnConnectionEventMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -52,6 +52,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_OnConnectionEventMessage(output);
@@ -69,6 +77,21 @@
 
         public function deserializeAs_OnConnectionEventMessage(input:ICustomDataInput):void
         {
+            this._eventTypeFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_OnConnectionEventMessage(tree);
+        }
+
+        public function deserializeAsyncAs_OnConnectionEventMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._eventTypeFunc);
+        }
+
+        private function _eventTypeFunc(input:ICustomDataInput):void
+        {
             this.eventType = input.readByte();
             if (this.eventType < 0)
             {
@@ -78,5 +101,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.initialization
+} com.ankamagames.dofus.network.messages.game.initialization
 

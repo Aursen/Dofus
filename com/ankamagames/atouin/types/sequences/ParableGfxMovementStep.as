@@ -1,4 +1,4 @@
-﻿package com.ankamagames.atouin.types.sequences
+package com.ankamagames.atouin.types.sequences
 {
     import com.ankamagames.jerakine.sequencer.AbstractSequencable;
     import com.ankamagames.jerakine.entities.interfaces.IMovable;
@@ -9,7 +9,6 @@
     import flash.display.DisplayObject;
     import gs.TweenMax;
     import gs.easing.Linear;
-    import gs.events.TweenEvent;
 
     public class ParableGfxMovementStep extends AbstractSequencable 
     {
@@ -38,16 +37,19 @@
             var distance:Number;
             if (this._targetPoint.equals(this._gfxEntity.position))
             {
-                this.onTweenEnd(null);
+                if (this._waitEnd)
+                {
+                    executeCallbacks();
+                };
                 return;
             };
             var start:Point = new Point(CellUtil.getPixelXFromMapPoint((this._gfxEntity as IEntity).position), (CellUtil.getPixelYFromMapPoint((this._gfxEntity as IEntity).position) + this._yOffset));
-            var end:Point = new Point(CellUtil.getPixelXFromMapPoint(this._targetPoint), (CellUtil.getPixelYFromMapPoint(this._targetPoint) + ((!((this._yOffsetOnHit == 0))) ? this._yOffsetOnHit : this._yOffset)));
+            var end:Point = new Point(CellUtil.getPixelXFromMapPoint(this._targetPoint), (CellUtil.getPixelYFromMapPoint(this._targetPoint) + ((this._yOffsetOnHit != 0) ? this._yOffsetOnHit : this._yOffset)));
             distance = Point.distance(start, end);
             var curvePoint:Point = Point.interpolate(start, end, 0.5);
             curvePoint.y = (curvePoint.y - (distance * this._curvePrc));
             DisplayObject(this._gfxEntity).y = (DisplayObject(this._gfxEntity).y + this._yOffset);
-            var tweener:TweenMax = new TweenMax(this._gfxEntity, (((distance / 100) * this._speed) / 1000), {
+            TweenMax.to(this._gfxEntity, (((distance / 100) * this._speed) / 1000), {
                 "x":end.x,
                 "y":end.y,
                 "orientToBezier":true,
@@ -57,21 +59,12 @@
                 }],
                 "scaleX":1,
                 "scaleY":1,
-                "rotation":15,
                 "alpha":1,
                 "ease":Linear.easeNone,
-                "renderOnStart":true
+                "immediateRender":true,
+                "onComplete":((this._waitEnd) ? executeCallbacks : null)
             });
-            tweener.addEventListener(TweenEvent.COMPLETE, this.onTweenEnd);
-            if (!(this._waitEnd))
-            {
-                executeCallbacks();
-            };
-        }
-
-        private function onTweenEnd(e:TweenEvent):void
-        {
-            if (this._waitEnd)
+            if (!this._waitEnd)
             {
                 executeCallbacks();
             };
@@ -79,5 +72,5 @@
 
 
     }
-}//package com.ankamagames.atouin.types.sequences
+} com.ankamagames.atouin.types.sequences
 

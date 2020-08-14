@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.resources.protocols
+package com.ankamagames.jerakine.resources.protocols
 {
     import com.ankamagames.jerakine.pools.Poolable;
     import com.ankamagames.jerakine.types.Uri;
@@ -12,5 +12,5 @@
         function cancel():void;
 
     }
-}//package com.ankamagames.jerakine.resources.protocols
+} com.ankamagames.jerakine.resources.protocols
 

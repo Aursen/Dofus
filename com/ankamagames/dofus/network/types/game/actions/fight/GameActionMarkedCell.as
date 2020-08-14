@@ -1,10 +1,10 @@
-﻿package com.ankamagames.dofus.network.types.game.actions.fight
+package com.ankamagames.dofus.network.types.game.actions.fight
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class GameActionMarkedCell implements INetworkType 
     {
 
@@ -45,7 +45,7 @@
 
         public function serializeAs_GameActionMarkedCell(output:ICustomDataOutput):void
         {
-            if ((((this.cellId < 0)) || ((this.cellId > 559))))
+            if (((this.cellId < 0) || (this.cellId > 559)))
             {
                 throw (new Error((("Forbidden value (" + this.cellId) + ") on element cellId.")));
             };
@@ -62,17 +62,50 @@
 
         public function deserializeAs_GameActionMarkedCell(input:ICustomDataInput):void
         {
+            this._cellIdFunc(input);
+            this._zoneSizeFunc(input);
+            this._cellColorFunc(input);
+            this._cellsTypeFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GameActionMarkedCell(tree);
+        }
+
+        public function deserializeAsyncAs_GameActionMarkedCell(tree:FuncTree):void
+        {
+            tree.addChild(this._cellIdFunc);
+            tree.addChild(this._zoneSizeFunc);
+            tree.addChild(this._cellColorFunc);
+            tree.addChild(this._cellsTypeFunc);
+        }
+
+        private function _cellIdFunc(input:ICustomDataInput):void
+        {
             this.cellId = input.readVarUhShort();
-            if ((((this.cellId < 0)) || ((this.cellId > 559))))
+            if (((this.cellId < 0) || (this.cellId > 559)))
             {
                 throw (new Error((("Forbidden value (" + this.cellId) + ") on element of GameActionMarkedCell.cellId.")));
             };
+        }
+
+        private function _zoneSizeFunc(input:ICustomDataInput):void
+        {
             this.zoneSize = input.readByte();
+        }
+
+        private function _cellColorFunc(input:ICustomDataInput):void
+        {
             this.cellColor = input.readInt();
+        }
+
+        private function _cellsTypeFunc(input:ICustomDataInput):void
+        {
             this.cellsType = input.readByte();
         }
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.actions.fight
+} com.ankamagames.dofus.network.types.game.actions.fight
 

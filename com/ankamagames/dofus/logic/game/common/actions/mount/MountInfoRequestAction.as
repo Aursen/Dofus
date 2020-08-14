@@ -1,15 +1,13 @@
-﻿package com.ankamagames.dofus.logic.game.common.actions.mount
+package com.ankamagames.dofus.logic.game.common.actions.mount
 {
     import com.ankamagames.jerakine.handlers.messages.Action;
     import com.ankamagames.dofus.internalDatacenter.items.ItemWrapper;
     import com.ankamagames.dofus.datacenter.effects.EffectInstance;
     import com.ankamagames.dofus.datacenter.effects.instances.EffectInstanceMount;
+    import com.ankama.dofus.enums.ActionIds;
 
     public class MountInfoRequestAction implements Action 
     {
-
-        public static const EFFECT_ID_MOUNT:int = 995;
-        public static const EFFECT_ID_VALIDITY:int = 998;
 
         public var item:ItemWrapper;
         public var mountId:Number;
@@ -25,9 +23,9 @@
             {
                 switch (effect.effectId)
                 {
-                    case EFFECT_ID_MOUNT:
-                        o.time = (effect as EffectInstanceMount).date;
-                        o.mountId = (effect as EffectInstanceMount).mountId;
+                    case ActionIds.ACTION_RIDE_DETAILS:
+                        o.time = (effect as EffectInstanceMount).expirationDate;
+                        o.mountId = (effect as EffectInstanceMount).id;
                         break;
                 };
             };
@@ -36,5 +34,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.actions.mount
+} com.ankamagames.dofus.logic.game.common.actions.mount
 

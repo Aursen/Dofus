@@ -1,11 +1,12 @@
-﻿package com.ankamagames.dofus.network.types.game.context.fight
+package com.ankamagames.dofus.network.types.game.context.fight
 {
     import com.ankamagames.jerakine.network.INetworkType;
-    import com.ankamagames.dofus.network.types.game.look.EntityLook;
     import com.ankamagames.dofus.network.types.game.context.EntityDispositionInformations;
+    import com.ankamagames.dofus.network.types.game.look.EntityLook;
     import __AS3__.vec.Vector;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
     public class GameFightTaxCollectorInformations extends GameFightAIInformations implements INetworkType 
     {
@@ -22,9 +23,9 @@
             return (48);
         }
 
-        public function initGameFightTaxCollectorInformations(contextualId:int=0, look:EntityLook=null, disposition:EntityDispositionInformations=null, teamId:uint=2, wave:uint=0, alive:Boolean=false, stats:GameFightMinimalStats=null, previousPositions:Vector.<uint>=null, firstNameId:uint=0, lastNameId:uint=0, level:uint=0):GameFightTaxCollectorInformations
+        public function initGameFightTaxCollectorInformations(contextualId:Number=0, disposition:EntityDispositionInformations=null, look:EntityLook=null, spawnInfo:GameContextBasicSpawnInformation=null, wave:uint=0, stats:GameFightMinimalStats=null, previousPositions:Vector.<uint>=null, firstNameId:uint=0, lastNameId:uint=0, level:uint=0):GameFightTaxCollectorInformations
         {
-            super.initGameFightAIInformations(contextualId, look, disposition, teamId, wave, alive, stats, previousPositions);
+            super.initGameFightAIInformations(contextualId, disposition, look, spawnInfo, wave, stats, previousPositions);
             this.firstNameId = firstNameId;
             this.lastNameId = lastNameId;
             this.level = level;
@@ -57,7 +58,7 @@
                 throw (new Error((("Forbidden value (" + this.lastNameId) + ") on element lastNameId.")));
             };
             output.writeVarShort(this.lastNameId);
-            if ((((this.level < 0)) || ((this.level > 0xFF))))
+            if (((this.level < 0) || (this.level > 0xFF)))
             {
                 throw (new Error((("Forbidden value (" + this.level) + ") on element level.")));
             };
@@ -72,18 +73,46 @@
         public function deserializeAs_GameFightTaxCollectorInformations(input:ICustomDataInput):void
         {
             super.deserialize(input);
+            this._firstNameIdFunc(input);
+            this._lastNameIdFunc(input);
+            this._levelFunc(input);
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GameFightTaxCollectorInformations(tree);
+        }
+
+        public function deserializeAsyncAs_GameFightTaxCollectorInformations(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._firstNameIdFunc);
+            tree.addChild(this._lastNameIdFunc);
+            tree.addChild(this._levelFunc);
+        }
+
+        private function _firstNameIdFunc(input:ICustomDataInput):void
+        {
             this.firstNameId = input.readVarUhShort();
             if (this.firstNameId < 0)
             {
                 throw (new Error((("Forbidden value (" + this.firstNameId) + ") on element of GameFightTaxCollectorInformations.firstNameId.")));
             };
+        }
+
+        private function _lastNameIdFunc(input:ICustomDataInput):void
+        {
             this.lastNameId = input.readVarUhShort();
             if (this.lastNameId < 0)
             {
                 throw (new Error((("Forbidden value (" + this.lastNameId) + ") on element of GameFightTaxCollectorInformations.lastNameId.")));
             };
+        }
+
+        private function _levelFunc(input:ICustomDataInput):void
+        {
             this.level = input.readUnsignedByte();
-            if ((((this.level < 0)) || ((this.level > 0xFF))))
+            if (((this.level < 0) || (this.level > 0xFF)))
             {
                 throw (new Error((("Forbidden value (" + this.level) + ") on element of GameFightTaxCollectorInformations.level.")));
             };
@@ -91,5 +120,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.context.fight
+} com.ankamagames.dofus.network.types.game.context.fight
 

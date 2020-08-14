@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.network
+package com.ankamagames.jerakine.network
 {
     import com.ankamagames.jerakine.messages.MessageHandler;
 
@@ -11,6 +11,7 @@
         function set handler(_arg_1:MessageHandler):void;
         function get pauseBuffer():Array;
         function get connected():Boolean;
+        function get connecting():Boolean;
         function get latencyAvg():uint;
         function get latencySamplesCount():uint;
         function get latencySamplesMax():uint;
@@ -20,8 +21,8 @@
         function close():void;
         function pause():void;
         function resume():void;
-        function send(_arg_1:INetworkMessage):void;
+        function send(_arg_1:INetworkMessage, _arg_2:String=""):void;
 
     }
-}//package com.ankamagames.jerakine.network
+} com.ankamagames.jerakine.network
 

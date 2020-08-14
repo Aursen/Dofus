@@ -1,9 +1,9 @@
-﻿package com.ankamagames.berilia.types.graphic
+package com.ankamagames.berilia.types.graphic
 {
     import flash.html.HTMLLoader;
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
-    import avmplus.getQualifiedClassName;
+    import flash.utils.getQualifiedClassName;
     import flash.utils.Dictionary;
     import flash.utils.Timer;
     import flash.events.Event;
@@ -29,7 +29,7 @@
         public static function getLoader(uid:String=null):TimeoutHTMLLoader
         {
             var instance:TimeoutHTMLLoader;
-            if (((!((uid == null))) && (INSTANCE_CACHE[uid])))
+            if (((!(uid == null)) && (INSTANCE_CACHE[uid])))
             {
                 instance = INSTANCE_CACHE[uid];
                 instance._fromCache = true;
@@ -54,12 +54,16 @@
 
         private static function onJsError(event:HTMLUncaughtScriptExceptionEvent):void
         {
-            var msg:String = (('Javascript exception "' + event.exceptionValue.message) + '"');
             var i:uint;
-            while (i < event.stackTrace.length)
+            var msg:* = (('Javascript exception "' + event.exceptionValue.message) + '"');
+            if (event.stackTrace)
             {
-                msg = (msg + ((("\n" + event.stackTrace[i].functionName) + " at line ") + event.stackTrace[i].line));
-                i++;
+                i = 0;
+                while (i < event.stackTrace.length)
+                {
+                    msg = (msg + ((("\n" + event.stackTrace[i].functionName) + " at line ") + event.stackTrace[i].line));
+                    i++;
+                };
             };
             _log.error(msg);
         }
@@ -98,5 +102,5 @@
 
 
     }
-}//package com.ankamagames.berilia.types.graphic
+} com.ankamagames.berilia.types.graphic
 

@@ -1,8 +1,9 @@
-﻿package com.ankamagames.dofus.network.types.game.context.roleplay.job
+package com.ankamagames.dofus.network.types.game.context.roleplay.job
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import __AS3__.vec.Vector;
     import com.ankamagames.dofus.network.types.game.interactive.skill.SkillActionDescription;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
     import com.ankamagames.dofus.network.ProtocolTypeManager;
@@ -14,13 +15,9 @@
         public static const protocolId:uint = 101;
 
         public var jobId:uint = 0;
-        public var skills:Vector.<SkillActionDescription>;
+        public var skills:Vector.<SkillActionDescription> = new Vector.<SkillActionDescription>();
+        private var _skillstree:FuncTree;
 
-        public function JobDescription()
-        {
-            this.skills = new Vector.<SkillActionDescription>();
-            super();
-        }
 
         public function getTypeId():uint
         {
@@ -71,11 +68,7 @@
         {
             var _id2:uint;
             var _item2:SkillActionDescription;
-            this.jobId = input.readByte();
-            if (this.jobId < 0)
-            {
-                throw (new Error((("Forbidden value (" + this.jobId) + ") on element of JobDescription.jobId.")));
-            };
+            this._jobIdFunc(input);
             var _skillsLen:uint = input.readUnsignedShort();
             var _i2:uint;
             while (_i2 < _skillsLen)
@@ -88,7 +81,46 @@
             };
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_JobDescription(tree);
+        }
+
+        public function deserializeAsyncAs_JobDescription(tree:FuncTree):void
+        {
+            tree.addChild(this._jobIdFunc);
+            this._skillstree = tree.addChild(this._skillstreeFunc);
+        }
+
+        private function _jobIdFunc(input:ICustomDataInput):void
+        {
+            this.jobId = input.readByte();
+            if (this.jobId < 0)
+            {
+                throw (new Error((("Forbidden value (" + this.jobId) + ") on element of JobDescription.jobId.")));
+            };
+        }
+
+        private function _skillstreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._skillstree.addChild(this._skillsFunc);
+                i++;
+            };
+        }
+
+        private function _skillsFunc(input:ICustomDataInput):void
+        {
+            var _id:uint = input.readUnsignedShort();
+            var _item:SkillActionDescription = ProtocolTypeManager.getInstance(SkillActionDescription, _id);
+            _item.deserialize(input);
+            this.skills.push(_item);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.types.game.context.roleplay.job
+} com.ankamagames.dofus.network.types.game.context.roleplay.job
 

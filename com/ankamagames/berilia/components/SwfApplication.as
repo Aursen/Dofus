@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.components
+package com.ankamagames.berilia.components
 {
     import com.ankamagames.berilia.types.graphic.GraphicContainer;
     import com.ankamagames.berilia.UIComponent;
@@ -6,9 +6,14 @@
     import com.ankamagames.jerakine.types.Uri;
     import flash.display.DisplayObject;
     import flash.net.URLRequest;
+    import com.ankamagames.berilia.managers.SecureCenter;
+    import flash.system.LoaderContext;
+    import flash.system.ApplicationDomain;
+    import flash.utils.ByteArray;
     import flash.events.Event;
     import flash.events.IOErrorEvent;
     import flash.events.MouseEvent;
+    import flash.events.UncaughtErrorEvent;
     import flash.events.ProgressEvent;
 
     public class SwfApplication extends GraphicContainer implements UIComponent 
@@ -20,15 +25,17 @@
         public var loadedHandler:Function;
         public var loadErrorHandler:Function;
         public var loadProgressHandler:Function;
+        public var autoResize:Boolean = true;
 
         public function SwfApplication()
         {
             mouseEnabled = true;
         }
 
+        [Uri]
         public function set uri(v:Uri):void
         {
-            if (((!(getUi())) || (!(getUi().uiModule.trusted))))
+            if (!getUi())
             {
                 return;
             };
@@ -37,15 +44,27 @@
             this._ldr.load(new URLRequest(v.normalizedUri));
         }
 
+        [Uri]
         public function get uri():Uri
         {
             return (this._uri);
         }
 
+        public function setByte(bytes:ByteArray, accessKey:Object):void
+        {
+            SecureCenter.checkAccessKey(accessKey);
+            this.initLoader();
+            var lc:LoaderContext = new LoaderContext();
+            lc.applicationDomain = new ApplicationDomain(ApplicationDomain.currentDomain);
+            lc.allowCodeImport = true;
+            lc.allowLoadBytesCodeExecution = true;
+            this._ldr.loadBytes(bytes, lc);
+        }
+
         override public function set width(nW:Number):void
         {
             super.width = nW;
-            if (this._app)
+            if (((this._app) && (this.autoResize)))
             {
                 this._app.width = nW;
             };
@@ -54,7 +73,7 @@
         override public function set height(nH:Number):void
         {
             super.height = nH;
-            if (this._app)
+            if (((this._app) && (this.autoResize)))
             {
                 this._app.height = nH;
             };
@@ -79,11 +98,11 @@
 
         public function bindApi(propertyName:String, value:*):Boolean
         {
-            if (((!(getUi())) || (!(getUi().uiModule.trusted))))
+            if (!getUi())
             {
                 return (false);
             };
-            if (!(this._app))
+            if (!this._app)
             {
                 return (false);
             };
@@ -98,11 +117,20 @@
             return (true);
         }
 
+        public function dispatchEventToApp(eventName:String, param:Object):void
+        {
+            if (this._app)
+            {
+                this._app.dispatchEvent(new AppEvent(eventName, param));
+            };
+        }
+
         private function initLoader():void
         {
-            if (!(this._ldr))
+            if (!this._ldr)
             {
                 this._ldr = new Loader();
+                this._ldr.uncaughtErrorEvents.addEventListener(UncaughtErrorEvent.UNCAUGHT_ERROR, trace, false, 0, true);
                 this._ldr.contentLoaderInfo.addEventListener(Event.INIT, this.onInit);
                 this._ldr.contentLoaderInfo.addEventListener(ProgressEvent.PROGRESS, this.onProgress);
                 this._ldr.contentLoaderInfo.addEventListener(IOErrorEvent.IO_ERROR, this.onError);
@@ -117,7 +145,7 @@
         {
             if (this._ldr)
             {
-                this._ldr.unloadAndStop();
+                this._ldr.unloadAndStop(true);
             };
             while (numChildren)
             {
@@ -128,8 +156,6 @@
         private function onInit(e:Event):void
         {
             this._app = this._ldr.content;
-            this._app.width = width;
-            this._app.height = height;
             addChild(this._app);
             this._app.addEventListener(MouseEvent.MOUSE_MOVE, this.onMouseMouse);
             if (this.loadedHandler != null)
@@ -162,5 +188,21 @@
 
 
     }
-}//package com.ankamagames.berilia.components
+} com.ankamagames.berilia.components
+
+import flash.events.Event;
+
+class AppEvent extends Event 
+{
+
+    public var parameters:Object;
+
+    public function AppEvent(_arg_1:String, parameters:Object)
+    {
+        super(_arg_1, false, false);
+        this.parameters = parameters;
+    }
+
+}
+
 

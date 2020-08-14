@@ -1,9 +1,10 @@
-﻿package com.ankamagames.dofus.network.types.game.context.fight
+package com.ankamagames.dofus.network.types.game.context.fight
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.utils.BooleanByteWrapper;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
     public class FightOptionsInformations implements INetworkType 
     {
@@ -60,6 +61,21 @@
 
         public function deserializeAs_FightOptionsInformations(input:ICustomDataInput):void
         {
+            this.deserializeByteBoxes(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_FightOptionsInformations(tree);
+        }
+
+        public function deserializeAsyncAs_FightOptionsInformations(tree:FuncTree):void
+        {
+            tree.addChild(this.deserializeByteBoxes);
+        }
+
+        private function deserializeByteBoxes(input:ICustomDataInput):void
+        {
             var _box0:uint = input.readByte();
             this.isSecret = BooleanByteWrapper.getFlag(_box0, 0);
             this.isRestrictedToPartyOnly = BooleanByteWrapper.getFlag(_box0, 1);
@@ -69,5 +85,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.context.fight
+} com.ankamagames.dofus.network.types.game.context.fight
 

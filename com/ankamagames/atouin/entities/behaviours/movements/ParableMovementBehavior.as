@@ -1,4 +1,4 @@
-﻿package com.ankamagames.atouin.entities.behaviours.movements
+package com.ankamagames.atouin.entities.behaviours.movements
 {
     import flash.geom.Point;
     import com.ankamagames.jerakine.utils.errors.SingletonError;
@@ -34,7 +34,7 @@
 
         public static function getInstance():ParableMovementBehavior
         {
-            if (!(_self))
+            if (!_self)
             {
                 _self = new (ParableMovementBehavior)();
             };
@@ -94,7 +94,7 @@
             var nextCellSprite:Sprite = InteractiveCellManager.getInstance().getCell(tweenData.nextCell.cellId);
             displayObject.x = (((((1 - tweenData.barycentre) * (1 - tweenData.barycentre)) * currentCellSprite.x) + (((2 * (1 - tweenData.barycentre)) * tweenData.barycentre) * _curvePoint.x)) + ((tweenData.barycentre * tweenData.barycentre) * nextCellSprite.x));
             displayObject.y = (((((1 - tweenData.barycentre) * (1 - tweenData.barycentre)) * currentCellSprite.y) + (((2 * (1 - tweenData.barycentre)) * tweenData.barycentre) * _curvePoint.y)) + ((tweenData.barycentre * tweenData.barycentre) * nextCellSprite.y));
-            var initRotation:Number = -((_angle + ((90 - _angle) / 2)));
+            var initRotation:Number = -(_angle + ((90 - _angle) / 2));
             var gravity:Number = ((2.5 * (90 + initRotation)) * tweenData.barycentre);
             displayObject.rotation = (initRotation + gravity);
             if (nextCellSprite.y > currentCellSprite.y)
@@ -103,7 +103,7 @@
                 displayObject.rotation = (-(initRotation) - gravity2);
             };
             displayObject.scaleX = (1 - ((tweenData.barycentre * (90 - Math.abs((90 - _angle)))) / 90));
-            if (((!(tweenData.wasOrdered)) && ((tweenData.barycentre > 0.5))))
+            if (((!(tweenData.wasOrdered)) && (tweenData.barycentre > 0.5)))
             {
                 EntitiesDisplayManager.getInstance().orderEntity(displayObject, nextCellSprite);
             };
@@ -129,5 +129,5 @@
 
 
     }
-}//package com.ankamagames.atouin.entities.behaviours.movements
+} com.ankamagames.atouin.entities.behaviours.movements
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.types.zones
+package com.ankamagames.jerakine.types.zones
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
@@ -7,6 +7,7 @@
     import __AS3__.vec.Vector;
     import com.ankamagames.jerakine.types.enums.DirectionsEnum;
     import com.ankamagames.jerakine.types.positions.MapPoint;
+    import mapTools.MapTools;
     import __AS3__.vec.*;
 
     public class Cross implements IZone 
@@ -20,13 +21,11 @@
         private var _direction:uint;
         private var _diagonal:Boolean = false;
         private var _allDirections:Boolean = false;
-        public var disabledDirection:Array;
+        public var disabledDirection:Array = [];
         public var onlyPerpendicular:Boolean = false;
 
         public function Cross(nMinRadius:uint, nMaxRadius:uint, dataMapProvider:IDataMapProvider)
         {
-            this.disabledDirection = [];
-            super();
             this.minRadius = nMinRadius;
             this.radius = nMaxRadius;
             this._dataMapProvider = dataMapProvider;
@@ -44,7 +43,7 @@
 
         public function get surface():uint
         {
-            return (((this._radius * 4) + 1));
+            return ((this._radius * 4) + 1);
         }
 
         public function set minRadius(r:uint):void
@@ -128,40 +127,40 @@
             {
                 if (r >= this._minRadius)
                 {
-                    if (!(this._diagonal))
+                    if (!this._diagonal)
                     {
-                        if (((MapPoint.isInMap((x + r), y)) && ((this.disabledDirection.indexOf(DirectionsEnum.DOWN_RIGHT) == -1))))
+                        if (((MapPoint.isInMap((x + r), y)) && (this.disabledDirection.indexOf(DirectionsEnum.DOWN_RIGHT) == -1)))
                         {
                             this.addCell((x + r), y, aCells);
                         };
-                        if (((MapPoint.isInMap((x - r), y)) && ((this.disabledDirection.indexOf(DirectionsEnum.UP_LEFT) == -1))))
+                        if (((MapPoint.isInMap((x - r), y)) && (this.disabledDirection.indexOf(DirectionsEnum.UP_LEFT) == -1)))
                         {
                             this.addCell((x - r), y, aCells);
                         };
-                        if (((MapPoint.isInMap(x, (y + r))) && ((this.disabledDirection.indexOf(DirectionsEnum.UP_RIGHT) == -1))))
+                        if (((MapPoint.isInMap(x, (y + r))) && (this.disabledDirection.indexOf(DirectionsEnum.UP_RIGHT) == -1)))
                         {
                             this.addCell(x, (y + r), aCells);
                         };
-                        if (((MapPoint.isInMap(x, (y - r))) && ((this.disabledDirection.indexOf(DirectionsEnum.DOWN_LEFT) == -1))))
+                        if (((MapPoint.isInMap(x, (y - r))) && (this.disabledDirection.indexOf(DirectionsEnum.DOWN_LEFT) == -1)))
                         {
                             this.addCell(x, (y - r), aCells);
                         };
                     };
                     if (((this._diagonal) || (this._allDirections)))
                     {
-                        if (((MapPoint.isInMap((x + r), (y - r))) && ((this.disabledDirection.indexOf(DirectionsEnum.DOWN) == -1))))
+                        if (((MapPoint.isInMap((x + r), (y - r))) && (this.disabledDirection.indexOf(DirectionsEnum.DOWN) == -1)))
                         {
                             this.addCell((x + r), (y - r), aCells);
                         };
-                        if (((MapPoint.isInMap((x - r), (y + r))) && ((this.disabledDirection.indexOf(DirectionsEnum.UP) == -1))))
+                        if (((MapPoint.isInMap((x - r), (y + r))) && (this.disabledDirection.indexOf(DirectionsEnum.UP) == -1)))
                         {
                             this.addCell((x - r), (y + r), aCells);
                         };
-                        if (((MapPoint.isInMap((x + r), (y + r))) && ((this.disabledDirection.indexOf(DirectionsEnum.RIGHT) == -1))))
+                        if (((MapPoint.isInMap((x + r), (y + r))) && (this.disabledDirection.indexOf(DirectionsEnum.RIGHT) == -1)))
                         {
                             this.addCell((x + r), (y + r), aCells);
                         };
-                        if (((MapPoint.isInMap((x - r), (y - r))) && ((this.disabledDirection.indexOf(DirectionsEnum.LEFT) == -1))))
+                        if (((MapPoint.isInMap((x - r), (y - r))) && (this.disabledDirection.indexOf(DirectionsEnum.LEFT) == -1)))
                         {
                             this.addCell((x - r), (y - r), aCells);
                         };
@@ -174,13 +173,13 @@
 
         private function addCell(x:int, y:int, cellMap:Vector.<uint>):void
         {
-            if ((((this._dataMapProvider == null)) || (this._dataMapProvider.pointMov(x, y))))
+            if (((this._dataMapProvider == null) || (this._dataMapProvider.pointMov(x, y))))
             {
-                cellMap.push(MapPoint.fromCoords(x, y).cellId);
+                cellMap.push(MapTools.getCellIdByCoord(x, y));
             };
         }
 
 
     }
-}//package com.ankamagames.jerakine.types.zones
+} com.ankamagames.jerakine.types.zones
 

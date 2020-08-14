@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.roleplay.actions.estate
+package com.ankamagames.dofus.logic.game.roleplay.actions.estate
 {
     import com.ankamagames.jerakine.handlers.messages.Action;
 
@@ -17,5 +17,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.roleplay.actions.estate
+} com.ankamagames.dofus.logic.game.roleplay.actions.estate
 

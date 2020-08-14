@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.web.ankabox
+package com.ankamagames.dofus.network.messages.web.ankabox
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class MailStatusMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -55,6 +55,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_MailStatusMessage(output);
@@ -81,11 +89,32 @@
 
         public function deserializeAs_MailStatusMessage(input:ICustomDataInput):void
         {
+            this._unreadFunc(input);
+            this._totalFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_MailStatusMessage(tree);
+        }
+
+        public function deserializeAsyncAs_MailStatusMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._unreadFunc);
+            tree.addChild(this._totalFunc);
+        }
+
+        private function _unreadFunc(input:ICustomDataInput):void
+        {
             this.unread = input.readVarUhShort();
             if (this.unread < 0)
             {
                 throw (new Error((("Forbidden value (" + this.unread) + ") on element of MailStatusMessage.unread.")));
             };
+        }
+
+        private function _totalFunc(input:ICustomDataInput):void
+        {
             this.total = input.readVarUhShort();
             if (this.total < 0)
             {
@@ -95,5 +124,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.web.ankabox
+} com.ankamagames.dofus.network.messages.web.ankabox
 

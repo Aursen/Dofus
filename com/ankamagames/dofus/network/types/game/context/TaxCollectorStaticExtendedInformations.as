@@ -1,7 +1,8 @@
-﻿package com.ankamagames.dofus.network.types.game.context
+package com.ankamagames.dofus.network.types.game.context
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.dofus.network.types.game.context.roleplay.AllianceInformations;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import com.ankamagames.dofus.network.types.game.context.roleplay.GuildInformations;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
@@ -11,13 +12,9 @@
 
         public static const protocolId:uint = 440;
 
-        public var allianceIdentity:AllianceInformations;
+        public var allianceIdentity:AllianceInformations = new AllianceInformations();
+        private var _allianceIdentitytree:FuncTree;
 
-        public function TaxCollectorStaticExtendedInformations()
-        {
-            this.allianceIdentity = new AllianceInformations();
-            super();
-        }
 
         override public function getTypeId():uint
         {
@@ -60,7 +57,24 @@
             this.allianceIdentity.deserialize(input);
         }
 
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_TaxCollectorStaticExtendedInformations(tree);
+        }
+
+        public function deserializeAsyncAs_TaxCollectorStaticExtendedInformations(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            this._allianceIdentitytree = tree.addChild(this._allianceIdentitytreeFunc);
+        }
+
+        private function _allianceIdentitytreeFunc(input:ICustomDataInput):void
+        {
+            this.allianceIdentity = new AllianceInformations();
+            this.allianceIdentity.deserializeAsync(this._allianceIdentitytree);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.types.game.context
+} com.ankamagames.dofus.network.types.game.context
 

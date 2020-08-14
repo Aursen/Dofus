@@ -1,13 +1,13 @@
-﻿package com.ankamagames.dofus.network.types.game.character.choice
+package com.ankamagames.dofus.network.types.game.character.choice
 {
     import com.ankamagames.dofus.network.types.game.character.AbstractCharacterInformation;
     import com.ankamagames.jerakine.network.INetworkType;
     import __AS3__.vec.Vector;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
     import __AS3__.vec.*;
 
-    [Trusted]
     public class CharacterRemodelingInformation extends AbstractCharacterInformation implements INetworkType 
     {
 
@@ -17,20 +17,16 @@
         public var breed:int = 0;
         public var sex:Boolean = false;
         public var cosmeticId:uint = 0;
-        public var colors:Vector.<int>;
+        public var colors:Vector.<int> = new Vector.<int>();
+        private var _colorstree:FuncTree;
 
-        public function CharacterRemodelingInformation()
-        {
-            this.colors = new Vector.<int>();
-            super();
-        }
 
         override public function getTypeId():uint
         {
             return (479);
         }
 
-        public function initCharacterRemodelingInformation(id:uint=0, name:String="", breed:int=0, sex:Boolean=false, cosmeticId:uint=0, colors:Vector.<int>=null):CharacterRemodelingInformation
+        public function initCharacterRemodelingInformation(id:Number=0, name:String="", breed:int=0, sex:Boolean=false, cosmeticId:uint=0, colors:Vector.<int>=null):CharacterRemodelingInformation
         {
             super.initAbstractCharacterInformation(id);
             this.name = name;
@@ -85,14 +81,10 @@
         {
             var _val5:int;
             super.deserialize(input);
-            this.name = input.readUTF();
-            this.breed = input.readByte();
-            this.sex = input.readBoolean();
-            this.cosmeticId = input.readVarUhShort();
-            if (this.cosmeticId < 0)
-            {
-                throw (new Error((("Forbidden value (" + this.cosmeticId) + ") on element of CharacterRemodelingInformation.cosmeticId.")));
-            };
+            this._nameFunc(input);
+            this._breedFunc(input);
+            this._sexFunc(input);
+            this._cosmeticIdFunc(input);
             var _colorsLen:uint = input.readUnsignedShort();
             var _i5:uint;
             while (_i5 < _colorsLen)
@@ -103,7 +95,63 @@
             };
         }
 
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_CharacterRemodelingInformation(tree);
+        }
+
+        public function deserializeAsyncAs_CharacterRemodelingInformation(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._nameFunc);
+            tree.addChild(this._breedFunc);
+            tree.addChild(this._sexFunc);
+            tree.addChild(this._cosmeticIdFunc);
+            this._colorstree = tree.addChild(this._colorstreeFunc);
+        }
+
+        private function _nameFunc(input:ICustomDataInput):void
+        {
+            this.name = input.readUTF();
+        }
+
+        private function _breedFunc(input:ICustomDataInput):void
+        {
+            this.breed = input.readByte();
+        }
+
+        private function _sexFunc(input:ICustomDataInput):void
+        {
+            this.sex = input.readBoolean();
+        }
+
+        private function _cosmeticIdFunc(input:ICustomDataInput):void
+        {
+            this.cosmeticId = input.readVarUhShort();
+            if (this.cosmeticId < 0)
+            {
+                throw (new Error((("Forbidden value (" + this.cosmeticId) + ") on element of CharacterRemodelingInformation.cosmeticId.")));
+            };
+        }
+
+        private function _colorstreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._colorstree.addChild(this._colorsFunc);
+                i++;
+            };
+        }
+
+        private function _colorsFunc(input:ICustomDataInput):void
+        {
+            var _val:int = input.readInt();
+            this.colors.push(_val);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.types.game.character.choice
+} com.ankamagames.dofus.network.types.game.character.choice
 

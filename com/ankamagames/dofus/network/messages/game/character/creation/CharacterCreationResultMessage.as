@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.character.creation
+package com.ankamagames.dofus.network.messages.game.character.creation
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class CharacterCreationResultMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -52,6 +52,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_CharacterCreationResultMessage(output);
@@ -69,6 +77,21 @@
 
         public function deserializeAs_CharacterCreationResultMessage(input:ICustomDataInput):void
         {
+            this._resultFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_CharacterCreationResultMessage(tree);
+        }
+
+        public function deserializeAsyncAs_CharacterCreationResultMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._resultFunc);
+        }
+
+        private function _resultFunc(input:ICustomDataInput):void
+        {
             this.result = input.readByte();
             if (this.result < 0)
             {
@@ -78,5 +101,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.character.creation
+} com.ankamagames.dofus.network.messages.game.character.creation
 

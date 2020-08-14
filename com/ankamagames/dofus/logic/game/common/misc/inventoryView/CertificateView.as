@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.common.misc.inventoryView
+package com.ankamagames.dofus.logic.game.common.misc.inventoryView
 {
     import com.ankamagames.dofus.logic.game.common.misc.IInventoryView;
     import com.ankamagames.jerakine.logger.Logger;
@@ -91,5 +91,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.misc.inventoryView
+} com.ankamagames.dofus.logic.game.common.misc.inventoryView
 

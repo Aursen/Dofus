@@ -1,19 +1,21 @@
-﻿package com.ankamagames.dofus.logic.game.roleplay.actions
+package com.ankamagames.dofus.logic.game.roleplay.actions
 {
     import com.ankamagames.jerakine.handlers.messages.Action;
 
     public class TeleportRequestAction implements Action 
     {
 
-        public var mapId:uint;
-        public var teleportType:uint;
+        public var mapId:Number;
+        public var sourceType:uint;
+        public var destinationType:uint;
         public var cost:uint;
 
 
-        public static function create(teleportType:uint, mapId:uint, cost:uint):TeleportRequestAction
+        public static function create(sourceType:uint, destinationType:uint, mapId:Number, cost:uint):TeleportRequestAction
         {
             var action:TeleportRequestAction = new (TeleportRequestAction)();
-            action.teleportType = teleportType;
+            action.sourceType = sourceType;
+            action.destinationType = destinationType;
             action.mapId = mapId;
             action.cost = cost;
             return (action);
@@ -21,5 +23,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.roleplay.actions
+} com.ankamagames.dofus.logic.game.roleplay.actions
 

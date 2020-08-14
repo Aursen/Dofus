@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.enums
+package com.ankamagames.dofus.network.enums
 {
     public class FighterRefusedReasonEnum 
     {
@@ -25,11 +25,11 @@
         public static const RESTRICTED_ACCOUNT:int = 19;
         public static const WRONG_ALLIANCE:int = 20;
         public static const AVA_ZONE:int = 21;
-        public static const COMPANION_REFUSED:int = 22;
+        public static const ENTITY_REFUSED:int = 22;
         public static const NOT_ENOUGH_ROOM:int = 23;
         public static const GUEST_ACCOUNT:int = 24;
 
 
     }
-}//package com.ankamagames.dofus.network.enums
+} com.ankamagames.dofus.network.enums
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.context
+package com.ankamagames.dofus.network.messages.game.context
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,15 +6,15 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class GameContextRemoveElementMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 251;
 
         private var _isInitialized:Boolean = false;
-        public var id:int = 0;
+        public var id:Number = 0;
 
 
         override public function get isInitialized():Boolean
@@ -27,7 +27,7 @@
             return (251);
         }
 
-        public function initGameContextRemoveElementMessage(id:int=0):GameContextRemoveElementMessage
+        public function initGameContextRemoveElementMessage(id:Number=0):GameContextRemoveElementMessage
         {
             this.id = id;
             this._isInitialized = true;
@@ -52,6 +52,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_GameContextRemoveElementMessage(output);
@@ -59,7 +67,11 @@
 
         public function serializeAs_GameContextRemoveElementMessage(output:ICustomDataOutput):void
         {
-            output.writeInt(this.id);
+            if (((this.id < -9007199254740992) || (this.id > 9007199254740992)))
+            {
+                throw (new Error((("Forbidden value (" + this.id) + ") on element id.")));
+            };
+            output.writeDouble(this.id);
         }
 
         public function deserialize(input:ICustomDataInput):void
@@ -69,10 +81,29 @@
 
         public function deserializeAs_GameContextRemoveElementMessage(input:ICustomDataInput):void
         {
-            this.id = input.readInt();
+            this._idFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GameContextRemoveElementMessage(tree);
+        }
+
+        public function deserializeAsyncAs_GameContextRemoveElementMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._idFunc);
+        }
+
+        private function _idFunc(input:ICustomDataInput):void
+        {
+            this.id = input.readDouble();
+            if (((this.id < -9007199254740992) || (this.id > 9007199254740992)))
+            {
+                throw (new Error((("Forbidden value (" + this.id) + ") on element of GameContextRemoveElementMessage.id.")));
+            };
         }
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.context
+} com.ankamagames.dofus.network.messages.game.context
 

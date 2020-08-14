@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.inventory.items
+package com.ankamagames.dofus.network.messages.game.inventory.items
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class ExchangeMultiCraftCrafterCanUseHisRessourcesMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -52,6 +52,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_ExchangeMultiCraftCrafterCanUseHisRessourcesMessage(output);
@@ -69,10 +77,25 @@
 
         public function deserializeAs_ExchangeMultiCraftCrafterCanUseHisRessourcesMessage(input:ICustomDataInput):void
         {
+            this._allowedFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_ExchangeMultiCraftCrafterCanUseHisRessourcesMessage(tree);
+        }
+
+        public function deserializeAsyncAs_ExchangeMultiCraftCrafterCanUseHisRessourcesMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._allowedFunc);
+        }
+
+        private function _allowedFunc(input:ICustomDataInput):void
+        {
             this.allowed = input.readBoolean();
         }
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.inventory.items
+} com.ankamagames.dofus.network.messages.game.inventory.items
 

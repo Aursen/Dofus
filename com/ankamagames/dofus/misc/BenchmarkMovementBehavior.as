@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.misc
+package com.ankamagames.dofus.misc
 {
     import com.ankamagames.atouin.entities.behaviours.movements.AnimatedMovementBehavior;
     import com.ankamagames.jerakine.logger.Logger;
@@ -34,7 +34,7 @@
 
         public static function getInstance():BenchmarkMovementBehavior
         {
-            if (!(_self))
+            if (!_self)
             {
                 _self = new (BenchmarkMovementBehavior)();
             };
@@ -64,7 +64,7 @@
                 j = -1;
                 while (j < 2)
                 {
-                    if (((((MapPoint.isInMap((movementPath.start.x + i), (movementPath.start.y + j))) && (((!((i == 0))) || (!((j == 0))))))) && (DataMapProvider.getInstance().pointMov((movementPath.start.x + i), (movementPath.start.y + j)))))
+                    if ((((MapPoint.isInMap((movementPath.start.x + i), (movementPath.start.y + j))) && ((!(i == 0)) || (!(j == 0)))) && (DataMapProvider.getInstance().pointMov((movementPath.start.x + i), (movementPath.start.y + j)))))
                     {
                         freeCells.push(MapPoint.fromCoords((movementPath.start.x + i), (movementPath.start.y + j)));
                     };
@@ -118,5 +118,5 @@
 
 
     }
-}//package com.ankamagames.dofus.misc
+} com.ankamagames.dofus.misc
 

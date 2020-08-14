@@ -1,16 +1,16 @@
-﻿package com.ankamagames.dofus.network.messages.game.inventory.spells
+package com.ankamagames.dofus.network.messages.game.inventory.spells
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
     import __AS3__.vec.Vector;
     import com.ankamagames.dofus.network.types.game.data.items.SpellItem;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
     import __AS3__.vec.*;
 
-    [Trusted]
     public class SpellListMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -18,13 +18,9 @@
 
         private var _isInitialized:Boolean = false;
         public var spellPrevisualization:Boolean = false;
-        public var spells:Vector.<SpellItem>;
+        public var spells:Vector.<SpellItem> = new Vector.<SpellItem>();
+        private var _spellstree:FuncTree;
 
-        public function SpellListMessage()
-        {
-            this.spells = new Vector.<SpellItem>();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
@@ -63,6 +59,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_SpellListMessage(output);
@@ -88,7 +92,7 @@
         public function deserializeAs_SpellListMessage(input:ICustomDataInput):void
         {
             var _item2:SpellItem;
-            this.spellPrevisualization = input.readBoolean();
+            this._spellPrevisualizationFunc(input);
             var _spellsLen:uint = input.readUnsignedShort();
             var _i2:uint;
             while (_i2 < _spellsLen)
@@ -100,7 +104,41 @@
             };
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_SpellListMessage(tree);
+        }
+
+        public function deserializeAsyncAs_SpellListMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._spellPrevisualizationFunc);
+            this._spellstree = tree.addChild(this._spellstreeFunc);
+        }
+
+        private function _spellPrevisualizationFunc(input:ICustomDataInput):void
+        {
+            this.spellPrevisualization = input.readBoolean();
+        }
+
+        private function _spellstreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._spellstree.addChild(this._spellsFunc);
+                i++;
+            };
+        }
+
+        private function _spellsFunc(input:ICustomDataInput):void
+        {
+            var _item:SpellItem = new SpellItem();
+            _item.deserialize(input);
+            this.spells.push(_item);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.inventory.spells
+} com.ankamagames.dofus.network.messages.game.inventory.spells
 

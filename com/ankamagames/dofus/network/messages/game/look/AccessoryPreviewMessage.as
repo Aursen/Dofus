@@ -1,27 +1,23 @@
-﻿package com.ankamagames.dofus.network.messages.game.look
+package com.ankamagames.dofus.network.messages.game.look
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
     import com.ankamagames.dofus.network.types.game.look.EntityLook;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
 
-    [Trusted]
     public class AccessoryPreviewMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 6517;
 
         private var _isInitialized:Boolean = false;
-        public var look:EntityLook;
+        public var look:EntityLook = new EntityLook();
+        private var _looktree:FuncTree;
 
-        public function AccessoryPreviewMessage()
-        {
-            this.look = new EntityLook();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
@@ -58,6 +54,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_AccessoryPreviewMessage(output);
@@ -79,7 +83,23 @@
             this.look.deserialize(input);
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_AccessoryPreviewMessage(tree);
+        }
+
+        public function deserializeAsyncAs_AccessoryPreviewMessage(tree:FuncTree):void
+        {
+            this._looktree = tree.addChild(this._looktreeFunc);
+        }
+
+        private function _looktreeFunc(input:ICustomDataInput):void
+        {
+            this.look = new EntityLook();
+            this.look.deserializeAsync(this._looktree);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.look
+} com.ankamagames.dofus.network.messages.game.look
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.guild.tax
+package com.ankamagames.dofus.network.messages.game.guild.tax
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,15 +6,15 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class TaxCollectorStateUpdateMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 6455;
 
         private var _isInitialized:Boolean = false;
-        public var uniqueId:int = 0;
+        public var uniqueId:Number = 0;
         public var state:int = 0;
 
 
@@ -28,7 +28,7 @@
             return (6455);
         }
 
-        public function initTaxCollectorStateUpdateMessage(uniqueId:int=0, state:int=0):TaxCollectorStateUpdateMessage
+        public function initTaxCollectorStateUpdateMessage(uniqueId:Number=0, state:int=0):TaxCollectorStateUpdateMessage
         {
             this.uniqueId = uniqueId;
             this.state = state;
@@ -55,6 +55,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_TaxCollectorStateUpdateMessage(output);
@@ -62,7 +70,11 @@
 
         public function serializeAs_TaxCollectorStateUpdateMessage(output:ICustomDataOutput):void
         {
-            output.writeInt(this.uniqueId);
+            if (((this.uniqueId < 0) || (this.uniqueId > 9007199254740992)))
+            {
+                throw (new Error((("Forbidden value (" + this.uniqueId) + ") on element uniqueId.")));
+            };
+            output.writeDouble(this.uniqueId);
             output.writeByte(this.state);
         }
 
@@ -73,11 +85,36 @@
 
         public function deserializeAs_TaxCollectorStateUpdateMessage(input:ICustomDataInput):void
         {
-            this.uniqueId = input.readInt();
+            this._uniqueIdFunc(input);
+            this._stateFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_TaxCollectorStateUpdateMessage(tree);
+        }
+
+        public function deserializeAsyncAs_TaxCollectorStateUpdateMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._uniqueIdFunc);
+            tree.addChild(this._stateFunc);
+        }
+
+        private function _uniqueIdFunc(input:ICustomDataInput):void
+        {
+            this.uniqueId = input.readDouble();
+            if (((this.uniqueId < 0) || (this.uniqueId > 9007199254740992)))
+            {
+                throw (new Error((("Forbidden value (" + this.uniqueId) + ") on element of TaxCollectorStateUpdateMessage.uniqueId.")));
+            };
+        }
+
+        private function _stateFunc(input:ICustomDataInput):void
+        {
             this.state = input.readByte();
         }
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.guild.tax
+} com.ankamagames.dofus.network.messages.game.guild.tax
 

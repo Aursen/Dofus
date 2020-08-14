@@ -1,10 +1,19 @@
-﻿package com.ankamagames.dofus.types.sequences
+package com.ankamagames.dofus.types.sequences
 {
     import com.ankamagames.jerakine.sequencer.AbstractSequencable;
     import com.ankamagames.jerakine.types.positions.MapPoint;
+    import com.ankamagames.jerakine.entities.interfaces.IEntity;
+    import com.ankamagames.dofus.logic.game.fight.types.CastingSpell;
     import __AS3__.vec.Vector;
+    import com.ankamagames.jerakine.types.zones.IZone;
+    import com.ankamagames.dofus.datacenter.effects.EffectInstance;
+    import com.ankamagames.jerakine.types.zones.Cross;
+    import com.ankamagames.jerakine.utils.display.spellZone.SpellShapeEnum;
+    import com.ankamagames.atouin.utils.DataMapProvider;
+    import com.ankamagames.jerakine.types.zones.Line;
+    import com.ankamagames.jerakine.types.zones.Lozenge;
     import flash.geom.Point;
-    import com.ankamagames.jerakine.utils.display.Dofus1Line;
+    import com.ankamagames.dofus.scripts.api.FxApi;
     import com.ankamagames.jerakine.utils.display.Dofus2Line;
     import com.ankamagames.dofus.logic.game.common.misc.DofusEntities;
     import com.ankamagames.dofus.types.entities.Projectile;
@@ -12,12 +21,14 @@
     import com.ankamagames.tiphon.events.TiphonEvent;
     import com.ankamagames.jerakine.enum.AddGfxModeEnum;
     import com.ankamagames.atouin.enums.PlacementStrataEnums;
+    import __AS3__.vec.*;
 
     public class AddGfxInLineStep extends AbstractSequencable 
     {
 
         private var _gfxId:uint;
         private var _startCell:MapPoint;
+        private var _startEntity:IEntity;
         private var _endCell:MapPoint;
         private var _addOnStartCell:Boolean;
         private var _addOnEndCell:Boolean;
@@ -25,13 +36,20 @@
         private var _mode:uint;
         private var _shot:Boolean = false;
         private var _scale:Number;
+        private var _castingSpell:CastingSpell;
         private var _showUnder:Boolean;
         private var _useOnlyAddedCells:Boolean;
         private var _addedCells:Vector.<uint>;
         private var _cells:Array;
+        private var _zone:IZone;
 
-        public function AddGfxInLineStep(gfxId:uint, startCell:MapPoint, endCell:MapPoint, yOffset:int, mode:uint=0, scale:Number=0, addOnStartCell:Boolean=false, addOnEndCell:Boolean=false, addedCells:Vector.<uint>=null, useOnlyAddedCells:Boolean=false, showUnder:Boolean=false)
+        public function AddGfxInLineStep(gfxId:uint, castingSpell:CastingSpell, startCell:MapPoint, endCell:MapPoint, yOffset:int, mode:uint=0, minScale:Number=0, maxScale:Number=0, addOnStartCell:Boolean=false, addOnEndCell:Boolean=false, useSpellZone:Boolean=false, useOnlyAddedCells:Boolean=false, showUnder:Boolean=false, startEntity:IEntity=null)
         {
+            var shape:uint;
+            var ray:uint;
+            var i:EffectInstance;
+            var shapeT:Cross;
+            super();
             this._gfxId = gfxId;
             this._startCell = startCell;
             this._endCell = endCell;
@@ -39,22 +57,73 @@
             this._addOnEndCell = addOnEndCell;
             this._yOffset = yOffset;
             this._mode = mode;
-            this._scale = scale;
-            this._addedCells = addedCells;
             this._useOnlyAddedCells = useOnlyAddedCells;
             this._showUnder = showUnder;
+            this._castingSpell = castingSpell;
+            this._startEntity = startEntity;
+            var level:uint = this._castingSpell.spell.spellLevels.indexOf(this._castingSpell.spellRank.id);
+            this._scale = (1 + ((minScale + (((maxScale - minScale) * level) / this._castingSpell.spell.spellLevels.length)) / 10));
+            this._addedCells = new Vector.<uint>();
+            if (useSpellZone)
+            {
+                shape = 88;
+                ray = 0;
+                for each (i in this._castingSpell.spellRank.effects)
+                {
+                    if ((((!(i.zoneShape == 0)) && (i.zoneSize < 63)) && ((i.zoneSize > ray) || ((i.zoneSize == ray) && (shape == SpellShapeEnum.P)))))
+                    {
+                        ray = uint(i.zoneSize);
+                        shape = i.zoneShape;
+                    };
+                };
+                switch (shape)
+                {
+                    case SpellShapeEnum.X:
+                        this._zone = new Cross(0, ray, DataMapProvider.getInstance());
+                        break;
+                    case SpellShapeEnum.L:
+                        this._zone = new Line(ray, DataMapProvider.getInstance());
+                        break;
+                    case SpellShapeEnum.T:
+                        shapeT = new Cross(0, ray, DataMapProvider.getInstance());
+                        shapeT.onlyPerpendicular = true;
+                        this._zone = shapeT;
+                        break;
+                    case SpellShapeEnum.D:
+                        this._zone = new Cross(0, ray, DataMapProvider.getInstance());
+                        break;
+                    case SpellShapeEnum.C:
+                        this._zone = new Lozenge(0, ray, DataMapProvider.getInstance());
+                        break;
+                    case SpellShapeEnum.O:
+                        this._zone = new Cross((ray - 1), ray, DataMapProvider.getInstance());
+                        break;
+                    case SpellShapeEnum.P:
+                    default:
+                        this._zone = new Cross(0, 0, DataMapProvider.getInstance());
+                };
+            };
         }
 
         override public function start():void
         {
-            var cells:*;
+            var cells:Array;
             var cell:Point;
             var i:uint;
             var add:Boolean;
             var j:uint;
-            if (!(this._useOnlyAddedCells))
+            if (this._startEntity)
             {
-                cells = ((Dofus1Line.useDofus2Line) ? Dofus2Line.getLine(this._startCell.cellId, this._endCell.cellId) : Dofus1Line.getLine(this._startCell.x, this._startCell.y, 0, this._endCell.x, this._endCell.y, 0));
+                this._startCell = FxApi.GetEntityCell(this._startEntity);
+            };
+            if (this._zone)
+            {
+                this._zone.direction = this._startCell.advancedOrientationTo(this._castingSpell.targetedCell);
+                this._addedCells = this._zone.getCells(this._castingSpell.targetedCell.cellId);
+            };
+            if (!this._useOnlyAddedCells)
+            {
+                cells = Dofus2Line.getLine(this._startCell.cellId, this._endCell.cellId);
             }
             else
             {
@@ -69,7 +138,7 @@
             while (i < cells.length)
             {
                 cell = cells[i];
-                if (((((this._addOnEndCell) && ((i == (cells.length - 1))))) || ((((i >= 0)) && ((i < (cells.length - 1)))))))
+                if ((((this._addOnEndCell) && (i == (cells.length - 1))) || ((i >= 0) && (i < (cells.length - 1)))))
                 {
                     this._cells.push(MapPoint.fromCoords(cell.x, cell.y));
                 };
@@ -103,30 +172,30 @@
 
         private function addNextGfx():void
         {
-            if (!(this._cells.length))
+            if (!this._cells.length)
             {
                 executeCallbacks();
                 return;
             };
-            var id:int = -10000;
+            var id:* = -10000;
             while (DofusEntities.getEntity(id))
             {
-                id = (-10000 + (Math.random() * 10000));
+                id = int((-10000 + (Math.random() * 10000)));
             };
             var entity:Projectile = new Projectile(id, TiphonEntityLook.fromString((("{" + this._gfxId) + "}")));
             entity.addEventListener(TiphonEvent.ANIMATION_SHOT, this.shot);
             entity.addEventListener(TiphonEvent.ANIMATION_END, this.remove);
             entity.addEventListener(TiphonEvent.RENDER_FAILED, this.remove);
             entity.position = this._cells.shift();
-            if (!(entity.libraryIsAvaible))
+            if (!entity.libraryIsAvailable)
             {
                 entity.addEventListener(TiphonEvent.SPRITE_INIT, this.startDisplay);
                 entity.addEventListener(TiphonEvent.SPRITE_INIT_FAILED, this.remove);
-                entity.init();
+                entity.initDirection();
             }
             else
             {
-                entity.init();
+                entity.initDirection();
                 this.startDisplay(new TiphonEvent(TiphonEvent.SPRITE_INIT, entity));
             };
         }
@@ -134,8 +203,8 @@
         private function startDisplay(e:TiphonEvent):void
         {
             var p:Projectile;
-            var _local_3:Array;
-            var _local_4:Array;
+            var dir:Array;
+            var ad:Array;
             var i:uint;
             p = Projectile(e.sprite);
             switch (this._mode)
@@ -143,18 +212,18 @@
                 case AddGfxModeEnum.NORMAL:
                     break;
                 case AddGfxModeEnum.RANDOM:
-                    _local_3 = p.getAvaibleDirection("FX");
-                    _local_4 = new Array();
+                    dir = p.getAvaibleDirection("FX");
+                    ad = new Array();
                     i = 0;
                     while (i < 8)
                     {
-                        if (_local_3[i])
+                        if (dir[i])
                         {
-                            _local_4.push(i);
+                            ad.push(i);
                         };
                         i++;
                     };
-                    p.setDirection(_local_4[Math.floor((Math.random() * _local_4.length))]);
+                    p.setDirection(ad[Math.floor((Math.random() * ad.length))]);
                     break;
                 case AddGfxModeEnum.ORIENTED:
                     p.setDirection(this._startCell.advancedOrientationTo(this._endCell, true));
@@ -173,7 +242,7 @@
             e.sprite.removeEventListener(TiphonEvent.SPRITE_INIT, this.startDisplay);
             e.sprite.removeEventListener(TiphonEvent.SPRITE_INIT_FAILED, this.remove);
             Projectile(e.sprite).remove();
-            if (!(this._shot))
+            if (!this._shot)
             {
                 this.shot(null);
             };
@@ -191,5 +260,5 @@
 
 
     }
-}//package com.ankamagames.dofus.types.sequences
+} com.ankamagames.dofus.types.sequences
 

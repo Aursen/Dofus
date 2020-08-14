@@ -1,0 +1,10 @@
+﻿// Decompiled by AS3 Sorcerer 6.30
+// www.as3sorcerer.com
+
+//cmodule.lua_wrapper._AS3_Get
+
+package cmodule.lua_wrapper
+{
+    internal var _AS3_Get:int;
+}//package cmodule.lua_wrapper
+

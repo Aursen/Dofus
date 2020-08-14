@@ -1,10 +1,11 @@
-﻿package com.ankamagames.dofus.externalnotification.enums
+package com.ankamagames.dofus.externalnotification.enums
 {
     public class ExternalNotificationTypeEnum 
     {
 
         public static const ACHIEVEMENT_UNLOCKED:int = 777;
         public static const QUEST_VALIDATED:int = 888;
+        public static const DARE_WON:int = 999;
         public static const FRIEND_CONNECTION:int = 1;
         public static const MEMBER_CONNECTION:int = 2;
         public static const GROUP_INVITATION:int = 3;
@@ -42,8 +43,13 @@
         public static const GUILD_INVITATION:int = 35;
         public static const PRISM_ATTACK:int = 36;
         public static const CRAFT_REQUEST:int = 37;
+        public static const HAVENBAG_INVITATION:int = 38;
+        public static const BREACH_INVITATION:int = 39;
+        public static const RIDE_TRAVEL_END:int = 40;
+        public static const FRIEND_INVITE:int = 41;
+        public static const NOTIFICATIONSARRAY:Array = [777, 888, 999, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41];
 
 
     }
-}//package com.ankamagames.dofus.externalnotification.enums
+} com.ankamagames.dofus.externalnotification.enums
 

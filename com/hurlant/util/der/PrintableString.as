@@ -1,4 +1,4 @@
-﻿package com.hurlant.util.der
+package com.hurlant.util.der
 {
     import flash.utils.ByteArray;
 
@@ -9,9 +9,9 @@
         protected var len:uint;
         protected var str:String;
 
-        public function PrintableString(type:uint, length:uint)
+        public function PrintableString(_arg_1:uint, length:uint)
         {
-            this.type = type;
+            this.type = _arg_1;
             this.len = length;
         }
 
@@ -37,7 +37,7 @@
 
         public function toString():String
         {
-            return ((DER.indent + this.str));
+            return (DER.indent + this.str);
         }
 
         public function toDER():ByteArray
@@ -47,5 +47,5 @@
 
 
     }
-}//package com.hurlant.util.der
+} com.hurlant.util.der
 

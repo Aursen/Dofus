@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.datacenter.items.criterion
+package com.ankamagames.dofus.datacenter.items.criterion
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.dofus.kernel.Kernel;
@@ -17,13 +17,9 @@
         {
             super(pCriterion);
             var arrayParams:Array = String(_criterionValueText).split(",");
-            if (((arrayParams) && ((arrayParams.length > 0))))
+            if (((arrayParams) && (arrayParams.length > 0)))
             {
-                if (arrayParams.length > 2)
-                {
-                    trace((("Les paramètres pour le don sont mauvais ! (" + _serverCriterionForm) + ")"));
-                }
-                else
+                if (arrayParams.length <= 2)
                 {
                     this._aliGiftId = uint(arrayParams[0]);
                     this._aliGiftLevel = int(arrayParams[1]);
@@ -83,5 +79,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.items.criterion
+} com.ankamagames.dofus.datacenter.items.criterion
 

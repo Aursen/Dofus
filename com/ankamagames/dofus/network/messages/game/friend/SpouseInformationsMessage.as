@@ -1,28 +1,24 @@
-﻿package com.ankamagames.dofus.network.messages.game.friend
+package com.ankamagames.dofus.network.messages.game.friend
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
     import com.ankamagames.dofus.network.types.game.friend.FriendSpouseInformations;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
     import com.ankamagames.dofus.network.ProtocolTypeManager;
 
-    [Trusted]
     public class SpouseInformationsMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 6356;
 
         private var _isInitialized:Boolean = false;
-        public var spouse:FriendSpouseInformations;
+        public var spouse:FriendSpouseInformations = new FriendSpouseInformations();
+        private var _spousetree:FuncTree;
 
-        public function SpouseInformationsMessage()
-        {
-            this.spouse = new FriendSpouseInformations();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
@@ -59,6 +55,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_SpouseInformationsMessage(output);
@@ -82,7 +86,24 @@
             this.spouse.deserialize(input);
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_SpouseInformationsMessage(tree);
+        }
+
+        public function deserializeAsyncAs_SpouseInformationsMessage(tree:FuncTree):void
+        {
+            this._spousetree = tree.addChild(this._spousetreeFunc);
+        }
+
+        private function _spousetreeFunc(input:ICustomDataInput):void
+        {
+            var _id:uint = input.readUnsignedShort();
+            this.spouse = ProtocolTypeManager.getInstance(FriendSpouseInformations, _id);
+            this.spouse.deserializeAsync(this._spousetree);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.friend
+} com.ankamagames.dofus.network.messages.game.friend
 

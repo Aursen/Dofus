@@ -1,8 +1,9 @@
-﻿package com.ankamagames.dofus.network.types.game.context.roleplay
+package com.ankamagames.dofus.network.types.game.context.roleplay
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import __AS3__.vec.Vector;
     import com.ankamagames.dofus.network.types.game.context.MapCoordinatesExtended;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
     import __AS3__.vec.*;
@@ -13,22 +14,18 @@
         public static const protocolId:uint = 175;
 
         public var type:uint = 0;
-        public var coords:Vector.<MapCoordinatesExtended>;
+        public var coords:Vector.<MapCoordinatesExtended> = new Vector.<MapCoordinatesExtended>();
+        private var _coordstree:FuncTree;
 
-        public function AtlasPointsInformations()
-        {
-            this.coords = new Vector.<MapCoordinatesExtended>();
-            super();
-        }
 
         public function getTypeId():uint
         {
             return (175);
         }
 
-        public function initAtlasPointsInformations(type:uint=0, coords:Vector.<MapCoordinatesExtended>=null):AtlasPointsInformations
+        public function initAtlasPointsInformations(_arg_1:uint=0, coords:Vector.<MapCoordinatesExtended>=null):AtlasPointsInformations
         {
-            this.type = type;
+            this.type = _arg_1;
             this.coords = coords;
             return (this);
         }
@@ -64,11 +61,7 @@
         public function deserializeAs_AtlasPointsInformations(input:ICustomDataInput):void
         {
             var _item2:MapCoordinatesExtended;
-            this.type = input.readByte();
-            if (this.type < 0)
-            {
-                throw (new Error((("Forbidden value (" + this.type) + ") on element of AtlasPointsInformations.type.")));
-            };
+            this._typeFunc(input);
             var _coordsLen:uint = input.readUnsignedShort();
             var _i2:uint;
             while (_i2 < _coordsLen)
@@ -80,7 +73,45 @@
             };
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_AtlasPointsInformations(tree);
+        }
+
+        public function deserializeAsyncAs_AtlasPointsInformations(tree:FuncTree):void
+        {
+            tree.addChild(this._typeFunc);
+            this._coordstree = tree.addChild(this._coordstreeFunc);
+        }
+
+        private function _typeFunc(input:ICustomDataInput):void
+        {
+            this.type = input.readByte();
+            if (this.type < 0)
+            {
+                throw (new Error((("Forbidden value (" + this.type) + ") on element of AtlasPointsInformations.type.")));
+            };
+        }
+
+        private function _coordstreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._coordstree.addChild(this._coordsFunc);
+                i++;
+            };
+        }
+
+        private function _coordsFunc(input:ICustomDataInput):void
+        {
+            var _item:MapCoordinatesExtended = new MapCoordinatesExtended();
+            _item.deserialize(input);
+            this.coords.push(_item);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.types.game.context.roleplay
+} com.ankamagames.dofus.network.types.game.context.roleplay
 

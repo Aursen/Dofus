@@ -1,27 +1,23 @@
-﻿package com.ankamagames.dofus.network.messages.game.inventory.exchanges
+package com.ankamagames.dofus.network.messages.game.inventory.exchanges
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
     import com.ankamagames.dofus.network.types.game.data.items.ObjectItemToSell;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
 
-    [Trusted]
     public class ExchangeShopStockMovementUpdatedMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 5909;
 
         private var _isInitialized:Boolean = false;
-        public var objectInfo:ObjectItemToSell;
+        public var objectInfo:ObjectItemToSell = new ObjectItemToSell();
+        private var _objectInfotree:FuncTree;
 
-        public function ExchangeShopStockMovementUpdatedMessage()
-        {
-            this.objectInfo = new ObjectItemToSell();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
@@ -58,6 +54,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_ExchangeShopStockMovementUpdatedMessage(output);
@@ -79,7 +83,23 @@
             this.objectInfo.deserialize(input);
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_ExchangeShopStockMovementUpdatedMessage(tree);
+        }
+
+        public function deserializeAsyncAs_ExchangeShopStockMovementUpdatedMessage(tree:FuncTree):void
+        {
+            this._objectInfotree = tree.addChild(this._objectInfotreeFunc);
+        }
+
+        private function _objectInfotreeFunc(input:ICustomDataInput):void
+        {
+            this.objectInfo = new ObjectItemToSell();
+            this.objectInfo.deserializeAsync(this._objectInfotree);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.inventory.exchanges
+} com.ankamagames.dofus.network.messages.game.inventory.exchanges
 

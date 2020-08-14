@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.context.roleplay.objects
+package com.ankamagames.dofus.network.messages.game.context.roleplay.objects
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class ObjectGroundAddedMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -55,6 +55,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_ObjectGroundAddedMessage(output);
@@ -62,7 +70,7 @@
 
         public function serializeAs_ObjectGroundAddedMessage(output:ICustomDataOutput):void
         {
-            if ((((this.cellId < 0)) || ((this.cellId > 559))))
+            if (((this.cellId < 0) || (this.cellId > 559)))
             {
                 throw (new Error((("Forbidden value (" + this.cellId) + ") on element cellId.")));
             };
@@ -81,11 +89,32 @@
 
         public function deserializeAs_ObjectGroundAddedMessage(input:ICustomDataInput):void
         {
+            this._cellIdFunc(input);
+            this._objectGIDFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_ObjectGroundAddedMessage(tree);
+        }
+
+        public function deserializeAsyncAs_ObjectGroundAddedMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._cellIdFunc);
+            tree.addChild(this._objectGIDFunc);
+        }
+
+        private function _cellIdFunc(input:ICustomDataInput):void
+        {
             this.cellId = input.readVarUhShort();
-            if ((((this.cellId < 0)) || ((this.cellId > 559))))
+            if (((this.cellId < 0) || (this.cellId > 559)))
             {
                 throw (new Error((("Forbidden value (" + this.cellId) + ") on element of ObjectGroundAddedMessage.cellId.")));
             };
+        }
+
+        private function _objectGIDFunc(input:ICustomDataInput):void
+        {
             this.objectGID = input.readVarUhShort();
             if (this.objectGID < 0)
             {
@@ -95,5 +124,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.context.roleplay.objects
+} com.ankamagames.dofus.network.messages.game.context.roleplay.objects
 

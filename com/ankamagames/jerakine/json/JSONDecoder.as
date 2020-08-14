@@ -1,68 +1,76 @@
-﻿package com.ankamagames.jerakine.json
+package com.ankamagames.jerakine.json
 {
     public class JSONDecoder 
     {
 
-        private var strict:Boolean;
-        private var value;
-        private var tokenizer:JSONTokenizer;
-        private var token:JSONToken;
+        protected var strict:Boolean;
+        protected var value:*;
+        protected var tokenizer:JSONTokenizer;
+        protected var token:JSONToken;
 
         public function JSONDecoder(s:String, strict:Boolean)
+        {
+            this.init(s, strict);
+        }
+
+        protected function init(s:String, strict:Boolean):void
         {
             this.strict = strict;
             this.tokenizer = new JSONTokenizer(s, strict);
             this.nextToken();
-            this.value = this.parseValue();
-            if (((strict) && (!((this.nextToken() == null)))))
+            if (this.token)
+            {
+                this.value = this.parseValue();
+            };
+            if (((strict) && (!(this.nextToken() == null))))
             {
                 this.tokenizer.parseError("Unexpected characters left in input stream");
             };
         }
 
-        public function getValue()
+        public function getValue():*
         {
             return (this.value);
         }
 
         private function nextToken():JSONToken
         {
-            return ((this.token = this.tokenizer.getNextToken()));
+            return (this.token = this.tokenizer.getNextToken());
         }
 
         private function parseArray():Array
         {
-            var a:Array = new Array();
+            var result:Array = [];
             this.nextToken();
             if (this.token.type == JSONTokenType.RIGHT_BRACKET)
             {
-                return (a);
+                return (result);
             };
-            if (((!(this.strict)) && ((this.token.type == JSONTokenType.COMMA))))
+            if (((!(this.strict)) && (this.token.type == JSONTokenType.COMMA)))
             {
                 this.nextToken();
                 if (this.token.type == JSONTokenType.RIGHT_BRACKET)
                 {
-                    return (a);
+                    return (result);
                 };
                 this.tokenizer.parseError(("Leading commas are not supported.  Expecting ']' but found " + this.token.value));
             };
             while (true)
             {
-                a.push(this.parseValue());
+                result.push(this.parseValue());
                 this.nextToken();
                 if (this.token.type == JSONTokenType.RIGHT_BRACKET)
                 {
-                    return (a);
+                    break;
                 };
                 if (this.token.type == JSONTokenType.COMMA)
                 {
                     this.nextToken();
-                    if (!(this.strict))
+                    if (!this.strict)
                     {
                         if (this.token.type == JSONTokenType.RIGHT_BRACKET)
                         {
-                            return (a);
+                            break;
                         };
                     };
                 }
@@ -71,24 +79,24 @@
                     this.tokenizer.parseError(("Expecting ] or , but found " + this.token.value));
                 };
             };
-            return (null);
+            return (result);
         }
 
         private function parseObject():Object
         {
             var key:String;
-            var o:Object = new Object();
+            var result:Object = {};
             this.nextToken();
             if (this.token.type == JSONTokenType.RIGHT_BRACE)
             {
-                return (o);
+                return (result);
             };
-            if (((!(this.strict)) && ((this.token.type == JSONTokenType.COMMA))))
+            if (((!(this.strict)) && (this.token.type == JSONTokenType.COMMA)))
             {
                 this.nextToken();
                 if (this.token.type == JSONTokenType.RIGHT_BRACE)
                 {
-                    return (o);
+                    return (result);
                 };
                 this.tokenizer.parseError(("Leading commas are not supported.  Expecting '}' but found " + this.token.value));
             };
@@ -101,20 +109,20 @@
                     if (this.token.type == JSONTokenType.COLON)
                     {
                         this.nextToken();
-                        o[key] = this.parseValue();
+                        result[key] = this.parseValue();
                         this.nextToken();
                         if (this.token.type == JSONTokenType.RIGHT_BRACE)
                         {
-                            return (o);
+                            break;
                         };
                         if (this.token.type == JSONTokenType.COMMA)
                         {
                             this.nextToken();
-                            if (!(this.strict))
+                            if (!this.strict)
                             {
                                 if (this.token.type == JSONTokenType.RIGHT_BRACE)
                                 {
-                                    return (o);
+                                    break;
                                 };
                             };
                         }
@@ -133,7 +141,7 @@
                     this.tokenizer.parseError(("Expecting string but found " + this.token.value));
                 };
             };
-            return (null);
+            return (result);
         }
 
         private function parseValue():Object
@@ -155,7 +163,7 @@
                 case JSONTokenType.NULL:
                     return (this.token.value);
                 case JSONTokenType.NAN:
-                    if (!(this.strict))
+                    if (!this.strict)
                     {
                         return (this.token.value);
                     };
@@ -168,5 +176,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.json
+} com.ankamagames.jerakine.json
 

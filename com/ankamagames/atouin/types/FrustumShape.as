@@ -1,4 +1,4 @@
-﻿package com.ankamagames.atouin.types
+package com.ankamagames.atouin.types
 {
     import flash.display.Sprite;
 
@@ -10,6 +10,8 @@
         public function FrustumShape(direction:uint)
         {
             this._direction = direction;
+            alpha = 0;
+            buttonMode = true;
         }
 
         public function get direction():uint
@@ -19,5 +21,5 @@
 
 
     }
-}//package com.ankamagames.atouin.types
+} com.ankamagames.atouin.types
 

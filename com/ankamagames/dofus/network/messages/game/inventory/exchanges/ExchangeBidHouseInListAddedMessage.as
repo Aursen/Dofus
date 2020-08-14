@@ -1,9 +1,10 @@
-﻿package com.ankamagames.dofus.network.messages.game.inventory.exchanges
+package com.ankamagames.dofus.network.messages.game.inventory.exchanges
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
     import __AS3__.vec.Vector;
     import com.ankamagames.dofus.network.types.game.data.items.effects.ObjectEffect;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
@@ -11,7 +12,6 @@
     import com.ankamagames.dofus.network.ProtocolTypeManager;
     import __AS3__.vec.*;
 
-    [Trusted]
     public class ExchangeBidHouseInListAddedMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -19,16 +19,13 @@
 
         private var _isInitialized:Boolean = false;
         public var itemUID:int = 0;
-        public var objGenericId:int = 0;
-        public var effects:Vector.<ObjectEffect>;
-        public var prices:Vector.<uint>;
+        public var objectGID:uint = 0;
+        public var objectType:uint = 0;
+        public var effects:Vector.<ObjectEffect> = new Vector.<ObjectEffect>();
+        public var prices:Vector.<Number> = new Vector.<Number>();
+        private var _effectstree:FuncTree;
+        private var _pricestree:FuncTree;
 
-        public function ExchangeBidHouseInListAddedMessage()
-        {
-            this.effects = new Vector.<ObjectEffect>();
-            this.prices = new Vector.<uint>();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
@@ -40,10 +37,11 @@
             return (5949);
         }
 
-        public function initExchangeBidHouseInListAddedMessage(itemUID:int=0, objGenericId:int=0, effects:Vector.<ObjectEffect>=null, prices:Vector.<uint>=null):ExchangeBidHouseInListAddedMessage
+        public function initExchangeBidHouseInListAddedMessage(itemUID:int=0, objectGID:uint=0, objectType:uint=0, effects:Vector.<ObjectEffect>=null, prices:Vector.<Number>=null):ExchangeBidHouseInListAddedMessage
         {
             this.itemUID = itemUID;
-            this.objGenericId = objGenericId;
+            this.objectGID = objectGID;
+            this.objectType = objectType;
             this.effects = effects;
             this.prices = prices;
             this._isInitialized = true;
@@ -53,9 +51,10 @@
         override public function reset():void
         {
             this.itemUID = 0;
-            this.objGenericId = 0;
+            this.objectGID = 0;
+            this.objectType = 0;
             this.effects = new Vector.<ObjectEffect>();
-            this.prices = new Vector.<uint>();
+            this.prices = new Vector.<Number>();
             this._isInitialized = false;
         }
 
@@ -71,6 +70,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_ExchangeBidHouseInListAddedMessage(output);
@@ -79,25 +86,34 @@
         public function serializeAs_ExchangeBidHouseInListAddedMessage(output:ICustomDataOutput):void
         {
             output.writeInt(this.itemUID);
-            output.writeInt(this.objGenericId);
-            output.writeShort(this.effects.length);
-            var _i3:uint;
-            while (_i3 < this.effects.length)
+            if (this.objectGID < 0)
             {
-                output.writeShort((this.effects[_i3] as ObjectEffect).getTypeId());
-                (this.effects[_i3] as ObjectEffect).serialize(output);
-                _i3++;
+                throw (new Error((("Forbidden value (" + this.objectGID) + ") on element objectGID.")));
+            };
+            output.writeVarShort(this.objectGID);
+            if (this.objectType < 0)
+            {
+                throw (new Error((("Forbidden value (" + this.objectType) + ") on element objectType.")));
+            };
+            output.writeInt(this.objectType);
+            output.writeShort(this.effects.length);
+            var _i4:uint;
+            while (_i4 < this.effects.length)
+            {
+                output.writeShort((this.effects[_i4] as ObjectEffect).getTypeId());
+                (this.effects[_i4] as ObjectEffect).serialize(output);
+                _i4++;
             };
             output.writeShort(this.prices.length);
-            var _i4:uint;
-            while (_i4 < this.prices.length)
+            var _i5:uint;
+            while (_i5 < this.prices.length)
             {
-                if (this.prices[_i4] < 0)
+                if (((this.prices[_i5] < 0) || (this.prices[_i5] > 9007199254740992)))
                 {
-                    throw (new Error((("Forbidden value (" + this.prices[_i4]) + ") on element 4 (starting at 1) of prices.")));
+                    throw (new Error((("Forbidden value (" + this.prices[_i5]) + ") on element 5 (starting at 1) of prices.")));
                 };
-                output.writeVarInt(this.prices[_i4]);
-                _i4++;
+                output.writeVarLong(this.prices[_i5]);
+                _i5++;
             };
         }
 
@@ -108,36 +124,114 @@
 
         public function deserializeAs_ExchangeBidHouseInListAddedMessage(input:ICustomDataInput):void
         {
-            var _id3:uint;
-            var _item3:ObjectEffect;
-            var _val4:uint;
-            this.itemUID = input.readInt();
-            this.objGenericId = input.readInt();
+            var _id4:uint;
+            var _item4:ObjectEffect;
+            var _val5:Number;
+            this._itemUIDFunc(input);
+            this._objectGIDFunc(input);
+            this._objectTypeFunc(input);
             var _effectsLen:uint = input.readUnsignedShort();
-            var _i3:uint;
-            while (_i3 < _effectsLen)
-            {
-                _id3 = input.readUnsignedShort();
-                _item3 = ProtocolTypeManager.getInstance(ObjectEffect, _id3);
-                _item3.deserialize(input);
-                this.effects.push(_item3);
-                _i3++;
-            };
-            var _pricesLen:uint = input.readUnsignedShort();
             var _i4:uint;
-            while (_i4 < _pricesLen)
+            while (_i4 < _effectsLen)
             {
-                _val4 = input.readVarUhInt();
-                if (_val4 < 0)
-                {
-                    throw (new Error((("Forbidden value (" + _val4) + ") on elements of prices.")));
-                };
-                this.prices.push(_val4);
+                _id4 = input.readUnsignedShort();
+                _item4 = ProtocolTypeManager.getInstance(ObjectEffect, _id4);
+                _item4.deserialize(input);
+                this.effects.push(_item4);
                 _i4++;
             };
+            var _pricesLen:uint = input.readUnsignedShort();
+            var _i5:uint;
+            while (_i5 < _pricesLen)
+            {
+                _val5 = input.readVarUhLong();
+                if (((_val5 < 0) || (_val5 > 9007199254740992)))
+                {
+                    throw (new Error((("Forbidden value (" + _val5) + ") on elements of prices.")));
+                };
+                this.prices.push(_val5);
+                _i5++;
+            };
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_ExchangeBidHouseInListAddedMessage(tree);
+        }
+
+        public function deserializeAsyncAs_ExchangeBidHouseInListAddedMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._itemUIDFunc);
+            tree.addChild(this._objectGIDFunc);
+            tree.addChild(this._objectTypeFunc);
+            this._effectstree = tree.addChild(this._effectstreeFunc);
+            this._pricestree = tree.addChild(this._pricestreeFunc);
+        }
+
+        private function _itemUIDFunc(input:ICustomDataInput):void
+        {
+            this.itemUID = input.readInt();
+        }
+
+        private function _objectGIDFunc(input:ICustomDataInput):void
+        {
+            this.objectGID = input.readVarUhShort();
+            if (this.objectGID < 0)
+            {
+                throw (new Error((("Forbidden value (" + this.objectGID) + ") on element of ExchangeBidHouseInListAddedMessage.objectGID.")));
+            };
+        }
+
+        private function _objectTypeFunc(input:ICustomDataInput):void
+        {
+            this.objectType = input.readInt();
+            if (this.objectType < 0)
+            {
+                throw (new Error((("Forbidden value (" + this.objectType) + ") on element of ExchangeBidHouseInListAddedMessage.objectType.")));
+            };
+        }
+
+        private function _effectstreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._effectstree.addChild(this._effectsFunc);
+                i++;
+            };
+        }
+
+        private function _effectsFunc(input:ICustomDataInput):void
+        {
+            var _id:uint = input.readUnsignedShort();
+            var _item:ObjectEffect = ProtocolTypeManager.getInstance(ObjectEffect, _id);
+            _item.deserialize(input);
+            this.effects.push(_item);
+        }
+
+        private function _pricestreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._pricestree.addChild(this._pricesFunc);
+                i++;
+            };
+        }
+
+        private function _pricesFunc(input:ICustomDataInput):void
+        {
+            var _val:Number = input.readVarUhLong();
+            if (((_val < 0) || (_val > 9007199254740992)))
+            {
+                throw (new Error((("Forbidden value (" + _val) + ") on elements of prices.")));
+            };
+            this.prices.push(_val);
         }
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.inventory.exchanges
+} com.ankamagames.dofus.network.messages.game.inventory.exchanges
 

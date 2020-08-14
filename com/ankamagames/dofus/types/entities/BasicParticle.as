@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.types.entities
+package com.ankamagames.dofus.types.entities
 {
     import flash.display.DisplayObject;
 
@@ -24,15 +24,15 @@
         {
             var explode:Boolean;
             var prcLife:Number = (this._life / this._initialLife);
-            if (((this._subExplosion) && ((Math.random() > prcLife))))
+            if (((this._subExplosion) && (Math.random() > prcLife)))
             {
                 explode = true;
             };
-            if (((((!(this._life)) || (explode))) && (!(this._deathDispatched))))
+            if ((((!(this._life)) || (explode)) && (!(this._deathDispatched))))
             {
                 this._deathCallback(this, explode);
             };
-            this._sprite.alpha = (((prcLife > (1 / 2))) ? 1 : (prcLife * 2));
+            this._sprite.alpha = ((prcLife > (1 / 2)) ? 1 : (prcLife * 2));
             if (this._life)
             {
                 this._life--;
@@ -61,5 +61,5 @@
 
 
     }
-}//package com.ankamagames.dofus.types.entities
+} com.ankamagames.dofus.types.entities
 

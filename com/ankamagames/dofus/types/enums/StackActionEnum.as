@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.types.enums
+package com.ankamagames.dofus.types.enums
 {
     public class StackActionEnum 
     {
@@ -9,5 +9,5 @@
 
 
     }
-}//package com.ankamagames.dofus.types.enums
+} com.ankamagames.dofus.types.enums
 

@@ -1,10 +1,11 @@
-﻿package com.ankamagames.dofus.network.types.game.context.roleplay
+package com.ankamagames.dofus.network.types.game.context.roleplay
 {
     import com.ankamagames.jerakine.network.INetworkType;
-    import com.ankamagames.dofus.network.types.game.look.EntityLook;
     import com.ankamagames.dofus.network.types.game.context.EntityDispositionInformations;
+    import com.ankamagames.dofus.network.types.game.look.EntityLook;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
     public class GameRolePlayNamedActorInformations extends GameRolePlayActorInformations implements INetworkType 
     {
@@ -19,9 +20,9 @@
             return (154);
         }
 
-        public function initGameRolePlayNamedActorInformations(contextualId:int=0, look:EntityLook=null, disposition:EntityDispositionInformations=null, name:String=""):GameRolePlayNamedActorInformations
+        public function initGameRolePlayNamedActorInformations(contextualId:Number=0, disposition:EntityDispositionInformations=null, look:EntityLook=null, name:String=""):GameRolePlayNamedActorInformations
         {
-            super.initGameRolePlayActorInformations(contextualId, look, disposition);
+            super.initGameRolePlayActorInformations(contextualId, disposition, look);
             this.name = name;
             return (this);
         }
@@ -51,10 +52,26 @@
         public function deserializeAs_GameRolePlayNamedActorInformations(input:ICustomDataInput):void
         {
             super.deserialize(input);
+            this._nameFunc(input);
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GameRolePlayNamedActorInformations(tree);
+        }
+
+        public function deserializeAsyncAs_GameRolePlayNamedActorInformations(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._nameFunc);
+        }
+
+        private function _nameFunc(input:ICustomDataInput):void
+        {
             this.name = input.readUTF();
         }
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.context.roleplay
+} com.ankamagames.dofus.network.types.game.context.roleplay
 

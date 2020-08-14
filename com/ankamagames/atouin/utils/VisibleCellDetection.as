@@ -1,4 +1,4 @@
-﻿package com.ankamagames.atouin.utils
+package com.ankamagames.atouin.utils
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
@@ -75,8 +75,8 @@
                         {
                             elementData = ele.getElementData(GraphicalElement(element).elementId);
                             bottomTmp = (GraphicalElement(element).altitude * AtouinConstants.ALTITUDE_PIXEL_UNIT);
-                            bottom = (((bottomTmp < bottom)) ? bottomTmp : bottom);
-                            if (((elementData) && ((elementData is NormalGraphicalElementData))))
+                            bottom = ((bottomTmp < bottom) ? bottomTmp : bottom);
+                            if (((elementData) && (elementData is NormalGraphicalElementData)))
                             {
                                 ged = (elementData as NormalGraphicalElementData);
                                 if ((-(ged.origin.x) + AtouinConstants.CELL_WIDTH) < left)
@@ -96,7 +96,7 @@
                             };
                         };
                     };
-                    if (!(alt))
+                    if (!alt)
                     {
                         alt = AtouinConstants.CELL_HEIGHT;
                     };
@@ -113,7 +113,7 @@
                     rcv.top = (((p.y + oy) - bottom) - alt);
                     rcv.width = width;
                     rcv.height = (alt + (AtouinConstants.CELL_HEIGHT * 2));
-                    if (!(aCell[cell.cellId]))
+                    if (!aCell[cell.cellId])
                     {
                         aCell[cell.cellId] = {
                             "r":rcv.clone(),
@@ -131,13 +131,13 @@
             i = 0;
             while (i < aCell.length)
             {
-                if (!(aCell[i]))
+                if (!aCell[i])
                 {
                 }
                 else
                 {
                     rcv = aCell[i].r;
-                    if (((rcv) && ((rcv.intersects(rv) == visible))))
+                    if (((rcv) && (rcv.intersects(rv) == visible)))
                     {
                         pdm.cell[i] = true;
                         j = 0;
@@ -159,5 +159,5 @@
 
 
     }
-}//package com.ankamagames.atouin.utils
+} com.ankamagames.atouin.utils
 

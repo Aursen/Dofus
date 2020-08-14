@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.inventory.items
+package com.ankamagames.dofus.network.messages.game.inventory.items
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class LivingObjectChangeSkinRequestMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -58,6 +58,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_LivingObjectChangeSkinRequestMessage(output);
@@ -70,7 +78,7 @@
                 throw (new Error((("Forbidden value (" + this.livingUID) + ") on element livingUID.")));
             };
             output.writeVarInt(this.livingUID);
-            if ((((this.livingPosition < 0)) || ((this.livingPosition > 0xFF))))
+            if (((this.livingPosition < 0) || (this.livingPosition > 0xFF)))
             {
                 throw (new Error((("Forbidden value (" + this.livingPosition) + ") on element livingPosition.")));
             };
@@ -89,16 +97,43 @@
 
         public function deserializeAs_LivingObjectChangeSkinRequestMessage(input:ICustomDataInput):void
         {
+            this._livingUIDFunc(input);
+            this._livingPositionFunc(input);
+            this._skinIdFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_LivingObjectChangeSkinRequestMessage(tree);
+        }
+
+        public function deserializeAsyncAs_LivingObjectChangeSkinRequestMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._livingUIDFunc);
+            tree.addChild(this._livingPositionFunc);
+            tree.addChild(this._skinIdFunc);
+        }
+
+        private function _livingUIDFunc(input:ICustomDataInput):void
+        {
             this.livingUID = input.readVarUhInt();
             if (this.livingUID < 0)
             {
                 throw (new Error((("Forbidden value (" + this.livingUID) + ") on element of LivingObjectChangeSkinRequestMessage.livingUID.")));
             };
+        }
+
+        private function _livingPositionFunc(input:ICustomDataInput):void
+        {
             this.livingPosition = input.readUnsignedByte();
-            if ((((this.livingPosition < 0)) || ((this.livingPosition > 0xFF))))
+            if (((this.livingPosition < 0) || (this.livingPosition > 0xFF)))
             {
                 throw (new Error((("Forbidden value (" + this.livingPosition) + ") on element of LivingObjectChangeSkinRequestMessage.livingPosition.")));
             };
+        }
+
+        private function _skinIdFunc(input:ICustomDataInput):void
+        {
             this.skinId = input.readVarUhInt();
             if (this.skinId < 0)
             {
@@ -108,5 +143,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.inventory.items
+} com.ankamagames.dofus.network.messages.game.inventory.items
 

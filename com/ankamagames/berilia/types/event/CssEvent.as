@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.types.event
+package com.ankamagames.berilia.types.event
 {
     import flash.events.Event;
     import com.ankamagames.berilia.types.data.ExtendedStyleSheet;
@@ -10,9 +10,9 @@
 
         private var _stylesheet:ExtendedStyleSheet;
 
-        public function CssEvent(type:String, bubbles:Boolean=false, cancelable:Boolean=false, stylesheet:ExtendedStyleSheet=null)
+        public function CssEvent(_arg_1:String, bubbles:Boolean=false, cancelable:Boolean=false, stylesheet:ExtendedStyleSheet=null)
         {
-            super(type, bubbles, cancelable);
+            super(_arg_1, bubbles, cancelable);
             this._stylesheet = stylesheet;
         }
 
@@ -23,5 +23,5 @@
 
 
     }
-}//package com.ankamagames.berilia.types.event
+} com.ankamagames.berilia.types.event
 

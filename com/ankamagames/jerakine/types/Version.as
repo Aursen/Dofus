@@ -1,56 +1,47 @@
-﻿package com.ankamagames.jerakine.types
+package com.ankamagames.jerakine.types
 {
     import flash.utils.IExternalizable;
+    import com.ankamagames.jerakine.interfaces.IDataCenter;
     import flash.utils.IDataOutput;
     import flash.utils.IDataInput;
 
-    public class Version implements IExternalizable 
+    public class Version implements IExternalizable, IDataCenter 
     {
 
-        private var _major:uint;
-        private var _minor:uint;
-        private var _release:uint;
-        private var _revision:uint;
-        private var _patch:uint;
-        private var _buildType:uint;
+        private var _major:uint = 2;
+        private var _minor:uint = 0;
+        private var _code:uint = 0;
+        private var _build:uint = 0;
+        private var _buildType:uint = 4;
 
         public function Version(... args)
         {
-            if (args.length == 3)
+            var split:Array;
+            super();
+            if (((!(args)) || (args.length == 0)))
             {
-                this._major = uint(args[0]);
-                this._minor = uint(args[1]);
-                this._release = uint(args[2]);
-            };
-        }
-
-        public static function fromString(version:String):Version
-        {
-            var a:Array = version.split(".");
-            if (a.length != 3)
-            {
-                throw (new ArgumentError("Format de version invalide !"));
-            };
-            try
-            {
-                return (new (Version)(parseInt(a[0], 10), parseInt(a[1], 10), parseInt(a[2], 10)));
+                this._major = (this._minor = (this._code = (this._build = (this._buildType = 0))));
             }
-            catch(e)
+            else
             {
-                throw (e);
+                if (((args.length == 2) && (args[0] is String)))
+                {
+                    split = (args[0] as String).split(".");
+                    this._major = uint(split[0]);
+                    this._minor = uint(split[1]);
+                    this._code = uint(split[2].split("-")[0]);
+                    this._buildType = args[1];
+                }
+                else
+                {
+                    throw (new ArgumentError("invalid parameters"));
+                };
             };
-            return (undefined);
         }
-
 
         public function get major():uint
         {
             return (this._major);
-        }
-
-        public function set major(value:uint):void
-        {
-            this._major = value;
         }
 
         public function get minor():uint
@@ -58,39 +49,19 @@
             return (this._minor);
         }
 
-        public function set minor(value:uint):void
+        public function get code():uint
         {
-            this._minor = value;
+            return (this._code);
         }
 
-        public function get release():uint
+        public function get build():uint
         {
-            return (this._release);
+            return (this._build);
         }
 
-        public function set release(value:uint):void
+        public function set build(value:uint):void
         {
-            this._release = value;
-        }
-
-        public function get revision():uint
-        {
-            return (this._revision);
-        }
-
-        public function set revision(value:uint):void
-        {
-            this._revision = value;
-        }
-
-        public function get patch():uint
-        {
-            return (this._patch);
-        }
-
-        public function set patch(value:uint):void
-        {
-            this._patch = value;
+            this._build = value;
         }
 
         public function get buildType():uint
@@ -105,31 +76,65 @@
 
         public function toString():String
         {
-            return (((((((((this._major + ".") + this._minor) + ".") + this._release) + ".") + this._revision) + ".") + this._patch));
+            if (this._buildType == 5)
+            {
+                return ((((this._major + ".") + this._minor) + ".") + this._code);
+            };
+            if (this._buildType == 0)
+            {
+                return ((((((this._major + ".") + this._minor) + ".") + this._code) + ".") + this._build);
+            };
+            return ((((((((this._major + ".") + this._minor) + ".") + this._code) + ".") + this._build) + "-") + this._buildType);
+        }
+
+        public function toStringForAppName():String
+        {
+            var version:String = ((((((this._major + ".") + this._minor) + ".") + this._code) + ".") + this._build);
+            switch (this._buildType)
+            {
+                case 1:
+                    version = (version + "-beta");
+                    break;
+                case 3:
+                    version = (version + "-testing");
+                    break;
+                case 4:
+                    version = (version + "-locale");
+                    break;
+                case 5:
+                    version = (version + "-debug");
+                    break;
+                case 6:
+                    version = (version + "-draft");
+                    break;
+            };
+            return (version);
         }
 
         public function equals(otherVersion:Version):Boolean
         {
-            return ((((((((this._major == otherVersion.major)) && ((this._minor == otherVersion.minor)))) && ((this._release == otherVersion.release)))) && ((this._buildType == otherVersion.buildType))));
+            return (((((this._major == otherVersion._major) && (this._minor == otherVersion._minor)) && (this._code == otherVersion._code)) && (this._build == otherVersion._build)) && (this._buildType == otherVersion._buildType));
         }
 
         public function writeExternal(output:IDataOutput):void
         {
-            output.writeByte(this.major);
-            output.writeByte(this.minor);
-            output.writeByte(this.release);
-            output.writeByte(this.buildType);
+            output.writeByte(this._major);
+            output.writeByte(this._minor);
+            output.writeByte(this._code);
+            output.writeByte(this._build);
+            output.writeByte(this._buildType);
         }
 
         public function readExternal(input:IDataInput):void
         {
-            this.major = input.readUnsignedByte();
-            this.minor = input.readUnsignedByte();
-            this.release = input.readUnsignedByte();
-            this.buildType = input.readUnsignedByte();
+            this._major = input.readUnsignedByte();
+            this._minor = input.readUnsignedByte();
+            this._code = input.readUnsignedByte();
+            this._build = input.readUnsignedByte();
+            this._buildType = input.readUnsignedByte();
         }
 
 
     }
-}//package com.ankamagames.jerakine.types
+} com.ankamagames.jerakine.types
 

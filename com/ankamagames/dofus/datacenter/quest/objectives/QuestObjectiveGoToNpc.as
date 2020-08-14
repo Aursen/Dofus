@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.datacenter.quest.objectives
+package com.ankamagames.dofus.datacenter.quest.objectives
 {
     import com.ankamagames.dofus.datacenter.quest.QuestObjective;
     import com.ankamagames.jerakine.interfaces.IDataCenter;
@@ -14,7 +14,7 @@
 
         public function get npcId():uint
         {
-            if (!(this.parameters))
+            if (!this.parameters)
             {
                 return (0);
             };
@@ -23,7 +23,7 @@
 
         public function get npc():Npc
         {
-            if (!(this._npc))
+            if (!this._npc)
             {
                 this._npc = Npc.getNpcById(this.npcId);
             };
@@ -32,7 +32,7 @@
 
         override public function get text():String
         {
-            if (!(this._text))
+            if (!this._text)
             {
                 this._text = PatternDecoder.getDescription(this.type.name, [this.npc.name]);
             };
@@ -41,5 +41,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.quest.objectives
+} com.ankamagames.dofus.datacenter.quest.objectives
 

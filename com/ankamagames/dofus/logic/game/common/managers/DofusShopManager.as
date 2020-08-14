@@ -1,51 +1,47 @@
-﻿package com.ankamagames.dofus.logic.game.common.managers
+package com.ankamagames.dofus.logic.game.common.managers
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
-    import com.ankamagames.jerakine.managers.LangManager;
-    import com.ankamagames.dofus.BuildInfos;
-    import com.ankamagames.dofus.network.enums.BuildTypeEnum;
-    import com.ankamagames.dofus.misc.utils.RpcServiceCenter;
-    import com.ankamagames.dofus.logic.common.managers.PlayerManager;
-    import com.ankamagames.berilia.Berilia;
-    import com.ankamagames.berilia.types.event.UiUnloadEvent;
+    import com.ankamagames.jerakine.data.XmlConfig;
+    import com.ankama.haapi.client.api.ShopApi;
+    import com.ankama.haapi.client.api.MoneyApi;
+    import flash.utils.Dictionary;
+    import org.openapitools.common.ApiUserCredentials;
     import com.ankamagames.berilia.managers.KernelEventsManager;
     import com.ankamagames.dofus.misc.lists.ExternalGameHookList;
-    import com.ankamagames.dofus.logic.game.common.types.DofusShopObject;
-    import com.ankamagames.dofus.types.enums.DofusShopEnum;
+    import org.openapitools.event.ApiClientEvent;
+    import com.ankamagames.berilia.managers.UiModuleManager;
+    import com.ankamagames.berilia.Berilia;
+    import com.ankamagames.berilia.enums.StrataEnum;
     import com.ankamagames.dofus.logic.game.common.types.DofusShopArticle;
     import com.ankamagames.dofus.logic.game.common.types.DofusShopCategory;
     import com.ankamagames.dofus.logic.game.common.types.DofusShopHighlight;
+    import com.ankamagames.dofus.types.enums.DofusShopEnum;
+    import com.ankama.haapi.client.model.ShopBuyResult;
     import flash.events.IOErrorEvent;
     import flash.events.ErrorEvent;
     import com.ankamagames.dofus.misc.lists.ChatHookList;
+    import com.ankamagames.jerakine.data.I18n;
     import com.ankamagames.dofus.logic.game.common.frames.ChatFrame;
 
     public class DofusShopManager 
     {
 
         private static const _log:Logger = Log.getLogger("DofusShopManager");
-        private static const LOCAL_GAME_SERVICE_URL:String = "http://api.ankama.lan/game/";
-        private static const RELEASE_GAME_SERVICE_URL:String = "http://api.ankama.com/game/";
-        private static const SHOP_KEY:String = "DOFUS_INGAME";
+        private static const HAAPI_BASE_PATH:String = XmlConfig.getInstance().getEntry("config.haapiUrlAnkama");
+        private static const NB_CATEGORY_ARTICLES_HEADER_NAME:String = "X-Total";
         private static var _self:DofusShopManager;
 
-        private var _serviceBaseUrl:String;
-        private var _serviceType:String;
-        private var _serviceVersion:String;
-        private var _currentLocale:String;
-        private var _currentPurchaseId:int;
-        private var _cacheHome:Object;
-        private var _cacheArticles:Array;
-        private var _objectPool:Array;
-        private var _lastCategory:int;
-        private var _lastPage:int;
-        private var _isOnHomePage:Boolean;
+        public var shopApi:ShopApi;
+        public var moneyApi:MoneyApi;
+        private var _tokens:Array;
+        private var _key:String;
+        private var _articlesTemp:Dictionary = new Dictionary();
 
 
         public static function getInstance():DofusShopManager
         {
-            if (!(_self))
+            if (!_self)
             {
                 _self = new (DofusShopManager)();
             };
@@ -55,436 +51,423 @@
 
         public function init(key:String, forceReleaseGameService:Boolean=false):void
         {
-            this._serviceType = "json";
-            this._serviceVersion = "1.0";
-            this._currentLocale = LangManager.getInstance().getEntry("config.lang.current");
-            this._objectPool = new Array();
-            if ((((BuildInfos.BUILD_TYPE >= BuildTypeEnum.TESTING)) && (!(forceReleaseGameService))))
-            {
-                this._serviceBaseUrl = LOCAL_GAME_SERVICE_URL;
-            }
-            else
-            {
-                this._serviceBaseUrl = RELEASE_GAME_SERVICE_URL;
-            };
-            RpcServiceCenter.getInstance().makeRpcCall(((this._serviceBaseUrl + "authentification.") + this._serviceType), this._serviceType, this._serviceVersion, "Authentification", [key, PlayerManager.getInstance().server.id, PlayedCharacterManager.getInstance().id], this.onAuthentification);
-            this.open();
+            this._key = key;
+            var apiCredentials:ApiUserCredentials = new ApiUserCredentials("", HAAPI_BASE_PATH, this._key);
+            this.shopApi = new ShopApi(apiCredentials);
+            this.moneyApi = new MoneyApi(apiCredentials);
+            this.shopApi.home().onSuccess(this.onHome).onError(this.onHomeError).call();
+            this.update();
         }
 
-        public function open():void
+        private function update():void
         {
-            Berilia.getInstance().addEventListener(UiUnloadEvent.UNLOAD_UI_COMPLETE, this.onClose);
-            this._cacheArticles = [];
+            this.moneyApi.ogrins_account(false).onSuccess(this.onLinkedOgrines).onError(this.onLinkedOgrinesError).call();
+            this.getOneClickTokens();
         }
 
         public function getMoney():void
         {
-            RpcServiceCenter.getInstance().makeRpcCall(((this._serviceBaseUrl + "account.") + this._serviceType), this._serviceType, this._serviceVersion, "Money", [], this.onMoney);
+            this.moneyApi.ogrins_amount().onSuccess(this.onMoney).onError(this.onMoneyError).call();
         }
 
-        public function getHome():void
+        public function buyArticle(articleId:int, currency:String, amount:Number, quantity:int=1):void
         {
-            this._isOnHomePage = true;
-            if (this._cacheHome)
-            {
-                KernelEventsManager.getInstance().processCallback(ExternalGameHookList.DofusShopHome, this._cacheHome.categories, this._cacheHome.gondolaArticles, this._cacheHome.gondolaHeads, this._cacheHome.highlightCarousel, this._cacheHome.highlightImages);
-                return;
-            };
-            RpcServiceCenter.getInstance().makeRpcCall(((this._serviceBaseUrl + "shop.") + this._serviceType), this._serviceType, this._serviceVersion, "Home", [SHOP_KEY, this._currentLocale], this.onHome);
+            this.shopApi.simple_buy(articleId, quantity, amount, currency).onSuccess(this.onBuyArticle(articleId)).onError(this.onBuyArticleError(articleId)).call();
         }
 
-        public function buyArticle(articleId:int, quantity:int=1):void
+        public function getArticlesList(category:int, size:int=20):void
         {
-            this._currentPurchaseId = articleId;
-            RpcServiceCenter.getInstance().makeRpcCall(((this._serviceBaseUrl + "shop.") + this._serviceType), this._serviceType, this._serviceVersion, "QuickBuy", [SHOP_KEY, this._currentLocale, articleId, quantity], this.onBuyArticle, true, false);
+            this._articlesTemp[category] = [];
+            this.shopApi.articles_list_by_category(category, 1, size).onSuccess(this.onArticlesList(category, 1)).onError(this.onArticleListError(category, 1)).call();
         }
 
-        public function getArticlesList(category:int, page:int=1, size:int=12):void
+        public function searchForArticles(criteria:String, size:int=20):void
         {
-            this._isOnHomePage = false;
-            this._lastCategory = category;
-            this._lastPage = page;
-            if (!(this._cacheArticles[category]))
-            {
-                this._cacheArticles[category] = new Array();
-            };
-            if (this._cacheArticles[category][page])
-            {
-                KernelEventsManager.getInstance().processCallback(ExternalGameHookList.DofusShopArticlesList, this._cacheArticles[category][page].articles, this._cacheArticles[category][page].totalPages);
-                this.checkPreviousAndNextArticlePages(category, page, this._cacheArticles[category][page].totalPages);
-                return;
-            };
-            RpcServiceCenter.getInstance().makeRpcCall(((this._serviceBaseUrl + "shop.") + this._serviceType), this._serviceType, this._serviceVersion, "ArticlesList", [SHOP_KEY, this._currentLocale, category, page, size], this.onArticlesList, false);
-        }
-
-        public function searchForArticles(criteria:String, page:int=1, size:int=12):void
-        {
-            this._isOnHomePage = false;
-            RpcServiceCenter.getInstance().makeRpcCall(((this._serviceBaseUrl + "shop.") + this._serviceType), this._serviceType, this._serviceVersion, "ArticlesSearch", [SHOP_KEY, this._currentLocale, criteria, [], page, size], this.onSearchArticles);
+            this._articlesTemp[-1] = [];
+            this.shopApi.articles_list_search(criteria, [], 1, size).onSuccess(this.onSearchArticles(1, criteria)).onError(this.onSearchArticlesError(1, criteria)).call();
         }
 
         public function updateAfterExpiredArticle(articleId:int):void
         {
-            var l:int;
-            var list:Array;
-            var data:DofusShopObject;
-            var i:int;
-            var category:int;
-            var page:int;
-            var categoriesToPurge:Array;
-            var categoryKey:String;
-            var needUpdate:Boolean;
-            var pageKey:String;
-            var pageObj:Object;
-            if (((this._cacheHome) && (this._cacheHome.gondolaArticles)))
+            this.shopApi.articles_list_by_ids([articleId]).onSuccess(this.onRefreshArticle([articleId])).onError(this.onRefreshArticleError(articleId)).call();
+        }
+
+        public function getOneClickTokens():void
+        {
+            this.shopApi.one_click_tokens().onSuccess(this.onOneClickTokens).onError(this.onOneClickTokensError).call();
+        }
+
+        public function oneClickBuyArticle(data:String, currency:String, token:Number):void
+        {
+            this.shopApi.one_click_buy(data, currency, token).onSuccess(this.onOneClickBuy(token)).onError(this.onOneclickBuyError(token)).call();
+        }
+
+        public function oneClickValidateOrder(orderId:Number, code:String):void
+        {
+            this.shopApi.one_click_validate_order(orderId, code).onSuccess(this.onOneClickValidateOrder).onError(this.onCodeError).call();
+        }
+
+        public function onceClickSendCode(orderId:Number):void
+        {
+            this.shopApi.one_click_send_code(orderId).onSuccess(this.onOneClickSendCode).onError(this.onOneClickSendCodeError).call();
+        }
+
+        private function onOneClickTokens(e:ApiClientEvent):void
+        {
+            if (e.response.payload)
             {
-                l = this._cacheHome.gondolaArticles.length;
-                i = 0;
-                while (i < l)
-                {
-                    if (this._cacheHome.gondolaArticles[i].id == articleId)
-                    {
-                        this._cacheHome.gondolaArticles.splice(i, 1);
-                        if (this._isOnHomePage)
-                        {
-                            KernelEventsManager.getInstance().processCallback(ExternalGameHookList.DofusShopHome, this._cacheHome.categories, this._cacheHome.gondolaArticles, this._cacheHome.gondolaHeads, this._cacheHome.highlightCarousel, this._cacheHome.highlightImages);
-                        };
-                        break;
-                    };
-                    i++;
-                };
-            };
-            if (this._cacheArticles)
-            {
-                categoriesToPurge = new Array();
-                for (categoryKey in this._cacheArticles)
-                {
-                    category = parseInt(categoryKey);
-                    for (pageKey in this._cacheArticles[category])
-                    {
-                        page = parseInt(pageKey);
-                        if (categoriesToPurge.indexOf(category) != -1)
-                        {
-                            break;
-                        };
-                        if (!(this._cacheArticles[category][page].articles))
-                        {
-                        }
-                        else
-                        {
-                            l = this._cacheArticles[category][page].articles.length;
-                            i = 0;
-                            while (i < l)
-                            {
-                                if (this._cacheArticles[category][page].articles[i].id == articleId)
-                                {
-                                    categoriesToPurge.push(category);
-                                    break;
-                                };
-                                i++;
-                            };
-                        };
-                    };
-                };
-                needUpdate = false;
-                for each (category in categoriesToPurge)
-                {
-                    if (category == this._lastCategory)
-                    {
-                        needUpdate = true;
-                    };
-                    for each (pageObj in this._cacheArticles[category])
-                    {
-                        for each (data in pageObj.articles)
-                        {
-                            data.free();
-                        };
-                    };
-                    delete this._cacheArticles[category];
-                };
-                if (((!(this._isOnHomePage)) && (needUpdate)))
-                {
-                    this.getArticlesList(this._lastCategory, this._lastPage);
-                };
+                this._tokens = (e.response.payload as Array);
+                KernelEventsManager.getInstance().processCallback(ExternalGameHookList.DofusShopOneClickTokens, e.response.payload);
             };
         }
 
-        private function onAuthentification(success:Boolean, params:*, request:*):void
+        private function onOneClickTokensError(e:ApiClientEvent):void
         {
-            _log.debug(("onAuthentification - " + success));
-            if (success)
+            _log.error("Can't get haapi One Click token");
+        }
+
+        private function onOneClickBuy(pToken:Number):Function
+        {
+            return (function (e:ApiClientEvent):void
             {
-                this.getMoney();
-                this.getHome();
+                var token:*;
+                if (e.response.payload == null)
+                {
+                    processCallError(("Error: OneClickBuy requested data corrupted : " + e.response.errorMessage));
+                    return;
+                };
+                var mod:* = UiModuleManager.getInstance().getModule("Ankama_Web");
+                var params:* = e.response.payload;
+                for each (token in _tokens)
+                {
+                    if (token.id == pToken)
+                    {
+                        params.codeMethod = token.security_method;
+                        params.codeMethodValue = token.security_method_value;
+                        params.article = Berilia.getInstance().getUi("webShop").uiClass.currentArticle;
+                    };
+                };
+                Berilia.getInstance().loadUi(mod, mod.getUi("shopPopupOneClickCode"), "shopPopupOneClickCode", params, true, StrataEnum.STRATA_TOP);
+            });
+        }
+
+        private function onOneclickBuyError(token:Number):Function
+        {
+            return (function (e:ApiClientEvent):void
+            {
+                _log.error(("Can't buy article with One Click [token] " + token));
+            });
+        }
+
+        private function onOneClickValidateOrder(e:ApiClientEvent):void
+        {
+            if (e.response.payload == null)
+            {
+                this.processCallError("Error: OneClickValidateOrder requested data corrupted");
+                return;
+            };
+            if (e.response.payload.reason)
+            {
+                KernelEventsManager.getInstance().processCallback(ExternalGameHookList.DofusShopOneInvalidCode);
             }
             else
             {
-                _log.error(params);
-                KernelEventsManager.getInstance().processCallback(ExternalGameHookList.DofusShopError, DofusShopEnum.ERROR_AUTHENTICATION_FAILED);
+                KernelEventsManager.getInstance().processCallback(ExternalGameHookList.DofusShopBuySuccess, true);
             };
         }
 
-        private function onMoney(success:Boolean, params:*, request:*):void
+        private function onCodeError(e:ApiClientEvent):void
         {
-            _log.debug(("onMoney - " + success));
-            if (success)
-            {
-                KernelEventsManager.getInstance().processCallback(ExternalGameHookList.DofusShopMoney, params.ogrins, params.krozs);
-            }
-            else
-            {
-                this.processCallError(params);
-            };
+            KernelEventsManager.getInstance().processCallback(ExternalGameHookList.DofusShopOneInvalidCode);
         }
 
-        private function onHome(success:Boolean, params:*, request:*):void
+        private function onOneClickSendCode(e:ApiClientEvent):void
+        {
+            _log.info("OneClick code sent succesfully");
+        }
+
+        private function onOneClickSendCodeError(e:ApiClientEvent):void
+        {
+            _log.error("Could not send OneClick code");
+        }
+
+        private function onMoney(e:ApiClientEvent):void
+        {
+            if (e.response.payload == null)
+            {
+                this.processCallError("Error: Money requested data corrupted");
+                return;
+            };
+            KernelEventsManager.getInstance().processCallback(ExternalGameHookList.DofusShopMoney, e.response.payload.amount);
+        }
+
+        public function onMoneyError(e:ApiClientEvent):void
+        {
+            _log.error("Can't Retrieve Money ammount from Haapi");
+        }
+
+        private function onLinkedOgrines(e:ApiClientEvent):void
+        {
+            if (e.response.payload == null)
+            {
+                this.processCallError("Error: LinkedOgrines requested data corrupted");
+                return;
+            };
+            KernelEventsManager.getInstance().processCallback(ExternalGameHookList.DofusBakLinkedOgrines, e.response.payload);
+        }
+
+        private function onLinkedOgrinesError(e:ApiClientEvent):void
+        {
+            _log.error("Could not get linked ogrines ammoun from haapi");
+        }
+
+        private function onHome(e:ApiClientEvent):void
         {
             var data:Object;
             var article:DofusShopArticle;
-            _log.debug(("onHome - " + success));
-            if (success)
+            var payload:* = e.response.payload;
+            if (!payload)
             {
-                if (!(params.content))
+                this.processCallError(("Error: Home requested data corrupted : " + e.response.errorMessage));
+                return;
+            };
+            var categories:Array = [];
+            var gondolaArticles:Array = [];
+            var highlightCarousel:Array = [];
+            this.getMoney();
+            if (payload.categories)
+            {
+                for each (data in payload.categories)
                 {
-                    this.processCallError("Error: Home requested data corrupted");
-                    return;
+                    categories.push(new DofusShopCategory(data));
                 };
-                this._cacheHome = {
-                    "categories":[],
-                    "gondolaHead":[],
-                    "gondolaArticles":[],
-                    "highlightCarousel":[],
-                    "highlightImages":[]
-                };
-                if (params.content.categories)
+            };
+            if (payload.gondolahead_article)
+            {
+                for each (data in payload.gondolahead_article)
                 {
-                    for each (data in params.content.categories.categories)
+                    article = new DofusShopArticle(data);
+                    if (!article.hasExpired)
                     {
-                        this._cacheHome.categories.push(new DofusShopCategory(data));
+                        gondolaArticles.push(article);
                     };
                 };
-                if (params.content.gondolahead_article)
+            };
+            if (payload.hightlight_carousel)
+            {
+                for each (data in payload.hightlight_carousel)
                 {
-                    for each (data in params.content.gondolahead_article.articles)
+                    highlightCarousel.push(new DofusShopHighlight(data));
+                };
+            };
+            KernelEventsManager.getInstance().processCallback(ExternalGameHookList.DofusShopHome, categories, gondolaArticles, highlightCarousel);
+        }
+
+        private function onHomeError(e:ApiClientEvent):void
+        {
+            _log.error(("Error while retrieving Shop Home from Haapi : " + e.response.errorMessage));
+        }
+
+        private function onArticlesList(categoryId:Number, page:Number):Function
+        {
+            return (function (e:ApiClientEvent):void
+            {
+                var articleData:*;
+                var article:*;
+                var maxPage:*;
+                var i:*;
+                var payload:* = e.response.payload;
+                if (payload == null)
+                {
+                    processCallError(("Error: ArticlesList requested data corrupted : " + e.response.errorMessage));
+                    return;
+                };
+                var articles:* = new Array();
+                for each (articleData in payload.articles)
+                {
+                    article = new DofusShopArticle(articleData);
+                    if (!article.hasExpired)
                     {
-                        article = new DofusShopArticle(data);
-                        if (!(article.hasExpired))
+                        articles.push(article);
+                    };
+                };
+                maxPage = 1;
+                if (payload.total_count)
+                {
+                    maxPage = Math.ceil((int(payload.total_count) / DofusShopEnum.MAX_ARTICLES_PER_PAGE));
+                    if (page == 1)
+                    {
+                        i = 2;
+                        while (i <= maxPage)
                         {
-                            this._cacheHome.gondolaArticles.push(article);
+                            shopApi.articles_list_by_category(categoryId, i, DofusShopEnum.MAX_ARTICLES_PER_PAGE).onSuccess(onArticlesList(categoryId, i)).onError(onArticleListError(categoryId, i)).call();
+                            i++;
                         };
                     };
                 };
-                if (params.content.hightlight_carousel)
+                _articlesTemp[categoryId].insertAt((page - 1), articles);
+                i = 0;
+                while (i < maxPage)
                 {
-                    for each (data in params.content.hightlight_carousel.hightlights)
+                    if (!_articlesTemp[categoryId][i])
                     {
-                        this._cacheHome.highlightCarousel.push(new DofusShopHighlight(data));
+                        return;
                     };
+                    i++;
                 };
-                if (params.content.hightlight_image)
+                var resultArray:* = [];
+                i = 0;
+                while (i < maxPage)
                 {
-                    for each (data in params.content.hightlight_image.hightlights)
-                    {
-                        this._cacheHome.highlightImages.push(new DofusShopHighlight(data));
-                    };
+                    resultArray = resultArray.concat(_articlesTemp[categoryId][i]);
+                    i++;
                 };
-                KernelEventsManager.getInstance().processCallback(ExternalGameHookList.DofusShopHome, this._cacheHome.categories, this._cacheHome.gondolaArticles, this._cacheHome.gondolaHeads, this._cacheHome.highlightCarousel, this._cacheHome.highlightImages);
-            }
-            else
-            {
-                this.processCallError(params);
-            };
+                KernelEventsManager.getInstance().processCallback(ExternalGameHookList.DofusShopArticlesList, resultArray, categoryId);
+            });
         }
 
-        private function onArticlesList(success:Boolean, params:*, request:*):void
+        private function onArticleListError(categoryId:Number, page:Number):Function
         {
-            var articles:Array;
-            var totalPages:int;
-            var articleData:Object;
-            var article:DofusShopArticle;
-            if (!(this._cacheArticles))
+            return (function (e:ApiClientEvent):void
             {
-                return;
-            };
-            _log.debug(("onArticlesList - " + success));
-            if (success)
-            {
-                articles = new Array();
-                totalPages = Math.ceil((params.count / DofusShopEnum.MAX_ARTICLES_PER_PAGE));
-                for each (articleData in params.articles)
-                {
-                    article = new DofusShopArticle(articleData);
-                    if (!(article.hasExpired))
-                    {
-                        articles.push(article);
-                    };
-                };
-                KernelEventsManager.getInstance().processCallback(ExternalGameHookList.DofusShopArticlesList, articles, totalPages);
-                this._cacheArticles[request.params[2]][request.params[3]] = {
-                    "articles":articles,
-                    "totalPages":totalPages
-                };
-                this.checkPreviousAndNextArticlePages(request.params[2], request.params[3], totalPages);
-            }
-            else
-            {
-                this.processCallError(params);
-            };
+                _log.error(((((("Error while retrieving article list from Haapi with [category] " + categoryId) + ", [page] ") + page) + " : ") + e.response.errorMessage));
+            });
         }
 
-        private function onPreloadArticlesList(success:Boolean, params:*, request:*):void
+        private function onSearchArticles(page:int, text:String):Function
         {
-            var articles:Array;
-            var totalPages:int;
-            var articleData:Object;
-            var article:DofusShopArticle;
-            if (!(this._cacheArticles))
+            return (function (e:ApiClientEvent):void
             {
-                return;
-            };
-            _log.debug(("onPreloadArticlesList - " + success));
-            if (success)
-            {
-                if (!(this._cacheArticles))
+                var articleData:*;
+                var article:*;
+                var maxPage:*;
+                var i:*;
+                var payload:* = e.response.payload;
+                if (payload == null)
                 {
+                    processCallError(("Error: SearchArticles requested data corrupted : " + e.response.errorMessage));
                     return;
                 };
-                articles = new Array();
-                totalPages = Math.ceil((params.count / DofusShopEnum.MAX_ARTICLES_PER_PAGE));
-                for each (articleData in params.articles)
+                var articles:* = new Array();
+                for each (articleData in payload.articles)
                 {
                     article = new DofusShopArticle(articleData);
-                    if (!(article.hasExpired))
+                    if (!article.hasExpired)
                     {
                         articles.push(article);
                     };
                 };
-                this._cacheArticles[request.params[2]][request.params[3]] = {
-                    "articles":articles,
-                    "totalPages":totalPages
-                };
-            };
-        }
-
-        private function onSearchArticles(success:Boolean, params:*, request:*):void
-        {
-            var articles:Array;
-            var totalPages:int;
-            var articleData:Object;
-            var article:DofusShopArticle;
-            if (!(this._cacheArticles))
-            {
-                return;
-            };
-            _log.debug(("onSearchArticles - " + success));
-            if (success)
-            {
-                articles = new Array();
-                totalPages = Math.ceil((params.count / DofusShopEnum.MAX_ARTICLES_PER_PAGE));
-                for each (articleData in params.articles)
+                maxPage = 1;
+                if (payload.total_count)
                 {
-                    article = new DofusShopArticle(articleData);
-                    if (!(article.hasExpired))
+                    maxPage = Math.ceil((int(payload.total_count) / DofusShopEnum.MAX_ARTICLES_PER_PAGE));
+                    if (page == 1)
                     {
-                        articles.push(article);
-                    };
-                };
-                KernelEventsManager.getInstance().processCallback(ExternalGameHookList.DofusShopArticlesList, articles, totalPages);
-            }
-            else
-            {
-                this.processCallError(params);
-            };
-        }
-
-        private function onBuyArticle(success:Boolean, params:*, request:*):void
-        {
-            _log.debug(("onBuyArticle - " + success));
-            if (success)
-            {
-                if (params.result)
-                {
-                    KernelEventsManager.getInstance().processCallback(ExternalGameHookList.DofusShopSuccessfulPurchase, this._currentPurchaseId);
-                    KernelEventsManager.getInstance().processCallback(ExternalGameHookList.DofusShopMoney, params.ogrins, params.krozs);
-                }
-                else
-                {
-                    KernelEventsManager.getInstance().processCallback(ExternalGameHookList.DofusShopError, params.error);
-                };
-            }
-            else
-            {
-                if ((((params is ErrorEvent)) && ((params.type == IOErrorEvent.NETWORK_ERROR))))
-                {
-                    KernelEventsManager.getInstance().processCallback(ExternalGameHookList.DofusShopError, DofusShopEnum.ERROR_PURCHASE_REQUEST_TIMED_OUT);
-                }
-                else
-                {
-                    this.processCallError(params);
-                };
-            };
-            this._currentPurchaseId = 0;
-        }
-
-        private function onClose(event:UiUnloadEvent):void
-        {
-            var list:Array;
-            var data:DofusShopObject;
-            var page:Object;
-            if ((((event.name == "webBase")) && (this._cacheHome)))
-            {
-                Berilia.getInstance().removeEventListener(UiUnloadEvent.UNLOAD_UI_COMPLETE, this.onClose);
-                for each (list in this._cacheHome)
-                {
-                    for each (data in list)
-                    {
-                        data.free();
-                    };
-                    list = null;
-                };
-                this._cacheHome = null;
-                for each (list in this._cacheArticles)
-                {
-                    for each (page in list)
-                    {
-                        for each (data in page.articles)
+                        i = 2;
+                        while (i <= maxPage)
                         {
-                            data.free();
+                            shopApi.articles_list_search(text, [], i, DofusShopEnum.MAX_ARTICLES_PER_PAGE).onSuccess(onSearchArticles(i, text)).onError(onSearchArticlesError(i, text)).call();
+                            i++;
                         };
-                        page = null;
                     };
-                    list = null;
                 };
-                this._cacheArticles = null;
-            };
+                _articlesTemp[-1].insertAt((page - 1), articles);
+                i = 0;
+                while (i < maxPage)
+                {
+                    if (!_articlesTemp[-1][i])
+                    {
+                        return;
+                    };
+                    i++;
+                };
+                var resultArray:* = [];
+                i = 0;
+                while (i < maxPage)
+                {
+                    resultArray = resultArray.concat(_articlesTemp[-1][i]);
+                    i++;
+                };
+                KernelEventsManager.getInstance().processCallback(ExternalGameHookList.DofusShopArticlesSearchList, resultArray);
+            });
         }
 
-        private function checkPreviousAndNextArticlePages(category:int, page:int, totalPages:int):void
+        private function onSearchArticlesError(page:int, text:String):Function
         {
-            if ((((page > 1)) && (!(this._cacheArticles[category][(page - 1)]))))
+            return (function (e:ApiClientEvent):void
             {
-                RpcServiceCenter.getInstance().makeRpcCall(((this._serviceBaseUrl + "shop.") + this._serviceType), this._serviceType, this._serviceVersion, "ArticlesList", [SHOP_KEY, this._currentLocale, category, (page - 1), DofusShopEnum.MAX_ARTICLES_PER_PAGE], this.onPreloadArticlesList);
-            };
-            if ((((page < totalPages)) && (!(this._cacheArticles[category][(page + 1)]))))
+                _log.error(((((("Error while searching articles from Haapi with [criteria] " + text) + ", [page] ") + page) + " : ") + e.response.errorMessage));
+            });
+        }
+
+        private function onBuyArticle(articleId:int):Function
+        {
+            return (function (e:ApiClientEvent):void
             {
-                RpcServiceCenter.getInstance().makeRpcCall(((this._serviceBaseUrl + "shop.") + this._serviceType), this._serviceType, this._serviceVersion, "ArticlesList", [SHOP_KEY, this._currentLocale, category, (page + 1), DofusShopEnum.MAX_ARTICLES_PER_PAGE], this.onPreloadArticlesList);
-            };
+                var payload:* = e.response.payload;
+                if (payload == null)
+                {
+                    processCallError(("Error: BuyArticle requested data corrupted : " + e.response.errorMessage));
+                    return;
+                };
+                if (payload.balance)
+                {
+                    KernelEventsManager.getInstance().processCallback(ExternalGameHookList.DofusShopMoney, payload.balance[0].amount);
+                };
+                if (payload.order_status == ShopBuyResult.OrderStatusEnum_PROCESSED)
+                {
+                    shopApi.articles_list_by_ids([articleId]).onSuccess(onRefreshArticle([articleId])).onError(onRefreshArticleError(articleId)).call();
+                    KernelEventsManager.getInstance().processCallback(ExternalGameHookList.DofusShopBuySuccess, false);
+                };
+            });
+        }
+
+        private function onBuyArticleError(id:int):Function
+        {
+            return (function (e:ApiClientEvent):void
+            {
+                _log.error(((("Can't Buy article [id]" + id) + " : ") + e.response.errorMessage));
+            });
+        }
+
+        private function onRefreshArticle(ids:Array):Function
+        {
+            return (function (e:ApiClientEvent):void
+            {
+                if (e.response.payload == null)
+                {
+                    processCallError(("Error: RefreshArticle requested data corrupted : " + e.response.errorMessage));
+                    return;
+                };
+                if (e.response.payload.articles.length == 0)
+                {
+                    KernelEventsManager.getInstance().processCallback(ExternalGameHookList.DofusShopDeleteArticle, ids);
+                };
+            });
+        }
+
+        private function onRefreshArticleError(id:Number):Function
+        {
+            return (function (e:ApiClientEvent):void
+            {
+                _log.error(("Error while refreshing article [id] " + id));
+            });
         }
 
         private function processCallError(error:*):void
         {
             _log.error(error);
-            if ((((error is ErrorEvent)) && ((error.type == IOErrorEvent.NETWORK_ERROR))))
+            if (((error is ErrorEvent) && (error.type == IOErrorEvent.NETWORK_ERROR)))
             {
                 KernelEventsManager.getInstance().processCallback(ExternalGameHookList.DofusShopError, DofusShopEnum.ERROR_REQUEST_TIMED_OUT);
             }
             else
             {
-                KernelEventsManager.getInstance().processCallback(ChatHookList.TextInformation, "Une erreur est survenue dans le chargement de certaines données dans la boutique, veuillez réessayer. #TED", ChatFrame.RED_CHANNEL_ID, TimeManager.getInstance().getTimestamp());
+                KernelEventsManager.getInstance().processCallback(ChatHookList.TextInformation, I18n.getUiText("ui.shop.errorApi"), ChatFrame.RED_CHANNEL_ID, TimeManager.getInstance().getTimestamp());
             };
         }
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.managers
+} com.ankamagames.dofus.logic.game.common.managers
 

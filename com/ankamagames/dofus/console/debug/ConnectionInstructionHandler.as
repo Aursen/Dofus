@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.console.debug
+package com.ankamagames.dofus.console.debug
 {
     import com.ankamagames.jerakine.console.ConsoleInstructionHandler;
     import com.ankamagames.dofus.kernel.net.ConnectionsHandler;
@@ -15,15 +15,15 @@
             {
                 case "connectionstatus":
                     console.output(("" + ((ConnectionsHandler.getConnection()) ? ConnectionsHandler.getConnection() : "There is currently no connection.")));
-                    return;
+                    break;
                 case "inspecttraffic":
-                    ServerConnection.DEBUG_VERBOSE = !(ServerConnection.DEBUG_VERBOSE);
+                    ServerConnection.DEBUG_VERBOSE = (!(ServerConnection.DEBUG_VERBOSE));
                     console.output(("Inspect traffic is " + ((ServerConnection.DEBUG_VERBOSE) ? "ON" : "OFF")));
-                    return;
+                    break;
                 case "inspectlowtraffic":
-                    ServerConnection.DEBUG_LOW_LEVEL_VERBOSE = !(ServerConnection.DEBUG_LOW_LEVEL_VERBOSE);
+                    ServerConnection.DEBUG_LOW_LEVEL_VERBOSE = (!(ServerConnection.DEBUG_LOW_LEVEL_VERBOSE));
                     console.output(("Inspect low traffic is " + ((ServerConnection.DEBUG_LOW_LEVEL_VERBOSE) ? "ON" : "OFF")));
-                    return;
+                    break;
             };
         }
 
@@ -38,7 +38,7 @@
                 case "inspectlowtraffic":
                     return ("Show detailled informations about network message parsing.");
             };
-            return ((("No help for command '" + cmd) + "'"));
+            return (("No help for command '" + cmd) + "'");
         }
 
         public function getParamPossibilities(cmd:String, paramIndex:uint=0, currentParams:Array=null):Array
@@ -48,5 +48,5 @@
 
 
     }
-}//package com.ankamagames.dofus.console.debug
+} com.ankamagames.dofus.console.debug
 

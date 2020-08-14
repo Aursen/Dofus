@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.datacenter.effects.instances
+package com.ankamagames.dofus.datacenter.effects.instances
 {
     import com.ankamagames.dofus.datacenter.effects.EffectInstance;
     import com.ankamagames.jerakine.interfaces.IDataCenter;
@@ -39,16 +39,16 @@
 
         override public function get parameter1():Object
         {
-            var smonth:String = (((this.month > 9)) ? String(this.month) : ("0" + String(this.month)));
-            var sday:String = (((this.day > 9)) ? String(this.day) : ("0" + String(this.day)));
-            return ((smonth + sday));
+            var smonth:String = ((this.month > 9) ? String(this.month) : ("0" + String(this.month)));
+            var sday:String = ((this.day > 9) ? String(this.day) : ("0" + String(this.day)));
+            return (smonth + sday);
         }
 
         override public function get parameter2():Object
         {
-            var shour:String = (((this.hour > 9)) ? String(this.hour) : ("0" + String(this.hour)));
-            var sminute:String = (((this.minute > 9)) ? String(this.minute) : ("0" + String(this.minute)));
-            return ((shour + sminute));
+            var shour:String = ((this.hour > 9) ? String(this.hour) : ("0" + String(this.hour)));
+            var sminute:String = ((this.minute > 9) ? String(this.minute) : ("0" + String(this.minute)));
+            return (shour + sminute);
         }
 
         override public function get parameter3():Object
@@ -67,25 +67,25 @@
             {
                 case 0:
                     this.year = uint(value);
-                    return;
+                    break;
                 case 1:
                     this.month = uint(String(value).substr(0, 2));
                     this.day = uint(String(value).substr(2, 2));
-                    return;
+                    break;
                 case 2:
                     this.hour = uint(String(value).substr(0, 2));
                     this.minute = uint(String(value).substr(2, 2));
-                    return;
+                    break;
                 case 3:
                     this.month = uint(value);
-                    return;
+                    break;
                 case 4:
                     this.day = uint(value);
-                    return;
+                    break;
             };
         }
 
 
     }
-}//package com.ankamagames.dofus.datacenter.effects.instances
+} com.ankamagames.dofus.datacenter.effects.instances
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.resources.adapters.impl
+package com.ankamagames.jerakine.resources.adapters.impl
 {
     import com.ankamagames.jerakine.resources.adapters.AbstractUrlLoaderAdapter;
     import com.ankamagames.jerakine.resources.adapters.IAdapter;
@@ -9,13 +9,13 @@
     {
 
 
-        override protected function getResource(dataFormat:String, data:*)
+        override protected function getResource(dataFormat:String, data:*):*
         {
-            if ((((dataFormat == ResourceType.getName(ResourceType.RESOURCE_BINARY))) && ((data is IDataInput))))
+            if (((dataFormat == ResourceType.getName(ResourceType.RESOURCE_BINARY)) && (data is IDataInput)))
             {
                 return (IDataInput(data).readUTFBytes(IDataInput(data).bytesAvailable));
             };
-            return ((data as String));
+            return (data as String);
         }
 
         override public function getResourceType():uint
@@ -25,5 +25,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.resources.adapters.impl
+} com.ankamagames.jerakine.resources.adapters.impl
 

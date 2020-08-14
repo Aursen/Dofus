@@ -1,4 +1,4 @@
-﻿package com.hurlant.crypto.symmetric
+package com.hurlant.crypto.symmetric
 {
     import flash.utils.ByteArray;
 
@@ -12,5 +12,5 @@
         function toString():String;
 
     }
-}//package com.hurlant.crypto.symmetric
+} com.hurlant.crypto.symmetric
 

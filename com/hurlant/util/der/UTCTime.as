@@ -1,4 +1,4 @@
-﻿package com.hurlant.util.der
+package com.hurlant.util.der
 {
     import flash.utils.ByteArray;
 
@@ -9,9 +9,9 @@
         protected var len:uint;
         public var date:Date;
 
-        public function UTCTime(type:uint, len:uint)
+        public function UTCTime(_arg_1:uint, len:uint)
         {
-            this.type = type;
+            this.type = _arg_1;
             this.len = len;
         }
 
@@ -45,7 +45,7 @@
 
         public function toString():String
         {
-            return ((((((((DER.indent + "UTCTime[") + this.type) + "][") + this.len) + "][") + this.date) + "]"));
+            return (((((((DER.indent + "UTCTime[") + this.type) + "][") + this.len) + "][") + this.date) + "]");
         }
 
         public function toDER():ByteArray
@@ -55,5 +55,5 @@
 
 
     }
-}//package com.hurlant.util.der
+} com.hurlant.util.der
 

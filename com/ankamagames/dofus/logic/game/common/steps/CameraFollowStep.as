@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.common.steps
+package com.ankamagames.dofus.logic.game.common.steps
 {
     import com.ankamagames.jerakine.sequencer.AbstractSequencable;
     import com.ankamagames.dofus.misc.utils.Camera;
@@ -34,5 +34,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.steps
+} com.ankamagames.dofus.logic.game.common.steps
 

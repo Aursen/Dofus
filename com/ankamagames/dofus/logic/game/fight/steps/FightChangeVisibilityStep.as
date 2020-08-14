@@ -1,30 +1,35 @@
-﻿package com.ankamagames.dofus.logic.game.fight.steps
+package com.ankamagames.dofus.logic.game.fight.steps
 {
     import com.ankamagames.jerakine.sequencer.AbstractSequencable;
     import com.ankamagames.dofus.logic.game.fight.frames.FightEntitiesFrame;
     import com.ankamagames.dofus.network.types.game.context.fight.GameFightFighterInformations;
     import flash.display.DisplayObject;
+    import com.ankamagames.jerakine.types.positions.MapPoint;
+    import flash.utils.Dictionary;
+    import com.ankamagames.dofus.logic.game.fight.actions.RemoveEntityAction;
     import com.ankamagames.atouin.Atouin;
     import com.ankamagames.atouin.AtouinConstants;
     import com.ankamagames.dofus.types.entities.AnimatedCharacter;
+    import com.ankamagames.dofus.kernel.Kernel;
     import com.ankamagames.dofus.network.enums.GameActionFightInvisibilityStateEnum;
     import com.ankamagames.dofus.logic.game.fight.fightEvents.FightEventsHelper;
     import com.ankamagames.dofus.logic.game.fight.types.FightEventEnum;
+    import com.ankamagames.dofus.logic.game.fight.frames.FightContextFrame;
+    import __AS3__.vec.Vector;
     import com.ankamagames.dofus.logic.game.fight.miscs.FightEntitiesHolder;
     import com.ankamagames.dofus.logic.game.common.misc.DofusEntities;
     import com.ankamagames.jerakine.entities.interfaces.IDisplayable;
     import com.ankamagames.jerakine.entities.interfaces.IEntity;
     import com.ankamagames.tiphon.display.TiphonSprite;
-    import com.ankamagames.dofus.kernel.Kernel;
 
     public class FightChangeVisibilityStep extends AbstractSequencable implements IFightStep 
     {
 
-        private var _entityId:int;
+        private var _entityId:Number;
         private var _visibilityState:int;
         private var _oldVisibilityState:int;
 
-        public function FightChangeVisibilityStep(entityId:int, visibilityState:int)
+        public function FightChangeVisibilityStep(entityId:Number, visibilityState:int)
         {
             var fighterInfos:GameFightFighterInformations = (FightEntitiesFrame.getCurrentInstance().getEntityInfos(entityId) as GameFightFighterInformations);
             this._oldVisibilityState = fighterInfos.stats.invisibilityState;
@@ -41,10 +46,16 @@
         {
             var dispatchedState:uint;
             var invisibleEntity:DisplayObject;
+            var invisibleEntityPos:MapPoint;
+            var entitiesFrame:FightEntitiesFrame;
+            var fightEntities:Dictionary;
+            var entityId:*;
+            var entityInfos:GameFightFighterInformations;
+            var rea:RemoveEntityAction;
             switch (this._visibilityState)
             {
                 case GameActionFightInvisibilityStateEnum.VISIBLE:
-                    if (Atouin.getInstance().options.transparentOverlayMode)
+                    if (Atouin.getInstance().options.getOption("transparentOverlayMode"))
                     {
                         invisibleEntity = this.respawnEntity();
                         invisibleEntity.alpha = AtouinConstants.OVERLAY_MODE_ALPHA;
@@ -56,9 +67,27 @@
                     };
                     if ((invisibleEntity is AnimatedCharacter))
                     {
-                        AnimatedCharacter(invisibleEntity).setCanSeeThrough(false);
+                        invisibleEntityPos = AnimatedCharacter(invisibleEntity).position;
+                        entitiesFrame = (Kernel.getWorker().getFrame(FightEntitiesFrame) as FightEntitiesFrame);
+                        fightEntities = entitiesFrame.getEntitiesDictionnary();
+                        for (entityId in fightEntities)
+                        {
+                            entityInfos = (entitiesFrame.getEntityInfos(entityId) as GameFightFighterInformations);
+                            if ((((entitiesFrame.entityIsIllusion(entityId)) && (entityInfos.stats.summoner == this._entityId)) && (entityInfos.disposition.cellId == invisibleEntityPos.cellId)))
+                            {
+                                rea = RemoveEntityAction.create(entityId);
+                                entitiesFrame.process(rea);
+                                break;
+                            };
+                        };
                     };
-                    if ((((this._oldVisibilityState == GameActionFightInvisibilityStateEnum.DETECTED)) || ((this._oldVisibilityState == GameActionFightInvisibilityStateEnum.INVISIBLE))))
+                    if ((invisibleEntity is AnimatedCharacter))
+                    {
+                        AnimatedCharacter(invisibleEntity).setCanSeeThrough(false);
+                        AnimatedCharacter(invisibleEntity).setCanWalkThrough(false);
+                        AnimatedCharacter(invisibleEntity).setCanWalkTo(false);
+                    };
+                    if (((this._oldVisibilityState == GameActionFightInvisibilityStateEnum.DETECTED) || (this._oldVisibilityState == GameActionFightInvisibilityStateEnum.INVISIBLE)))
                     {
                         dispatchedState = GameActionFightInvisibilityStateEnum.VISIBLE;
                     };
@@ -72,6 +101,8 @@
                     if ((invisibleEntity is AnimatedCharacter))
                     {
                         AnimatedCharacter(invisibleEntity).setCanSeeThrough(true);
+                        AnimatedCharacter(invisibleEntity).setCanWalkThrough(false);
+                        AnimatedCharacter(invisibleEntity).setCanWalkTo(false);
                     };
                     invisibleEntity.alpha = 0.5;
                     break;
@@ -84,9 +115,27 @@
                     break;
             };
             FightEventsHelper.sendFightEvent(FightEventEnum.FIGHTER_VISIBILITY_CHANGED, [this._entityId, dispatchedState], this._entityId, castingSpellId);
+            var fcf:FightContextFrame = (Kernel.getWorker().getFrame(FightContextFrame) as FightContextFrame);
+            if (this._visibilityState == GameActionFightInvisibilityStateEnum.INVISIBLE)
+            {
+                fcf.addToHiddenEntities(this._entityId);
+            }
+            else
+            {
+                fcf.removeFromHiddenEntities(this._entityId);
+            };
             var fighterInfos:GameFightFighterInformations = (FightEntitiesFrame.getCurrentInstance().getEntityInfos(this._entityId) as GameFightFighterInformations);
             fighterInfos.stats.invisibilityState = this._visibilityState;
+            if (FightEntitiesFrame.getCurrentInstance().hasIcon(this._entityId))
+            {
+                FightEntitiesFrame.getCurrentInstance().forceIconUpdate(this._entityId);
+            };
             executeCallbacks();
+        }
+
+        public function get targets():Vector.<Number>
+        {
+            return (new <Number>[this._entityId]);
         }
 
         private function unspawnEntity():void
@@ -97,13 +146,18 @@
             };
             var entity:IDisplayable = (DofusEntities.getEntity(this._entityId) as IDisplayable);
             FightEntitiesHolder.getInstance().holdEntity((entity as IEntity));
-            entity.remove();
+            var animatedEntity:AnimatedCharacter = (entity as AnimatedCharacter);
+            if (animatedEntity)
+            {
+                animatedEntity.hide();
+            };
         }
 
         private function respawnEntity():DisplayObject
         {
             var fightEntitiesFrame:FightEntitiesFrame;
             var entity:IDisplayable;
+            var animatedEntity:AnimatedCharacter;
             var tiphonSprite:TiphonSprite = (DofusEntities.getEntity(this._entityId) as TiphonSprite);
             if (((tiphonSprite) && (tiphonSprite.parentSprite)))
             {
@@ -112,22 +166,22 @@
                 {
                     fightEntitiesFrame.addOrUpdateActor(fightEntitiesFrame.getEntityInfos(this._entityId));
                 };
-                if (FightEntitiesHolder.getInstance().getEntity(this._entityId))
-                {
-                    FightEntitiesHolder.getInstance().unholdEntity(this._entityId);
-                };
                 return (tiphonSprite);
             };
             if (FightEntitiesHolder.getInstance().getEntity(this._entityId))
             {
                 entity = (DofusEntities.getEntity(this._entityId) as IDisplayable);
-                entity.display();
+                animatedEntity = (entity as AnimatedCharacter);
+                if (animatedEntity)
+                {
+                    animatedEntity.show();
+                };
                 FightEntitiesHolder.getInstance().unholdEntity(this._entityId);
             };
-            return ((DofusEntities.getEntity(this._entityId) as DisplayObject));
+            return (DofusEntities.getEntity(this._entityId) as DisplayObject);
         }
 
 
     }
-}//package com.ankamagames.dofus.logic.game.fight.steps
+} com.ankamagames.dofus.logic.game.fight.steps
 

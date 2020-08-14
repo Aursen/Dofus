@@ -1,4 +1,4 @@
-﻿package com.ankamagames.tiphon.engine
+package com.ankamagames.tiphon.engine
 {
     import flash.events.EventDispatcher;
     import com.ankamagames.jerakine.logger.Logger;
@@ -40,18 +40,15 @@
         private var _aWaiting:Array;
         private var _aWaitingResourceUri:Dictionary;
         private var _loader:IResourceLoader;
-        private var _waitingResources:Vector.<Uri>;
+        private var _waitingResources:Vector.<Uri> = new Vector.<Uri>();
         private var _type:uint;
         private var _GarbageCollectorTimer:Timer;
         private var _currentCacheSize:int = 0;
-        private var _libCurrentlyUsed:Dictionary;
+        private var _libCurrentlyUsed:Dictionary = new Dictionary(true);
         public var name:String;
 
-        public function LibrariesManager(n:String, type:uint)
+        public function LibrariesManager(n:String, _arg_2:uint)
         {
-            this._waitingResources = new Vector.<Uri>();
-            this._libCurrentlyUsed = new Dictionary(true);
-            super();
             this.name = n;
             this._aResources = new Dictionary();
             this._aResourceLoadFail = new Dictionary();
@@ -61,7 +58,7 @@
             this._loader = ResourceLoaderFactory.getLoader(ResourceLoaderType.SERIAL_LOADER);
             this._loader.addEventListener(ResourceLoadedEvent.LOADED, this.onLoadResource);
             this._loader.addEventListener(ResourceErrorEvent.ERROR, this.onLoadFailedResource);
-            this._type = type;
+            this._type = _arg_2;
             numLM++;
         }
 
@@ -72,7 +69,7 @@
             {
                 uri = new Uri((TiphonConstants.SWF_SKULL_PATH + "666.swl"));
             };
-            if (!(this._aResources[id]))
+            if (!this._aResources[id])
             {
                 if (this._type == TYPE_BONE)
                 {
@@ -88,7 +85,7 @@
             {
                 gl = this._aResources[id];
             };
-            if (!(gl.hasSwl(uri)))
+            if (!gl.hasSwl(uri))
             {
                 if (uri.tag == null)
                 {
@@ -102,19 +99,19 @@
 
         public function askResource(id:uint, className:String=null, callback:Callback=null, errorCallback:Callback=null):void
         {
-            var _local_5:GraphicLibrary;
-            var _local_6:String;
-            var _local_7:Array;
-            var _local_8:Boolean;
-            var _local_9:Callback;
+            var gl:GraphicLibrary;
+            var callbackUri:String;
+            var waitCallback:Array;
+            var ok:Boolean;
+            var c:Callback;
             var allMatch:Boolean;
             var index:uint;
-            if (!(this.hasResource(id, className)))
+            if (!this.hasResource(id, className))
             {
                 return;
             };
-            _local_5 = this._aResources[id];
-            if (_local_5.hasClassAvaible(className))
+            gl = this._aResources[id];
+            if (gl.hasClassAvaible(className))
             {
                 if (callback != null)
                 {
@@ -123,44 +120,44 @@
             }
             else
             {
-                if (!(this._aWaiting[id]))
+                if (!this._aWaiting[id])
                 {
                     this._aWaiting[id] = new Object();
                     this._aWaiting[id]["ok"] = new Array();
                     this._aWaiting[id]["ko"] = new Array();
                 };
-                if ((((this._type == TYPE_BONE)) && (BoneIndexManager.getInstance().hasCustomBone(id))))
+                if (((this._type == TYPE_BONE) && (BoneIndexManager.getInstance().hasCustomBone(id))))
                 {
-                    _local_6 = BoneIndexManager.getInstance().getBoneFile(id, className).uri;
+                    callbackUri = BoneIndexManager.getInstance().getBoneFile(id, className).uri;
                 };
-                _local_7 = this._aWaiting[id]["ok"];
-                _local_8 = true;
-                for each (_local_9 in _local_7)
+                waitCallback = this._aWaiting[id]["ok"];
+                ok = true;
+                for each (c in waitCallback)
                 {
-                    if ((((_local_9.method == callback.method)) && ((callback.args.length == _local_9.args.length))))
+                    if (((c.method == callback.method) && (callback.args.length == c.args.length)))
                     {
                         allMatch = true;
-                        while (index < _local_9.args.length)
+                        while (index < c.args.length)
                         {
-                            if (_local_9.args[index] != callback.args[index])
+                            if (c.args[index] != callback.args[index])
                             {
                                 allMatch = false;
                                 break;
                             };
                             index++;
                         };
-                        if (((allMatch) && (((!(_local_6)) || ((this._aWaitingResourceUri[_local_9] == _local_6))))))
+                        if (((allMatch) && ((!(callbackUri)) || (this._aWaitingResourceUri[c] == callbackUri))))
                         {
-                            _local_8 = false;
+                            ok = false;
                             break;
                         };
                     };
                 };
-                if (_local_8)
+                if (ok)
                 {
-                    if (_local_6)
+                    if (callbackUri)
                     {
-                        this._aWaitingResourceUri[callback] = _local_6;
+                        this._aWaitingResourceUri[callback] = callbackUri;
                     };
                     this._aWaiting[id]["ok"].push(callback);
                 };
@@ -193,9 +190,9 @@
             var lib:GraphicLibrary = this._aResources[id];
             if (animClass)
             {
-                return (((!((lib == null))) && (lib.hasClassAvaible(animClass))));
+                return ((!(lib == null)) && (lib.hasClassAvaible(animClass)));
             };
-            return (((lib) && (!((lib.getSwl() == null)))));
+            return ((lib) && (!(lib.getSwl() == null)));
         }
 
         public function hasError(id:uint):Boolean
@@ -206,14 +203,14 @@
         public function hasResource(id:uint, animClass:String=null):Boolean
         {
             var lib:GraphicLibrary = this._aResources[id];
-            return (((lib) && (lib.hasClass(animClass))));
+            return ((lib) && (lib.hasClass(animClass)));
         }
 
         public function getResourceById(resName:uint, animClass:String=null, waitForIt:Boolean=false):Swl
         {
             var swl:Swl;
             var lib:GraphicLibrary = this._aResources[resName];
-            if (!(lib))
+            if (!lib)
             {
                 _log.info((((("La librairie ne semble pas exister. (ressource: " + resName) + ", anim:") + animClass) + ")"));
                 return (null);
@@ -223,7 +220,7 @@
                 swl = lib.getSwl(null);
             };
             swl = lib.getSwl(animClass, waitForIt);
-            if ((((swl == null)) && (waitForIt)))
+            if (((swl == null) && (waitForIt)))
             {
                 lib.addEventListener(SwlEvent.SWL_LOADED, this.onSwfLoaded);
             };
@@ -238,27 +235,36 @@
 
         public function hasAnim(bonesId:int, animName:String, direction:int=-1):Boolean
         {
-            var animIzHere:Boolean;
-            var swldefanim:String;
+            var swl:Swl;
+            var classList:Array;
+            var fullAnimationName:String;
+            var className:String;
+            var hasAnimation:Boolean;
             var lib:GraphicLibrary = this._aResources[bonesId];
             if (((lib) && (lib.isSingleFile)))
             {
-                animIzHere = false;
-                if (!(lib.getSwl()))
+                swl = lib.getSwl();
+                if (!swl)
                 {
                     _log.info((((("On test si une librairie contient une anim sans l'avoir en mémoire. (bones: " + bonesId) + ", anim:") + animName) + ")"));
-                    return (false);
+                    return (hasAnimation);
                 };
-                for each (swldefanim in lib.getSwl().getDefinitions())
+                classList = swl.getDefinitions();
+                fullAnimationName = (animName + ((direction != -1) ? ("_" + direction) : ""));
+                for each (className in classList)
                 {
-                    if (swldefanim.indexOf((animName + ((!((direction == -1))) ? ("_" + direction) : ""))) == 0)
+                    if (className.indexOf(fullAnimationName) == 0)
                     {
-                        animIzHere = true;
+                        hasAnimation = true;
+                        break;
                     };
                 };
-                return (animIzHere);
+            }
+            else
+            {
+                hasAnimation = BoneIndexManager.getInstance().hasAnim(bonesId, animName, direction);
             };
-            return (BoneIndexManager.getInstance().hasAnim(bonesId, animName, direction));
+            return (hasAnimation);
         }
 
         private function onLoadResource(re:ResourceLoadedEvent):void
@@ -267,7 +273,7 @@
             var i:uint;
             var c:Callback;
             var callbacksToRemove:Vector.<Callback>;
-            var tagId:int = (((re.uri.tag.id == null)) ? re.uri.tag : re.uri.tag.id);
+            var tagId:int = ((re.uri.tag.id == null) ? re.uri.tag : re.uri.tag.id);
             _log.info(("Loaded " + re.uri));
             GraphicLibrary(this._aResources[tagId]).addSwl(re.resource, re.uri.uri);
             if (((this._aWaiting[tagId]) && (this._aWaiting[tagId]["ok"])))
@@ -278,7 +284,7 @@
                 while (i < size)
                 {
                     c = Callback(this._aWaiting[tagId]["ok"][i]);
-                    if (((c) && (((!(this._aWaitingResourceUri[c])) || ((this._aWaitingResourceUri[c] == re.uri.uri))))))
+                    if (((c) && ((!(this._aWaitingResourceUri[c])) || (this._aWaitingResourceUri[c] == re.uri.uri))))
                     {
                         c.exec();
                         callbacksToRemove.push(c);
@@ -326,5 +332,5 @@
 
 
     }
-}//package com.ankamagames.tiphon.engine
+} com.ankamagames.tiphon.engine
 

@@ -1,10 +1,11 @@
-﻿package com.ankamagames.berilia.types.listener
+package com.ankamagames.berilia.types.listener
 {
     import com.ankamagames.jerakine.interfaces.IDestroyable;
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
     import com.ankamagames.jerakine.utils.memory.WeakReference;
+    import com.ankamagames.jerakine.utils.benchmark.monitoring.FpsManager;
 
     public class GenericListener implements IDestroyable 
     {
@@ -14,7 +15,7 @@
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(GenericListener));
 
         private var _sEvent:String;
-        private var _oListener;
+        private var _oListener:*;
         private var _fCallback:Function;
         private var _nSortIndex:int;
         private var _nListenerType:uint;
@@ -37,6 +38,7 @@
             this._nSortIndex = nSortIndex;
             this._nListenerType = listener_type;
             this._nListenerContext = listenerContext;
+            FpsManager.getInstance().watchObject(this);
         }
 
         public function get event():String
@@ -49,7 +51,7 @@
             this._sEvent = sEvent;
         }
 
-        public function get listener()
+        public function get listener():*
         {
             return (this._oListener);
         }
@@ -105,5 +107,5 @@
 
 
     }
-}//package com.ankamagames.berilia.types.listener
+} com.ankamagames.berilia.types.listener
 

@@ -1,9 +1,10 @@
-﻿package com.ankamagames.dofus.datacenter.breeds
+package com.ankamagames.dofus.datacenter.breeds
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
+    import com.ankamagames.dofus.types.IdAccessors;
     import com.ankamagames.jerakine.data.GameData;
 
     public class Head implements IDataCenter 
@@ -11,6 +12,7 @@
 
         public static const MODULE:String = "Heads";
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(Head));
+        public static var idAccessors:IdAccessors = new IdAccessors(getHeadById, getHeads);
 
         public var id:int;
         public var skins:String;
@@ -23,7 +25,7 @@
 
         public static function getHeadById(id:int):Head
         {
-            return ((GameData.getObject(MODULE, id) as Head));
+            return (GameData.getObject(MODULE, id) as Head);
         }
 
         public static function getHeads():Array
@@ -38,7 +40,7 @@
             var result:Array = [];
             for each (head in heads)
             {
-                if ((((head.breed == breed)) && ((head.gender == gender))))
+                if (((head.breed == breed) && (head.gender == gender)))
                 {
                     result.push(head);
                 };
@@ -48,5 +50,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.breeds
+} com.ankamagames.dofus.datacenter.breeds
 

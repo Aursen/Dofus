@@ -1,8 +1,9 @@
-﻿package com.ankamagames.dofus.network.types.game.guild
+package com.ankamagames.dofus.network.types.game.guild
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
     public class GuildEmblem implements INetworkType 
     {
@@ -65,21 +66,54 @@
 
         public function deserializeAs_GuildEmblem(input:ICustomDataInput):void
         {
+            this._symbolShapeFunc(input);
+            this._symbolColorFunc(input);
+            this._backgroundShapeFunc(input);
+            this._backgroundColorFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GuildEmblem(tree);
+        }
+
+        public function deserializeAsyncAs_GuildEmblem(tree:FuncTree):void
+        {
+            tree.addChild(this._symbolShapeFunc);
+            tree.addChild(this._symbolColorFunc);
+            tree.addChild(this._backgroundShapeFunc);
+            tree.addChild(this._backgroundColorFunc);
+        }
+
+        private function _symbolShapeFunc(input:ICustomDataInput):void
+        {
             this.symbolShape = input.readVarUhShort();
             if (this.symbolShape < 0)
             {
                 throw (new Error((("Forbidden value (" + this.symbolShape) + ") on element of GuildEmblem.symbolShape.")));
             };
+        }
+
+        private function _symbolColorFunc(input:ICustomDataInput):void
+        {
             this.symbolColor = input.readInt();
+        }
+
+        private function _backgroundShapeFunc(input:ICustomDataInput):void
+        {
             this.backgroundShape = input.readByte();
             if (this.backgroundShape < 0)
             {
                 throw (new Error((("Forbidden value (" + this.backgroundShape) + ") on element of GuildEmblem.backgroundShape.")));
             };
+        }
+
+        private function _backgroundColorFunc(input:ICustomDataInput):void
+        {
             this.backgroundColor = input.readInt();
         }
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.guild
+} com.ankamagames.dofus.network.types.game.guild
 

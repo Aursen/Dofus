@@ -1,21 +1,23 @@
-﻿package com.ankamagames.dofus.logic.game.common.actions.mount
+package com.ankamagames.dofus.logic.game.common.actions.mount
 {
     import com.ankamagames.jerakine.handlers.messages.Action;
 
     public class PaddockSellRequestAction implements Action 
     {
 
-        public var price:uint;
+        public var price:Number = 0;
+        public var forSale:Boolean;
 
 
-        public static function create(price:uint):PaddockSellRequestAction
+        public static function create(price:Number, forSale:Boolean=true):PaddockSellRequestAction
         {
             var o:PaddockSellRequestAction = new (PaddockSellRequestAction)();
             o.price = price;
+            o.forSale = forSale;
             return (o);
         }
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.actions.mount
+} com.ankamagames.dofus.logic.game.common.actions.mount
 

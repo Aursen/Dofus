@@ -1,29 +1,25 @@
-﻿package com.ankamagames.dofus.network.messages.game.context.roleplay.job
+package com.ankamagames.dofus.network.messages.game.context.roleplay.job
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
     import __AS3__.vec.Vector;
     import com.ankamagames.dofus.network.types.game.context.roleplay.job.JobExperience;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
     import __AS3__.vec.*;
 
-    [Trusted]
     public class JobExperienceMultiUpdateMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 5809;
 
         private var _isInitialized:Boolean = false;
-        public var experiencesUpdate:Vector.<JobExperience>;
+        public var experiencesUpdate:Vector.<JobExperience> = new Vector.<JobExperience>();
+        private var _experiencesUpdatetree:FuncTree;
 
-        public function JobExperienceMultiUpdateMessage()
-        {
-            this.experiencesUpdate = new Vector.<JobExperience>();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
@@ -58,6 +54,14 @@
         override public function unpack(input:ICustomDataInput, length:uint):void
         {
             this.deserialize(input);
+        }
+
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
         }
 
         public function serialize(output:ICustomDataOutput):void
@@ -95,7 +99,35 @@
             };
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_JobExperienceMultiUpdateMessage(tree);
+        }
+
+        public function deserializeAsyncAs_JobExperienceMultiUpdateMessage(tree:FuncTree):void
+        {
+            this._experiencesUpdatetree = tree.addChild(this._experiencesUpdatetreeFunc);
+        }
+
+        private function _experiencesUpdatetreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._experiencesUpdatetree.addChild(this._experiencesUpdateFunc);
+                i++;
+            };
+        }
+
+        private function _experiencesUpdateFunc(input:ICustomDataInput):void
+        {
+            var _item:JobExperience = new JobExperience();
+            _item.deserialize(input);
+            this.experiencesUpdate.push(_item);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.context.roleplay.job
+} com.ankamagames.dofus.network.messages.game.context.roleplay.job
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.utils.crypto
+package com.ankamagames.jerakine.utils.crypto
 {
     public class AdvancedMd5 
     {
@@ -48,7 +48,7 @@
 
         public static function md5_vm_test():Boolean
         {
-            return ((hex_md5("abc") == "900150983cd24fb0d6963f7d28e17f72"));
+            return (hex_md5("abc") == "900150983cd24fb0d6963f7d28e17f72");
         }
 
         public static function rstr_md5(string:String):String
@@ -85,7 +85,7 @@
             while (i < input.length)
             {
                 x = input.charCodeAt(i);
-                output = (output + (hex_tab.charAt(((x >>> 4) & 15)) + hex_tab.charAt((x & 15))));
+                output = (output + (hex_tab.charAt(((x >>> 4) & 0x0F)) + hex_tab.charAt((x & 0x0F))));
                 i++;
             };
             return (output);
@@ -101,7 +101,7 @@
             var i:Number = 0;
             while (i < len)
             {
-                triplet = (((input.charCodeAt(i) << 16) | ((((i + 1) < len)) ? (input.charCodeAt((i + 1)) << 8) : 0)) | ((((i + 2) < len)) ? input.charCodeAt((i + 2)) : 0));
+                triplet = (((input.charCodeAt(i) << 16) | (((i + 1) < len) ? (input.charCodeAt((i + 1)) << 8) : 0)) | (((i + 2) < len) ? input.charCodeAt((i + 2)) : 0));
                 j = 0;
                 while (j < 4)
                 {
@@ -111,7 +111,7 @@
                     }
                     else
                     {
-                        output = (output + tab.charAt(((triplet >>> (6 * (3 - j))) & 63)));
+                        output = (output + tab.charAt(((triplet >>> (6 * (3 - j))) & 0x3F)));
                     };
                     j++;
                 };
@@ -145,7 +145,7 @@
                     x = ((x << 16) + dividend[i]);
                     q = Math.floor((x / divisor));
                     x = (x - (q * divisor));
-                    if ((((quotient.length > 0)) || ((q > 0))))
+                    if (((quotient.length > 0) || (q > 0)))
                     {
                         quotient[quotient.length] = q;
                     };
@@ -173,10 +173,10 @@
             while (++i < input.length)
             {
                 x = input.charCodeAt(i);
-                y = ((((i + 1) < input.length)) ? input.charCodeAt((i + 1)) : 0);
-                if ((((((((0xD800 <= x)) && ((x <= 56319)))) && ((0xDC00 <= y)))) && ((y <= 57343))))
+                y = (((i + 1) < input.length) ? input.charCodeAt((i + 1)) : 0);
+                if (((((0xD800 <= x) && (x <= 56319)) && (0xDC00 <= y)) && (y <= 57343)))
                 {
-                    x = ((65536 + ((x & 1023) << 10)) + (y & 1023));
+                    x = ((0x10000 + ((x & 0x03FF) << 10)) + (y & 0x03FF));
                     i++;
                 };
                 if (x <= 127)
@@ -187,19 +187,19 @@
                 {
                     if (x <= 2047)
                     {
-                        output = (output + String.fromCharCode((192 | ((x >>> 6) & 31)), (128 | (x & 63))));
+                        output = (output + String.fromCharCode((0xC0 | ((x >>> 6) & 0x1F)), (0x80 | (x & 0x3F))));
                     }
                     else
                     {
                         if (x <= 0xFFFF)
                         {
-                            output = (output + String.fromCharCode((224 | ((x >>> 12) & 15)), (128 | ((x >>> 6) & 63)), (128 | (x & 63))));
+                            output = (output + String.fromCharCode((0xE0 | ((x >>> 12) & 0x0F)), (0x80 | ((x >>> 6) & 0x3F)), (0x80 | (x & 0x3F))));
                         }
                         else
                         {
                             if (x <= 2097151)
                             {
-                                output = (output + String.fromCharCode((240 | ((x >>> 18) & 7)), (128 | ((x >>> 12) & 63)), (128 | ((x >>> 6) & 63)), (128 | (x & 63))));
+                                output = (output + String.fromCharCode((0xF0 | ((x >>> 18) & 0x07)), (0x80 | ((x >>> 12) & 0x3F)), (0x80 | ((x >>> 6) & 0x3F)), (0x80 | (x & 0x3F))));
                             };
                         };
                     };
@@ -361,12 +361,12 @@
 
         public static function md5_ff(a:Number, b:Number, c:Number, d:Number, x:Number, s:Number, t:Number):Number
         {
-            return (md5_cmn(((b & c) | (~(b) & d)), a, b, x, s, t));
+            return (md5_cmn(((b & c) | ((~(b)) & d)), a, b, x, s, t));
         }
 
         public static function md5_gg(a:Number, b:Number, c:Number, d:Number, x:Number, s:Number, t:Number):Number
         {
-            return (md5_cmn(((b & d) | (c & ~(d))), a, b, x, s, t));
+            return (md5_cmn(((b & d) | (c & (~(d)))), a, b, x, s, t));
         }
 
         public static function md5_hh(a:Number, b:Number, c:Number, d:Number, x:Number, s:Number, t:Number):Number
@@ -376,22 +376,22 @@
 
         public static function md5_ii(a:Number, b:Number, c:Number, d:Number, x:Number, s:Number, t:Number):Number
         {
-            return (md5_cmn((c ^ (b | ~(d))), a, b, x, s, t));
+            return (md5_cmn((c ^ (b | (~(d)))), a, b, x, s, t));
         }
 
         public static function safe_add(x:Number, y:Number):Number
         {
             var lsw:Number = ((x & 0xFFFF) + (y & 0xFFFF));
             var msw:Number = (((x >> 16) + (y >> 16)) + (lsw >> 16));
-            return (((msw << 16) | (lsw & 0xFFFF)));
+            return ((msw << 16) | (lsw & 0xFFFF));
         }
 
         public static function bit_rol(num:Number, cnt:Number):Number
         {
-            return (((num << cnt) | (num >>> (32 - cnt))));
+            return ((num << cnt) | (num >>> (32 - cnt)));
         }
 
 
     }
-}//package com.ankamagames.jerakine.utils.crypto
+} com.ankamagames.jerakine.utils.crypto
 

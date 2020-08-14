@@ -1,16 +1,15 @@
-﻿package com.ankamagames.dofus.network.types.game.data.items
+package com.ankamagames.dofus.network.types.game.data.items
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class SpellItem extends Item implements INetworkType 
     {
 
         public static const protocolId:uint = 49;
 
-        public var position:uint = 0;
         public var spellId:int = 0;
         public var spellLevel:int = 0;
 
@@ -20,9 +19,8 @@
             return (49);
         }
 
-        public function initSpellItem(position:uint=0, spellId:int=0, spellLevel:int=0):SpellItem
+        public function initSpellItem(spellId:int=0, spellLevel:int=0):SpellItem
         {
-            this.position = position;
             this.spellId = spellId;
             this.spellLevel = spellLevel;
             return (this);
@@ -30,7 +28,6 @@
 
         override public function reset():void
         {
-            this.position = 0;
             this.spellId = 0;
             this.spellLevel = 0;
         }
@@ -43,17 +40,12 @@
         public function serializeAs_SpellItem(output:ICustomDataOutput):void
         {
             super.serializeAs_Item(output);
-            if ((((this.position < 63)) || ((this.position > 0xFF))))
-            {
-                throw (new Error((("Forbidden value (" + this.position) + ") on element position.")));
-            };
-            output.writeByte(this.position);
             output.writeInt(this.spellId);
-            if ((((this.spellLevel < 1)) || ((this.spellLevel > 6))))
+            if (((this.spellLevel < 1) || (this.spellLevel > 200)))
             {
                 throw (new Error((("Forbidden value (" + this.spellLevel) + ") on element spellLevel.")));
             };
-            output.writeByte(this.spellLevel);
+            output.writeShort(this.spellLevel);
         }
 
         override public function deserialize(input:ICustomDataInput):void
@@ -64,14 +56,31 @@
         public function deserializeAs_SpellItem(input:ICustomDataInput):void
         {
             super.deserialize(input);
-            this.position = input.readUnsignedByte();
-            if ((((this.position < 63)) || ((this.position > 0xFF))))
-            {
-                throw (new Error((("Forbidden value (" + this.position) + ") on element of SpellItem.position.")));
-            };
+            this._spellIdFunc(input);
+            this._spellLevelFunc(input);
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_SpellItem(tree);
+        }
+
+        public function deserializeAsyncAs_SpellItem(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._spellIdFunc);
+            tree.addChild(this._spellLevelFunc);
+        }
+
+        private function _spellIdFunc(input:ICustomDataInput):void
+        {
             this.spellId = input.readInt();
-            this.spellLevel = input.readByte();
-            if ((((this.spellLevel < 1)) || ((this.spellLevel > 6))))
+        }
+
+        private function _spellLevelFunc(input:ICustomDataInput):void
+        {
+            this.spellLevel = input.readShort();
+            if (((this.spellLevel < 1) || (this.spellLevel > 200)))
             {
                 throw (new Error((("Forbidden value (" + this.spellLevel) + ") on element of SpellItem.spellLevel.")));
             };
@@ -79,5 +88,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.data.items
+} com.ankamagames.dofus.network.types.game.data.items
 

@@ -1,10 +1,10 @@
-﻿package com.ankamagames.dofus.network.types.game.mount
+package com.ankamagames.dofus.network.types.game.mount
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class ItemDurability implements INetworkType 
     {
 
@@ -50,11 +50,32 @@
 
         public function deserializeAs_ItemDurability(input:ICustomDataInput):void
         {
+            this._durabilityFunc(input);
+            this._durabilityMaxFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_ItemDurability(tree);
+        }
+
+        public function deserializeAsyncAs_ItemDurability(tree:FuncTree):void
+        {
+            tree.addChild(this._durabilityFunc);
+            tree.addChild(this._durabilityMaxFunc);
+        }
+
+        private function _durabilityFunc(input:ICustomDataInput):void
+        {
             this.durability = input.readShort();
+        }
+
+        private function _durabilityMaxFunc(input:ICustomDataInput):void
+        {
             this.durabilityMax = input.readShort();
         }
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.mount
+} com.ankamagames.dofus.network.types.game.mount
 

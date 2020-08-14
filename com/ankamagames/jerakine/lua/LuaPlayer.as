@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.lua
+package com.ankamagames.jerakine.lua
 {
     import flash.events.EventDispatcher;
     import com.ankamagames.jerakine.interfaces.IScriptsPlayer;
@@ -47,13 +47,13 @@
             {
                 case "EntityApi":
                     this._entityApi = pApi;
-                    return;
+                    break;
                 case "SeqApi":
                     this._seqApi = pApi;
-                    return;
+                    break;
                 case "CameraApi":
                     this._cameraApi = pApi;
-                    return;
+                    break;
             };
         }
 
@@ -102,8 +102,8 @@
             {
                 this._entityApi.init();
             };
-            this._alwaysShowAuraOnFront = OptionManager.getOptionManager("tiphon").alwaysShowAuraOnFront;
-            OptionManager.getOptionManager("tiphon").alwaysShowAuraOnFront = false;
+            this._alwaysShowAuraOnFront = OptionManager.getOptionManager("tiphon").getOption("alwaysShowAuraOnFront");
+            OptionManager.getOptionManager("tiphon").setOption("alwaysShowAuraOnFront", false);
         }
 
         private function onFileLoaded(pEvent:ResourceLoadedEvent):void
@@ -123,7 +123,7 @@
 
         private function resultCallback(pStack:Array):void
         {
-            var _local_3:LuaPlayerEvent;
+            var lpe:LuaPlayerEvent;
             var result:Boolean = pStack.shift();
             if (this._dispatchMessages)
             {
@@ -145,9 +145,9 @@
                 else
                 {
                     this.reset();
-                    _local_3 = new LuaPlayerEvent(LuaPlayerEvent.PLAY_ERROR);
-                    _local_3.stackTrace = pStack[0];
-                    dispatchEvent(_local_3);
+                    lpe = new LuaPlayerEvent(LuaPlayerEvent.PLAY_ERROR);
+                    lpe.stackTrace = pStack[0];
+                    dispatchEvent(lpe);
                 };
             };
         }
@@ -159,10 +159,10 @@
             {
                 this.reset();
             };
-            OptionManager.getOptionManager("tiphon").alwaysShowAuraOnFront = this._alwaysShowAuraOnFront;
+            OptionManager.getOptionManager("tiphon").setOption("alwaysShowAuraOnFront", this._alwaysShowAuraOnFront);
         }
 
 
     }
-}//package com.ankamagames.jerakine.lua
+} com.ankamagames.jerakine.lua
 

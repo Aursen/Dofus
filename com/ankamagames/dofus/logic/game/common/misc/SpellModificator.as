@@ -1,36 +1,27 @@
-﻿package com.ankamagames.dofus.logic.game.common.misc
+package com.ankamagames.dofus.logic.game.common.misc
 {
     import com.ankamagames.dofus.network.types.game.character.characteristic.CharacterBaseCharacteristic;
 
     public final class SpellModificator 
     {
 
-        public var apCost:CharacterBaseCharacteristic;
-        public var castInterval:CharacterBaseCharacteristic;
-        public var castIntervalSet:CharacterBaseCharacteristic;
-        public var maxCastPerTurn:CharacterBaseCharacteristic;
-        public var maxCastPerTarget:CharacterBaseCharacteristic;
+        public var apCost:CharacterBaseCharacteristic = new CharacterBaseCharacteristic();
+        public var castInterval:CharacterBaseCharacteristic = new CharacterBaseCharacteristic();
+        public var castIntervalSet:CharacterBaseCharacteristic = new CharacterBaseCharacteristic();
+        public var maxCastPerTurn:CharacterBaseCharacteristic = new CharacterBaseCharacteristic();
+        public var maxCastPerTarget:CharacterBaseCharacteristic = new CharacterBaseCharacteristic();
 
-        public function SpellModificator()
-        {
-            this.apCost = new CharacterBaseCharacteristic();
-            this.castInterval = new CharacterBaseCharacteristic();
-            this.castIntervalSet = new CharacterBaseCharacteristic();
-            this.maxCastPerTurn = new CharacterBaseCharacteristic();
-            this.maxCastPerTarget = new CharacterBaseCharacteristic();
-            super();
-        }
 
         public function getTotalBonus(pCharac:CharacterBaseCharacteristic):int
         {
-            if (!(pCharac))
+            if (!pCharac)
             {
                 return (0);
             };
-            return (((((pCharac.alignGiftBonus + pCharac.base) + pCharac.additionnal) + pCharac.contextModif) + pCharac.objectsAndMountBonus));
+            return ((((pCharac.alignGiftBonus + pCharac.base) + pCharac.additionnal) + pCharac.contextModif) + pCharac.objectsAndMountBonus);
         }
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.misc
+} com.ankamagames.dofus.logic.game.common.misc
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.scripts
+package com.ankamagames.dofus.scripts
 {
     import com.ankamagames.dofus.scripts.spells.SpellScript1;
     import com.ankamagames.dofus.scripts.spells.SpellScript2;
@@ -81,5 +81,5 @@
 
 
     }
-}//package com.ankamagames.dofus.scripts
+} com.ankamagames.dofus.scripts
 

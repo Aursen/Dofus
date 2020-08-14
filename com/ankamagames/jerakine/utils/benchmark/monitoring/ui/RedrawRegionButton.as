@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.utils.benchmark.monitoring.ui
+package com.ankamagames.jerakine.utils.benchmark.monitoring.ui
 {
     import flash.display.Sprite;
     import com.ankamagames.jerakine.utils.benchmark.monitoring.FpsManagerConst;
@@ -20,5 +20,5 @@
         }
 
     }
-}//package com.ankamagames.jerakine.utils.benchmark.monitoring.ui
+} com.ankamagames.jerakine.utils.benchmark.monitoring.ui
 

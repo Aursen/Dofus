@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.network
+package com.ankamagames.jerakine.network
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
@@ -42,7 +42,7 @@
         public function request(uri:Uri, errorCallback:Function=null, cacheLife:uint=0):Boolean
         {
             var lastRequestTime:Number = this._requestTimestamp[uri.toString()];
-            if (((lastRequestTime) && (((getTimer() - lastRequestTime) < cacheLife))))
+            if (((lastRequestTime) && ((getTimer() - lastRequestTime) < cacheLife)))
             {
                 return (false);
             };
@@ -62,7 +62,7 @@
 
         public function addToWhiteList(classRef:Class):void
         {
-            if (!(this._whiteList[classRef]))
+            if (!this._whiteList[classRef])
             {
                 this._whiteList[classRef] = true;
                 this._whiteListCount++;
@@ -95,7 +95,7 @@
 
         private function getMessageId(firstOctet:uint):uint
         {
-            return ((firstOctet >> NetworkMessage.BIT_RIGHT_SHIFT_LEN_PACKET_ID));
+            return (firstOctet >> NetworkMessage.BIT_RIGHT_SHIFT_LEN_PACKET_ID);
         }
 
         private function readMessageLength(staticHeader:uint, src:IDataInput):uint
@@ -146,7 +146,7 @@
             while (src.bytesAvailable > 0)
             {
                 msg = this.lowReceive(src);
-                if (!(msg))
+                if (!msg)
                 {
                     if (byteAvaible == src.bytesAvailable)
                     {
@@ -192,7 +192,7 @@
             _log.error(((("Cannot load " + e.uri) + " : ") + e.errorMsg));
             if (this._errorCallback[e.uri] != null)
             {
-                var _local_2 = this._errorCallback;
+                var _local_2:* = this._errorCallback;
                 (_local_2[e.uri](e.uri));
             };
             delete this._errorCallback[e.uri];
@@ -200,5 +200,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.network
+} com.ankamagames.jerakine.network
 

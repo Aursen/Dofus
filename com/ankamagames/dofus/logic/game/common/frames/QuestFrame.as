@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.common.frames
+package com.ankamagames.dofus.logic.game.common.frames
 {
     import com.ankamagames.jerakine.messages.Frame;
     import com.ankamagames.jerakine.logger.Logger;
@@ -7,10 +7,28 @@
     import __AS3__.vec.Vector;
     import com.ankamagames.dofus.network.types.game.context.roleplay.quest.QuestActiveInformations;
     import flash.utils.Dictionary;
-    import com.ankamagames.dofus.network.types.game.achievement.AchievementRewardable;
-    import com.ankamagames.jerakine.types.enums.Priority;
+    import com.ankamagames.dofus.network.types.game.achievement.AchievementAchieved;
+    import com.ankamagames.dofus.network.types.game.achievement.AchievementAchievedRewardable;
+    import com.ankamagames.jerakine.types.Callback;
+    import com.ankamagames.dofus.network.messages.game.achievement.AchievementListMessage;
+    import com.ankamagames.dofus.datacenter.quest.AchievementReward;
+    import com.ankamagames.dofus.internalDatacenter.items.ItemWrapper;
+    import com.ankamagames.dofus.internalDatacenter.communication.EmoteWrapper;
+    import com.ankamagames.dofus.internalDatacenter.appearance.OrnamentWrapper;
+    import com.ankamagames.dofus.internalDatacenter.spells.SpellWrapper;
+    import com.ankamagames.dofus.internalDatacenter.appearance.TitleWrapper;
+    import com.ankamagames.dofus.network.types.game.data.items.effects.ObjectEffect;
+    import com.ankamagames.jerakine.data.I18n;
+    import com.ankamagames.berilia.managers.KernelEventsManager;
+    import com.ankamagames.dofus.misc.lists.ChatHookList;
+    import com.ankamagames.dofus.network.enums.ChatActivableChannelsEnum;
+    import com.ankamagames.dofus.logic.game.common.managers.TimeManager;
+    import com.ankamagames.dofus.misc.utils.ParamsDecoder;
     import com.ankamagames.dofus.datacenter.quest.Achievement;
+    import com.ankamagames.jerakine.types.enums.Priority;
     import com.ankamagames.dofus.network.enums.TreasureHuntFlagStateEnum;
+    import com.ankamagames.jerakine.data.XmlConfig;
+    import com.ankamagames.dofus.logic.common.actions.AuthorizedCommandAction;
     import com.ankamagames.dofus.network.messages.game.context.roleplay.quest.QuestListRequestMessage;
     import com.ankamagames.dofus.network.messages.game.context.roleplay.quest.QuestListMessage;
     import com.ankamagames.dofus.logic.game.common.actions.quest.QuestInfosRequestAction;
@@ -28,10 +46,17 @@
     import com.ankamagames.dofus.network.messages.game.context.roleplay.quest.QuestObjectiveValidatedMessage;
     import com.ankamagames.dofus.network.messages.game.context.roleplay.quest.QuestStepValidatedMessage;
     import com.ankamagames.dofus.network.messages.game.context.roleplay.quest.QuestStepStartedMessage;
+    import com.ankamagames.dofus.logic.game.common.actions.FollowQuestAction;
+    import com.ankamagames.dofus.logic.game.common.actions.RefreshFollowedQuestsOrderAction;
+    import com.ankamagames.dofus.network.messages.game.context.roleplay.quest.RefreshFollowedQuestsOrderRequestMessage;
+    import com.ankamagames.dofus.network.messages.game.context.roleplay.quest.FollowedQuestsMessage;
+    import com.ankamagames.berilia.types.data.UiModule;
+    import com.ankamagames.jerakine.types.DataStoreType;
+    import com.ankamagames.dofus.network.messages.game.inventory.items.ObjectAddedMessage;
     import com.ankamagames.dofus.logic.game.common.actions.NotificationUpdateFlagAction;
     import com.ankamagames.dofus.network.messages.game.context.notification.NotificationUpdateFlagMessage;
     import com.ankamagames.dofus.network.messages.game.context.notification.NotificationResetMessage;
-    import com.ankamagames.dofus.network.messages.game.achievement.AchievementListMessage;
+    import com.ankamagames.dofus.logic.game.common.managers.PlayedCharacterManager;
     import com.ankamagames.dofus.logic.game.common.actions.quest.AchievementDetailedListRequestAction;
     import com.ankamagames.dofus.network.messages.game.achievement.AchievementDetailedListRequestMessage;
     import com.ankamagames.dofus.network.messages.game.achievement.AchievementDetailedListMessage;
@@ -45,8 +70,6 @@
     import com.ankamagames.dofus.network.messages.game.achievement.AchievementRewardSuccessMessage;
     import com.ankamagames.dofus.network.messages.game.achievement.AchievementRewardErrorMessage;
     import com.ankamagames.dofus.network.messages.game.context.roleplay.treasureHunt.TreasureHuntShowLegendaryUIMessage;
-    import com.ankamagames.dofus.logic.game.common.actions.quest.treasureHunt.TreasureHuntRequestAction;
-    import com.ankamagames.dofus.network.messages.game.context.roleplay.treasureHunt.TreasureHuntRequestMessage;
     import com.ankamagames.dofus.logic.game.common.actions.quest.treasureHunt.TreasureHuntLegendaryRequestAction;
     import com.ankamagames.dofus.network.messages.game.context.roleplay.treasureHunt.TreasureHuntLegendaryRequestMessage;
     import com.ankamagames.dofus.network.messages.game.context.roleplay.treasureHunt.TreasureHuntRequestAnswerMessage;
@@ -65,57 +88,263 @@
     import com.ankamagames.dofus.logic.game.common.actions.quest.treasureHunt.TreasureHuntDigRequestAction;
     import com.ankamagames.dofus.network.messages.game.context.roleplay.treasureHunt.TreasureHuntDigRequestMessage;
     import com.ankamagames.dofus.network.messages.game.context.roleplay.treasureHunt.TreasureHuntDigRequestAnswerMessage;
+    import com.ankamagames.berilia.types.graphic.UiRootContainer;
     import com.ankamagames.dofus.network.types.game.context.roleplay.quest.QuestActiveDetailedInformations;
     import com.ankamagames.dofus.network.types.game.context.roleplay.quest.QuestObjectiveInformations;
     import com.ankamagames.dofus.datacenter.quest.QuestStep;
+    import com.ankamagames.dofus.network.messages.game.context.roleplay.quest.FollowQuestObjectiveRequestMessage;
+    import com.ankamagames.dofus.network.messages.game.context.roleplay.quest.UnfollowQuestObjectiveRequestMessage;
+    import com.ankamagames.dofus.datacenter.quest.QuestObjective;
     import com.ankamagames.dofus.internalDatacenter.quest.TreasureHuntStepWrapper;
     import com.ankamagames.dofus.network.types.game.context.roleplay.treasureHunt.TreasureHuntFlag;
+    import com.ankamagames.berilia.Berilia;
     import com.ankamagames.dofus.kernel.net.ConnectionsHandler;
     import com.ankamagames.dofus.logic.game.common.actions.quest.QuestListRequestAction;
-    import com.ankamagames.berilia.managers.KernelEventsManager;
     import com.ankamagames.dofus.misc.lists.QuestHookList;
     import com.ankamagames.dofus.network.types.game.context.roleplay.quest.QuestObjectiveInformationsWithCompletion;
     import com.ankamagames.dofus.logic.game.common.actions.quest.GuidedModeReturnRequestAction;
     import com.ankamagames.dofus.logic.game.common.actions.quest.GuidedModeQuitRequestAction;
     import com.ankamagames.dofus.misc.lists.HookList;
     import com.ankamagames.dofus.network.enums.CompassTypeEnum;
-    import com.ankamagames.dofus.logic.game.common.managers.PlayedCharacterManager;
+    import com.ankamagames.dofus.uiApi.QuestApi;
+    import com.ankamagames.berilia.managers.UiModuleManager;
+    import com.ankamagames.jerakine.types.enums.DataStoreEnum;
+    import com.ankamagames.jerakine.managers.StoreDataManager;
+    import com.ankamagames.berilia.enums.StrataEnum;
+    import com.ankamagames.dofus.uiApi.PlayedCharacterApi;
+    import com.ankamagames.dofus.logic.game.fight.miscs.ActionIdProtocol;
+    import com.ankamagames.dofus.network.types.game.data.items.effects.ObjectEffectInteger;
     import com.ankamagames.dofus.logic.game.common.actions.NotificationResetAction;
-    import com.ankamagames.dofus.misc.utils.ParamsDecoder;
-    import com.ankamagames.jerakine.data.I18n;
-    import com.ankamagames.dofus.misc.lists.ChatHookList;
-    import com.ankamagames.dofus.network.enums.ChatActivableChannelsEnum;
-    import com.ankamagames.dofus.logic.game.common.managers.TimeManager;
+    import com.ankamagames.dofus.logic.common.managers.PlayerManager;
+    import com.ankamagames.dofus.network.enums.GameServerTypeEnum;
+    import com.ankamagames.dofus.logic.common.managers.NotificationManager;
+    import com.ankamagames.dofus.types.enums.NotificationTypeEnum;
+    import com.ankamagames.dofus.datacenter.servers.ServerTemporisSeason;
+    import com.ankamagames.dofus.logic.common.managers.AccountManager;
     import com.ankamagames.dofus.network.enums.TreasureHuntRequestEnum;
     import com.ankamagames.dofus.network.enums.TreasureHuntFlagRequestEnum;
+    import com.ankamagames.atouin.Atouin;
+    import com.ankamagames.jerakine.utils.display.StageShareManager;
+    import com.ankamagames.atouin.AtouinConstants;
+    import com.ankamagames.atouin.managers.FrustumManager;
+    import com.ankamagames.jerakine.utils.misc.DictionaryUtils;
     import com.ankamagames.dofus.network.messages.game.context.roleplay.treasureHunt.TreasureHuntDigRequestAnswerFailedMessage;
     import com.ankamagames.dofus.network.enums.TreasureHuntDigRequestEnum;
     import com.ankamagames.dofus.network.enums.TreasureHuntTypeEnum;
     import com.ankamagames.jerakine.messages.Message;
+    import com.ankamagames.dofus.datacenter.world.SubArea;
+    import com.ankamagames.dofus.datacenter.quest.AchievementCategory;
     import __AS3__.vec.*;
 
     public class QuestFrame implements Frame 
     {
 
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(QuestFrame));
+        protected static const DISCOVER_INCARNAM_ACHIEVEMENT_ID:int = 422;
+        protected static const FIRST_TEMPORIS_REWARD_ACHIEVEMENT_ID:int = 2903;
+        private static const TEMPORIS_4_CATEGORY:uint = 107;
+        private static const STORAGE_NEW_TEMPORIS_4_REWARD:String = "storageNewTemporis4Reward";
         public static var notificationList:Array;
 
         private var _nbAllAchievements:int;
         private var _activeQuests:Vector.<QuestActiveInformations>;
         private var _completedQuests:Vector.<uint>;
-        private var _questsInformations:Dictionary;
-        private var _finishedAchievementsIds:Vector.<uint>;
-        private var _rewardableAchievements:Vector.<AchievementRewardable>;
+        private var _reinitDoneQuests:Vector.<uint>;
+        private var _followedQuests:Vector.<uint> = new Vector.<uint>();
+        private var _questsInformations:Dictionary = new Dictionary();
+        private var _finishedAchievements:Vector.<AchievementAchieved>;
+        private var _activeObjectives:Vector.<uint> = new Vector.<uint>();
+        private var _completedObjectives:Vector.<uint> = new Vector.<uint>();
+        private var _finishedAccountAchievementIds:Array;
+        private var _finishedCharacterAchievementIds:Array;
+        private var _rewardableAchievements:Vector.<AchievementAchievedRewardable>;
         private var _rewardableAchievementsVisible:Boolean;
-        private var _treasureHunts:Dictionary;
-        private var _flagColors:Array;
+        private var _treasureHunts:Dictionary = new Dictionary();
+        private var _flagColors:Array = new Array();
+        private var _followedQuestsCallback:Callback;
+        private var _achievementsFinishedCache:Array = null;
+        private var _achievementsList:AchievementListMessage;
+        private var _achievementsListProcessed:Boolean = false;
 
-        public function QuestFrame()
+
+        private static function displayFinishedAchievementInChat(finishedAchievement:Achievement):void
         {
-            this._questsInformations = new Dictionary();
-            this._treasureHunts = new Dictionary();
-            this._flagColors = new Array();
-            super();
+            var itemAwardIndex:uint;
+            var itemQuantity:uint;
+            var itemId:uint;
+            var spellId:uint;
+            var emoteId:uint;
+            var ornamentId:uint;
+            var titleId:uint;
+            if (finishedAchievement === null)
+            {
+                return;
+            };
+            var chatMessage:String;
+            var currentAchievementReward:AchievementReward;
+            var currentItemAward:ItemWrapper;
+            var currentEmoteAward:EmoteWrapper;
+            var currentOrnamentAward:OrnamentWrapper;
+            var currentSpellAward:SpellWrapper;
+            var currentTitleAward:TitleWrapper;
+            var jndex:uint;
+            while (jndex < finishedAchievement.rewardIds.length)
+            {
+                currentAchievementReward = AchievementReward.getAchievementRewardById(finishedAchievement.rewardIds[jndex]);
+                if (currentAchievementReward === null)
+                {
+                }
+                else
+                {
+                    itemAwardIndex = 0;
+                    itemQuantity = 0;
+                    for each (itemId in currentAchievementReward.itemsReward)
+                    {
+                        itemQuantity = ((currentAchievementReward.itemsQuantityReward.length > itemAwardIndex) ? currentAchievementReward.itemsQuantityReward[itemAwardIndex] : 1);
+                        currentItemAward = ItemWrapper.create(0, 0, itemId, itemQuantity, new Vector.<ObjectEffect>(), false);
+                        if (currentItemAward !== null)
+                        {
+                            chatMessage = I18n.getUiText("ui.temporis.rewardObtained", [(((("{item," + currentItemAward.id) + "::") + currentItemAward.name) + "}"), (("{openTemporisQuestTab::" + I18n.getUiText("ui.temporis.getReward")) + "}")]);
+                            KernelEventsManager.getInstance().processCallback(ChatHookList.TextInformation, chatMessage, ChatActivableChannelsEnum.PSEUDO_CHANNEL_INFO, TimeManager.getInstance().getTimestamp());
+                        };
+                    };
+                    for each (spellId in currentAchievementReward.spellsReward)
+                    {
+                        currentSpellAward = SpellWrapper.create(spellId, 1, false, 0, false);
+                        if (currentSpellAward !== null)
+                        {
+                            chatMessage = I18n.getUiText("ui.temporis.rewardObtained", [(((("{spell," + currentSpellAward.id) + ",") + currentSpellAward.spellLevel) + "}"), (("{openTemporisQuestTab::" + I18n.getUiText("ui.temporis.getReward")) + "}")]);
+                            KernelEventsManager.getInstance().processCallback(ChatHookList.TextInformation, chatMessage, ChatActivableChannelsEnum.PSEUDO_CHANNEL_INFO, TimeManager.getInstance().getTimestamp());
+                        };
+                    };
+                    for each (emoteId in currentAchievementReward.emotesReward)
+                    {
+                        currentEmoteAward = EmoteWrapper.create(emoteId, 0);
+                        if (currentEmoteAward !== null)
+                        {
+                            chatMessage = I18n.getUiText("ui.temporis.rewardObtained", [(((("{showEmote," + currentEmoteAward.id) + "::") + currentEmoteAward.emote.name) + "}"), (("{openTemporisQuestTab::" + I18n.getUiText("ui.temporis.getReward")) + "}"), (("{openTemporisQuestTab::" + I18n.getUiText("ui.temporis.getReward")) + "}")]);
+                            KernelEventsManager.getInstance().processCallback(ChatHookList.TextInformation, chatMessage, ChatActivableChannelsEnum.PSEUDO_CHANNEL_INFO, TimeManager.getInstance().getTimestamp());
+                        };
+                    };
+                    for each (ornamentId in currentAchievementReward.ornamentsReward)
+                    {
+                        currentOrnamentAward = OrnamentWrapper.create(ornamentId);
+                        if (currentOrnamentAward !== null)
+                        {
+                            chatMessage = ParamsDecoder.applyParams(I18n.getUiText("ui.temporis.rewardObtained", ["$ornament%1", (("{openTemporisQuestTab::" + I18n.getUiText("ui.temporis.getReward")) + "}")]), [currentOrnamentAward.id]);
+                            KernelEventsManager.getInstance().processCallback(ChatHookList.TextInformation, chatMessage, ChatActivableChannelsEnum.PSEUDO_CHANNEL_INFO, TimeManager.getInstance().getTimestamp());
+                        };
+                    };
+                    for each (titleId in currentAchievementReward.titlesReward)
+                    {
+                        currentTitleAward = TitleWrapper.create(titleId);
+                        if (currentTitleAward !== null)
+                        {
+                            chatMessage = ParamsDecoder.applyParams(I18n.getUiText("ui.temporis.rewardObtained", ["$title%1", (("{openTemporisQuestTab::" + I18n.getUiText("ui.temporis.getReward")) + "}")]), [currentTitleAward.id]);
+                            KernelEventsManager.getInstance().processCallback(ChatHookList.TextInformation, chatMessage, ChatActivableChannelsEnum.PSEUDO_CHANNEL_INFO, TimeManager.getInstance().getTimestamp());
+                        };
+                    };
+                };
+                jndex++;
+            };
+        }
+
+        private static function displayRewardedAchievementInChat(rewardedAchievement:Achievement):void
+        {
+            var itemAwardIndex:uint;
+            var itemQuantity:uint;
+            var itemId:uint;
+            var spellId:uint;
+            var emoteId:uint;
+            var ornamentId:uint;
+            var titleId:uint;
+            if (rewardedAchievement === null)
+            {
+                return;
+            };
+            var chatMessage:String;
+            var currentAchievementReward:AchievementReward;
+            var currentItemAward:ItemWrapper;
+            var currentEmoteAward:EmoteWrapper;
+            var currentOrnamentAward:OrnamentWrapper;
+            var currentSpellAward:SpellWrapper;
+            var currentTitleAward:TitleWrapper;
+            var jndex:uint;
+            while (jndex < rewardedAchievement.rewardIds.length)
+            {
+                currentAchievementReward = AchievementReward.getAchievementRewardById(rewardedAchievement.rewardIds[jndex]);
+                if (currentAchievementReward === null)
+                {
+                }
+                else
+                {
+                    itemAwardIndex = 0;
+                    itemQuantity = 0;
+                    for each (itemId in currentAchievementReward.itemsReward)
+                    {
+                        itemQuantity = ((currentAchievementReward.itemsQuantityReward.length > itemAwardIndex) ? currentAchievementReward.itemsQuantityReward[itemAwardIndex] : 1);
+                        currentItemAward = ItemWrapper.create(0, 0, itemId, itemQuantity, new Vector.<ObjectEffect>(), false);
+                        if (currentItemAward !== null)
+                        {
+                            chatMessage = I18n.getUiText("ui.temporis.rewardSuccess", [(((("{item," + currentItemAward.id) + "::") + currentItemAward.name) + "}")]);
+                            KernelEventsManager.getInstance().processCallback(ChatHookList.TextInformation, chatMessage, ChatActivableChannelsEnum.PSEUDO_CHANNEL_INFO, TimeManager.getInstance().getTimestamp());
+                        };
+                    };
+                    for each (spellId in currentAchievementReward.spellsReward)
+                    {
+                        currentSpellAward = SpellWrapper.create(spellId, 1, false, 0, false);
+                        if (currentSpellAward !== null)
+                        {
+                            chatMessage = I18n.getUiText("ui.temporis.rewardSuccess", [(((("{spell," + currentSpellAward.id) + ",") + currentSpellAward.spellLevel) + "}")]);
+                            KernelEventsManager.getInstance().processCallback(ChatHookList.TextInformation, chatMessage, ChatActivableChannelsEnum.PSEUDO_CHANNEL_INFO, TimeManager.getInstance().getTimestamp());
+                        };
+                    };
+                    for each (emoteId in currentAchievementReward.emotesReward)
+                    {
+                        currentEmoteAward = EmoteWrapper.create(emoteId, 0);
+                        if (currentEmoteAward !== null)
+                        {
+                            chatMessage = I18n.getUiText("ui.temporis.rewardSuccess", [(((("{showEmote," + currentEmoteAward.id) + "::") + currentEmoteAward.emote.name) + "}")]);
+                            KernelEventsManager.getInstance().processCallback(ChatHookList.TextInformation, chatMessage, ChatActivableChannelsEnum.PSEUDO_CHANNEL_INFO, TimeManager.getInstance().getTimestamp());
+                        };
+                    };
+                    for each (ornamentId in currentAchievementReward.ornamentsReward)
+                    {
+                        currentOrnamentAward = OrnamentWrapper.create(ornamentId);
+                        if (currentOrnamentAward !== null)
+                        {
+                            chatMessage = ParamsDecoder.applyParams(I18n.getUiText("ui.temporis.rewardSuccess", ["$ornament%1"]), [currentOrnamentAward.id]);
+                            KernelEventsManager.getInstance().processCallback(ChatHookList.TextInformation, chatMessage, ChatActivableChannelsEnum.PSEUDO_CHANNEL_INFO, TimeManager.getInstance().getTimestamp());
+                        };
+                    };
+                    for each (titleId in currentAchievementReward.titlesReward)
+                    {
+                        currentTitleAward = TitleWrapper.create(titleId);
+                        if (currentTitleAward !== null)
+                        {
+                            chatMessage = ParamsDecoder.applyParams(I18n.getUiText("ui.temporis.rewardSuccess", ["$title%1"]), [currentTitleAward.id]);
+                            KernelEventsManager.getInstance().processCallback(ChatHookList.TextInformation, chatMessage, ChatActivableChannelsEnum.PSEUDO_CHANNEL_INFO, TimeManager.getInstance().getTimestamp());
+                        };
+                    };
+                };
+                jndex++;
+            };
+        }
+
+
+        public function get achievmentsList():AchievementListMessage
+        {
+            return (this._achievementsList);
+        }
+
+        public function get achievmentsListProcessed():Boolean
+        {
+            return (this._achievementsListProcessed);
+        }
+
+        public function get followedQuestsCallback():Callback
+        {
+            return (this._followedQuestsCallback);
         }
 
         public function get priority():int
@@ -123,9 +352,19 @@
             return (Priority.NORMAL);
         }
 
-        public function get finishedAchievementsIds():Vector.<uint>
+        public function get finishedAchievements():Vector.<AchievementAchieved>
         {
-            return (this._finishedAchievementsIds);
+            return (this._finishedAchievements);
+        }
+
+        public function get finishedAccountAchievementIds():Array
+        {
+            return (this._finishedAccountAchievementIds);
+        }
+
+        public function get finishedCharacterAchievementIds():Array
+        {
+            return (this._finishedCharacterAchievementIds);
         }
 
         public function getActiveQuests():Vector.<QuestActiveInformations>
@@ -138,12 +377,32 @@
             return (this._completedQuests);
         }
 
+        public function getReinitDoneQuests():Vector.<uint>
+        {
+            return (this._reinitDoneQuests);
+        }
+
+        public function getFollowedQuests():Vector.<uint>
+        {
+            return (this._followedQuests);
+        }
+
         public function getQuestInformations(questId:uint):Object
         {
             return (this._questsInformations[questId]);
         }
 
-        public function get rewardableAchievements():Vector.<AchievementRewardable>
+        public function getActiveObjectives():Vector.<uint>
+        {
+            return (this._activeObjectives);
+        }
+
+        public function getCompletedObjectives():Vector.<uint>
+        {
+            return (this._completedObjectives);
+        }
+
+        public function get rewardableAchievements():Vector.<AchievementAchievedRewardable>
         {
             return (this._rewardableAchievements);
         }
@@ -155,123 +414,254 @@
 
         public function pushed():Boolean
         {
-            this._rewardableAchievements = new Vector.<AchievementRewardable>();
-            this._finishedAchievementsIds = new Vector.<uint>();
+            this._rewardableAchievements = new Vector.<AchievementAchievedRewardable>();
+            this._finishedAchievements = new Vector.<AchievementAchieved>();
+            this._finishedAccountAchievementIds = new Array();
+            this._finishedCharacterAchievementIds = new Array();
             this._treasureHunts = new Dictionary();
             this._nbAllAchievements = Achievement.getAchievements().length;
-            this._flagColors[TreasureHuntFlagStateEnum.TREASURE_HUNT_FLAG_STATE_UNKNOWN] = 15636787;
-            this._flagColors[TreasureHuntFlagStateEnum.TREASURE_HUNT_FLAG_STATE_OK] = 4521796;
-            this._flagColors[TreasureHuntFlagStateEnum.TREASURE_HUNT_FLAG_STATE_WRONG] = 16729156;
+            this._achievementsList = new AchievementListMessage();
+            this._achievementsList.initAchievementListMessage(new Vector.<AchievementAchieved>());
+            this._flagColors[TreasureHuntFlagStateEnum.TREASURE_HUNT_FLAG_STATE_UNKNOWN] = XmlConfig.getInstance().getEntry("colors.flag.unknown");
+            this._flagColors[TreasureHuntFlagStateEnum.TREASURE_HUNT_FLAG_STATE_OK] = XmlConfig.getInstance().getEntry("colors.flag.right");
+            this._flagColors[TreasureHuntFlagStateEnum.TREASURE_HUNT_FLAG_STATE_WRONG] = XmlConfig.getInstance().getEntry("colors.flag.wrong");
             return (true);
         }
 
         public function process(msg:Message):Boolean
         {
-            var _local_2:QuestListRequestMessage;
-            var _local_3:QuestListMessage;
-            var _local_4:QuestInfosRequestAction;
-            var _local_5:QuestStepInfoRequestMessage;
-            var _local_6:QuestStepInfoMessage;
-            var _local_7:QuestStartRequestAction;
-            var _local_8:QuestStartRequestMessage;
-            var _local_9:QuestObjectiveValidationAction;
-            var _local_10:QuestObjectiveValidationMessage;
-            var _local_11:GuidedModeReturnRequestMessage;
-            var _local_12:GuidedModeQuitRequestMessage;
-            var _local_13:QuestStartedMessage;
-            var _local_14:QuestValidatedMessage;
-            var _local_15:Quest;
-            var _local_16:QuestObjectiveValidatedMessage;
-            var _local_17:QuestStepValidatedMessage;
-            var _local_18:Object;
-            var _local_19:QuestStepStartedMessage;
-            var _local_20:NotificationUpdateFlagAction;
-            var _local_21:NotificationUpdateFlagMessage;
-            var _local_22:NotificationResetMessage;
-            var _local_23:AchievementListMessage;
-            var _local_24:int;
-            var _local_25:AchievementDetailedListRequestAction;
-            var _local_26:AchievementDetailedListRequestMessage;
-            var _local_27:AchievementDetailedListMessage;
-            var _local_28:AchievementDetailsRequestAction;
-            var _local_29:AchievementDetailsRequestMessage;
-            var _local_30:AchievementDetailsMessage;
-            var _local_31:AchievementFinishedInformationMessage;
-            var _local_32:String;
-            var _local_33:AchievementFinishedMessage;
-            var _local_34:AchievementRewardable;
-            var _local_35:String;
-            var _local_36:AchievementRewardRequestAction;
-            var _local_37:AchievementRewardRequestMessage;
-            var _local_38:AchievementRewardSuccessMessage;
-            var _local_39:int;
-            var _local_40:AchievementRewardErrorMessage;
-            var _local_41:TreasureHuntShowLegendaryUIMessage;
-            var _local_42:TreasureHuntRequestAction;
-            var _local_43:TreasureHuntRequestMessage;
-            var _local_44:TreasureHuntLegendaryRequestAction;
-            var _local_45:TreasureHuntLegendaryRequestMessage;
-            var _local_46:TreasureHuntRequestAnswerMessage;
-            var _local_47:String;
-            var _local_48:TreasureHuntFlagRequestAction;
-            var _local_49:TreasureHuntFlagRequestMessage;
-            var _local_50:TreasureHuntFlagRemoveRequestAction;
-            var _local_51:TreasureHuntFlagRemoveRequestMessage;
-            var _local_52:TreasureHuntFlagRequestAnswerMessage;
-            var _local_53:String;
-            var _local_54:TreasureHuntMessage;
-            var _local_55:MapPosition;
-            var _local_56:TreasureHuntWrapper;
-            var _local_57:int;
-            var _local_58:TreasureHuntAvailableRetryCountUpdateMessage;
-            var _local_59:TreasureHuntFinishedMessage;
-            var _local_60:TreasureHuntGiveUpRequestAction;
-            var _local_61:TreasureHuntGiveUpRequestMessage;
-            var _local_62:TreasureHuntDigRequestAction;
-            var _local_63:TreasureHuntDigRequestMessage;
-            var _local_64:TreasureHuntDigRequestAnswerMessage;
-            var _local_65:int;
-            var _local_66:String;
-            var stepsInfos:QuestActiveDetailedInformations;
+            var aca:AuthorizedCommandAction;
+            var qlrmsg:QuestListRequestMessage;
+            var qlmsg:QuestListMessage;
+            var qira:QuestInfosRequestAction;
+            var qsirmsg:QuestStepInfoRequestMessage;
+            var qsimsg:QuestStepInfoMessage;
+            var questAlreadyInArray:Boolean;
+            var qsra:QuestStartRequestAction;
+            var qsrmsg:QuestStartRequestMessage;
+            var qova:QuestObjectiveValidationAction;
+            var qovmsg:QuestObjectiveValidationMessage;
+            var gmrrmsg:GuidedModeReturnRequestMessage;
+            var gmqrmsg:GuidedModeQuitRequestMessage;
+            var qsmsg:QuestStartedMessage;
+            var qvmsg:QuestValidatedMessage;
+            var questValidated:Quest;
+            var qovmsg2:QuestObjectiveValidatedMessage;
+            var qsvmsg:QuestStepValidatedMessage;
+            var objectivesIds:Object;
+            var qssmsg:QuestStepStartedMessage;
+            var fqa:FollowQuestAction;
+            var questIndex:int;
+            var rfqoa:RefreshFollowedQuestsOrderAction;
+            var rfqormsg:RefreshFollowedQuestsOrderRequestMessage;
+            var fqmsg:FollowedQuestsMessage;
+            var followedQuests:Array;
+            var j:int;
+            var k:int;
+            var numQuests:uint;
+            var mod:UiModule;
+            var dst:DataStoreType;
+            var questListMinimized:Boolean;
+            var oamsg:ObjectAddedMessage;
+            var oeff:ObjectEffect;
+            var nufa:NotificationUpdateFlagAction;
+            var nufmsg:NotificationUpdateFlagMessage;
+            var nrmsg:NotificationResetMessage;
+            var player:PlayedCharacterManager;
+            var adlra:AchievementDetailedListRequestAction;
+            var adlrmsg:AchievementDetailedListRequestMessage;
+            var adlmsg:AchievementDetailedListMessage;
+            var adra:AchievementDetailsRequestAction;
+            var adrmsg:AchievementDetailsRequestMessage;
+            var admsg:AchievementDetailsMessage;
+            var afimsg:AchievementFinishedInformationMessage;
+            var info3:String;
+            var afmsg:AchievementFinishedMessage;
+            var finishedAchievement:Achievement;
+            var arra:AchievementRewardRequestAction;
+            var arrmsg:AchievementRewardRequestMessage;
+            var arsmsg:AchievementRewardSuccessMessage;
+            var rewardedAchievementIndex:int;
+            var achievementIndex:int;
+            var achievementAchieved:AchievementAchieved;
+            var rewardedAchievement:Achievement;
+            var aremsg:AchievementRewardErrorMessage;
+            var thslumsg:TreasureHuntShowLegendaryUIMessage;
+            var thlra:TreasureHuntLegendaryRequestAction;
+            var thlrmsg:TreasureHuntLegendaryRequestMessage;
+            var thramsg:TreasureHuntRequestAnswerMessage;
+            var treasureHuntRequestAnswerText:String;
+            var thfra:TreasureHuntFlagRequestAction;
+            var thfrmsg:TreasureHuntFlagRequestMessage;
+            var thfrra:TreasureHuntFlagRemoveRequestAction;
+            var thfrrmsg:TreasureHuntFlagRemoveRequestMessage;
+            var thframsg:TreasureHuntFlagRequestAnswerMessage;
+            var treasureHuntFlagRequestAnswerText:String;
+            var thmsg:TreasureHuntMessage;
+            var mp:MapPosition;
+            var th:TreasureHuntWrapper;
+            var i:int;
+            var tharcumsg:TreasureHuntAvailableRetryCountUpdateMessage;
+            var thfmsg:TreasureHuntFinishedMessage;
+            var thgura:TreasureHuntGiveUpRequestAction;
+            var thgurmsg:TreasureHuntGiveUpRequestMessage;
+            var thdra:TreasureHuntDigRequestAction;
+            var thdrmsg:TreasureHuntDigRequestMessage;
+            var thdramsg:TreasureHuntDigRequestAnswerMessage;
+            var wrongFlagCount:int;
+            var treasureHuntDigAnswerText:String;
+            var args:Array;
+            var questId:uint;
+            var questUi:UiRootContainer;
+            var questInfosDetailed:QuestActiveDetailedInformations;
             var obj:QuestObjectiveInformations;
+            var id:uint;
+            var quest:Quest;
+            var steps:Vector.<QuestStep>;
+            var qs:QuestStep;
+            var qai:QuestActiveInformations;
+            var qid:uint;
+            var stepsInfos:QuestActiveDetailedInformations;
+            var objective:QuestObjectiveInformations;
             var dialogParams:Array;
             var nbParams:int;
             var compl:Object;
-            var _local_72:int;
-            var _local_73:QuestActiveInformations;
+            var index:int;
+            var activeQuest:QuestActiveInformations;
             var step:QuestStep;
             var questStepObjId:int;
             var stepObjId:int;
-            var finishAchId:int;
-            var rewAch:AchievementRewardable;
-            var achievementRewardable:AchievementRewardable;
-            var j:int;
+            var fqor:FollowQuestObjectiveRequestMessage;
+            var ufqor:UnfollowQuestObjectiveRequestMessage;
+            var questParam:Object;
+            var numObjectives:uint;
+            var questObjective:QuestObjective;
+            var objectiveFlagInfos:Object;
+            var idQuest:uint;
+            var questInfosRequestMsg:QuestStepInfoRequestMessage;
+            var achievementFinishedRewardable:AchievementAchievedRewardable;
+            var nid:uint;
+            var characterDst:DataStoreType;
+            var achievementId:int;
+            var playerId:Number;
+            var achievementFinished:Achievement;
+            var info:String;
+            var achievementRewardable:AchievementAchievedRewardable;
+            var l:int;
             var st:TreasureHuntStepWrapper;
             var fl:TreasureHuntFlag;
             switch (true)
             {
+                case (msg is AuthorizedCommandAction):
+                    aca = (msg as AuthorizedCommandAction);
+                    if (aca.command.indexOf("quest reset quest") == 0)
+                    {
+                        args = aca.command.split(" ");
+                        if (args.length > 3)
+                        {
+                            questId = parseInt(args[3]);
+                            if (this._followedQuests.indexOf(questId) != -1)
+                            {
+                                questUi = Berilia.getInstance().getUi("questList");
+                                if (((questUi) && (questUi.uiClass)))
+                                {
+                                    questUi.uiClass.unfollowQuest(questId);
+                                };
+                            };
+                        };
+                    };
+                    return (false);
                 case (msg is QuestListRequestAction):
-                    _local_2 = new QuestListRequestMessage();
-                    _local_2.initQuestListRequestMessage();
-                    ConnectionsHandler.getConnection().send(_local_2);
+                    qlrmsg = new QuestListRequestMessage();
+                    qlrmsg.initQuestListRequestMessage();
+                    ConnectionsHandler.getConnection().send(qlrmsg);
                     return (true);
                 case (msg is QuestListMessage):
-                    _local_3 = (msg as QuestListMessage);
-                    this._activeQuests = _local_3.activeQuests;
-                    this._completedQuests = _local_3.finishedQuestsIds;
+                    qlmsg = (msg as QuestListMessage);
+                    this._activeQuests = qlmsg.activeQuests;
+                    this._completedQuests = qlmsg.finishedQuestsIds;
+                    this._completedQuests = this._completedQuests.concat(qlmsg.reinitDoneQuestsIds);
+                    this._reinitDoneQuests = qlmsg.reinitDoneQuestsIds;
+                    this._activeObjectives = new Vector.<uint>();
+                    this._completedObjectives = new Vector.<uint>();
+                    for each (questInfosDetailed in this._activeQuests)
+                    {
+                        if (questInfosDetailed)
+                        {
+                            for each (obj in questInfosDetailed.objectives)
+                            {
+                                if (obj.objectiveStatus)
+                                {
+                                    if (this._activeObjectives.indexOf(obj.objectiveId) == -1)
+                                    {
+                                        if (this._completedObjectives.indexOf(obj.objectiveId) != -1)
+                                        {
+                                            this._completedObjectives.splice(this._completedObjectives.indexOf(obj.objectiveId), 1);
+                                        };
+                                        this._activeObjectives.push(obj.objectiveId);
+                                    };
+                                }
+                                else
+                                {
+                                    if (this._completedObjectives.indexOf(obj.objectiveId) == -1)
+                                    {
+                                        if (this._activeObjectives.indexOf(obj.objectiveId) != -1)
+                                        {
+                                            this._activeObjectives.splice(this._activeObjectives.indexOf(obj.objectiveId), 1);
+                                        };
+                                        this._completedObjectives.push(obj.objectiveId);
+                                    };
+                                };
+                            };
+                        };
+                    };
+                    for each (id in this._completedQuests)
+                    {
+                        quest = Quest.getQuestById(id);
+                        if (!quest)
+                        {
+                        }
+                        else
+                        {
+                            steps = quest.steps;
+                            for each (qs in steps)
+                            {
+                                this._completedObjectives = this._completedObjectives.concat(qs.objectiveIds);
+                            };
+                        };
+                    };
                     KernelEventsManager.getInstance().processCallback(QuestHookList.QuestListUpdated);
                     return (true);
                 case (msg is QuestInfosRequestAction):
-                    _local_4 = (msg as QuestInfosRequestAction);
-                    _local_5 = new QuestStepInfoRequestMessage();
-                    _local_5.initQuestStepInfoRequestMessage(_local_4.questId);
-                    ConnectionsHandler.getConnection().send(_local_5);
+                    qira = (msg as QuestInfosRequestAction);
+                    qsirmsg = new QuestStepInfoRequestMessage();
+                    qsirmsg.initQuestStepInfoRequestMessage(qira.questId);
+                    ConnectionsHandler.getConnection().send(qsirmsg);
                     return (true);
                 case (msg is QuestStepInfoMessage):
-                    _local_6 = (msg as QuestStepInfoMessage);
-                    if ((_local_6.infos is QuestActiveDetailedInformations))
+                    qsimsg = (msg as QuestStepInfoMessage);
+                    questAlreadyInArray = false;
+                    for each (qai in this._activeQuests)
                     {
-                        stepsInfos = (_local_6.infos as QuestActiveDetailedInformations);
+                        if (qai.questId == qsimsg.infos.questId)
+                        {
+                            questAlreadyInArray = true;
+                        };
+                    };
+                    for each (qid in this._completedQuests)
+                    {
+                        if (qid == qsimsg.infos.questId)
+                        {
+                            questAlreadyInArray = true;
+                        };
+                    };
+                    if (!questAlreadyInArray)
+                    {
+                        this._activeQuests.push(qsimsg.infos);
+                    };
+                    if ((qsimsg.infos is QuestActiveDetailedInformations))
+                    {
+                        stepsInfos = (qsimsg.infos as QuestActiveDetailedInformations);
                         this._questsInformations[stepsInfos.questId] = {
                             "questId":stepsInfos.questId,
                             "stepId":stepsInfos.stepId
@@ -279,303 +669,509 @@
                         this._questsInformations[stepsInfos.questId].objectives = new Array();
                         this._questsInformations[stepsInfos.questId].objectivesData = new Array();
                         this._questsInformations[stepsInfos.questId].objectivesDialogParams = new Array();
-                        for each (obj in stepsInfos.objectives)
+                        for each (objective in stepsInfos.objectives)
                         {
-                            this._questsInformations[stepsInfos.questId].objectives[obj.objectiveId] = obj.objectiveStatus;
-                            if (((obj.dialogParams) && ((obj.dialogParams.length > 0))))
+                            if (objective.objectiveStatus)
                             {
-                                dialogParams = new Array();
-                                nbParams = obj.dialogParams.length;
-                                _local_57 = 0;
-                                while (_local_57 < nbParams)
+                                if (this._activeObjectives.indexOf(objective.objectiveId) == -1)
                                 {
-                                    dialogParams.push(obj.dialogParams[_local_57]);
-                                    _local_57++;
+                                    if (this._completedObjectives.indexOf(objective.objectiveId) != -1)
+                                    {
+                                        this._completedObjectives.splice(this._completedObjectives.indexOf(objective.objectiveId), 1);
+                                    };
+                                    this._activeObjectives.push(objective.objectiveId);
+                                };
+                            }
+                            else
+                            {
+                                if (this._completedObjectives.indexOf(objective.objectiveId) == -1)
+                                {
+                                    if (this._activeObjectives.indexOf(objective.objectiveId) != -1)
+                                    {
+                                        this._activeObjectives.splice(this._activeObjectives.indexOf(objective.objectiveId), 1);
+                                    };
+                                    this._completedObjectives.push(objective.objectiveId);
                                 };
                             };
-                            this._questsInformations[stepsInfos.questId].objectivesDialogParams[obj.objectiveId] = dialogParams;
-                            if ((obj is QuestObjectiveInformationsWithCompletion))
+                            this._questsInformations[stepsInfos.questId].objectives[objective.objectiveId] = objective.objectiveStatus;
+                            if (((objective.dialogParams) && (objective.dialogParams.length > 0)))
+                            {
+                                dialogParams = new Array();
+                                nbParams = objective.dialogParams.length;
+                                i = 0;
+                                while (i < nbParams)
+                                {
+                                    dialogParams.push(objective.dialogParams[i]);
+                                    i++;
+                                };
+                            };
+                            this._questsInformations[stepsInfos.questId].objectivesDialogParams[objective.objectiveId] = dialogParams;
+                            if ((objective is QuestObjectiveInformationsWithCompletion))
                             {
                                 compl = new Object();
-                                compl.current = (obj as QuestObjectiveInformationsWithCompletion).curCompletion;
-                                compl.max = (obj as QuestObjectiveInformationsWithCompletion).maxCompletion;
-                                this._questsInformations[stepsInfos.questId].objectivesData[obj.objectiveId] = compl;
+                                compl.current = (objective as QuestObjectiveInformationsWithCompletion).curCompletion;
+                                compl.max = (objective as QuestObjectiveInformationsWithCompletion).maxCompletion;
+                                this._questsInformations[stepsInfos.questId].objectivesData[objective.objectiveId] = compl;
                             };
                         };
                         KernelEventsManager.getInstance().processCallback(QuestHookList.QuestInfosUpdated, stepsInfos.questId, true);
                     }
                     else
                     {
-                        if ((_local_6.infos is QuestActiveInformations))
+                        if ((qsimsg.infos is QuestActiveInformations))
                         {
-                            KernelEventsManager.getInstance().processCallback(QuestHookList.QuestInfosUpdated, (_local_6.infos as QuestActiveInformations).questId, false);
+                            KernelEventsManager.getInstance().processCallback(QuestHookList.QuestInfosUpdated, (qsimsg.infos as QuestActiveInformations).questId, false);
                         };
                     };
                     return (true);
                 case (msg is QuestStartRequestAction):
-                    _local_7 = (msg as QuestStartRequestAction);
-                    _local_8 = new QuestStartRequestMessage();
-                    _local_8.initQuestStartRequestMessage(_local_7.questId);
-                    ConnectionsHandler.getConnection().send(_local_8);
+                    qsra = (msg as QuestStartRequestAction);
+                    qsrmsg = new QuestStartRequestMessage();
+                    qsrmsg.initQuestStartRequestMessage(qsra.questId);
+                    ConnectionsHandler.getConnection().send(qsrmsg);
                     return (true);
                 case (msg is QuestObjectiveValidationAction):
-                    _local_9 = (msg as QuestObjectiveValidationAction);
-                    _local_10 = new QuestObjectiveValidationMessage();
-                    _local_10.initQuestObjectiveValidationMessage(_local_9.questId, _local_9.objectiveId);
-                    ConnectionsHandler.getConnection().send(_local_10);
+                    qova = (msg as QuestObjectiveValidationAction);
+                    qovmsg = new QuestObjectiveValidationMessage();
+                    qovmsg.initQuestObjectiveValidationMessage(qova.questId, qova.objectiveId);
+                    ConnectionsHandler.getConnection().send(qovmsg);
                     return (true);
                 case (msg is GuidedModeReturnRequestAction):
-                    _local_11 = new GuidedModeReturnRequestMessage();
-                    _local_11.initGuidedModeReturnRequestMessage();
-                    ConnectionsHandler.getConnection().send(_local_11);
+                    gmrrmsg = new GuidedModeReturnRequestMessage();
+                    gmrrmsg.initGuidedModeReturnRequestMessage();
+                    ConnectionsHandler.getConnection().send(gmrrmsg);
                     return (true);
                 case (msg is GuidedModeQuitRequestAction):
-                    _local_12 = new GuidedModeQuitRequestMessage();
-                    _local_12.initGuidedModeQuitRequestMessage();
-                    ConnectionsHandler.getConnection().send(_local_12);
+                    gmqrmsg = new GuidedModeQuitRequestMessage();
+                    gmqrmsg.initGuidedModeQuitRequestMessage();
+                    ConnectionsHandler.getConnection().send(gmqrmsg);
                     return (true);
                 case (msg is QuestStartedMessage):
-                    _local_13 = (msg as QuestStartedMessage);
-                    KernelEventsManager.getInstance().processCallback(QuestHookList.QuestStarted, _local_13.questId);
+                    qsmsg = (msg as QuestStartedMessage);
+                    KernelEventsManager.getInstance().processCallback(QuestHookList.QuestStarted, qsmsg.questId);
                     return (true);
                 case (msg is QuestValidatedMessage):
-                    _local_14 = (msg as QuestValidatedMessage);
-                    KernelEventsManager.getInstance().processCallback(QuestHookList.QuestValidated, _local_14.questId);
-                    if (!(this._completedQuests))
+                    qvmsg = (msg as QuestValidatedMessage);
+                    KernelEventsManager.getInstance().processCallback(QuestHookList.QuestValidated, qvmsg.questId);
+                    if (!this._completedQuests)
                     {
                         this._completedQuests = new Vector.<uint>();
                     }
                     else
                     {
-                        for each (_local_73 in this._activeQuests)
+                        for each (activeQuest in this._activeQuests)
                         {
-                            if (_local_73.questId == _local_14.questId)
+                            if (activeQuest.questId == qvmsg.questId)
                             {
                                 break;
                             };
-                            _local_72++;
+                            index++;
                         };
-                        if (((this._activeQuests) && ((_local_72 < this._activeQuests.length))))
+                        if (((this._activeQuests) && (index < this._activeQuests.length)))
                         {
-                            this._activeQuests.splice(_local_72, 1);
+                            this._activeQuests.splice(index, 1);
                         };
                     };
-                    this._completedQuests.push(_local_14.questId);
-                    _local_15 = Quest.getQuestById(_local_14.questId);
-                    for each (step in _local_15.steps)
+                    this._completedQuests.push(qvmsg.questId);
+                    questValidated = Quest.getQuestById(qvmsg.questId);
+                    if (!questValidated)
+                    {
+                        return (true);
+                    };
+                    for each (step in questValidated.steps)
                     {
                         for each (questStepObjId in step.objectiveIds)
                         {
-                            KernelEventsManager.getInstance().processCallback(HookList.RemoveMapFlag, ((((("flag_srv" + CompassTypeEnum.COMPASS_TYPE_QUEST) + "_") + _local_14.questId) + "_") + questStepObjId), PlayedCharacterManager.getInstance().currentWorldMap.id);
+                            if (this._completedObjectives.indexOf(questStepObjId) == -1)
+                            {
+                                if (this._activeObjectives.indexOf(questStepObjId) != -1)
+                                {
+                                    this._activeObjectives.splice(this._activeObjectives.indexOf(questStepObjId), 1);
+                                };
+                                this._completedObjectives.push(questStepObjId);
+                            };
+                            KernelEventsManager.getInstance().processCallback(HookList.RemoveMapFlag, ((((("flag_srv" + CompassTypeEnum.COMPASS_TYPE_QUEST) + "_") + qvmsg.questId) + "_") + questStepObjId), PlayedCharacterManager.getInstance().currentWorldMapId);
                         };
                     };
                     return (true);
                 case (msg is QuestObjectiveValidatedMessage):
-                    _local_16 = (msg as QuestObjectiveValidatedMessage);
-                    KernelEventsManager.getInstance().processCallback(QuestHookList.QuestObjectiveValidated, _local_16.questId, _local_16.objectiveId);
-                    KernelEventsManager.getInstance().processCallback(HookList.RemoveMapFlag, ((((("flag_srv" + CompassTypeEnum.COMPASS_TYPE_QUEST) + "_") + _local_16.questId) + "_") + _local_16.objectiveId), PlayedCharacterManager.getInstance().currentWorldMap.id);
+                    qovmsg2 = (msg as QuestObjectiveValidatedMessage);
+                    KernelEventsManager.getInstance().processCallback(QuestHookList.QuestObjectiveValidated, qovmsg2.questId, qovmsg2.objectiveId);
+                    KernelEventsManager.getInstance().processCallback(HookList.RemoveMapFlag, ((((("flag_srv" + CompassTypeEnum.COMPASS_TYPE_QUEST) + "_") + qovmsg2.questId) + "_") + qovmsg2.objectiveId), PlayedCharacterManager.getInstance().currentWorldMapId);
                     return (true);
                 case (msg is QuestStepValidatedMessage):
-                    _local_17 = (msg as QuestStepValidatedMessage);
-                    if (this._questsInformations[_local_17.questId])
+                    qsvmsg = (msg as QuestStepValidatedMessage);
+                    if (this._questsInformations[qsvmsg.questId])
                     {
-                        this._questsInformations[_local_17.questId].stepId = _local_17.stepId;
+                        this._questsInformations[qsvmsg.questId].stepId = qsvmsg.stepId;
                     };
-                    _local_18 = QuestStep.getQuestStepById(_local_17.stepId).objectiveIds;
-                    for each (stepObjId in _local_18)
+                    objectivesIds = QuestStep.getQuestStepById(qsvmsg.stepId).objectiveIds;
+                    for each (stepObjId in objectivesIds)
                     {
-                        KernelEventsManager.getInstance().processCallback(HookList.RemoveMapFlag, ((((("flag_srv" + CompassTypeEnum.COMPASS_TYPE_QUEST) + "_") + _local_17.questId) + "_") + stepObjId), PlayedCharacterManager.getInstance().currentWorldMap.id);
+                        KernelEventsManager.getInstance().processCallback(HookList.RemoveMapFlag, ((((("flag_srv" + CompassTypeEnum.COMPASS_TYPE_QUEST) + "_") + qsvmsg.questId) + "_") + stepObjId), PlayedCharacterManager.getInstance().currentWorldMapId);
                     };
-                    KernelEventsManager.getInstance().processCallback(QuestHookList.QuestStepValidated, _local_17.questId, _local_17.stepId);
+                    KernelEventsManager.getInstance().processCallback(QuestHookList.QuestStepValidated, qsvmsg.questId, qsvmsg.stepId);
                     return (true);
                 case (msg is QuestStepStartedMessage):
-                    _local_19 = (msg as QuestStepStartedMessage);
-                    if (this._questsInformations[_local_19.questId])
+                    qssmsg = (msg as QuestStepStartedMessage);
+                    if (this._questsInformations[qssmsg.questId])
                     {
-                        this._questsInformations[_local_19.questId].stepId = _local_19.stepId;
+                        this._questsInformations[qssmsg.questId].stepId = qssmsg.stepId;
                     };
-                    KernelEventsManager.getInstance().processCallback(QuestHookList.QuestStepStarted, _local_19.questId, _local_19.stepId);
+                    KernelEventsManager.getInstance().processCallback(QuestHookList.QuestStepStarted, qssmsg.questId, qssmsg.stepId);
                     return (true);
+                case (msg is FollowQuestAction):
+                    fqa = (msg as FollowQuestAction);
+                    questIndex = this._followedQuests.indexOf(fqa.questId);
+                    if (fqa.follow)
+                    {
+                        if (questIndex == -1)
+                        {
+                            this._followedQuests.push(fqa.questId);
+                        };
+                        fqor = new FollowQuestObjectiveRequestMessage();
+                        fqor.initFollowQuestObjectiveRequestMessage(fqa.questId, fqa.objectiveId);
+                        ConnectionsHandler.getConnection().send(fqor);
+                    }
+                    else
+                    {
+                        if (questIndex != -1)
+                        {
+                            if (fqa.objectiveId == -1)
+                            {
+                                this._followedQuests.splice(questIndex, 1);
+                            };
+                            ufqor = new UnfollowQuestObjectiveRequestMessage();
+                            ufqor.initUnfollowQuestObjectiveRequestMessage(fqa.questId, fqa.objectiveId);
+                            ConnectionsHandler.getConnection().send(ufqor);
+                        };
+                    };
+                    KernelEventsManager.getInstance().processCallback(QuestHookList.QuestFollowed, fqa.questId, fqa.follow);
+                    return (true);
+                case (msg is RefreshFollowedQuestsOrderAction):
+                    rfqoa = (msg as RefreshFollowedQuestsOrderAction);
+                    rfqormsg = new RefreshFollowedQuestsOrderRequestMessage();
+                    rfqormsg.initRefreshFollowedQuestsOrderRequestMessage(rfqoa.questsIds);
+                    ConnectionsHandler.getConnection().send(rfqormsg);
+                    return (true);
+                case (msg is FollowedQuestsMessage):
+                    if (!PlayedCharacterManager.getInstance().currentMap)
+                    {
+                        this._followedQuestsCallback = new Callback(this.process, msg);
+                        return (false);
+                    };
+                    fqmsg = (msg as FollowedQuestsMessage);
+                    followedQuests = new Array();
+                    numQuests = fqmsg.quests.length;
+                    j = (fqmsg.quests.length - 1);
+                    while (j >= 0)
+                    {
+                        questParam = {
+                            "questId":fqmsg.quests[j].questId,
+                            "objectives":new Array(),
+                            "fromServer":true
+                        };
+                        numObjectives = fqmsg.quests[j].objectives.length;
+                        k = 0;
+                        while (k < numObjectives)
+                        {
+                            if (fqmsg.quests[j].objectives[k].objectiveStatus)
+                            {
+                                questObjective = QuestObjective.getQuestObjectiveById(fqmsg.quests[j].objectives[k].objectiveId);
+                                if (!questObjective)
+                                {
+                                }
+                                else
+                                {
+                                    objectiveFlagInfos = (((questObjective.coords) || (questObjective.mapId)) ? (QuestApi.getInstance().getQuestObjectiveFlagInfos(questParam.questId, questObjective.id)) : null);
+                                    questParam.objectives.push({
+                                        "id":questObjective.id,
+                                        "flagData":((objectiveFlagInfos) ? ({
+"id":objectiveFlagInfos.id,
+"text":objectiveFlagInfos.text,
+"worldMapId":objectiveFlagInfos.worldMapId,
+"x":objectiveFlagInfos.x,
+"y":objectiveFlagInfos.y
+}) : (null))
+                                    });
+                                };
+                            };
+                            k++;
+                        };
+                        followedQuests.push(questParam);
+                        this._followedQuests.push(questParam.questId);
+                        j--;
+                    };
+                    mod = UiModuleManager.getInstance().getModule("Ankama_Grimoire");
+                    dst = new DataStoreType(("AccountModule_" + mod.id), true, DataStoreEnum.LOCATION_LOCAL, DataStoreEnum.BIND_ACCOUNT);
+                    questListMinimized = StoreDataManager.getInstance().getSetData(dst, "questListMinimized", false);
+                    if (questListMinimized)
+                    {
+                        Berilia.getInstance().loadUi(mod, mod.uis["questListMinimized"], "questListMinimized", null, false, StrataEnum.STRATA_TOP);
+                    };
+                    Berilia.getInstance().loadUi(mod, mod.uis["questList"], "questList", {
+                        "visible":((!(questListMinimized)) && (!(PlayedCharacterApi.getInstance().isInFight()))),
+                        "quests":followedQuests
+                    }, false, StrataEnum.STRATA_TOP);
+                    this._followedQuestsCallback = null;
+                    return (true);
+                case (msg is ObjectAddedMessage):
+                    oamsg = (msg as ObjectAddedMessage);
+                    for each (oeff in oamsg.object.effects)
+                    {
+                        if (oeff.actionId == ActionIdProtocol.ACTION_QUEST_CHECK_STARTED_OBJECTIVES)
+                        {
+                            idQuest = (oeff as ObjectEffectInteger).value;
+                            if (this._followedQuests.indexOf(idQuest) != -1)
+                            {
+                                questInfosRequestMsg = new QuestStepInfoRequestMessage();
+                                questInfosRequestMsg.initQuestStepInfoRequestMessage(idQuest);
+                                ConnectionsHandler.getConnection().send(questInfosRequestMsg);
+                            };
+                        };
+                    };
+                    return (false);
                 case (msg is NotificationUpdateFlagAction):
-                    _local_20 = (msg as NotificationUpdateFlagAction);
-                    _local_21 = new NotificationUpdateFlagMessage();
-                    _local_21.initNotificationUpdateFlagMessage(_local_20.index);
-                    ConnectionsHandler.getConnection().send(_local_21);
+                    nufa = (msg as NotificationUpdateFlagAction);
+                    nufmsg = new NotificationUpdateFlagMessage();
+                    nufmsg.initNotificationUpdateFlagMessage(nufa.index);
+                    ConnectionsHandler.getConnection().send(nufmsg);
                     return (true);
                 case (msg is NotificationResetAction):
                     notificationList = new Array();
-                    _local_22 = new NotificationResetMessage();
-                    _local_22.initNotificationResetMessage();
-                    ConnectionsHandler.getConnection().send(_local_22);
+                    nrmsg = new NotificationResetMessage();
+                    nrmsg.initNotificationResetMessage();
+                    ConnectionsHandler.getConnection().send(nrmsg);
                     KernelEventsManager.getInstance().processCallback(HookList.NotificationReset);
                     return (true);
                 case (msg is AchievementListMessage):
-                    _local_23 = (msg as AchievementListMessage);
-                    this._finishedAchievementsIds = _local_23.finishedAchievementsIds;
-                    this._rewardableAchievements = _local_23.rewardableAchievements;
-                    for each (finishAchId in this._finishedAchievementsIds)
+                    this._achievementsList = (msg as AchievementListMessage);
+                    if (this._achievementsFinishedCache !== null)
                     {
-                        if (Achievement.getAchievementById(finishAchId))
+                        for each (achievementFinishedRewardable in this._achievementsFinishedCache)
                         {
-                            _local_24 = (_local_24 + Achievement.getAchievementById(finishAchId).points);
-                        }
-                        else
-                        {
-                            _log.warn((("Succés " + finishAchId) + " non exporté"));
+                            this._achievementsList.finishedAchievements.push(achievementFinishedRewardable);
                         };
+                        this._achievementsFinishedCache = null;
                     };
-                    for each (rewAch in this._rewardableAchievements)
+                    player = PlayedCharacterManager.getInstance();
+                    if (((player) && (player.characteristics)))
                     {
-                        if (Achievement.getAchievementById(rewAch.id))
-                        {
-                            _local_24 = (_local_24 + Achievement.getAchievementById(rewAch.id).points);
-                            this._finishedAchievementsIds.push(rewAch.id);
-                        }
-                        else
-                        {
-                            _log.warn((("Succés " + rewAch.id) + " non exporté"));
-                        };
+                        this.processAchievements(true);
                     };
-                    KernelEventsManager.getInstance().processCallback(QuestHookList.AchievementList, this._finishedAchievementsIds);
-                    if (((!(this._rewardableAchievementsVisible)) && ((this._rewardableAchievements.length > 0))))
-                    {
-                        this._rewardableAchievementsVisible = true;
-                        KernelEventsManager.getInstance().processCallback(QuestHookList.RewardableAchievementsVisible, this._rewardableAchievementsVisible);
-                    };
-                    PlayedCharacterManager.getInstance().achievementPercent = Math.floor(((this._finishedAchievementsIds.length / this._nbAllAchievements) * 100));
-                    PlayedCharacterManager.getInstance().achievementPoints = _local_24;
                     return (true);
                 case (msg is AchievementDetailedListRequestAction):
-                    _local_25 = (msg as AchievementDetailedListRequestAction);
-                    _local_26 = new AchievementDetailedListRequestMessage();
-                    _local_26.initAchievementDetailedListRequestMessage(_local_25.categoryId);
-                    ConnectionsHandler.getConnection().send(_local_26);
+                    adlra = (msg as AchievementDetailedListRequestAction);
+                    adlrmsg = new AchievementDetailedListRequestMessage();
+                    adlrmsg.initAchievementDetailedListRequestMessage(adlra.categoryId);
+                    ConnectionsHandler.getConnection().send(adlrmsg);
                     return (true);
                 case (msg is AchievementDetailedListMessage):
-                    _local_27 = (msg as AchievementDetailedListMessage);
-                    KernelEventsManager.getInstance().processCallback(QuestHookList.AchievementDetailedList, _local_27.finishedAchievements, _local_27.startedAchievements);
+                    adlmsg = (msg as AchievementDetailedListMessage);
+                    KernelEventsManager.getInstance().processCallback(QuestHookList.AchievementDetailedList, adlmsg.finishedAchievements, adlmsg.startedAchievements);
                     return (true);
                 case (msg is AchievementDetailsRequestAction):
-                    _local_28 = (msg as AchievementDetailsRequestAction);
-                    _local_29 = new AchievementDetailsRequestMessage();
-                    _local_29.initAchievementDetailsRequestMessage(_local_28.achievementId);
-                    ConnectionsHandler.getConnection().send(_local_29);
+                    adra = (msg as AchievementDetailsRequestAction);
+                    adrmsg = new AchievementDetailsRequestMessage();
+                    adrmsg.initAchievementDetailsRequestMessage(adra.achievementId);
+                    ConnectionsHandler.getConnection().send(adrmsg);
                     return (true);
                 case (msg is AchievementDetailsMessage):
-                    _local_30 = (msg as AchievementDetailsMessage);
-                    KernelEventsManager.getInstance().processCallback(QuestHookList.AchievementDetails, _local_30.achievement);
+                    admsg = (msg as AchievementDetailsMessage);
+                    KernelEventsManager.getInstance().processCallback(QuestHookList.AchievementDetails, admsg.achievement);
                     return (true);
                 case (msg is AchievementFinishedInformationMessage):
-                    _local_31 = (msg as AchievementFinishedInformationMessage);
-                    _local_32 = ParamsDecoder.applyParams(I18n.getUiText("ui.achievement.characterUnlocksAchievement", [(((("{player," + _local_31.name) + ",") + _local_31.playerId) + "}")]), [_local_31.name, _local_31.id]);
-                    KernelEventsManager.getInstance().processCallback(ChatHookList.TextInformation, _local_32, ChatActivableChannelsEnum.PSEUDO_CHANNEL_INFO, TimeManager.getInstance().getTimestamp());
+                    afimsg = (msg as AchievementFinishedInformationMessage);
+                    info3 = ParamsDecoder.applyParams(I18n.getUiText("ui.achievement.characterUnlocksAchievement", [(((("{player," + afimsg.name) + ",") + afimsg.playerId) + "}")]), [afimsg.name, afimsg.achievement.id]);
+                    KernelEventsManager.getInstance().processCallback(ChatHookList.TextInformation, info3, ChatActivableChannelsEnum.PSEUDO_CHANNEL_INFO, TimeManager.getInstance().getTimestamp());
                     return (true);
                 case (msg is AchievementFinishedMessage):
-                    _local_33 = (msg as AchievementFinishedMessage);
-                    KernelEventsManager.getInstance().processCallback(QuestHookList.AchievementFinished, _local_33.id);
-                    this._finishedAchievementsIds.push(_local_33.id);
-                    _local_34 = new AchievementRewardable();
-                    this._rewardableAchievements.push(_local_34.initAchievementRewardable(_local_33.id, _local_33.finishedlevel));
-                    if (!(this._rewardableAchievementsVisible))
+                    afmsg = (msg as AchievementFinishedMessage);
+                    if (PlayerManager.getInstance().server.gameTypeId == GameServerTypeEnum.SERVER_TYPE_TEMPORIS)
                     {
-                        this._rewardableAchievementsVisible = true;
-                        KernelEventsManager.getInstance().processCallback(QuestHookList.RewardableAchievementsVisible, this._rewardableAchievementsVisible);
+                        if (afmsg.achievement.id == DISCOVER_INCARNAM_ACHIEVEMENT_ID)
+                        {
+                            InventoryManagementFrame.displayNewsPopupTemporis();
+                        }
+                        else
+                        {
+                            if (afmsg.achievement.id == FIRST_TEMPORIS_REWARD_ACHIEVEMENT_ID)
+                            {
+                                nid = NotificationManager.getInstance().prepareNotification(I18n.getUiText("ui.temporis.popupFirstRewardTitle"), I18n.getUiText("ui.temporis.popupFirstRewardContent"), NotificationTypeEnum.TUTORIAL, "FirstTemporisIVRewardNotif");
+                                NotificationManager.getInstance().addButtonToNotification(nid, I18n.getUiText("ui.achievement.rewardsGet"), "OpenBook", ["temporisQuestTab"]);
+                                NotificationManager.getInstance().sendNotification(nid);
+                            };
+                        };
                     };
-                    _local_35 = ParamsDecoder.applyParams(I18n.getUiText("ui.achievement.achievementUnlockWithLink"), [_local_33.id]);
-                    KernelEventsManager.getInstance().processCallback(ChatHookList.TextInformation, _local_35, ChatActivableChannelsEnum.PSEUDO_CHANNEL_INFO, TimeManager.getInstance().getTimestamp());
-                    PlayedCharacterManager.getInstance().achievementPercent = Math.floor(((this._finishedAchievementsIds.length / this._nbAllAchievements) * 100));
-                    PlayedCharacterManager.getInstance().achievementPoints = (PlayedCharacterManager.getInstance().achievementPoints + Achievement.getAchievementById(_local_33.id).points);
+                    this._achievementsList.finishedAchievements.push(new AchievementAchieved().initAchievementAchieved(afmsg.achievement.id, afmsg.achievement.achievedBy));
+                    if (this._achievementsFinishedCache === null)
+                    {
+                        this._achievementsFinishedCache = [];
+                    };
+                    this._achievementsFinishedCache.push(new AchievementAchievedRewardable().initAchievementAchievedRewardable(afmsg.achievement.id, afmsg.achievement.achievedBy, afmsg.achievement.finishedlevel));
+                    finishedAchievement = Achievement.getAchievementById(afmsg.achievement.id);
+                    if (finishedAchievement.category.id === TEMPORIS_4_CATEGORY)
+                    {
+                        characterDst = new DataStoreType("Module_Ankama_Grimoire", true, DataStoreEnum.LOCATION_LOCAL, DataStoreEnum.BIND_CHARACTER);
+                        StoreDataManager.getInstance().setData(characterDst, STORAGE_NEW_TEMPORIS_4_REWARD, true);
+                        KernelEventsManager.getInstance().processCallback(HookList.NewAreNewTemporisRewardsAvailable, true);
+                    };
+                    if (finishedAchievement.category.visible)
+                    {
+                        for each (achievementId in this._finishedCharacterAchievementIds)
+                        {
+                            if (achievementId == afmsg.achievement.id)
+                            {
+                                return (true);
+                            };
+                        };
+                        this._finishedAchievements.push(afmsg.achievement);
+                        this._rewardableAchievements.push(afmsg.achievement);
+                        KernelEventsManager.getInstance().processCallback(QuestHookList.AchievementFinished, afmsg.achievement);
+                        if (((!(this._rewardableAchievementsVisible)) && (this.doesRewardsUiNeedOpening())))
+                        {
+                            this._rewardableAchievementsVisible = true;
+                            KernelEventsManager.getInstance().processCallback(QuestHookList.RewardableAchievementsVisible, this._rewardableAchievementsVisible);
+                        };
+                        if (((ServerTemporisSeason.isTemporisSpellsUi) && (finishedAchievement.category.id === TEMPORIS_4_CATEGORY)))
+                        {
+                            displayFinishedAchievementInChat(finishedAchievement);
+                        }
+                        else
+                        {
+                            info = ParamsDecoder.applyParams(I18n.getUiText("ui.achievement.achievementUnlockWithLink"), [afmsg.achievement.id]);
+                            KernelEventsManager.getInstance().processCallback(ChatHookList.TextInformation, info, ChatActivableChannelsEnum.PSEUDO_CHANNEL_INFO, TimeManager.getInstance().getTimestamp());
+                        };
+                        playerId = PlayedCharacterManager.getInstance().id;
+                        AccountManager.getInstance().achievementPercent = Math.floor(((this._finishedAchievements.length / this._nbAllAchievements) * 100));
+                        if (this._finishedAccountAchievementIds.indexOf(afmsg.achievement.id) == -1)
+                        {
+                            this._finishedAccountAchievementIds.push(afmsg.achievement.id);
+                        };
+                        if (afmsg.achievement.achievedBy == playerId)
+                        {
+                            this._finishedCharacterAchievementIds.push(afmsg.achievement.id);
+                            PlayedCharacterManager.getInstance().achievementPercent = Math.floor(((this._finishedCharacterAchievementIds.length / this._nbAllAchievements) * 100));
+                        };
+                        achievementFinished = Achievement.getAchievementById(afmsg.achievement.id);
+                        if (achievementFinished)
+                        {
+                            AccountManager.getInstance().achievementPoints = (AccountManager.getInstance().achievementPoints + achievementFinished.points);
+                            if (afmsg.achievement.achievedBy == playerId)
+                            {
+                                PlayedCharacterManager.getInstance().achievementPoints = (PlayedCharacterManager.getInstance().achievementPoints + achievementFinished.points);
+                            };
+                        };
+                    };
                     return (true);
                 case (msg is AchievementRewardRequestAction):
-                    _local_36 = (msg as AchievementRewardRequestAction);
-                    _local_37 = new AchievementRewardRequestMessage();
-                    _local_37.initAchievementRewardRequestMessage(_local_36.achievementId);
-                    ConnectionsHandler.getConnection().send(_local_37);
+                    arra = (msg as AchievementRewardRequestAction);
+                    arrmsg = new AchievementRewardRequestMessage();
+                    arrmsg.initAchievementRewardRequestMessage(arra.achievementId);
+                    ConnectionsHandler.getConnection().send(arrmsg);
                     return (true);
                 case (msg is AchievementRewardSuccessMessage):
-                    _local_38 = (msg as AchievementRewardSuccessMessage);
+                    arsmsg = (msg as AchievementRewardSuccessMessage);
                     for each (achievementRewardable in this._rewardableAchievements)
                     {
-                        if (achievementRewardable.id == _local_38.achievementId)
+                        if (achievementRewardable.id == arsmsg.achievementId)
                         {
-                            _local_39 = this._rewardableAchievements.indexOf(achievementRewardable);
+                            rewardedAchievementIndex = this._rewardableAchievements.indexOf(achievementRewardable);
                             break;
                         };
                     };
-                    this._rewardableAchievements.splice(_local_39, 1);
-                    KernelEventsManager.getInstance().processCallback(QuestHookList.AchievementRewardSuccess, _local_38.achievementId);
-                    if (((this._rewardableAchievementsVisible) && ((this._rewardableAchievements.length == 0))))
+                    this._rewardableAchievements.splice(rewardedAchievementIndex, 1);
+                    achievementIndex = 0;
+                    while (achievementIndex < this._achievementsList.finishedAchievements.length)
+                    {
+                        achievementAchieved = this._achievementsList.finishedAchievements[achievementIndex];
+                        if (((achievementAchieved.id == arsmsg.achievementId) && (achievementAchieved is AchievementAchievedRewardable)))
+                        {
+                            this._achievementsList.finishedAchievements[achievementIndex] = new AchievementAchieved();
+                            this._achievementsList.finishedAchievements[achievementIndex].initAchievementAchieved(achievementAchieved.id, achievementAchieved.achievedBy);
+                            break;
+                        };
+                        achievementIndex++;
+                    };
+                    KernelEventsManager.getInstance().processCallback(QuestHookList.AchievementRewardSuccess, arsmsg.achievementId);
+                    if (((this._rewardableAchievementsVisible) && (!(this.doesRewardsUiNeedOpening()))))
                     {
                         this._rewardableAchievementsVisible = false;
                         KernelEventsManager.getInstance().processCallback(QuestHookList.RewardableAchievementsVisible, this._rewardableAchievementsVisible);
                     };
+                    rewardedAchievement = Achievement.getAchievementById(arsmsg.achievementId);
+                    if ((((ServerTemporisSeason.isTemporisSpellsUi) && (!(rewardedAchievement === null))) && (rewardedAchievement.category.id === 107)))
+                    {
+                        displayRewardedAchievementInChat(rewardedAchievement);
+                    };
                     return (true);
                 case (msg is AchievementRewardErrorMessage):
-                    _local_40 = (msg as AchievementRewardErrorMessage);
+                    aremsg = (msg as AchievementRewardErrorMessage);
                     return (true);
                 case (msg is TreasureHuntShowLegendaryUIMessage):
-                    _local_41 = (msg as TreasureHuntShowLegendaryUIMessage);
-                    KernelEventsManager.getInstance().processCallback(QuestHookList.TreasureHuntLegendaryUiUpdate, _local_41.availableLegendaryIds);
-                    return (true);
-                case (msg is TreasureHuntRequestAction):
-                    _local_42 = (msg as TreasureHuntRequestAction);
-                    _local_43 = new TreasureHuntRequestMessage();
-                    _local_43.initTreasureHuntRequestMessage(_local_42.level, _local_42.questType);
-                    ConnectionsHandler.getConnection().send(_local_43);
+                    thslumsg = (msg as TreasureHuntShowLegendaryUIMessage);
+                    KernelEventsManager.getInstance().processCallback(QuestHookList.TreasureHuntLegendaryUiUpdate, thslumsg.availableLegendaryIds);
                     return (true);
                 case (msg is TreasureHuntLegendaryRequestAction):
-                    _local_44 = (msg as TreasureHuntLegendaryRequestAction);
-                    _local_45 = new TreasureHuntLegendaryRequestMessage();
-                    _local_45.initTreasureHuntLegendaryRequestMessage(_local_44.legendaryId);
-                    ConnectionsHandler.getConnection().send(_local_45);
+                    thlra = (msg as TreasureHuntLegendaryRequestAction);
+                    thlrmsg = new TreasureHuntLegendaryRequestMessage();
+                    thlrmsg.initTreasureHuntLegendaryRequestMessage(thlra.legendaryId);
+                    ConnectionsHandler.getConnection().send(thlrmsg);
                     return (true);
                 case (msg is TreasureHuntRequestAnswerMessage):
-                    _local_46 = (msg as TreasureHuntRequestAnswerMessage);
-                    if (_local_46.result == TreasureHuntRequestEnum.TREASURE_HUNT_ERROR_ALREADY_HAVE_QUEST)
+                    thramsg = (msg as TreasureHuntRequestAnswerMessage);
+                    if (thramsg.result == TreasureHuntRequestEnum.TREASURE_HUNT_ERROR_ALREADY_HAVE_QUEST)
                     {
-                        _local_47 = I18n.getUiText("ui.treasureHunt.alreadyHaveQuest");
+                        treasureHuntRequestAnswerText = I18n.getUiText("ui.treasureHunt.alreadyHaveQuest");
                     }
                     else
                     {
-                        if (_local_46.result == TreasureHuntRequestEnum.TREASURE_HUNT_ERROR_NO_QUEST_FOUND)
+                        if (thramsg.result == TreasureHuntRequestEnum.TREASURE_HUNT_ERROR_NO_QUEST_FOUND)
                         {
-                            _local_47 = I18n.getUiText("ui.treasureHunt.noQuestFound");
+                            treasureHuntRequestAnswerText = I18n.getUiText("ui.treasureHunt.noQuestFound");
                         }
                         else
                         {
-                            if (_local_46.result == TreasureHuntRequestEnum.TREASURE_HUNT_ERROR_UNDEFINED)
+                            if (thramsg.result == TreasureHuntRequestEnum.TREASURE_HUNT_ERROR_UNDEFINED)
                             {
-                                _local_47 = I18n.getUiText("ui.popup.impossible_action");
+                                treasureHuntRequestAnswerText = I18n.getUiText("ui.popup.impossible_action");
                             }
                             else
                             {
-                                if (_local_46.result == TreasureHuntRequestEnum.TREASURE_HUNT_ERROR_NOT_AVAILABLE)
+                                if (thramsg.result == TreasureHuntRequestEnum.TREASURE_HUNT_ERROR_NOT_AVAILABLE)
                                 {
-                                    _local_47 = I18n.getUiText("ui.treasureHunt.huntNotAvailable");
+                                    treasureHuntRequestAnswerText = I18n.getUiText("ui.treasureHunt.huntNotAvailable");
+                                }
+                                else
+                                {
+                                    if (thramsg.result == TreasureHuntRequestEnum.TREASURE_HUNT_ERROR_DAILY_LIMIT_EXCEEDED)
+                                    {
+                                        treasureHuntRequestAnswerText = I18n.getUiText("ui.treasureHunt.huntLimitExceeded");
+                                    };
                                 };
                             };
                         };
                     };
-                    if (_local_47)
+                    if (treasureHuntRequestAnswerText)
                     {
-                        KernelEventsManager.getInstance().processCallback(ChatHookList.TextInformation, _local_47, ChatActivableChannelsEnum.PSEUDO_CHANNEL_INFO, TimeManager.getInstance().getTimestamp());
+                        KernelEventsManager.getInstance().processCallback(ChatHookList.TextInformation, treasureHuntRequestAnswerText, ChatActivableChannelsEnum.PSEUDO_CHANNEL_INFO, TimeManager.getInstance().getTimestamp());
                     };
                     return (true);
                 case (msg is TreasureHuntFlagRequestAction):
-                    _local_48 = (msg as TreasureHuntFlagRequestAction);
-                    _local_49 = new TreasureHuntFlagRequestMessage();
-                    _local_49.initTreasureHuntFlagRequestMessage(_local_48.questType, _local_48.index);
-                    ConnectionsHandler.getConnection().send(_local_49);
+                    thfra = (msg as TreasureHuntFlagRequestAction);
+                    thfrmsg = new TreasureHuntFlagRequestMessage();
+                    thfrmsg.initTreasureHuntFlagRequestMessage(thfra.questType, thfra.index);
+                    ConnectionsHandler.getConnection().send(thfrmsg);
                     return (true);
                 case (msg is TreasureHuntFlagRemoveRequestAction):
-                    _local_50 = (msg as TreasureHuntFlagRemoveRequestAction);
-                    _local_51 = new TreasureHuntFlagRemoveRequestMessage();
-                    _local_51.initTreasureHuntFlagRemoveRequestMessage(_local_50.questType, _local_50.index);
-                    ConnectionsHandler.getConnection().send(_local_51);
+                    thfrra = (msg as TreasureHuntFlagRemoveRequestAction);
+                    thfrrmsg = new TreasureHuntFlagRemoveRequestMessage();
+                    thfrrmsg.initTreasureHuntFlagRemoveRequestMessage(thfrra.questType, thfrra.index);
+                    ConnectionsHandler.getConnection().send(thfrrmsg);
                     return (true);
                 case (msg is TreasureHuntFlagRequestAnswerMessage):
-                    _local_52 = (msg as TreasureHuntFlagRequestAnswerMessage);
-                    switch (_local_52.result)
+                    thframsg = (msg as TreasureHuntFlagRequestAnswerMessage);
+                    switch (thframsg.result)
                     {
                         case TreasureHuntFlagRequestEnum.TREASURE_HUNT_FLAG_OK:
                             break;
@@ -584,158 +1180,167 @@
                         case TreasureHuntFlagRequestEnum.TREASURE_HUNT_FLAG_TOO_MANY:
                         case TreasureHuntFlagRequestEnum.TREASURE_HUNT_FLAG_ERROR_IMPOSSIBLE:
                         case TreasureHuntFlagRequestEnum.TREASURE_HUNT_FLAG_WRONG_INDEX:
-                            _local_53 = I18n.getUiText("ui.treasureHunt.flagFail");
+                            treasureHuntFlagRequestAnswerText = I18n.getUiText("ui.treasureHunt.flagFail");
                             break;
                         case TreasureHuntFlagRequestEnum.TREASURE_HUNT_FLAG_SAME_MAP:
-                            _local_53 = I18n.getUiText("ui.treasureHunt.flagFailSameMap");
+                            treasureHuntFlagRequestAnswerText = I18n.getUiText("ui.treasureHunt.flagFailSameMap");
                             break;
                     };
-                    if (_local_53)
+                    if (treasureHuntFlagRequestAnswerText)
                     {
-                        KernelEventsManager.getInstance().processCallback(ChatHookList.TextInformation, _local_53, ChatActivableChannelsEnum.PSEUDO_CHANNEL_INFO, TimeManager.getInstance().getTimestamp());
+                        KernelEventsManager.getInstance().processCallback(ChatHookList.TextInformation, treasureHuntFlagRequestAnswerText, ChatActivableChannelsEnum.PSEUDO_CHANNEL_INFO, TimeManager.getInstance().getTimestamp());
                     };
                     return (true);
                 case (msg is TreasureHuntMessage):
-                    _local_54 = (msg as TreasureHuntMessage);
-                    if (((this._treasureHunts[_local_54.questType]) && (this._treasureHunts[_local_54.questType].stepList.length)))
+                    thmsg = (msg as TreasureHuntMessage);
+                    Atouin.getInstance().setWorldMaskDimensions((StageShareManager.startWidth + (AtouinConstants.CELL_HALF_WIDTH / 2)), FrustumManager.getInstance().frustum.marginBottom, 0, 0.7, "treasureHinting");
+                    if (DictionaryUtils.getLength(this._treasureHunts) <= 0)
                     {
-                        j = 0;
-                        for each (st in this._treasureHunts[_local_54.questType].stepList)
+                        Atouin.getInstance().toggleWorldMask("treasureHinting", true);
+                    };
+                    if (((this._treasureHunts[thmsg.questType]) && (this._treasureHunts[thmsg.questType].stepList.length)))
+                    {
+                        l = 0;
+                        for each (st in this._treasureHunts[thmsg.questType].stepList)
                         {
                             if (st.flagState > -1)
                             {
-                                j++;
-                                if (!(_local_55))
+                                l++;
+                                if (!mp)
                                 {
-                                    _local_55 = MapPosition.getMapPositionById(st.mapId);
+                                    mp = MapPosition.getMapPositionById(st.mapId);
                                 };
-                                if (_local_55.worldMap > -1)
+                                if (mp.worldMap > -1)
                                 {
-                                    KernelEventsManager.getInstance().processCallback(HookList.RemoveMapFlag, ((("flag_hunt_" + _local_54.questType) + "_") + j), _local_55.worldMap);
+                                    KernelEventsManager.getInstance().processCallback(HookList.RemoveMapFlag, ((("flag_hunt_" + thmsg.questType) + "_") + l), mp.worldMap);
                                 };
                             };
                         };
                     };
-                    _local_56 = TreasureHuntWrapper.create(_local_54.questType, _local_54.startMapId, _local_54.checkPointCurrent, _local_54.checkPointTotal, _local_54.totalStepCount, _local_54.availableRetryCount, _local_54.knownStepsList, _local_54.flags);
-                    this._treasureHunts[_local_54.questType] = _local_56;
-                    _local_57 = 0;
-                    for each (fl in _local_54.flags)
+                    th = TreasureHuntWrapper.create(thmsg.questType, thmsg.startMapId, thmsg.checkPointCurrent, thmsg.checkPointTotal, thmsg.totalStepCount, thmsg.availableRetryCount, thmsg.knownStepsList, thmsg.flags);
+                    this._treasureHunts[thmsg.questType] = th;
+                    i = 0;
+                    for each (fl in thmsg.flags)
                     {
-                        _local_57++;
-                        _local_55 = MapPosition.getMapPositionById(fl.mapId);
-                        if (_local_55.worldMap > -1)
+                        i++;
+                        mp = MapPosition.getMapPositionById(fl.mapId);
+                        if (mp.worldMap > -1)
                         {
-                            KernelEventsManager.getInstance().processCallback(HookList.AddMapFlag, ((("flag_hunt_" + _local_54.questType) + "_") + _local_57), (((((((I18n.getUiText(("ui.treasureHunt.huntType" + _local_54.questType)) + " - Indice n°") + _local_57) + " [") + _local_55.posX) + ",") + _local_55.posY) + "]"), _local_55.worldMap, _local_55.posX, _local_55.posY, this._flagColors[fl.state], false, false, false);
+                            KernelEventsManager.getInstance().processCallback(HookList.AddMapFlag, ((("flag_hunt_" + thmsg.questType) + "_") + i), (((((((I18n.getUiText(("ui.treasureHunt.huntType" + thmsg.questType)) + " - ") + I18n.getUiText("ui.treasureHunt.hint", [i])) + " [") + mp.posX) + ",") + mp.posY) + "]"), mp.worldMap, mp.posX, mp.posY, this._flagColors[fl.state], false, false, false);
                         };
                     };
-                    KernelEventsManager.getInstance().processCallback(QuestHookList.TreasureHuntUpdate, _local_56.questType);
+                    KernelEventsManager.getInstance().processCallback(QuestHookList.TreasureHuntUpdate, th.questType);
                     return (true);
                 case (msg is TreasureHuntAvailableRetryCountUpdateMessage):
-                    _local_58 = (msg as TreasureHuntAvailableRetryCountUpdateMessage);
-                    this._treasureHunts[_local_58.questType].availableRetryCount = _local_58.availableRetryCount;
-                    KernelEventsManager.getInstance().processCallback(QuestHookList.TreasureHuntAvailableRetryCountUpdate, _local_58.questType, _local_58.availableRetryCount);
+                    tharcumsg = (msg as TreasureHuntAvailableRetryCountUpdateMessage);
+                    this._treasureHunts[tharcumsg.questType].availableRetryCount = tharcumsg.availableRetryCount;
+                    KernelEventsManager.getInstance().processCallback(QuestHookList.TreasureHuntAvailableRetryCountUpdate, tharcumsg.questType, tharcumsg.availableRetryCount);
                     return (true);
                 case (msg is TreasureHuntFinishedMessage):
-                    _local_59 = (msg as TreasureHuntFinishedMessage);
-                    if (this._treasureHunts[_local_59.questType])
+                    thfmsg = (msg as TreasureHuntFinishedMessage);
+                    if (this._treasureHunts[thfmsg.questType])
                     {
-                        if (this._treasureHunts[_local_59.questType].stepList.length)
+                        if (this._treasureHunts[thfmsg.questType].stepList.length)
                         {
                             j = 0;
-                            for each (st in this._treasureHunts[_local_59.questType].stepList)
+                            for each (st in this._treasureHunts[thfmsg.questType].stepList)
                             {
                                 if (st.flagState > -1)
                                 {
                                     j++;
-                                    if (!(_local_55))
+                                    if (!mp)
                                     {
-                                        _local_55 = MapPosition.getMapPositionById(st.mapId);
+                                        mp = MapPosition.getMapPositionById(st.mapId);
                                     };
-                                    if (_local_55.worldMap > -1)
+                                    if (mp.worldMap > -1)
                                     {
-                                        KernelEventsManager.getInstance().processCallback(HookList.RemoveMapFlag, ((("flag_hunt_" + _local_59.questType) + "_") + j), _local_55.worldMap);
+                                        KernelEventsManager.getInstance().processCallback(HookList.RemoveMapFlag, ((("flag_hunt_" + thfmsg.questType) + "_") + j), mp.worldMap);
                                     };
                                 };
                             };
                         };
-                        this._treasureHunts[_local_59.questType] = null;
-                        delete this._treasureHunts[_local_59.questType];
-                        KernelEventsManager.getInstance().processCallback(QuestHookList.TreasureHuntFinished, _local_59.questType);
+                        this._treasureHunts[thfmsg.questType] = null;
+                        delete this._treasureHunts[thfmsg.questType];
+                        if (!this.hasTreasureHunt())
+                        {
+                            Atouin.getInstance().toggleWorldMask("treasureHinting", false);
+                        };
+                        KernelEventsManager.getInstance().processCallback(QuestHookList.TreasureHuntFinished, thfmsg.questType);
                     };
                     return (true);
                 case (msg is TreasureHuntGiveUpRequestAction):
-                    _local_60 = (msg as TreasureHuntGiveUpRequestAction);
-                    _local_61 = new TreasureHuntGiveUpRequestMessage();
-                    _local_61.initTreasureHuntGiveUpRequestMessage(_local_60.questType);
-                    ConnectionsHandler.getConnection().send(_local_61);
+                    thgura = (msg as TreasureHuntGiveUpRequestAction);
+                    thgurmsg = new TreasureHuntGiveUpRequestMessage();
+                    thgurmsg.initTreasureHuntGiveUpRequestMessage(thgura.questType);
+                    ConnectionsHandler.getConnection().send(thgurmsg);
                     return (true);
                 case (msg is TreasureHuntDigRequestAction):
-                    _local_62 = (msg as TreasureHuntDigRequestAction);
-                    _local_63 = new TreasureHuntDigRequestMessage();
-                    _local_63.initTreasureHuntDigRequestMessage(_local_62.questType);
-                    ConnectionsHandler.getConnection().send(_local_63);
+                    thdra = (msg as TreasureHuntDigRequestAction);
+                    thdrmsg = new TreasureHuntDigRequestMessage();
+                    thdrmsg.initTreasureHuntDigRequestMessage(thdra.questType);
+                    ConnectionsHandler.getConnection().send(thdrmsg);
                     return (true);
                 case (msg is TreasureHuntDigRequestAnswerMessage):
-                    _local_64 = (msg as TreasureHuntDigRequestAnswerMessage);
-                    if ((_local_64 is TreasureHuntDigRequestAnswerFailedMessage))
+                    thdramsg = (msg as TreasureHuntDigRequestAnswerMessage);
+                    if ((thdramsg is TreasureHuntDigRequestAnswerFailedMessage))
                     {
-                        _local_65 = (_local_64 as TreasureHuntDigRequestAnswerFailedMessage).wrongFlagCount;
+                        wrongFlagCount = (thdramsg as TreasureHuntDigRequestAnswerFailedMessage).wrongFlagCount;
                     };
-                    if (_local_64.result == TreasureHuntDigRequestEnum.TREASURE_HUNT_DIG_ERROR_IMPOSSIBLE)
+                    if (thdramsg.result == TreasureHuntDigRequestEnum.TREASURE_HUNT_DIG_ERROR_IMPOSSIBLE)
                     {
-                        _local_66 = I18n.getUiText("ui.fight.wrongMap");
+                        treasureHuntDigAnswerText = I18n.getUiText("ui.fight.wrongMap");
                     }
                     else
                     {
-                        if (_local_64.result == TreasureHuntDigRequestEnum.TREASURE_HUNT_DIG_ERROR_UNDEFINED)
+                        if (thdramsg.result == TreasureHuntDigRequestEnum.TREASURE_HUNT_DIG_ERROR_UNDEFINED)
                         {
-                            _local_66 = I18n.getUiText("ui.popup.impossible_action");
+                            treasureHuntDigAnswerText = I18n.getUiText("ui.popup.impossible_action");
                         }
                         else
                         {
-                            if (_local_64.result == TreasureHuntDigRequestEnum.TREASURE_HUNT_DIG_LOST)
+                            if (thdramsg.result == TreasureHuntDigRequestEnum.TREASURE_HUNT_DIG_LOST)
                             {
-                                _local_66 = I18n.getUiText("ui.treasureHunt.huntFail");
+                                treasureHuntDigAnswerText = I18n.getUiText("ui.treasureHunt.huntFail");
                             }
                             else
                             {
-                                if (_local_64.result == TreasureHuntDigRequestEnum.TREASURE_HUNT_DIG_NEW_HINT)
+                                if (thdramsg.result == TreasureHuntDigRequestEnum.TREASURE_HUNT_DIG_NEW_HINT)
                                 {
-                                    _local_66 = I18n.getUiText("ui.treasureHunt.stepSuccess");
+                                    treasureHuntDigAnswerText = I18n.getUiText("ui.treasureHunt.stepSuccess");
                                 }
                                 else
                                 {
-                                    if (_local_64.result == TreasureHuntDigRequestEnum.TREASURE_HUNT_DIG_WRONG)
+                                    if (thdramsg.result == TreasureHuntDigRequestEnum.TREASURE_HUNT_DIG_WRONG)
                                     {
-                                        if (_local_65 > 1)
+                                        if (wrongFlagCount > 1)
                                         {
-                                            _local_66 = I18n.getUiText("ui.treasureHunt.digWrongFlags", [_local_65]);
+                                            treasureHuntDigAnswerText = I18n.getUiText("ui.treasureHunt.digWrongFlags", [wrongFlagCount]);
                                         }
                                         else
                                         {
-                                            if (_local_65 > 0)
+                                            if (wrongFlagCount > 0)
                                             {
-                                                _local_66 = I18n.getUiText("ui.treasureHunt.digWrongFlag");
+                                                treasureHuntDigAnswerText = I18n.getUiText("ui.treasureHunt.digWrongFlag");
                                             }
                                             else
                                             {
-                                                _local_66 = I18n.getUiText("ui.treasureHunt.digFail");
+                                                treasureHuntDigAnswerText = I18n.getUiText("ui.treasureHunt.digFail");
                                             };
                                         };
                                     }
                                     else
                                     {
-                                        if (_local_64.result == TreasureHuntDigRequestEnum.TREASURE_HUNT_DIG_WRONG_AND_YOU_KNOW_IT)
+                                        if (thdramsg.result == TreasureHuntDigRequestEnum.TREASURE_HUNT_DIG_WRONG_AND_YOU_KNOW_IT)
                                         {
-                                            _local_66 = I18n.getUiText("ui.treasureHunt.noNewFlag");
+                                            treasureHuntDigAnswerText = I18n.getUiText("ui.treasureHunt.noNewFlag");
                                         }
                                         else
                                         {
-                                            if (_local_64.result == TreasureHuntDigRequestEnum.TREASURE_HUNT_DIG_FINISHED)
+                                            if (thdramsg.result == TreasureHuntDigRequestEnum.TREASURE_HUNT_DIG_FINISHED)
                                             {
-                                                if (_local_64.questType == TreasureHuntTypeEnum.TREASURE_HUNT_CLASSIC)
+                                                if (thdramsg.questType == TreasureHuntTypeEnum.TREASURE_HUNT_CLASSIC)
                                                 {
-                                                    _local_66 = I18n.getUiText("ui.treasureHunt.huntSuccess");
+                                                    treasureHuntDigAnswerText = I18n.getUiText("ui.treasureHunt.huntSuccess");
                                                 };
                                             };
                                         };
@@ -744,9 +1349,9 @@
                             };
                         };
                     };
-                    if (_local_66)
+                    if (treasureHuntDigAnswerText)
                     {
-                        KernelEventsManager.getInstance().processCallback(ChatHookList.TextInformation, _local_66, ChatActivableChannelsEnum.PSEUDO_CHANNEL_INFO, TimeManager.getInstance().getTimestamp());
+                        KernelEventsManager.getInstance().processCallback(ChatHookList.TextInformation, treasureHuntDigAnswerText, ChatActivableChannelsEnum.PSEUDO_CHANNEL_INFO, TimeManager.getInstance().getTimestamp());
                     };
                     return (true);
             };
@@ -758,7 +1363,140 @@
             return (true);
         }
 
+        private function hasTreasureHunt():Boolean
+        {
+            var key:*;
+            for (key in this._treasureHunts)
+            {
+                if (key != null)
+                {
+                    return (true);
+                };
+            };
+            return (false);
+        }
+
+        private function getCurrentSeason():ServerTemporisSeason
+        {
+            var season:ServerTemporisSeason;
+            var allSeason:Array = ServerTemporisSeason.getAllSeason();
+            var currentDate:Date = new Date();
+            for each (season in allSeason)
+            {
+                if (((currentDate.getTime() >= season.beginning) && (currentDate.getTime() <= season.closure)))
+                {
+                    return (season);
+                };
+            };
+            return (null);
+        }
+
+        public function processAchievements(resetRewards:Boolean=false):void
+        {
+            var ach:Achievement;
+            var achievedAchievement:AchievementAchieved;
+            var sa:SubArea;
+            var doesRewardsUiNeedOpeningValue:Boolean;
+            PlayerManager.getInstance().serverSeason = ((PlayerManager.getInstance().server.gameTypeId == GameServerTypeEnum.SERVER_TYPE_TEMPORIS) ? this.getCurrentSeason() : null);
+            var playerAchievementsCount:int;
+            var accountAchievementsCount:int;
+            var playerPoints:int;
+            var accountPoints:int;
+            var achievementDone:Dictionary = new Dictionary();
+            this._finishedAchievements = new Vector.<AchievementAchieved>();
+            this._finishedCharacterAchievementIds = [];
+            if (resetRewards)
+            {
+                this._rewardableAchievements = new Vector.<AchievementAchievedRewardable>();
+            };
+            for each (achievedAchievement in this._achievementsList.finishedAchievements)
+            {
+                ach = Achievement.getAchievementById(achievedAchievement.id);
+                if (((((!(ach == null)) && (ach)) && (ach.category)) && (ach.category.visible)))
+                {
+                    if (((achievedAchievement is AchievementAchievedRewardable) && (this._rewardableAchievements.indexOf(achievedAchievement) === -1)))
+                    {
+                        this._rewardableAchievements.push(achievedAchievement);
+                    };
+                    if (this._finishedAchievements.indexOf(achievedAchievement) === -1)
+                    {
+                        this._finishedAchievements.push(achievedAchievement);
+                    };
+                    accountPoints = (accountPoints + ach.points);
+                    accountAchievementsCount++;
+                    if (this._finishedAccountAchievementIds.indexOf(ach.id) == -1)
+                    {
+                        this._finishedAccountAchievementIds.push(ach.id);
+                    };
+                    if (achievedAchievement.achievedBy == PlayedCharacterManager.getInstance().id)
+                    {
+                        playerPoints = (playerPoints + ach.points);
+                        playerAchievementsCount++;
+                        this._finishedCharacterAchievementIds.push(ach.id);
+                    };
+                    achievementDone[achievedAchievement.id] = true;
+                }
+                else
+                {
+                    if (ach == null)
+                    {
+                        _log.warn((("Succés " + achievedAchievement.id) + " non exporté"));
+                    };
+                };
+            };
+            for each (sa in SubArea.getAllSubArea())
+            {
+                sa.isDiscovered = achievementDone[sa.exploreAchievementId];
+            };
+            PlayedCharacterManager.getInstance().achievementPercent = Math.floor(((playerAchievementsCount / this._nbAllAchievements) * 100));
+            PlayedCharacterManager.getInstance().achievementPoints = playerPoints;
+            AccountManager.getInstance().achievementPercent = Math.floor(((accountAchievementsCount / this._nbAllAchievements) * 100));
+            AccountManager.getInstance().achievementPoints = accountPoints;
+            KernelEventsManager.getInstance().processCallback(QuestHookList.AchievementList);
+            doesRewardsUiNeedOpeningValue = this.doesRewardsUiNeedOpening();
+            if (((!(this._rewardableAchievementsVisible)) && (doesRewardsUiNeedOpeningValue)))
+            {
+                this._rewardableAchievementsVisible = true;
+                KernelEventsManager.getInstance().processCallback(QuestHookList.RewardableAchievementsVisible, this._rewardableAchievementsVisible);
+            };
+            if (((this._rewardableAchievementsVisible) && (!(doesRewardsUiNeedOpeningValue))))
+            {
+                this._rewardableAchievementsVisible = false;
+                KernelEventsManager.getInstance().processCallback(QuestHookList.RewardableAchievementsVisible, this._rewardableAchievementsVisible);
+            };
+            this._achievementsListProcessed = true;
+        }
+
+        private function doesRewardsUiNeedOpening():Boolean
+        {
+            var rewardable:AchievementAchievedRewardable;
+            var achievement:Achievement;
+            var category:AchievementCategory;
+            for each (rewardable in this._rewardableAchievements)
+            {
+                if (rewardable === null)
+                {
+                }
+                else
+                {
+                    achievement = Achievement.getAchievementById(rewardable.id);
+                    if (achievement === null)
+                    {
+                    }
+                    else
+                    {
+                        category = achievement.category;
+                        if (((!(category === null)) && (!(category.id === TEMPORIS_4_CATEGORY))))
+                        {
+                            return (true);
+                        };
+                    };
+                };
+            };
+            return (false);
+        }
+
 
     }
-}//package com.ankamagames.dofus.logic.game.common.frames
+} com.ankamagames.dofus.logic.game.common.frames
 

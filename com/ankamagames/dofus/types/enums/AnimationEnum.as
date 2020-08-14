@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.types.enums
+package com.ankamagames.dofus.types.enums
 {
     public class AnimationEnum 
     {
@@ -24,8 +24,10 @@
         public static const ANIM_THROW:String = "AnimThrow";
         public static const ANIM_VANISH:String = "AnimVanish";
         public static const ANIM_STATIQUE_RANDOM:String = "AnimStatiqueRandom";
+        public static const ANIM_MARCHE_UNDERWATER:String = "AnimNageMarche";
+        public static const ANIM_COURSE_UNDERWATER:String = "AnimNageCourse";
 
 
     }
-}//package com.ankamagames.dofus.types.enums
+} com.ankamagames.dofus.types.enums
 

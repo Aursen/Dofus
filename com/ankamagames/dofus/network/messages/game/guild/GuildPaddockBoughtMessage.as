@@ -1,27 +1,23 @@
-﻿package com.ankamagames.dofus.network.messages.game.guild
+package com.ankamagames.dofus.network.messages.game.guild
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
     import com.ankamagames.dofus.network.types.game.paddock.PaddockContentInformations;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
 
-    [Trusted]
     public class GuildPaddockBoughtMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 5952;
 
         private var _isInitialized:Boolean = false;
-        public var paddockInfo:PaddockContentInformations;
+        public var paddockInfo:PaddockContentInformations = new PaddockContentInformations();
+        private var _paddockInfotree:FuncTree;
 
-        public function GuildPaddockBoughtMessage()
-        {
-            this.paddockInfo = new PaddockContentInformations();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
@@ -58,6 +54,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_GuildPaddockBoughtMessage(output);
@@ -79,7 +83,23 @@
             this.paddockInfo.deserialize(input);
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GuildPaddockBoughtMessage(tree);
+        }
+
+        public function deserializeAsyncAs_GuildPaddockBoughtMessage(tree:FuncTree):void
+        {
+            this._paddockInfotree = tree.addChild(this._paddockInfotreeFunc);
+        }
+
+        private function _paddockInfotreeFunc(input:ICustomDataInput):void
+        {
+            this.paddockInfo = new PaddockContentInformations();
+            this.paddockInfo.deserializeAsync(this._paddockInfotree);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.guild
+} com.ankamagames.dofus.network.messages.game.guild
 

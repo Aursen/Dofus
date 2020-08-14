@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.character.deletion
+package com.ankamagames.dofus.network.messages.game.character.deletion
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,15 +6,15 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class CharacterDeletionRequestMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 165;
 
         private var _isInitialized:Boolean = false;
-        public var characterId:uint = 0;
+        public var characterId:Number = 0;
         public var secretAnswerHash:String = "";
 
 
@@ -28,7 +28,7 @@
             return (165);
         }
 
-        public function initCharacterDeletionRequestMessage(characterId:uint=0, secretAnswerHash:String=""):CharacterDeletionRequestMessage
+        public function initCharacterDeletionRequestMessage(characterId:Number=0, secretAnswerHash:String=""):CharacterDeletionRequestMessage
         {
             this.characterId = characterId;
             this.secretAnswerHash = secretAnswerHash;
@@ -55,6 +55,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_CharacterDeletionRequestMessage(output);
@@ -62,11 +70,11 @@
 
         public function serializeAs_CharacterDeletionRequestMessage(output:ICustomDataOutput):void
         {
-            if (this.characterId < 0)
+            if (((this.characterId < 0) || (this.characterId > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.characterId) + ") on element characterId.")));
             };
-            output.writeInt(this.characterId);
+            output.writeVarLong(this.characterId);
             output.writeUTF(this.secretAnswerHash);
         }
 
@@ -77,15 +85,36 @@
 
         public function deserializeAs_CharacterDeletionRequestMessage(input:ICustomDataInput):void
         {
-            this.characterId = input.readInt();
-            if (this.characterId < 0)
+            this._characterIdFunc(input);
+            this._secretAnswerHashFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_CharacterDeletionRequestMessage(tree);
+        }
+
+        public function deserializeAsyncAs_CharacterDeletionRequestMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._characterIdFunc);
+            tree.addChild(this._secretAnswerHashFunc);
+        }
+
+        private function _characterIdFunc(input:ICustomDataInput):void
+        {
+            this.characterId = input.readVarUhLong();
+            if (((this.characterId < 0) || (this.characterId > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.characterId) + ") on element of CharacterDeletionRequestMessage.characterId.")));
             };
+        }
+
+        private function _secretAnswerHashFunc(input:ICustomDataInput):void
+        {
             this.secretAnswerHash = input.readUTF();
         }
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.character.deletion
+} com.ankamagames.dofus.network.messages.game.character.deletion
 

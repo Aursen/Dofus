@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.chat.smiley
+package com.ankamagames.dofus.network.messages.game.chat.smiley
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class MoodSmileyResultMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -15,7 +15,7 @@
 
         private var _isInitialized:Boolean = false;
         public var resultCode:uint = 1;
-        public var smileyId:int = 0;
+        public var smileyId:uint = 0;
 
 
         override public function get isInitialized():Boolean
@@ -28,7 +28,7 @@
             return (6196);
         }
 
-        public function initMoodSmileyResultMessage(resultCode:uint=1, smileyId:int=0):MoodSmileyResultMessage
+        public function initMoodSmileyResultMessage(resultCode:uint=1, smileyId:uint=0):MoodSmileyResultMessage
         {
             this.resultCode = resultCode;
             this.smileyId = smileyId;
@@ -55,6 +55,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_MoodSmileyResultMessage(output);
@@ -63,7 +71,11 @@
         public function serializeAs_MoodSmileyResultMessage(output:ICustomDataOutput):void
         {
             output.writeByte(this.resultCode);
-            output.writeByte(this.smileyId);
+            if (this.smileyId < 0)
+            {
+                throw (new Error((("Forbidden value (" + this.smileyId) + ") on element smileyId.")));
+            };
+            output.writeVarShort(this.smileyId);
         }
 
         public function deserialize(input:ICustomDataInput):void
@@ -73,15 +85,40 @@
 
         public function deserializeAs_MoodSmileyResultMessage(input:ICustomDataInput):void
         {
+            this._resultCodeFunc(input);
+            this._smileyIdFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_MoodSmileyResultMessage(tree);
+        }
+
+        public function deserializeAsyncAs_MoodSmileyResultMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._resultCodeFunc);
+            tree.addChild(this._smileyIdFunc);
+        }
+
+        private function _resultCodeFunc(input:ICustomDataInput):void
+        {
             this.resultCode = input.readByte();
             if (this.resultCode < 0)
             {
                 throw (new Error((("Forbidden value (" + this.resultCode) + ") on element of MoodSmileyResultMessage.resultCode.")));
             };
-            this.smileyId = input.readByte();
+        }
+
+        private function _smileyIdFunc(input:ICustomDataInput):void
+        {
+            this.smileyId = input.readVarUhShort();
+            if (this.smileyId < 0)
+            {
+                throw (new Error((("Forbidden value (" + this.smileyId) + ") on element of MoodSmileyResultMessage.smileyId.")));
+            };
         }
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.chat.smiley
+} com.ankamagames.dofus.network.messages.game.chat.smiley
 

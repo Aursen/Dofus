@@ -1,41 +1,42 @@
-﻿package com.ankamagames.berilia.api
+package com.ankamagames.berilia.api
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
     import flash.utils.Dictionary;
-    import com.ankamagames.jerakine.utils.misc.DescribeTypeCache;
+    import __AS3__.vec.Vector;
+    import com.ankamagames.jerakine.utils.misc.classInfo.MetadataInfo;
     import com.ankamagames.berilia.managers.UiModuleManager;
+    import com.ankamagames.jerakine.utils.misc.DescribeTypeCache;
     import com.ankamagames.berilia.utils.errors.ApiError;
     import com.ankamagames.berilia.types.data.UiModule;
-    import com.ankamagames.berilia.managers.SecureCenter;
-    import flash.system.ApplicationDomain;
-    import com.ankamagames.jerakine.utils.misc.CallWithParameters;
 
     public class ApiBinder 
     {
 
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(ApiBinder));
-        private static var _apiClass:Array = new Array();
-        private static var _apiInstance:Array = new Array();
-        private static var _apiData:Array = new Array();
-        private static var _isComplexFctCache:Dictionary = new Dictionary();
+        private static var _apiClass:Dictionary = new Dictionary();
+        private static var _apiInstance:Dictionary = new Dictionary();
+        private static var _apiData:Dictionary = new Dictionary();
+        private static var _apiDataTagsCache:Dictionary = new Dictionary();
+        private static var _apiConfigurationsCache:Dictionary = new Dictionary();
 
 
         public static function addApi(name:String, apiClass:Class):void
         {
-            _apiClass[name] = apiClass;
+            var className:String = getQualifiedClassName(apiClass);
+            _apiClass[className.substring((className.indexOf("::") + 2))] = apiClass;
         }
 
-        public static function removeApi(name:String):void
+        public static function removeApi(apiClass:Class):void
         {
-            delete _apiClass[name];
+            _apiClass[getQualifiedClassName(apiClass)] = null;
         }
 
         public static function reset():void
         {
-            _apiInstance = [];
-            _apiData = [];
+            _apiInstance = new Dictionary();
+            _apiData = new Dictionary();
         }
 
         public static function addApiData(name:String, value:*):void
@@ -43,7 +44,7 @@
             _apiData[name] = value;
         }
 
-        public static function getApiData(name:String)
+        public static function getApiData(name:String):*
         {
             return (_apiData[name]);
         }
@@ -53,225 +54,161 @@
             _apiData[name] = null;
         }
 
-        public static function initApi(target:Object, module:UiModule, sharedDefinition:ApplicationDomain=null):String
+        public static function initApi(target:Object, module:UiModule):void
         {
             var api:Object;
-            var metaTag:XML;
-            var metaData:*;
-            var apiName:String;
+            var configCache:ApiConfigurationCache;
+            var tuple:Vector.<String>;
+            var cache:ApiConfigurationCache;
+            var variables:Vector.<String>;
+            var varDecl:String;
+            var metaData:MetadataInfo;
             var modName:String;
+            var apiName:String;
             addApiData("module", module);
-            var desc:XML = DescribeTypeCache.typeDescription(target);
-            for each (metaTag in desc..variable)
+            var targetClassName:String = getQualifiedClassName(target);
+            if (_apiConfigurationsCache[targetClassName])
             {
-                for each (metaData in metaTag.metadata)
+                configCache = _apiConfigurationsCache[targetClassName];
+                for each (tuple in configCache.apisToBind)
                 {
-                    if ((((metaData.@name == "Module")) && (!(UiModuleManager.getInstance().getModules()[metaData.arg.@value]))))
+                    api = getApiInstance(tuple[1]);
+                    if (module.apiList.indexOf(api) == -1)
                     {
-                        return (metaData.arg.@value);
+                        module.apiList.push(api);
                     };
+                    target[tuple[0]] = api;
                 };
-                if (metaTag.@type.toString().indexOf("d2api::") == 0)
+                for each (tuple in configCache.modulesToBind)
                 {
-                    apiName = metaTag.@type.toString();
-                    apiName = apiName.substr(7, (apiName.length - 10));
-                    api = getApiInstance(apiName, module.trusted, sharedDefinition);
-                    module.apiList.push(api);
-                    target[metaTag.@name] = api;
-                }
-                else
+                    target[tuple[0]] = UiModuleManager.getInstance().getModule(tuple[1]).mainClass;
+                };
+            }
+            else
+            {
+                cache = new ApiConfigurationCache();
+                _apiConfigurationsCache[targetClassName] = cache;
+                variables = DescribeTypeCache.getVariables(target, true);
+                for each (varDecl in variables)
                 {
-                    for each (metaData in metaTag.metadata)
+                    for each (metaData in DescribeTypeCache.getVariableMetadata(target, varDecl))
                     {
-                        if (metaData.@name == "Api")
+                        if (((metaData) && (metaData.name == "Module")))
                         {
-                            if (metaData.arg.@key == "name")
+                            modName = metaData.args["name"];
+                            if (modName)
                             {
-                                api = getApiInstance(metaData.arg.@value, module.trusted, sharedDefinition);
-                                module.apiList.push(api);
-                                target[metaTag.@name] = api;
-                            }
-                            else
-                            {
-                                throw (new ApiError((((module.id + ' module, unknow property "') + metaTag..metadata.arg.@key) + '" in Api tag')));
-                            };
-                        };
-                        if (metaData.@name == "Module")
-                        {
-                            if (metaData.arg.@key == "name")
-                            {
-                                modName = metaData.arg.@value;
-                                if (!(UiModuleManager.getInstance().getModules()[modName]))
+                                if (!UiModuleManager.getInstance().getModules()[modName])
                                 {
                                     throw (new ApiError((((("Module " + modName) + " does not exist (in ") + module.id) + ")")));
                                 };
-                                if (((((((module.trusted) || ((modName == "Ankama_Common")))) || ((modName == "Ankama_ContextMenu")))) || (!(UiModuleManager.getInstance().getModules()[modName].trusted))))
+                                target[varDecl] = UiModuleManager.getInstance().getModule(modName).mainClass;
+                                cache.modulesToBind.push(new <String>[varDecl, modName]);
+                            };
+                        };
+                        if (((metaData) && (metaData.name == "Api")))
+                        {
+                            apiName = metaData.args["name"];
+                            if (apiName)
+                            {
+                                if (!_apiClass[apiName])
                                 {
-                                    target[metaTag.@name] = new ModuleReference(UiModule(UiModuleManager.getInstance().getModules()[modName]).mainClass, SecureCenter.ACCESS_KEY);
-                                }
-                                else
-                                {
-                                    throw (new ApiError(((module.id + ", untrusted module cannot acces to trusted modules ") + modName)));
+                                    throw (new ApiError((("Api " + apiName) + " does not exist")));
                                 };
-                            }
-                            else
-                            {
-                                throw (new ApiError((((module.id + ' module, unknow property "') + metaData.arg.@key) + '" in Api tag')));
+                                api = getApiInstance(apiName);
+                                if (module.apiList.indexOf(api) == -1)
+                                {
+                                    module.apiList.push(api);
+                                };
+                                target[varDecl] = api;
+                                cache.apisToBind.push(new <String>[varDecl, apiName]);
                             };
                         };
                     };
                 };
             };
-            return (null);
         }
 
-        private static function getApiInstance(name:String, trusted:Boolean, sharedDefinition:ApplicationDomain):Object
+        public static function getApiInstance(name:String):Object
         {
-            var apiDesc:XML;
-            var api:Object;
-            var apiRef:* = undefined;
-            var instancied:Boolean;
-            var meta:XML;
-            var tag:String;
-            var help:String;
-            var boxing:Boolean;
-            var method:XML;
-            var accessor:XML;
-            var metaData:XML;
-            var metaData2:* = undefined;
-            if (((_apiInstance[name]) && (_apiInstance[name][trusted])))
+            var keyVal:Vector.<String>;
+            if (_apiInstance[name])
             {
-                return (_apiInstance[name][trusted]);
+                return (_apiInstance[name]);
             };
-            if (_apiClass[name])
+            if (!_apiClass[name])
             {
-                apiDesc = DescribeTypeCache.typeDescription(_apiClass[name]);
-                api = new ((sharedDefinition.getDefinition((("d2api::" + name) + "Api")) as Class))();
-                apiRef = _apiClass[name];
-                instancied = false;
-                for each (meta in apiDesc..metadata)
-                {
-                    if (meta.@name == "InstanciedApi")
-                    {
-                        apiRef = new (_apiClass[name])();
-                        instancied = true;
-                        break;
-                    };
-                };
-                for each (method in apiDesc..method)
-                {
-                    boxing = true;
-                    for each (metaData in method.metadata)
-                    {
-                        if ((((((metaData.@name == "Untrusted")) || ((metaData.@name == "Trusted")))) || ((metaData.@name == "Deprecated"))))
-                        {
-                            tag = metaData.@name;
-                            if (metaData.@name == "Deprecated")
-                            {
-                                help = metaData.arg.(@key == "help").@value;
-                            };
-                        };
-                        if (metaData.@name == "NoBoxing")
-                        {
-                            boxing = false;
-                        };
-                    };
-                    if (((((!((tag == "Untrusted"))) && (!((tag == "Trusted"))))) && (!((tag == "Deprecated")))))
-                    {
-                        throw (new ApiError(((('Missing tag [Untrusted / Trusted] before function "' + method.@name) + '" in ') + _apiClass[name])));
-                    };
-                    if ((((tag == "Untrusted")) || ((((((tag == "Trusted")) || ((tag == "Deprecated")))) && (trusted)))))
-                    {
-                        if (tag == "Deprecated")
-                        {
-                            api[method.@name] = createDepreciatedMethod(apiRef[method.@name], method.@name, help);
-                        }
-                        else
-                        {
-                            if (((boxing) && (!(isComplexFct(method)))))
-                            {
-                                api[method.@name] = SecureCenter.secure(apiRef[method.@name]);
-                            }
-                            else
-                            {
-                                api[method.@name] = apiRef[method.@name];
-                            };
-                        };
-                    }
-                    else
-                    {
-                        api[method.@name] = GenericApiFunction.getRestrictedFunctionAccess(apiRef[method.@name]);
-                    };
-                };
-                for each (accessor in apiDesc..accessor)
-                {
-                    for each (metaData2 in accessor.metadata)
-                    {
-                        if (metaData2.@name == "ApiData")
-                        {
-                            apiRef[accessor.@name] = _apiData[metaData2.arg.@value];
-                            break;
-                        };
-                    };
-                };
-                if (!(instancied))
-                {
-                    if (!(_apiInstance[name]))
-                    {
-                        _apiInstance[name] = new Array();
-                    };
-                    _apiInstance[name][trusted] = api;
-                };
-                return (api);
+                _log.error((("Api [" + name) + "] is not available"));
+                return (null);
             };
-            _log.error((("Api [" + name) + "] is not avaible"));
-            return (null);
-        }
-
-        private static function isComplexFct(methodDesc:XML):Boolean
-        {
-            var paramType:String;
-            var cacheKey:String = ((methodDesc.@declaredBy + "_") + methodDesc.@name);
-            if (_isComplexFctCache[cacheKey] != null)
+            var descCache:ApiDataTagCache = _apiDataTagsCache[name];
+            if (!descCache)
             {
-                return (_isComplexFctCache[cacheKey]);
+                descCache = new ApiDataTagCache(_apiClass[name]);
+                _apiDataTagsCache[name] = descCache;
             };
-            var simpleType:Array = ["int", "uint", "Number", "Boolean", "String", "void"];
-            if (simpleType.indexOf(methodDesc.@returnType.toString()) == -1)
+            var api:Object = new ((_apiClass[name] as Class))();
+            for each (keyVal in descCache.tags)
             {
-                _isComplexFctCache[cacheKey] = false;
-                return (false);
+                api[keyVal[0]] = _apiData[keyVal[1]];
             };
-            for each (paramType in methodDesc..parameter..@type)
+            if (!descCache.isInstancied)
             {
-                if (simpleType.indexOf(paramType) == -1)
-                {
-                    _isComplexFctCache[cacheKey] = false;
-                    return (false);
-                };
+                _apiInstance[name] = api;
             };
-            _isComplexFctCache[cacheKey] = true;
-            return (true);
-        }
-
-        private static function createDepreciatedMethod(fct:Function, fctName:String, help:String):Function
-        {
-            return (function (... args)
-            {
-                var e:* = new Error();
-                if (e.getStackTrace())
-                {
-                    _log.fatal((((fctName + " is a deprecated api function, called at ") + e.getStackTrace().split("at ")[2]) + ((help.length) ? (help + "\n") : "")));
-                }
-                else
-                {
-                    _log.fatal((fctName + " is a deprecated api function. No stack trace available"));
-                };
-                return (CallWithParameters.callR(fct, args));
-            });
+            return (api);
         }
 
 
     }
-}//package com.ankamagames.berilia.api
+} com.ankamagames.berilia.api
+
+import __AS3__.vec.Vector;
+import com.ankamagames.jerakine.utils.misc.classInfo.MetadataInfo;
+import com.ankamagames.jerakine.utils.misc.DescribeTypeCache;
+import __AS3__.vec.*;
+
+class ApiConfigurationCache 
+{
+
+    public var apisToBind:Vector.<Vector.<String>> = new Vector.<Vector.<String>>();
+    public var modulesToBind:Vector.<Vector.<String>> = new Vector.<Vector.<String>>();
+
+
+}
+
+class ApiDataTagCache 
+{
+
+    public var isInstancied:Boolean = false;
+    public var tags:Vector.<Vector.<String>> = new Vector.<Vector.<String>>();
+
+    public function ApiDataTagCache(apiClass:Class)
+    {
+        var tag:MetadataInfo;
+        var accessor:String;
+        var accessorMetadata:MetadataInfo;
+        super();
+        for each (tag in DescribeTypeCache.getMetadata(apiClass))
+        {
+            if (tag.name == "InstanciedApi")
+            {
+                this.isInstancied = true;
+                break;
+            };
+        };
+        for each (accessor in DescribeTypeCache.getAccessors(apiClass))
+        {
+            for each (accessorMetadata in DescribeTypeCache.getVariableMetadata(apiClass, accessor))
+            {
+                if (accessorMetadata.name == "ApiData")
+                {
+                    this.tags.push(new <String>[accessor, accessorMetadata.args["name"]]);
+                };
+            };
+        };
+    }
+
+}
+
 

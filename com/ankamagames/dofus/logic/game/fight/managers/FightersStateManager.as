@@ -1,9 +1,11 @@
-﻿package com.ankamagames.dofus.logic.game.fight.managers
+package com.ankamagames.dofus.logic.game.fight.managers
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
     import flash.utils.Dictionary;
+    import com.ankamagames.dofus.datacenter.spells.SpellState;
+    import com.ankamagames.dofus.logic.game.fight.types.FighterStatus;
 
     public class FightersStateManager 
     {
@@ -11,17 +13,12 @@
         private static const _log:Logger = Log.getLogger(getQualifiedClassName(FightersStateManager));
         private static var _self:FightersStateManager;
 
-        private var _entityStates:Dictionary;
+        private var _entityStates:Dictionary = new Dictionary();
 
-        public function FightersStateManager()
-        {
-            this._entityStates = new Dictionary();
-            super();
-        }
 
         public static function getInstance():FightersStateManager
         {
-            if (!(_self))
+            if (!_self)
             {
                 _self = new (FightersStateManager)();
             };
@@ -29,45 +26,127 @@
         }
 
 
-        public function addStateOnTarget(stateId:int, targetId:int):void
+        public function addStateOnTarget(targetId:Number, stateId:int, delta:int=1):void
         {
-            var stateList:Array = this._entityStates[targetId];
-            if (!(stateList))
+            if (!this._entityStates[targetId])
             {
-                stateList = new Array();
-                this._entityStates[targetId] = stateList;
+                this._entityStates[targetId] = new Dictionary();
             };
-            stateList.push(stateId);
+            if (!this._entityStates[targetId][stateId])
+            {
+                this._entityStates[targetId][stateId] = delta;
+            }
+            else
+            {
+                this._entityStates[targetId][stateId] = (this._entityStates[targetId][stateId] + delta);
+            };
         }
 
-        public function removeStateOnTarget(stateId:int, targetId:int):void
+        public function removeStateOnTarget(targetId:Number, stateId:int, delta:int=1):void
         {
-            var stateList:Array = this._entityStates[targetId];
-            if (!(stateList))
+            if (!this._entityStates[targetId])
             {
                 _log.error((("Can't find state list for " + targetId) + " to remove state"));
                 return;
             };
-            var index:int = stateList.indexOf(stateId);
-            if (index != -1)
+            if (this._entityStates[targetId][stateId])
             {
-                stateList.splice(index, 1);
+                this._entityStates[targetId][stateId] = (this._entityStates[targetId][stateId] - delta);
+                if (this._entityStates[targetId][stateId] == 0)
+                {
+                    delete this._entityStates[targetId][stateId];
+                };
             };
         }
 
-        public function hasState(targetId:int, stateId:int):Boolean
+        public function hasState(targetId:Number, stateId:int):Boolean
         {
-            var stateList:Array = this._entityStates[targetId];
-            if (!(stateList))
+            if (((!(this._entityStates[targetId])) || (!(this._entityStates[targetId][stateId]))))
             {
                 return (false);
             };
-            return (!((stateList.indexOf(stateId) == -1)));
+            return (this._entityStates[targetId][stateId] > 0);
         }
 
-        public function getStates(targetId:int):Array
+        public function getStates(targetId:Number):Array
         {
-            return (this._entityStates[targetId]);
+            var stateId:*;
+            var states:Array = new Array();
+            if (!this._entityStates[targetId])
+            {
+                return (states);
+            };
+            for (stateId in this._entityStates[targetId])
+            {
+                if (this._entityStates[targetId][stateId] > 0)
+                {
+                    states.push(stateId);
+                };
+            };
+            return (states);
+        }
+
+        public function getStatus(targetId:Number):FighterStatus
+        {
+            var stateId:*;
+            var state:SpellState;
+            var fighterstatus:FighterStatus = new FighterStatus();
+            for (stateId in this._entityStates[targetId])
+            {
+                state = SpellState.getSpellStateById(stateId);
+                if (((state) && (this._entityStates[targetId][stateId] > 0)))
+                {
+                    if (state.preventsSpellCast)
+                    {
+                        fighterstatus.cantUseSpells = true;
+                    };
+                    if (state.preventsFight)
+                    {
+                        fighterstatus.cantUseCloseQuarterAttack = true;
+                    };
+                    if (state.cantDealDamage)
+                    {
+                        fighterstatus.cantDealDamage = true;
+                    };
+                    if (state.invulnerable)
+                    {
+                        fighterstatus.invulnerable = true;
+                    };
+                    if (state.incurable)
+                    {
+                        fighterstatus.incurable = true;
+                    };
+                    if (state.cantBeMoved)
+                    {
+                        fighterstatus.cantBeMoved = true;
+                    };
+                    if (state.cantBePushed)
+                    {
+                        fighterstatus.cantBePushed = true;
+                    };
+                    if (state.cantSwitchPosition)
+                    {
+                        fighterstatus.cantSwitchPosition = true;
+                    };
+                    if (state.invulnerableMelee)
+                    {
+                        fighterstatus.invulnerableMelee = true;
+                    };
+                    if (state.invulnerableRange)
+                    {
+                        fighterstatus.invulnerableRange = true;
+                    };
+                    if (state.cantTackle)
+                    {
+                        fighterstatus.cantTackle = true;
+                    };
+                    if (state.cantBeTackled)
+                    {
+                        fighterstatus.cantBeTackled = true;
+                    };
+                };
+            };
+            return (fighterstatus);
         }
 
         public function endFight():void
@@ -77,5 +156,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.fight.managers
+} com.ankamagames.dofus.logic.game.fight.managers
 

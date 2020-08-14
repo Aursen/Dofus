@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.inventory.items
+package com.ankamagames.dofus.network.messages.game.inventory.items
 {
     import com.ankamagames.dofus.network.messages.game.inventory.exchanges.ExchangeObjectMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,20 +6,20 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class ExchangeKamaModifiedMessage extends ExchangeObjectMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 5521;
 
         private var _isInitialized:Boolean = false;
-        public var quantity:uint = 0;
+        public var quantity:Number = 0;
 
 
         override public function get isInitialized():Boolean
         {
-            return (((super.isInitialized) && (this._isInitialized)));
+            return ((super.isInitialized) && (this._isInitialized));
         }
 
         override public function getMessageId():uint
@@ -27,7 +27,7 @@
             return (5521);
         }
 
-        public function initExchangeKamaModifiedMessage(remote:Boolean=false, quantity:uint=0):ExchangeKamaModifiedMessage
+        public function initExchangeKamaModifiedMessage(remote:Boolean=false, quantity:Number=0):ExchangeKamaModifiedMessage
         {
             super.initExchangeObjectMessage(remote);
             this.quantity = quantity;
@@ -54,6 +54,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         override public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_ExchangeKamaModifiedMessage(output);
@@ -62,11 +70,11 @@
         public function serializeAs_ExchangeKamaModifiedMessage(output:ICustomDataOutput):void
         {
             super.serializeAs_ExchangeObjectMessage(output);
-            if (this.quantity < 0)
+            if (((this.quantity < 0) || (this.quantity > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.quantity) + ") on element quantity.")));
             };
-            output.writeVarInt(this.quantity);
+            output.writeVarLong(this.quantity);
         }
 
         override public function deserialize(input:ICustomDataInput):void
@@ -77,8 +85,24 @@
         public function deserializeAs_ExchangeKamaModifiedMessage(input:ICustomDataInput):void
         {
             super.deserialize(input);
-            this.quantity = input.readVarUhInt();
-            if (this.quantity < 0)
+            this._quantityFunc(input);
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_ExchangeKamaModifiedMessage(tree);
+        }
+
+        public function deserializeAsyncAs_ExchangeKamaModifiedMessage(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._quantityFunc);
+        }
+
+        private function _quantityFunc(input:ICustomDataInput):void
+        {
+            this.quantity = input.readVarUhLong();
+            if (((this.quantity < 0) || (this.quantity > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.quantity) + ") on element of ExchangeKamaModifiedMessage.quantity.")));
             };
@@ -86,5 +110,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.inventory.items
+} com.ankamagames.dofus.network.messages.game.inventory.items
 

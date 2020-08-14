@@ -1,27 +1,23 @@
-﻿package com.ankamagames.dofus.network.messages.game.inventory.exchanges
+package com.ankamagames.dofus.network.messages.game.inventory.exchanges
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
     import com.ankamagames.dofus.network.types.game.data.items.ObjectItemToSellInBid;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
 
-    [Trusted]
     public class ExchangeBidHouseItemAddOkMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 5945;
 
         private var _isInitialized:Boolean = false;
-        public var itemInfo:ObjectItemToSellInBid;
+        public var itemInfo:ObjectItemToSellInBid = new ObjectItemToSellInBid();
+        private var _itemInfotree:FuncTree;
 
-        public function ExchangeBidHouseItemAddOkMessage()
-        {
-            this.itemInfo = new ObjectItemToSellInBid();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
@@ -58,6 +54,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_ExchangeBidHouseItemAddOkMessage(output);
@@ -79,7 +83,23 @@
             this.itemInfo.deserialize(input);
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_ExchangeBidHouseItemAddOkMessage(tree);
+        }
+
+        public function deserializeAsyncAs_ExchangeBidHouseItemAddOkMessage(tree:FuncTree):void
+        {
+            this._itemInfotree = tree.addChild(this._itemInfotreeFunc);
+        }
+
+        private function _itemInfotreeFunc(input:ICustomDataInput):void
+        {
+            this.itemInfo = new ObjectItemToSellInBid();
+            this.itemInfo.deserializeAsync(this._itemInfotree);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.inventory.exchanges
+} com.ankamagames.dofus.network.messages.game.inventory.exchanges
 

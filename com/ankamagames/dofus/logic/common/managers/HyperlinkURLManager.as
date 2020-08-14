@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.common.managers
+package com.ankamagames.dofus.logic.common.managers
 {
     import flash.net.navigateToURL;
     import flash.net.URLRequest;
@@ -39,5 +39,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.common.managers
+} com.ankamagames.dofus.logic.common.managers
 

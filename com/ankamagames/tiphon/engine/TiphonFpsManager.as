@@ -1,4 +1,4 @@
-﻿package com.ankamagames.tiphon.engine
+package com.ankamagames.tiphon.engine
 {
     import flash.utils.Timer;
     import flash.utils.Dictionary;
@@ -81,7 +81,7 @@
                 i++;
             };
             clip.stop();
-            if (clip.isControled)
+            if (FpsControler.containsFps(clip))
             {
                 FpsControler.uncontrolFps(clip);
             };
@@ -136,5 +136,5 @@
 
 
     }
-}//package com.ankamagames.tiphon.engine
+} com.ankamagames.tiphon.engine
 

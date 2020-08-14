@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.common.misc
+package com.ankamagames.dofus.logic.game.common.misc
 {
     import __AS3__.vec.Vector;
     import com.ankamagames.dofus.internalDatacenter.items.ItemWrapper;
@@ -17,5 +17,5 @@
         function empty():void;
 
     }
-}//package com.ankamagames.dofus.logic.game.common.misc
+} com.ankamagames.dofus.logic.game.common.misc
 

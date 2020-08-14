@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.types.events
+package com.ankamagames.jerakine.types.events
 {
     import flash.events.Event;
 
@@ -10,13 +10,15 @@
         private var _error:Error;
         private var _text:String;
         private var _showPopup:Boolean;
+        private var _tags:Object;
 
-        public function ErrorReportedEvent(error:Error, text:String, pShowPopup:Boolean=true)
+        public function ErrorReportedEvent(error:Error, text:String, pShowPopup:Boolean=true, tags:Object=null)
         {
             super(ERROR, false, false);
             this._error = error;
             this._text = text;
             this._showPopup = pShowPopup;
+            this._tags = tags;
         }
 
         public function get error():Error
@@ -34,6 +36,11 @@
             return (this._showPopup);
         }
 
+        public function get tags():Object
+        {
+            return (this._tags);
+        }
+
         public function get errorType():String
         {
             if (this.error == null)
@@ -46,5 +53,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.types.events
+} com.ankamagames.jerakine.types.events
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.internalDatacenter.items
+package com.ankamagames.dofus.internalDatacenter.items
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.dofus.datacenter.items.Weapon;
@@ -34,5 +34,5 @@
 
 
     }
-}//package com.ankamagames.dofus.internalDatacenter.items
+} com.ankamagames.dofus.internalDatacenter.items
 

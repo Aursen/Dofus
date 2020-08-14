@@ -1,28 +1,29 @@
-﻿package com.ankamagames.jerakine.utils.misc
+package com.ankamagames.jerakine.utils.misc
 {
+    import __AS3__.vec.Vector;
+
     public class CopyObject 
     {
 
 
         public static function copyObject(o:Object, exclude:Array=null, output:Object=null):Object
         {
-            var p:String;
-            if (!(output))
+            var propertyName:String;
+            if (!output)
             {
-                output = new Object();
+                output = {};
             };
-            var properties:Array = DescribeTypeCache.getVariables(o);
-            for each (p in properties)
+            var properties:Vector.<String> = DescribeTypeCache.getVariables(o);
+            for each (propertyName in properties)
             {
-                if (!((((exclude) && (!((exclude.indexOf(p) == -1))))) || ((p == "prototype"))))
+                if (!(((exclude) && (!(exclude.indexOf(propertyName) == -1))) || (propertyName == "prototype")))
                 {
                     try
                     {
-                        output[p] = o[p];
+                        output[propertyName] = o[propertyName];
                     }
                     catch(e:SecurityError)
                     {
-                        trace(("Error while copying field " + p));
                     };
                 };
             };
@@ -31,5 +32,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.utils.misc
+} com.ankamagames.jerakine.utils.misc
 

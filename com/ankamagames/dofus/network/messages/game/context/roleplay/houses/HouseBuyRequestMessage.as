@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.context.roleplay.houses
+package com.ankamagames.dofus.network.messages.game.context.roleplay.houses
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,15 +6,15 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class HouseBuyRequestMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 5738;
 
         private var _isInitialized:Boolean = false;
-        public var proposedPrice:uint = 0;
+        public var proposedPrice:Number = 0;
 
 
         override public function get isInitialized():Boolean
@@ -27,7 +27,7 @@
             return (5738);
         }
 
-        public function initHouseBuyRequestMessage(proposedPrice:uint=0):HouseBuyRequestMessage
+        public function initHouseBuyRequestMessage(proposedPrice:Number=0):HouseBuyRequestMessage
         {
             this.proposedPrice = proposedPrice;
             this._isInitialized = true;
@@ -52,6 +52,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_HouseBuyRequestMessage(output);
@@ -59,11 +67,11 @@
 
         public function serializeAs_HouseBuyRequestMessage(output:ICustomDataOutput):void
         {
-            if (this.proposedPrice < 0)
+            if (((this.proposedPrice < 0) || (this.proposedPrice > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.proposedPrice) + ") on element proposedPrice.")));
             };
-            output.writeVarInt(this.proposedPrice);
+            output.writeVarLong(this.proposedPrice);
         }
 
         public function deserialize(input:ICustomDataInput):void
@@ -73,8 +81,23 @@
 
         public function deserializeAs_HouseBuyRequestMessage(input:ICustomDataInput):void
         {
-            this.proposedPrice = input.readVarUhInt();
-            if (this.proposedPrice < 0)
+            this._proposedPriceFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_HouseBuyRequestMessage(tree);
+        }
+
+        public function deserializeAsyncAs_HouseBuyRequestMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._proposedPriceFunc);
+        }
+
+        private function _proposedPriceFunc(input:ICustomDataInput):void
+        {
+            this.proposedPrice = input.readVarUhLong();
+            if (((this.proposedPrice < 0) || (this.proposedPrice > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.proposedPrice) + ") on element of HouseBuyRequestMessage.proposedPrice.")));
             };
@@ -82,5 +105,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.context.roleplay.houses
+} com.ankamagames.dofus.network.messages.game.context.roleplay.houses
 

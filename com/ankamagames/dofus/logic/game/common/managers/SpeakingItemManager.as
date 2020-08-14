@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.common.managers
+package com.ankamagames.dofus.logic.game.common.managers
 {
     import com.ankamagames.jerakine.interfaces.IDestroyable;
     import flash.utils.Timer;
@@ -6,6 +6,7 @@
     import com.ankamagames.dofus.internalDatacenter.items.ItemWrapper;
     import com.ankamagames.dofus.datacenter.livingObjects.SpeakingItemText;
     import com.ankamagames.dofus.network.messages.game.inventory.items.LivingObjectMessageRequestMessage;
+    import com.ankamagames.jerakine.utils.misc.Chrono;
     import com.ankamagames.dofus.kernel.Kernel;
     import com.ankamagames.dofus.logic.game.common.frames.ChatFrame;
     import com.ankamagames.jerakine.managers.OptionManager;
@@ -15,6 +16,7 @@
     import com.ankamagames.dofus.misc.lists.ChatHookList;
     import com.ankamagames.dofus.network.enums.ChatActivableChannelsEnum;
     import flash.events.TimerEvent;
+    import __AS3__.vec.*;
 
     public class SpeakingItemManager implements IDestroyable 
     {
@@ -47,6 +49,14 @@
         public static const SPEAK_TRIGGER_KILLED_HIMSELF:int = 20;
         public static const SPEAK_TRIGGER_CRAFT_OK:int = 21;
         public static const SPEAK_TRIGGER_CRAFT_KO:int = 22;
+        public static const SPEAK_TRIGGER_NEW_MAP:int = 23;
+        public static const SPEAK_TRIGGER_MOVE:int = 24;
+        public static const SPEAK_TRIGGER_PLAYER_LOOSE_LIFE:int = 25;
+        public static const SPEAK_TRIGGER_ALLIED_LOOSE_LIFE:int = 26;
+        public static const SPEAK_TRIGGER_ENEMY_LOOSE_LIFE:int = 27;
+        public static const SPEAK_TRIGGER_PLAYER_TURN_START:int = 28;
+        public static const SPEAK_TRIGGER_PLAYER_CLOSE_COMBAT:int = 29;
+        public static const SPEAK_TRIGGER_PLAYER_TACKLED:int = 30;
         private static var _self:SpeakingItemManager;
 
         private var _nextMessageCount:int;
@@ -93,12 +103,15 @@
             var speakingText:SpeakingItemText;
             var restriction:Array;
             var msg:LivingObjectMessageRequestMessage;
-            if (!(Kernel.getWorker().getFrame(ChatFrame)))
+            Chrono.start("SpeakingEntitiesManager");
+            SpeakingEntitiesManager.getInstance().triggerEvent(nEvent);
+            Chrono.stop();
+            if (!Kernel.getWorker().getFrame(ChatFrame))
             {
                 return;
             };
-            var opt:Boolean = OptionManager.getOptionManager("chat").letLivingObjectTalk;
-            if (!(opt))
+            var opt:Boolean = OptionManager.getOptionManager("chat").getOption("letLivingObjectTalk");
+            if (!opt)
             {
                 return;
             };
@@ -129,24 +142,24 @@
                 i = 0;
                 while (i < triggersAssoc.textIds.length)
                 {
-                    if (((itemWrapper.isLivingObject) && (!((triggersAssoc.states[i] == itemWrapper.livingObjectMood)))))
+                    if (((itemWrapper.isLivingObject) && (!(triggersAssoc.states[i] == itemWrapper.livingObjectMood))))
                     {
                     }
                     else
                     {
                         speakingText = SpeakingItemText.getSpeakingItemTextById(triggersAssoc.textIds[i]);
-                        if (!(speakingText))
+                        if (!speakingText)
                         {
                         }
                         else
                         {
-                            if ((((speakingText.textLevel > itemWrapper.livingObjectLevel)) && (itemWrapper.isLivingObject)))
+                            if (((speakingText.textLevel > itemWrapper.livingObjectLevel) && (itemWrapper.isLivingObject)))
                             {
                             }
                             else
                             {
                                 restriction = speakingText.textRestriction.split(",");
-                                if (((!((speakingText.textRestriction == ""))) && ((restriction.indexOf(strId) == -1))))
+                                if (((!(speakingText.textRestriction == "")) && (restriction.indexOf(strId) == -1)))
                                 {
                                 }
                                 else
@@ -174,7 +187,7 @@
                     };
                     i++;
                 };
-                if (!(ok))
+                if (!ok)
                 {
                     return;
                 };
@@ -189,8 +202,7 @@
                 if (Math.random() < SPEAKING_ITEMS_CHAT_PROBA)
                 {
                     msg = new LivingObjectMessageRequestMessage();
-                    msg.msgId = speakingText.textId;
-                    msg.livingObject = itemWrapper.objectUID;
+                    msg.initLivingObjectMessageRequestMessage(speakingText.textId, new Vector.<String>(), itemWrapper.objectUID);
                     ConnectionsHandler.getConnection().send(msg);
                 }
                 else
@@ -236,5 +248,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.managers
+} com.ankamagames.dofus.logic.game.common.managers
 

@@ -1,12 +1,12 @@
-﻿package com.ankamagames.dofus.types.entities
+package com.ankamagames.dofus.types.entities
 {
     import com.ankamagames.tiphon.display.TiphonSprite;
     import com.ankamagames.jerakine.entities.interfaces.IEntity;
     import org.flintparticles.twoD.emitters.Emitter2D;
     import org.flintparticles.twoD.renderers.DisplayObjectRenderer;
     import org.flintparticles.twoD.zones.LineZone;
-    import org.flintparticles.twoD.initializers.Position;
     import flash.geom.Point;
+    import org.flintparticles.twoD.initializers.Position;
     import com.ankamagames.tiphon.types.look.TiphonEntityLook;
     import org.flintparticles.common.counters.PerformanceAdjusted;
     import org.flintparticles.common.initializers.ImageClass;
@@ -27,16 +27,13 @@
     public class TailEntity extends TiphonSprite implements IEntity 
     {
 
-        private var _emiter:Emitter2D;
-        private var _renderer:DisplayObjectRenderer;
-        private var _startPositionZone:LineZone;
+        private var _emiter:Emitter2D = new Emitter2D();
+        private var _renderer:DisplayObjectRenderer = new DisplayObjectRenderer();
+        private var _startPositionZone:LineZone = new LineZone(new Point(0, 0), new Point(0, 0));
         private var _startPosition:Position;
 
         public function TailEntity()
         {
-            this._emiter = new Emitter2D();
-            this._renderer = new DisplayObjectRenderer();
-            this._startPositionZone = new LineZone(new Point(0, 0), new Point(0, 0));
             super(new TiphonEntityLook());
             this._emiter.counter = new PerformanceAdjusted(10, 50, 40);
             this._emiter.addInitializer(new ImageClass(Dot, 1.5));
@@ -55,12 +52,12 @@
             addEventListener(Event.REMOVED_FROM_STAGE, this.onRemove);
         }
 
-        public function get id():int
+        public function get id():Number
         {
             return (0);
         }
 
-        public function set id(nValue:int):void
+        public function set id(nValue:Number):void
         {
         }
 
@@ -75,7 +72,7 @@
 
         private function onTailAdded(e:Event):void
         {
-            if (!(this._emiter.running))
+            if (!this._emiter.running)
             {
                 parent.parent.addChild(this._renderer);
                 addEventListener(Event.ENTER_FRAME, this.onNewFrame);
@@ -100,5 +97,5 @@
 
 
     }
-}//package com.ankamagames.dofus.types.entities
+} com.ankamagames.dofus.types.entities
 

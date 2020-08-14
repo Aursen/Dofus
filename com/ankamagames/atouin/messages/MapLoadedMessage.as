@@ -1,4 +1,4 @@
-﻿package com.ankamagames.atouin.messages
+package com.ankamagames.atouin.messages
 {
     import com.ankamagames.jerakine.messages.ILogableMessage;
 
@@ -12,5 +12,5 @@
 
 
     }
-}//package com.ankamagames.atouin.messages
+} com.ankamagames.atouin.messages
 

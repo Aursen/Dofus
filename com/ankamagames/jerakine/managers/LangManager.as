@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.managers
+package com.ankamagames.jerakine.managers
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
@@ -22,7 +22,6 @@
     import com.ankamagames.jerakine.utils.misc.Chrono;
     import com.ankamagames.jerakine.types.LangMetaData;
     import com.ankamagames.jerakine.task.LangXmlParsingTask;
-    import com.ankamagames.jerakine.utils.display.StageShareManager;
     import com.ankamagames.jerakine.types.events.LangFileEvent;
     import com.ankamagames.jerakine.tasking.TaskingManager;
     import nochump.util.zip.ZipEntry;
@@ -44,14 +43,12 @@
         private var _sLang:String;
         private var _aVersion:Array;
         private var _loader:IResourceLoader;
-        private var _parseReference:Dictionary;
+        private var _parseReference:Dictionary = new Dictionary();
         private var _fontManager:FontManager;
         private var _replaceErrorCallback:Function;
 
         public function LangManager()
         {
-            this._parseReference = new Dictionary();
-            super();
             if (_self != null)
             {
                 throw (new SingletonError("LangManager is a singleton and should not be instanciated directly."));
@@ -126,7 +123,7 @@
             this.startParsing([langFile], uri.uri);
         }
 
-        public function getUntypedEntry(sKey:String)
+        public function getUntypedEntry(sKey:String):*
         {
             var sEntry:* = StoreDataManager.getInstance().getData(JerakineConstants.DATASTORE_LANG, KEY_LANG_INDEX)[sKey];
             if (sEntry == null)
@@ -134,7 +131,7 @@
                 _log.warn((("[Warning] LangManager : " + sKey) + " is unknow"));
                 sEntry = ("!" + sKey);
             };
-            if (((((!((sEntry == null))) && ((sEntry is String)))) && (!((String(sEntry).indexOf("[") == -1)))))
+            if ((((!(sEntry == null)) && (sEntry is String)) && (!(String(sEntry).indexOf("[") == -1))))
             {
                 sEntry = this.replaceKey(sEntry, true);
             };
@@ -168,8 +165,8 @@
 
         public function setEntry(sKey:String, sValue:String, sType:String=null):void
         {
-            var _local_4:Class;
-            if (!(sType))
+            var c:Class;
+            if (!sType)
             {
                 this._aLang[sKey] = sValue;
             }
@@ -179,26 +176,26 @@
                 {
                     case "STRING":
                         this._aLang[sKey] = sValue;
-                        return;
+                        break;
                     case "NUMBER":
                         this._aLang[sKey] = parseFloat(sValue);
-                        return;
+                        break;
                     case "UINT":
                     case "INT":
                         this._aLang[sKey] = parseInt(sValue, 10);
-                        return;
+                        break;
                     case "BOOLEAN":
                         this._aLang[sKey] = (sValue.toLowerCase() == "true");
-                        return;
+                        break;
                     case "ARRAY":
                         this._aLang[sKey] = sValue.split(",");
-                        return;
+                        break;
                     case "BOOLEAN":
                         this._aLang[sKey] = (sValue.toLowerCase() == "true");
-                        return;
+                        break;
                     default:
-                        _local_4 = (getDefinitionByName(sType) as Class);
-                        this._aLang[sKey] = new (_local_4)(sValue);
+                        c = (getDefinitionByName(sType) as Class);
+                        this._aLang[sKey] = new c(sValue);
                 };
             };
         }
@@ -216,7 +213,7 @@
             var sNewVal:String;
             var aFind:Array;
             var sKey:String;
-            if (((!((sTxt == null))) && (!((sTxt.indexOf("[") == -1)))))
+            if (((!(sTxt == null)) && (!(sTxt.indexOf("[") == -1))))
             {
                 reg = /(?<!\\)\[([^\]]*)\]/g;
                 aKey = sTxt.match(reg);
@@ -230,7 +227,7 @@
                     sKey = aKey[i].substr(1, (aKey[i].length - 2));
                     if (sKey.charAt(0) == "#")
                     {
-                        if (!(bReplaceDynamicReference)) continue;
+                        if (!bReplaceDynamicReference) continue;
                         sKey = sKey.substr(1);
                     };
                     sNewVal = this._aLang[sKey];
@@ -261,7 +258,7 @@
                                 }
                                 else
                                 {
-                                    _log.warn(((("Référence inconue vers la clef [" + sKey) + "] dans : ") + sTxt));
+                                    _log.warn(((("Référence inconnue vers la clef [" + sKey) + "] dans : ") + sTxt));
                                 };
                             };
                         };
@@ -326,7 +323,7 @@
 
         public function checkFileVersion(sFileName:String, sVersion:String):Boolean
         {
-            return ((this._aVersion[sFileName] == sVersion));
+            return (this._aVersion[sFileName] == sVersion);
         }
 
         public function clear(sCategory:String=null):void
@@ -349,27 +346,6 @@
                 this._aLang = new Array();
             };
             StoreDataManager.getInstance().setData(JerakineConstants.DATASTORE_LANG, KEY_LANG_INDEX, this._aLang);
-        }
-
-        public function resolve(targetKey:String):void
-        {
-            StoreDataManager.getInstance().startStoreSequence();
-            this.resolveImp((("[" + targetKey) + "]"), targetKey);
-            this.resolveImp((("[#" + targetKey) + "]"), targetKey);
-            StoreDataManager.getInstance().stopStoreSequence();
-        }
-
-        private function resolveImp(targetKey:String, configKey:String):void
-        {
-            var key:String;
-            var keyValue:* = this.getUntypedEntry(configKey);
-            for (key in this._aLang)
-            {
-                if (String(this._aLang[key]).indexOf(targetKey) != -1)
-                {
-                    this._aLang[key] = String(this._aLang[key]).replace(targetKey, keyValue);
-                };
-            };
         }
 
         private function loadMetaDataFile(sUrl:String):void
@@ -405,7 +381,7 @@
             {
                 throw (new FileTypeError((sUrl + " have no type (no extension found).")));
             };
-            if (((((!(oMeta.clearAllFile)) && (!(oMeta.clearFileCount)))) && (!(oMeta.loadAllFile))))
+            if ((((!(oMeta.clearAllFile)) && (!(oMeta.clearFileCount))) && (!(oMeta.loadAllFile))))
             {
                 this._handler.process(new LangAllFilesLoadedMessage(sUrl, true));
                 return;
@@ -418,7 +394,7 @@
                     Chrono.start("Chargement zip");
                 case "XML":
                     this._loader.load(uri);
-                    return;
+                    break;
                 default:
                     throw (new FileTypeError((((sUrl + " is not expected type (bad extension found (") + sExtension) + "), support only .zip and .xml).")));
             };
@@ -429,16 +405,9 @@
             StoreDataManager.getInstance().startStoreSequence();
             var parseReference:Boolean = this._parseReference[sUrlProvider];
             var stParsing:LangXmlParsingTask = new LangXmlParsingTask(aLangData, sUrlProvider, parseReference);
-            if (StageShareManager.rootContainer == null)
-            {
-                stParsing.parseForReg();
-            }
-            else
-            {
-                stParsing.addEventListener(LangFileEvent.ALL_COMPLETE, this.onTaskEnd);
-                stParsing.addEventListener(LangFileEvent.COMPLETE, this.onTaskStep);
-                TaskingManager.getInstance().addTask(stParsing);
-            };
+            stParsing.addEventListener(LangFileEvent.ALL_COMPLETE, this.onTaskEnd);
+            stParsing.addEventListener(LangFileEvent.COMPLETE, this.onTaskStep);
+            TaskingManager.getInstance().addTask(stParsing);
         }
 
         private function onFileLoaded(e:ResourceLoadedEvent):void
@@ -447,14 +416,14 @@
             {
                 case "XML":
                     this.onXmlLoadComplete(e);
-                    return;
+                    break;
                 case "META":
                     this.onMetaLoad(e);
-                    return;
+                    break;
                 case "ZIP":
                     Chrono.stop();
                     this.onZipFileComplete(e);
-                    return;
+                    break;
             };
         }
 
@@ -464,13 +433,13 @@
             {
                 case "XML":
                     this.onXmlLoadError(e);
-                    return;
+                    break;
                 case "META":
                     this.onMetaLoadError(e);
-                    return;
+                    break;
                 case "ZIP":
                     this.onZipFileLoadError(e);
-                    return;
+                    break;
             };
         }
 
@@ -478,11 +447,11 @@
         {
             var metaData:LangMetaData = LangMetaData(e.uri.tag);
             var sCat:String = FileUtils.getFileStartName(e.uri.uri);
-            if (sCat == "config-custom")
+            if (((sCat == "config-custom") || (!(sCat.indexOf("config-lang-") == -1))))
             {
                 sCat = "config";
             };
-            if (((((metaData.clearFile[e.uri.fileName]) || (metaData.clearAllFile))) || (metaData.loadAllFile)))
+            if ((((metaData.clearFile[e.uri.fileName]) || (metaData.clearAllFile)) || (metaData.loadAllFile)))
             {
                 if (((metaData.clearFile[e.uri.fileName]) || (metaData.clearAllFile)))
                 {
@@ -510,7 +479,7 @@
             };
             for (s in metaData.clearFile)
             {
-                if (!(zipFile.getEntry(s)))
+                if (!zipFile.getEntry(s))
                 {
                     _log.warn((((("File '" + s) + "' was not found in ") + e.uri.uri) + " (specified by metadata file)"));
                 };
@@ -520,7 +489,7 @@
             {
                 entry = aFileList[i];
                 sCat = FileUtils.getFileStartName(entry.name);
-                if (((((metaData.clearFile[entry.name]) || (metaData.clearAllFile))) || (metaData.loadAllFile)))
+                if ((((metaData.clearFile[entry.name]) || (metaData.clearAllFile)) || (metaData.loadAllFile)))
                 {
                     if (((metaData.clearFile[entry.name]) || (metaData.clearAllFile)))
                     {
@@ -580,5 +549,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.managers
+} com.ankamagames.jerakine.managers
 

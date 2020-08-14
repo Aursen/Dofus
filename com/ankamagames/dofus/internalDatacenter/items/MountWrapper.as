@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.internalDatacenter.items
+package com.ankamagames.dofus.internalDatacenter.items
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.jerakine.logger.Logger;
@@ -34,7 +34,7 @@
             _mountUtil = PlayedCharacterManager.getInstance().mount;
             if (_mountUtil)
             {
-                mountWrapper.mountId = _mountUtil.model;
+                mountWrapper.mountId = _mountUtil.modelId;
                 mountWrapper.effects = new Vector.<EffectInstance>();
                 for each (effect in _mountUtil.effectList)
                 {
@@ -55,7 +55,7 @@
 
         override public function get name():String
         {
-            if (!(_mountUtil))
+            if (!_mountUtil)
             {
                 return ("");
             };
@@ -64,7 +64,7 @@
 
         override public function get description():String
         {
-            if (!(_mountUtil))
+            if (!_mountUtil)
             {
                 return ("");
             };
@@ -114,7 +114,7 @@
                 return (this._uri);
             };
             this._uri = new Uri(XmlConfig.getInstance().getEntry("config.content.path").concat("gfx/mounts/").concat(this.mountId).concat(".swf"));
-            if (!(_uriLoaderContext))
+            if (!_uriLoaderContext)
             {
                 _uriLoaderContext = new LoaderContext();
                 AirScanner.allowByteCodeExecution(_uriLoaderContext, true);
@@ -144,7 +144,7 @@
             _mountUtil = PlayedCharacterManager.getInstance().mount;
             if (_mountUtil)
             {
-                this.mountId = _mountUtil.model;
+                this.mountId = _mountUtil.modelId;
                 effects = new Vector.<EffectInstance>();
                 for each (effect in _mountUtil.effectList)
                 {
@@ -162,10 +162,10 @@
 
         override public function toString():String
         {
-            return ((("[MountWrapper#" + this.mountId) + "]"));
+            return (("[MountWrapper#" + this.mountId) + "]");
         }
 
 
     }
-}//package com.ankamagames.dofus.internalDatacenter.items
+} com.ankamagames.dofus.internalDatacenter.items
 

@@ -1,7 +1,8 @@
-﻿package com.ankamagames.dofus.network.types.game.context.roleplay.quest
+package com.ankamagames.dofus.network.types.game.context.roleplay.quest
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import __AS3__.vec.Vector;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
     import com.ankamagames.dofus.network.ProtocolTypeManager;
@@ -13,13 +14,9 @@
         public static const protocolId:uint = 382;
 
         public var stepId:uint = 0;
-        public var objectives:Vector.<QuestObjectiveInformations>;
+        public var objectives:Vector.<QuestObjectiveInformations> = new Vector.<QuestObjectiveInformations>();
+        private var _objectivestree:FuncTree;
 
-        public function QuestActiveDetailedInformations()
-        {
-            this.objectives = new Vector.<QuestObjectiveInformations>();
-            super();
-        }
 
         override public function getTypeId():uint
         {
@@ -74,11 +71,7 @@
             var _id2:uint;
             var _item2:QuestObjectiveInformations;
             super.deserialize(input);
-            this.stepId = input.readVarUhShort();
-            if (this.stepId < 0)
-            {
-                throw (new Error((("Forbidden value (" + this.stepId) + ") on element of QuestActiveDetailedInformations.stepId.")));
-            };
+            this._stepIdFunc(input);
             var _objectivesLen:uint = input.readUnsignedShort();
             var _i2:uint;
             while (_i2 < _objectivesLen)
@@ -91,7 +84,47 @@
             };
         }
 
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_QuestActiveDetailedInformations(tree);
+        }
+
+        public function deserializeAsyncAs_QuestActiveDetailedInformations(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._stepIdFunc);
+            this._objectivestree = tree.addChild(this._objectivestreeFunc);
+        }
+
+        private function _stepIdFunc(input:ICustomDataInput):void
+        {
+            this.stepId = input.readVarUhShort();
+            if (this.stepId < 0)
+            {
+                throw (new Error((("Forbidden value (" + this.stepId) + ") on element of QuestActiveDetailedInformations.stepId.")));
+            };
+        }
+
+        private function _objectivestreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._objectivestree.addChild(this._objectivesFunc);
+                i++;
+            };
+        }
+
+        private function _objectivesFunc(input:ICustomDataInput):void
+        {
+            var _id:uint = input.readUnsignedShort();
+            var _item:QuestObjectiveInformations = ProtocolTypeManager.getInstance(QuestObjectiveInformations, _id);
+            _item.deserialize(input);
+            this.objectives.push(_item);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.types.game.context.roleplay.quest
+} com.ankamagames.dofus.network.types.game.context.roleplay.quest
 

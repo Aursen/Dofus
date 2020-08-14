@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.utils.misc
+package com.ankamagames.jerakine.utils.misc
 {
     public class Levenshtein 
     {
@@ -62,7 +62,7 @@
             while (i < aPossibility.length)
             {
                 value = distance(word, aPossibility[i]);
-                if ((((min > value)) && ((value <= max))))
+                if (((min > value) && (value <= max)))
                 {
                     min = value;
                     res = aPossibility[i];
@@ -74,5 +74,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.utils.misc
+} com.ankamagames.jerakine.utils.misc
 

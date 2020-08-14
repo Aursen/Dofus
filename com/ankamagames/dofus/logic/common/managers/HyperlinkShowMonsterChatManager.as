@@ -1,15 +1,15 @@
-﻿package com.ankamagames.dofus.logic.common.managers
+package com.ankamagames.dofus.logic.common.managers
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
-    import avmplus.getQualifiedClassName;
+    import flash.utils.getQualifiedClassName;
+    import com.ankamagames.berilia.managers.TooltipManager;
     import com.ankamagames.berilia.managers.KernelEventsManager;
     import com.ankamagames.dofus.misc.lists.HookList;
     import com.ankamagames.dofus.datacenter.monsters.Monster;
     import flash.geom.Rectangle;
     import com.ankamagames.berilia.types.data.TextTooltipInfo;
     import com.ankamagames.jerakine.data.I18n;
-    import com.ankamagames.berilia.managers.TooltipManager;
     import com.ankamagames.berilia.managers.UiModuleManager;
     import com.ankamagames.berilia.enums.StrataEnum;
 
@@ -26,7 +26,8 @@
             var data:Object = new Object();
             data.monsterId = monsterId;
             data.forceOpen = true;
-            KernelEventsManager.getInstance().processCallback(HookList.OpenBook, "bestiaryTab", data);
+            TooltipManager.hideAll();
+            KernelEventsManager.getInstance().processCallback(HookList.OpenEncyclopedia, "bestiaryTab", data);
         }
 
         public static function addMonster(monsterId:uint):String
@@ -48,7 +49,7 @@
             var monster:Monster = Monster.getMonsterById(monsterId);
             if (monster)
             {
-                return ((("[" + monster.name) + "]"));
+                return (("[" + monster.name) + "]");
             };
             return ("[null]");
         }
@@ -62,5 +63,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.common.managers
+} com.ankamagames.dofus.logic.common.managers
 

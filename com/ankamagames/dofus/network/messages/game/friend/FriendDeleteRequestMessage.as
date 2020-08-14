@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.friend
+package com.ankamagames.dofus.network.messages.game.friend
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class FriendDeleteRequestMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -52,6 +52,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_FriendDeleteRequestMessage(output);
@@ -73,6 +81,21 @@
 
         public function deserializeAs_FriendDeleteRequestMessage(input:ICustomDataInput):void
         {
+            this._accountIdFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_FriendDeleteRequestMessage(tree);
+        }
+
+        public function deserializeAsyncAs_FriendDeleteRequestMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._accountIdFunc);
+        }
+
+        private function _accountIdFunc(input:ICustomDataInput):void
+        {
             this.accountId = input.readInt();
             if (this.accountId < 0)
             {
@@ -82,5 +105,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.friend
+} com.ankamagames.dofus.network.messages.game.friend
 

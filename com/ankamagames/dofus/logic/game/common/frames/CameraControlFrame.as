@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.common.frames
+package com.ankamagames.dofus.logic.game.common.frames
 {
     import com.ankamagames.jerakine.messages.Frame;
     import com.ankamagames.jerakine.logger.Logger;
@@ -18,9 +18,15 @@
     import flash.display.DisplayObject;
     import com.ankamagames.dofus.logic.game.roleplay.frames.InfoEntitiesFrame;
     import com.ankamagames.berilia.types.data.LinkedCursorData;
+    import flash.display.MovieClip;
+    import com.ankamagames.dofus.logic.game.fight.frames.FightPreparationFrame;
     import com.ankamagames.berilia.managers.TooltipManager;
     import com.ankamagames.dofus.kernel.Kernel;
     import com.ankamagames.berilia.managers.LinkedCursorSpriteManager;
+    import com.ankamagames.dofus.logic.common.managers.HyperlinkDisplayArrowManager;
+    import com.ankamagames.berilia.types.tooltip.TooltipPlacer;
+    import com.ankamagames.dofus.network.messages.game.context.roleplay.CurrentMapMessage;
+    import com.ankamagames.dofus.network.messages.game.context.fight.GameFightStartingMessage;
     import com.ankamagames.jerakine.entities.messages.EntityClickMessage;
     import com.ankamagames.dofus.logic.game.roleplay.messages.InteractiveElementActivationMessage;
     import com.ankamagames.atouin.messages.AdjacentMapClickMessage;
@@ -75,7 +81,7 @@
         private function onMouseMove(pEvent:MouseEvent):void
         {
             var window:Rectangle;
-            if (((((((this._allowDrag) && ((Atouin.getInstance().currentZoom > MIN_ZOOM)))) && (!(this._dragging)))) && (this._buttonDown)))
+            if (((((this._allowDrag) && (this._mapZoomed)) && (!(this._dragging))) && (this._buttonDown)))
             {
                 Mouse.hide();
                 InteractiveCellManager.getInstance().setInteraction(false);
@@ -96,7 +102,7 @@
         private function onMouseDown(pEvent:Event):void
         {
             this._buttonDown = true;
-            if (((!((pEvent.target == StageShareManager.stage))) && (!(this.isInWorld((pEvent.target as DisplayObject))))))
+            if (((!(pEvent.target == StageShareManager.stage)) && (!(this.isInWorld((pEvent.target as DisplayObject))))))
             {
                 this._allowDrag = false;
             };
@@ -142,7 +148,9 @@
             var offSetY:Number;
             var infoEntitiesFrame:InfoEntitiesFrame;
             var lcd:LinkedCursorData;
-            if (((!((this._container.x == this._containerLastX))) || (!((this._container.y == this._containerLastY)))))
+            var arrow:MovieClip;
+            var fightPreparationFrame:FightPreparationFrame;
+            if (((!(this._container.x == this._containerLastX)) || (!(this._container.y == this._containerLastY))))
             {
                 offSetX = (this._container.x - this._containerLastX);
                 offSetY = (this._container.y - this._containerLastY);
@@ -158,6 +166,17 @@
                     lcd.sprite.x = (lcd.sprite.x + offSetX);
                     lcd.sprite.y = (lcd.sprite.y + offSetY);
                 };
+                arrow = HyperlinkDisplayArrowManager.getArrowClip();
+                if (((arrow) && (!(HyperlinkDisplayArrowManager.getArrowStrata() == 5))))
+                {
+                    arrow.x = (arrow.x + offSetX);
+                    arrow.y = (arrow.y + offSetY);
+                };
+                fightPreparationFrame = (Kernel.getWorker().getFrame(FightPreparationFrame) as FightPreparationFrame);
+                if (fightPreparationFrame)
+                {
+                    fightPreparationFrame.updateSwapPositionRequestsIcons();
+                };
                 this._containerLastX = this._container.x;
                 this._containerLastY = this._container.y;
             };
@@ -165,28 +184,44 @@
 
         public function process(msg:Message):Boolean
         {
-            var _local_2:Boolean;
+            var consumeMsg:Boolean;
             switch (true)
             {
+                case (msg is CurrentMapMessage):
+                case (msg is GameFightStartingMessage):
+                    TooltipPlacer.isMapZoomed = (this._mapZoomed = false);
+                    this.onMouseUp(null);
+                    break;
                 case (msg is EntityClickMessage):
                 case (msg is InteractiveElementActivationMessage):
                 case (msg is AdjacentMapClickMessage):
                     if (this._wasDragging)
                     {
                         this._wasDragging = false;
-                        return (true);
+                        if (((!(Object(msg).hasOwnProperty("fromStack"))) || (!(msg["fromStack"]))))
+                        {
+                            return (true);
+                        };
                     };
                     break;
                 case (msg is MapLoadedMessage):
                     this._allowDrag = (this._mapZoomed = false);
                     return (false);
                 case (msg is MapZoomMessage):
-                    if (((((MapDisplayManager.getInstance().currentMapRendered) && (!(this._dragging)))) && (!(this._mapZoomed))))
+                    if (((((Atouin.getInstance().currentZoom > MIN_ZOOM) && (MapDisplayManager.getInstance().currentMapRendered)) && (!(this._dragging))) && (!(this._mapZoomed))))
                     {
                         this._allowDrag = (this._mapZoomed = true);
+                    }
+                    else
+                    {
+                        if (Atouin.getInstance().currentZoom <= MIN_ZOOM)
+                        {
+                            this._allowDrag = (this._mapZoomed = false);
+                        };
                     };
-                    _local_2 = PlayedCharacterManager.getInstance().isFighting;
-                    return (_local_2);
+                    TooltipPlacer.isMapZoomed = this._mapZoomed;
+                    consumeMsg = PlayedCharacterManager.getInstance().isFighting;
+                    return (consumeMsg);
             };
             return (false);
         }
@@ -198,5 +233,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.frames
+} com.ankamagames.dofus.logic.game.common.frames
 

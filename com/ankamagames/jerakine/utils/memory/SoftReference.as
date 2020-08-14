@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.utils.memory
+package com.ankamagames.jerakine.utils.memory
 {
     import flash.utils.clearTimeout;
     import flash.utils.setTimeout;
@@ -6,7 +6,7 @@
     public class SoftReference 
     {
 
-        private var value;
+        private var value:*;
         private var keptTime:uint;
         private var timeout:uint;
 
@@ -17,7 +17,7 @@
             this.resetTimeout();
         }
 
-        public function get object()
+        public function get object():*
         {
             this.resetTimeout();
             return (this.value);
@@ -39,5 +39,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.utils.memory
+} com.ankamagames.jerakine.utils.memory
 

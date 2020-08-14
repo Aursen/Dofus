@@ -1,4 +1,4 @@
-﻿package com.ankamagames.tiphon.types
+package com.ankamagames.tiphon.types
 {
     import flash.display.DisplayObject;
 
@@ -17,5 +17,5 @@
         }
 
     }
-}//package com.ankamagames.tiphon.types
+} com.ankamagames.tiphon.types
 

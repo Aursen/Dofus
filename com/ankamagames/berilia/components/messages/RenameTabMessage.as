@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.components.messages
+package com.ankamagames.berilia.components.messages
 {
     import flash.display.InteractiveObject;
 
@@ -27,5 +27,5 @@
 
 
     }
-}//package com.ankamagames.berilia.components.messages
+} com.ankamagames.berilia.components.messages
 

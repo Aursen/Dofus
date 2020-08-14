@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.chat
+package com.ankamagames.dofus.network.messages.game.chat
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class ChatAbstractServerMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -62,6 +62,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_ChatAbstractServerMessage(output);
@@ -86,21 +94,54 @@
 
         public function deserializeAs_ChatAbstractServerMessage(input:ICustomDataInput):void
         {
+            this._channelFunc(input);
+            this._contentFunc(input);
+            this._timestampFunc(input);
+            this._fingerprintFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_ChatAbstractServerMessage(tree);
+        }
+
+        public function deserializeAsyncAs_ChatAbstractServerMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._channelFunc);
+            tree.addChild(this._contentFunc);
+            tree.addChild(this._timestampFunc);
+            tree.addChild(this._fingerprintFunc);
+        }
+
+        private function _channelFunc(input:ICustomDataInput):void
+        {
             this.channel = input.readByte();
             if (this.channel < 0)
             {
                 throw (new Error((("Forbidden value (" + this.channel) + ") on element of ChatAbstractServerMessage.channel.")));
             };
+        }
+
+        private function _contentFunc(input:ICustomDataInput):void
+        {
             this.content = input.readUTF();
+        }
+
+        private function _timestampFunc(input:ICustomDataInput):void
+        {
             this.timestamp = input.readInt();
             if (this.timestamp < 0)
             {
                 throw (new Error((("Forbidden value (" + this.timestamp) + ") on element of ChatAbstractServerMessage.timestamp.")));
             };
+        }
+
+        private function _fingerprintFunc(input:ICustomDataInput):void
+        {
             this.fingerprint = input.readUTF();
         }
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.chat
+} com.ankamagames.dofus.network.messages.game.chat
 

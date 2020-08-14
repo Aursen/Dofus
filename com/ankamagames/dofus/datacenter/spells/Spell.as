@@ -1,9 +1,10 @@
-﻿package com.ankamagames.dofus.datacenter.spells
+package com.ankamagames.dofus.datacenter.spells
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
+    import com.ankamagames.dofus.types.IdAccessors;
     import __AS3__.vec.Vector;
     import com.ankamagames.jerakine.data.GameData;
     import com.ankamagames.jerakine.data.I18n;
@@ -13,6 +14,7 @@
 
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(Spell));
         public static const MODULE:String = "Spells";
+        public static var idAccessors:IdAccessors = new IdAccessors(getSpellById, getSpells);
 
         private var _indexedParam:Array;
         private var _indexedCriticalParam:Array;
@@ -20,6 +22,7 @@
         public var nameId:uint;
         public var descriptionId:uint;
         public var typeId:uint;
+        public var order:uint;
         public var scriptParams:String;
         public var scriptParamsCritical:String;
         public var scriptId:int;
@@ -28,19 +31,19 @@
         public var spellLevels:Vector.<uint>;
         public var useParamCache:Boolean = true;
         public var verbose_cast:Boolean;
+        public var default_zone:String;
+        public var bypassSummoningLimit:Boolean;
+        public var canAlwaysTriggerSpells:Boolean;
+        public var adminName:String;
         private var _name:String;
         private var _description:String;
-        private var _spellLevels:Array;
+        private var _spellLevels:Array = [];
+        private var _spellVariant:SpellVariant;
 
-        public function Spell()
-        {
-            this._spellLevels = [];
-            super();
-        }
 
         public static function getSpellById(id:int):Spell
         {
-            return ((GameData.getObject(MODULE, id) as Spell));
+            return (GameData.getObject(MODULE, id) as Spell);
         }
 
         public static function getSpells():Array
@@ -51,7 +54,7 @@
 
         public function get name():String
         {
-            if (!(this._name))
+            if (!this._name)
             {
                 this._name = I18n.getText(this.nameId);
             };
@@ -60,7 +63,7 @@
 
         public function get description():String
         {
-            if (!(this._description))
+            if (!this._description)
             {
                 this._description = I18n.getText(this.descriptionId);
             };
@@ -72,20 +75,51 @@
             return (SpellType.getSpellTypeById(this.typeId));
         }
 
-        public function getSpellLevel(level:int):SpellLevel
+        public function get spellVariant():SpellVariant
         {
-            if (!(this._spellLevels[level]))
+            var allSpellVariants:Array;
+            var variant:SpellVariant;
+            if (!this._spellVariant)
             {
-                if ((((this.spellLevels.length >= level)) && ((level > 0))))
+                allSpellVariants = SpellVariant.getSpellVariants();
+                for each (variant in allSpellVariants)
                 {
-                    this._spellLevels[level] = SpellLevel.getLevelById(this.spellLevels[(level - 1)]);
-                }
-                else
-                {
-                    this._spellLevels[level] = SpellLevel.getLevelById(this.spellLevels[0]);
+                    if (variant.spellIds.indexOf(this.id) != -1)
+                    {
+                        this._spellVariant = variant;
+                        return (this._spellVariant);
+                    };
                 };
             };
-            return (this._spellLevels[level]);
+            return (this._spellVariant);
+        }
+
+        public function getSpellLevel(level:int):SpellLevel
+        {
+            this.spellLevelsInfo;
+            var index:int;
+            if (((this.spellLevels.length >= level) && (level > 0)))
+            {
+                index = (level - 1);
+            };
+            return (this._spellLevels[index]);
+        }
+
+        public function get spellLevelsInfo():Array
+        {
+            var levelCount:int;
+            var i:int;
+            if (((!(this._spellLevels)) || (!(this._spellLevels.length == this.spellLevels.length))))
+            {
+                levelCount = this.spellLevels.length;
+                i = 0;
+                while (i < levelCount)
+                {
+                    this._spellLevels[i] = SpellLevel.getLevelById(this.spellLevels[i]);
+                    i++;
+                };
+            };
+            return (this._spellLevels);
         }
 
         public function getScriptId(critical:Boolean=false):int
@@ -97,12 +131,12 @@
             return (this.scriptId);
         }
 
-        public function getParamByName(name:String, critical:Boolean=false)
+        public function getParamByName(name:String, critical:Boolean=false):*
         {
             var tmp:Array;
             var tmp2:Array;
             var param:String;
-            if (((((critical) && (this.scriptParamsCritical))) && (!((this.scriptParamsCritical == "null")))))
+            if ((((critical) && (this.scriptParamsCritical)) && (!(this.scriptParamsCritical == "null"))))
             {
                 if (((!(this._indexedCriticalParam)) || (!(this.useParamCache))))
                 {
@@ -135,24 +169,24 @@
             return (this._indexedParam[name]);
         }
 
-        private function getValue(str:String)
+        private function getValue(str:String):*
         {
             var num:Number;
             var regNum:RegExp = /^[+-]?[0-9.]*$/;
             if (str.search(regNum) != -1)
             {
                 num = parseFloat(str);
-                return (((isNaN(num)) ? 0 : num));
+                return ((isNaN(num)) ? 0 : num);
             };
             return (str);
         }
 
         public function toString():String
         {
-            return ((((this.name + " (") + this.id) + ")"));
+            return (((this.name + " (") + this.id) + ")");
         }
 
 
     }
-}//package com.ankamagames.dofus.datacenter.spells
+} com.ankamagames.dofus.datacenter.spells
 

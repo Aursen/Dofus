@@ -1,15 +1,15 @@
-﻿package com.ankamagames.dofus.internalDatacenter.communication
+package com.ankamagames.dofus.internalDatacenter.communication
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
 
     public class CraftSmileyItem implements IDataCenter 
     {
 
-        public var playerId:int;
+        public var playerId:Number;
         public var iconId:int;
         public var craftResult:uint;
 
-        public function CraftSmileyItem(pPlayerId:uint, pIconId:int, pCraftResult:uint)
+        public function CraftSmileyItem(pPlayerId:Number, pIconId:int, pCraftResult:uint)
         {
             this.playerId = pPlayerId;
             this.iconId = pIconId;
@@ -17,5 +17,5 @@
         }
 
     }
-}//package com.ankamagames.dofus.internalDatacenter.communication
+} com.ankamagames.dofus.internalDatacenter.communication
 

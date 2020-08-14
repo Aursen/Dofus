@@ -1,4 +1,4 @@
-﻿package com.somerandomdude.colortoolkit
+package com.somerandomdude.colortoolkit
 {
     import com.somerandomdude.colortoolkit.spaces.CMYK;
     import com.somerandomdude.colortoolkit.spaces.RGB;
@@ -51,7 +51,7 @@
 
         public function get analogousScheme():ColorList
         {
-            if (!(this._analogous))
+            if (!this._analogous)
             {
                 this._analogous = new Analogous(_color, this._analogousAngle, this._analogousContrast);
             }
@@ -92,7 +92,7 @@
 
         public function get complemenartyScheme():ColorList
         {
-            if (!(this._complementary))
+            if (!this._complementary)
             {
                 this._complementary = new Complementary(_color);
             }
@@ -105,7 +105,7 @@
 
         public function get splitComplementaryScheme():ColorList
         {
-            if (!(this._splitComplementary))
+            if (!this._splitComplementary)
             {
                 this._splitComplementary = new SplitComplementary(_color);
             }
@@ -118,7 +118,7 @@
 
         public function get compoundScheme():ColorList
         {
-            if (!(this._compound))
+            if (!this._compound)
             {
                 this._compound = new Compound(_color);
             }
@@ -131,7 +131,7 @@
 
         public function get flippedCompoundScheme():ColorList
         {
-            if (!(this._flippedCompound))
+            if (!this._flippedCompound)
             {
                 this._flippedCompound = new FlippedCompound(_color);
             }
@@ -144,7 +144,7 @@
 
         public function get monochromeScheme():ColorList
         {
-            if (!(this._monochrome))
+            if (!this._monochrome)
             {
                 this._monochrome = new Monochrome(_color);
             }
@@ -157,7 +157,7 @@
 
         public function get tetradScheme():ColorList
         {
-            if (!(this._tetrad))
+            if (!this._tetrad)
             {
                 this._tetrad = new Tetrad(_color, this._tetradAngle);
             }
@@ -183,7 +183,7 @@
 
         public function set tetradAngle(value:Number):void
         {
-            if (!(this._tetrad))
+            if (!this._tetrad)
             {
                 this._tetrad = new Tetrad(_color, this._tetradAngle);
             }
@@ -195,7 +195,7 @@
 
         public function get triadScheme():ColorList
         {
-            if (!(this._triad))
+            if (!this._triad)
             {
                 this._triad = new Triad(_color, this._triadAngle);
             }
@@ -213,7 +213,7 @@
 
         public function set triadAngle(value:Number):void
         {
-            if (!(this._triad))
+            if (!this._triad)
             {
                 this._triad = new Triad(_color, this._triadAngle);
             }
@@ -422,5 +422,5 @@
 
 
     }
-}//package com.somerandomdude.colortoolkit
+} com.somerandomdude.colortoolkit
 

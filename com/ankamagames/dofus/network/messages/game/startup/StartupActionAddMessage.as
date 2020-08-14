@@ -1,27 +1,23 @@
-﻿package com.ankamagames.dofus.network.messages.game.startup
+package com.ankamagames.dofus.network.messages.game.startup
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
     import com.ankamagames.dofus.network.types.game.startup.StartupActionAddObject;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
 
-    [Trusted]
     public class StartupActionAddMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 6538;
 
         private var _isInitialized:Boolean = false;
-        public var newAction:StartupActionAddObject;
+        public var newAction:StartupActionAddObject = new StartupActionAddObject();
+        private var _newActiontree:FuncTree;
 
-        public function StartupActionAddMessage()
-        {
-            this.newAction = new StartupActionAddObject();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
@@ -58,6 +54,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_StartupActionAddMessage(output);
@@ -79,7 +83,23 @@
             this.newAction.deserialize(input);
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_StartupActionAddMessage(tree);
+        }
+
+        public function deserializeAsyncAs_StartupActionAddMessage(tree:FuncTree):void
+        {
+            this._newActiontree = tree.addChild(this._newActiontreeFunc);
+        }
+
+        private function _newActiontreeFunc(input:ICustomDataInput):void
+        {
+            this.newAction = new StartupActionAddObject();
+            this.newAction.deserializeAsync(this._newActiontree);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.startup
+} com.ankamagames.dofus.network.messages.game.startup
 

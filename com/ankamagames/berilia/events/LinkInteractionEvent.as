@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.events
+package com.ankamagames.berilia.events
 {
     import flash.events.Event;
 
@@ -10,12 +10,12 @@
 
         public var text:String;
 
-        public function LinkInteractionEvent(type:String, pText:String="")
+        public function LinkInteractionEvent(_arg_1:String, pText:String="")
         {
             this.text = pText;
-            super(type, false, false);
+            super(_arg_1, false, false);
         }
 
     }
-}//package com.ankamagames.berilia.events
+} com.ankamagames.berilia.events
 

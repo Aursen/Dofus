@@ -1,4 +1,4 @@
-﻿package 
+package 
 {
     public class Dynamic 
     {
@@ -8,5 +8,5 @@
         }
 
     }
-}//package 
+} 
 

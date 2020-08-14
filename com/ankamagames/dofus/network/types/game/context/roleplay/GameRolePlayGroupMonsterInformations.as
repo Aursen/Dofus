@@ -1,8 +1,9 @@
-﻿package com.ankamagames.dofus.network.types.game.context.roleplay
+package com.ankamagames.dofus.network.types.game.context.roleplay
 {
     import com.ankamagames.jerakine.network.INetworkType;
-    import com.ankamagames.dofus.network.types.game.look.EntityLook;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import com.ankamagames.dofus.network.types.game.context.EntityDispositionInformations;
+    import com.ankamagames.dofus.network.types.game.look.EntityLook;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.utils.BooleanByteWrapper;
     import com.ankamagames.jerakine.network.ICustomDataInput;
@@ -13,30 +14,24 @@
 
         public static const protocolId:uint = 160;
 
-        public var staticInfos:GroupMonsterStaticInformations;
-        public var ageBonus:int = 0;
+        public var staticInfos:GroupMonsterStaticInformations = new GroupMonsterStaticInformations();
         public var lootShare:int = 0;
         public var alignmentSide:int = 0;
         public var keyRingBonus:Boolean = false;
         public var hasHardcoreDrop:Boolean = false;
         public var hasAVARewardToken:Boolean = false;
+        private var _staticInfostree:FuncTree;
 
-        public function GameRolePlayGroupMonsterInformations()
-        {
-            this.staticInfos = new GroupMonsterStaticInformations();
-            super();
-        }
 
         override public function getTypeId():uint
         {
             return (160);
         }
 
-        public function initGameRolePlayGroupMonsterInformations(contextualId:int=0, look:EntityLook=null, disposition:EntityDispositionInformations=null, staticInfos:GroupMonsterStaticInformations=null, ageBonus:int=0, lootShare:int=0, alignmentSide:int=0, keyRingBonus:Boolean=false, hasHardcoreDrop:Boolean=false, hasAVARewardToken:Boolean=false):GameRolePlayGroupMonsterInformations
+        public function initGameRolePlayGroupMonsterInformations(contextualId:Number=0, disposition:EntityDispositionInformations=null, look:EntityLook=null, staticInfos:GroupMonsterStaticInformations=null, lootShare:int=0, alignmentSide:int=0, keyRingBonus:Boolean=false, hasHardcoreDrop:Boolean=false, hasAVARewardToken:Boolean=false):GameRolePlayGroupMonsterInformations
         {
-            super.initGameRolePlayActorInformations(contextualId, look, disposition);
+            super.initGameRolePlayActorInformations(contextualId, disposition, look);
             this.staticInfos = staticInfos;
-            this.ageBonus = ageBonus;
             this.lootShare = lootShare;
             this.alignmentSide = alignmentSide;
             this.keyRingBonus = keyRingBonus;
@@ -49,7 +44,6 @@
         {
             super.reset();
             this.staticInfos = new GroupMonsterStaticInformations();
-            this.lootShare = 0;
             this.alignmentSide = 0;
             this.keyRingBonus = false;
             this.hasHardcoreDrop = false;
@@ -71,12 +65,7 @@
             output.writeByte(_box0);
             output.writeShort(this.staticInfos.getTypeId());
             this.staticInfos.serialize(output);
-            if ((((this.ageBonus < -1)) || ((this.ageBonus > 1000))))
-            {
-                throw (new Error((("Forbidden value (" + this.ageBonus) + ") on element ageBonus.")));
-            };
-            output.writeShort(this.ageBonus);
-            if ((((this.lootShare < -1)) || ((this.lootShare > 8))))
+            if (((this.lootShare < -1) || (this.lootShare > 8)))
             {
                 throw (new Error((("Forbidden value (" + this.lootShare) + ") on element lootShare.")));
             };
@@ -92,27 +81,58 @@
         public function deserializeAs_GameRolePlayGroupMonsterInformations(input:ICustomDataInput):void
         {
             super.deserialize(input);
+            this.deserializeByteBoxes(input);
+            var _id1:uint = input.readUnsignedShort();
+            this.staticInfos = ProtocolTypeManager.getInstance(GroupMonsterStaticInformations, _id1);
+            this.staticInfos.deserialize(input);
+            this._lootShareFunc(input);
+            this._alignmentSideFunc(input);
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GameRolePlayGroupMonsterInformations(tree);
+        }
+
+        public function deserializeAsyncAs_GameRolePlayGroupMonsterInformations(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this.deserializeByteBoxes);
+            this._staticInfostree = tree.addChild(this._staticInfostreeFunc);
+            tree.addChild(this._lootShareFunc);
+            tree.addChild(this._alignmentSideFunc);
+        }
+
+        private function deserializeByteBoxes(input:ICustomDataInput):void
+        {
             var _box0:uint = input.readByte();
             this.keyRingBonus = BooleanByteWrapper.getFlag(_box0, 0);
             this.hasHardcoreDrop = BooleanByteWrapper.getFlag(_box0, 1);
             this.hasAVARewardToken = BooleanByteWrapper.getFlag(_box0, 2);
-            var _id1:uint = input.readUnsignedShort();
-            this.staticInfos = ProtocolTypeManager.getInstance(GroupMonsterStaticInformations, _id1);
-            this.staticInfos.deserialize(input);
-            this.ageBonus = input.readShort();
-            if ((((this.ageBonus < -1)) || ((this.ageBonus > 1000))))
-            {
-                throw (new Error((("Forbidden value (" + this.ageBonus) + ") on element of GameRolePlayGroupMonsterInformations.ageBonus.")));
-            };
+        }
+
+        private function _staticInfostreeFunc(input:ICustomDataInput):void
+        {
+            var _id:uint = input.readUnsignedShort();
+            this.staticInfos = ProtocolTypeManager.getInstance(GroupMonsterStaticInformations, _id);
+            this.staticInfos.deserializeAsync(this._staticInfostree);
+        }
+
+        private function _lootShareFunc(input:ICustomDataInput):void
+        {
             this.lootShare = input.readByte();
-            if ((((this.lootShare < -1)) || ((this.lootShare > 8))))
+            if (((this.lootShare < -1) || (this.lootShare > 8)))
             {
                 throw (new Error((("Forbidden value (" + this.lootShare) + ") on element of GameRolePlayGroupMonsterInformations.lootShare.")));
             };
+        }
+
+        private function _alignmentSideFunc(input:ICustomDataInput):void
+        {
             this.alignmentSide = input.readByte();
         }
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.context.roleplay
+} com.ankamagames.dofus.network.types.game.context.roleplay
 

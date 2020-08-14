@@ -1,4 +1,4 @@
-﻿package com.ankamagames.atouin.types
+package com.ankamagames.atouin.types
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
@@ -14,7 +14,7 @@
 
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(Selection));
 
-        private var _mapId:uint;
+        private var _mapId:Number;
         public var renderer:IZoneRenderer;
         public var zone:IZone;
         public var cells:Vector.<uint>;
@@ -24,12 +24,12 @@
         public var visible:Boolean;
 
 
-        public function set mapId(id:uint):void
+        public function set mapId(id:Number):void
         {
             this._mapId = id;
         }
 
-        public function get mapId():uint
+        public function get mapId():Number
         {
             if (isNaN(this._mapId))
             {
@@ -51,7 +51,7 @@
         {
             if (this.renderer)
             {
-                if (!(aCells))
+                if (!aCells)
                 {
                     this.renderer.remove(this.cells, MapDisplayManager.getInstance().getDataMapContainer());
                 }
@@ -65,7 +65,7 @@
 
         public function isInside(cellId:uint):Boolean
         {
-            if (!(this.cells))
+            if (!this.cells)
             {
                 return (false);
             };
@@ -83,5 +83,5 @@
 
 
     }
-}//package com.ankamagames.atouin.types
+} com.ankamagames.atouin.types
 

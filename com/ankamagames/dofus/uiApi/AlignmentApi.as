@@ -1,10 +1,10 @@
-﻿package com.ankamagames.dofus.uiApi
+package com.ankamagames.dofus.uiApi
 {
     import com.ankamagames.berilia.interfaces.IApi;
     import com.ankamagames.jerakine.logger.Logger;
-    import com.ankamagames.dofus.datacenter.world.MapPosition;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
+    import com.ankamagames.dofus.datacenter.world.MapPosition;
     import com.ankamagames.dofus.kernel.Kernel;
     import com.ankamagames.dofus.logic.game.common.frames.AllianceFrame;
     import com.ankamagames.dofus.logic.game.common.frames.AlignmentFrame;
@@ -24,7 +24,7 @@
     public class AlignmentApi implements IApi 
     {
 
-        protected var _log:Logger;
+        protected var _log:Logger = Log.getLogger(getQualifiedClassName(DataApi));
         private var _orderRanks:Array;
         private var _rankGifts:Array;
         private var _rankId:uint;
@@ -32,28 +32,22 @@
         private var _sideId:uint;
         private var include_mapPosition:MapPosition = null;
 
-        public function AlignmentApi()
-        {
-            this._log = Log.getLogger(getQualifiedClassName(DataApi));
-            super();
-        }
 
         private function get allianceFrame():AllianceFrame
         {
-            return ((Kernel.getWorker().getFrame(AllianceFrame) as AllianceFrame));
+            return (Kernel.getWorker().getFrame(AllianceFrame) as AllianceFrame);
         }
 
         private function get alignmentFrame():AlignmentFrame
         {
-            return ((Kernel.getWorker().getFrame(AlignmentFrame) as AlignmentFrame));
+            return (Kernel.getWorker().getFrame(AlignmentFrame) as AlignmentFrame);
         }
 
         private function get roleplayEntitiesFrame():RoleplayEntitiesFrame
         {
-            return ((Kernel.getWorker().getFrame(RoleplayEntitiesFrame) as RoleplayEntitiesFrame));
+            return (Kernel.getWorker().getFrame(RoleplayEntitiesFrame) as RoleplayEntitiesFrame);
         }
 
-        [Trusted]
         public function destroy():void
         {
             this._orderRanks = null;
@@ -61,79 +55,66 @@
             this._sideOrders = null;
         }
 
-        [Untrusted]
         public function getBalance(balanceId:uint):AlignmentBalance
         {
             return (AlignmentBalance.getAlignmentBalanceById(balanceId));
         }
 
-        [Untrusted]
         public function getBalances():Array
         {
             return (AlignmentBalance.getAlignmentBalances());
         }
 
-        [Untrusted]
         public function getEffect(effectId:uint):AlignmentEffect
         {
             return (AlignmentEffect.getAlignmentEffectById(effectId));
         }
 
-        [Untrusted]
         public function getGift(giftId:uint):AlignmentGift
         {
             return (AlignmentGift.getAlignmentGiftById(giftId));
         }
 
-        [Untrusted]
         public function getGifts():Array
         {
             return (AlignmentGift.getAlignmentGifts());
         }
 
-        [Untrusted]
         public function getRankGifts(rankId:uint):AlignmentRankJntGift
         {
             return (AlignmentRankJntGift.getAlignmentRankJntGiftById(rankId));
         }
 
-        [Untrusted]
         public function getGiftEffect(giftId:uint):AlignmentEffect
         {
             return (this.getEffect(this.getGift(giftId).effectId));
         }
 
-        [Untrusted]
         public function getOrder(orderId:uint):AlignmentOrder
         {
             return (AlignmentOrder.getAlignmentOrderById(orderId));
         }
 
-        [Untrusted]
         public function getOrders():Array
         {
             return (AlignmentOrder.getAlignmentOrders());
         }
 
-        [Untrusted]
         public function getRank(rankId:uint):AlignmentRank
         {
             return (AlignmentRank.getAlignmentRankById(rankId));
         }
 
-        [Untrusted]
         public function getRanks():Array
         {
             return (AlignmentRank.getAlignmentRanks());
         }
 
-        [Untrusted]
         public function getRankOrder(rankId:uint):AlignmentOrder
         {
             return (this.getOrder(this.getRank(rankId).orderId));
         }
 
-        [Untrusted]
         public function getOrderRanks(orderId:uint):Array
         {
             var alignmentRank:AlignmentRank;
@@ -156,19 +137,16 @@
             return (listOrderRanks.sortOn("minimumAlignment", Array.NUMERIC));
         }
 
-        [Untrusted]
         public function getSide(sideId:uint):AlignmentSide
         {
             return (AlignmentSide.getAlignmentSideById(sideId));
         }
 
-        [Untrusted]
         public function getOrderSide(orderId:uint):AlignmentSide
         {
             return (this.getSide(this.getOrder(orderId).sideId));
         }
 
-        [Untrusted]
         public function getSideOrders(sideId:uint):Array
         {
             this._sideId = sideId;
@@ -176,25 +154,21 @@
             return (this._sideOrders);
         }
 
-        [Untrusted]
         public function getTitleName(sideId:uint, grade:int):String
         {
             return (AlignmentTitle.getAlignmentTitlesById(sideId).getNameFromGrade(grade));
         }
 
-        [Untrusted]
         public function getTitleShortName(sideId:uint, grade:int):String
         {
             return (AlignmentTitle.getAlignmentTitlesById(sideId).getShortNameFromGrade(grade));
         }
 
-        [Untrusted]
         public function getPlayerRank():int
         {
-            return (this.alignmentFrame.playerRank);
+            return (AlignmentFrame.getInstance().playerRank);
         }
 
-        [Untrusted]
         public function getAlliancesOnTheHill():Vector.<AllianceOnTheHillWrapper>
         {
             return (this.allianceFrame.alliancesOnTheHill);
@@ -235,5 +209,5 @@
 
 
     }
-}//package com.ankamagames.dofus.uiApi
+} com.ankamagames.dofus.uiApi
 

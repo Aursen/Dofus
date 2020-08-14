@@ -1,4 +1,4 @@
-﻿package com.ankamagames.atouin.data.elements.subtypes
+package com.ankamagames.atouin.data.elements.subtypes
 {
     import com.ankamagames.atouin.AtouinConstants;
     import flash.utils.IDataInput;
@@ -34,5 +34,5 @@
 
 
     }
-}//package com.ankamagames.atouin.data.elements.subtypes
+} com.ankamagames.atouin.data.elements.subtypes
 

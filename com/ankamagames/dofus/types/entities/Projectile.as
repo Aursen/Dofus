@@ -1,9 +1,10 @@
-﻿package com.ankamagames.dofus.types.entities
+package com.ankamagames.dofus.types.entities
 {
     import com.ankamagames.tiphon.display.TiphonSprite;
     import com.ankamagames.jerakine.entities.interfaces.IDisplayable;
     import com.ankamagames.jerakine.entities.interfaces.IMovable;
     import com.ankamagames.jerakine.entities.interfaces.IEntity;
+    import com.ankamagames.jerakine.interfaces.ITransparency;
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
@@ -18,26 +19,27 @@
     import flash.events.Event;
     import com.ankamagames.jerakine.types.positions.MovementPath;
 
-    public class Projectile extends TiphonSprite implements IDisplayable, IMovable, IEntity 
+    public class Projectile extends TiphonSprite implements IDisplayable, IMovable, IEntity, ITransparency 
     {
 
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(Projectile));
 
-        private var _id:int;
+        private var _id:Number;
         private var _position:MapPoint;
         private var _displayed:Boolean;
         private var _displayBehavior:IDisplayBehavior;
         private var _movementBehavior:IMovementBehavior;
+        private var _transparencyAllowed:Boolean = true;
         public var startPlayingOnlyWhenDisplayed:Boolean;
 
-        public function Projectile(nId:int, look:TiphonEntityLook, postInit:Boolean=false, startPlayingOnlyWhenDisplayed:Boolean=true)
+        public function Projectile(nId:Number, look:TiphonEntityLook, postInit:Boolean=false, startPlayingOnlyWhenDisplayed:Boolean=true)
         {
             super(look);
             this.startPlayingOnlyWhenDisplayed = startPlayingOnlyWhenDisplayed;
             this.id = nId;
-            if (!(postInit))
+            if (!postInit)
             {
-                this.init();
+                this.initDirection();
             };
             mouseChildren = false;
             mouseEnabled = false;
@@ -63,12 +65,12 @@
             this._movementBehavior = oValue;
         }
 
-        public function get id():int
+        public function get id():Number
         {
             return (this._id);
         }
 
-        public function set id(nValue:int):void
+        public function set id(nValue:Number):void
         {
             this._id = nValue;
         }
@@ -98,11 +100,21 @@
             return (this._displayed);
         }
 
-        public function init(direction:int=-1):void
+        public function getIsTransparencyAllowed():Boolean
+        {
+            return (this._transparencyAllowed);
+        }
+
+        public function set transparencyAllowed(allowed:Boolean):void
+        {
+            this._transparencyAllowed = allowed;
+        }
+
+        public function initDirection(direction:int=-1):void
         {
             this._displayBehavior = AtouinDisplayBehavior.getInstance();
             this._movementBehavior = ParableMovementBehavior.getInstance();
-            setDirection((((direction == -1)) ? DirectionsEnum.RIGHT : direction));
+            setDirection(((direction == -1) ? DirectionsEnum.RIGHT : direction));
             if (((!(this.startPlayingOnlyWhenDisplayed)) || (parent)))
             {
                 this.setAnim();
@@ -160,5 +172,5 @@
 
 
     }
-}//package com.ankamagames.dofus.types.entities
+} com.ankamagames.dofus.types.entities
 

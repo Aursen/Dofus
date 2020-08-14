@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.types.graphic
+package com.ankamagames.berilia.types.graphic
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
@@ -32,11 +32,11 @@
             this._nPoint = LocationEnum.POINT_TOPLEFT;
             this._nRelativePoint = LocationEnum.POINT_TOPLEFT;
             this._sRelativeTo = REF_PARENT;
-            if (!(isNaN(nPoint)))
+            if (!isNaN(nPoint))
             {
                 this._nPoint = nPoint;
             };
-            if (!(isNaN(nRelativePoint)))
+            if (!isNaN(nRelativePoint))
             {
                 this._nRelativePoint = nRelativePoint;
             };
@@ -100,6 +100,15 @@
             };
         }
 
+
+        public function reset():void
+        {
+            this._nOffsetX = 0;
+            this._nOffsetY = 0;
+            this._nPoint = LocationEnum.POINT_TOPLEFT;
+            this._nRelativePoint = LocationEnum.POINT_TOPLEFT;
+            this._sRelativeTo = REF_PARENT;
+        }
 
         public function setPoint(sPoint:String):void
         {
@@ -167,7 +176,7 @@
 
         public function toString():String
         {
-            return (((((((((("GraphicLocation [point : " + convertPointIntToString(this.getPoint())) + ", relativePoint : ") + convertPointIntToString(this.getRelativePoint())) + ", relativeTo : ") + this.getRelativeTo()) + ", offset : ") + this.getOffsetX()) + "/") + this.getOffsetY()));
+            return ((((((((("GraphicLocation [point : " + convertPointIntToString(this.getPoint())) + ", relativePoint : ") + convertPointIntToString(this.getRelativePoint())) + ", relativeTo : ") + this.getRelativeTo()) + ", offset : ") + this.getOffsetX()) + "/") + this.getOffsetY());
         }
 
         public function clone():GraphicLocation
@@ -195,5 +204,5 @@
 
 
     }
-}//package com.ankamagames.berilia.types.graphic
+} com.ankamagames.berilia.types.graphic
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.character.stats
+package com.ankamagames.dofus.network.messages.game.character.stats
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class CharacterLevelUpMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -52,6 +52,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_CharacterLevelUpMessage(output);
@@ -59,11 +67,11 @@
 
         public function serializeAs_CharacterLevelUpMessage(output:ICustomDataOutput):void
         {
-            if ((((this.newLevel < 2)) || ((this.newLevel > 200))))
+            if (this.newLevel < 0)
             {
                 throw (new Error((("Forbidden value (" + this.newLevel) + ") on element newLevel.")));
             };
-            output.writeByte(this.newLevel);
+            output.writeVarShort(this.newLevel);
         }
 
         public function deserialize(input:ICustomDataInput):void
@@ -73,8 +81,23 @@
 
         public function deserializeAs_CharacterLevelUpMessage(input:ICustomDataInput):void
         {
-            this.newLevel = input.readUnsignedByte();
-            if ((((this.newLevel < 2)) || ((this.newLevel > 200))))
+            this._newLevelFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_CharacterLevelUpMessage(tree);
+        }
+
+        public function deserializeAsyncAs_CharacterLevelUpMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._newLevelFunc);
+        }
+
+        private function _newLevelFunc(input:ICustomDataInput):void
+        {
+            this.newLevel = input.readVarUhShort();
+            if (this.newLevel < 0)
             {
                 throw (new Error((("Forbidden value (" + this.newLevel) + ") on element of CharacterLevelUpMessage.newLevel.")));
             };
@@ -82,5 +105,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.character.stats
+} com.ankamagames.dofus.network.messages.game.character.stats
 

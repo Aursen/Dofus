@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.managers
+package com.ankamagames.berilia.managers
 {
     import flash.utils.Dictionary;
     import com.ankamagames.berilia.types.data.BeriliaUiSound;
@@ -16,22 +16,15 @@
         public static const UI_UNLOAD:uint = 1;
         private static var _self:UiSoundManager;
 
-        private var _registeredHook:Dictionary;
-        private var _registeredUi:Dictionary;
-        private var _registeredUiElement:Dictionary;
+        private var _registeredHook:Dictionary = new Dictionary();
+        private var _registeredUi:Dictionary = new Dictionary();
+        private var _registeredUiElement:Dictionary = new Dictionary();
         public var playSound:Function;
 
-        public function UiSoundManager()
-        {
-            this._registeredHook = new Dictionary();
-            this._registeredUi = new Dictionary();
-            this._registeredUiElement = new Dictionary();
-            super();
-        }
 
         public static function getInstance():UiSoundManager
         {
-            if (!(_self))
+            if (!_self)
             {
                 _self = new (UiSoundManager)();
             };
@@ -42,7 +35,7 @@
         public function registerUi(uiName:String, openFile:String=null, closeFile:String=null):void
         {
             var uiSound:BeriliaUiSound = this._registeredUi[uiName];
-            if (!(uiSound))
+            if (!uiSound)
             {
                 uiSound = new BeriliaUiSound();
                 uiSound.uiName = uiName;
@@ -81,15 +74,15 @@
         {
             var elementHash:String;
             var result:Vector.<BeriliaUiElementSound> = new Vector.<BeriliaUiElementSound>();
-            if (!(target.getUi()))
+            if (!target.getUi())
             {
                 return (result);
             };
-            var uiName:String = (target.getUi().name + "::");
+            var uiName:* = (target.getUi().name + "::");
             var uiNameLen:uint = uiName.length;
             for (elementHash in this._registeredUiElement)
             {
-                if ((((elementHash.substr(0, uiNameLen) == uiName)) && ((elementHash.substr(uiNameLen, target.name.length) == target.name))))
+                if (((elementHash.substr(0, uiNameLen) == uiName) && (elementHash.substr(uiNameLen, target.name.length) == target.name)))
                 {
                     result.push(this._registeredUiElement[elementHash]);
                 };
@@ -99,7 +92,7 @@
 
         public function fromUiElement(target:GraphicContainer, hookFct:String):Boolean
         {
-            if (((((!(target)) || (!(hookFct)))) || (!(target.getUi()))))
+            if ((((!(target)) || (!(hookFct))) || (!(target.getUi()))))
             {
                 return (false);
             };
@@ -126,5 +119,5 @@
 
 
     }
-}//package com.ankamagames.berilia.managers
+} com.ankamagames.berilia.managers
 

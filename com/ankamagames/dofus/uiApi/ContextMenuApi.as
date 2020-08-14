@@ -1,11 +1,10 @@
-﻿package com.ankamagames.dofus.uiApi
+package com.ankamagames.dofus.uiApi
 {
     import com.ankamagames.berilia.interfaces.IApi;
-    import com.ankamagames.jerakine.utils.misc.CheckCompatibility;
+    import com.ankamagames.jerakine.utils.misc.DescribeTypeCache;
     import com.ankamagames.berilia.interfaces.IMenuMaker;
     import com.ankamagames.berilia.factories.MenusFactory;
     import com.ankamagames.berilia.utils.errors.ApiError;
-    import com.ankamagames.berilia.managers.SecureCenter;
     import com.ankamagames.berilia.types.data.ContextMenuData;
 
     [InstanciedApi]
@@ -13,10 +12,9 @@
     {
 
 
-        [Untrusted]
         public function registerMenuMaker(makerName:String, makerClass:Class):void
         {
-            if (CheckCompatibility.isCompatible(IMenuMaker, makerClass))
+            if (DescribeTypeCache.classImplementInterface(makerClass, IMenuMaker))
             {
                 MenusFactory.registerMaker(makerName, makerClass);
             }
@@ -26,14 +24,12 @@
             };
         }
 
-        [Untrusted]
         public function create(data:*, makerName:String=null, makerParams:Array=null):ContextMenuData
         {
-            var menu:ContextMenuData = MenusFactory.create(SecureCenter.unsecure(data), makerName, SecureCenter.unsecure(makerParams));
+            var menu:ContextMenuData = MenusFactory.create(data, makerName, makerParams);
             return (menu);
         }
 
-        [Untrusted]
         [NoBoxing]
         public function getMenuMaker(makerName:String):Object
         {
@@ -42,5 +38,5 @@
 
 
     }
-}//package com.ankamagames.dofus.uiApi
+} com.ankamagames.dofus.uiApi
 

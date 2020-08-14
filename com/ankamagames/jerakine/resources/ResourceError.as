@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.resources
+package com.ankamagames.jerakine.resources
 {
     public class ResourceError extends Error 
     {
@@ -9,5 +9,5 @@
         }
 
     }
-}//package com.ankamagames.jerakine.resources
+} com.ankamagames.jerakine.resources
 

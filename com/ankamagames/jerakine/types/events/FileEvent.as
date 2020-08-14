@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.types.events
+package com.ankamagames.jerakine.types.events
 {
     import flash.events.Event;
 
@@ -10,9 +10,9 @@
         private var _sFile:String;
         private var _bSuccess:Boolean;
 
-        public function FileEvent(type:String, sFile:String, bSuccess:Boolean)
+        public function FileEvent(_arg_1:String, sFile:String, bSuccess:Boolean)
         {
-            super(type, bubbles, cancelable);
+            super(_arg_1, bubbles, cancelable);
             this._sFile = sFile;
             this._bSuccess = bSuccess;
         }
@@ -29,5 +29,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.types.events
+} com.ankamagames.jerakine.types.events
 

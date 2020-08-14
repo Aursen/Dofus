@@ -1,32 +1,28 @@
-﻿package com.ankamagames.dofus.network.messages.game.chat
+package com.ankamagames.dofus.network.messages.game.chat
 {
     import com.ankamagames.jerakine.network.INetworkMessage;
     import __AS3__.vec.Vector;
     import com.ankamagames.dofus.network.types.game.data.items.ObjectItem;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
     import __AS3__.vec.*;
 
-    [Trusted]
     public class ChatServerWithObjectMessage extends ChatServerMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 883;
 
         private var _isInitialized:Boolean = false;
-        public var objects:Vector.<ObjectItem>;
+        public var objects:Vector.<ObjectItem> = new Vector.<ObjectItem>();
+        private var _objectstree:FuncTree;
 
-        public function ChatServerWithObjectMessage()
-        {
-            this.objects = new Vector.<ObjectItem>();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
-            return (((super.isInitialized) && (this._isInitialized)));
+            return ((super.isInitialized) && (this._isInitialized));
         }
 
         override public function getMessageId():uint
@@ -34,9 +30,9 @@
             return (883);
         }
 
-        public function initChatServerWithObjectMessage(channel:uint=0, content:String="", timestamp:uint=0, fingerprint:String="", senderId:int=0, senderName:String="", senderAccountId:uint=0, objects:Vector.<ObjectItem>=null):ChatServerWithObjectMessage
+        public function initChatServerWithObjectMessage(channel:uint=0, content:String="", timestamp:uint=0, fingerprint:String="", senderId:Number=0, senderName:String="", prefix:String="", senderAccountId:uint=0, objects:Vector.<ObjectItem>=null):ChatServerWithObjectMessage
         {
-            super.initChatServerMessage(channel, content, timestamp, fingerprint, senderId, senderName, senderAccountId);
+            super.initChatServerMessage(channel, content, timestamp, fingerprint, senderId, senderName, prefix, senderAccountId);
             this.objects = objects;
             this._isInitialized = true;
             return (this);
@@ -59,6 +55,14 @@
         override public function unpack(input:ICustomDataInput, length:uint):void
         {
             this.deserialize(input);
+        }
+
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
         }
 
         override public function serialize(output:ICustomDataOutput):void
@@ -98,7 +102,36 @@
             };
         }
 
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_ChatServerWithObjectMessage(tree);
+        }
+
+        public function deserializeAsyncAs_ChatServerWithObjectMessage(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            this._objectstree = tree.addChild(this._objectstreeFunc);
+        }
+
+        private function _objectstreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._objectstree.addChild(this._objectsFunc);
+                i++;
+            };
+        }
+
+        private function _objectsFunc(input:ICustomDataInput):void
+        {
+            var _item:ObjectItem = new ObjectItem();
+            _item.deserialize(input);
+            this.objects.push(_item);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.chat
+} com.ankamagames.dofus.network.messages.game.chat
 

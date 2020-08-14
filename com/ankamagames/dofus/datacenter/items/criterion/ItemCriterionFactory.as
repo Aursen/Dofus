@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.datacenter.items.criterion
+package com.ankamagames.dofus.datacenter.items.criterion
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.jerakine.logger.Logger;
@@ -22,41 +22,92 @@
                     break;
                 case "Ca":
                 case "CA":
+                case "ca":
                 case "Cc":
                 case "CC":
+                case "cc":
+                case "CD":
                 case "Ce":
                 case "CE":
-                case "CD":
                 case "CH":
                 case "Ci":
                 case "CI":
+                case "ci":
                 case "CL":
                 case "CM":
                 case "CP":
                 case "Cs":
                 case "CS":
-                case "Cv":
-                case "CV":
-                case "Cw":
-                case "CW":
+                case "cs":
                 case "Ct":
                 case "CT":
-                case "ca":
-                case "cc":
-                case "ci":
-                case "cs":
+                case "Cv":
+                case "CV":
                 case "cv":
+                case "Cw":
+                case "CW":
                 case "cw":
                     criterion = new ItemCriterion(pServerCriterionForm);
+                    break;
+                case "EA":
+                    criterion = new MonsterGroupChallengeCriterion(pServerCriterionForm);
+                    break;
+                case "EB":
+                    criterion = new NumberOfMountBirthedCriterion(pServerCriterionForm);
+                    break;
+                case "Ec":
+                    criterion = new NumberOfItemMadeCriterion(pServerCriterionForm);
+                    break;
+                case "Eu":
+                    criterion = new RuneByBreakingItemCriterion(pServerCriterionForm);
+                    break;
+                case "Kd":
+                    criterion = new ArenaDuelRankCriterion(pServerCriterionForm);
+                    break;
+                case "KD":
+                    criterion = new ArenaMaxDuelRankCriterion(pServerCriterionForm);
+                    break;
+                case "Ks":
+                    criterion = new ArenaSoloRankCriterion(pServerCriterionForm);
+                    break;
+                case "KS":
+                    criterion = new ArenaMaxSoloRankCriterion(pServerCriterionForm);
+                    break;
+                case "Kt":
+                    criterion = new ArenaTeamRankCriterion(pServerCriterionForm);
+                    break;
+                case "KT":
+                    criterion = new ArenaMaxTeamRankCriterion(pServerCriterionForm);
+                    break;
+                case "MK":
+                    criterion = new MapCharactersItemCriterion(pServerCriterionForm);
+                    break;
+                case "Oa":
+                    criterion = new AchievementPointsItemCriterion(pServerCriterionForm);
                     break;
                 case "OA":
                     criterion = new AchievementItemCriterion(pServerCriterionForm);
                     break;
-                case "Ow":
-                    criterion = new AllianceItemCriterion(pServerCriterionForm);
+                case "Ob":
+                    criterion = new AchievementAccountItemCriterion(pServerCriterionForm);
+                    break;
+                case "Of":
+                    criterion = new MountFamilyItemCriterion(pServerCriterionForm);
+                    break;
+                case "OH":
+                    criterion = new NewHavenbagItemCriterion(pServerCriterionForm);
+                    break;
+                case "OO":
+                    criterion = new AchievementObjectiveValidated(pServerCriterionForm);
+                    break;
+                case "Os":
+                    criterion = new SmileyPackItemCriterion(pServerCriterionForm);
                     break;
                 case "OV":
                     criterion = new SubscriptionDurationItemCriterion(pServerCriterionForm);
+                    break;
+                case "Ow":
+                    criterion = new AllianceItemCriterion(pServerCriterionForm);
                     break;
                 case "Ox":
                     criterion = new AllianceRightsItemCriterion(pServerCriterionForm);
@@ -108,6 +159,9 @@
                 case "PL":
                     criterion = new LevelItemCriterion(pServerCriterionForm);
                     break;
+                case "Pl":
+                    criterion = new PrestigeLevelItemCriterion(pServerCriterionForm);
+                    break;
                 case "PN":
                     criterion = new NameItemCriterion(pServerCriterionForm);
                     break;
@@ -120,12 +174,6 @@
                 case "Pp":
                 case "PP":
                     criterion = new PVPRankItemCriterion(pServerCriterionForm);
-                    break;
-                case "Pq":
-                    criterion = new RankCriterion(pServerCriterionForm);
-                    break;
-                case "PQ":
-                    criterion = new MaxRankCriterion(pServerCriterionForm);
                     break;
                 case "Pr":
                     criterion = new SpecializationItemCriterion(pServerCriterionForm);
@@ -157,10 +205,10 @@
                 case "PX":
                     criterion = new AccountRightsItemCriterion(pServerCriterionForm);
                     break;
-                case "Pz":
-                    break;
                 case "Py":
                     criterion = new GuildLevelItemCriterion(pServerCriterionForm);
+                    break;
+                case "Pz":
                     break;
                 case "PZ":
                     criterion = new SubscribeItemCriterion(pServerCriterionForm);
@@ -170,20 +218,26 @@
                 case "Qf":
                     criterion = new QuestItemCriterion(pServerCriterionForm);
                     break;
-                case "MK":
-                    criterion = new MapCharactersItemCriterion(pServerCriterionForm);
+                case "Qo":
+                    criterion = new QuestObjectiveItemCriterion(pServerCriterionForm);
+                    break;
+                case "SC":
+                    criterion = new ServerTypeItemCriterion(pServerCriterionForm);
                     break;
                 case "Sc":
                     criterion = new StaticCriterionItemCriterion(pServerCriterionForm);
                     break;
-                case "SG":
-                    criterion = new MonthItemCriterion(pServerCriterionForm);
-                    break;
                 case "Sd":
                     criterion = new DayItemCriterion(pServerCriterionForm);
                     break;
+                case "SG":
+                    criterion = new MonthItemCriterion(pServerCriterionForm);
+                    break;
                 case "SI":
                     criterion = new ServerItemCriterion(pServerCriterionForm);
+                    break;
+                case "ST":
+                    criterion = new ServerSeasonTemporisCriterion(pServerCriterionForm);
                     break;
                 case "Sy":
                     criterion = new CommunityItemCriterion(pServerCriterionForm);
@@ -196,5 +250,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.items.criterion
+} com.ankamagames.dofus.datacenter.items.criterion
 

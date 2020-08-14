@@ -1,10 +1,10 @@
-﻿package com.ankamagames.dofus.network.types.game.achievement
+package com.ankamagames.dofus.network.types.game.achievement
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class AchievementObjective implements INetworkType 
     {
 
@@ -58,11 +58,32 @@
 
         public function deserializeAs_AchievementObjective(input:ICustomDataInput):void
         {
+            this._idFunc(input);
+            this._maxValueFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_AchievementObjective(tree);
+        }
+
+        public function deserializeAsyncAs_AchievementObjective(tree:FuncTree):void
+        {
+            tree.addChild(this._idFunc);
+            tree.addChild(this._maxValueFunc);
+        }
+
+        private function _idFunc(input:ICustomDataInput):void
+        {
             this.id = input.readVarUhInt();
             if (this.id < 0)
             {
                 throw (new Error((("Forbidden value (" + this.id) + ") on element of AchievementObjective.id.")));
             };
+        }
+
+        private function _maxValueFunc(input:ICustomDataInput):void
+        {
             this.maxValue = input.readVarUhShort();
             if (this.maxValue < 0)
             {
@@ -72,5 +93,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.achievement
+} com.ankamagames.dofus.network.types.game.achievement
 

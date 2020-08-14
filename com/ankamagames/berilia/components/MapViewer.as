@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.components
+package com.ankamagames.berilia.components
 {
     import com.ankamagames.berilia.types.graphic.GraphicContainer;
     import com.ankamagames.berilia.FinalizableUIComponent;
@@ -10,42 +10,54 @@
     import flash.display.Shape;
     import com.ankamagames.berilia.types.graphic.MapGroupElement;
     import flash.geom.Rectangle;
+    import flash.geom.Point;
     import com.ankamagames.berilia.types.data.Map;
     import __AS3__.vec.Vector;
     import com.ankamagames.berilia.types.data.MapArea;
-    import com.ankamagames.jerakine.utils.system.AirScanner;
     import com.ankamagames.jerakine.utils.display.StageShareManager;
     import flash.events.Event;
-    import flash.geom.Point;
-    import flash.display.InteractiveObject;
     import com.ankamagames.berilia.types.data.MapElement;
+    import com.ankamagames.berilia.types.graphic.MapIconElement;
+    import com.ankamagames.jerakine.managers.CursorSpriteManager;
+    import flash.display.InteractiveObject;
+    import com.ankamagames.berilia.managers.MapElementManager;
+    import com.ankamagames.jerakine.types.Uri;
+    import flash.geom.ColorTransform;
+    import com.ankamagames.berilia.types.graphic.MapDisplayableElement;
+    import com.ankamagames.berilia.types.graphic.LinkedMapIconElement;
+    import com.ankamagames.berilia.types.graphic.MapRouteShape;
+    import flash.display.Graphics;
+    import com.ankamagames.berilia.types.graphic.MapAreaShape;
     import com.ankamagames.berilia.Berilia;
     import com.ankamagames.berilia.components.messages.MapMoveMessage;
-    import flash.geom.ColorTransform;
-    import com.ankamagames.jerakine.types.Uri;
-    import com.ankamagames.berilia.types.graphic.MapAreaShape;
-    import flash.display.Graphics;
-    import com.ankamagames.berilia.types.data.LinkedCursorData;
     import flash.ui.Mouse;
-    import com.ankamagames.berilia.managers.LinkedCursorSpriteManager;
+    import flash.ui.MouseCursor;
     import com.ankamagames.jerakine.utils.display.EnterFrameDispatcher;
+    import com.ankamagames.jerakine.pools.PoolablePoint;
+    import com.ankamagames.jerakine.pools.PoolsManager;
     import com.ankamagames.jerakine.data.XmlConfig;
     import flash.display.DisplayObject;
-    import flash.display.DisplayObjectContainer;
-    import com.ankamagames.berilia.components.messages.MapRollOverMessage;
+    import com.ankamagames.berilia.components.messages.TextureReadyMessage;
     import com.ankamagames.jerakine.handlers.messages.mouse.MouseOverMessage;
+    import flash.display.DisplayObjectContainer;
     import com.ankamagames.jerakine.handlers.messages.mouse.MouseOutMessage;
+    import com.ankamagames.jerakine.handlers.messages.mouse.MouseDownMessage;
     import com.ankamagames.jerakine.handlers.messages.mouse.MouseClickMessage;
     import com.ankamagames.jerakine.handlers.messages.mouse.MouseWheelMessage;
     import com.ankamagames.jerakine.handlers.messages.mouse.MouseRightClickMessage;
     import com.ankamagames.berilia.components.messages.MapElementRollOverMessage;
+    import com.ankamagames.berilia.components.messages.MapRollOutMessage;
     import com.ankamagames.berilia.components.messages.MapElementRollOutMessage;
-    import com.ankamagames.jerakine.handlers.messages.mouse.MouseDownMessage;
+    import com.ankamagames.berilia.frames.ShortcutsFrame;
+    import com.ankamagames.berilia.managers.KernelEventsManager;
+    import com.ankamagames.berilia.utils.BeriliaHookList;
     import com.ankamagames.berilia.managers.TooltipManager;
     import com.ankamagames.jerakine.handlers.messages.mouse.MouseReleaseOutsideMessage;
     import com.ankamagames.jerakine.handlers.messages.mouse.MouseUpMessage;
+    import flash.utils.getTimer;
     import com.ankamagames.berilia.components.messages.MapElementRightClickMessage;
     import com.ankamagames.jerakine.messages.Message;
+    import com.ankamagames.berilia.components.messages.MapRollOverMessage;
     import __AS3__.vec.*;
 
     public class MapViewer extends GraphicContainer implements FinalizableUIComponent 
@@ -53,40 +65,50 @@
 
         public static var MEMORY_LOG:Dictionary = new Dictionary(true);
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(MapViewer));
+        private static var _iconUris:Dictionary = new Dictionary();
         public static var FLAG_CURSOR:Class;
 
-        private var _finalized:Boolean;
         private var _showGrid:Boolean = false;
         private var _mapBitmapContainer:Sprite;
         private var _mapContainer:Sprite;
         private var _arrowContainer:Sprite;
         private var _grid:Shape;
         private var _areaShapesContainer:Sprite;
+        private var _routeShapesContainer:Sprite;
         private var _groupsContainer:Sprite;
         private var _layersContainer:Sprite;
+        private var _currentMapContainer:Sprite;
         private var _openedMapGroupElement:MapGroupElement;
-        private var _elementsGraphicRef:Dictionary;
+        private var _elementsListsByCoordinates:Dictionary;
+        private var _elementsByElementTexture:Dictionary;
+        private var _elementTexturesByElement:Dictionary;
         private var _lastMx:int;
         private var _lastMy:int;
+        private var _currentMapRect:Rectangle;
+        private var _currentMapPos:Point;
         private var _viewRect:Rectangle;
         private var _layers:Array;
-        private var _mapElements:Array;
+        private var _mapElements:Dictionary;
         private var _dragging:Boolean;
         private var _currentMap:Map;
-        private var _availableMaps:Array;
-        private var _arrowPool:Array;
-        private var _arrowAllocation:Dictionary;
-        private var _reverseArrowAllocation:Dictionary;
-        private var _mapGroupElements:Dictionary;
+        private var _availableMaps:Array = [];
+        private var _arrowPool:Array = [];
+        private var _arrowsByElementTexture:Dictionary = new Dictionary();
+        private var _elementTexturesByArrow:Dictionary = new Dictionary();
+        private var _mapGroupElements:Dictionary = new Dictionary();
         private var _lastScaleIconUpdate:Number = -1;
-        private var _enable3DMode:Boolean = false;
         private var _flagCursor:Sprite;
         private var _flagCursorVisible:Boolean;
         private var _mouseOnArrow:Boolean = false;
-        private var _zoomLevels:Array;
-        private var _zoomLevelsPercent:Array;
+        private var _zoomLevels:Array = [];
         private var _visibleMapAreas:Vector.<MapArea>;
         private var _mapToClear:Map;
+        private var _lastWheelZoom:Number;
+        private var _currentZoomStep:Number;
+        private var _currentMapIcon:Texture;
+        private var _onMapElementsUpdated:Function;
+        private var _lastIconScale:Number;
+        private var _needIconResize:Boolean;
         public var mapWidth:Number;
         public var mapHeight:Number;
         public var origineX:int;
@@ -94,43 +116,57 @@
         public var maxScale:Number = 2;
         public var minScale:Number = 0.5;
         public var startScale:Number = 0.8;
-        public var roundCornerRadius:uint = 0;
         public var enabledDrag:Boolean = true;
         public var autoSizeIcon:Boolean = false;
         public var gridLineThickness:Number = 0.5;
-        private var zz:Number = 1;
-        private var _lastMouseX:int = 0;
-        private var _lastMouseY:int = 0;
+        public var needMask:Boolean = true;
+        private var _isMouseOver:Boolean = false;
+        private var _lastMouseX:Number = 0;
+        private var _lastMouseY:Number = 0;
+        private var _openMapGroupElementIndex:int;
 
         public function MapViewer()
         {
-            this._availableMaps = [];
-            this._arrowPool = new Array();
-            this._arrowAllocation = new Dictionary();
-            this._reverseArrowAllocation = new Dictionary();
-            this._mapGroupElements = new Dictionary();
-            this._zoomLevels = [];
-            super();
             MEMORY_LOG[this] = 1;
-            if (AirScanner.hasAir())
+            if (StageShareManager.stage)
             {
                 StageShareManager.stage.nativeWindow.addEventListener(Event.DEACTIVATE, this.onWindowDeactivate);
             };
         }
 
+        private static function checkDuplicate(pElement:MapIconElement, pElements:Vector.<MapElement>):Boolean
+        {
+            var elem:MapElement;
+            var iconElem:MapIconElement;
+            if (((pElement.allowDuplicate) || (!(pElement.legend))))
+            {
+                return (false);
+            };
+            for each (elem in pElements)
+            {
+                iconElem = (elem as MapIconElement);
+                if ((((iconElem) && (iconElem.legend == pElement.legend)) && (iconElem.layer == pElement.layer)))
+                {
+                    return (true);
+                };
+            };
+            return (false);
+        }
+
+        private static function removeCustomCursor():void
+        {
+            CursorSpriteManager.resetCursor();
+        }
+
+
+        public function set onMapElementsUpdated(pCallBack:Function):void
+        {
+            this._onMapElementsUpdated = pCallBack;
+        }
+
         public function get mapContainerBounds():Rectangle
         {
             return (new Rectangle(this._mapContainer.x, this._mapContainer.y, this._mapContainer.width, this._mapContainer.height));
-        }
-
-        public function get finalized():Boolean
-        {
-            return (this._finalized);
-        }
-
-        public function set finalized(b:Boolean):void
-        {
-            this._finalized = b;
         }
 
         public function get showGrid():Boolean
@@ -151,13 +187,13 @@
 
         public function get visibleMaps():Rectangle
         {
-            var vX:Number = (-(((this._mapContainer.x / this._mapContainer.scaleX) + this.origineX)) / this.mapWidth);
-            var vY:Number = (-(((this._mapContainer.y / this._mapContainer.scaleY) + this.origineY)) / this.mapHeight);
-            var vWidth:Number = ((width / (this.mapWidth * this._mapContainer.scaleX)) - 1);
-            var vHeight:Number = ((height / (this.mapHeight * this._mapContainer.scaleY)) - 1);
+            var vX:Number = (-((this._mapContainer.x / this._mapContainer.scaleX) + this.origineX) / this.mapWidth);
+            var vY:Number = (-((this._mapContainer.y / this._mapContainer.scaleY) + this.origineY) / this.mapHeight);
+            var vWidth:Number = (width / (this.mapWidth * this._mapContainer.scaleX));
+            var vHeight:Number = (height / (this.mapHeight * this._mapContainer.scaleY));
             var w:Number = Math.ceil(vWidth);
             var h:Number = Math.ceil(vHeight);
-            return (new Rectangle(vX, vY, (((w < 1)) ? 1 : w), (((h < 1)) ? 1 : h)));
+            return (new Rectangle(vX, vY, ((w < 1) ? 1 : w), ((h < 1) ? 1 : h)));
         }
 
         public function get currentMouseMapX():int
@@ -168,6 +204,31 @@
         public function get currentMouseMapY():int
         {
             return (this._lastMy);
+        }
+
+        public function get currentMapBounds():Rectangle
+        {
+            return (this.getMapBounds(this._lastMx, this._lastMy));
+        }
+
+        public function getMapBounds(pX:int, pY:int):Rectangle
+        {
+            if (!this._currentMapRect)
+            {
+                this._currentMapRect = new Rectangle();
+            };
+            if (!this._currentMapPos)
+            {
+                this._currentMapPos = new Point();
+            };
+            this._currentMapPos.x = ((pX * this.mapWidth) + this.origineX);
+            this._currentMapPos.y = ((pY * this.mapHeight) + this.origineY);
+            var p:Point = this._mapContainer.localToGlobal(this._currentMapPos);
+            this._currentMapRect.x = p.x;
+            this._currentMapRect.y = p.y;
+            this._currentMapRect.width = (this.mapWidth * this._mapContainer.scaleX);
+            this._currentMapRect.height = (this.mapHeight * this._mapContainer.scaleY);
+            return (this._currentMapRect);
         }
 
         public function get mapBounds():Rectangle
@@ -200,46 +261,58 @@
 
         public function get zoomFactor():Number
         {
-            return (Number(this._mapContainer.scaleX.toFixed(2)));
+            return (this._mapContainer.scaleX);
         }
 
         override public function set width(nW:Number):void
         {
+            if (!nW)
+            {
+                return;
+            };
+            var update:* = (!(nW == super.width));
             super.width = nW;
-            if (this.finalized)
+            if (((finalized) && (update)))
             {
                 this.initMask();
+                this.zoom(this._mapContainer.scaleX);
                 this.updateVisibleChunck(false);
-                this.updateMapElements();
             };
         }
 
         override public function set height(nH:Number):void
         {
+            var update:Boolean;
+            if (!nH)
+            {
+                return;
+            };
+            update = (!(nH == super.height));
             super.height = nH;
-            if (this.finalized)
+            if (((finalized) && (update)))
             {
                 this.initMask();
+                this.zoom(this._mapContainer.scaleX);
                 this.updateVisibleChunck(false);
-                this.updateMapElements();
             };
         }
 
         public function setSize(w:Number, h:Number):void
         {
+            var update:Boolean = ((!(h == super.height)) || (!(w == super.width)));
             super.width = w;
             super.height = h;
-            if (this.finalized)
+            if (((finalized) && (update)))
             {
                 this.initMask();
+                this.zoom(this._mapContainer.scaleX);
                 this.updateVisibleChunck(false);
-                this.updateMapElements();
             };
         }
 
         public function get zoomStep():Number
         {
-            return ((((this._availableMaps.length > 0)) ? (this.maxScale / this._availableMaps.length) : NaN));
+            return ((this._availableMaps.length > 0) ? (this.maxScale / (this._availableMaps.length * 2)) : NaN);
         }
 
         public function get zoomLevels():Array
@@ -252,7 +325,7 @@
             var layer:Sprite;
             for each (layer in this._layers)
             {
-                if (!(layer.visible))
+                if (!layer.visible)
                 {
                     return (false);
                 };
@@ -260,45 +333,59 @@
             return (true);
         }
 
-        public function finalize():void
+        public function isLayerVisible(pLayerName:String):Boolean
+        {
+            return ((this._layers[pLayerName]) ? this._layers[pLayerName].visible : false);
+        }
+
+        public function set mapScale(pScale:Number):void
+        {
+            this._mapContainer.scaleX = (this._mapContainer.scaleY = pScale);
+        }
+
+        public function get mouseOnArrow():Boolean
+        {
+            return (this._mouseOnArrow);
+        }
+
+        public function set currentMapIconVisible(pValue:Boolean):void
+        {
+            this._currentMapIcon.visible = pValue;
+        }
+
+        public function get currentMapIconVisible():Boolean
+        {
+            return (this._currentMapIcon.visible);
+        }
+
+        override public function finalize():void
         {
             var arrow:Texture;
             var child:InteractiveObject;
             destroy(this._mapBitmapContainer);
             destroy(this._mapContainer);
             destroy(this._areaShapesContainer);
+            destroy(this._routeShapesContainer);
             destroy(this._groupsContainer);
             destroy(this._layersContainer);
-            if (((this._arrowPool) && (this._arrowAllocation)))
+            destroy(this._currentMapContainer);
+            if (((this._arrowPool) && (this._arrowsByElementTexture)))
             {
-                for each (arrow in this._arrowAllocation)
+                for each (arrow in this._arrowsByElementTexture)
                 {
                     this._arrowPool.push(arrow);
                 };
-                this._arrowAllocation = new Dictionary();
+                this._arrowsByElementTexture = new Dictionary();
             };
-            MapElement.removeAllElements(this);
-            this._viewRect = new Rectangle();
+            MapElementManager.getInstance().removeAllElements(this);
             this._mapBitmapContainer = new Sprite();
             this._mapBitmapContainer.doubleClickEnabled = true;
             this._mapBitmapContainer.mouseChildren = false;
             this._mapBitmapContainer.mouseEnabled = false;
-            this._mapContainer = new Sprite();
-            this._mapContainer.doubleClickEnabled = true;
-            this._arrowContainer = new Sprite();
-            this._arrowContainer.mouseEnabled = false;
-            this._grid = new Shape();
-            this._areaShapesContainer = new Sprite();
-            this._areaShapesContainer.mouseEnabled = false;
-            this._groupsContainer = new Sprite();
-            this._groupsContainer.mouseEnabled = false;
-            this._layersContainer = new Sprite();
-            this._layersContainer.doubleClickEnabled = true;
-            this._elementsGraphicRef = new Dictionary();
-            this._layers = [];
-            this._mapElements = [];
+            this._mapBitmapContainer.name = "mapBitmapContainer";
+            this._viewRect = new Rectangle();
             this.initMap();
-            this._finalized = true;
+            _finalized = true;
             var i:int;
             while (i < numChildren)
             {
@@ -309,44 +396,14 @@
                 };
                 i++;
             };
-            this.setupZoomLevels(width, height);
+            super.finalize();
             getUi().iAmFinalized(this);
-        }
-
-        public function setupZoomLevels(width:Number, height:Number):void
-        {
-            var zoom:Number;
-            var zoomsToRemove:Vector.<Number>;
-            for each (zoom in this._zoomLevels)
-            {
-                if (((this._currentMap) && (((((this._currentMap.initialWidth * zoom) < width)) || (((this._currentMap.initialHeight * zoom) < height))))))
-                {
-                    if (!(zoomsToRemove))
-                    {
-                        zoomsToRemove = new Vector.<Number>(0);
-                    };
-                    zoomsToRemove.push(zoom);
-                };
-            };
-            if (zoomsToRemove)
-            {
-                for each (zoom in zoomsToRemove)
-                {
-                    this._zoomLevels.splice(this._zoomLevels.indexOf(zoom), 1);
-                };
-                Berilia.getInstance().handler.process(new MapMoveMessage(this));
-            };
-            this._zoomLevelsPercent = [];
-            for each (zoom in this._zoomLevels)
-            {
-                this._zoomLevelsPercent.push(int((zoom * 100)));
-            };
         }
 
         public function addLayer(name:String):void
         {
             var s:Sprite;
-            if (!(this._layers[name]))
+            if (!this._layers[name])
             {
                 s = new Sprite();
                 s.name = ("layer_" + name);
@@ -354,36 +411,83 @@
                 s.doubleClickEnabled = true;
                 this._layers[name] = s;
             };
-            this._layersContainer.addChild(this._layers[name]);
+            this._layersContainer.addChildAt(this._layers[name], 0);
         }
 
-        public function addIcon(layer:String, id:String, uri:*, x:int, y:int, scale:Number=1, legend:String=null, follow:Boolean=false, color:int=-1, canBeGrouped:Boolean=true, canBeManuallyRemoved:Boolean=true):MapIconElement
+        private function addMapElement(elem:MapElement):void
         {
-            var t:Texture;
-            var s:Number;
+            if (!this._mapElements[elem.x])
+            {
+                this._mapElements[elem.x] = new Dictionary();
+            };
+            if (!this._mapElements[elem.x][elem.y])
+            {
+                this._mapElements[elem.x][elem.y] = new Vector.<MapElement>();
+            };
+            if (((!(elem is MapIconElement)) || (!(checkDuplicate((elem as MapIconElement), this._mapElements[elem.x][elem.y])))))
+            {
+                this._mapElements[elem.x][elem.y].push(elem);
+            };
+        }
+
+        private function addMapIconElementToListByCoordinate(elem:MapIconElement):void
+        {
+            if (!this._elementsListsByCoordinates[elem.x])
+            {
+                this._elementsListsByCoordinates[elem.x] = new Dictionary(true);
+            };
+            if (!this._elementsListsByCoordinates[elem.x][elem.y])
+            {
+                this._elementsListsByCoordinates[elem.x][elem.y] = [];
+            };
+            this._elementsListsByCoordinates[elem.x][elem.y].push(elem);
+        }
+
+        public function addIcon(layer:String, id:String, rawUri:String, x:int, y:int, scale:Number=1, legend:String=null, follow:Boolean=false, color:int=-1, canBeGrouped:Boolean=true, canBeManuallyRemoved:Boolean=true, hitArea:Rectangle=null, mouseEnabled:Boolean=false, allowDuplicate:Boolean=false, priority:uint=0):MapIconElement
+        {
+            var uri:Uri;
+            var t:TextureBase;
             var mie:MapIconElement;
+            var hit:Sprite;
             var R:int;
             var V:int;
             var B:int;
             var ct:ColorTransform;
             if (((this._layers[layer]) && (this.mapBounds.contains(x, y))))
             {
-                if ((uri is String))
+                if (!_iconUris[rawUri])
                 {
-                    uri = new Uri(uri);
+                    _iconUris[rawUri] = new Uri(rawUri);
                 };
-                t = new Texture();
-                t.uri = uri;
+                uri = _iconUris[rawUri];
+                t = (((uri.path) && (uri.fileType.toLowerCase() == "png")) ? new TextureBitmap() : new Texture());
                 t.mouseChildren = false;
-                if (((this.autoSizeIcon) && ((this._lastScaleIconUpdate == this._mapContainer.scaleX))))
+                t.autoCenterBitmap = true;
+                if ((t is TextureBitmap))
                 {
-                    s = (0.75 + (1 / this._mapContainer.scaleX));
+                    TextureBitmap(t).smooth = true;
                 }
                 else
                 {
-                    s = Math.min(2, scale);
+                    if ((t is Texture))
+                    {
+                        Texture(t).dispatchMessages = true;
+                    };
                 };
-                t.scaleX = (t.scaleY = s);
+                if (uri.path)
+                {
+                    t.uri = uri;
+                };
+                if (hitArea)
+                {
+                    hit = new Sprite();
+                    hit.graphics.beginFill(0, 0);
+                    hit.graphics.drawRect(hitArea.x, hitArea.y, hitArea.width, hitArea.height);
+                    hit.mouseEnabled = false;
+                    t.addChildAt(hit, 0);
+                    t.hitArea = hit;
+                };
+                t.scaleX = (t.scaleY = (this._lastIconScale * MapDisplayableElement.SCALE_FACTOR));
                 if (color != -1)
                 {
                     R = ((color >> 16) & 0xFF);
@@ -392,17 +496,204 @@
                     ct = new ColorTransform(0.6, 0.6, 0.6, 1, (R - 80), (V - 80), (B - 80));
                     t.transform.colorTransform = ct;
                 };
-                mie = new MapIconElement(id, x, y, layer, t, legend, this, canBeManuallyRemoved);
+                mie = new MapIconElement(id, x, y, layer, t, color, legend, this, canBeManuallyRemoved, mouseEnabled, allowDuplicate, priority);
                 mie.canBeGrouped = canBeGrouped;
                 mie.follow = follow;
-                this._mapElements.push(mie);
-                this._elementsGraphicRef[t] = mie;
+                this.addMapElement(mie);
+                this._elementsByElementTexture[t] = mie;
+                this._elementTexturesByElement[mie] = t;
+                this.addMapIconElementToListByCoordinate(mie);
+                mie.textureScale = this._lastIconScale;
                 return (mie);
             };
             return (null);
         }
 
-        public function addAreaShape(layer:String, id:String, coordList:Vector.<int>, lineColor:uint=0, lineAlpha:Number=1, fillColor:uint=0, fillAlpha:Number=0.4, thickness:int=4):MapAreaShape
+        public function addBreachIcon(layer:String, id:String, rawUri:String, x:int, y:int, scale:Number=1, legend:String=null, follow:Boolean=false, color:int=-1, mouseEnabled:Boolean=false, priority:uint=0):MapIconElement
+        {
+            var uri:Uri;
+            var t:TextureBase;
+            var mie:MapIconElement;
+            var hit:Sprite;
+            var R:int;
+            var V:int;
+            var B:int;
+            var ct:ColorTransform;
+            if (((this._layers[layer]) && (this.mapBounds.contains(x, y))))
+            {
+                if (!_iconUris[rawUri])
+                {
+                    _iconUris[rawUri] = new Uri(rawUri);
+                };
+                uri = _iconUris[rawUri];
+                t = (((uri.path) && (uri.fileType.toLowerCase() == "png")) ? new TextureBitmap() : new Texture());
+                t.mouseChildren = false;
+                t.autoCenterBitmap = true;
+                if ((t is TextureBitmap))
+                {
+                    TextureBitmap(t).smooth = true;
+                }
+                else
+                {
+                    if ((t is Texture))
+                    {
+                        Texture(t).dispatchMessages = true;
+                    };
+                };
+                if (uri.path)
+                {
+                    t.uri = uri;
+                };
+                if (hitArea)
+                {
+                    hit = new Sprite();
+                    hit.graphics.beginFill(0, 0);
+                    hit.graphics.drawRect(hitArea.x, hitArea.y, hitArea.width, hitArea.height);
+                    hit.mouseEnabled = false;
+                    t.addChildAt(hit, 0);
+                    t.hitArea = hit;
+                };
+                t.scale = scale;
+                if (color != -1)
+                {
+                    R = ((color >> 16) & 0xFF);
+                    V = ((color >> 8) & 0xFF);
+                    B = ((color >> 0) & 0xFF);
+                    ct = new ColorTransform(0.6, 0.6, 0.6, 1, (R - 80), (V - 80), (B - 80));
+                    t.transform.colorTransform = ct;
+                };
+                mie = new MapIconElement(id, x, y, layer, t, color, legend, this, false, mouseEnabled, false, priority);
+                mie.canBeGrouped = false;
+                mie.canBeAutoSize = false;
+                mie.follow = follow;
+                this.addMapElement(mie);
+                this._elementsByElementTexture[t] = mie;
+                this._elementTexturesByElement[mie] = t;
+                this.addMapIconElementToListByCoordinate(mie);
+                mie.setScale(scale);
+                return (mie);
+            };
+            return (null);
+        }
+
+        public function addLine(layer:String, id:String, fromX:int, fromY:int, toX:int, toY:int, rawUri:String, text:String="", color:uint=0xFF0000):MapIconElement
+        {
+            if (this._layers[layer] == null)
+            {
+                return (null);
+            };
+            if (!_iconUris[rawUri])
+            {
+                _iconUris[rawUri] = new Uri(rawUri);
+            };
+            var uri:Uri = _iconUris[rawUri];
+            var uriFileType:String = uri.fileType.toLowerCase();
+            var uriPath:String = uri.path;
+            var t:TextureBase = (((uriPath) && (uriFileType == "png")) ? new TextureBitmap() : new Texture());
+            t.mouseChildren = false;
+            t.autoCenterBitmap = true;
+            if ((t is TextureBitmap))
+            {
+                TextureBitmap(t).smooth = true;
+            }
+            else
+            {
+                if ((t is Texture))
+                {
+                    Texture(t).dispatchMessages = true;
+                };
+            };
+            if (uriPath)
+            {
+                t.uri = uri;
+            };
+            var mie:LinkedMapIconElement = new LinkedMapIconElement(null, id, fromX, fromY, layer, t, -1, text, this);
+            this.addMapElement(mie);
+            this._elementsByElementTexture[t] = mie;
+            this._elementTexturesByElement[mie] = t;
+            this.addMapIconElementToListByCoordinate(mie);
+            t = (((uriPath) && (uriFileType == "png")) ? new TextureBitmap() : new Texture());
+            t.mouseChildren = false;
+            t.autoCenterBitmap = true;
+            if ((t is TextureBitmap))
+            {
+                TextureBitmap(t).smooth = true;
+            }
+            else
+            {
+                if ((t is Texture))
+                {
+                    Texture(t).dispatchMessages = true;
+                };
+            };
+            if (uriPath)
+            {
+                t.uri = uri;
+            };
+            mie = new LinkedMapIconElement(mie, (id + "_link"), toX, toY, layer, t, color, text, this);
+            this.addMapElement(mie);
+            this._elementsByElementTexture[t] = mie;
+            this._elementTexturesByElement[mie] = t;
+            this.addMapIconElementToListByCoordinate(mie);
+            return (mie);
+        }
+
+        public function addRouteShape(layer:String, id:String, coordList:Vector.<int>, lineColor:uint=0, lineAlpha:Number=1, thickness:int=4, completionColor:uint=0, completionAlpha:Number=0.5):MapRouteShape
+        {
+            var oldRouteShape:MapRouteShape;
+            var routeTexture:Texture;
+            var graphic:Graphics;
+            var coordCount:int;
+            var i:int;
+            var posX:int;
+            var posY:int;
+            var mapRouteShape:MapRouteShape;
+            var cellElems:Vector.<MapElement>;
+            if (((this._layers[layer]) && (coordList)))
+            {
+                oldRouteShape = (MapElementManager.getInstance().getElementById(id, this) as MapRouteShape);
+                if (oldRouteShape)
+                {
+                    oldRouteShape.remove();
+                    cellElems = this._mapElements[oldRouteShape.x][oldRouteShape.y];
+                    cellElems.splice(cellElems.indexOf(oldRouteShape), 1);
+                };
+                routeTexture = new Texture();
+                routeTexture.mouseEnabled = false;
+                routeTexture.mouseChildren = false;
+                graphic = routeTexture.graphics;
+                graphic.lineStyle(thickness, lineColor, lineAlpha, true);
+                coordCount = coordList.length;
+                if (coordCount > 1)
+                {
+                    graphic.moveTo(((coordList[0] * this.mapWidth) + (this.mapWidth / 2)), ((coordList[1] * this.mapHeight) + (this.mapHeight / 2)));
+                };
+                i = 2;
+                while (i < coordCount)
+                {
+                    posX = coordList[i];
+                    posY = coordList[(i + 1)];
+                    graphic.lineTo(((posX * this.mapWidth) + (this.mapWidth / 2)), ((posY * this.mapHeight) + (this.mapHeight / 2)));
+                    i = (i + 2);
+                };
+                mapRouteShape = new MapRouteShape(id, layer, routeTexture, this.origineX, this.origineY, coordList, this, lineColor, lineAlpha, thickness, completionColor, completionAlpha);
+                this.addMapElement(mapRouteShape);
+                return (mapRouteShape);
+            };
+            return (null);
+        }
+
+        public function updateRouteShapeCompletion(routeShapeName:String, posX:int, posY:int):void
+        {
+            var routeShape:MapRouteShape = (MapElementManager.getInstance().getElementById(routeShapeName, this) as MapRouteShape);
+            if (!routeShape)
+            {
+                return;
+            };
+            routeShape.updateCompletion(posX, posY, this.mapWidth, this.mapHeight);
+        }
+
+        public function addAreaShape(layer:String, id:String, coordList:Vector.<int>, lineColor:uint=0, lineAlpha:Number=1, fillColor:uint=0, fillAlpha:Number=0.4, thickness:int=4, removeFromOtherLayer:Boolean=true):MapAreaShape
         {
             var oldAreaShape:MapAreaShape;
             var shapeZone:Texture;
@@ -410,19 +701,24 @@
             var nCoords:int;
             var i:int;
             var mapAreaShape:MapAreaShape;
+            var cellElems:Vector.<MapElement>;
             var posX:int;
             var posY:int;
             if (((this._layers[layer]) && (coordList)))
             {
-                oldAreaShape = MapAreaShape(MapElement.getElementById(id, this));
+                oldAreaShape = MapAreaShape(MapElementManager.getInstance().getElementById(id, this));
                 if (oldAreaShape)
                 {
-                    if ((((oldAreaShape.lineColor == lineColor)) && ((oldAreaShape.fillColor == fillColor))))
+                    if (((oldAreaShape.lineColor == lineColor) && (oldAreaShape.fillColor == fillColor)))
                     {
                         return (oldAreaShape);
                     };
-                    oldAreaShape.remove();
-                    this._mapElements.splice(this._mapElements.indexOf(oldAreaShape), 1);
+                    if (((removeFromOtherLayer) || (oldAreaShape.layer == layer)))
+                    {
+                        oldAreaShape.remove();
+                        cellElems = this._mapElements[oldAreaShape.x][oldAreaShape.y];
+                        cellElems.splice(cellElems.indexOf(oldAreaShape), 1);
+                    };
                 };
                 shapeZone = new Texture();
                 shapeZone.mouseEnabled = false;
@@ -447,7 +743,7 @@
                     i = (i + 2);
                 };
                 mapAreaShape = new MapAreaShape(id, layer, shapeZone, this.origineX, this.origineY, lineColor, fillColor, this);
-                this._mapElements.push(mapAreaShape);
+                this.addMapElement(mapAreaShape);
                 return (mapAreaShape);
             };
             return (null);
@@ -461,15 +757,27 @@
         public function getMapElement(id:String):MapElement
         {
             var elem:MapElement;
-            var mapElem:MapElement = MapElement.getElementById(id, this);
-            if (!(mapElem))
+            var line:Dictionary;
+            var elems:Vector.<MapElement>;
+            if (id == "")
             {
-                for each (elem in this._mapElements)
+                return (null);
+            };
+            var mapElem:MapElement = MapElementManager.getInstance().getElementById(id, this);
+            if (!mapElem)
+            {
+                for each (line in this._mapElements)
                 {
-                    if (elem.id == id)
+                    for each (elems in line)
                     {
-                        mapElem = elem;
-                        break;
+                        for each (elem in elems)
+                        {
+                            if (elem.id == id)
+                            {
+                                mapElem = elem;
+                                break;
+                            };
+                        };
                     };
                 };
             };
@@ -478,149 +786,231 @@
 
         public function getMapElementsByLayer(layerId:String):Array
         {
-            var mapElement:MapElement;
-            var nbElements:int = this._mapElements.length;
-            var elements:Array = new Array();
-            var i:int;
-            while (i < nbElements)
+            var line:Dictionary;
+            var elems:Vector.<MapElement>;
+            var elem:MapElement;
+            var elements:Array = [];
+            for each (line in this._mapElements)
             {
-                mapElement = this._mapElements[i];
-                if (mapElement.layer == layerId)
+                for each (elems in line)
                 {
-                    elements.push(mapElement);
+                    for each (elem in elems)
+                    {
+                        if (elem.layer == layerId)
+                        {
+                            elements.push(elem);
+                        };
+                    };
                 };
-                i++;
             };
             return (elements);
         }
 
-        public function removeMapElement(me:MapElement):void
+        public function getMapElementsAtCoordinates(x:int, y:int):Array
         {
-            var element:MapElement;
-            var iconTexture:Object;
-            if (!(me))
+            if (((!(this._elementsListsByCoordinates[x])) || (!(this._elementsListsByCoordinates[x][y]))))
+            {
+                return ([]);
+            };
+            return ((this._elementsListsByCoordinates[x][y] as Array).sortOn("priority"));
+        }
+
+        public function removeMapElement(me:MapElement, deleteME:Boolean=true):void
+        {
+            var mie:MapIconElement;
+            var iconTexture:TextureBase;
+            var index2:int;
+            if ((((!(me)) || (!(this._mapElements[me.x]))) || (!(this._mapElements[me.x][me.y]))))
             {
                 return;
             };
-            var index:int = this._mapElements.indexOf(me);
+            var cellElements:Vector.<MapElement> = this._mapElements[me.x][me.y];
+            var index:int = cellElements.indexOf(me);
             if (index != -1)
             {
-                element = this._mapElements[index];
+                mie = (me as MapIconElement);
+                if (mie)
+                {
+                    iconTexture = this._elementTexturesByElement[mie];
+                    if (this._mapGroupElements[mie])
+                    {
+                        if (mie.group)
+                        {
+                            mie.group.removeElement(mie);
+                            mie.group = null;
+                        };
+                        this._mapGroupElements[mie].display();
+                        delete this._mapGroupElements[mie];
+                    };
+                    if (((this._arrowsByElementTexture[iconTexture]) && (this._arrowsByElementTexture[iconTexture].parent)))
+                    {
+                        this._arrowsByElementTexture[iconTexture].parent.removeChild(this._arrowsByElementTexture[iconTexture]);
+                        this._arrowPool.push(this._arrowsByElementTexture[iconTexture]);
+                        delete this._elementTexturesByArrow[this._arrowsByElementTexture[iconTexture]];
+                        delete this._arrowsByElementTexture[iconTexture];
+                    };
+                    if (((this._elementsListsByCoordinates[mie.x]) && (this._elementsListsByCoordinates[mie.x][mie.y])))
+                    {
+                        index2 = this._elementsListsByCoordinates[mie.x][mie.y].indexOf(mie);
+                        if (index2 != -1)
+                        {
+                            this._elementsListsByCoordinates[mie.x][mie.y].splice(index2, 1);
+                        };
+                    };
+                    delete this._elementTexturesByElement[mie];
+                };
+                if (deleteME)
+                {
+                    me.remove();
+                };
+                cellElements.splice(index, 1);
+            };
+        }
+
+        public function updateOneMapElement(elemId:String, x:int, y:int, legend:String=null):Boolean
+        {
+            var mie:MapIconElement;
+            var me:MapElement = this.getMapElement(elemId);
+            if (me)
+            {
+                this.removeMapElement(me, false);
+                me.x = x;
+                me.y = y;
+                this.addMapElement(me);
                 if ((me is MapIconElement))
                 {
-                    iconTexture = MapIconElement(me)._texture;
-                    if (this._mapGroupElements[me])
+                    mie = (me as MapIconElement);
+                    this.addMapIconElementToListByCoordinate(mie);
+                    if (legend)
                     {
-                        this._mapGroupElements[me].icons.splice(this._mapGroupElements[me].icons.indexOf(iconTexture), 1);
-                        delete this._mapGroupElements[me];
-                    };
-                    if (((this._arrowAllocation[iconTexture]) && (this._arrowAllocation[iconTexture].parent)))
-                    {
-                        this._arrowAllocation[iconTexture].parent.removeChild(this._arrowAllocation[iconTexture]);
-                        this._arrowPool.push(this._arrowAllocation[iconTexture]);
-                        delete this._reverseArrowAllocation[this._arrowAllocation[iconTexture]];
-                        delete this._arrowAllocation[iconTexture];
+                        mie.legend = legend;
                     };
                 };
-                element.remove();
-                this._mapElements.splice(index, 1);
+                this.updateMapElements();
+                return (true);
             };
+            return (false);
         }
 
         public function updateMapElements():void
         {
-            var ico:Object;
-            var elem:MapElement;
-            var sortedMapElements:Array;
-            var elems:Array;
-            var iconNum:uint;
-            var group:MapGroupElement;
-            var _local_7:MapIconElement;
-            var _local_8:MapAreaShape;
-            var _local_9:Sprite;
-            var visibleIconCount:uint;
-            var iconIndex:uint;
+            if (!hasEventListener(Event.ENTER_FRAME))
+            {
+                addEventListener(Event.ENTER_FRAME, this.processUpdateMapElements);
+            };
+        }
+
+        private function processUpdateMapElements(e:Event):void
+        {
+            var elemsArray:Dictionary;
+            var elems:Vector.<MapElement>;
+            removeEventListener(Event.ENTER_FRAME, this.processUpdateMapElements);
             this.updateIconSize();
-            for (ico in this._mapGroupElements)
+            for each (elemsArray in this._mapElements)
             {
-                delete this._mapGroupElements[ico];
-            };
-            this.clearLayer();
-            this.clearElementsGroups();
-            this.clearMapAreaShapes();
-            sortedMapElements = new Array();
-            for each (elem in this._mapElements)
-            {
-                if (!(sortedMapElements[((elem.x + "_") + elem.y)]))
+                for each (elems in elemsArray)
                 {
-                    sortedMapElements[((elem.x + "_") + elem.y)] = new Array();
-                };
-                sortedMapElements[((elem.x + "_") + elem.y)].push(elem);
-            };
-            for each (elems in sortedMapElements)
-            {
-                iconNum = 0;
-                group = null;
-                for each (elem in elems)
-                {
-                    if (!!(this._layers[elem.layer].visible))
-                    {
-                        switch (true)
-                        {
-                            case (elem is MapIconElement):
-                                _local_7 = (elem as MapIconElement);
-                                _local_7._texture.x = (((_local_7.x * this.mapWidth) + this.origineX) + (this.mapWidth / 2));
-                                _local_7._texture.y = (((_local_7.y * this.mapHeight) + this.origineY) + (this.mapHeight / 2));
-                                if (((!((elems.length == 1))) && (_local_7.canBeGrouped)))
-                                {
-                                    if (!(group))
-                                    {
-                                        group = new MapGroupElement((this.mapWidth * 0.5), (this.mapHeight * 0.5));
-                                        group.x = (((_local_7.x * this.mapWidth) + this.origineX) + (this.mapWidth / 2));
-                                        group.y = (((_local_7.y * this.mapHeight) + this.origineY) + (this.mapHeight / 2));
-                                        this._groupsContainer.addChild(group);
-                                    };
-                                    this._mapGroupElements[_local_7] = group;
-                                    if (elem.layer != "layer_8")
-                                    {
-                                        visibleIconCount = elems.length;
-                                        if (visibleIconCount > 2)
-                                        {
-                                            visibleIconCount = 2;
-                                        };
-                                        iconIndex = Math.min(visibleIconCount, iconNum);
-                                        _local_7._texture.x = ((4 * iconIndex) - ((visibleIconCount * 4) / 2));
-                                        _local_7._texture.y = ((4 * iconIndex) - ((visibleIconCount * 4) / 2));
-                                        group.addChild(_local_7._texture);
-                                    }
-                                    else
-                                    {
-                                        group.icons.push(_local_7._texture);
-                                        this._layers[elem.layer].addChild(_local_7._texture);
-                                    };
-                                }
-                                else
-                                {
-                                    this._layers[elem.layer].addChild(_local_7._texture);
-                                };
-                                break;
-                            case (elem is MapAreaShape):
-                                _local_8 = (elem as MapAreaShape);
-                                _local_9 = this._layers[elem.layer];
-                                if (_local_9.parent != this._areaShapesContainer)
-                                {
-                                    this._areaShapesContainer.addChild(_local_9);
-                                };
-                                _local_9.addChild(_local_8.shape);
-                                _local_8.shape.x = _local_8.x;
-                                _local_8.shape.y = _local_8.y;
-                                break;
-                        };
-                        iconNum++;
-                    };
+                    this.updateMapCellElements(elems);
                 };
             };
             this.updateIcons();
+            if (this._onMapElementsUpdated != null)
+            {
+                this._onMapElementsUpdated.call();
+            };
+        }
+
+        public function updateMapCellElements(elems:Vector.<MapElement>):void
+        {
+            var icon:MapIconElement;
+            var elem:MapElement;
+            var group:MapGroupElement;
+            var updateGroup:Boolean;
+            var numGroupableIcons:int;
+            var lastNullGroupIcon:MapIconElement;
+            for each (elem in elems)
+            {
+                icon = (elem as MapIconElement);
+                if (((icon) && (icon.canBeGrouped)))
+                {
+                    if (icon.group != null)
+                    {
+                        group = icon.group;
+                        break;
+                    };
+                    lastNullGroupIcon = icon;
+                    numGroupableIcons++;
+                };
+            };
+            if (((numGroupableIcons > 1) && (group == null)))
+            {
+                group = new MapGroupElement(this);
+                group.x = (((lastNullGroupIcon.x * this.mapWidth) + this.origineX) + (this.mapWidth / 2));
+                group.y = (((lastNullGroupIcon.y * this.mapHeight) + this.origineY) + (this.mapHeight / 2));
+                this._groupsContainer.addChild(group);
+            };
+            for each (elem in elems)
+            {
+                switch (true)
+                {
+                    case (elem is MapIconElement):
+                        icon = (elem as MapIconElement);
+                        if (((group) && (icon.canBeGrouped)))
+                        {
+                            if (icon.group == group)
+                            {
+                                break;
+                            };
+                            if (icon.group != null)
+                            {
+                                icon.group.removeElement(icon);
+                            };
+                            this._mapGroupElements[icon] = group;
+                            icon.setTexturePosition(0, 0);
+                            group.addElement(icon);
+                            updateGroup = true;
+                        }
+                        else
+                        {
+                            icon.group = null;
+                            icon.setTexturePosition((((icon.x * this.mapWidth) + this.origineX) + (this.mapWidth / 2)), (((icon.y * this.mapHeight) + this.origineY) + (this.mapHeight / 2)));
+                            icon.setTextureParent(this._layers[elem.layer]);
+                        };
+                        break;
+                    case (elem is MapAreaShape):
+                        this.updateMapAreaShape((elem as MapAreaShape));
+                        break;
+                    case (elem is MapRouteShape):
+                        this.updateMapRouteShape((elem as MapRouteShape));
+                        break;
+                };
+            };
+            if (updateGroup)
+            {
+                group.display();
+            };
+        }
+
+        public function updateMapAreaShape(pShape:MapAreaShape):void
+        {
+            var container:Sprite = this._layers[pShape.layer];
+            if (container.parent != this._areaShapesContainer)
+            {
+                this._areaShapesContainer.addChild(container);
+            };
+            pShape.setTextureParent(container);
+            pShape.setTexturePosition(pShape.x, pShape.y);
+        }
+
+        public function updateMapRouteShape(pShape:MapRouteShape):void
+        {
+            var container:Sprite = this._layers[pShape.layer];
+            if (container.parent != this._routeShapesContainer)
+            {
+                this._routeShapesContainer.addChild(container);
+            };
+            pShape.setTextureParent(container);
+            pShape.setTexturePosition(pShape.x, pShape.y);
         }
 
         public function showLayer(name:String, display:Boolean=true):void
@@ -672,19 +1062,19 @@
             if (center)
             {
                 zoneWidth = ((width * this.mapWidth) * this._mapContainer.scaleX);
-                if ((((zoneWidth > this.width)) && (autoZoom)))
+                if (((zoneWidth > this.width) && (autoZoom)))
                 {
                     this._mapContainer.scaleX = (this.width / (this.mapWidth * width));
                     this._mapContainer.scaleY = this._mapContainer.scaleX;
                 };
                 zoneHeight = ((height * this.mapHeight) * this._mapContainer.scaleY);
-                if ((((zoneHeight > this.height)) && (autoZoom)))
+                if (((zoneHeight > this.height) && (autoZoom)))
                 {
                     this._mapContainer.scaleY = (this.height / (this.mapHeight * height));
                     this._mapContainer.scaleX = this._mapContainer.scaleY;
                 };
-                newX = ((-(((x * this.mapWidth) + this.origineX)) * this._mapContainer.scaleX) - ((this.mapWidth / 2) * this._mapContainer.scaleX));
-                newY = ((-(((y * this.mapHeight) + this.origineY)) * this._mapContainer.scaleY) - ((this.mapHeight / 2) * this._mapContainer.scaleY));
+                newX = int(((-((x * this.mapWidth) + this.origineX) * this._mapContainer.scaleX) - ((this.mapWidth / 2) * this._mapContainer.scaleX)));
+                newY = int(((-((y * this.mapHeight) + this.origineY) * this._mapContainer.scaleY) - ((this.mapHeight / 2) * this._mapContainer.scaleY)));
                 offsetX = (this.width / 2);
                 offsetY = (this.height / 2);
                 diffX = Math.abs((-(this._mapContainer.width) - newX));
@@ -702,14 +1092,14 @@
             }
             else
             {
-                this._mapContainer.x = (-(((x * this.mapWidth) + this.origineX)) * this._mapContainer.scaleX);
-                this._mapContainer.y = (-(((y * this.mapHeight) + this.origineY)) * this._mapContainer.scaleY);
+                this._mapContainer.x = (-((x * this.mapWidth) + this.origineX) * this._mapContainer.scaleX);
+                this._mapContainer.y = (-((y * this.mapHeight) + this.origineY) * this._mapContainer.scaleY);
             };
             var w:Number = ((this._currentMap) ? this._currentMap.initialWidth : this._mapBitmapContainer.width);
             var h:Number = ((this._currentMap) ? this._currentMap.initialHeight : this._mapBitmapContainer.height);
             if (this._mapContainer.x < (width - w))
             {
-                if (!(center))
+                if (!center)
                 {
                     this._mapContainer.x = (width - w);
                 }
@@ -720,7 +1110,7 @@
             };
             if (this._mapContainer.y < (height - h))
             {
-                if (!(center))
+                if (!center)
                 {
                     this._mapContainer.y = (height - h);
                 }
@@ -739,26 +1129,20 @@
             };
             this.updateVisibleChunck();
             Berilia.getInstance().handler.process(new MapMoveMessage(this));
+            this._mouseOnArrow = false;
         }
 
         private function zoomWithScalePercent(scalePercent:int, coord:Point=null):void
         {
-            if (this._zoomLevelsPercent.indexOf(scalePercent) != -1)
-            {
-                this.zoom((scalePercent / 100), coord);
-            }
-            else
-            {
-                _log.warn((((("Can't zoom, a scale of " + String((scalePercent / 100))) + " (") + scalePercent) + ") is not defined"));
-            };
+            this.zoom((scalePercent / 100), coord);
         }
 
         public function zoom(scale:Number, coord:Point=null):void
         {
             var w:Number;
             var h:Number;
-            var _local_5:Rectangle;
-            var _local_6:Point;
+            var r:Rectangle;
+            var p:Point;
             if (scale > this.maxScale)
             {
                 scale = this.maxScale;
@@ -767,9 +1151,16 @@
             {
                 scale = this.minScale;
             };
-            if (((this._currentMap) && (((((this._currentMap.initialWidth * scale) < width)) || (((this._currentMap.initialHeight * scale) < height))))))
+            if (this._currentMap)
             {
-                return;
+                if ((this._currentMap.initialWidth * scale) < width)
+                {
+                    scale = (width / this._currentMap.initialWidth);
+                };
+                if ((this._currentMap.initialHeight * scale) < height)
+                {
+                    scale = (height / this._currentMap.initialHeight);
+                };
             };
             if (coord)
             {
@@ -780,6 +1171,7 @@
                 this._mapContainer.x = (this._mapContainer.x - ((coord.x * scale) - (coord.x * this._mapContainer.scaleX)));
                 this._mapContainer.y = (this._mapContainer.y - ((coord.y * scale) - (coord.y * this._mapContainer.scaleY)));
                 this._mapContainer.scaleX = (this._mapContainer.scaleY = scale);
+                this._needIconResize = (((62 * MapDisplayableElement.SCALE_FACTOR) > (this.mapWidth * scale)) || ((62 * MapDisplayableElement.SCALE_FACTOR) > (this.mapHeight * scale)));
                 w = ((this._currentMap) ? this._currentMap.initialWidth : this._mapBitmapContainer.width);
                 h = ((this._currentMap) ? this._currentMap.initialHeight : this._mapBitmapContainer.height);
                 if (this._mapContainer.x < (width - (w * scale)))
@@ -802,9 +1194,9 @@
             }
             else
             {
-                _local_5 = this.visibleMaps;
-                _local_6 = new Point((((_local_5.x + (_local_5.width / 2)) * this.mapWidth) + this.origineX), (((_local_5.y + (_local_5.height / 2)) * this.mapHeight) + this.origineY));
-                this.zoom(scale, _local_6);
+                r = this.visibleMaps;
+                p = new Point((((r.x + (r.width / 2)) * this.mapWidth) + this.origineX), (((r.y + (r.height / 2)) * this.mapHeight) + this.origineY));
+                this.zoom(scale, p);
                 return;
             };
             this.processMapInfo();
@@ -842,27 +1234,22 @@
 
         public function set useFlagCursor(pValue:Boolean):void
         {
-            var lcd:LinkedCursorData;
-            if (!(FLAG_CURSOR))
+            if (!FLAG_CURSOR)
             {
                 return;
             };
             if (pValue)
             {
-                if (!(this._flagCursor))
+                if (!this._flagCursor)
                 {
                     this._flagCursor = new Sprite();
                     this._flagCursor.addChild(new FLAG_CURSOR());
                 };
-                lcd = new LinkedCursorData();
-                lcd.sprite = this._flagCursor;
-                lcd.offset = new Point();
-                Mouse.hide();
-                LinkedCursorSpriteManager.getInstance().addItem("mapViewerCursor", lcd);
+                CursorSpriteManager.displaySpecificCursor("mapViewerCursor", this._flagCursor);
             }
             else
             {
-                this.removeCustomCursor();
+                CursorSpriteManager.resetCursor();
             };
             this._flagCursorVisible = pValue;
         }
@@ -881,7 +1268,7 @@
             };
             for each (mapArea in this._visibleMapAreas)
             {
-                if (!(mapArea.isLoaded))
+                if (!mapArea.isLoaded)
                 {
                     return (false);
                 };
@@ -889,17 +1276,12 @@
             return (true);
         }
 
-        private function removeCustomCursor():void
-        {
-            Mouse.show();
-            LinkedCursorSpriteManager.getInstance().removeItem("mapViewerCursor");
-        }
-
         override public function remove():void
         {
+            var elements:Dictionary;
             var me:MapElement;
-            var k:Object;
-            if (!(__removed))
+            Mouse.cursor = MouseCursor.AUTO;
+            if (!__removed)
             {
                 if (this._grid)
                 {
@@ -915,7 +1297,8 @@
                     this._mapToClear = null;
                 };
                 this.removeAllMap();
-                for each (me in MapElement.getOwnerElements(this))
+                elements = MapElementManager.getInstance().getOwnerElements(this);
+                for each (me in elements)
                 {
                     if (this._mapGroupElements[me])
                     {
@@ -923,113 +1306,126 @@
                     };
                     me.remove();
                 };
-                for (k in this._elementsGraphicRef)
-                {
-                    delete this._elementsGraphicRef[k];
-                };
                 this._mapElements = null;
-                this._elementsGraphicRef = null;
+                this._elementsByElementTexture = null;
+                this._elementTexturesByElement = null;
+                this._elementsListsByCoordinates = null;
                 this._mapGroupElements = null;
                 this._visibleMapAreas = null;
-                MapElement._elementRef = new Dictionary(true);
+                MapElementManager.getInstance().removeAllElements(this);
                 EnterFrameDispatcher.removeEventListener(this.onMapEnterFrame);
-                this.removeCustomCursor();
-                if (AirScanner.hasAir())
+                removeCustomCursor();
+                if (hasEventListener(Event.ENTER_FRAME))
                 {
-                    StageShareManager.stage.nativeWindow.removeEventListener(Event.DEACTIVATE, this.onWindowDeactivate);
+                    removeEventListener(Event.ENTER_FRAME, this.processUpdateMapElements);
                 };
+                StageShareManager.stage.nativeWindow.removeEventListener(Event.DEACTIVATE, this.onWindowDeactivate);
             };
             super.remove();
         }
 
         private function getIconTextureGlobalCoords(pMapIconElement:MapIconElement):Point
         {
-            var txX:Number = (((pMapIconElement.x * this.mapWidth) + this.origineX) + (this.mapWidth / 2));
-            var txY:Number = (((pMapIconElement.y * this.mapHeight) + this.origineY) + (this.mapHeight / 2));
+            var p:Point;
+            var pp:PoolablePoint;
             var layer:Sprite = (this._layers[pMapIconElement.layer] as Sprite);
-            return (layer.localToGlobal(new Point(txX, txY)));
+            if (this._mapGroupElements[pMapIconElement])
+            {
+                pp = (PoolsManager.getInstance().getPointPool().checkOut() as PoolablePoint);
+                p = layer.localToGlobal(pp.renew(this._mapGroupElements[pMapIconElement].x, this._mapGroupElements[pMapIconElement].y));
+            }
+            else
+            {
+                p = layer.localToGlobal(pMapIconElement.getTexturePosition());
+            };
+            return (p);
         }
 
         private function updateIcons():void
         {
-            var iconTexture:Texture;
+            var iconTexture:TextureBase;
             var mie:MapIconElement;
-            var p:Point;
-            var p2:Point;
-            var dist:Number;
             var iconVisible:Boolean;
-            var me:MapElement;
+            var elemsArray:Dictionary;
             var arrow:Texture;
             var angle:Number;
             var a:Number;
             var res:Number;
             var icon:*;
+            var elems:Vector.<MapElement>;
+            var me:MapElement;
             var tempArrow:Texture;
             var vr:Number;
             var iconRect:Rectangle = new Rectangle(0, 0, 1, 1);
             var visibleMaps:Rectangle = this.visibleMaps;
             var currentPosition:Point = new Point(Math.floor((visibleMaps.x + (visibleMaps.width / 2))), Math.floor((visibleMaps.y + (visibleMaps.height / 2))));
-            var minimalArrowDist:Number = (visibleMaps.width / 2);
-            var isCircleView:Boolean = (this.roundCornerRadius > (width / 3));
-            var radius:Number = (width / 2);
-            for each (me in this._mapElements)
+            var globalPos:Point = parent.localToGlobal(new Point(x, y));
+            var globalRect:Rectangle = new Rectangle(globalPos.x, globalPos.y, width, height);
+            for each (elemsArray in this._mapElements)
             {
-                mie = (me as MapIconElement);
-                if (!(mie))
+                for each (elems in elemsArray)
                 {
-                }
-                else
-                {
-                    iconRect.x = mie.x;
-                    iconRect.y = mie.y;
-                    iconTexture = mie._texture;
-                    if (!!(iconTexture))
+                    for each (me in elems)
                     {
-                        if (mie.follow)
-                        {
-                            p = this.getIconTextureGlobalCoords(mie);
-                            if (isCircleView)
-                            {
-                                p2 = globalToLocal(p);
-                                dist = Math.floor(Math.sqrt((Math.pow((p2.x - radius), 2) + Math.pow((p2.y - radius), 2))));
-                                iconVisible = (dist < radius);
-                            }
-                            else
-                            {
-                                iconVisible = this._mapContainer.mask.getBounds(StageShareManager.stage).containsPoint(p);
-                            };
-                        }
-                        else
-                        {
-                            iconVisible = visibleMaps.intersects(iconRect);
-                        };
-                        iconTexture.visible = ((!((this._layers[mie.layer].visible == false))) && (iconVisible));
-                        if (((iconTexture.visible) && (!(iconTexture.finalized))))
-                        {
-                            iconTexture.finalize();
-                        };
-                        if (!(mie.follow))
+                        mie = (me as MapIconElement);
+                        if (!mie)
                         {
                         }
                         else
                         {
-                            if (((iconTexture.visible) && (this._arrowAllocation[iconTexture])))
+                            iconRect.x = mie.x;
+                            iconRect.y = mie.y;
+                            iconTexture = this._elementTexturesByElement[mie];
+                            if (!iconTexture)
                             {
-                                this._arrowContainer.removeChild(this._arrowAllocation[iconTexture]);
-                                this._arrowPool.push(this._arrowAllocation[iconTexture]);
-                                mie.boundsRef = null;
-                                delete this._reverseArrowAllocation[this._arrowAllocation[iconTexture]];
-                                delete this._arrowAllocation[iconTexture];
                             }
                             else
                             {
-                                if (((mie.follow) && (!(iconTexture.visible))))
+                                if (mie.follow)
                                 {
-                                    tempArrow = this.getIconArrow(iconTexture);
-                                    tempArrow.visible = this._layers[mie.layer].visible;
-                                    this._arrowContainer.addChild(tempArrow);
-                                    this._elementsGraphicRef[tempArrow] = mie;
-                                    mie.boundsRef = tempArrow;
+                                    iconVisible = ((((!(iconTexture.uri)) || (!(iconTexture.finalized))) || (!(iconTexture.parent))) ? visibleMaps.intersects(iconRect) : globalRect.intersects(mie.getRealBounds));
+                                }
+                                else
+                                {
+                                    iconVisible = true;
+                                };
+                                iconTexture.visible = ((!(this._layers[mie.layer].visible == false)) && (iconVisible));
+                                if (mie.group)
+                                {
+                                    mie.group.setIconVisibility(mie, iconTexture.visible);
+                                };
+                                if ((iconTexture is Texture))
+                                {
+                                    if (((iconTexture.visible) && (!(iconTexture.finalized))))
+                                    {
+                                        iconTexture.finalize();
+                                    };
+                                    Texture(iconTexture).gotoAndPlay = 1;
+                                };
+                                if (!mie.follow)
+                                {
+                                }
+                                else
+                                {
+                                    if (((iconTexture.visible) && (this._arrowsByElementTexture[iconTexture])))
+                                    {
+                                        this._arrowContainer.removeChild(this._arrowsByElementTexture[iconTexture]);
+                                        this._arrowPool.push(this._arrowsByElementTexture[iconTexture]);
+                                        mie.boundsRef = null;
+                                        delete this._elementTexturesByArrow[this._arrowsByElementTexture[iconTexture]];
+                                        delete this._arrowsByElementTexture[iconTexture];
+                                    }
+                                    else
+                                    {
+                                        if (((mie.follow) && (!(iconTexture.visible))))
+                                        {
+                                            tempArrow = this.getIconArrow(iconTexture);
+                                            tempArrow.visible = this._layers[mie.layer].visible;
+                                            this._arrowContainer.addChild(tempArrow);
+                                            this._elementsByElementTexture[tempArrow] = mie;
+                                            mie.boundsRef = tempArrow;
+                                        };
+                                    };
                                 };
                             };
                         };
@@ -1037,112 +1433,95 @@
                 };
             };
             angle = Math.atan2(0, (-(width) / 2));
-            a = (Math.atan2((width / 2), 0) + angle);
-            for (icon in this._arrowAllocation)
+            for (icon in this._arrowsByElementTexture)
             {
-                arrow = this._arrowAllocation[icon];
-                mie = this._elementsGraphicRef[icon];
-                if (isCircleView)
-                {
-                    p = globalToLocal(this.getIconTextureGlobalCoords(mie));
-                    vr = Math.atan2((-(p.y) + (height / 2)), (-(p.x) + (width / 2)));
-                }
-                else
-                {
-                    vr = Math.atan2((-(mie.y) + currentPosition.y), (-(mie.x) + currentPosition.x));
-                };
+                arrow = this._arrowsByElementTexture[icon];
+                mie = this._elementsByElementTexture[icon];
+                vr = Math.atan2((-(mie.y) + currentPosition.y), (-(mie.x) + currentPosition.x));
                 arrow.x = ((Math.cos((angle + vr)) * width) / 2);
                 arrow.y = ((Math.sin((angle + vr)) * height) / 2);
                 arrow.rotation = (vr * (180 / Math.PI));
-                if (isCircleView)
+                a = (arrow.y / arrow.x);
+                vr = (vr + Math.PI);
+                if (((vr < (Math.PI / 4)) || (vr > ((Math.PI * 7) / 4))))
                 {
-                    arrow.x = (arrow.x + (width / 2));
-                    arrow.y = (arrow.y + (height / 2));
+                    res = (((width / 2) * a) + (height / 2));
+                    if (((res > 0) && (res < height)))
+                    {
+                        arrow.x = width;
+                        arrow.y = res;
+                        continue;
+                    };
                 }
                 else
                 {
-                    a = (arrow.y / arrow.x);
-                    vr = (vr + Math.PI);
-                    if ((((vr < (Math.PI / 4))) || ((vr > ((Math.PI * 7) / 4)))))
+                    if (vr < ((Math.PI * 3) / 4))
                     {
-                        res = (((width / 2) * a) + (height / 2));
-                        if ((((res > 0)) && ((res < height))))
+                        res = (((height / 2) / a) + (width / 2));
+                        res = ((res > width) ? width : res);
+                        if (res > 0)
                         {
-                            arrow.x = width;
-                            arrow.y = res;
+                            arrow.x = res;
+                            arrow.y = height;
                             continue;
                         };
                     }
                     else
                     {
-                        if (vr < ((Math.PI * 3) / 4))
+                        if (vr < ((Math.PI * 5) / 4))
                         {
-                            res = (((height / 2) / a) + (width / 2));
-                            res = (((res > width)) ? width : res);
-                            if (res > 0)
+                            res = (((-(width) / 2) * a) + (height / 2));
+                            if (((res > 0) && (res < height)))
                             {
-                                arrow.x = res;
-                                arrow.y = height;
+                                arrow.x = 0;
+                                arrow.y = res;
                                 continue;
                             };
                         }
                         else
                         {
-                            if (vr < ((Math.PI * 5) / 4))
+                            res = (((-(height) / 2) / a) + (width / 2));
+                            res = ((res > width) ? width : ((res < 0) ? 0 : res));
+                            if (res >= 0)
                             {
-                                res = (((-(width) / 2) * a) + (height / 2));
-                                if ((((res > 0)) && ((res < height))))
-                                {
-                                    arrow.x = 0;
-                                    arrow.y = res;
-                                    continue;
-                                };
-                            }
-                            else
-                            {
-                                res = (((-(height) / 2) / a) + (width / 2));
-                                res = (((res > width)) ? width : (((res < 0)) ? 0 : res));
-                                if (res >= 0)
-                                {
-                                    arrow.x = res;
-                                    arrow.y = 0;
-                                    continue;
-                                };
+                                arrow.x = res;
+                                arrow.y = 0;
+                                continue;
                             };
                         };
                     };
-                    if (arrow.rotation == -45)
-                    {
-                        arrow.x = 0;
-                        arrow.y = res;
-                    };
+                };
+                if (arrow.rotation == -45)
+                {
+                    arrow.x = 0;
+                    arrow.y = res;
                 };
             };
         }
 
-        private function getIconArrow(icon:Texture):Texture
+        private function getIconArrow(icon:TextureBase):Texture
         {
-            var _local_2:Texture;
-            if (this._arrowAllocation[icon])
+            var arrow:Texture;
+            if (this._arrowsByElementTexture[icon])
             {
-                return (this._arrowAllocation[icon]);
+                return (this._arrowsByElementTexture[icon]);
             };
             if (this._arrowPool.length)
             {
-                this._arrowAllocation[icon] = this._arrowPool.pop();
+                this._arrowsByElementTexture[icon] = this._arrowPool.pop();
             }
             else
             {
-                _local_2 = new Texture();
-                _local_2.uri = new Uri((XmlConfig.getInstance().getEntry("config.gfx.path") + "icons/assets.swf|arrow0"));
-                _local_2.mouseEnabled = true;
-                _local_2.buttonMode = (_local_2.useHandCursor = true);
-                _local_2.finalize();
-                this._arrowAllocation[icon] = _local_2;
+                arrow = new Texture();
+                arrow.uri = new Uri((XmlConfig.getInstance().getEntry("config.gfx.path") + "icons/assets.swf|arrow0"));
+                arrow.mouseEnabled = true;
+                arrow.buttonMode = (arrow.useHandCursor = true);
+                arrow.finalize();
+                this._arrowsByElementTexture[icon] = arrow;
             };
-            this._reverseArrowAllocation[this._arrowAllocation[icon]] = icon;
-            Texture(this._arrowAllocation[icon]).transform.colorTransform = icon.transform.colorTransform;
-            return (this._arrowAllocation[icon]);
+            this._elementTexturesByArrow[this._arrowsByElementTexture[icon]] = icon;
+            Texture(this._arrowsByElementTexture[icon]).transform.colorTransform = icon.transform.colorTransform;
+            return (this._arrowsByElementTexture[icon]);
         }
 
         private function processMapInfo():void
@@ -1150,7 +1529,7 @@
             var choosenMap:Map;
             var tmpZoomDist:Number;
             var map:Map;
-            if (!(this._availableMaps.length))
+            if (!this._availableMaps.length)
             {
                 return;
             };
@@ -1158,14 +1537,14 @@
             var zoomDist:Number = 10000;
             for each (map in this._availableMaps)
             {
-                tmpZoomDist = Math.abs((map.zoom - this._mapContainer.scaleX));
-                if (tmpZoomDist < zoomDist)
+                tmpZoomDist = Math.abs((this._mapContainer.scaleX - map.zoom));
+                if (((tmpZoomDist < zoomDist) && (this._mapContainer.scaleX <= map.zoom)))
                 {
                     choosenMap = map;
                     zoomDist = tmpZoomDist;
                 };
             };
-            if (((!(this._currentMap)) || (!((choosenMap == this._currentMap)))))
+            if (((choosenMap) && ((!(this._currentMap)) || (!(choosenMap == this._currentMap)))))
             {
                 if (this._currentMap)
                 {
@@ -1188,7 +1567,6 @@
 
         private function updateVisibleChunck(refreshIcons:Boolean=true):void
         {
-            var rect:MapArea;
             if (((!(this._currentMap)) || (!(this._currentMap.areas))))
             {
                 return;
@@ -1198,201 +1576,164 @@
                 this.updateIcons();
             };
             var marge:uint = 100;
-            this._visibleMapAreas = new Vector.<MapArea>();
             this._viewRect.x = ((-(this._mapContainer.x) / this._mapContainer.scaleX) - marge);
             this._viewRect.y = ((-(this._mapContainer.y) / this._mapContainer.scaleY) - marge);
             this._viewRect.width = ((width / this._mapContainer.scaleX) + (marge * 2));
             this._viewRect.height = ((height / this._mapContainer.scaleY) + (marge * 2));
-            for each (rect in this._currentMap.areas)
-            {
-                if (this._viewRect.intersects(rect))
-                {
-                    if (!(rect.isUsed))
-                    {
-                        rect.parent.container.addChild(rect.getBitmap());
-                    };
-                    this._visibleMapAreas.push(rect);
-                }
-                else
-                {
-                    if (rect.isUsed)
-                    {
-                        rect.free();
-                    };
-                };
-            };
-            this._visibleMapAreas.fixed = true;
+            this._visibleMapAreas = this._currentMap.loadAreas(this._viewRect);
         }
 
         private function initMask():void
         {
+            if (!this.needMask)
+            {
+                return;
+            };
             if (this._mapContainer.mask)
             {
                 this._mapContainer.mask.parent.removeChild(this._mapContainer.mask);
             };
             var maskCtr:Sprite = new Sprite();
+            maskCtr.name = "maskCtr";
             maskCtr.doubleClickEnabled = true;
             maskCtr.graphics.beginFill(0x770000, 0.3);
-            if (!(this.roundCornerRadius))
-            {
-                maskCtr.graphics.drawRect(0, 0, width, height);
-            }
-            else
-            {
-                maskCtr.graphics.drawRoundRectComplex(0, 0, width, height, this.roundCornerRadius, this.roundCornerRadius, this.roundCornerRadius, this.roundCornerRadius);
-            };
+            maskCtr.graphics.drawRect(0, 0, width, height);
             addChild(maskCtr);
             this._mapContainer.mask = maskCtr;
         }
 
         private function initMap():void
         {
-            var t3d:Sprite;
+            var mapRef:Map;
             this._mapContainer = new Sprite();
+            this._mapContainer.name = "mapContainer";
+            this._mapContainer.doubleClickEnabled = true;
             this.initMask();
             this._mapContainer.addChild(this._mapBitmapContainer);
             this._grid = new Shape();
             this.drawGrid();
             this._mapContainer.addChild(this._grid);
             this._areaShapesContainer = new Sprite();
+            this._areaShapesContainer.name = "areaShapesContainer";
             this._areaShapesContainer.mouseEnabled = false;
             this._mapContainer.addChild(this._areaShapesContainer);
+            this._routeShapesContainer = new Sprite();
+            this._routeShapesContainer.name = "routeShapesContainer";
+            this._routeShapesContainer.mouseEnabled = false;
+            this._mapContainer.addChild(this._routeShapesContainer);
+            this._layersContainer = new Sprite();
+            this._layersContainer.name = "layersContainer";
+            this._layersContainer.mouseEnabled = false;
+            this._mapContainer.addChild(this._layersContainer);
             this._groupsContainer = new Sprite();
+            this._groupsContainer.name = "groupsContainer";
             this._groupsContainer.mouseEnabled = false;
             this._mapContainer.addChild(this._groupsContainer);
-            this._layersContainer = new Sprite();
-            this._mapContainer.addChild(this._layersContainer);
-            this._layersContainer.mouseEnabled = false;
-            if (this._enable3DMode)
-            {
-                t3d = new Sprite();
-                t3d.addChild(this._mapContainer);
-                t3d.rotationX = -30;
-                t3d.doubleClickEnabled = true;
-                addChild(t3d);
-            }
-            else
-            {
-                addChild(this._mapContainer);
-            };
+            this._currentMapContainer = new Sprite();
+            this._currentMapContainer.name = "currentMapContainer";
+            this._currentMapContainer.mouseEnabled = false;
+            this._mapContainer.addChild(this._currentMapContainer);
+            this._currentMapIcon = new Texture();
+            this._currentMapIcon.mouseEnabled = false;
+            this._currentMapIcon.uri = new Uri((XmlConfig.getInstance().getEntry("config.gfx.path") + "icons/assets.swf|currenMapHighlight"));
+            this._currentMapIcon.finalize();
+            this._currentMapContainer.addChild(this._currentMapIcon);
+            addChild(this._mapContainer);
+            this._arrowContainer = new Sprite();
+            this._arrowContainer.name = "arrowContainer";
+            this._arrowContainer.mouseEnabled = false;
             addChild(this._arrowContainer);
-            this._mapElements = new Array();
-            this._layers = new Array();
-            this._elementsGraphicRef = new Dictionary(true);
+            this._mapElements = new Dictionary();
+            this._layers = [];
+            this._elementsByElementTexture = new Dictionary(true);
+            this._elementTexturesByElement = new Dictionary(true);
+            this._elementsListsByCoordinates = new Dictionary(true);
+            if (((this._availableMaps) && (this._availableMaps.length)))
+            {
+                mapRef = Map(this._availableMaps[0]);
+                this.minScale = Math.min((width / mapRef.initialWidth), (height / mapRef.initialHeight));
+                this.maxScale = this._zoomLevels[(this._zoomLevels.length - 1)];
+                this.startScale = Math.min((width / (this.mapWidth * 3)), (height / (this.mapHeight * 3)));
+            };
             this.zoom(this.startScale);
         }
 
         private function drawGrid():void
         {
-            var _local_3:uint;
-            var _local_4:Number;
-            var _local_5:uint;
-            var _local_6:uint;
-            var offsetX:int = (this.origineX % this.mapWidth);
-            var offsetY:int = (this.origineY % this.mapHeight);
-            if (!(this._showGrid))
+            var offsetX:int;
+            var offsetY:int;
+            var i:uint;
+            var coordinate:Number;
+            var verticalLineCount:uint;
+            var horizontalLineCount:uint;
+            if (!this._showGrid)
             {
                 this._grid.graphics.clear();
             }
             else
             {
+                offsetX = (this.origineX % this.mapWidth);
+                offsetY = (this.origineY % this.mapHeight);
                 this._grid.cacheAsBitmap = false;
                 this._grid.graphics.lineStyle(1, 0x777777, this.gridLineThickness);
-                _local_5 = (this._mapBitmapContainer.width / this.mapWidth);
-                _local_3 = 0;
-                while (_local_3 < _local_5)
+                verticalLineCount = uint((this._mapBitmapContainer.width / this.mapWidth));
+                i = 0;
+                while (i < verticalLineCount)
                 {
-                    _local_4 = ((_local_3 * this.mapWidth) + offsetX);
-                    this._grid.graphics.moveTo(_local_4, 0);
-                    this._grid.graphics.lineTo(_local_4, this._mapBitmapContainer.height);
-                    _local_3++;
+                    coordinate = ((i * this.mapWidth) + offsetX);
+                    this._grid.graphics.moveTo(coordinate, 0);
+                    this._grid.graphics.lineTo(coordinate, this._mapBitmapContainer.height);
+                    i++;
                 };
-                _local_6 = (this._mapBitmapContainer.height / this.mapHeight);
-                _local_3 = 0;
-                while (_local_3 < _local_6)
+                horizontalLineCount = uint((this._mapBitmapContainer.height / this.mapHeight));
+                i = 0;
+                while (i < horizontalLineCount)
                 {
-                    _local_4 = ((_local_3 * this.mapHeight) + offsetY);
-                    this._grid.graphics.moveTo(0, _local_4);
-                    this._grid.graphics.lineTo(this._mapBitmapContainer.width, _local_4);
-                    _local_3++;
+                    coordinate = ((i * this.mapHeight) + offsetY);
+                    this._grid.graphics.moveTo(0, coordinate);
+                    this._grid.graphics.lineTo(this._mapBitmapContainer.width, coordinate);
+                    i++;
                 };
-                this._grid.cacheAsBitmap = true;
-            };
-        }
-
-        private function clearLayer(target:DisplayObjectContainer=null):void
-        {
-            var child:DisplayObject;
-            var l:DisplayObjectContainer;
-            for each (l in this._layers)
-            {
-                if (((!(target)) || ((target == l))))
-                {
-                    while (l.numChildren)
-                    {
-                        child = l.removeChildAt(0);
-                    };
-                };
-            };
-        }
-
-        private function clearElementsGroups():void
-        {
-            var mapGroupElement:MapGroupElement;
-            while (this._groupsContainer.numChildren > 0)
-            {
-                mapGroupElement = (this._groupsContainer.getChildAt(0) as MapGroupElement);
-                mapGroupElement.remove();
-                this._groupsContainer.removeChildAt(0);
-            };
-        }
-
-        private function clearMapAreaShapes():void
-        {
-            var mapAreaShape:MapAreaShape;
-            var layer:Sprite;
-            var i:int;
-            var numLayers:int = this._areaShapesContainer.numChildren;
-            i = 0;
-            while (i < numLayers)
-            {
-                layer = (this._areaShapesContainer.getChildAt(i) as Sprite);
-                while (layer.numChildren)
-                {
-                    mapAreaShape = (layer.getChildAt(0) as MapAreaShape);
-                    mapAreaShape.remove();
-                    layer.removeChildAt(0);
-                };
-                i++;
             };
         }
 
         private function updateIconSize():void
         {
             var mie:MapIconElement;
+            var elemsArray:Dictionary;
+            var elems:Vector.<MapElement>;
             var me:MapElement;
-            if (((!(this.autoSizeIcon)) || ((this._lastScaleIconUpdate == this._mapContainer.scaleX))))
+            if (((!(this.autoSizeIcon)) || (this._lastScaleIconUpdate == this._mapContainer.scaleX)))
             {
                 return;
             };
             this._lastScaleIconUpdate = this._mapContainer.scaleX;
-            for each (me in this._mapElements)
+            var currentDo:DisplayObject = this._mapContainer;
+            var realScale:Number = this._mapContainer.scaleX;
+            while (((currentDo) && (currentDo.parent)))
             {
-                mie = (me as MapIconElement);
-                if (((!(mie)) || (!(mie.canBeAutoSize))))
+                currentDo = currentDo.parent;
+                realScale = (realScale * currentDo.scaleX);
+            };
+            this._lastIconScale = (1 / realScale);
+            this._lastIconScale = ((this._needIconResize) ? (this._lastIconScale * 0.6) : this._lastIconScale);
+            for each (elemsArray in this._mapElements)
+            {
+                for each (elems in elemsArray)
                 {
-                }
-                else
-                {
-                    mie._texture.scaleX = (mie._texture.scaleY = (0.75 + (1 / this._mapContainer.scaleX)));
+                    for each (me in elems)
+                    {
+                        mie = (me as MapIconElement);
+                        if (((!(mie)) || (!(mie.canBeAutoSize))))
+                        {
+                        }
+                        else
+                        {
+                            mie.textureScale = this._lastIconScale;
+                        };
+                    };
                 };
             };
-        }
-
-        private function forceMapRollOver():void
-        {
-            this._mouseOnArrow = false;
-            Berilia.getInstance().handler.process(new MapRollOverMessage(this, Math.floor(((this._mapBitmapContainer.mouseX - this.origineX) / this.mapWidth)), Math.floor(((this._mapBitmapContainer.mouseY - this.origineY) / this.mapHeight))));
         }
 
         private function clearMap(map:Map):void
@@ -1412,168 +1753,209 @@
             map = null;
         }
 
-        [HideInFakeClass]
         override public function process(msg:Message):Boolean
         {
-            var _local_2:MouseOverMessage;
-            var _local_3:MouseOutMessage;
-            var _local_4:MouseClickMessage;
-            var _local_5:MouseWheelMessage;
-            var _local_6:int;
-            var _local_7:Point;
-            var _local_8:MouseRightClickMessage;
+            var preventMsgToContinue:Boolean;
+            var trmsg:TextureReadyMessage;
+            var movmsg:MouseOverMessage;
+            var currentTarget:DisplayObjectContainer;
+            var moumsg:MouseOutMessage;
+            var isMouseOver:Boolean;
+            var mdmsg:MouseDownMessage;
+            var mcmsg:MouseClickMessage;
+            var mwmsg:MouseWheelMessage;
+            var zoomPoint:Point;
+            var scaleAsPercent:int;
+            var mrcmsg:MouseRightClickMessage;
+            var mapElement:MapElement;
             var me:MapElement;
             switch (true)
             {
+                case (msg is TextureReadyMessage):
+                    trmsg = (msg as TextureReadyMessage);
+                    trmsg.texture.gotoAndPlay = 1;
+                    break;
                 case (msg is MouseOverMessage):
-                    _local_2 = (msg as MouseOverMessage);
-                    if ((((((_local_2.target == this)) || ((_local_2.target.parent == this)))) || (((!((_local_2.target.parent == this._arrowContainer))) && ((_local_2.target.parent.parent == this))))))
+                    movmsg = (msg as MouseOverMessage);
+                    preventMsgToContinue = this._isMouseOver;
+                    this._isMouseOver = ((((mouseX >= 0) && (mouseY >= 0)) && (mouseX <= width)) && (mouseY <= height));
+                    Mouse.cursor = MouseCursor.HAND;
+                    this._currentMapIcon.visible = true;
+                    currentTarget = (movmsg.target as DisplayObjectContainer);
+                    while (currentTarget)
                     {
-                        if (!(EnterFrameDispatcher.hasEventListener(this.onMapEnterFrame)))
+                        if (currentTarget == this)
                         {
-                            EnterFrameDispatcher.addEventListener(this.onMapEnterFrame, "mapMouse");
-                        };
-                        return (false);
-                    };
-                    this._mouseOnArrow = (((_local_2.target.parent == this._arrowContainer)) ? true : false);
-                    if ((((((_local_2.target is MapGroupElement)) || ((((_local_2.target.parent is MapGroupElement)) && (!((this._openedMapGroupElement == _local_2.target.parent))))))) || ((((this._mapGroupElements[this._elementsGraphicRef[_local_2.target]] is MapGroupElement)) && (!((this._openedMapGroupElement == this._mapGroupElements[this._elementsGraphicRef[_local_2.target]])))))))
-                    {
-                        if ((_local_2.target is MapGroupElement))
-                        {
-                            this._openedMapGroupElement = MapGroupElement(_local_2.target);
-                        }
-                        else
-                        {
-                            if ((_local_2.target.parent is MapGroupElement))
+                            if (!EnterFrameDispatcher.hasEventListener(this.onMapEnterFrame))
                             {
-                                this._openedMapGroupElement = MapGroupElement(_local_2.target.parent);
-                            }
-                            else
-                            {
-                                if (!(this._mouseOnArrow))
-                                {
-                                    this._openedMapGroupElement = this._mapGroupElements[this._elementsGraphicRef[_local_2.target]];
-                                }
-                                else
-                                {
-                                    this._openedMapGroupElement = null;
-                                };
+                                EnterFrameDispatcher.addEventListener(this.onMapEnterFrame, "mapMouse");
                             };
+                            break;
                         };
-                        if (((((this._openedMapGroupElement) && (!(this._openedMapGroupElement.opened)))) && ((this._openedMapGroupElement.icons.length > 1))))
-                        {
-                            this._openedMapGroupElement.open();
-                        };
-                        if (((!((_local_2.target is MapGroupElement))) && (((!(this._openedMapGroupElement)) || ((this._openedMapGroupElement.icons.length > 1))))))
-                        {
-                            Berilia.getInstance().handler.process(new MapElementRollOverMessage(this, this._elementsGraphicRef[_local_2.target]));
-                        };
+                        currentTarget = currentTarget.parent;
+                    };
+                    if (currentTarget != this)
+                    {
+                        preventMsgToContinue = true;
+                        this._isMouseOver = false;
+                    };
+                    this._mouseOnArrow = (movmsg.target.parent == this._arrowContainer);
+                    if ((movmsg.target is MapGroupElement))
+                    {
+                        this._openedMapGroupElement = MapGroupElement(movmsg.target);
                     }
                     else
                     {
-                        if (this._elementsGraphicRef[_local_2.target])
+                        if ((movmsg.target.parent is MapGroupElement))
                         {
-                            Berilia.getInstance().handler.process(new MapElementRollOverMessage(this, this._elementsGraphicRef[_local_2.target]));
+                            this._openedMapGroupElement = MapGroupElement(movmsg.target.parent);
                         }
                         else
                         {
-                            if (((this._reverseArrowAllocation[_local_2.target]) && (this._elementsGraphicRef[this._reverseArrowAllocation[_local_2.target]])))
+                            if (((!(this._mouseOnArrow)) && (this._mapGroupElements[this._elementsByElementTexture[movmsg.target]] is MapGroupElement)))
                             {
-                                Berilia.getInstance().handler.process(new MapElementRollOverMessage(this, this._elementsGraphicRef[this._reverseArrowAllocation[_local_2.target]]));
+                                this._openedMapGroupElement = this._mapGroupElements[this._elementsByElementTexture[movmsg.target]];
                             };
                         };
                     };
-                    break;
-                case (msg is MouseOutMessage):
-                    _local_3 = (msg as MouseOutMessage);
-                    if ((((((_local_3.target == this)) || ((_local_3.target.parent == this)))) || (((!((_local_3.target.parent == this._arrowContainer))) && ((_local_3.target.parent.parent == this))))))
+                    if (this._elementsByElementTexture[movmsg.target])
                     {
-                        if (((!(this._dragging)) && (EnterFrameDispatcher.hasEventListener(this.onMapEnterFrame))))
+                        Berilia.getInstance().handler.process(new MapElementRollOverMessage(this, this._elementsByElementTexture[movmsg.target]));
+                    }
+                    else
+                    {
+                        if (((this._elementTexturesByArrow[movmsg.target]) && (this._elementsByElementTexture[this._elementTexturesByArrow[movmsg.target]])))
                         {
-                            EnterFrameDispatcher.removeEventListener(this.onMapEnterFrame);
+                            Berilia.getInstance().handler.process(new MapElementRollOverMessage(this, this._elementsByElementTexture[this._elementTexturesByArrow[movmsg.target]]));
                         };
-                        return (false);
+                    };
+                    return (preventMsgToContinue);
+                case (msg is MouseOutMessage):
+                    moumsg = (msg as MouseOutMessage);
+                    isMouseOver = ((((mouseX >= 0) && (mouseY >= 0)) && (mouseX <= width)) && (mouseY <= height));
+                    preventMsgToContinue = (this._isMouseOver == isMouseOver);
+                    this._isMouseOver = isMouseOver;
+                    Mouse.cursor = MouseCursor.AUTO;
+                    if (((!(moumsg.mouseEvent.relatedObject)) || (!(contains(moumsg.mouseEvent.relatedObject)))))
+                    {
+                        this._currentMapIcon.visible = false;
+                        Berilia.getInstance().handler.process(new MapRollOutMessage(this));
+                    };
+                    currentTarget = (moumsg.target as DisplayObjectContainer);
+                    while (currentTarget)
+                    {
+                        if (currentTarget == this)
+                        {
+                            if (((!(this._dragging)) && (EnterFrameDispatcher.hasEventListener(this.onMapEnterFrame))))
+                            {
+                                EnterFrameDispatcher.removeEventListener(this.onMapEnterFrame);
+                            };
+                            break;
+                        };
+                        currentTarget = currentTarget.parent;
+                    };
+                    if (currentTarget != this)
+                    {
+                        preventMsgToContinue = false;
+                        this._isMouseOver = false;
                     };
                     this._mouseOnArrow = false;
-                    if (((((((((((_local_3.mouseEvent.relatedObject) && (!((_local_3.mouseEvent.relatedObject.parent == this._openedMapGroupElement))))) && (!((_local_3.mouseEvent.relatedObject == this._openedMapGroupElement))))) && (!((this._mapGroupElements[this._elementsGraphicRef[_local_3.mouseEvent.relatedObject]] == this._openedMapGroupElement))))) && (this._openedMapGroupElement))) && (this._openedMapGroupElement.opened)))
+                    if (this._openedMapGroupElement)
                     {
-                        this._openedMapGroupElement.close();
-                        this._openedMapGroupElement = null;
-                        this.forceMapRollOver();
+                        if (this._openedMapGroupElement.opened)
+                        {
+                            this._openedMapGroupElement.close();
+                            this._openedMapGroupElement = null;
+                        };
                     };
-                    if (this._elementsGraphicRef[_local_3.target])
+                    if (this._elementsByElementTexture[moumsg.target])
                     {
-                        Berilia.getInstance().handler.process(new MapElementRollOutMessage(this, this._elementsGraphicRef[_local_3.target]));
+                        Berilia.getInstance().handler.process(new MapElementRollOutMessage(this, this._elementsByElementTexture[moumsg.target]));
                     }
                     else
                     {
-                        if (((this._reverseArrowAllocation[_local_3.target]) && (this._elementsGraphicRef[this._reverseArrowAllocation[_local_3.target]])))
+                        if (((this._elementTexturesByArrow[moumsg.target]) && (this._elementsByElementTexture[this._elementTexturesByArrow[moumsg.target]])))
                         {
-                            Berilia.getInstance().handler.process(new MapElementRollOutMessage(this, this._elementsGraphicRef[this._reverseArrowAllocation[_local_3.target]]));
+                            Berilia.getInstance().handler.process(new MapElementRollOutMessage(this, this._elementsByElementTexture[this._elementTexturesByArrow[moumsg.target]]));
                         };
                     };
-                    break;
+                    return (preventMsgToContinue);
                 case (msg is MouseDownMessage):
-                    if (!(this.enabledDrag))
+                    mdmsg = (msg as MouseDownMessage);
+                    if (ShortcutsFrame.shiftKey)
+                    {
+                        mapElement = ((this._elementsByElementTexture[mdmsg.target]) ? this._elementsByElementTexture[mdmsg.target] : this._elementsByElementTexture[this._elementTexturesByArrow[mdmsg.target]]);
+                        KernelEventsManager.getInstance().processCallback(BeriliaHookList.MouseShiftClick, {
+                            "data":this,
+                            "params":{
+                                "x":this._lastMx,
+                                "y":this._lastMy,
+                                "element":(mapElement as MapIconElement)
+                            }
+                        });
+                    };
+                    if (!this.enabledDrag)
                     {
                         return (false);
-                    };
-                    if (!(this._enable3DMode))
-                    {
-                        this._mapContainer.startDrag(false, new Rectangle((width - (this._currentMap.initialWidth * this._mapContainer.scaleX)), (height - (this._currentMap.initialHeight * this._mapContainer.scaleY)), ((this._currentMap.initialWidth * this._mapContainer.scaleX) - width), ((this._currentMap.initialHeight * this._mapContainer.scaleY) - height)));
                     };
                     this._dragging = true;
                     return (false);
                 case (msg is MouseClickMessage):
-                    _local_4 = (msg as MouseClickMessage);
-                    if (this._reverseArrowAllocation[_local_4.target])
+                    mcmsg = (msg as MouseClickMessage);
+                    if (this._elementTexturesByArrow[mcmsg.target])
                     {
                         TooltipManager.hide();
-                        me = this._elementsGraphicRef[this._reverseArrowAllocation[_local_4.target]];
+                        me = this._elementsByElementTexture[this._elementTexturesByArrow[mcmsg.target]];
                         this.moveTo(me.x, me.y);
                     };
                     break;
                 case (msg is MouseReleaseOutsideMessage):
                 case (msg is MouseUpMessage):
-                    if (!(this._enable3DMode))
-                    {
-                        this._mapContainer.stopDrag();
-                    };
                     this._dragging = false;
                     this._lastMouseX = 0;
                     this.updateVisibleChunck();
                     Berilia.getInstance().handler.process(new MapMoveMessage(this));
                     return (false);
                 case (msg is MouseWheelMessage):
-                    _local_5 = (msg as MouseWheelMessage);
-                    _local_6 = ((this._mapContainer.scaleX * 100) + ((((_local_5.mouseEvent.delta > 0)) ? 100 : -100) * this.zoomStep));
-                    _local_7 = new Point(_local_5.mouseEvent.localX, _local_5.mouseEvent.localY);
-                    switch (true)
+                    mwmsg = (msg as MouseWheelMessage);
+                    if ((getTimer() - this._lastWheelZoom) < 100)
                     {
-                        case (_local_5.mouseEvent.target.parent is MapGroupElement):
-                            _local_7.x = _local_5.mouseEvent.target.parent.x;
-                            _local_7.y = _local_5.mouseEvent.target.parent.y;
-                            break;
-                        case (_local_5.mouseEvent.target is MapGroupElement):
-                        case (_local_5.mouseEvent.target is Texture):
-                            _local_7.x = _local_5.mouseEvent.target.x;
-                            _local_7.y = _local_5.mouseEvent.target.y;
-                            break;
-                    };
-                    this.zoomWithScalePercent(_local_6, _local_7);
-                    Berilia.getInstance().handler.process(new MapMoveMessage(this));
-                    return (true);
-                case (msg is MouseRightClickMessage):
-                    _local_8 = (msg as MouseRightClickMessage);
-                    if (this._elementsGraphicRef[_local_8.target])
-                    {
-                        Berilia.getInstance().handler.process(new MapElementRightClickMessage(this, this._elementsGraphicRef[_local_8.target]));
+                        this._currentZoomStep = (this._currentZoomStep + this.zoomStep);
                     }
                     else
                     {
-                        if (((this._reverseArrowAllocation[_local_8.target]) && (this._elementsGraphicRef[this._reverseArrowAllocation[_local_8.target]])))
+                        this._currentZoomStep = this.zoomStep;
+                    };
+                    currentTarget = (mwmsg.target as DisplayObjectContainer);
+                    while (currentTarget)
+                    {
+                        if (currentTarget == this._mapContainer)
                         {
-                            Berilia.getInstance().handler.process(new MapElementRightClickMessage(this, this._elementsGraphicRef[this._reverseArrowAllocation[_local_8.target]]));
+                            zoomPoint = new Point(currentTarget.mouseX, currentTarget.mouseY);
+                            break;
+                        };
+                        currentTarget = currentTarget.parent;
+                    };
+                    if (!zoomPoint)
+                    {
+                        return (true);
+                    };
+                    scaleAsPercent = ((this._mapContainer.scaleX * 100) + (((mwmsg.mouseEvent.delta > 0) ? 100 : -100) * this._currentZoomStep));
+                    this.zoomWithScalePercent(scaleAsPercent, zoomPoint);
+                    Berilia.getInstance().handler.process(new MapMoveMessage(this));
+                    this._lastWheelZoom = getTimer();
+                    return (true);
+                case (msg is MouseRightClickMessage):
+                    mrcmsg = (msg as MouseRightClickMessage);
+                    if (this._elementsByElementTexture[mrcmsg.target])
+                    {
+                        Berilia.getInstance().handler.process(new MapElementRightClickMessage(this, this._elementsByElementTexture[mrcmsg.target]));
+                    }
+                    else
+                    {
+                        if (((this._elementTexturesByArrow[mrcmsg.target]) && (this._elementsByElementTexture[this._elementTexturesByArrow[mrcmsg.target]])))
+                        {
+                            Berilia.getInstance().handler.process(new MapElementRightClickMessage(this, this._elementsByElementTexture[this._elementTexturesByArrow[mrcmsg.target]]));
                         };
                     };
                     return (false);
@@ -1583,37 +1965,86 @@
 
         private function onMapEnterFrame(e:Event):void
         {
+            var newX:Number;
+            var newY:Number;
             var mx:int;
             var my:int;
+            if (!stage)
+            {
+                return;
+            };
             if (((this._mapToClear) && (this.allChunksLoaded)))
             {
                 this.clearMap(this._mapToClear);
                 this._mapToClear = null;
             };
-            if (((this._dragging) && (((!((this._lastMouseX == StageShareManager.mouseX))) || (!((this._lastMouseY == StageShareManager.mouseY)))))))
+            var stageMouseX:Number = stage.mouseX;
+            var stageMouseY:Number = stage.mouseY;
+            if (((this._dragging) && ((!(this._lastMouseX == stageMouseX)) || (!(this._lastMouseY == stageMouseY)))))
             {
-                if (((this._enable3DMode) && (this._lastMouseX)))
+                newX = ((this._mapContainer.x + stageMouseX) - this._lastMouseX);
+                newY = ((this._mapContainer.y + stageMouseY) - this._lastMouseY);
+                if (((this._lastMouseX) && ((newX <= 0) && (Math.round((newX + (this._currentMap.initialWidth * this._mapContainer.scaleX))) >= width))))
                 {
-                    this._mapContainer.x = (this._mapContainer.x - (StageShareManager.mouseX - this._lastMouseX));
-                    this._mapContainer.y = (this._mapContainer.y - (StageShareManager.mouseY - this._lastMouseY));
+                    this._mapContainer.x = newX;
+                };
+                if (((this._lastMouseX) && ((newY <= 0) && (Math.round((newY + (this._currentMap.initialHeight * this._mapContainer.scaleY))) >= height))))
+                {
+                    this._mapContainer.y = newY;
                 };
                 this.updateVisibleChunck();
-                this._lastMouseX = StageShareManager.mouseX;
-                this._lastMouseY = StageShareManager.mouseY;
+                this._lastMouseX = stageMouseX;
+                this._lastMouseY = stageMouseY;
             };
             var posX:int = this.mouseX;
             var posY:int = this.mouseY;
-            if ((((((((posX > 0)) && ((posX < __width)))) && ((posY > 0)))) && ((posY < __height))))
+            if (((((posX > 0) && (posX < __width)) && (posY > 0)) && (posY < __height)))
             {
-                mx = Math.floor(((this._mapBitmapContainer.mouseX - this.origineX) / this.mapWidth));
-                my = Math.floor(((this._mapBitmapContainer.mouseY - this.origineY) / this.mapHeight));
-                if (((((((!(this._openedMapGroupElement)) || (!(this._openedMapGroupElement.opened)))) && (!(this._mouseOnArrow)))) && (((!((mx == this._lastMx))) || (!((my == this._lastMy)))))))
+                mx = int(Math.floor(((this._mapBitmapContainer.mouseX - this.origineX) / this.mapWidth)));
+                my = int(Math.floor(((this._mapBitmapContainer.mouseY - this.origineY) / this.mapHeight)));
+                if (((!(this._mouseOnArrow)) && ((!(mx == this._lastMx)) || (!(my == this._lastMy)))))
                 {
                     this._lastMx = mx;
                     this._lastMy = my;
-                    Berilia.getInstance().handler.process(new MapRollOverMessage(this, mx, my));
+                    this.onRollOverChunk();
+                };
+            }
+            else
+            {
+                this._lastMx = Number.NaN;
+                this._lastMy = Number.NaN;
+            };
+        }
+
+        private function onRollOverChunk():void
+        {
+            var currentMapGroupElement:MapGroupElement;
+            var currentMapIcons:Array;
+            this._currentMapIcon.x = (((this._lastMx * this.mapWidth) + this.origineX) + (this.mapWidth / 2));
+            this._currentMapIcon.y = (((this._lastMy * this.mapHeight) + this.origineY) + (this.mapHeight / 2));
+            this._currentMapIcon.scaleX = (this._currentMapIcon.scaleY = (this.mapWidth / this._currentMapIcon.width));
+            if (((this._openedMapGroupElement) && (this._openedMapGroupElement.parent)))
+            {
+                this._openedMapGroupElement.parent.setChildIndex(this._openedMapGroupElement, this._openMapGroupElementIndex);
+                this._openedMapGroupElement.close();
+                this._openedMapGroupElement = null;
+            };
+            if (this._elementsListsByCoordinates[this._lastMx])
+            {
+                currentMapIcons = this._elementsListsByCoordinates[this._lastMx][this._lastMy];
+                if (((currentMapIcons) && (currentMapIcons.length > 1)))
+                {
+                    currentMapGroupElement = this._mapGroupElements[currentMapIcons[0]];
+                    if (((currentMapGroupElement) && (!(this._openedMapGroupElement))))
+                    {
+                        this._openMapGroupElementIndex = currentMapGroupElement.parent.getChildIndex(currentMapGroupElement);
+                        currentMapGroupElement.parent.setChildIndex(currentMapGroupElement, (currentMapGroupElement.parent.numChildren - 1));
+                        currentMapGroupElement.open();
+                        this._openedMapGroupElement = currentMapGroupElement;
+                    };
                 };
             };
+            Berilia.getInstance().handler.process(new MapRollOverMessage(this, this._lastMx, this._lastMy));
         }
 
         private function onWindowDeactivate(pEvent:Event):void
@@ -1626,5 +2057,5 @@
 
 
     }
-}//package com.ankamagames.berilia.components
+} com.ankamagames.berilia.components
 

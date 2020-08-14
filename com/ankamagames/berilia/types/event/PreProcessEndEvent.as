@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.types.event
+package com.ankamagames.berilia.types.event
 {
     import flash.events.Event;
     import com.ankamagames.berilia.uiRender.XmlPreProcessor;
@@ -23,5 +23,5 @@
 
 
     }
-}//package com.ankamagames.berilia.types.event
+} com.ankamagames.berilia.types.event
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.atouin.data.map.elements
+package com.ankamagames.atouin.data.map.elements
 {
     import com.ankamagames.jerakine.types.ColorMultiplicator;
     import flash.geom.Point;
@@ -31,6 +31,10 @@
 
         public function get colorMultiplicator():ColorMultiplicator
         {
+            if (!this.finalTeint)
+            {
+                this.calculateFinalTeint();
+            };
             return (this.finalTeint);
         }
 
@@ -108,5 +112,5 @@
 
 
     }
-}//package com.ankamagames.atouin.data.map.elements
+} com.ankamagames.atouin.data.map.elements
 

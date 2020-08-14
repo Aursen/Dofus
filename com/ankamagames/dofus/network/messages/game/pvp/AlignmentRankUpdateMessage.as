@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.pvp
+package com.ankamagames.dofus.network.messages.game.pvp
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class AlignmentRankUpdateMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -55,6 +55,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_AlignmentRankUpdateMessage(output);
@@ -77,15 +85,36 @@
 
         public function deserializeAs_AlignmentRankUpdateMessage(input:ICustomDataInput):void
         {
+            this._alignmentRankFunc(input);
+            this._verboseFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_AlignmentRankUpdateMessage(tree);
+        }
+
+        public function deserializeAsyncAs_AlignmentRankUpdateMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._alignmentRankFunc);
+            tree.addChild(this._verboseFunc);
+        }
+
+        private function _alignmentRankFunc(input:ICustomDataInput):void
+        {
             this.alignmentRank = input.readByte();
             if (this.alignmentRank < 0)
             {
                 throw (new Error((("Forbidden value (" + this.alignmentRank) + ") on element of AlignmentRankUpdateMessage.alignmentRank.")));
             };
+        }
+
+        private function _verboseFunc(input:ICustomDataInput):void
+        {
             this.verbose = input.readBoolean();
         }
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.pvp
+} com.ankamagames.dofus.network.messages.game.pvp
 

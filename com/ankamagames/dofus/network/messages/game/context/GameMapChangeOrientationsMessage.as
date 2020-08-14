@@ -1,29 +1,25 @@
-﻿package com.ankamagames.dofus.network.messages.game.context
+package com.ankamagames.dofus.network.messages.game.context
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
     import __AS3__.vec.Vector;
     import com.ankamagames.dofus.network.types.game.context.ActorOrientation;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
     import __AS3__.vec.*;
 
-    [Trusted]
     public class GameMapChangeOrientationsMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 6155;
 
         private var _isInitialized:Boolean = false;
-        public var orientations:Vector.<ActorOrientation>;
+        public var orientations:Vector.<ActorOrientation> = new Vector.<ActorOrientation>();
+        private var _orientationstree:FuncTree;
 
-        public function GameMapChangeOrientationsMessage()
-        {
-            this.orientations = new Vector.<ActorOrientation>();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
@@ -58,6 +54,14 @@
         override public function unpack(input:ICustomDataInput, length:uint):void
         {
             this.deserialize(input);
+        }
+
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
         }
 
         public function serialize(output:ICustomDataOutput):void
@@ -95,7 +99,35 @@
             };
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GameMapChangeOrientationsMessage(tree);
+        }
+
+        public function deserializeAsyncAs_GameMapChangeOrientationsMessage(tree:FuncTree):void
+        {
+            this._orientationstree = tree.addChild(this._orientationstreeFunc);
+        }
+
+        private function _orientationstreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._orientationstree.addChild(this._orientationsFunc);
+                i++;
+            };
+        }
+
+        private function _orientationsFunc(input:ICustomDataInput):void
+        {
+            var _item:ActorOrientation = new ActorOrientation();
+            _item.deserialize(input);
+            this.orientations.push(_item);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.context
+} com.ankamagames.dofus.network.messages.game.context
 

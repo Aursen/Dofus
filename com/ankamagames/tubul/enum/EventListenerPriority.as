@@ -1,4 +1,4 @@
-﻿package com.ankamagames.tubul.enum
+package com.ankamagames.tubul.enum
 {
     public class EventListenerPriority 
     {
@@ -11,5 +11,5 @@
 
 
     }
-}//package com.ankamagames.tubul.enum
+} com.ankamagames.tubul.enum
 

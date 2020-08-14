@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.types.data
+package com.ankamagames.berilia.types.data
 {
     import flash.display.Sprite;
     import flash.geom.Point;
@@ -10,9 +10,9 @@
         public var lockX:Boolean = false;
         public var lockY:Boolean = false;
         public var offset:Point;
-        public var data;
+        public var data:*;
 
 
     }
-}//package com.ankamagames.berilia.types.data
+} com.ankamagames.berilia.types.data
 

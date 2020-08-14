@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.datacenter.misc
+package com.ankamagames.dofus.datacenter.misc
 {
     import com.ankamagames.jerakine.data.ICensoredDataItem;
     import com.ankamagames.jerakine.interfaces.IDataCenter;
@@ -63,5 +63,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.misc
+} com.ankamagames.dofus.datacenter.misc
 

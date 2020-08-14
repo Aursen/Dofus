@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.messages.events
+package com.ankamagames.jerakine.messages.events
 {
     import flash.events.Event;
     import com.ankamagames.jerakine.messages.Frame;
@@ -23,5 +23,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.messages.events
+} com.ankamagames.jerakine.messages.events
 

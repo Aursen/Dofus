@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.kernel.sound.type
+package com.ankamagames.dofus.kernel.sound.type
 {
     import flash.geom.Point;
 
@@ -25,5 +25,5 @@
         }
 
     }
-}//package com.ankamagames.dofus.kernel.sound.type
+} com.ankamagames.dofus.kernel.sound.type
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.common.frames
+package com.ankamagames.dofus.logic.common.frames
 {
     import com.ankamagames.jerakine.messages.Frame;
     import flash.utils.Timer;
@@ -25,6 +25,7 @@
     import com.ankamagames.dofus.network.messages.game.context.fight.GameFightTurnFinishMessage;
     import flash.utils.setTimeout;
     import com.ankamagames.dofus.network.messages.common.basic.BasicPingMessage;
+    import com.ankamagames.dofus.kernel.net.ConnectionType;
     import com.ankamagames.jerakine.entities.interfaces.IEntity;
     import com.ankamagames.dofus.kernel.Kernel;
     import com.ankamagames.dofus.logic.game.roleplay.frames.RoleplayEntitiesFrame;
@@ -58,22 +59,18 @@
         private var _fightCount:uint;
         private var _mapPos:Array;
         private var _enabled:Boolean;
-        private var _rollOverTimer:Timer;
-        private var _actionTimer:Timer;
+        private var _rollOverTimer:Timer = new Timer(2000);
+        private var _actionTimer:Timer = new Timer(5000);
         private var _inFight:Boolean;
         private var _lastElemOver:Sprite;
         private var _lastEntityOver:IInteractive;
         private var _wait:Boolean;
         private var _turnPlayed:uint;
         private var _myTurn:Boolean;
-        private var _turnAction:Array;
+        private var _turnAction:Array = [];
 
         public function FightBotFrame()
         {
-            this._rollOverTimer = new Timer(2000);
-            this._actionTimer = new Timer(5000);
-            this._turnAction = [];
-            super();
             if (_self)
             {
                 throw (new SingletonError());
@@ -85,7 +82,7 @@
 
         public static function getInstance():FightBotFrame
         {
-            if (!(_self))
+            if (!_self)
             {
                 _self = new (FightBotFrame)();
             };
@@ -127,8 +124,8 @@
 
         public function process(msg:Message):Boolean
         {
-            var _local_2:GameFightReadyMessage;
-            var _local_3:GameFightTurnStartMessage;
+            var startFightMsg:GameFightReadyMessage;
+            var turnStartMsg:GameFightTurnStartMessage;
             switch (true)
             {
                 case (msg is GameFightJoinMessage):
@@ -149,14 +146,14 @@
                     this.sendAdminCmd("giveenergy *");
                     this._turnPlayed = 0;
                     this._myTurn = false;
-                    _local_2 = new GameFightReadyMessage();
-                    _local_2.initGameFightReadyMessage(true);
-                    ConnectionsHandler.getConnection().send(_local_2);
+                    startFightMsg = new GameFightReadyMessage();
+                    startFightMsg.initGameFightReadyMessage(true);
+                    ConnectionsHandler.getConnection().send(startFightMsg);
                     break;
                 case (msg is GameFightTurnStartMessage):
-                    _local_3 = (msg as GameFightTurnStartMessage);
+                    turnStartMsg = (msg as GameFightTurnStartMessage);
                     this._turnAction = [];
-                    if (_local_3.id == PlayedCharacterManager.getInstance().id)
+                    if (turnStartMsg.id == PlayedCharacterManager.getInstance().id)
                     {
                         this._myTurn = true;
                         this._turnPlayed++;
@@ -268,14 +265,14 @@
 
         private function fakeActivity():void
         {
-            if (!(this._enabled))
+            if (!this._enabled)
             {
                 return;
             };
             setTimeout(this.fakeActivity, ((1000 * 60) * 5));
             var bpmgs:BasicPingMessage = new BasicPingMessage();
             bpmgs.initBasicPingMessage(false);
-            ConnectionsHandler.getConnection().send(bpmgs);
+            ConnectionsHandler.getConnection().send(bpmgs, ConnectionType.TO_ALL_SERVERS);
         }
 
         private function randomWalk():void
@@ -287,7 +284,7 @@
                 return;
             };
             var rpEF:RoleplayEntitiesFrame = (Kernel.getWorker().getFrame(RoleplayEntitiesFrame) as RoleplayEntitiesFrame);
-            if (!(rpEF))
+            if (!rpEF)
             {
                 return;
             };
@@ -314,7 +311,7 @@
         private function fightRandomMove():void
         {
             var reachableCells:FightReachableCellsMaker = new FightReachableCellsMaker((FightEntitiesFrame.getCurrentInstance().getEntityInfos(PlayedCharacterManager.getInstance().id) as GameFightFighterInformations));
-            if (!(reachableCells.reachableCells.length))
+            if (!reachableCells.reachableCells.length)
             {
                 this.nextTurnAction();
                 return;
@@ -347,7 +344,7 @@
                 };
             };
             entity = avaibleEntities[Math.floor((avaibleEntities.length * Math.random()))];
-            if (!(entity))
+            if (!entity)
             {
                 return;
             };
@@ -370,7 +367,7 @@
                     };
                 };
             };
-            if (!(avaibleElem.length))
+            if (!avaibleElem.length)
             {
                 return;
             };
@@ -388,8 +385,8 @@
         private function castSpell(spellId:uint, onMySelf:Boolean):void
         {
             var cellId:uint;
-            var _local_5:Array;
-            var _local_6:*;
+            var avaibleCells:Array;
+            var entity:*;
             var monster:GameFightMonsterInformations;
             var gafcrmsg:GameActionFightCastRequestMessage = new GameActionFightCastRequestMessage();
             if (onMySelf)
@@ -398,19 +395,19 @@
             }
             else
             {
-                _local_5 = [];
-                for each (_local_6 in FightEntitiesFrame.getCurrentInstance().getEntitiesDictionnary())
+                avaibleCells = [];
+                for each (entity in FightEntitiesFrame.getCurrentInstance().getEntitiesDictionnary())
                 {
-                    if ((((_local_6.contextualId < 0)) && ((_local_6 is GameFightMonsterInformations))))
+                    if (((entity.contextualId < 0) && (entity is GameFightMonsterInformations)))
                     {
-                        monster = (_local_6 as GameFightMonsterInformations);
-                        if (monster.alive)
+                        monster = (entity as GameFightMonsterInformations);
+                        if (monster.spawnInfo.alive)
                         {
-                            _local_5.push(_local_6.disposition.cellId);
+                            avaibleCells.push(entity.disposition.cellId);
                         };
                     };
                 };
-                cellId = _local_5[Math.floor((_local_5.length * Math.random()))];
+                cellId = uint(avaibleCells[Math.floor((avaibleCells.length * Math.random()))]);
             };
             gafcrmsg.initGameActionFightCastRequestMessage(spellId, cellId);
             ConnectionsHandler.getConnection().send(gafcrmsg);
@@ -418,5 +415,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.common.frames
+} com.ankamagames.dofus.logic.common.frames
 

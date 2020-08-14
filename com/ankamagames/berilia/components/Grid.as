@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.components
+package com.ankamagames.berilia.components
 {
     import com.ankamagames.berilia.types.graphic.GraphicContainer;
     import com.ankamagames.berilia.FinalizableUIComponent;
@@ -13,6 +13,8 @@
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
     import com.ankamagames.berilia.interfaces.IGridRenderer;
+    import __AS3__.vec.Vector;
+    import com.ankamagames.berilia.types.data.GridItem;
     import com.ankamagames.jerakine.utils.memory.WeakReference;
     import com.ankamagames.jerakine.types.Uri;
     import flash.display.Shape;
@@ -21,8 +23,8 @@
     import flash.errors.IllegalOperationError;
     import flash.utils.getDefinitionByName;
     import flash.events.Event;
-    import com.ankamagames.berilia.types.data.GridItem;
     import flash.display.DisplayObject;
+    import mx.utils.ObjectUtil;
     import com.ankamagames.berilia.components.messages.SelectItemMessage;
     import flash.events.MouseEvent;
     import com.ankamagames.jerakine.handlers.messages.mouse.MouseRightClickMessage;
@@ -31,17 +33,20 @@
     import com.ankamagames.jerakine.handlers.messages.mouse.MouseMessage;
     import com.ankamagames.jerakine.handlers.messages.mouse.MouseUpMessage;
     import com.ankamagames.jerakine.handlers.messages.keyboard.KeyboardKeyDownMessage;
+    import com.ankamagames.jerakine.pools.PoolablePoint;
     import com.ankamagames.berilia.managers.UIEventManager;
     import com.ankamagames.berilia.components.messages.ItemRightClickMessage;
     import com.ankamagames.berilia.components.messages.ItemRollOverMessage;
     import com.ankamagames.berilia.components.messages.ItemRollOutMessage;
     import com.ankamagames.jerakine.handlers.messages.mouse.MouseWheelMessage;
+    import com.ankamagames.jerakine.pools.PoolsManager;
+    import com.ankamagames.jerakine.utils.display.StageShareManager;
     import com.ankamagames.jerakine.handlers.messages.mouse.MouseClickMessage;
     import com.ankamagames.berilia.components.messages.SelectEmptyItemMessage;
     import com.ankamagames.jerakine.utils.display.KeyPoll;
     import flash.ui.Keyboard;
-    import com.ankamagames.jerakine.utils.system.AirScanner;
     import com.ankamagames.jerakine.handlers.messages.mouse.MouseDoubleClickMessage;
+    import flash.events.KeyboardEvent;
     import com.ankamagames.jerakine.messages.Message;
     import com.ankamagames.berilia.Berilia;
     import com.ankamagames.jerakine.messages.MessageHandler;
@@ -62,11 +67,13 @@
         public static const AUTOSELECT_BY_INDEX:int = 1;
         public static const AUTOSELECT_BY_ITEM:int = 2;
 
-        protected var _dataProvider;
+        public var mouseClickEnabled:Boolean = true;
+        protected var _dataProvider:*;
         protected var _renderer:IGridRenderer;
-        protected var _items:Array;
+        protected var _items:Vector.<GridItem>;
         protected var _scrollBarV:ScrollBar;
         protected var _scrollBarH:ScrollBar;
+        protected var _scrollbarOffset:int = 0;
         protected var _horizontalScrollSpeed:Number = 1;
         protected var _verticalScrollSpeed:Number = 1;
         protected var _slotWidth:uint = 50;
@@ -80,9 +87,8 @@
         protected var _nSelectedItem:WeakReference;
         protected var _sVScrollCss:Uri;
         protected var _sHScrollCss:Uri;
-        protected var _scrollBarSize:uint = 16;
+        protected var _scrollBarSize:uint = 10;
         protected var _eventCatcher:Shape;
-        protected var _finalized:Boolean = false;
         protected var _displayScrollbar:String = "auto";
         protected var _autoSelect:int = 1;
         protected var _sortProperty:String;
@@ -91,17 +97,27 @@
         protected var _slotByCol:uint;
         protected var _totalSlotByRow:uint;
         protected var _totalSlotByCol:uint;
-        protected var _avaibleSpaceX:uint;
-        protected var _avaibleSpaceY:uint;
+        protected var _avaibleSpaceX:int;
+        protected var _avaibleSpaceY:int;
         protected var _hiddenRow:uint = 0;
         protected var _hiddenCol:uint = 0;
         protected var _mask:Shape;
+        protected var _hPadding:uint = 0;
+        protected var _vPadding:uint = 0;
+        protected var _allowLastToFirst:Boolean = false;
+        protected var _useLeftRightToSelect:Boolean = false;
+        protected var _ignoreConfigVar:Boolean = false;
+        protected var _scrollBarHYOffset:Number = 0;
+        protected var _scrollBarHXOffset:Number = 0;
+        protected var _scrollBarHWidthOffset:Number = 0;
+        public var selectWithArrows:Boolean = true;
+        public var _forceRefresh:Boolean = false;
         public var keyboardIndexHandler:Function;
         public var silent:Boolean;
 
         public function Grid():void
         {
-            this._items = new Array();
+            this._items = new Vector.<GridItem>();
             this._dataProvider = new Array();
             this._eventCatcher = new Shape();
             this._eventCatcher.alpha = 0;
@@ -109,23 +125,95 @@
             this._eventCatcher.graphics.drawRect(0, 0, 1, 1);
             addChild(this._eventCatcher);
             mouseEnabled = true;
+            useHandCursor = false;
             MEMORY_LOG[this] = 1;
+        }
+
+        public function set hPadding(value:int):void
+        {
+            this._hPadding = value;
+            if (finalized)
+            {
+                this.finalize();
+            };
+        }
+
+        public function get hPadding():int
+        {
+            return (this._hPadding);
+        }
+
+        public function set vPadding(value:int):void
+        {
+            this._vPadding = value;
+            if (finalized)
+            {
+                this.finalize();
+            };
+        }
+
+        public function get vPadding():int
+        {
+            return (this._vPadding);
+        }
+
+        public function set allowLastToFirst(value:Boolean):void
+        {
+            this._allowLastToFirst = value;
+        }
+
+        public function get allowLastToFirst():Boolean
+        {
+            return (this._allowLastToFirst);
+        }
+
+        public function set useLeftRightToSelect(value:Boolean):void
+        {
+            this._useLeftRightToSelect = value;
+        }
+
+        public function get useLeftRightToSelect():Boolean
+        {
+            return (this._useLeftRightToSelect);
         }
 
         override public function set width(nW:Number):void
         {
+            if (super.width == nW)
+            {
+                return;
+            };
             super.width = nW;
             this._eventCatcher.width = nW;
+            if (finalized)
+            {
+                this.finalize();
+                this.initSlot();
+            };
         }
 
         override public function set height(nH:Number):void
         {
+            if (super.height == nH)
+            {
+                return;
+            };
             super.height = nH;
             this._eventCatcher.height = nH;
             if (this._scrollBarV)
             {
                 this._scrollBarV.height = nH;
             };
+            if (finalized)
+            {
+                this.finalize();
+                this.initSlot();
+            };
+        }
+
+        public function get scrollBarSize():uint
+        {
+            return (this._scrollBarSize);
         }
 
         public function set rendererName(value:String):void
@@ -145,7 +233,7 @@
         public function set rendererArgs(value:String):void
         {
             this._sRendererArgs = value;
-            if (this.finalized)
+            if (finalized)
             {
                 this.finalize();
             };
@@ -163,11 +251,11 @@
 
         public function set dataProvider(data:*):void
         {
-            if (!(data))
+            if (!data)
             {
                 return;
             };
-            if (!(this.isIterable(data)))
+            if (!this.isIterable(data))
             {
                 throw (new ArgumentError("dataProvider must be either Array or Vector."));
             };
@@ -176,7 +264,7 @@
             this.initSlot();
         }
 
-        public function get dataProvider()
+        public function get dataProvider():*
         {
             return (this._dataProvider);
         }
@@ -193,24 +281,48 @@
             };
         }
 
+        [Uri]
         public function set horizontalScrollbarCss(sValue:Uri):void
         {
             this._sHScrollCss = sValue;
         }
 
+        [Uri]
         public function get horizontalScrollbarCss():Uri
         {
             return (this._sHScrollCss);
         }
 
+        [Uri]
         public function set verticalScrollbarCss(sValue:Uri):void
         {
             this._sVScrollCss = sValue;
         }
 
+        [Uri]
         public function get verticalScrollbarCss():Uri
         {
             return (this._sVScrollCss);
+        }
+
+        public function set scrollbarOffset(sValue:int):void
+        {
+            this._scrollbarOffset = sValue;
+        }
+
+        public function get scrollbarOffset():int
+        {
+            return (this._scrollbarOffset);
+        }
+
+        public function set forceRefresh(sValue:Boolean):void
+        {
+            this._forceRefresh = sValue;
+        }
+
+        public function set scrollBarHWidthOffset(sValue:int):void
+        {
+            this._scrollBarHWidthOffset = sValue;
         }
 
         public function get selectedIndex():int
@@ -223,27 +335,32 @@
             this.setSelectedIndex(i, SelectMethodEnum.MANUAL);
         }
 
-        public function set vertical(b:Boolean):void
+        public function set verticalScroll(b:Boolean):void
         {
             if (this._verticalScroll != b)
             {
                 this._verticalScroll = b;
-                if (this._finalized)
+                if (_finalized)
                 {
                     this.finalize();
                 };
             };
         }
 
-        public function get vertical():Boolean
+        public function get verticalScroll():Boolean
         {
             return (this._verticalScroll);
+        }
+
+        public function get pageYOffset():int
+        {
+            return (this._pageYOffset);
         }
 
         public function set autoSelect(b:Boolean):void
         {
             this._autoSelect = AUTOSELECT_BY_INDEX;
-            if (((this._dataProvider.length) && ((this._autoSelect == AUTOSELECT_BY_INDEX))))
+            if (((this._dataProvider.length) && (this._autoSelect == AUTOSELECT_BY_INDEX)))
             {
                 this.setSelectedIndex(Math.min(this._nSelectedIndex, (this._dataProvider.length - 1)), SelectMethodEnum.AUTO);
             };
@@ -251,12 +368,16 @@
 
         public function get autoSelect():Boolean
         {
-            return ((this._autoSelect == AUTOSELECT_BY_INDEX));
+            return (this._autoSelect == AUTOSELECT_BY_INDEX);
         }
 
         public function set autoSelectMode(mode:int):void
         {
             this._autoSelect = mode;
+            if (this._autoSelect == AUTOSELECT_NONE)
+            {
+                this._nSelectedIndex = -1;
+            };
             if (this._dataProvider.length)
             {
                 if (this._autoSelect == AUTOSELECT_BY_INDEX)
@@ -313,9 +434,9 @@
             return (count);
         }
 
-        public function get selectedItem()
+        public function get selectedItem():*
         {
-            if (!(this._dataProvider))
+            if (!this._dataProvider)
             {
                 return (null);
             };
@@ -341,12 +462,12 @@
                 i = 0;
                 while (i < this._dataProvider.length)
                 {
-                    data = SecureCenter.unsecure(this._dataProvider[i]);
-                    if (data === SecureCenter.unsecure(o))
+                    data = this._dataProvider[i];
+                    if (data === o)
                     {
                         this.setSelectedIndex(i, SelectMethodEnum.MANUAL);
                         isSet = true;
-                        return;
+                        break;
                     };
                     i++;
                 };
@@ -361,7 +482,7 @@
         public function set slotWidth(value:uint):void
         {
             this._slotWidth = value;
-            if (this.finalized)
+            if (finalized)
             {
                 this.finalize();
             };
@@ -375,20 +496,10 @@
         public function set slotHeight(value:uint):void
         {
             this._slotHeight = value;
-            if (this.finalized)
+            if (finalized)
             {
                 this.finalize();
             };
-        }
-
-        public function set finalized(b:Boolean):void
-        {
-            this._finalized = b;
-        }
-
-        public function get finalized():Boolean
-        {
-            return (this._finalized);
         }
 
         public function get slotByRow():uint
@@ -399,6 +510,11 @@
         public function get slotByCol():uint
         {
             return (this._slotByCol);
+        }
+
+        public function get scrollBarV():ScrollBar
+        {
+            return (this._scrollBarV);
         }
 
         public function get verticalScrollValue():int
@@ -421,7 +537,7 @@
                 }
                 else
                 {
-                    this.updateFromIndex(value);
+                    this.updateFromIndex(this._scrollBarV.value);
                 };
             };
         }
@@ -467,7 +583,7 @@
         public function set hiddenRow(v:uint):void
         {
             this._hiddenRow = v;
-            if (this.finalized)
+            if (finalized)
             {
                 this.finalize();
             };
@@ -476,10 +592,45 @@
         public function set hiddenCol(v:uint):void
         {
             this._hiddenCol = v;
-            if (this.finalized)
+            if (finalized)
             {
                 this.finalize();
             };
+        }
+
+        public function set slotByRow(v:uint):void
+        {
+            this._slotByRow = v;
+        }
+
+        public function set totalSlotByRow(v:int):void
+        {
+            this._totalSlotByRow = v;
+        }
+
+        public function set ignoreConfigVar(v:Boolean):void
+        {
+            this._ignoreConfigVar = v;
+        }
+
+        public function set avaibleSpaceX(v:Number):void
+        {
+            this._avaibleSpaceX = v;
+        }
+
+        public function set avaibleSpaceY(v:Number):void
+        {
+            this._avaibleSpaceY = v;
+        }
+
+        public function set scrollBarHYOffset(v:Number):void
+        {
+            this._scrollBarHYOffset = v;
+        }
+
+        public function set scrollBarHXOffset(v:Number):void
+        {
+            this._scrollBarHXOffset = v;
         }
 
         public function renderModificator(childs:Array, accessKey:Object):Array
@@ -491,12 +642,12 @@
             };
             if (this._sRendererName)
             {
-                if (!(this._renderer))
+                if (!this._renderer)
                 {
                     cRenderer = (getDefinitionByName(this._sRendererName) as Class);
                     if (cRenderer)
                     {
-                        this._renderer = new (cRenderer)(this._sRendererArgs);
+                        this._renderer = new cRenderer(this._sRendererArgs);
                         this._renderer.grid = this;
                     }
                     else
@@ -515,24 +666,29 @@
             return (this._renderer.renderModificator(childs));
         }
 
-        public function finalize():void
+        override public function finalize():void
         {
             var maxValue:int;
-            this.configVar();
-            if ((((this._slotByRow < this._totalSlotByRow)) && (!((this._displayScrollbar == "never")))))
+            if (!this._ignoreConfigVar)
             {
-                if (!(this._scrollBarH))
+                this.configVar();
+            };
+            if (((this._slotByRow < this._totalSlotByRow) && (!(this._displayScrollbar == "never"))))
+            {
+                if (!this._scrollBarH)
                 {
+                    this._verticalScroll = false;
                     this._scrollBarH = new ScrollBar();
                     addChild(this._scrollBarH);
                     this._scrollBarH.addEventListener(Event.CHANGE, this.onScroll, false, 0, true);
-                    this._scrollBarH.css = this._sVScrollCss;
+                    this._scrollBarH.css = this._sHScrollCss;
                     this._scrollBarH.min = 0;
                     this._scrollBarH.max = (this._totalSlotByRow - this._slotByRow);
                     this._scrollBarH.total = this._totalSlotByRow;
-                    this._scrollBarH.width = width;
+                    this._scrollBarH.width = (width + this._scrollBarHWidthOffset);
                     this._scrollBarH.height = this._scrollBarSize;
-                    this._scrollBarH.y = (height - this._scrollBarH.height);
+                    this._scrollBarH.y = ((height - this._scrollBarH.height) + this._scrollBarHYOffset);
+                    this._scrollBarH.x = (this._scrollBarHXOffset - (this._scrollBarHWidthOffset / 2));
                     this._scrollBarH.step = 1;
                     this._scrollBarH.scrollSpeed = this._horizontalScrollSpeed;
                     this._scrollBarH.finalize();
@@ -545,9 +701,9 @@
             }
             else
             {
-                if ((((((this._slotByCol < this._totalSlotByCol)) && (!((this._displayScrollbar == "never"))))) || ((this._displayScrollbar == "always"))))
+                if ((((this._slotByCol < this._totalSlotByCol) && (!(this._displayScrollbar == "never"))) || (this._displayScrollbar == "always")))
                 {
-                    if (!(this._scrollBarV))
+                    if (!this._scrollBarV)
                     {
                         this._scrollBarV = new ScrollBar();
                         addChild(this._scrollBarV);
@@ -573,6 +729,7 @@
                     }
                     else
                     {
+                        this._scrollBarV.finalized = false;
                         maxValue = (this._totalSlotByCol - this._slotByCol);
                         if (maxValue < 0)
                         {
@@ -584,6 +741,7 @@
                         };
                         this._scrollBarV.total = this._totalSlotByCol;
                         addChild(this._scrollBarV);
+                        this._scrollBarV.x = (width - this._scrollBarV.width);
                         this._scrollBarV.finalize();
                     };
                 }
@@ -592,12 +750,14 @@
                     if (((this._scrollBarV) && (this._scrollBarV.parent)))
                     {
                         removeChild(this._scrollBarV);
+                        this._scrollBarV.finalized = false;
                         this._scrollBarV.max = 0;
                         this._scrollBarV.finalize();
                     };
                     if (((this._scrollBarH) && (this._scrollBarH.parent)))
                     {
                         removeChild(this._scrollBarH);
+                        this._scrollBarH.finalized = false;
                         this._scrollBarH.max = 0;
                         this._scrollBarH.finalize();
                     };
@@ -605,11 +765,11 @@
             };
             if (((this._hiddenCol) || (this._hiddenRow)))
             {
-                if (!(this._mask))
+                if (!this._mask)
                 {
                     this._mask = new Shape();
                 };
-                if (((!((this._mask.width == width))) || (!((this._mask.height == height)))))
+                if (((!(this._mask.width == width)) || (!(this._mask.height == height))))
                 {
                     this._mask.graphics.clear();
                     this._mask.graphics.beginFill(0xFFFF00);
@@ -618,7 +778,8 @@
                     mask = this._mask;
                 };
             };
-            this._finalized = true;
+            super.finalize();
+            _finalized = true;
             if (getUi())
             {
                 getUi().iAmFinalized(this);
@@ -636,9 +797,17 @@
 
         public function updateItem(index:uint):void
         {
+            var item:GridItem;
             var currenItem:GridItem;
-            currenItem = this._items[index];
-            if (!(currenItem))
+            for each (item in this._items)
+            {
+                if (item.index == index)
+                {
+                    currenItem = item;
+                    break;
+                };
+            };
+            if (!currenItem)
             {
                 return;
             };
@@ -651,7 +820,9 @@
                 this._renderer.update(this._dataProvider[currenItem.index], index, currenItem.container, false);
             };
             currenItem.data = this._dataProvider[currenItem.index];
+            var scrollValue:int = this.verticalScrollValue;
             this.finalize();
+            this.verticalScrollValue = scrollValue;
         }
 
         public function updateItems():void
@@ -661,7 +832,7 @@
             while (index < this._items.length)
             {
                 currenItem = this._items[index];
-                if (!((!(currenItem)) || ((this._nSelectedIndex < 0))))
+                if (!((!(currenItem)) || (this._nSelectedIndex < 0)))
                 {
                     if (currenItem.index == this._nSelectedIndex)
                     {
@@ -681,7 +852,7 @@
         public function get selectedSlot():DisplayObject
         {
             var currentItem:GridItem;
-            if ((((((this._items == null)) || ((this._nSelectedIndex < 0)))) || ((this._nSelectedIndex >= this.dataProvider.length))))
+            if ((((this._items == null) || (this._nSelectedIndex < 0)) || (this._nSelectedIndex >= this.dataProvider.length)))
             {
                 return (null);
             };
@@ -700,7 +871,7 @@
 
         public function get slots():Array
         {
-            if ((((this._items == null)) || ((this.dataProvider.length == 0))))
+            if (((this._items == null) || (this.dataProvider.length == 0)))
             {
                 return (new Array());
             };
@@ -717,11 +888,21 @@
             return (slots);
         }
 
+        public function get items():Vector.<GridItem>
+        {
+            return (this._items);
+        }
+
+        public function get firstItemDisplayedIndex():Number
+        {
+            return ((this._pageYOffset * this._slotByRow) + (this._pageXOffset * this._slotByCol));
+        }
+
         override public function remove():void
         {
             var currentItem:GridItem;
             var i:uint;
-            if (!(__removed))
+            if (!__removed)
             {
                 if (this._renderer)
                 {
@@ -747,13 +928,32 @@
             super.remove();
         }
 
+        public function removeItems():void
+        {
+            var i:int;
+            if (this._renderer)
+            {
+                i = 0;
+                while (i < this._items.length)
+                {
+                    this._renderer.remove(this._items[i].container);
+                    i++;
+                };
+                this._items = new Vector.<GridItem>();
+            };
+            while (numChildren > 0)
+            {
+                removeChildAt(0);
+            };
+        }
+
         public function indexIsInvisibleSlot(index:uint):Boolean
         {
             if (this._verticalScroll)
             {
-                return ((((((index / this._totalSlotByRow) - this._pageYOffset) >= this._slotByCol)) || ((((index / this._totalSlotByRow) - this._pageYOffset) < 0))));
+                return ((((index / this._totalSlotByRow) - this._pageYOffset) >= (this._slotByCol + this.hiddenRow)) || (((index / this._totalSlotByRow) - this._pageYOffset) < (0 - this.hiddenRow)));
             };
-            return ((((((index % this._totalSlotByRow) - this._pageXOffset) >= this._slotByRow)) || ((((index % this._totalSlotByRow) - this._pageXOffset) < 0))));
+            return ((((index % this._totalSlotByRow) - this._pageXOffset) >= this._slotByRow) || (((index % this._totalSlotByRow) - this._pageXOffset) < 0));
         }
 
         public function moveTo(index:uint, force:Boolean=false):void
@@ -802,34 +1002,62 @@
         public function sortOn(col:String, options:int=0):void
         {
             this._sortProperty = col;
-            this._dataProvider.sortOn(col, options);
+            if ((this._dataProvider is Array))
+            {
+                this._dataProvider.sortOn(col, options);
+            }
+            else
+            {
+                if ((this._dataProvider is Vector.<*>))
+                {
+                    this._dataProvider.sort(function (param1:*, param2:*):int
+                    {
+                        if (((!(param1.hasOwnProperty(col))) || (!(param2.hasOwnProperty(col)))))
+                        {
+                            return (0);
+                        };
+                        var a:* = param1[col];
+                        var b:* = param2[col];
+                        if (a == null)
+                        {
+                            return ((b == null) ? 0 : -1);
+                        };
+                        if (((options & Array.CASEINSENSITIVE) && (a is String)))
+                        {
+                            a = a.toLowerCase();
+                        };
+                        if (((options & Array.CASEINSENSITIVE) && (b is String)))
+                        {
+                            b = b.toLowerCase();
+                        };
+                        var cmpRes:int = ObjectUtil.compare(a, b);
+                        if (((options & Array.DESCENDING) && (!(cmpRes == 0))))
+                        {
+                            return (-(cmpRes));
+                        };
+                        return (cmpRes);
+                    });
+                };
+            };
+            this.finalize();
+            this.initSlot();
+        }
+
+        public function sortBy(sortFunction:Function):void
+        {
+            this._dataProvider.sort(sortFunction);
             this.finalize();
             this.initSlot();
         }
 
         public function getItemIndex(item:*):int
         {
-            var realItem:DisplayObject;
-            realItem = SecureCenter.unsecure(item);
-            var res:GridItem = this.getGridItem(realItem);
+            var res:GridItem = this.getGridItem(item);
             if (res)
             {
                 return (res.index);
             };
             return (-1);
-        }
-
-        private function sortFunction(a:*, b:*):Number
-        {
-            if (a[this._sortProperty] < b[this._sortProperty])
-            {
-                return (-1);
-            };
-            if (a[this._sortProperty] == b[this._sortProperty])
-            {
-                return (0);
-            };
-            return (1);
         }
 
         private function itemExists(o:*):Boolean
@@ -843,8 +1071,8 @@
                 i = 0;
                 while (i < len)
                 {
-                    data = SecureCenter.unsecure(this._dataProvider[i]);
-                    if (data === SecureCenter.unsecure(o))
+                    data = this._dataProvider[i];
+                    if (data === o)
                     {
                         return (true);
                     };
@@ -856,11 +1084,16 @@
 
         private function initSlot():void
         {
-            var slot:DisplayObject;
             var item:GridItem;
-            var totalSlot:uint;
+            var j:int;
             var i:int;
-            var isSelected:Boolean;
+            var slotX:Number;
+            var slotY:Number;
+            var totalSlot:uint;
+            if (this._items == null)
+            {
+                this._items = new Vector.<GridItem>();
+            };
             var dataPos:int;
             if (((this._dataProvider.length) && (!(this._autoPosition))))
             {
@@ -870,10 +1103,16 @@
                     while (this._pageXOffset >= 0)
                     {
                         dataPos = ((this._pageXOffset * this._slotByCol) + (this._pageYOffset * this._slotByRow));
-                        if (dataPos <= (this._dataProvider.length - totalSlot)) break;
+                        if (dataPos <= (this._dataProvider.length - totalSlot))
+                        {
+                            break;
+                        };
                         this._pageXOffset--;
                     };
-                    if (dataPos <= (this._dataProvider.length - totalSlot)) break;
+                    if (dataPos <= (this._dataProvider.length - totalSlot))
+                    {
+                        break;
+                    };
                     this._pageXOffset = 0;
                     this._pageYOffset--;
                 };
@@ -895,64 +1134,54 @@
                 };
             };
             var slotIndex:uint;
-            var j:int = -(this._hiddenRow);
-            while (j < (this._slotByCol + this._hiddenRow))
+            if (!this._verticalScroll)
             {
-                i = -(this._hiddenCol);
-                while (i < (this._slotByRow + this._hiddenCol))
+                j = -(this._hiddenCol);
+                while (j < (this._slotByRow + this._hiddenCol))
                 {
-                    dataPos = (((i + (this._pageXOffset * this._slotByCol)) + (j * this._totalSlotByRow)) + (this._pageYOffset * this._slotByRow));
-                    item = this._items[slotIndex];
-                    isSelected = (((((((((this._nSelectedIndex == dataPos)) && ((this._autoSelect > 0)))) && ((this._dataProvider.length > 0)))) && ((dataPos < this._dataProvider.length)))) && (!((this._dataProvider[dataPos] == null))));
-                    if (item)
+                    i = -(this._hiddenRow);
+                    while (i < (this._slotByCol + this._hiddenRow))
                     {
-                        item.index = dataPos;
-                        slot = item.container;
-                        if (this._dataProvider.length > dataPos)
-                        {
-                            item.data = this._dataProvider[dataPos];
-                            this._renderer.update(this._dataProvider[dataPos], dataPos, item.container, isSelected);
-                        }
-                        else
-                        {
-                            item.data = null;
-                            this._renderer.update(null, dataPos, item.container, isSelected);
-                        };
-                    }
-                    else
-                    {
-                        if (this._dataProvider.length > dataPos)
-                        {
-                            slot = this._renderer.render(this._dataProvider[dataPos], dataPos, isSelected);
-                        }
-                        else
-                        {
-                            slot = this._renderer.render(null, dataPos, isSelected);
-                        };
-                        if (dataPos < this._dataProvider.length)
-                        {
-                            this._items.push(new GridItem(dataPos, slot, this._dataProvider[dataPos]));
-                        }
-                        else
-                        {
-                            this._items.push(new GridItem(dataPos, slot, null));
-                        };
+                        dataPos = (((i + (this._pageYOffset * this._slotByRow)) + (j * this._totalSlotByCol)) + (this._pageXOffset * this._slotByCol));
+                        slotX = ((j * this._slotWidth) + ((j * (this._avaibleSpaceX - (this._slotByRow * this._slotWidth))) / this._slotByRow));
+                        slotY = ((i * this._slotHeight) + ((i * (this._avaibleSpaceY - (this._slotByCol * this._slotHeight))) / this._slotByCol));
+                        this.createOrUpdateSlotAtIndex(slotIndex, dataPos, slotX, slotY);
+                        slotIndex++;
+                        i++;
                     };
-                    slot.x = ((i * this._slotWidth) + ((i * (this._avaibleSpaceX - (this._slotByRow * this._slotWidth))) / this._slotByRow));
-                    slot.y = ((j * this._slotHeight) + ((j * (this._avaibleSpaceY - (this._slotByCol * this._slotHeight))) / this._slotByCol));
-                    addChild(slot);
-                    slotIndex++;
-                    i++;
+                    j++;
                 };
-                j++;
-            };
-            while (this._items[slotIndex])
+            }
+            else
             {
-                this._renderer.remove(GridItem(this._items.pop()).container);
+                j = -(this._hiddenRow);
+                while (j < (this._slotByCol + this._hiddenRow))
+                {
+                    i = -(this._hiddenCol);
+                    while (i < (this._slotByRow + this._hiddenCol))
+                    {
+                        dataPos = (((i + (this._pageXOffset * this._slotByCol)) + (j * this._totalSlotByRow)) + (this._pageYOffset * this._slotByRow));
+                        slotX = ((i * this._slotWidth) + ((i * (this._avaibleSpaceX - (this._slotByRow * this._slotWidth))) / this._slotByRow));
+                        slotY = ((j * this._slotHeight) + ((j * (this._avaibleSpaceY - (this._slotByCol * this._slotHeight))) / this._slotByCol));
+                        this.createOrUpdateSlotAtIndex(slotIndex, dataPos, slotX, slotY);
+                        slotIndex++;
+                        i++;
+                    };
+                    j++;
+                };
+            };
+            while (this._items.length > slotIndex)
+            {
+                item = this._items.pop();
+                this._renderer.remove(item.container);
+                if (item.container.parent)
+                {
+                    item.container.parent.removeChild(item.container);
+                };
             };
             if (this._autoSelect == AUTOSELECT_BY_INDEX)
             {
-                if (((((((((this._nSelectedItem) && (this.itemExists(this._nSelectedItem.object)))) && (this._verticalScroll))) && (this._scrollBarV))) && ((this._scrollBarV.value >= 0))))
+                if ((((((this._nSelectedItem) && (this.itemExists(this._nSelectedItem.object))) && (this._verticalScroll)) && (this._scrollBarV)) && (this._scrollBarV.value >= 0)))
                 {
                     this.updateFromIndex(this._scrollBarV.value);
                 }
@@ -977,6 +1206,51 @@
             };
         }
 
+        private function createOrUpdateSlotAtIndex(index:int, indexData:int, slotX:Number, slotY:Number):void
+        {
+            var slot:DisplayObject;
+            var item:GridItem;
+            var isSelected:Boolean = (((((this._nSelectedIndex == indexData) && (this._autoSelect > 0)) && (this._dataProvider.length > 0)) && (indexData < this._dataProvider.length)) && (!(this._dataProvider[indexData] == null)));
+            if (this._items.length > index)
+            {
+                item = this._items[index];
+                item.index = indexData;
+                slot = item.container;
+                if (this._dataProvider.length > indexData)
+                {
+                    item.data = this._dataProvider[indexData];
+                    this._renderer.update(this._dataProvider[indexData], indexData, item.container, isSelected);
+                }
+                else
+                {
+                    item.data = null;
+                    this._renderer.update(null, indexData, item.container, isSelected);
+                };
+            }
+            else
+            {
+                if (this._dataProvider.length > indexData)
+                {
+                    slot = this._renderer.render(this._dataProvider[indexData], indexData, isSelected);
+                }
+                else
+                {
+                    slot = this._renderer.render(null, indexData, isSelected);
+                };
+                if (indexData < this._dataProvider.length)
+                {
+                    this._items.push(new GridItem(indexData, slot, this._dataProvider[indexData]));
+                }
+                else
+                {
+                    this._items.push(new GridItem(indexData, slot, null));
+                };
+            };
+            slot.x = slotX;
+            slot.y = slotY;
+            addChildAt(slot, 0);
+        }
+
         private function updateFromIndex(newIndex:uint):void
         {
             var i:int;
@@ -985,7 +1259,7 @@
             var currIndex:uint;
             var pos:int;
             var diff:int = (newIndex - ((this._verticalScroll) ? this._pageYOffset : this._pageXOffset));
-            if (!(diff))
+            if (!diff)
             {
                 return;
             };
@@ -1004,7 +1278,7 @@
             while (i < this._items.length)
             {
                 currentItem = this._items[i];
-                if (this.indexIsInvisibleSlot(currentItem.index))
+                if (((this._forceRefresh) || (this.indexIsInvisibleSlot(currentItem.index))))
                 {
                     aAvaibleSlot.push(currentItem);
                     nAvaible++;
@@ -1024,7 +1298,7 @@
                     pos = (((this._totalSlotByRow * j) + i) + this._pageXOffset);
                     currIndex = (pos + (this._pageYOffset * this._totalSlotByRow));
                     currentItem = aOkSlot[currIndex];
-                    if (!(currentItem))
+                    if (!currentItem)
                     {
                         currentItem = aAvaibleSlot.shift();
                         currentItem.index = currIndex;
@@ -1059,12 +1333,23 @@
             };
         }
 
-        function setSelectedIndex(index:int, method:uint):void
+        public function setSelectedIndex(index:int, method:uint):void
         {
             var lastIndex:int;
             var currenItem:GridItem;
             var iDes:*;
-            if (((((!((method == SelectMethodEnum.MANUAL))) && ((index < 0)))) || ((index >= this._dataProvider.length))))
+            if (this._allowLastToFirst)
+            {
+                if (index >= this._dataProvider.length)
+                {
+                    index = 0;
+                };
+                if (index < 0)
+                {
+                    index = (this._dataProvider.length - 1);
+                };
+            };
+            if ((((!(method == SelectMethodEnum.MANUAL)) && (index < 0)) || (index >= this._dataProvider.length)))
             {
                 return;
             };
@@ -1078,12 +1363,12 @@
                 };
                 for each (iDes in this._items)
                 {
-                    if ((((iDes.index == lastIndex)) && ((lastIndex < this._dataProvider.length))))
+                    if (((iDes.index == lastIndex) && (lastIndex < this._dataProvider.length)))
                     {
                         this._renderer.update(this._dataProvider[lastIndex], lastIndex, iDes.container, false);
                     };
                 };
-                this.dispatchMessage(new SelectItemMessage(this, method, !((lastIndex == this._nSelectedIndex))));
+                this.dispatchMessage(new SelectItemMessage(this, method, (!(lastIndex == this._nSelectedIndex))));
             }
             else
             {
@@ -1120,8 +1405,16 @@
                     };
                     index++;
                 };
-                this.moveTo(this._nSelectedIndex);
-                this.dispatchMessage(new SelectItemMessage(this, method, !((lastIndex == this._nSelectedIndex))));
+                this.afterIndexSelection(lastIndex, method);
+            };
+        }
+
+        protected function afterIndexSelection(lastIndex:int, method:uint):void
+        {
+            this.moveTo(this._nSelectedIndex, (this is ComboBoxGrid));
+            if ((((this.selectWithArrows) || (method == SelectMethodEnum.CLICK)) || (!((method == SelectMethodEnum.DOWN_ARROW) || (method == SelectMethodEnum.UP_ARROW)))))
+            {
+                this.dispatchMessage(new SelectItemMessage(this, method, (!(lastIndex == this._nSelectedIndex))));
             };
         }
 
@@ -1136,15 +1429,27 @@
             var i:uint;
             while (i < 2)
             {
-                useScrollBar = ((((((i) && ((this._displayScrollbar == "auto")))) && (((((this._totalSlotByCol * this._slotHeight) > height)) || (((this._totalSlotByRow * this._slotWidth) > width)))))) || ((this._displayScrollbar == "always")));
-                this._avaibleSpaceX = (width - ((((this._verticalScroll) && (useScrollBar))) ? this._scrollBarSize : 0));
-                this._avaibleSpaceY = (height - ((((!(this._verticalScroll)) && (useScrollBar))) ? this._scrollBarSize : 0));
-                this._slotByRow = Math.floor((this._avaibleSpaceX / this._slotWidth));
-                if (this._slotByRow == 0)
+                useScrollBar = ((((i) && (this._displayScrollbar == "auto")) && (((this._totalSlotByCol * this._slotHeight) > height) || ((this._totalSlotByRow * this._slotWidth) > width))) || (this._displayScrollbar == "always"));
+                this._avaibleSpaceX = (width - (((this._verticalScroll) && (useScrollBar)) ? (this._scrollBarSize + this._scrollbarOffset) : 0));
+                this._avaibleSpaceY = (height - (((!(this._verticalScroll)) && (useScrollBar)) ? (this._scrollBarSize + this._scrollbarOffset) : 0));
+                if (this._avaibleSpaceX < 0)
+                {
+                    this._avaibleSpaceX = 0;
+                };
+                if (this._avaibleSpaceY < 0)
+                {
+                    this._avaibleSpaceY = 0;
+                };
+                this._slotByRow = Math.floor((this._avaibleSpaceX / (this._slotWidth + this._hPadding)));
+                this._slotByCol = Math.floor((this._avaibleSpaceY / (this._slotHeight + this._vPadding)));
+                if (this._slotByRow <= 0)
                 {
                     this._slotByRow = 1;
                 };
-                this._slotByCol = Math.floor((this._avaibleSpaceY / this._slotHeight));
+                if (this._slotByCol <= 0)
+                {
+                    this._slotByCol = 1;
+                };
                 if (this._verticalScroll)
                 {
                     this._totalSlotByRow = this._slotByRow;
@@ -1169,11 +1474,11 @@
             {
                 return (true);
             };
-            if (!(obj))
+            if (!obj)
             {
                 return (false);
             };
-            if (((((((((!((obj["length"] == null))) && (!((obj["length"] == 0))))) && (!(isNaN(obj["length"]))))) && (!((obj[0] == null))))) && (!((obj is String)))))
+            if ((((((!(obj["length"] == null)) && (!(obj["length"] == 0))) && (!(isNaN(obj["length"])))) && (!(obj[0] == null))) && (!(obj is String))))
             {
                 return (true);
             };
@@ -1183,12 +1488,12 @@
         protected function getGridItem(item:DisplayObject):GridItem
         {
             var currentItem:GridItem;
-            if (!(this._items))
+            if (!this._items)
             {
                 return (null);
             };
             var currentDo:DisplayObject = item;
-            while (((currentDo) && (!((currentDo.parent == this)))))
+            while (((currentDo) && (!(currentDo.parent == this))))
             {
                 currentDo = currentDo.parent;
             };
@@ -1259,7 +1564,7 @@
             return (currentSlot);
         }
 
-        private function onScroll(e:Event):void
+        protected function onScroll(e:Event):void
         {
             var i:int;
             if (((this._scrollBarV) && (this._scrollBarV.visible)))
@@ -1270,7 +1575,7 @@
             {
                 i = this._scrollBarH.value;
             };
-            if (!(isNaN(i)))
+            if (!isNaN(i))
             {
                 this.updateFromIndex(i);
             };
@@ -1302,24 +1607,25 @@
             };
         }
 
-        [HideInFakeClass]
         override public function process(msg:Message):Boolean
         {
             var currentItem:GridItem;
-            var _local_3:MouseRightClickMessage;
-            var _local_4:MouseOverMessage;
-            var _local_5:MouseOutMessage;
-            var _local_6:int;
-            var _local_7:MouseMessage;
-            var _local_8:MouseUpMessage;
-            var _local_9:KeyboardKeyDownMessage;
-            var _local_10:int;
-            var _local_11:int;
+            var mrcm:MouseRightClickMessage;
+            var mom:MouseOverMessage;
+            var mom2:MouseOutMessage;
+            var scrollIndex:int;
+            var mmsg:MouseMessage;
+            var mummsg:MouseUpMessage;
+            var kdmsg:KeyboardKeyDownMessage;
+            var newIndex:int;
+            var method:int;
+            var p:PoolablePoint;
+            var i:int;
             switch (true)
             {
                 case (msg is MouseRightClickMessage):
-                    _local_3 = (msg as MouseRightClickMessage);
-                    currentItem = this.getGridItem(_local_3.target);
+                    mrcm = (msg as MouseRightClickMessage);
+                    currentItem = this.getGridItem(mrcm.target);
                     if (currentItem)
                     {
                         if (UIEventManager.getInstance().isRegisteredInstance(this, ItemRightClickMessage))
@@ -1329,13 +1635,13 @@
                     };
                     break;
                 case (msg is MouseOverMessage):
-                    _local_4 = (msg as MouseOverMessage);
-                    currentItem = this.getGridItem(_local_4.target);
+                    mom = (msg as MouseOverMessage);
+                    currentItem = this.getGridItem(mom.target);
                     if (currentItem)
                     {
-                        if (((UIEventManager.getInstance().isRegisteredInstance(this, ItemRollOverMessage)) || (((parent) && ((parent is ComboBox))))))
+                        if (((UIEventManager.getInstance().isRegisteredInstance(this, ItemRollOverMessage)) || ((parent) && (parent is ComboBox))))
                         {
-                            if (((parent) && ((parent is ComboBox))))
+                            if (((parent) && (parent is ComboBox)))
                             {
                                 this.dispatchMessage(new ItemRollOverMessage((parent as ComboBox), currentItem));
                             }
@@ -1347,13 +1653,13 @@
                     };
                     break;
                 case (msg is MouseOutMessage):
-                    _local_5 = (msg as MouseOutMessage);
-                    currentItem = this.getGridItem(_local_5.target);
+                    mom2 = (msg as MouseOutMessage);
+                    currentItem = this.getGridItem(mom2.target);
                     if (currentItem)
                     {
-                        if (((UIEventManager.getInstance().isRegisteredInstance(this, ItemRollOverMessage)) || (((parent) && ((parent is ComboBox))))))
+                        if (((UIEventManager.getInstance().isRegisteredInstance(this, ItemRollOverMessage)) || ((parent) && (parent is ComboBox))))
                         {
-                            if (((parent) && ((parent is ComboBox))))
+                            if (((parent) && (parent is ComboBox)))
                             {
                                 this.dispatchMessage(new ItemRollOutMessage((parent as ComboBox), currentItem));
                             }
@@ -1367,14 +1673,14 @@
                 case (msg is MouseWheelMessage):
                     if (this._scrollBarH)
                     {
-                        _local_6 = this._scrollBarH.value;
+                        scrollIndex = this._scrollBarH.value;
                     };
                     if (this._scrollBarV)
                     {
-                        _local_6 = this._scrollBarV.value;
+                        scrollIndex = this._scrollBarV.value;
                     };
                     this.onListWheel(MouseWheelMessage(msg).mouseEvent);
-                    if (((((this._scrollBarH) && (!((this._scrollBarH.value == _local_6))))) || (((this._scrollBarV) && (!((this._scrollBarV.value == _local_6)))))))
+                    if ((((this._scrollBarH) && (!(this._scrollBarH.value == scrollIndex))) || ((this._scrollBarV) && (!(this._scrollBarV.value == scrollIndex)))))
                     {
                         MouseWheelMessage(msg).canceled = true;
                         return (true);
@@ -1382,13 +1688,35 @@
                     break;
                 case (msg is MouseDoubleClickMessage):
                 case (msg is MouseClickMessage):
-                    _local_7 = MouseMessage(msg);
-                    currentItem = this.getGridItem(_local_7.target);
+                    if (!this.mouseClickEnabled)
+                    {
+                        return (true);
+                    };
+                    mmsg = MouseMessage(msg);
+                    if (mmsg.target == this)
+                    {
+                        p = (PoolsManager.getInstance().getPointPool().checkOut() as PoolablePoint);
+                        i = 0;
+                        while (i < this._items.length)
+                        {
+                            if (this._items[i].container.getBounds(StageShareManager.stage).containsPoint(p.renew(mmsg.mouseEvent.stageX, mmsg.mouseEvent.stageY)))
+                            {
+                                currentItem = this._items[i];
+                                break;
+                            };
+                            i++;
+                        };
+                        PoolsManager.getInstance().getPointPool().checkIn(p);
+                    }
+                    else
+                    {
+                        currentItem = this.getGridItem(mmsg.target);
+                    };
                     if (currentItem)
                     {
                         if ((msg is MouseClickMessage))
                         {
-                            if (!(currentItem.data))
+                            if (!currentItem.data)
                             {
                                 if (UIEventManager.getInstance().isRegisteredInstance(this, SelectEmptyItemMessage))
                                 {
@@ -1400,13 +1728,13 @@
                         }
                         else
                         {
-                            if ((((KeyPoll.getInstance().isDown(Keyboard.CONTROL) == true)) || ((KeyPoll.getInstance().isDown(15) == true))))
+                            if (((KeyPoll.getInstance().isDown(Keyboard.CONTROL) == true) || (KeyPoll.getInstance().isDown(15) == true)))
                             {
                                 this.setSelectedIndex(currentItem.index, SelectMethodEnum.CTRL_DOUBLE_CLICK);
                             }
                             else
                             {
-                                if (((AirScanner.hasAir()) && ((KeyPoll.getInstance().isDown(Keyboard["ALTERNATE"]) == true))))
+                                if (KeyPoll.getInstance().isDown(Keyboard["ALTERNATE"]) == true)
                                 {
                                     this.setSelectedIndex(currentItem.index, SelectMethodEnum.ALT_DOUBLE_CLICK);
                                 }
@@ -1420,42 +1748,82 @@
                     };
                     break;
                 case (msg is MouseUpMessage):
-                    _local_8 = MouseUpMessage(msg);
-                    currentItem = this.getGridItem(_local_8.target);
-                    if (((((((this._items) && ((this._items[0] is GridItem)))) && ((GridItem(this._items[0]).container is Slot)))) && (!(currentItem))))
+                    mummsg = MouseUpMessage(msg);
+                    currentItem = this.getGridItem(mummsg.target);
+                    if ((((((this._items) && (this._items.length > 0)) && (this._items[0] is GridItem)) && (GridItem(this._items[0]).container is Slot)) && (!(currentItem))))
                     {
-                        this.dispatchMessage(_local_8, this.getNearestSlot(_local_8.mouseEvent));
+                        if ((((this._items.length > 1) && (this._items[1])) && (this._items[1] is GridItem)))
+                        {
+                            this.dispatchMessage(mummsg, this.getNearestSlot(mummsg.mouseEvent));
+                        }
+                        else
+                        {
+                            this.dispatchMessage(mummsg, (GridItem(this._items[0]).container as Slot));
+                        };
                     };
                     break;
                 case (msg is KeyboardKeyDownMessage):
-                    _local_9 = (msg as KeyboardKeyDownMessage);
-                    _local_11 = -1;
-                    switch (_local_9.keyboardEvent.keyCode)
+                    kdmsg = (msg as KeyboardKeyDownMessage);
+                    method = -1;
+                    switch (kdmsg.keyboardEvent.keyCode)
                     {
                         case Keyboard.UP:
-                            _local_10 = (this.selectedIndex - this._totalSlotByRow);
-                            _local_11 = SelectMethodEnum.UP_ARROW;
+                            if (kdmsg.target.hasEventListener(KeyboardEvent.KEY_UP))
+                            {
+                                return (true);
+                            };
+                            newIndex = (this.selectedIndex - this._totalSlotByRow);
+                            method = SelectMethodEnum.UP_ARROW;
                             break;
                         case Keyboard.DOWN:
-                            _local_10 = (this.selectedIndex + this._totalSlotByRow);
-                            _local_11 = SelectMethodEnum.DOWN_ARROW;
+                            if (kdmsg.target.hasEventListener(KeyboardEvent.KEY_DOWN))
+                            {
+                                return (true);
+                            };
+                            newIndex = (this.selectedIndex + this._totalSlotByRow);
+                            method = SelectMethodEnum.DOWN_ARROW;
                             break;
                         case Keyboard.RIGHT:
-                            _local_10 = (this.selectedIndex + 1);
-                            _local_11 = SelectMethodEnum.RIGHT_ARROW;
+                            if (this._useLeftRightToSelect)
+                            {
+                                newIndex = (this.selectedIndex + 1);
+                                method = SelectMethodEnum.RIGHT_ARROW;
+                            };
                             break;
                         case Keyboard.LEFT:
-                            _local_10 = (this.selectedIndex - 1);
-                            _local_11 = SelectMethodEnum.LEFT_ARROW;
+                            if (this._useLeftRightToSelect)
+                            {
+                                newIndex = (this.selectedIndex - 1);
+                                method = SelectMethodEnum.LEFT_ARROW;
+                            };
                             break;
+                        case Keyboard.PAGE_DOWN:
+                            if (this._scrollBarV)
+                            {
+                                this._scrollBarV.value = (this._scrollBarV.value + (this._slotByCol - 1));
+                                this.onScroll(null);
+                                return (true);
+                            };
+                            break;
+                        case Keyboard.PAGE_UP:
+                            if (this._scrollBarV)
+                            {
+                                this._scrollBarV.value = (this._scrollBarV.value - (this._slotByCol - 1));
+                                this.onScroll(null);
+                                return (true);
+                            };
+                            break;
+                        case Keyboard.ENTER:
+                        case Keyboard.NUMPAD_ENTER:
+                            this.onEnter();
                     };
-                    if (_local_11 != -1)
+                    if (method != -1)
                     {
                         if (this.keyboardIndexHandler != null)
                         {
-                            _local_10 = this.keyboardIndexHandler(this.selectedIndex, _local_10);
+                            newIndex = this.keyboardIndexHandler(this.selectedIndex, newIndex);
                         };
-                        this.setSelectedIndex(_local_10, _local_11);
+                        this.setSelectedIndex(newIndex, method);
                         this.moveTo(this.selectedIndex);
                         return (true);
                     };
@@ -1464,11 +1832,21 @@
             return (false);
         }
 
+        protected function onEnter():void
+        {
+            if (this.selectWithArrows)
+            {
+                return;
+            };
+            this.moveTo(this._nSelectedIndex, (this is ComboBoxGrid));
+            this.dispatchMessage(new SelectItemMessage(this, 0, false));
+        }
+
         protected function dispatchMessage(msg:Message, handler:MessageHandler=null):void
         {
-            if (!(this.silent))
+            if (!this.silent)
             {
-                if (!(handler))
+                if (!handler)
                 {
                     handler = Berilia.getInstance().handler;
                 };
@@ -1478,5 +1856,5 @@
 
 
     }
-}//package com.ankamagames.berilia.components
+} com.ankamagames.berilia.components
 

@@ -1,9 +1,10 @@
-﻿package com.ankamagames.tubul.types.sounds
+package com.ankamagames.tubul.types.sounds
 {
     import com.ankamagames.tubul.interfaces.ILocalizedSound;
     import flash.geom.Point;
     import com.ankamagames.tubul.Tubul;
     import com.ankamagames.jerakine.types.Uri;
+    import com.ankamagames.tubul.types.SoundWrapper;
 
     public class LocalizedSound extends MP3SoundDofus implements ILocalizedSound 
     {
@@ -79,7 +80,8 @@
         public function set position(position:Point):void
         {
             this._position = position;
-            if (this._observerPosition)
+            var uriFileName:String = _uri.fileName;
+            if (((this._observerPosition) && (!(uriFileName == "40003440001.mp3"))))
             {
                 this.updateSound();
             };
@@ -88,6 +90,11 @@
         public function get volumeMax():Number
         {
             return (this._volumeMax);
+        }
+
+        public function get soundWrapper():SoundWrapper
+        {
+            return (_soundWrapper);
         }
 
         public function set volumeMax(pVolumeMax:Number):void
@@ -105,7 +112,7 @@
 
         override public function get effectiveVolume():Number
         {
-            return ((((busVolume * volume) * currentFadeVolume) * this.volumeMax));
+            return (((busVolume * volume) * currentFadeVolume) * this.volumeMax);
         }
 
         public function updateObserverPosition(point:Point):void
@@ -137,8 +144,6 @@
             var dist1Square:Number = (distx * distx);
             var dist2Square:Number = (disty * disty);
             var dist:Number = Math.sqrt((dist1Square + dist2Square));
-            var distRangeSquare:Number = (this._range * this._range);
-            var distSaturationRangeSquare:Number = (this._saturationRange * this._saturationRange);
             if (dist <= this._saturationRange)
             {
                 volume = 1;
@@ -165,5 +170,5 @@
 
 
     }
-}//package com.ankamagames.tubul.types.sounds
+} com.ankamagames.tubul.types.sounds
 

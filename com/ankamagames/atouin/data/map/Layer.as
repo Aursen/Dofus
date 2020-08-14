@@ -1,10 +1,12 @@
-﻿package com.ankamagames.atouin.data.map
+package com.ankamagames.atouin.data.map
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
+    import __AS3__.vec.Vector;
     import com.ankamagames.atouin.AtouinConstants;
     import flash.utils.IDataInput;
+    import __AS3__.vec.*;
 
     public class Layer 
     {
@@ -16,9 +18,8 @@
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(Layer));
 
         public var layerId:int;
-        public var refCell:int = 0;
         public var cellsCount:int;
-        public var cells:Array;
+        public var cells:Vector.<Cell>;
         private var _map:Map;
 
         public function Layer(map:Map)
@@ -35,26 +36,46 @@
         {
             var i:int;
             var c:Cell;
+            var maxMapCellId:int;
+            var endCell:Cell;
             try
             {
-                this.layerId = raw.readInt();
+                if (mapVersion >= 9)
+                {
+                    this.layerId = raw.readByte();
+                }
+                else
+                {
+                    this.layerId = raw.readInt();
+                };
                 this.cellsCount = raw.readShort();
                 if (AtouinConstants.DEBUG_FILES_PARSING)
                 {
                     _log.debug(("  (Layer) Cells count : " + this.cellsCount));
                 };
-                this.cells = new Array();
-                i = 0;
-                while (i < this.cellsCount)
+                this.cells = new Vector.<Cell>(this.cellsCount, true);
+                if (this.cellsCount > 0)
                 {
-                    c = new Cell(this);
-                    if (AtouinConstants.DEBUG_FILES_PARSING)
+                    i = 0;
+                    while (i < this.cellsCount)
                     {
-                        _log.debug((("  (Layer) Cell at index " + i) + " :"));
+                        c = new Cell(this);
+                        if (AtouinConstants.DEBUG_FILES_PARSING)
+                        {
+                            _log.debug((("  (Layer) Cell at index " + i) + " :"));
+                        };
+                        c.fromRaw(raw, mapVersion);
+                        this.cells[i] = c;
+                        i = (i + 1);
                     };
-                    c.fromRaw(raw, mapVersion);
-                    this.cells.push(c);
-                    i = (i + 1);
+                    maxMapCellId = (AtouinConstants.MAP_CELLS_COUNT - 1);
+                    if (c.cellId < maxMapCellId)
+                    {
+                        endCell = Cell.createEmptyCell(this, maxMapCellId);
+                        this.cells.fixed = false;
+                        this.cells.push(endCell);
+                        this.cells.fixed = true;
+                    };
                 };
             }
             catch(e)
@@ -65,5 +86,5 @@
 
 
     }
-}//package com.ankamagames.atouin.data.map
+} com.ankamagames.atouin.data.map
 

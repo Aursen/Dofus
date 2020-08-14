@@ -1,8 +1,10 @@
-﻿package com.ankamagames.atouin.data.map
+package com.ankamagames.atouin.data.map
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
+    import __AS3__.vec.Vector;
+    import com.ankamagames.atouin.data.elements.subtypes.NormalGraphicalElementData;
     import flash.utils.ByteArray;
     import com.ankamagames.atouin.data.DataFormatError;
     import com.ankamagames.atouin.AtouinConstants;
@@ -10,17 +12,16 @@
     import flash.utils.IDataInput;
     import com.ankamagames.atouin.data.map.elements.BasicElement;
     import com.ankamagames.atouin.data.elements.GraphicalElementData;
-    import com.ankamagames.atouin.data.elements.subtypes.NormalGraphicalElementData;
     import com.ankamagames.atouin.data.elements.Elements;
     import com.ankamagames.atouin.enums.ElementTypesEnum;
     import com.ankamagames.atouin.data.map.elements.GraphicalElement;
+    import __AS3__.vec.*;
 
     public class Map 
     {
 
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(Map));
 
-        public var mapClass:Class;
         public var mapVersion:int;
         public var encrypted:Boolean;
         public var encryptionVersion:uint;
@@ -29,49 +30,43 @@
         public var zoomOffsetX:int;
         public var zoomOffsetY:int;
         public var groundCacheCurrentlyUsed:int = 0;
-        public var id:int;
+        public var id:Number;
         public var relativeId:int;
         public var mapType:int;
         public var backgroundsCount:int;
-        public var backgroundFixtures:Array;
+        public var backgroundFixtures:Vector.<Fixture>;
         public var foregroundsCount:int;
-        public var foregroundFixtures:Array;
+        public var foregroundFixtures:Vector.<Fixture>;
         public var subareaId:int;
         public var shadowBonusOnEntities:int;
+        public var gridColor:uint;
         public var backgroundColor:uint;
         public var backgroundRed:int;
         public var backgroundGreen:int;
         public var backgroundBlue:int;
-        public var topNeighbourId:int;
-        public var bottomNeighbourId:int;
-        public var leftNeighbourId:int;
-        public var rightNeighbourId:int;
+        public var backgroundAlpha:int = 0;
+        public var topNeighbourId:Number;
+        public var bottomNeighbourId:Number;
+        public var leftNeighbourId:Number;
+        public var rightNeighbourId:Number;
         public var useLowPassFilter:Boolean;
         public var useReverb:Boolean;
         public var presetId:int;
         public var cellsCount:int;
         public var layersCount:int;
         public var isUsingNewMovementSystem:Boolean = false;
-        public var layers:Array;
-        public var cells:Array;
-        public var topArrowCell:Array;
-        public var leftArrowCell:Array;
-        public var bottomArrowCell:Array;
-        public var rightArrowCell:Array;
+        public var layers:Vector.<Layer>;
+        public var cells:Vector.<CellData>;
+        public var topArrowCell:Vector.<uint> = new Vector.<uint>();
+        public var leftArrowCell:Vector.<uint> = new Vector.<uint>();
+        public var bottomArrowCell:Vector.<uint> = new Vector.<uint>();
+        public var rightArrowCell:Vector.<uint> = new Vector.<uint>();
         private var _parsed:Boolean;
         private var _failed:Boolean;
-        private var _gfxList:Array;
+        private var _gfxList:Vector.<NormalGraphicalElementData>;
         private var _gfxCount:Array;
+        public var tacticalModeTemplateId:int;
 
-        public function Map()
-        {
-            this.mapClass = Map;
-            this.topArrowCell = [];
-            this.leftArrowCell = [];
-            this.bottomArrowCell = [];
-            this.rightArrowCell = [];
-            super();
-        }
 
         public function get parsed():Boolean
         {
@@ -83,9 +78,9 @@
             return (this._failed);
         }
 
-        public function getGfxList(skipBackground:Boolean=false):Array
+        public function getGfxList(skipBackground:Boolean=false):Vector.<NormalGraphicalElementData>
         {
-            if (!(this._gfxList))
+            if (!this._gfxList)
             {
                 this.computeGfxList(skipBackground);
             };
@@ -94,7 +89,7 @@
 
         public function getGfxCount(gfxId:uint):uint
         {
-            if (!(this._gfxList))
+            if (!this._gfxList)
             {
                 this.computeGfxList();
             };
@@ -111,6 +106,11 @@
             var cd:CellData;
             var dataLen:uint;
             var encryptedData:ByteArray;
+            var readColor:int;
+            var gridAlpha:int;
+            var gridRed:int;
+            var gridGreen:int;
+            var gridBlue:int;
             var fg:Fixture;
             try
             {
@@ -136,7 +136,7 @@
                     dataLen = raw.readInt();
                     if (this.encrypted)
                     {
-                        if (!(decryptionKey))
+                        if (!decryptionKey)
                         {
                             throw (new IllegalOperationError("Map decryption key is empty"));
                         };
@@ -187,21 +187,38 @@
                 {
                     _log.debug(("rightNeighbourId : " + this.rightNeighbourId));
                 };
-                this.shadowBonusOnEntities = raw.readInt();
+                this.shadowBonusOnEntities = raw.readUnsignedInt();
                 if (AtouinConstants.DEBUG_FILES_PARSING)
                 {
                     _log.debug(("ShadowBonusOnEntities : " + this.shadowBonusOnEntities));
                 };
-                if (this.mapVersion >= 3)
+                if (this.mapVersion >= 9)
                 {
-                    this.backgroundRed = raw.readByte();
-                    this.backgroundGreen = raw.readByte();
-                    this.backgroundBlue = raw.readByte();
-                    this.backgroundColor = ((((this.backgroundRed & 0xFF) << 16) | ((this.backgroundGreen & 0xFF) << 8)) | (this.backgroundBlue & 0xFF));
-                    if (AtouinConstants.DEBUG_FILES_PARSING)
+                    readColor = raw.readInt();
+                    this.backgroundAlpha = ((readColor & 0xFF000000) >> 32);
+                    this.backgroundRed = ((readColor & 0xFF0000) >> 16);
+                    this.backgroundGreen = ((readColor & 0xFF00) >> 8);
+                    this.backgroundBlue = (readColor & 0xFF);
+                    readColor = raw.readUnsignedInt();
+                    gridAlpha = ((readColor & 0xFF000000) >> 32);
+                    gridRed = ((readColor & 0xFF0000) >> 16);
+                    gridGreen = ((readColor & 0xFF00) >> 8);
+                    gridBlue = (readColor & 0xFF);
+                    this.gridColor = (((((gridAlpha & 0xFF) << 32) | ((gridRed & 0xFF) << 16)) | ((gridGreen & 0xFF) << 8)) | (gridBlue & 0xFF));
+                }
+                else
+                {
+                    if (this.mapVersion >= 3)
                     {
-                        _log.debug(((((("BackgroundColor : " + this.backgroundRed) + ",") + this.backgroundGreen) + ",") + this.backgroundBlue));
+                        this.backgroundRed = raw.readByte();
+                        this.backgroundGreen = raw.readByte();
+                        this.backgroundBlue = raw.readByte();
                     };
+                };
+                this.backgroundColor = (((((this.backgroundAlpha & 0xFF) << 32) | ((this.backgroundRed & 0xFF) << 16)) | ((this.backgroundGreen & 0xFF) << 8)) | (this.backgroundBlue & 0xFF));
+                if (AtouinConstants.DEBUG_FILES_PARSING)
+                {
+                    _log.debug(((((("BackgroundColor : " + this.backgroundRed) + ",") + this.backgroundGreen) + ",") + this.backgroundBlue));
                 };
                 if (this.mapVersion >= 4)
                 {
@@ -217,6 +234,10 @@
                     {
                         _log.debug(((((("Zoom auto : " + this.zoomScale) + ",") + this.zoomOffsetX) + ",") + this.zoomOffsetY));
                     };
+                };
+                if (this.mapVersion > 10)
+                {
+                    this.tacticalModeTemplateId = raw.readInt();
                 };
                 this.useLowPassFilter = (raw.readByte() == 1);
                 if (AtouinConstants.DEBUG_FILES_PARSING)
@@ -245,7 +266,7 @@
                 {
                     _log.debug(("Backgrounds count : " + this.backgroundsCount));
                 };
-                this.backgroundFixtures = new Array();
+                this.backgroundFixtures = new Vector.<Fixture>(this.backgroundsCount, true);
                 i = 0;
                 while (i < this.backgroundsCount)
                 {
@@ -255,7 +276,7 @@
                         _log.debug((("Background at index " + i) + " :"));
                     };
                     bg.fromRaw(raw);
-                    this.backgroundFixtures.push(bg);
+                    this.backgroundFixtures[i] = bg;
                     i = (i + 1);
                 };
                 this.foregroundsCount = raw.readByte();
@@ -263,7 +284,7 @@
                 {
                     _log.debug(("Foregrounds count : " + this.foregroundsCount));
                 };
-                this.foregroundFixtures = new Array();
+                this.foregroundFixtures = new Vector.<Fixture>(this.foregroundsCount, true);
                 i = 0;
                 while (i < this.foregroundsCount)
                 {
@@ -273,7 +294,7 @@
                         _log.debug((("Foreground at index " + i) + " :"));
                     };
                     fg.fromRaw(raw);
-                    this.foregroundFixtures.push(fg);
+                    this.foregroundFixtures[i] = fg;
                     i = (i + 1);
                 };
                 this.cellsCount = AtouinConstants.MAP_CELLS_COUNT;
@@ -292,7 +313,7 @@
                 {
                     _log.debug(("Layers count : " + this.layersCount));
                 };
-                this.layers = new Array();
+                this.layers = new Vector.<Layer>(this.layersCount, true);
                 i = 0;
                 while (i < this.layersCount)
                 {
@@ -302,20 +323,16 @@
                         _log.debug((("Layer at index " + i) + " :"));
                     };
                     la.fromRaw(raw, this.mapVersion);
-                    this.layers.push(la);
+                    this.layers[i] = la;
                     i = (i + 1);
                 };
-                this.cells = new Array();
+                this.cells = new Vector.<CellData>(this.cellsCount, true);
                 i = 0;
                 while (i < this.cellsCount)
                 {
                     cd = new CellData(this, i);
-                    if (AtouinConstants.DEBUG_FILES_PARSING)
-                    {
-                        _log.debug((("Cell data at index " + i) + " :"));
-                    };
                     cd.fromRaw(raw);
-                    if (!(_oldMvtSystem))
+                    if (!_oldMvtSystem)
                     {
                         _oldMvtSystem = cd.moveZone;
                     };
@@ -323,12 +340,15 @@
                     {
                         this.isUsingNewMovementSystem = true;
                     };
-                    this.cells.push(cd);
+                    this.cells[i] = cd;
                     i = (i + 1);
                 };
+                this.topArrowCell.fixed = true;
+                this.leftArrowCell.fixed = true;
+                this.bottomArrowCell.fixed = true;
+                this.rightArrowCell.fixed = true;
                 if (AtouinConstants.DEBUG_FILES_PARSING)
                 {
-                    trace(((this.isUsingNewMovementSystem) ? "This map is using the new movement system" : "This map is using the old movement system"));
                 };
                 this._parsed = true;
             }
@@ -344,9 +364,9 @@
             var l:int;
             var c:int;
             var e:int;
-            var lsCell:Array;
+            var lsCell:Vector.<Cell>;
             var numCell:int;
-            var lsElement:Array;
+            var lsElement:Vector.<BasicElement>;
             var numElement:int;
             var layer:Layer;
             var cell:Cell;
@@ -354,7 +374,7 @@
             var elementId:int;
             var elementData:GraphicalElementData;
             var graphicalElementData:NormalGraphicalElementData;
-            var s:String;
+            var gfx:NormalGraphicalElementData;
             var ele:Elements = Elements.getInstance();
             var gfxList:Array = new Array();
             this._gfxCount = new Array();
@@ -363,7 +383,7 @@
             while (l < numLayer)
             {
                 layer = this.layers[l];
-                if (((skipBackground) && ((l == 0))))
+                if (((skipBackground) && (l == 0)))
                 {
                 }
                 else
@@ -396,10 +416,7 @@
                                         gfxList[graphicalElementData.gfxId] = graphicalElementData;
                                         if (this._gfxCount[graphicalElementData.gfxId])
                                         {
-                                            var _local_19 = this._gfxCount;
-                                            var _local_20 = graphicalElementData.gfxId;
-                                            var _local_21 = (_local_19[_local_20] + 1);
-                                            _local_19[_local_20] = _local_21;
+                                            this._gfxCount[graphicalElementData.gfxId]++;
                                         }
                                         else
                                         {
@@ -415,14 +432,15 @@
                 };
                 l++;
             };
-            this._gfxList = new Array();
-            for (s in gfxList)
+            this._gfxList = new Vector.<NormalGraphicalElementData>();
+            for each (gfx in gfxList)
             {
-                this._gfxList.push(gfxList[s]);
+                this._gfxList.push(gfx);
             };
+            this._gfxList.fixed = true;
         }
 
 
     }
-}//package com.ankamagames.atouin.data.map
+} com.ankamagames.atouin.data.map
 

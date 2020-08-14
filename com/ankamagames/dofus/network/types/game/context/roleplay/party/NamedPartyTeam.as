@@ -1,8 +1,9 @@
-﻿package com.ankamagames.dofus.network.types.game.context.roleplay.party
+package com.ankamagames.dofus.network.types.game.context.roleplay.party
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
     public class NamedPartyTeam implements INetworkType 
     {
@@ -49,15 +50,36 @@
 
         public function deserializeAs_NamedPartyTeam(input:ICustomDataInput):void
         {
+            this._teamIdFunc(input);
+            this._partyNameFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_NamedPartyTeam(tree);
+        }
+
+        public function deserializeAsyncAs_NamedPartyTeam(tree:FuncTree):void
+        {
+            tree.addChild(this._teamIdFunc);
+            tree.addChild(this._partyNameFunc);
+        }
+
+        private function _teamIdFunc(input:ICustomDataInput):void
+        {
             this.teamId = input.readByte();
             if (this.teamId < 0)
             {
                 throw (new Error((("Forbidden value (" + this.teamId) + ") on element of NamedPartyTeam.teamId.")));
             };
+        }
+
+        private function _partyNameFunc(input:ICustomDataInput):void
+        {
             this.partyName = input.readUTF();
         }
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.context.roleplay.party
+} com.ankamagames.dofus.network.types.game.context.roleplay.party
 

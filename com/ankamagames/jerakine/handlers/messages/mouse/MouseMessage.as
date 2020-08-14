@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.handlers.messages.mouse
+package com.ankamagames.jerakine.handlers.messages.mouse
 {
     import com.ankamagames.jerakine.handlers.messages.HumanInputMessage;
     import flash.display.InteractiveObject;
@@ -10,11 +10,11 @@
 
         public static function create(target:InteractiveObject, mouseEvent:MouseEvent, instance:MouseMessage=null):MouseMessage
         {
-            if (!(instance))
+            if (!instance)
             {
                 instance = new (MouseMessage)();
             };
-            return ((HumanInputMessage.create(target, mouseEvent, instance) as MouseMessage));
+            return (HumanInputMessage.create(target, mouseEvent, instance) as MouseMessage);
         }
 
 
@@ -25,5 +25,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.handlers.messages.mouse
+} com.ankamagames.jerakine.handlers.messages.mouse
 

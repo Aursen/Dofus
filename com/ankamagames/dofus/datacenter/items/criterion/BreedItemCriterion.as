@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.datacenter.items.criterion
+package com.ankamagames.dofus.datacenter.items.criterion
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.dofus.datacenter.breeds.Breed;
@@ -24,7 +24,6 @@
             {
                 return (I18n.getUiText("ui.tooltip.dontBeABreed", [readableCriterionRef]));
             };
-            trace((("Le critère '" + _operator.text) + "' n'est pas correct pour la race ('=' ou '!')"));
             return ("");
         }
 
@@ -42,5 +41,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.items.criterion
+} com.ankamagames.dofus.datacenter.items.criterion
 

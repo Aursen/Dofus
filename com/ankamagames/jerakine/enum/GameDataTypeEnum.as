@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.enum
+package com.ankamagames.jerakine.enum
 {
     public class GameDataTypeEnum 
     {
@@ -13,5 +13,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.enum
+} com.ankamagames.jerakine.enum
 

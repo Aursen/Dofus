@@ -1,37 +1,56 @@
-﻿package com.ankamagames.dofus.logic.game.fight.types
+package com.ankamagames.dofus.logic.game.fight.types
 {
     import com.ankamagames.dofus.network.types.game.actions.fight.FightTriggeredEffect;
     import com.ankamagames.dofus.datacenter.effects.Effect;
+    import com.ankamagames.dofus.datacenter.effects.instances.EffectInstanceDice;
 
     public class TriggeredBuff extends BasicBuff 
     {
 
         public var delay:int;
+        public var triggerCount:uint;
 
         public function TriggeredBuff(effect:FightTriggeredEffect=null, castingSpell:CastingSpell=null, actionId:uint=0)
         {
             if (effect)
             {
                 super(effect, castingSpell, actionId, effect.param1, effect.param2, effect.param3);
+                this.initParam(effect.param1, effect.param2, effect.param3);
                 this.delay = effect.delay;
                 _effect.delay = this.delay;
+                this.triggerCount = 0;
             };
         }
 
-        override public function initParam(param1:int, param2:int, param3:int):void
+        override public function get param1():*
+        {
+            return (_effect.parameter0);
+        }
+
+        override public function get param2():*
+        {
+            return (_effect.parameter1);
+        }
+
+        override public function get param3():*
+        {
+            return (_effect.parameter2);
+        }
+
+        override public function initParam(p1:int, p2:int, p3:int):void
         {
             var min:int;
             var max:int;
-            super.initParam(param1, param2, param3);
-            if (Effect.getEffectById(actionId).forceMinMax)
+            super.initParam(p1, p2, p3);
+            var e:Effect = Effect.getEffectById(actionId);
+            if ((((e) && (e.forceMinMax)) && (_effect is EffectInstanceDice)))
             {
-                min = (param3 + param1);
-                max = ((param1 * param2) + param3);
+                min = (p3 + p1);
+                max = ((p1 * p2) + p3);
                 if (min == max)
                 {
                     param1 = min;
-                    param3 = 0;
-                    param2 = param3;
+                    param2 = (param3 = 0);
                 }
                 else
                 {
@@ -56,6 +75,7 @@
             var tb:TriggeredBuff = new TriggeredBuff();
             tb.id = uid;
             tb.uid = uid;
+            tb.dataUid = dataUid;
             tb.actionId = actionId;
             tb.targetId = targetId;
             tb.castingSpell = castingSpell;
@@ -63,8 +83,9 @@
             tb.dispelable = dispelable;
             tb.source = source;
             tb.aliveSource = aliveSource;
+            tb.sourceJustReaffected = sourceJustReaffected;
             tb.parentBoostUid = parentBoostUid;
-            tb.initParam(param1, param2, param3);
+            tb.initParam(this.param1, this.param2, this.param3);
             tb.delay = this.delay;
             tb._effect.delay = this.delay;
             return (tb);
@@ -72,7 +93,7 @@
 
         override public function get active():Boolean
         {
-            return ((((this.delay > 0)) || (super.active)));
+            return ((this.delay > 0) || (super.active));
         }
 
         override public function get trigger():Boolean
@@ -82,18 +103,18 @@
 
         override public function incrementDuration(delta:int, dispellEffect:Boolean=false):Boolean
         {
-            if ((((this.delay > 0)) && (!(dispellEffect))))
+            if (((this.delay > 0) && (!(dispellEffect))))
             {
                 if ((this.delay + delta) >= 0)
                 {
                     this.delay--;
-                    effects.delay--;
+                    effect.delay--;
                 }
                 else
                 {
                     delta = (delta + this.delay);
                     this.delay = 0;
-                    effects.delay = 0;
+                    effect.delay = 0;
                 };
             };
             if (delta != 0)
@@ -105,10 +126,10 @@
 
         override public function get unusableNextTurn():Boolean
         {
-            return ((((this.delay <= 1)) && (super.unusableNextTurn)));
+            return ((this.delay <= 1) && (super.unusableNextTurn));
         }
 
 
     }
-}//package com.ankamagames.dofus.logic.game.fight.types
+} com.ankamagames.dofus.logic.game.fight.types
 

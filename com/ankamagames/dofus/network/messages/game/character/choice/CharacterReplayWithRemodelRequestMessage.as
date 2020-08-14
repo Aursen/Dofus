@@ -1,31 +1,27 @@
-﻿package com.ankamagames.dofus.network.messages.game.character.choice
+package com.ankamagames.dofus.network.messages.game.character.choice
 {
     import com.ankamagames.dofus.network.messages.game.character.replay.CharacterReplayRequestMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
     import com.ankamagames.dofus.network.types.game.character.choice.RemodelingInformation;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
 
-    [Trusted]
     public class CharacterReplayWithRemodelRequestMessage extends CharacterReplayRequestMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 6551;
 
         private var _isInitialized:Boolean = false;
-        public var remodel:RemodelingInformation;
+        public var remodel:RemodelingInformation = new RemodelingInformation();
+        private var _remodeltree:FuncTree;
 
-        public function CharacterReplayWithRemodelRequestMessage()
-        {
-            this.remodel = new RemodelingInformation();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
-            return (((super.isInitialized) && (this._isInitialized)));
+            return ((super.isInitialized) && (this._isInitialized));
         }
 
         override public function getMessageId():uint
@@ -33,7 +29,7 @@
             return (6551);
         }
 
-        public function initCharacterReplayWithRemodelRequestMessage(characterId:uint=0, remodel:RemodelingInformation=null):CharacterReplayWithRemodelRequestMessage
+        public function initCharacterReplayWithRemodelRequestMessage(characterId:Number=0, remodel:RemodelingInformation=null):CharacterReplayWithRemodelRequestMessage
         {
             super.initCharacterReplayRequestMessage(characterId);
             this.remodel = remodel;
@@ -60,6 +56,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         override public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_CharacterReplayWithRemodelRequestMessage(output);
@@ -83,7 +87,24 @@
             this.remodel.deserialize(input);
         }
 
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_CharacterReplayWithRemodelRequestMessage(tree);
+        }
+
+        public function deserializeAsyncAs_CharacterReplayWithRemodelRequestMessage(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            this._remodeltree = tree.addChild(this._remodeltreeFunc);
+        }
+
+        private function _remodeltreeFunc(input:ICustomDataInput):void
+        {
+            this.remodel = new RemodelingInformation();
+            this.remodel.deserializeAsync(this._remodeltree);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.character.choice
+} com.ankamagames.dofus.network.messages.game.character.choice
 

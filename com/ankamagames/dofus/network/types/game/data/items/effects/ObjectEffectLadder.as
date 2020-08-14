@@ -1,10 +1,10 @@
-﻿package com.ankamagames.dofus.network.types.game.data.items.effects
+package com.ankamagames.dofus.network.types.game.data.items.effects
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class ObjectEffectLadder extends ObjectEffectCreature implements INetworkType 
     {
 
@@ -54,6 +54,22 @@
         public function deserializeAs_ObjectEffectLadder(input:ICustomDataInput):void
         {
             super.deserialize(input);
+            this._monsterCountFunc(input);
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_ObjectEffectLadder(tree);
+        }
+
+        public function deserializeAsyncAs_ObjectEffectLadder(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._monsterCountFunc);
+        }
+
+        private function _monsterCountFunc(input:ICustomDataInput):void
+        {
             this.monsterCount = input.readVarUhInt();
             if (this.monsterCount < 0)
             {
@@ -63,5 +79,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.data.items.effects
+} com.ankamagames.dofus.network.types.game.data.items.effects
 

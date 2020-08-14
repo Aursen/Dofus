@@ -1,22 +1,18 @@
-﻿package com.ankamagames.dofus.network.types.game.context.roleplay
+package com.ankamagames.dofus.network.types.game.context.roleplay
 {
     import com.ankamagames.jerakine.network.INetworkType;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
 
-    [Trusted]
     public class HumanOptionGuild extends HumanOption implements INetworkType 
     {
 
         public static const protocolId:uint = 409;
 
-        public var guildInformations:GuildInformations;
+        public var guildInformations:GuildInformations = new GuildInformations();
+        private var _guildInformationstree:FuncTree;
 
-        public function HumanOptionGuild()
-        {
-            this.guildInformations = new GuildInformations();
-            super();
-        }
 
         override public function getTypeId():uint
         {
@@ -57,7 +53,24 @@
             this.guildInformations.deserialize(input);
         }
 
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_HumanOptionGuild(tree);
+        }
+
+        public function deserializeAsyncAs_HumanOptionGuild(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            this._guildInformationstree = tree.addChild(this._guildInformationstreeFunc);
+        }
+
+        private function _guildInformationstreeFunc(input:ICustomDataInput):void
+        {
+            this.guildInformations = new GuildInformations();
+            this.guildInformations.deserializeAsync(this._guildInformationstree);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.types.game.context.roleplay
+} com.ankamagames.dofus.network.types.game.context.roleplay
 

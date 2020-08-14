@@ -1,16 +1,17 @@
-﻿package com.ankamagames.dofus.network.types.game.context.fight
+package com.ankamagames.dofus.network.types.game.context.fight
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.utils.BooleanByteWrapper;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
     public class GameFightFighterLightInformations implements INetworkType 
     {
 
         public static const protocolId:uint = 413;
 
-        public var id:int = 0;
+        public var id:Number = 0;
         public var wave:uint = 0;
         public var level:uint = 0;
         public var breed:int = 0;
@@ -23,7 +24,7 @@
             return (413);
         }
 
-        public function initGameFightFighterLightInformations(id:int=0, wave:uint=0, level:uint=0, breed:int=0, sex:Boolean=false, alive:Boolean=false):GameFightFighterLightInformations
+        public function initGameFightFighterLightInformations(id:Number=0, wave:uint=0, level:uint=0, breed:int=0, sex:Boolean=false, alive:Boolean=false):GameFightFighterLightInformations
         {
             this.id = id;
             this.wave = wave;
@@ -55,7 +56,11 @@
             _box0 = BooleanByteWrapper.setFlag(_box0, 0, this.sex);
             _box0 = BooleanByteWrapper.setFlag(_box0, 1, this.alive);
             output.writeByte(_box0);
-            output.writeInt(this.id);
+            if (((this.id < -9007199254740992) || (this.id > 9007199254740992)))
+            {
+                throw (new Error((("Forbidden value (" + this.id) + ") on element id.")));
+            };
+            output.writeDouble(this.id);
             if (this.wave < 0)
             {
                 throw (new Error((("Forbidden value (" + this.wave) + ") on element wave.")));
@@ -76,24 +81,67 @@
 
         public function deserializeAs_GameFightFighterLightInformations(input:ICustomDataInput):void
         {
+            this.deserializeByteBoxes(input);
+            this._idFunc(input);
+            this._waveFunc(input);
+            this._levelFunc(input);
+            this._breedFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GameFightFighterLightInformations(tree);
+        }
+
+        public function deserializeAsyncAs_GameFightFighterLightInformations(tree:FuncTree):void
+        {
+            tree.addChild(this.deserializeByteBoxes);
+            tree.addChild(this._idFunc);
+            tree.addChild(this._waveFunc);
+            tree.addChild(this._levelFunc);
+            tree.addChild(this._breedFunc);
+        }
+
+        private function deserializeByteBoxes(input:ICustomDataInput):void
+        {
             var _box0:uint = input.readByte();
             this.sex = BooleanByteWrapper.getFlag(_box0, 0);
             this.alive = BooleanByteWrapper.getFlag(_box0, 1);
-            this.id = input.readInt();
+        }
+
+        private function _idFunc(input:ICustomDataInput):void
+        {
+            this.id = input.readDouble();
+            if (((this.id < -9007199254740992) || (this.id > 9007199254740992)))
+            {
+                throw (new Error((("Forbidden value (" + this.id) + ") on element of GameFightFighterLightInformations.id.")));
+            };
+        }
+
+        private function _waveFunc(input:ICustomDataInput):void
+        {
             this.wave = input.readByte();
             if (this.wave < 0)
             {
                 throw (new Error((("Forbidden value (" + this.wave) + ") on element of GameFightFighterLightInformations.wave.")));
             };
+        }
+
+        private function _levelFunc(input:ICustomDataInput):void
+        {
             this.level = input.readVarUhShort();
             if (this.level < 0)
             {
                 throw (new Error((("Forbidden value (" + this.level) + ") on element of GameFightFighterLightInformations.level.")));
             };
+        }
+
+        private function _breedFunc(input:ICustomDataInput):void
+        {
             this.breed = input.readByte();
         }
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.context.fight
+} com.ankamagames.dofus.network.types.game.context.fight
 

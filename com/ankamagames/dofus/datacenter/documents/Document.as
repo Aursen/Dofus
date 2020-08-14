@@ -1,6 +1,7 @@
-﻿package com.ankamagames.dofus.datacenter.documents
+package com.ankamagames.dofus.datacenter.documents
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
+    import com.ankamagames.dofus.types.IdAccessors;
     import com.ankamagames.jerakine.data.GameData;
     import com.ankamagames.jerakine.data.I18n;
 
@@ -9,14 +10,18 @@
 
         private static const MODULE:String = "Documents";
         private static const PAGEFEED:String = "<pagefeed/>";
+        public static var idAccessors:IdAccessors = new IdAccessors(getDocumentById, getDocuments);
 
         public var id:int;
         public var typeId:uint;
+        public var showTitle:Boolean;
+        public var showBackgroundImage:Boolean;
         public var titleId:uint;
         public var authorId:uint;
         public var subTitleId:uint;
         public var contentId:uint;
         public var contentCSS:String;
+        public var clientProperties:String;
         private var _title:String;
         private var _author:String;
         private var _subTitle:String;
@@ -26,7 +31,7 @@
 
         public static function getDocumentById(id:int):Document
         {
-            return ((GameData.getObject(MODULE, id) as Document));
+            return (GameData.getObject(MODULE, id) as Document);
         }
 
         public static function getDocuments():Array
@@ -37,7 +42,7 @@
 
         public function get title():String
         {
-            if (!(this._title))
+            if (!this._title)
             {
                 this._title = I18n.getText(this.titleId);
             };
@@ -46,7 +51,7 @@
 
         public function get author():String
         {
-            if (!(this._author))
+            if (!this._author)
             {
                 this._author = I18n.getText(this.authorId);
             };
@@ -55,7 +60,7 @@
 
         public function get subTitle():String
         {
-            if (!(this._subTitle))
+            if (!this._subTitle)
             {
                 this._subTitle = I18n.getText(this.subTitleId);
                 if (this._subTitle.charAt(0) == "[")
@@ -68,7 +73,7 @@
 
         public function get content():String
         {
-            if (!(this._content))
+            if (!this._content)
             {
                 this._content = I18n.getText(this.contentId);
             };
@@ -77,7 +82,7 @@
 
         public function get pages():Array
         {
-            if (!(this._pages))
+            if (!this._pages)
             {
                 this._pages = this.content.split(PAGEFEED);
             };
@@ -86,5 +91,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.documents
+} com.ankamagames.dofus.datacenter.documents
 

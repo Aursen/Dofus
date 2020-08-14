@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.externalnotification
+package com.ankamagames.dofus.externalnotification
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
@@ -21,7 +21,6 @@
     import flash.events.TimerEvent;
     import flash.display.NativeWindowSystemChrome;
     import flash.display.NativeWindowType;
-    import flash.utils.describeType;
     import com.ankamagames.jerakine.types.events.PropertyChangeEvent;
     import com.ankamagames.jerakine.utils.display.StageShareManager;
     import flash.events.Event;
@@ -35,18 +34,15 @@
     import flash.display.NativeWindowDisplayState;
     import flash.desktop.NativeApplication;
     import com.ankamagames.jerakine.utils.system.SystemManager;
+    import com.ankamagames.berilia.managers.KernelEventsManager;
+    import com.ankamagames.dofus.misc.lists.HookList;
     import flash.events.AsyncErrorEvent;
     import flash.events.StatusEvent;
     import flash.events.SecurityErrorEvent;
-    import com.ankamagames.berilia.managers.UiModuleManager;
-    import com.ankamagames.berilia.types.data.UiModule;
-    import com.ankamagames.berilia.Berilia;
-    import com.ankamagames.berilia.types.graphic.UiRootContainer;
     import com.ankamagames.dofus.kernel.sound.SoundManager;
     import com.ankamagames.jerakine.json.JSON;
     import com.ankamagames.berilia.types.data.Hook;
     import com.ankamagames.jerakine.utils.misc.CallWithParameters;
-    import com.ankamagames.berilia.managers.KernelEventsManager;
     import flash.geom.Rectangle;
     import __AS3__.vec.*;
 
@@ -58,7 +54,6 @@
         private static var _instance:ExternalNotificationManager;
 
         private const NOTIFICATION_SPACING:Number = 10;
-        private const MODULE_NAME:String = "Ankama_GameUiCore";
         private const UI_NAME:String = "externalnotification";
         private const CONNECTION_ID:String = "_externalNotifications";
         private const WINDOWS_KEY:int = 91;
@@ -82,6 +77,7 @@
         private var _isMaster:Boolean;
         private var _masterConnection:LocalConnection;
         private var _slaveConnection:LocalConnection;
+        private var _pingConnection:LocalConnection;
         private var _slavesIds:Array;
         private var dofusHasFocus:Boolean;
         private var _windowsStartMenuOpened:Boolean;
@@ -91,16 +87,15 @@
         private var _buffer:Vector.<ExternalNotificationRequest>;
         private var _playSound:Boolean;
         private var _broadCasting:Boolean = false;
+        private var _pingSlavesIds:Array;
+        private var _waitingRequests:Vector.<ExternalNotificationRequest> = new Vector.<ExternalNotificationRequest>(0);
 
-        public function ExternalNotificationManager(pc:PrivateClass)
-        {
-        }
 
         public static function getInstance():ExternalNotificationManager
         {
-            if (!(_instance))
+            if (!_instance)
             {
-                _instance = new (ExternalNotificationManager)(new PrivateClass());
+                _instance = new (ExternalNotificationManager)();
             };
             return (_instance);
         }
@@ -118,7 +113,7 @@
 
         public function canAddExternalNotification(pExternalNotificationType:int):Boolean
         {
-            return (((this.notificationsEnabled) && (!(this.isExternalNotificationTypeIgnored(pExternalNotificationType)))));
+            return ((this.notificationsEnabled) && (!(this.isExternalNotificationTypeIgnored(pExternalNotificationType))));
         }
 
         public function getNotificationOptions(pNotificationType:int):Object
@@ -127,7 +122,7 @@
             var extNotif:ExternalNotification;
             var notifData:Object = StoreDataManager.getInstance().getData(this._dataStoreType, ("notificationsEvent" + pNotificationType));
             var hasOptions:Boolean = this.hasNotificationData(pNotificationType);
-            var invalidData:Boolean = ((((((((((notifData) && (hasOptions))) && (!(notifData.hasOwnProperty("active"))))) && (!(notifData.hasOwnProperty("sound"))))) && (!(notifData.hasOwnProperty("multi"))))) && (!(notifData.hasOwnProperty("notify"))));
+            var invalidData:Boolean = ((((((notifData) && (hasOptions)) && (!(notifData.hasOwnProperty("active")))) && (!(notifData.hasOwnProperty("sound")))) && (!(notifData.hasOwnProperty("multi")))) && (!(notifData.hasOwnProperty("notify"))));
             if (((!(notifData)) || (invalidData)))
             {
                 extNotifs = ExternalNotification.getExternalNotifications();
@@ -145,27 +140,23 @@
                             break;
                         };
                     };
-                }
-                else
-                {
-                    notifData.active = true;
                 };
                 this.setNotificationOptions(pNotificationType, notifData);
             };
             return (notifData);
         }
 
-        public function setNotificationOptions(pNotificationType:int, pOptions:Object):void
+        public function setNotificationOptions(pNotificationType:int, pOptions:Object, pSynchronizeMultiAccountOptions:Boolean=true):void
         {
             var multiaccountChanged:Boolean;
             StoreDataManager.getInstance().setData(this._dataStoreType, ("notificationsEvent" + pNotificationType), pOptions);
             if (this._initialized)
             {
-                multiaccountChanged = ((!(this._notificationsOptions[pNotificationType].hasOwnProperty("multi"))) ? false : !((this._notificationsOptions[pNotificationType].multi == pOptions.multi)));
+                multiaccountChanged = ((this._notificationsOptions[pNotificationType].hasOwnProperty("multi")) ? (!(this._notificationsOptions[pNotificationType].multi == pOptions.multi)) : false);
                 this.updateNotificationOptions(pNotificationType, pOptions);
                 if (multiaccountChanged)
                 {
-                    if (!(this._isMaster))
+                    if (!this._isMaster)
                     {
                         try
                         {
@@ -176,24 +167,27 @@
                             log("there's already a master");
                         };
                     };
-                    this.synchronizeMultiAccountOptions();
+                    if (pSynchronizeMultiAccountOptions)
+                    {
+                        this.synchronizeMultiAccountOptions();
+                    };
                 };
             };
         }
 
-        private function getOptionValue(pOptionName:String)
+        private function getOptionValue(pOptionName:String):*
         {
-            return (OptionManager.getOptionManager("dofus")[pOptionName]);
+            return (OptionManager.getOptionManager("dofus").getOption(pOptionName));
         }
 
         private function setOptionValue(pOptionName:String, pOptionValue:*):void
         {
-            OptionManager.getOptionManager("dofus")[pOptionName] = pOptionValue;
+            OptionManager.getOptionManager("dofus").setOption(pOptionName, pOptionValue);
         }
 
         private function isTopPosition(pPosition:int):Boolean
         {
-            return ((((pPosition == ExternalNotificationPositionEnum.TOP_LEFT)) || ((pPosition == ExternalNotificationPositionEnum.TOP_RIGHT))));
+            return ((pPosition == ExternalNotificationPositionEnum.TOP_LEFT) || (pPosition == ExternalNotificationPositionEnum.TOP_RIGHT));
         }
 
         private function isNotificationDuplicated(pClientId:String, pNotificationType:int):Boolean
@@ -202,7 +196,7 @@
             var enWin:ExternalNotificationWindow;
             for each (enWin in this._notificationsList)
             {
-                if (((((!(typeVisible)) && (!((enWin.clientId == pClientId))))) && ((enWin.notificationType == pNotificationType))))
+                if ((((!(typeVisible)) && (!(enWin.clientId == pClientId))) && (enWin.notificationType == pNotificationType)))
                 {
                     typeVisible = true;
                     break;
@@ -214,7 +208,7 @@
         private function initDataStoreType():void
         {
             var storeKey:String = ("externalNotifications_" + MD5.hash(PlayerManager.getInstance().nickname));
-            if (((!(this._dataStoreType)) || (!((this._dataStoreType.category == storeKey)))))
+            if (((!(this._dataStoreType)) || (!(this._dataStoreType.category == storeKey))))
             {
                 this._dataStoreType = new DataStoreType(storeKey, true, DataStoreEnum.LOCATION_LOCAL, DataStoreEnum.BIND_CHARACTER);
             };
@@ -222,8 +216,7 @@
 
         public function init():void
         {
-            var notificationEvent:XML;
-            var notificationType:int;
+            var value:int;
             this._timeOut = new Timer(50);
             this._timeOut.addEventListener(TimerEvent.TIMER, this.processRequests);
             this._buffer = new Vector.<ExternalNotificationRequest>();
@@ -242,12 +235,9 @@
             this.setDisplayDuration(this.getOptionValue("notificationsDisplayDuration"));
             this.setMaxNotifications(this.getOptionValue("notificationsMaxNumber"));
             this._nbGeneralEvents = ExternalNotification.getExternalNotifications().length;
-            var x:XML = describeType(ExternalNotificationTypeEnum);
-            var events:XMLList = x..constant;
-            for each (notificationEvent in events)
+            for each (value in ExternalNotificationTypeEnum.NOTIFICATIONSARRAY)
             {
-                notificationType = ExternalNotificationTypeEnum[notificationEvent.@name];
-                this.updateNotificationOptions(notificationType, this.getNotificationOptions(notificationType));
+                this.updateNotificationOptions(value, this.getNotificationOptions(value));
             };
             this.setNotificationsPosition(this.getOptionValue("notificationsPosition"));
             OptionManager.getOptionManager("dofus").addEventListener(PropertyChangeEvent.PROPERTY_CHANGED, this.onPropertyChanged);
@@ -260,6 +250,8 @@
             this.initLocalConnection(this._masterConnection);
             this._slaveConnection = new LocalConnection();
             this.initLocalConnection(this._slaveConnection);
+            this._pingConnection = new LocalConnection();
+            this.initLocalConnection(this._pingConnection);
             try
             {
                 this.becomeMaster();
@@ -277,7 +269,7 @@
             {
                 StageShareManager.stage.addEventListener(KeyboardEvent.KEY_DOWN, this.onKeyDown);
             };
-            this._notificationsEnabled = ((this._clientWindow.active) ? false : true);
+            this._notificationsEnabled = (!(this._clientWindow.active));
             this._initialized = true;
         }
 
@@ -291,10 +283,12 @@
                 this.closeMasterConnection();
                 this.destroyLocalConnection(this._masterConnection);
                 this.destroyLocalConnection(this._slaveConnection);
+                this.destroyLocalConnection(this._pingConnection);
             }
             else
             {
                 this.closeSlaveConnection();
+                this.closePingConnection();
                 this.destroyLocalConnection(this._slaveConnection);
                 this.sendToMaster("unregisterSlave", this._clientId);
             };
@@ -334,7 +328,7 @@
                 return;
             };
             this._notificationsEnabled = false;
-            if (!(this._isMaster))
+            if (!this._isMaster)
             {
                 this.sendToMaster("updateDofusFocus", this._clientId, this._clientWindow.active);
             };
@@ -342,11 +336,11 @@
 
         private function onWindowDeactivate(pEvent:Event):void
         {
-            if ((((this._showMode == ExternalNotificationModeEnum.FOCUS_LOST_DOFUS)) || ((this._showMode == ExternalNotificationModeEnum.FOCUS_LOST_OTHER))))
+            if (((this._showMode == ExternalNotificationModeEnum.FOCUS_LOST_DOFUS) || (this._showMode == ExternalNotificationModeEnum.FOCUS_LOST_OTHER)))
             {
                 this._notificationsEnabled = true;
             };
-            if (!(this._isMaster))
+            if (!this._isMaster)
             {
                 this.sendToMaster("updateDofusFocus", this._clientId, this._clientWindow.active);
             };
@@ -393,10 +387,12 @@
                 this.closeMasterConnection();
                 this.destroyLocalConnection(this._masterConnection);
                 this.destroyLocalConnection(this._slaveConnection);
+                this.destroyLocalConnection(this._pingConnection);
             }
             else
             {
                 this.closeSlaveConnection();
+                this.closePingConnection();
                 this.destroyLocalConnection(this._slaveConnection);
                 this.sendToMaster("unregisterSlave", this._clientId);
             };
@@ -487,7 +483,7 @@
 
         public function get notificationsEnabled():Boolean
         {
-            return ((((this._showMode == ExternalNotificationModeEnum.DISABLED)) ? false : this._notificationsEnabled));
+            return ((this._showMode == ExternalNotificationModeEnum.DISABLED) ? false : this._notificationsEnabled);
         }
 
         private function getExternalNotification(pClientId:String, pExternalNotificationId:String):ExternalNotificationWindow
@@ -498,7 +494,7 @@
             {
                 for each (enWin in this._notificationsList)
                 {
-                    if ((((enWin.clientId == pClientId)) && ((enWin.id == pExternalNotificationId))))
+                    if (((enWin.clientId == pClientId) && (enWin.id == pExternalNotificationId)))
                     {
                         foundNotification = enWin;
                         break;
@@ -522,7 +518,7 @@
                         foundNotifications.push(enWin);
                     };
                 };
-                foundNotifications = (((foundNotifications.length == 0)) ? null : foundNotifications);
+                foundNotifications = ((foundNotifications.length == 0) ? null : foundNotifications);
             };
             return (foundNotifications);
         }
@@ -530,6 +526,10 @@
         private function hasNotificationData(pNotificationType:int):Boolean
         {
             var extNotif:ExternalNotification;
+            if (pNotificationType > this._nbGeneralEvents)
+            {
+                return (true);
+            };
             var extNotifs:Array = ExternalNotification.getExternalNotifications();
             for each (extNotif in extNotifs)
             {
@@ -571,7 +571,7 @@
                 default:
                     return;
             };
-            if (!(this._isMaster))
+            if (!this._isMaster)
             {
                 try
                 {
@@ -581,9 +581,9 @@
                 {
                 };
             };
-            if (!(this._isMaster))
+            if (!this._isMaster)
             {
-                if (!(this._optionChangedFromOtherClient))
+                if (!this._optionChangedFromOtherClient)
                 {
                     this.sendToMaster("updateProperty", pEvent.propertyName, pEvent.propertyValue);
                 };
@@ -594,16 +594,18 @@
             };
         }
 
-        private function synchronizeMultiAccountOptions():void
+        public function synchronizeMultiAccountOptions():void
         {
+            var notifType:*;
             var values:Array = new Array();
-            var i:int = 1;
-            while (i <= this._nbGeneralEvents)
+            for (notifType in this._notificationsOptions)
             {
-                values.push(this._notificationsOptions[i].multi);
-                i++;
+                values.push({
+                    "notifType":notifType,
+                    "multi":this._notificationsOptions[notifType].multi
+                });
             };
-            if (!(this._isMaster))
+            if (!this._isMaster)
             {
                 this.sendToMaster("updateAllMultiAccountOptions", values);
             }
@@ -615,12 +617,15 @@
 
         public function updateAllMultiAccountOptions(pValues:Array):void
         {
-            var i:int = 1;
-            while (i <= this._nbGeneralEvents)
+            var notifMultiValue:Object;
+            for each (notifMultiValue in pValues)
             {
-                this.updateMultiAccountOption(i, pValues[(i - 1)]);
-                i++;
+                if (notifMultiValue.multi != null)
+                {
+                    this.updateMultiAccountOption(notifMultiValue.notifType, notifMultiValue.multi);
+                };
             };
+            KernelEventsManager.getInstance().processCallback(HookList.ExternalNotificationsOptiosnUpdate, this._notificationsOptions);
             if (this._isMaster)
             {
                 this.sendToSlaves("updateAllMultiAccountOptions", pValues);
@@ -635,7 +640,7 @@
 
         public function updateNotificationOptions(pNotificationType:int, pOptions:Object):void
         {
-            if (!(this._notificationsOptions[pNotificationType]))
+            if (!this._notificationsOptions[pNotificationType])
             {
                 this._notificationsOptions[pNotificationType] = new Object();
             };
@@ -656,7 +661,7 @@
 
         public function setNotificationsPosition(pValue:int):void
         {
-            if (((((!((this._notificationsPosition == -1))) && ((this._notificationsList.length > 0)))) && (!((this._notificationsPosition == pValue)))))
+            if ((((!(this._notificationsPosition == -1)) && (this._notificationsList.length > 0)) && (!(this._notificationsPosition == pValue))))
             {
                 this.changeNotificationsPosition(pValue);
             };
@@ -692,12 +697,12 @@
 
         public function notificationPlaySound(pNotificationType:int):Boolean
         {
-            return (((this.hasNotificationData(pNotificationType)) ? this._notificationsOptions[pNotificationType].sound : true));
+            return ((this.hasNotificationData(pNotificationType)) ? this._notificationsOptions[pNotificationType].sound : true);
         }
 
         public function notificationNotify(pNotificationType:int):Boolean
         {
-            return (((this.hasNotificationData(pNotificationType)) ? this._notificationsOptions[pNotificationType].notify : false));
+            return ((this.hasNotificationData(pNotificationType)) ? this._notificationsOptions[pNotificationType].notify : false);
         }
 
         private function initLocalConnection(pLc:LocalConnection):void
@@ -722,6 +727,33 @@
 
         private function onConnectionStatus(pEvent:StatusEvent):void
         {
+            var slaveId:String;
+            var i:int;
+            var numWaitingRequests:uint;
+            if (pEvent.currentTarget == this._pingConnection)
+            {
+                slaveId = this._pingSlavesIds.shift();
+                if (pEvent.level == "error")
+                {
+                    this.unregisterSlave(slaveId);
+                };
+                if (this._pingSlavesIds.length == 0)
+                {
+                    if (this._slavesIds.length == 0)
+                    {
+                        numWaitingRequests = this._waitingRequests.length;
+                        i = 0;
+                        while (i < numWaitingRequests)
+                        {
+                            this._buffer.push(this._waitingRequests[i]);
+                            this._timeOut.reset();
+                            this._timeOut.start();
+                            i++;
+                        };
+                    };
+                    this._waitingRequests.length = 0;
+                };
+            };
         }
 
         private function onConnectionSecurityError(pEvent:SecurityErrorEvent):void
@@ -750,6 +782,17 @@
             };
         }
 
+        private function closePingConnection():void
+        {
+            try
+            {
+                this._pingConnection.close();
+            }
+            catch(ae:ArgumentError)
+            {
+            };
+        }
+
         private function sendToMaster(pMethodName:String, ... pArgs):void
         {
             var argArray:Array;
@@ -766,21 +809,21 @@
         private function sendToSlave(pSlaveId:String, pMethodName:String, ... pArgs):void
         {
             var argArray:Array;
-            var _local_5:Array;
-            var _local_6:*;
+            var params:Array;
+            var param:*;
             try
             {
                 argArray = [((this.CONNECTION_ID + ".") + pSlaveId), pMethodName];
-                if (!(this._broadCasting))
+                if (!this._broadCasting)
                 {
                     argArray = argArray.concat(pArgs);
                 }
                 else
                 {
-                    _local_5 = pArgs[0];
-                    for each (_local_6 in _local_5)
+                    params = pArgs[0];
+                    for each (param in params)
                     {
-                        argArray.push(_local_6);
+                        argArray.push(param);
                     };
                 };
                 this._slaveConnection.send.apply(this, argArray);
@@ -801,6 +844,25 @@
             this._broadCasting = false;
         }
 
+        private function pingSlaves():void
+        {
+            var i:int;
+            this._pingSlavesIds = this._slavesIds.concat();
+            var numSlaves:uint = this._slavesIds.length;
+            i = 0;
+            while (i < numSlaves)
+            {
+                try
+                {
+                    this._pingConnection.send.apply(this, [((this.CONNECTION_ID + ".ping.") + this._slavesIds[i]), "ping"]);
+                }
+                catch(e:Error)
+                {
+                };
+                i++;
+            };
+        }
+
         private function becomeMaster(pSlavesIds:Array=null):void
         {
             var id:String;
@@ -819,6 +881,7 @@
                 };
             };
             this.closeSlaveConnection();
+            this.closePingConnection();
             this._clientId = "master";
             this._isMaster = true;
         }
@@ -828,6 +891,8 @@
             this._clientId = ("slave" + Math.floor((Math.random() * 100000000)));
             this._slaveConnection.client = getInstance();
             this._slaveConnection.connect(((this.CONNECTION_ID + ".") + this._clientId));
+            this._pingConnection.client = getInstance();
+            this._pingConnection.connect(((this.CONNECTION_ID + ".ping.") + this._clientId));
             this._isMaster = false;
             this.sendToMaster("updateDofusFocus", this._clientId, this._clientWindow.active);
         }
@@ -861,6 +926,10 @@
             };
         }
 
+        public function ping():void
+        {
+        }
+
         public function handleNotificationRequest(pExtNotifRequest:Object):void
         {
             var req:ExternalNotificationRequest;
@@ -873,22 +942,27 @@
             {
                 req = (pExtNotifRequest as ExternalNotificationRequest);
             };
-            if ((((this._clientId == req.clientId)) && (!((req.showMode == ExternalNotificationModeEnum.ALWAYS)))))
+            if (((this._clientId == req.clientId) && (!(req.showMode == ExternalNotificationModeEnum.ALWAYS))))
             {
                 focus = this.dofusHasFocus;
                 if (((!(focus)) && (this._clientWindow.active)))
                 {
                     focus = true;
                 };
-                if ((((req.showMode == ExternalNotificationModeEnum.FOCUS_LOST_OTHER)) && (focus)))
+                if (((req.showMode == ExternalNotificationModeEnum.FOCUS_LOST_OTHER) && (focus)))
                 {
                     return;
                 };
             };
-            if (((this._isMaster) && (this.hasNotificationData(req.notificationType))))
+            if (this._isMaster)
             {
-                if ((((this._notificationsOptions[req.notificationType].multi == false)) && (this.isNotificationDuplicated(req.clientId, req.notificationType))))
+                if ((((this.hasNotificationData(req.notificationType)) && (this._notificationsOptions[req.notificationType].multi == false)) && (this._slavesIds.length)))
                 {
+                    this._waitingRequests.push(req);
+                    if (((!(this._pingSlavesIds)) || (this._pingSlavesIds.length == 0)))
+                    {
+                        this.pingSlaves();
+                    };
                     return;
                 };
             };
@@ -899,25 +973,27 @@
 
         public function processRequest(pExtNotifRequest:ExternalNotificationRequest):void
         {
-            var mod:UiModule = UiModuleManager.getInstance().getModule(this.MODULE_NAME);
-            var ctr:UiRootContainer = Berilia.getInstance().loadUi(mod, mod.uis[pExtNotifRequest.uiName], pExtNotifRequest.instanceId, pExtNotifRequest.displayData);
-            var enWin:ExternalNotificationWindow = new ExternalNotificationWindow(pExtNotifRequest.notificationType, pExtNotifRequest.clientId, pExtNotifRequest.id, ctr, this._nativeWinOpts, pExtNotifRequest.hookName, pExtNotifRequest.hookParams);
+            var enWin:ExternalNotificationWindow = new ExternalNotificationWindow(pExtNotifRequest, this._nativeWinOpts);
             this._notificationsList.push(enWin);
-            this.setNotificationCoordinates(enWin);
-            this.showExternalNotification(enWin);
+        }
+
+        public function addNotification(pExternalNotificationWindow:ExternalNotificationWindow):void
+        {
+            this.setNotificationCoordinates(pExternalNotificationWindow);
+            this.showExternalNotification(pExternalNotificationWindow);
             if (this._playSound)
             {
-                if (((!(this.hasNotificationData(pExtNotifRequest.notificationType))) || (pExtNotifRequest.playSound)))
+                if (((!(this.hasNotificationData(pExternalNotificationWindow.notificationType))) || (pExternalNotificationWindow.playSound)))
                 {
-                    SoundManager.getInstance().manager.playUISound(pExtNotifRequest.soundId);
+                    SoundManager.getInstance().manager.playUISound(pExternalNotificationWindow.soundId);
                 };
                 this._playSound = false;
             };
-            if (pExtNotifRequest.notify)
+            if (pExternalNotificationWindow.notify)
             {
-                if (pExtNotifRequest.clientId != this._clientId)
+                if (pExternalNotificationWindow.clientId != this._clientId)
                 {
-                    this.sendToSlave(pExtNotifRequest.clientId, "notifyUser");
+                    this.sendToSlave(pExternalNotificationWindow.clientId, "notifyUser");
                 }
                 else
                 {
@@ -931,7 +1007,7 @@
             var bufferLen:int;
             var i:int;
             bufferLen = this._buffer.length;
-            var maxLen:int = (((bufferLen > this._maxNotifications)) ? this._maxNotifications : bufferLen);
+            var maxLen:int = ((bufferLen > this._maxNotifications) ? this._maxNotifications : bufferLen);
             if (this._isMaster)
             {
                 this._playSound = true;
@@ -957,7 +1033,7 @@
                     {
                         _buffer = _buffer.slice(((bufferLen - 1) - _maxNotifications), (bufferLen - 1));
                     };
-                    sendToMaster("handleNotificationRequest", JSON.encode(_buffer.pop()));
+                    sendToMaster("handleNotificationRequest", com.ankamagames.jerakine.json.JSON.encode(_buffer.pop()));
                     if (_buffer.length == 0)
                     {
                         _timeOut.stop();
@@ -1000,7 +1076,7 @@
             pExtNotifWin.show();
             pExtNotifWin.timeoutId = setTimeout(this.destroyExternalNotification, this._timeoutDuration, pExtNotifWin);
             var offScreen:Boolean = ((this.isTopPosition(this._notificationsPosition)) ? (pExtNotifWin.y > (Capabilities.screenResolutionY - pExtNotifWin.contentHeight)) : (pExtNotifWin.y < 0));
-            if ((((this._notificationsList.length > this._maxNotifications)) || (offScreen)))
+            if (((this._notificationsList.length > this._maxNotifications) || (offScreen)))
             {
                 this.destroyExternalNotification(this._notificationsList[0]);
             };
@@ -1104,7 +1180,7 @@
             var destroyedNotificationIndex:int = this._notificationsList.indexOf(pExtNotifWin);
             if (pReplaceOthers)
             {
-                if ((((this._notificationsList.length > 0)) && (!((destroyedNotificationIndex == (len - 1))))))
+                if (((this._notificationsList.length > 0) && (!(destroyedNotificationIndex == (len - 1)))))
                 {
                     diff = (pExtNotifWin.height + this.NOTIFICATION_SPACING);
                     if (this.isTopPosition(this._notificationsPosition))
@@ -1124,11 +1200,5 @@
 
 
     }
-}//package com.ankamagames.dofus.externalnotification
-
-class PrivateClass 
-{
-
-
-}
+} com.ankamagames.dofus.externalnotification
 

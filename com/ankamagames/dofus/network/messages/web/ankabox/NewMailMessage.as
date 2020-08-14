@@ -1,31 +1,27 @@
-﻿package com.ankamagames.dofus.network.messages.web.ankabox
+package com.ankamagames.dofus.network.messages.web.ankabox
 {
     import com.ankamagames.jerakine.network.INetworkMessage;
     import __AS3__.vec.Vector;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
     import __AS3__.vec.*;
 
-    [Trusted]
     public class NewMailMessage extends MailStatusMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 6292;
 
         private var _isInitialized:Boolean = false;
-        public var sendersAccountId:Vector.<uint>;
+        public var sendersAccountId:Vector.<uint> = new Vector.<uint>();
+        private var _sendersAccountIdtree:FuncTree;
 
-        public function NewMailMessage()
-        {
-            this.sendersAccountId = new Vector.<uint>();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
-            return (((super.isInitialized) && (this._isInitialized)));
+            return ((super.isInitialized) && (this._isInitialized));
         }
 
         override public function getMessageId():uint
@@ -58,6 +54,14 @@
         override public function unpack(input:ICustomDataInput, length:uint):void
         {
             this.deserialize(input);
+        }
+
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
         }
 
         override public function serialize(output:ICustomDataOutput):void
@@ -104,7 +108,39 @@
             };
         }
 
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_NewMailMessage(tree);
+        }
+
+        public function deserializeAsyncAs_NewMailMessage(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            this._sendersAccountIdtree = tree.addChild(this._sendersAccountIdtreeFunc);
+        }
+
+        private function _sendersAccountIdtreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._sendersAccountIdtree.addChild(this._sendersAccountIdFunc);
+                i++;
+            };
+        }
+
+        private function _sendersAccountIdFunc(input:ICustomDataInput):void
+        {
+            var _val:uint = input.readInt();
+            if (_val < 0)
+            {
+                throw (new Error((("Forbidden value (" + _val) + ") on elements of sendersAccountId.")));
+            };
+            this.sendersAccountId.push(_val);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.web.ankabox
+} com.ankamagames.dofus.network.messages.web.ankabox
 

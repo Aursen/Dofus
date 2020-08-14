@@ -1,26 +1,26 @@
-﻿package com.ankamagames.dofus.misc.options
+package com.ankamagames.dofus.misc.options
 {
     import com.ankamagames.jerakine.managers.OptionManager;
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
-    import com.ankamagames.jerakine.data.XmlConfig;
+    import com.ankamagames.dofus.internalDatacenter.DataEnum;
     import com.ankamagames.berilia.managers.CssManager;
     import com.ankamagames.jerakine.types.Callback;
     import com.ankamagames.berilia.types.data.ExtendedStyleSheet;
+    import com.ankamagames.dofus.datacenter.communication.ChatChannel;
+    import flash.events.Event;
 
-    public dynamic class ChatOptions extends OptionManager 
+    public class ChatOptions extends OptionManager 
     {
 
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(ChatOptions));
+        public static const CSS_LOADED:String = "CSS_LOADED";
 
-        public var colors:Array;
-        private var _cssUri:String;
+        public var colors:Array = new Array();
 
         public function ChatOptions()
         {
-            this.colors = new Array();
-            this._cssUri = (XmlConfig.getInstance().getEntry("config.ui.skin") + "css/chat.css");
             super("chat");
             add("channelLocked", false);
             add("filterInsult", true);
@@ -30,39 +30,45 @@
             add("showShortcut", false);
             add("showInfoPrefix", false);
             add("chatFontSize", 1);
-            add("chatExpertMode", true);
-            add("channelTabs", [[0, 1, 2, 3, 4, 7, 8, 9, 10, 12, 13], [11], [9], [2, 5, 6]]);
+            add("channelTabs", [[DataEnum.CHAT_CHANNEL_GENERAL, DataEnum.CHAT_CHANNEL_TEAM, DataEnum.CHAT_CHANNEL_GUILD, DataEnum.CHAT_CHANNEL_ALLIANCE, DataEnum.CHAT_CHANNEL_GROUP, DataEnum.CHAT_CHANNEL_NOOB, DataEnum.CHAT_CHANNEL_ADMIN, DataEnum.CHAT_CHANNEL_PRIVATE, DataEnum.CHAT_CHANNEL_INFORMATION, DataEnum.CHAT_CHANNEL_PROMOTIONAL, DataEnum.CHAT_CHANNEL_ARENA, DataEnum.CHAT_CHANNEL_COMMUNITY], [DataEnum.CHAT_CHANNEL_INFORMATION, DataEnum.CHAT_CHANNEL_FIGHT], [DataEnum.CHAT_CHANNEL_PRIVATE], [DataEnum.CHAT_CHANNEL_GUILD, DataEnum.CHAT_CHANNEL_TRADE, DataEnum.CHAT_CHANNEL_RECRUITMENT]]);
             add("tabsNames", ["0", "1", "2", "3"]);
-            add("chatoutput", false);
             add("currentChatTheme", "");
             add("externalChatEnabledChannels", []);
-            CssManager.getInstance().askCss(this._cssUri, new Callback(this.onCssLoaded));
+            var cssUrl:String = "theme://css/chat.css";
+            CssManager.getInstance().askCss(cssUrl, new Callback(this.onCssLoaded, cssUrl));
         }
 
-        private function onCssLoaded():void
+        private function onCssLoaded(cssUrl:String):void
         {
             var styleObj:Object;
-            var _ssSheet:ExtendedStyleSheet = CssManager.getInstance().getCss(this._cssUri);
-            var theme:String = OptionManager.getOptionManager("dofus").switchUiSkin;
-            var chatTheme:String = OptionManager.getOptionManager("chat").currentChatTheme;
+            var _ssSheet:ExtendedStyleSheet = CssManager.getInstance().getCss(cssUrl);
+            var chatOptions:ChatOptions = (OptionManager.getOptionManager("chat") as ChatOptions);
+            var theme:String = OptionManager.getOptionManager("dofus").getOption("currentUiSkin");
+            var chatTheme:String = chatOptions.getOption("currentChatTheme");
+            var channelsCount:int = ChatChannel.getChannels().length;
             var i:int;
-            while (i < 14)
+            while (i < channelsCount)
             {
                 styleObj = _ssSheet.getStyle(("p" + i));
+                if ((((!(styleObj)) || (styleObj == null)) || (!(styleObj.hasOwnProperty("color")))))
+                {
+                    styleObj = _ssSheet.getStyle("p0");
+                };
                 this.colors[i] = uint(this.color0x(styleObj["color"]));
                 add(("channelColor" + i), this.colors[i]);
                 if (theme != chatTheme)
                 {
-                    OptionManager.getOptionManager("chat")[("channelColor" + i)] = this.colors[i];
+                    chatOptions.setOption(("channelColor" + i), this.colors[i]);
                 };
                 i++;
             };
             if (theme != chatTheme)
             {
-                OptionManager.getOptionManager("chat").currentChatTheme = theme;
+                chatOptions.setOption("currentChatTheme", theme);
             };
             styleObj = _ssSheet.getStyle("p");
             add("alertColor", uint(this.color0x(styleObj["color"])));
+            dispatchEvent(new Event(CSS_LOADED));
         }
 
         private function color0x(color:String):String
@@ -72,5 +78,5 @@
 
 
     }
-}//package com.ankamagames.dofus.misc.options
+} com.ankamagames.dofus.misc.options
 

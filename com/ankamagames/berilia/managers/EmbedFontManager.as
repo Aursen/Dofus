@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.managers
+package com.ankamagames.berilia.managers
 {
     import flash.events.EventDispatcher;
     import com.ankamagames.jerakine.logger.Logger;
@@ -64,7 +64,7 @@
 
         public function isEmbed(fontName:String):Boolean
         {
-            return ((this._aFonts[fontName] == true));
+            return (this._aFonts[fontName] == true);
         }
 
         public function getFont(fontName:String):Font
@@ -105,7 +105,7 @@
 
         private function onComplete(e:ResourceLoadedEvent):void
         {
-            var _local_3:Array;
+            var fontsList:Array;
             var i:int;
             var fontClass:Class = (Swl(e.resource).getDefinition(FileUtils.getFileStartName(e.uri.uri)) as Class);
             this._aFonts[FileUtils.getFileStartName(e.uri.uri)] = true;
@@ -115,13 +115,13 @@
             }
             else
             {
-                _local_3 = fontClass["FONTS_LIST"];
-                if (_local_3)
+                fontsList = fontClass["FONTS_LIST"];
+                if (fontsList)
                 {
                     i = 0;
-                    while (i < _local_3.length)
+                    while (i < fontsList.length)
                     {
-                        Font.registerFont(_local_3[i]);
+                        Font.registerFont(fontsList[i]);
                         i++;
                     };
                 };
@@ -141,5 +141,5 @@
 
 
     }
-}//package com.ankamagames.berilia.managers
+} com.ankamagames.berilia.managers
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.network.utils
+package com.ankamagames.jerakine.network.utils
 {
     public class BooleanByteWrapper 
     {
@@ -11,7 +11,7 @@
                 case 0:
                     if (b)
                     {
-                        a = (a | 1);
+                        a = (a | 0x01);
                     }
                     else
                     {
@@ -21,7 +21,7 @@
                 case 1:
                     if (b)
                     {
-                        a = (a | 2);
+                        a = (a | 0x02);
                     }
                     else
                     {
@@ -31,7 +31,7 @@
                 case 2:
                     if (b)
                     {
-                        a = (a | 4);
+                        a = (a | 0x04);
                     }
                     else
                     {
@@ -41,7 +41,7 @@
                 case 3:
                     if (b)
                     {
-                        a = (a | 8);
+                        a = (a | 0x08);
                     }
                     else
                     {
@@ -51,7 +51,7 @@
                 case 4:
                     if (b)
                     {
-                        a = (a | 16);
+                        a = (a | 0x10);
                     }
                     else
                     {
@@ -61,7 +61,7 @@
                 case 5:
                     if (b)
                     {
-                        a = (a | 32);
+                        a = (a | 0x20);
                     }
                     else
                     {
@@ -71,7 +71,7 @@
                 case 6:
                     if (b)
                     {
-                        a = (a | 64);
+                        a = (a | 0x40);
                     }
                     else
                     {
@@ -81,7 +81,7 @@
                 case 7:
                     if (b)
                     {
-                        a = (a | 128);
+                        a = (a | 0x80);
                     }
                     else
                     {
@@ -99,21 +99,21 @@
             switch (pos)
             {
                 case 0:
-                    return (!(((a & 1) == 0)));
+                    return (!((a & 0x01) == 0));
                 case 1:
-                    return (!(((a & 2) == 0)));
+                    return (!((a & 0x02) == 0));
                 case 2:
-                    return (!(((a & 4) == 0)));
+                    return (!((a & 0x04) == 0));
                 case 3:
-                    return (!(((a & 8) == 0)));
+                    return (!((a & 0x08) == 0));
                 case 4:
-                    return (!(((a & 16) == 0)));
+                    return (!((a & 0x10) == 0));
                 case 5:
-                    return (!(((a & 32) == 0)));
+                    return (!((a & 0x20) == 0));
                 case 6:
-                    return (!(((a & 64) == 0)));
+                    return (!((a & 0x40) == 0));
                 case 7:
-                    return (!(((a & 128) == 0)));
+                    return (!((a & 0x80) == 0));
                 default:
                     throw (new Error("Bytebox overflow."));
             };
@@ -121,5 +121,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.network.utils
+} com.ankamagames.jerakine.network.utils
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.entities.interfaces
+package com.ankamagames.jerakine.entities.interfaces
 {
     import flash.display.DisplayObject;
     import flash.display.DisplayObjectContainer;
@@ -10,5 +10,5 @@
         function getSubEntitySlot(_arg_1:uint, _arg_2:uint):DisplayObjectContainer;
 
     }
-}//package com.ankamagames.jerakine.entities.interfaces
+} com.ankamagames.jerakine.entities.interfaces
 

@@ -1,303 +1,364 @@
-﻿package com.ankamagames.dofus.logic.game.fight.types
+package com.ankamagames.dofus.logic.game.fight.types
 {
-    import com.ankamagames.jerakine.logger.Logger;
-    import com.ankamagames.jerakine.logger.Log;
-    import flash.utils.getQualifiedClassName;
     import __AS3__.vec.Vector;
-    import com.ankamagames.jerakine.types.positions.MapPoint;
     import com.ankamagames.dofus.types.entities.AnimatedCharacter;
     import flash.utils.Dictionary;
-    import com.ankamagames.dofus.logic.game.common.misc.DofusEntities;
-    import com.ankamagames.atouin.managers.EntitiesManager;
-    import com.ankamagames.dofus.kernel.Kernel;
-    import com.ankamagames.dofus.logic.game.fight.frames.FightContextFrame;
-    import com.ankamagames.dofus.network.types.game.context.fight.GameFightFighterInformations;
-    import com.ankamagames.dofus.datacenter.monsters.Monster;
-    import com.ankamagames.dofus.network.types.game.context.fight.GameFightMonsterInformations;
-    import com.ankamagames.dofus.logic.game.fight.managers.FightersStateManager;
+    import damageCalculation.fighterManagement.HaxeFighter;
     import com.ankamagames.tiphon.display.TiphonSprite;
-    import com.ankamagames.atouin.enums.PlacementStrataEnums;
-    import com.ankamagames.berilia.managers.TooltipManager;
-    import com.ankamagames.dofus.network.types.game.context.fight.GameFightCharacterInformations;
-    import com.ankamagames.berilia.types.LocationEnum;
+    import com.ankamagames.tiphon.types.IAnimationModifier;
+    import com.ankamagames.atouin.managers.EntitiesManager;
+    import com.ankamagames.jerakine.managers.OptionManager;
     import com.ankamagames.dofus.network.enums.SubEntityBindingPointCategoryEnum;
+    import com.ankamagames.dofus.types.entities.AnimStatiqueSubEntityBehavior;
     import com.ankamagames.dofus.types.entities.RiderBehavior;
     import com.ankamagames.dofus.logic.game.fight.miscs.CarrierSubEntityBehaviour;
     import com.ankamagames.dofus.logic.game.fight.miscs.CarrierAnimationModifier;
     import com.ankamagames.dofus.types.enums.AnimationEnum;
+    import com.ankamagames.dofus.kernel.Kernel;
     import com.ankamagames.dofus.logic.game.fight.frames.FightEntitiesFrame;
-    import com.ankamagames.dofus.network.enums.TeamEnum;
-    import com.ankamagames.atouin.managers.MapDisplayManager;
-    import com.ankamagames.atouin.data.map.CellData;
-    import com.ankamagames.jerakine.entities.interfaces.IEntity;
-    import com.ankamagames.dofus.network.types.game.context.fight.GameFightCompanionInformations;
-    import com.ankamagames.berilia.managers.UiModuleManager;
-    import com.ankamagames.berilia.enums.StrataEnum;
+    import com.ankamagames.dofus.logic.game.common.misc.DofusEntities;
+    import com.ankamagames.dofus.network.types.game.context.fight.GameFightFighterInformations;
+    import com.ankamagames.jerakine.interfaces.IRectangle;
+    import com.ankamagames.dofus.logic.game.fight.frames.FightContextFrame;
+    import com.ankamagames.berilia.managers.TooltipManager;
+    import com.ankamagames.dofus.network.types.game.context.fight.GameFightCharacterInformations;
+    import com.ankamagames.jerakine.utils.display.Rectangle2;
+    import com.ankamagames.atouin.Atouin;
+    import com.ankamagames.berilia.types.LocationEnum;
+    import haxe.ds._List.ListNode;
+    import damageCalculation.damageManagement.EffectOutput;
+    import mapTools.MapDirection;
+    import damageCalculation.damageManagement.Teleport;
+    import com.ankamagames.jerakine.types.positions.MapPoint;
+    import damageCalculation.tools.Const;
+    import com.ankamagames.dofus.logic.game.fight.frames.FightSpellCastFrame;
+    import com.ankamagames.atouin.enums.PlacementStrataEnums;
     import __AS3__.vec.*;
 
     public class FightTeleportationPreview 
     {
 
-        private static const _log:Logger = Log.getLogger(getQualifiedClassName(FightTeleportationPreview));
-
-        private var _targetedEntities:Vector.<int>;
-        private var _teleportationEffectId:uint;
-        private var _impactPos:MapPoint;
-        private var _casterPos:MapPoint;
         private var _previews:Vector.<AnimatedCharacter>;
-        private var _teleFraggedEntities:Vector.<AnimatedCharacter>;
         private var _previewIdEntityIdAssoc:Dictionary;
-        private var _multipleTeleportationEffects:Boolean;
+        private var _movedFighters:Vector.<HaxeFighter>;
+        private var _removed:Boolean;
 
-        public function FightTeleportationPreview(pTargetedEntities:Vector.<int>, pTeleportationEffectId:uint, pImpactCell:uint, pCasterCell:uint, pMultipleTeleportationEffects:Boolean)
+        public function FightTeleportationPreview(movedFighters:Vector.<HaxeFighter>)
         {
-            this._targetedEntities = pTargetedEntities;
-            this._teleportationEffectId = pTeleportationEffectId;
-            this._impactPos = MapPoint.fromCellId(pImpactCell);
-            this._casterPos = MapPoint.fromCellId(pCasterCell);
+            this.init(movedFighters);
             this._previewIdEntityIdAssoc = new Dictionary();
-            this._multipleTeleportationEffects = pMultipleTeleportationEffects;
         }
 
-        public function show():void
+        public static function getParentEntity(pEntity:TiphonSprite):TiphonSprite
         {
-            var entityId:int;
-            var entity:AnimatedCharacter;
-            var teleport:Function;
-            var parentEntity:AnimatedCharacter;
-            var parentEntityId:int;
-            var i:int;
-            switch (this._teleportationEffectId)
+            var parentEntity:TiphonSprite;
+            var parent:TiphonSprite = pEntity.parentSprite;
+            while (parent)
             {
-                case 1100:
-                    teleport = this.teleportationToPreviousPosition;
-                    break;
-                case 1104:
-                    teleport = this.symetricTeleportation;
-                    break;
-                case 1105:
-                    teleport = this.symetricTeleportationFromCaster;
-                    break;
-                case 1106:
-                    teleport = this.symetricTeleportationFromImpactCell;
-                    break;
+                parentEntity = parent;
+                parent = parent.parentSprite;
             };
-            this._targetedEntities.sort(this.compareDistanceFromCaster);
-            var nbEntities:int = this._targetedEntities.length;
-            i = 0;
-            while (i < nbEntities)
+            return ((parentEntity) ? parentEntity : pEntity);
+        }
+
+        private static function cloneFighter(originalEntity:AnimatedCharacter):AnimatedCharacter
+        {
+            var animModifier:IAnimationModifier;
+            var previewEntity:AnimatedCharacter = new AnimatedCharacter(EntitiesManager.getInstance().getFreeEntityId(), originalEntity.look, null, null);
+            if (OptionManager.getOptionManager("atouin").getOption("useLowDefSkin"))
             {
-                entity = (DofusEntities.getEntity(this._targetedEntities[i]) as AnimatedCharacter);
-                if (entity)
+                previewEntity.setAlternativeSkinIndex(0, true);
+            };
+            for each (animModifier in originalEntity.animationModifiers)
+            {
+                previewEntity.addAnimationModifier(animModifier);
+            };
+            previewEntity.skinModifier = originalEntity.skinModifier;
+            addPreviewSubEntities(originalEntity, previewEntity);
+            previewEntity.mouseEnabled = (previewEntity.mouseChildren = false);
+            return (previewEntity);
+        }
+
+        private static function addPreviewSubEntities(pActualEntity:TiphonSprite, pPreviewEntity:TiphonSprite):void
+        {
+            var carriedPreviewEntity:TiphonSprite;
+            var animModifier:IAnimationModifier;
+            var subEntities:Array = pActualEntity.look.getSubEntitiesFromCategory(SubEntityBindingPointCategoryEnum.HOOK_POINT_CATEGORY_PET);
+            if (((subEntities) && (subEntities.length)))
+            {
+                pPreviewEntity.setSubEntityBehaviour(SubEntityBindingPointCategoryEnum.HOOK_POINT_CATEGORY_PET, new AnimStatiqueSubEntityBehavior());
+            };
+            var isRider:Boolean;
+            subEntities = pActualEntity.look.getSubEntitiesFromCategory(SubEntityBindingPointCategoryEnum.HOOK_POINT_CATEGORY_MOUNT_DRIVER);
+            if (((subEntities) && (subEntities.length)))
+            {
+                isRider = true;
+                pPreviewEntity.setSubEntityBehaviour(SubEntityBindingPointCategoryEnum.HOOK_POINT_CATEGORY_MOUNT_DRIVER, new RiderBehavior());
+            };
+            var carryingEntity:TiphonSprite = pActualEntity;
+            if (((isRider) && (pActualEntity.getSubEntitySlot(SubEntityBindingPointCategoryEnum.HOOK_POINT_CATEGORY_MOUNT_DRIVER, 0))))
+            {
+                carryingEntity = (pActualEntity.getSubEntitySlot(SubEntityBindingPointCategoryEnum.HOOK_POINT_CATEGORY_MOUNT_DRIVER, 0) as TiphonSprite);
+            };
+            var carryingPreviewEntity:TiphonSprite = pPreviewEntity;
+            if (((isRider) && (pPreviewEntity.getSubEntitySlot(SubEntityBindingPointCategoryEnum.HOOK_POINT_CATEGORY_MOUNT_DRIVER, 0))))
+            {
+                carryingPreviewEntity = (pPreviewEntity.getSubEntitySlot(SubEntityBindingPointCategoryEnum.HOOK_POINT_CATEGORY_MOUNT_DRIVER, 0) as TiphonSprite);
+            };
+            var carriedEntity:TiphonSprite = (carryingEntity.getSubEntitySlot(SubEntityBindingPointCategoryEnum.HOOK_POINT_CATEGORY_LIFTED_ENTITY, 0) as TiphonSprite);
+            addTeamCircle(pActualEntity, pPreviewEntity);
+            if (carriedEntity)
+            {
+                carriedPreviewEntity = new TiphonSprite(carriedEntity.look);
+                if (OptionManager.getOptionManager("atouin").getOption("useLowDefSkin"))
                 {
-                    parentEntity = (this.getParentEntity(entity) as AnimatedCharacter);
-                    parentEntity.visible = false;
-                    teleport.apply(this, [parentEntity.id]);
+                    carriedPreviewEntity.setAlternativeSkinIndex(0, true);
                 };
-                i++;
+                for each (animModifier in carriedEntity.animationModifiers)
+                {
+                    carriedPreviewEntity.addAnimationModifier(animModifier);
+                };
+                carriedPreviewEntity.skinModifier = carriedEntity.skinModifier;
+                carryingPreviewEntity.setSubEntityBehaviour(SubEntityBindingPointCategoryEnum.HOOK_POINT_CATEGORY_LIFTED_ENTITY, new CarrierSubEntityBehaviour());
+                carryingPreviewEntity.isCarrying = true;
+                carryingPreviewEntity.addAnimationModifier(CarrierAnimationModifier.getInstance());
+                carryingPreviewEntity.addSubEntity(carriedPreviewEntity, SubEntityBindingPointCategoryEnum.HOOK_POINT_CATEGORY_LIFTED_ENTITY, 0);
+                carriedPreviewEntity.setAnimation(AnimationEnum.ANIM_STATIQUE);
+                carryingPreviewEntity.setAnimation(AnimationEnum.ANIM_STATIQUE_CARRYING);
+                addPreviewSubEntities(carriedEntity, carriedPreviewEntity);
             };
         }
 
-        public function remove():void
+        private static function addTeamCircle(pActualEntity:TiphonSprite, pEntity:TiphonSprite):void
         {
-            var entityId:int;
-            var entity:AnimatedCharacter;
-            var parentEntity:AnimatedCharacter;
-            var parentEntityId:int;
-            var ac:AnimatedCharacter;
-            for each (entityId in this._targetedEntities)
+            var entityId:Number;
+            var entitiesFrame:FightEntitiesFrame = (Kernel.getWorker().getFrame(FightEntitiesFrame) as FightEntitiesFrame);
+            for each (entityId in entitiesFrame.getEntitiesIdsList())
             {
-                entity = (DofusEntities.getEntity(entityId) as AnimatedCharacter);
-                if (entity)
+                if (DofusEntities.getEntity(entityId) == pActualEntity)
                 {
-                    parentEntity = (this.getParentEntity(entity) as AnimatedCharacter);
-                    parentEntity.visible = true;
+                    entitiesFrame.addCircleToFighter(pEntity, FightEntitiesFrame.getTeamCircleColor((entitiesFrame.getEntityInfos(entityId) as GameFightFighterInformations).spawnInfo.teamId));
+                    return;
+                };
+            };
+        }
+
+        private static function updateEntityTooltip(pActualEntityId:Number, pEntity:AnimatedCharacter):void
+        {
+            var entityInfos:GameFightFighterInformations;
+            var ttCacheName:String;
+            var offsetRect:IRectangle;
+            var fightContextFrame:FightContextFrame = (Kernel.getWorker().getFrame(FightContextFrame) as FightContextFrame);
+            var hasIcon:Boolean = fightContextFrame.entitiesFrame.hasIcon(pActualEntityId);
+            var ttName:String = ("tooltipOverEntity_" + pActualEntityId);
+            if (TooltipManager.isVisible(ttName))
+            {
+                entityInfos = (fightContextFrame.entitiesFrame.getEntityInfos(pActualEntityId) as GameFightFighterInformations);
+                ttCacheName = ((entityInfos is GameFightCharacterInformations) ? ("PlayerShortInfos" + pActualEntityId) : ("EntityShortInfos" + pActualEntityId));
+                offsetRect = ((hasIcon) ? new Rectangle2(0, -((fightContextFrame.entitiesFrame.getIcon(pActualEntityId).height * Atouin.getInstance().currentZoom) + (10 * Atouin.getInstance().currentZoom)), 0, 0) : null);
+                TooltipManager.updatePosition(ttCacheName, ttName, pEntity.absoluteBounds, LocationEnum.POINT_BOTTOM, LocationEnum.POINT_TOP, 0, true, true, pEntity.position.cellId, offsetRect);
+            }
+            else
+            {
+                if (hasIcon)
+                {
+                    fightContextFrame.entitiesFrame.getIcon(pActualEntityId).place(fightContextFrame.entitiesFrame.getIconEntityBounds(pEntity));
+                };
+            };
+        }
+
+
+        public function init(movedFighters:Vector.<HaxeFighter>):void
+        {
+            this._movedFighters = movedFighters;
+            this._removed = false;
+        }
+
+        public function getEntitiesIds():Vector.<Number>
+        {
+            var fighter:HaxeFighter;
+            var cursor:ListNode;
+            var output:EffectOutput;
+            var entitiesIds:Vector.<Number> = new Vector.<Number>(0);
+            for each (fighter in this._movedFighters)
+            {
+                if (entitiesIds.indexOf(fighter.id) == -1)
+                {
+                    entitiesIds.push(fighter.id);
+                };
+                cursor = fighter.totalEffects.h;
+                while (cursor != null)
+                {
+                    output = (cursor.item as EffectOutput);
+                    if (((!(output.carriedBy == HaxeFighter.INVALID_ID)) && (entitiesIds.indexOf(output.carriedBy) == -1)))
+                    {
+                        entitiesIds.push(output.carriedBy);
+                    };
+                    if (((!(output.throwedBy == HaxeFighter.INVALID_ID)) && (entitiesIds.indexOf(output.throwedBy) == -1)))
+                    {
+                        entitiesIds.push(output.throwedBy);
+                    };
+                    cursor = cursor.next;
+                };
+            };
+            return (entitiesIds);
+        }
+
+        public function isPreview(pEntityId:Number):Boolean
+        {
+            var previewEntity:AnimatedCharacter;
+            for each (previewEntity in this._previews)
+            {
+                if (previewEntity.id == pEntityId)
+                {
+                    return (true);
+                };
+            };
+            return (false);
+        }
+
+        public function show(frame:FightSpellCastFrame):void
+        {
+            var entity:AnimatedCharacter;
+            var currentFighterPreview:AnimatedCharacter;
+            var direction:uint;
+            var carrierId:Number;
+            var throwerId:Number;
+            var cursor:ListNode;
+            var fighter:HaxeFighter;
+            var output:EffectOutput;
+            var carrierEntity:AnimatedCharacter;
+            var carrierPreview:AnimatedCharacter;
+            var throwerEntity:AnimatedCharacter;
+            var throwerPreview:AnimatedCharacter;
+            var carriedEntity:TiphonSprite;
+            if (this._removed)
+            {
+                return;
+            };
+            for each (fighter in this._movedFighters)
+            {
+                entity = (DofusEntities.getEntity(fighter.id) as AnimatedCharacter);
+                if (!entity)
+                {
+                    entity = frame.getSummonPreview(fighter.id);
+                    if (!entity)
+                    {
+                        continue;
+                    };
+                };
+                direction = entity.getDirection();
+                carrierId = HaxeFighter.INVALID_ID;
+                throwerId = HaxeFighter.INVALID_ID;
+                cursor = fighter.totalEffects.h;
+                while (cursor != null)
+                {
+                    output = (cursor.item as EffectOutput);
+                    if (output.movement != null)
+                    {
+                        if (((MapDirection.isValidDirection(output.movement.direction)) && (MapDirection.isOrthogonal(output.movement.direction))))
+                        {
+                            direction = output.movement.direction;
+                        }
+                        else
+                        {
+                            if (output.movement.direction == Teleport.OPPOSITE_DIRECTION)
+                            {
+                                direction = MapDirection.getOppositeDirection(direction);
+                            };
+                        };
+                        if (output.carriedBy != HaxeFighter.INVALID_ID)
+                        {
+                            carrierId = output.carriedBy;
+                        };
+                        if (((!(output.throwedBy == HaxeFighter.INVALID_ID)) && (throwerId == HaxeFighter.INVALID_ID)))
+                        {
+                            carrierId = HaxeFighter.INVALID_ID;
+                            throwerId = output.throwedBy;
+                        };
+                    };
+                    cursor = cursor.next;
+                };
+                currentFighterPreview = this.createFighterPreview(fighter.id, MapPoint.fromCellId(fighter.getCurrentPositionCell()), entity, direction);
+                if (((fighter.hasState(Const.STATE_CARRIED)) && (!(carrierId == HaxeFighter.INVALID_ID))))
+                {
+                    carrierEntity = (DofusEntities.getEntity(carrierId) as AnimatedCharacter);
+                    carrierPreview = this.createFighterPreview(carrierId, MapPoint.fromCellId(fighter.getCurrentPositionCell()), carrierEntity, carrierEntity.getDirection());
+                    carrierPreview.setSubEntityBehaviour(SubEntityBindingPointCategoryEnum.HOOK_POINT_CATEGORY_LIFTED_ENTITY, new CarrierSubEntityBehaviour());
+                    carrierPreview.isCarrying = true;
+                    carrierPreview.addAnimationModifier(CarrierAnimationModifier.getInstance());
+                    carrierPreview.addSubEntity(currentFighterPreview, SubEntityBindingPointCategoryEnum.HOOK_POINT_CATEGORY_LIFTED_ENTITY, 0);
+                    carrierPreview.setAnimation(AnimationEnum.ANIM_STATIQUE_CARRYING);
+                    addPreviewSubEntities(entity, currentFighterPreview);
+                };
+                if (throwerId != HaxeFighter.INVALID_ID)
+                {
+                    throwerEntity = (DofusEntities.getEntity(throwerId) as AnimatedCharacter);
+                    throwerPreview = this.createFighterPreview(throwerId, throwerEntity.position, throwerEntity, throwerEntity.getDirection());
+                    carriedEntity = (throwerPreview.getSubEntitySlot(SubEntityBindingPointCategoryEnum.HOOK_POINT_CATEGORY_LIFTED_ENTITY, 0) as TiphonSprite);
+                    throwerPreview.setSubEntityBehaviour(SubEntityBindingPointCategoryEnum.HOOK_POINT_CATEGORY_LIFTED_ENTITY, null);
+                    throwerPreview.removeSubEntity(carriedEntity);
+                    throwerPreview.removeAnimationModifier(CarrierAnimationModifier.getInstance());
+                    throwerPreview.setAnimation(AnimationEnum.ANIM_STATIQUE);
+                };
+            };
+        }
+
+        public function remove(destroy:Boolean=true):void
+        {
+            var entityId:Number;
+            var ac:AnimatedCharacter;
+            var parentEntity:AnimatedCharacter;
+            if (this._removed)
+            {
+                if (((destroy) && (this._previews)))
+                {
+                    for each (ac in this._previews)
+                    {
+                        ac.quickDestroy();
+                    };
+                };
+                return;
+            };
+            var fightContextFrame:FightContextFrame = (Kernel.getWorker().getFrame(FightContextFrame) as FightContextFrame);
+            var showPermanentTooltips:Boolean = ((fightContextFrame.showPermanentTooltips) && (fightContextFrame.battleFrame.targetedEntities.length > 0));
+            var overEntity:AnimatedCharacter = (EntitiesManager.getInstance().getEntityOnCell(FightContextFrame.currentCell, AnimatedCharacter) as AnimatedCharacter);
+            overEntity = ((overEntity) ? (getParentEntity(overEntity) as AnimatedCharacter) : null);
+            for each (entityId in this.getEntitiesIds())
+            {
+                parentEntity = (DofusEntities.getEntity(entityId) as AnimatedCharacter);
+                if (parentEntity)
+                {
+                    if (((!(overEntity)) || (!(overEntity.id == parentEntity.id))))
+                    {
+                        TooltipManager.hide(("tooltipOverEntity_" + parentEntity.id));
+                        if (((showPermanentTooltips) && (!(fightContextFrame.battleFrame.targetedEntities.indexOf(parentEntity.id) == -1))))
+                        {
+                            fightContextFrame.displayEntityTooltip(parentEntity.id);
+                        };
+                    };
+                    parentEntity.alpha = 1;
                 };
             };
             if (this._previews)
             {
                 for each (ac in this._previews)
                 {
-                    ac.destroy();
-                };
-            };
-            if (this._teleFraggedEntities)
-            {
-                for each (ac in this._teleFraggedEntities)
-                {
-                    ac.visible = true;
-                };
-            };
-        }
-
-        private function symetricTeleportation(pTargetId:int):void
-        {
-            var preview:AnimatedCharacter;
-            var entity:AnimatedCharacter = (DofusEntities.getEntity(pTargetId) as AnimatedCharacter);
-            var teleportationCell:MapPoint = this._casterPos.pointSymetry(this._impactPos);
-            if (((((teleportationCell) && (this.isValidCell(teleportationCell.cellId)))) && ((EntitiesManager.getInstance().getEntitiesOnCell(this._impactPos.cellId, AnimatedCharacter).length > 0))))
-            {
-                preview = this.createFighterPreview(pTargetId, teleportationCell, this._casterPos.advancedOrientationTo(this._impactPos));
-                this.checkTeleFrag(preview, pTargetId, teleportationCell, this._casterPos);
-            }
-            else
-            {
-                entity.visible = true;
-            };
-        }
-
-        private function symetricTeleportationFromCaster(pTargetId:int):void
-        {
-            var preview:AnimatedCharacter;
-            var entity:AnimatedCharacter = (DofusEntities.getEntity(pTargetId) as AnimatedCharacter);
-            var entityPos:MapPoint = entity.position;
-            var teleportationCell:MapPoint = entityPos.pointSymetry(this._casterPos);
-            if (((teleportationCell) && (this.isValidCell(teleportationCell.cellId))))
-            {
-                preview = this.createFighterPreview(pTargetId, teleportationCell, entity.getDirection());
-                this.checkTeleFrag(preview, pTargetId, teleportationCell, entityPos);
-            }
-            else
-            {
-                entity.visible = true;
-            };
-        }
-
-        private function symetricTeleportationFromImpactCell(pTargetId:int):void
-        {
-            var preview:AnimatedCharacter;
-            var entity:AnimatedCharacter = (DofusEntities.getEntity(pTargetId) as AnimatedCharacter);
-            var existingPreview:AnimatedCharacter = this.getPreview(pTargetId);
-            var checkPositionsSwitch:Boolean = ((existingPreview) && (this._multipleTeleportationEffects));
-            var entityPos:MapPoint = ((checkPositionsSwitch) ? existingPreview.position : entity.position);
-            var teleportationCell:MapPoint = entityPos.pointSymetry(this._impactPos);
-            if (((checkPositionsSwitch) && (this.willSwitchPosition(existingPreview, teleportationCell))))
-            {
-                entityPos = entity.position;
-                teleportationCell = entityPos.pointSymetry(this._impactPos);
-            };
-            if (((teleportationCell) && (this.isValidCell(teleportationCell.cellId))))
-            {
-                preview = this.createFighterPreview(pTargetId, teleportationCell, entity.getDirection());
-                this.checkTeleFrag(preview, pTargetId, teleportationCell, entityPos);
-            }
-            else
-            {
-                entity.visible = true;
-            };
-        }
-
-        private function teleportationToPreviousPosition(pTargetId:int):void
-        {
-            var teleportationCell:MapPoint;
-            var preview:AnimatedCharacter;
-            var fightContextFrame:FightContextFrame = (Kernel.getWorker().getFrame(FightContextFrame) as FightContextFrame);
-            var entity:AnimatedCharacter = (DofusEntities.getEntity(pTargetId) as AnimatedCharacter);
-            var teleportationCellId:int = fightContextFrame.getFighterPreviousPosition(pTargetId);
-            if (teleportationCellId != -1)
-            {
-                teleportationCell = MapPoint.fromCellId(teleportationCellId);
-                if (((teleportationCell) && (this.isValidCell(teleportationCell.cellId))))
-                {
-                    preview = this.createFighterPreview(pTargetId, teleportationCell, entity.getDirection());
-                    this.checkTeleFrag(preview, pTargetId, teleportationCell, entity.position);
-                }
-                else
-                {
-                    entity.visible = true;
-                };
-            }
-            else
-            {
-                entity.visible = true;
-            };
-        }
-
-        private function checkTeleFrag(pTeleportPreview:AnimatedCharacter, pTargetId:int, pDestination:MapPoint, pFrom:MapPoint):void
-        {
-            var entity:AnimatedCharacter;
-            var entityActualId:int;
-            var _local_8:int;
-            var _local_9:AnimatedCharacter;
-            var teleportationCellEntities:Array = EntitiesManager.getInstance().getEntitiesOnCell(pDestination.cellId, AnimatedCharacter);
-            if (teleportationCellEntities.length > 0)
-            {
-                for each (entity in teleportationCellEntities)
-                {
-                    if (((!((entity == pTeleportPreview))) && (!((entity.id == pTargetId)))))
+                    if (destroy)
                     {
-                        entityActualId = ((this._previewIdEntityIdAssoc[entity.id]) ? this._previewIdEntityIdAssoc[entity.id] : entity.id);
-                        if (this.canTeleport(entityActualId))
-                        {
-                            this.telefrag((this.getParentEntity(entity) as AnimatedCharacter), pTeleportPreview, pTargetId, pFrom);
-                        }
-                        else
-                        {
-                            _local_8 = this._previewIdEntityIdAssoc[pTeleportPreview.id];
-                            _local_9 = (DofusEntities.getEntity(_local_8) as AnimatedCharacter);
-                            if (_local_9)
-                            {
-                                _local_9 = (this.getParentEntity(_local_9) as AnimatedCharacter);
-                                _local_9.visible = true;
-                            };
-                            pTeleportPreview.destroy();
-                        };
-                        break;
-                    };
-                };
-            };
-        }
-
-        private function telefrag(pTeleFraggedEntity:AnimatedCharacter, pTeleFraggingPreviewEntity:AnimatedCharacter, pTeleFraggingActualEntityId:int, pDestination:MapPoint):void
-        {
-            var preview:AnimatedCharacter = this.createFighterPreview(pTeleFraggedEntity.id, pDestination, pTeleFraggedEntity.getDirection());
-            if (!(this._previewIdEntityIdAssoc[pTeleFraggedEntity.id]))
-            {
-                pTeleFraggedEntity.visible = false;
-            };
-            if (!(this._teleFraggedEntities))
-            {
-                this._teleFraggedEntities = new Vector.<AnimatedCharacter>(0);
-            };
-            this._teleFraggedEntities.push(pTeleFraggedEntity);
-            var telefraggedActualEntityId:int = ((this._previewIdEntityIdAssoc[pTeleFraggedEntity.id]) ? this._previewIdEntityIdAssoc[pTeleFraggedEntity.id] : pTeleFraggedEntity.id);
-            this.showTelefragTooltip(telefraggedActualEntityId, preview);
-            this.showTelefragTooltip(pTeleFraggingActualEntityId, pTeleFraggingPreviewEntity);
-        }
-
-        private function willSwitchPosition(pPreview:AnimatedCharacter, pTeleportationCell:MapPoint):Boolean
-        {
-            var teleportationCellEntities:Array;
-            var entity:AnimatedCharacter;
-            var actualEntityId:int;
-            var fightContextFrame:FightContextFrame;
-            var entityFightInfos:GameFightFighterInformations;
-            var entityOnCellFightInfos:GameFightFighterInformations;
-            var entityOnCellId:int;
-            if (((pTeleportationCell) && (this.isValidCell(pTeleportationCell.cellId))))
-            {
-                teleportationCellEntities = EntitiesManager.getInstance().getEntitiesOnCell(pTeleportationCell.cellId, AnimatedCharacter);
-                actualEntityId = this._previewIdEntityIdAssoc[pPreview.id];
-                fightContextFrame = (Kernel.getWorker().getFrame(FightContextFrame) as FightContextFrame);
-                entityFightInfos = (fightContextFrame.entitiesFrame.getEntityInfos(actualEntityId) as GameFightFighterInformations);
-                for each (entity in teleportationCellEntities)
-                {
-                    if (((!((entity == pPreview))) && (!((entity.id == actualEntityId)))))
+                        ac.quickDestroy();
+                    }
+                    else
                     {
-                        entityOnCellId = ((this._previewIdEntityIdAssoc[entity.id]) ? this._previewIdEntityIdAssoc[entity.id] : entity.id);
-                        entityOnCellFightInfos = (fightContextFrame.entitiesFrame.getEntityInfos(entityOnCellId) as GameFightFighterInformations);
-                        if (entityFightInfos.teamId == entityOnCellFightInfos.teamId)
-                        {
-                            return (true);
-                        };
-                        return (false);
+                        ac.hide(false);
                     };
+                    fightContextFrame.entitiesFrame.updateEntityIconPosition(this._previewIdEntityIdAssoc[ac.id]);
                 };
             };
-            return (false);
+            this._removed = true;
         }
 
-        private function getPreview(pEntityId:int):AnimatedCharacter
+        public function getPreview(pEntityId:Number):AnimatedCharacter
         {
             var previewEntityId:*;
             var previewEntity:AnimatedCharacter;
@@ -330,181 +391,31 @@
             return (null);
         }
 
-        private function canTeleport(pEntityId:int):Boolean
+        private function createFighterPreview(pTargetId:Number, pDestPos:MapPoint, originalEntity:AnimatedCharacter, direction:int):AnimatedCharacter
         {
-            var monster:Monster;
-            var fcf:FightContextFrame = (Kernel.getWorker().getFrame(FightContextFrame) as FightContextFrame);
-            var entityInfos:GameFightFighterInformations = (fcf.entitiesFrame.getEntityInfos(pEntityId) as GameFightFighterInformations);
-            if ((entityInfos is GameFightMonsterInformations))
-            {
-                monster = Monster.getMonsterById((entityInfos as GameFightMonsterInformations).creatureGenericId);
-                if (!(monster.canSwitchPos))
-                {
-                    return (false);
-                };
-            };
-            var entityStates:Array = FightersStateManager.getInstance().getStates(pEntityId);
-            return (((!(entityStates)) || ((((entityStates.indexOf(6) == -1)) && ((entityStates.indexOf(97) == -1))))));
-        }
-
-        private function createFighterPreview(pTargetId:int, pDestPos:MapPoint, pDirection:uint):AnimatedCharacter
-        {
-            var fightContextFrame:FightContextFrame;
-            var entityInfos:GameFightFighterInformations;
-            var ttCacheName:String;
-            var ttName:String;
-            var actualEntity:AnimatedCharacter = (DofusEntities.getEntity(pTargetId) as AnimatedCharacter);
-            var parentEntity:TiphonSprite = this.getParentEntity(actualEntity);
+            originalEntity.alpha = 0.5;
             var previewEntity:AnimatedCharacter = this.getPreview(pTargetId);
-            if (!(previewEntity))
+            if (!previewEntity)
             {
-                previewEntity = new AnimatedCharacter(EntitiesManager.getInstance().getFreeEntityId(), parentEntity.look);
-                this.addPreviewSubEntities(parentEntity, previewEntity);
-                previewEntity.mouseEnabled = (previewEntity.mouseChildren = false);
-                if (!(this._previews))
+                previewEntity = cloneFighter(originalEntity);
+                if (!this._previews)
                 {
                     this._previews = new Vector.<AnimatedCharacter>(0);
                 };
                 this._previews.push(previewEntity);
                 this._previewIdEntityIdAssoc[previewEntity.id] = pTargetId;
             };
+            previewEntity.show(false);
             previewEntity.position = pDestPos;
-            previewEntity.setDirection(pDirection);
+            previewEntity.setAnimationAndDirection(originalEntity.getAnimation(), direction, true);
             previewEntity.display(PlacementStrataEnums.STRATA_PLAYER);
-            if (TooltipManager.isVisible(("tooltipOverEntity_" + pTargetId)))
-            {
-                fightContextFrame = (Kernel.getWorker().getFrame(FightContextFrame) as FightContextFrame);
-                entityInfos = (fightContextFrame.entitiesFrame.getEntityInfos(pTargetId) as GameFightFighterInformations);
-                ttCacheName = (((entityInfos is GameFightCharacterInformations)) ? ("PlayerShortInfos" + pTargetId) : ("EntityShortInfos" + pTargetId));
-                ttName = ("tooltipOverEntity_" + pTargetId);
-                TooltipManager.updatePosition(ttCacheName, ttName, previewEntity.absoluteBounds, LocationEnum.POINT_BOTTOM, LocationEnum.POINT_TOP, 0, true, true, previewEntity.position.cellId);
-            };
+            previewEntity.setCanSeeThrough(true);
+            var originalEntityId:Number = ((this._previewIdEntityIdAssoc[pTargetId]) ? this._previewIdEntityIdAssoc[pTargetId] : pTargetId);
+            updateEntityTooltip(originalEntityId, previewEntity);
             return (previewEntity);
-        }
-
-        private function getParentEntity(pEntity:TiphonSprite):TiphonSprite
-        {
-            var parentEntity:TiphonSprite;
-            var parent:TiphonSprite = pEntity.parentSprite;
-            while (parent)
-            {
-                parentEntity = parent;
-                parent = parent.parentSprite;
-            };
-            return (((!(parentEntity)) ? pEntity : parentEntity));
-        }
-
-        private function addPreviewSubEntities(pActualEntity:TiphonSprite, pPreviewEntity:TiphonSprite):void
-        {
-            var isRider:Boolean;
-            var carriedPreviewEntity:TiphonSprite;
-            if (((pActualEntity.look.getSubEntitiesFromCategory(SubEntityBindingPointCategoryEnum.HOOK_POINT_CATEGORY_MOUNT_DRIVER)) && (pActualEntity.look.getSubEntitiesFromCategory(SubEntityBindingPointCategoryEnum.HOOK_POINT_CATEGORY_MOUNT_DRIVER).length)))
-            {
-                isRider = true;
-                pPreviewEntity.setSubEntityBehaviour(SubEntityBindingPointCategoryEnum.HOOK_POINT_CATEGORY_MOUNT_DRIVER, new RiderBehavior());
-            };
-            var carryingEntity:TiphonSprite = pActualEntity;
-            if (((isRider) && (pActualEntity.getSubEntitySlot(SubEntityBindingPointCategoryEnum.HOOK_POINT_CATEGORY_MOUNT_DRIVER, 0))))
-            {
-                carryingEntity = (pActualEntity.getSubEntitySlot(SubEntityBindingPointCategoryEnum.HOOK_POINT_CATEGORY_MOUNT_DRIVER, 0) as TiphonSprite);
-            };
-            var carryingPreviewEntity:TiphonSprite = pPreviewEntity;
-            if (((isRider) && (pPreviewEntity.getSubEntitySlot(SubEntityBindingPointCategoryEnum.HOOK_POINT_CATEGORY_MOUNT_DRIVER, 0))))
-            {
-                carryingPreviewEntity = (pPreviewEntity.getSubEntitySlot(SubEntityBindingPointCategoryEnum.HOOK_POINT_CATEGORY_MOUNT_DRIVER, 0) as TiphonSprite);
-            };
-            var carriedEntity:TiphonSprite = (carryingEntity.getSubEntitySlot(SubEntityBindingPointCategoryEnum.HOOK_POINT_CATEGORY_LIFTED_ENTITY, 0) as TiphonSprite);
-            this.addTeamCircle(pActualEntity, pPreviewEntity);
-            if (carriedEntity)
-            {
-                carriedPreviewEntity = new TiphonSprite(carriedEntity.look);
-                carryingPreviewEntity.setSubEntityBehaviour(SubEntityBindingPointCategoryEnum.HOOK_POINT_CATEGORY_LIFTED_ENTITY, new CarrierSubEntityBehaviour());
-                carryingPreviewEntity.isCarrying = true;
-                carryingPreviewEntity.addAnimationModifier(CarrierAnimationModifier.getInstance());
-                carryingPreviewEntity.addSubEntity(carriedPreviewEntity, SubEntityBindingPointCategoryEnum.HOOK_POINT_CATEGORY_LIFTED_ENTITY, 0);
-                carriedPreviewEntity.setAnimation(AnimationEnum.ANIM_STATIQUE);
-                carryingPreviewEntity.setAnimation(AnimationEnum.ANIM_STATIQUE_CARRYING);
-                this.addPreviewSubEntities(carriedEntity, carriedPreviewEntity);
-            };
-        }
-
-        private function addTeamCircle(pActualEntity:TiphonSprite, pEntity:TiphonSprite):void
-        {
-            var id:int;
-            var entityId:int;
-            var entitiesFrame:FightEntitiesFrame = (Kernel.getWorker().getFrame(FightEntitiesFrame) as FightEntitiesFrame);
-            for each (entityId in entitiesFrame.getEntitiesIdsList())
-            {
-                if (DofusEntities.getEntity(entityId) == pActualEntity)
-                {
-                    id = entityId;
-                };
-            };
-            if (id != 0)
-            {
-                entitiesFrame.addCircleToFighter(pEntity, ((((entitiesFrame.getEntityInfos(id) as GameFightFighterInformations).teamId == TeamEnum.TEAM_DEFENDER)) ? 0xFF : 0xFF0000));
-            };
-        }
-
-        private function isValidCell(pCellId:int):Boolean
-        {
-            if (pCellId == -1)
-            {
-                return (false);
-            };
-            var cellData:CellData = MapDisplayManager.getInstance().getDataMapContainer().dataMap.cells[pCellId];
-            return (((cellData.mov) && (!(cellData.nonWalkableDuringFight))));
-        }
-
-        private function compareDistanceFromCaster(pEntityAId:uint, pEntityBId:uint):int
-        {
-            var entityA:IEntity = DofusEntities.getEntity(pEntityAId);
-            var entityB:IEntity = DofusEntities.getEntity(pEntityBId);
-            var distanceA:int = entityA.position.distanceToCell(this._casterPos);
-            var distanceB:int = entityB.position.distanceToCell(this._casterPos);
-            if (distanceA < distanceB)
-            {
-                return (-1);
-            };
-            if (distanceA > distanceB)
-            {
-                return (1);
-            };
-            return (0);
-        }
-
-        private function showTelefragTooltip(pActualEntityId:int, pPreviewEntity:AnimatedCharacter):void
-        {
-            var tooltipMaker:String;
-            var cacheName:String;
-            var fightContextFrame:FightContextFrame = (Kernel.getWorker().getFrame(FightContextFrame) as FightContextFrame);
-            var entityInfos:GameFightFighterInformations = (fightContextFrame.entitiesFrame.getEntityInfos(pActualEntityId) as GameFightFighterInformations);
-            TooltipManager.hide(("tooltipOverEntity_" + entityInfos.contextualId));
-            if ((entityInfos is GameFightCharacterInformations))
-            {
-                tooltipMaker = null;
-                cacheName = ("PlayerShortInfos" + entityInfos.contextualId);
-            }
-            else
-            {
-                if ((entityInfos is GameFightCompanionInformations))
-                {
-                    tooltipMaker = "companionFighter";
-                    cacheName = ("EntityShortInfos" + entityInfos.contextualId);
-                }
-                else
-                {
-                    tooltipMaker = "monsterFighter";
-                    cacheName = ("EntityShortInfos" + entityInfos.contextualId);
-                };
-            };
-            TooltipManager.show(entityInfos, pPreviewEntity.absoluteBounds, UiModuleManager.getInstance().getModule("Ankama_Tooltips"), false, ("tooltipOverEntity_" + entityInfos.contextualId), LocationEnum.POINT_BOTTOM, LocationEnum.POINT_TOP, 0, true, tooltipMaker, null, {
-                "telefrag":true,
-                "cellId":pPreviewEntity.position.cellId
-            }, cacheName, false, StrataEnum.STRATA_WORLD);
         }
 
 
     }
-}//package com.ankamagames.dofus.logic.game.fight.types
+} com.ankamagames.dofus.logic.game.fight.types
 

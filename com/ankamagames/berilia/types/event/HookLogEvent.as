@@ -1,7 +1,8 @@
-﻿package com.ankamagames.berilia.types.event
+package com.ankamagames.berilia.types.event
 {
     import com.ankamagames.jerakine.logger.LogEvent;
     import flash.utils.Dictionary;
+    import com.ankamagames.jerakine.utils.benchmark.monitoring.FpsManager;
     import flash.events.Event;
 
     public class HookLogEvent extends LogEvent 
@@ -18,6 +19,7 @@
             this._hookName = hookName;
             this._params = params;
             MEMORY_LOG[this] = 1;
+            FpsManager.getInstance().watchObject(this);
         }
 
         public function get name():String
@@ -37,5 +39,5 @@
 
 
     }
-}//package com.ankamagames.berilia.types.event
+} com.ankamagames.berilia.types.event
 

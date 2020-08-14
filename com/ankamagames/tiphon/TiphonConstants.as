@@ -1,4 +1,4 @@
-﻿package com.ankamagames.tiphon
+package com.ankamagames.tiphon
 {
     public class TiphonConstants 
     {
@@ -8,5 +8,5 @@
 
 
     }
-}//package com.ankamagames.tiphon
+} com.ankamagames.tiphon
 

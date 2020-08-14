@@ -1,4 +1,4 @@
-﻿package com.ankamagames.atouin.types
+package com.ankamagames.atouin.types
 {
     import flash.geom.Point;
     import flash.geom.Rectangle;
@@ -15,17 +15,13 @@
         private var _x:Number = 0;
         private var _y:Number = 0;
         private var _depth:int = 0;
-        public var datas:Array;
-        public var bitmaps:Array;
-        public var colorTransforms:Array;
+        public var datas:Array = new Array();
+        public var bitmaps:Array = new Array();
+        public var colorTransforms:Array = new Array();
         private var _numChildren:int = 0;
 
         public function BitmapCellContainer(id:uint)
         {
-            this.datas = new Array();
-            this.bitmaps = new Array();
-            this.colorTransforms = new Array();
-            super();
         }
 
         public function get cacheAsBitmap():Boolean
@@ -134,11 +130,11 @@
         {
             this.colorTransforms[this._numChildren] = colors;
             this.datas[this._numChildren] = data;
-            var _local_4 = this._numChildren++;
+            var _local_4:* = this._numChildren++;
             this.bitmaps[_local_4] = child;
         }
 
 
     }
-}//package com.ankamagames.atouin.types
+} com.ankamagames.atouin.types
 

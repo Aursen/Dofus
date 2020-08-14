@@ -1,4 +1,4 @@
-﻿package com.ankamagames.tiphon.types.cache
+package com.ankamagames.tiphon.types.cache
 {
     import com.ankamagames.tiphon.display.TiphonSprite;
     import com.ankamagames.tiphon.types.look.TiphonEntityLook;
@@ -16,5 +16,5 @@
         }
 
     }
-}//package com.ankamagames.tiphon.types.cache
+} com.ankamagames.tiphon.types.cache
 

@@ -1,9 +1,10 @@
-﻿package com.ankamagames.dofus.network.types.game.prism
+package com.ankamagames.dofus.network.types.game.prism
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.dofus.network.types.game.fight.ProtectedEntityWaitingForHelpInfo;
     import __AS3__.vec.Vector;
     import com.ankamagames.dofus.network.types.game.character.CharacterMinimalPlusLookInformations;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
     import com.ankamagames.dofus.network.ProtocolTypeManager;
@@ -15,17 +16,13 @@
         public static const protocolId:uint = 443;
 
         public var subAreaId:uint = 0;
-        public var waitingForHelpInfo:ProtectedEntityWaitingForHelpInfo;
-        public var allyCharactersInformations:Vector.<CharacterMinimalPlusLookInformations>;
-        public var enemyCharactersInformations:Vector.<CharacterMinimalPlusLookInformations>;
+        public var waitingForHelpInfo:ProtectedEntityWaitingForHelpInfo = new ProtectedEntityWaitingForHelpInfo();
+        public var allyCharactersInformations:Vector.<CharacterMinimalPlusLookInformations> = new Vector.<CharacterMinimalPlusLookInformations>();
+        public var enemyCharactersInformations:Vector.<CharacterMinimalPlusLookInformations> = new Vector.<CharacterMinimalPlusLookInformations>();
+        private var _waitingForHelpInfotree:FuncTree;
+        private var _allyCharactersInformationstree:FuncTree;
+        private var _enemyCharactersInformationstree:FuncTree;
 
-        public function PrismFightersInformation()
-        {
-            this.waitingForHelpInfo = new ProtectedEntityWaitingForHelpInfo();
-            this.allyCharactersInformations = new Vector.<CharacterMinimalPlusLookInformations>();
-            this.enemyCharactersInformations = new Vector.<CharacterMinimalPlusLookInformations>();
-            super();
-        }
 
         public function getTypeId():uint
         {
@@ -90,11 +87,7 @@
             var _item3:CharacterMinimalPlusLookInformations;
             var _id4:uint;
             var _item4:CharacterMinimalPlusLookInformations;
-            this.subAreaId = input.readVarUhShort();
-            if (this.subAreaId < 0)
-            {
-                throw (new Error((("Forbidden value (" + this.subAreaId) + ") on element of PrismFightersInformation.subAreaId.")));
-            };
+            this._subAreaIdFunc(input);
             this.waitingForHelpInfo = new ProtectedEntityWaitingForHelpInfo();
             this.waitingForHelpInfo.deserialize(input);
             var _allyCharactersInformationsLen:uint = input.readUnsignedShort();
@@ -119,7 +112,73 @@
             };
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_PrismFightersInformation(tree);
+        }
+
+        public function deserializeAsyncAs_PrismFightersInformation(tree:FuncTree):void
+        {
+            tree.addChild(this._subAreaIdFunc);
+            this._waitingForHelpInfotree = tree.addChild(this._waitingForHelpInfotreeFunc);
+            this._allyCharactersInformationstree = tree.addChild(this._allyCharactersInformationstreeFunc);
+            this._enemyCharactersInformationstree = tree.addChild(this._enemyCharactersInformationstreeFunc);
+        }
+
+        private function _subAreaIdFunc(input:ICustomDataInput):void
+        {
+            this.subAreaId = input.readVarUhShort();
+            if (this.subAreaId < 0)
+            {
+                throw (new Error((("Forbidden value (" + this.subAreaId) + ") on element of PrismFightersInformation.subAreaId.")));
+            };
+        }
+
+        private function _waitingForHelpInfotreeFunc(input:ICustomDataInput):void
+        {
+            this.waitingForHelpInfo = new ProtectedEntityWaitingForHelpInfo();
+            this.waitingForHelpInfo.deserializeAsync(this._waitingForHelpInfotree);
+        }
+
+        private function _allyCharactersInformationstreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._allyCharactersInformationstree.addChild(this._allyCharactersInformationsFunc);
+                i++;
+            };
+        }
+
+        private function _allyCharactersInformationsFunc(input:ICustomDataInput):void
+        {
+            var _id:uint = input.readUnsignedShort();
+            var _item:CharacterMinimalPlusLookInformations = ProtocolTypeManager.getInstance(CharacterMinimalPlusLookInformations, _id);
+            _item.deserialize(input);
+            this.allyCharactersInformations.push(_item);
+        }
+
+        private function _enemyCharactersInformationstreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._enemyCharactersInformationstree.addChild(this._enemyCharactersInformationsFunc);
+                i++;
+            };
+        }
+
+        private function _enemyCharactersInformationsFunc(input:ICustomDataInput):void
+        {
+            var _id:uint = input.readUnsignedShort();
+            var _item:CharacterMinimalPlusLookInformations = ProtocolTypeManager.getInstance(CharacterMinimalPlusLookInformations, _id);
+            _item.deserialize(input);
+            this.enemyCharactersInformations.push(_item);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.types.game.prism
+} com.ankamagames.dofus.network.types.game.prism
 

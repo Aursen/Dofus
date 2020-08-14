@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.types.event
+package com.ankamagames.berilia.types.event
 {
     import flash.utils.Dictionary;
     import flash.display.DisplayObject;
@@ -47,7 +47,7 @@
 
         public function get haveEvent():Boolean
         {
-            return (!((this._aEvent.length == 0)));
+            return (!(this._aEvent.length == 0));
         }
 
         public function push(sEventName:String):void
@@ -57,5 +57,5 @@
 
 
     }
-}//package com.ankamagames.berilia.types.event
+} com.ankamagames.berilia.types.event
 

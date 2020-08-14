@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.console.debug
+package com.ankamagames.dofus.console.debug
 {
     import com.ankamagames.jerakine.console.ConsoleInstructionHandler;
     import com.ankamagames.dofus.kernel.Kernel;
@@ -10,14 +10,14 @@
 
         public function handle(console:ConsoleHandler, cmd:String, args:Array):void
         {
-            var _local_4:uint;
+            var errorId:uint;
             switch (cmd)
             {
                 case "panic":
-                    _local_4 = uint(args[0]);
-                    console.output(("Kernel panic #" + _local_4));
-                    Kernel.panic(_local_4);
-                    return;
+                    errorId = uint(args[0]);
+                    console.output(("Kernel panic #" + errorId));
+                    Kernel.panic(errorId);
+                    break;
                 case "throw":
                     throw (new Error(args.join(" ")));
             };
@@ -32,7 +32,7 @@
                 case "throw":
                     return ("Throw an exception");
             };
-            return ((("No help for command '" + cmd) + "'"));
+            return (("No help for command '" + cmd) + "'");
         }
 
         public function getParamPossibilities(cmd:String, paramIndex:uint=0, currentParams:Array=null):Array
@@ -42,5 +42,5 @@
 
 
     }
-}//package com.ankamagames.dofus.console.debug
+} com.ankamagames.dofus.console.debug
 

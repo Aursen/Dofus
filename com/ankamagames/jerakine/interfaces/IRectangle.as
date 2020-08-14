@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.interfaces
+package com.ankamagames.jerakine.interfaces
 {
     import flash.geom.Point;
 
@@ -17,5 +17,5 @@
         function globalToLocal(_arg_1:Point):Point;
 
     }
-}//package com.ankamagames.jerakine.interfaces
+} com.ankamagames.jerakine.interfaces
 

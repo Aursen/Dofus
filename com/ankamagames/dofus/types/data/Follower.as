@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.types.data
+package com.ankamagames.dofus.types.data
 {
     import com.ankamagames.jerakine.entities.interfaces.IMovable;
     import com.ankamagames.dofus.types.entities.AnimatedCharacter;
@@ -13,16 +13,16 @@
         public var entity:IMovable;
         public var type:uint;
 
-        public function Follower(entity:IMovable, type:uint)
+        public function Follower(entity:IMovable, _arg_2:uint)
         {
             this.entity = entity;
-            this.type = type;
-            if (type != TYPE_MONSTER)
+            this.type = _arg_2;
+            if (_arg_2 != TYPE_MONSTER)
             {
                 (entity as AnimatedCharacter).allowMovementThrough = true;
             };
         }
 
     }
-}//package com.ankamagames.dofus.types.data
+} com.ankamagames.dofus.types.data
 

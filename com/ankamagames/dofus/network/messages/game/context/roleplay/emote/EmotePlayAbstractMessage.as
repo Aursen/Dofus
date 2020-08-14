@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.context.roleplay.emote
+package com.ankamagames.dofus.network.messages.game.context.roleplay.emote
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class EmotePlayAbstractMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -55,6 +55,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_EmotePlayAbstractMessage(output);
@@ -62,12 +70,12 @@
 
         public function serializeAs_EmotePlayAbstractMessage(output:ICustomDataOutput):void
         {
-            if ((((this.emoteId < 0)) || ((this.emoteId > 0xFF))))
+            if (((this.emoteId < 0) || (this.emoteId > 0xFF)))
             {
                 throw (new Error((("Forbidden value (" + this.emoteId) + ") on element emoteId.")));
             };
             output.writeByte(this.emoteId);
-            if ((((this.emoteStartTime < -9007199254740992)) || ((this.emoteStartTime > 9007199254740992))))
+            if (((this.emoteStartTime < -9007199254740992) || (this.emoteStartTime > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.emoteStartTime) + ") on element emoteStartTime.")));
             };
@@ -81,13 +89,34 @@
 
         public function deserializeAs_EmotePlayAbstractMessage(input:ICustomDataInput):void
         {
+            this._emoteIdFunc(input);
+            this._emoteStartTimeFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_EmotePlayAbstractMessage(tree);
+        }
+
+        public function deserializeAsyncAs_EmotePlayAbstractMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._emoteIdFunc);
+            tree.addChild(this._emoteStartTimeFunc);
+        }
+
+        private function _emoteIdFunc(input:ICustomDataInput):void
+        {
             this.emoteId = input.readUnsignedByte();
-            if ((((this.emoteId < 0)) || ((this.emoteId > 0xFF))))
+            if (((this.emoteId < 0) || (this.emoteId > 0xFF)))
             {
                 throw (new Error((("Forbidden value (" + this.emoteId) + ") on element of EmotePlayAbstractMessage.emoteId.")));
             };
+        }
+
+        private function _emoteStartTimeFunc(input:ICustomDataInput):void
+        {
             this.emoteStartTime = input.readDouble();
-            if ((((this.emoteStartTime < -9007199254740992)) || ((this.emoteStartTime > 9007199254740992))))
+            if (((this.emoteStartTime < -9007199254740992) || (this.emoteStartTime > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.emoteStartTime) + ") on element of EmotePlayAbstractMessage.emoteStartTime.")));
             };
@@ -95,5 +124,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.context.roleplay.emote
+} com.ankamagames.dofus.network.messages.game.context.roleplay.emote
 

@@ -1,9 +1,9 @@
-﻿package com.ankamagames.berilia.utils
+package com.ankamagames.berilia.utils
 {
     public class UiProperties 
     {
 
 
     }
-}//package com.ankamagames.berilia.utils
+} com.ankamagames.berilia.utils
 

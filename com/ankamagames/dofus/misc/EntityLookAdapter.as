@@ -1,9 +1,10 @@
-﻿package com.ankamagames.dofus.misc
+package com.ankamagames.dofus.misc
 {
     import com.ankamagames.dofus.network.types.game.look.SubEntity;
     import com.ankamagames.tiphon.types.look.TiphonEntityLook;
+    import com.ankamagames.dofus.types.entities.BreedSkinModifier;
     import com.ankamagames.dofus.network.types.game.look.EntityLook;
-    import com.ankamagames.berilia.managers.SecureCenter;
+    import flash.utils.Dictionary;
     import com.ankamagames.dofus.network.enums.SubEntityBindingPointCategoryEnum;
 
     public class EntityLookAdapter 
@@ -23,9 +24,10 @@
             {
                 o.addSkin(skin);
             };
-            if ((((n.bonesId == 1)) || ((n.bonesId == 2))))
+            if (((n.bonesId == 1) || (n.bonesId == 2)))
             {
                 o.defaultSkin = 1965;
+                o.skinModifier = new BreedSkinModifier();
             };
             var i:uint;
             while (i < n.indexedColors.length)
@@ -57,7 +59,7 @@
         public static function toNetwork(o:TiphonEntityLook):EntityLook
         {
             var colorIndexStr:String;
-            var subEntities:Array;
+            var subEntities:Dictionary;
             var catStr:String;
             var colorIndex:uint;
             var color:uint;
@@ -97,7 +99,6 @@
         public static function tiphonizeLook(rawLook:*):TiphonEntityLook
         {
             var entityLook:TiphonEntityLook;
-            rawLook = SecureCenter.unsecure(rawLook);
             if ((rawLook is TiphonEntityLook))
             {
                 entityLook = (rawLook as TiphonEntityLook);
@@ -115,7 +116,6 @@
 
         public static function getRiderLook(rawLook:*):TiphonEntityLook
         {
-            rawLook = SecureCenter.unsecure(rawLook);
             var oldEntityLook:TiphonEntityLook = tiphonizeLook(rawLook);
             var entityLook:TiphonEntityLook = oldEntityLook.clone();
             var ridderLook:TiphonEntityLook = entityLook.getSubEntity(SubEntityBindingPointCategoryEnum.HOOK_POINT_CATEGORY_MOUNT_DRIVER, 0);
@@ -132,5 +132,5 @@
 
 
     }
-}//package com.ankamagames.dofus.misc
+} com.ankamagames.dofus.misc
 

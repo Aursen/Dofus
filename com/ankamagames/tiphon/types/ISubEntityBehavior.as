@@ -1,4 +1,4 @@
-﻿package com.ankamagames.tiphon.types
+package com.ankamagames.tiphon.types
 {
     import com.ankamagames.tiphon.display.TiphonSprite;
 
@@ -9,5 +9,5 @@
         function remove():void;
 
     }
-}//package com.ankamagames.tiphon.types
+} com.ankamagames.tiphon.types
 

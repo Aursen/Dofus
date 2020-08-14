@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.types.entities
+package com.ankamagames.dofus.types.entities
 {
     import flash.display.Sprite;
     import com.ankamagames.jerakine.entities.interfaces.IEntity;
@@ -33,7 +33,7 @@
         private static var _running:Boolean;
         private static var _particules:Dictionary = new Dictionary();
 
-        private var _renderer:DisplayObjectRenderer;
+        private var _renderer:DisplayObjectRenderer = new DisplayObjectRenderer();
         private var _fxLoader:IResourceLoader;
         private var _startColors:Array;
         private var _explode:Boolean;
@@ -42,13 +42,12 @@
         private var _transformColor:Array;
         private var _type:uint;
 
-        public function ExplosionEntity(fxUri:Uri, startColors:Array, particleCount:uint=40, explode:Boolean=false, type:uint=2)
+        public function ExplosionEntity(fxUri:Uri, startColors:Array, particleCount:uint=40, explode:Boolean=false, _arg_5:uint=2)
         {
             var c:uint;
             var t:ColorTransform;
-            this._renderer = new DisplayObjectRenderer();
             super();
-            if (!(fxUri))
+            if (!fxUri)
             {
                 return;
             };
@@ -62,16 +61,16 @@
                     this._transformColor.push(t);
                 };
             };
-            this._type = type;
+            this._type = _arg_5;
             this._explode = explode;
             this._particleCount = particleCount;
-            if (!(OptionManager.getOptionManager("atouin").allowParticlesFx))
+            if (!OptionManager.getOptionManager("atouin").getOption("allowParticlesFx"))
             {
                 MAX_PARTICLES = 0;
             }
             else
             {
-                if (OptionManager.getOptionManager("dofus").dofusQuality >= 2)
+                if (OptionManager.getOptionManager("dofus").getOption("dofusQuality") >= 2)
                 {
                     MAX_PARTICLES = 800;
                 }
@@ -95,12 +94,12 @@
         }
 
 
-        public function get id():int
+        public function get id():Number
         {
             return (0);
         }
 
-        public function set id(nValue:int):void
+        public function set id(nValue:Number):void
         {
         }
 
@@ -119,7 +118,7 @@
             addEventListener(Event.ADDED_TO_STAGE, this.onAdded);
         }
 
-        private function createParticle(container:DisplayObjectContainer, count:uint, transformColor:Array, type:uint, subExplosionRatio:Number, fxClass:Array, deathCallback:Function, xStart:Number=0, yStart:Number=0):void
+        private function createParticle(container:DisplayObjectContainer, count:uint, transformColor:Array, _arg_4:uint, subExplosionRatio:Number, fxClass:Array, deathCallback:Function, xStart:Number=0, yStart:Number=0):void
         {
             var p:DisplayObject;
             var pType:uint;
@@ -132,32 +131,32 @@
                     p = (new (fxClass[Math.floor((fxClass.length * Math.random()))])() as DisplayObject);
                     p.x = xStart;
                     p.y = yStart;
-                    pType = type;
-                    if (type == TYPE_MIX)
+                    pType = _arg_4;
+                    if (_arg_4 == TYPE_MIX)
                     {
-                        pType = (((Math.random() > 0.5)) ? TYPE_TWIRL : TYPE_CLASSIC);
+                        pType = uint(((Math.random() > 0.5) ? TYPE_TWIRL : TYPE_CLASSIC));
                     };
                     if (transformColor)
                     {
-                        if (type == TYPE_MIX)
+                        if (_arg_4 == TYPE_MIX)
                         {
                             if (pType == TYPE_CLASSIC)
                             {
-                                colorIndex = Math.floor(((this._transformColor.length / 2) * Math.random()));
+                                colorIndex = uint(Math.floor(((this._transformColor.length / 2) * Math.random())));
                             }
                             else
                             {
-                                colorIndex = Math.floor(((this._transformColor.length / 2) + ((this._transformColor.length / 2) * Math.random())));
+                                colorIndex = uint(Math.floor(((this._transformColor.length / 2) + ((this._transformColor.length / 2) * Math.random()))));
                             };
                         }
                         else
                         {
-                            colorIndex = Math.floor((this._transformColor.length * Math.random()));
+                            colorIndex = uint(Math.floor((this._transformColor.length * Math.random())));
                         };
                         p.transform.colorTransform = this._transformColor[colorIndex];
                     };
                     container.addChild(p);
-                    _particules[p] = new TwirlParticle(p, 100, (Math.random() < subExplosionRatio), deathCallback, ((-(container.parent.y) + (20 * Math.random())) - 10), (((pType == TYPE_TWIRL)) ? 10 : 0));
+                    _particules[p] = new TwirlParticle(p, 100, (Math.random() < subExplosionRatio), deathCallback, ((-(container.parent.y) + (20 * Math.random())) - 10), ((pType == TYPE_TWIRL) ? 10 : 0));
                     CURRENT_PARTICLES++;
                 };
                 i++;
@@ -196,7 +195,7 @@
             rotation = parent.parent.parent.rotation;
             this.createParticle(this, this._particleCount, this._transformColor, this._type, ((this._explode) ? 0.2 : 0), this._fxClass, this.onParticuleDeath);
             removeEventListener(Event.ADDED_TO_STAGE, this.onAdded);
-            if (!(_running))
+            if (!_running)
             {
                 _running = true;
                 EnterFrameDispatcher.addEventListener(onFrame, "feeArtifice", 25);
@@ -205,5 +204,5 @@
 
 
     }
-}//package com.ankamagames.dofus.types.entities
+} com.ankamagames.dofus.types.entities
 

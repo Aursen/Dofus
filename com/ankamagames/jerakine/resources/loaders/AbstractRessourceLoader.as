@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.resources.loaders
+package com.ankamagames.jerakine.resources.loaders
 {
     import flash.events.EventDispatcher;
     import com.ankamagames.jerakine.resources.IResourceObserver;
@@ -42,7 +42,7 @@
         {
             var cr:CacheableResource;
             var resourceUrl:String;
-            if ((((((((uri.protocol == "pak")) || (!((uri.fileType == "swf"))))) || (!(uri.subPath)))) || ((uri.subPath.length == 0))))
+            if (((((uri.protocol == "pak") || (!(uri.fileType == "swf"))) || (!(uri.subPath))) || (uri.subPath.length == 0)))
             {
                 resourceUrl = (RES_CACHE_PREFIX + uri.toSum());
             }
@@ -59,7 +59,7 @@
 
         public function isInCache(uri:Uri):Boolean
         {
-            return (!((this.getCachedValue(uri) == null)));
+            return (!(this.getCachedValue(uri) == null));
         }
 
         public function cancel():void
@@ -76,7 +76,7 @@
             var cr:CacheableResource;
             var rle:ResourceLoadedEvent;
             var rlpe:ResourceLoaderProgressEvent;
-            if (((((!((uri.fileType == "swf"))) || (!(uri.subPath)))) || ((uri.subPath.length == 0))))
+            if ((((!(uri.fileType == "swf")) || (!(uri.subPath))) || (uri.subPath.length == 0)))
             {
                 resourceUrl = (RES_CACHE_PREFIX + uri.toSum());
             }
@@ -115,6 +115,10 @@
         protected function dispatchFailure(uri:Uri, errorMsg:String, errorCode:uint):void
         {
             var ree:ResourceErrorEvent;
+            if (this._filesTotal == 0)
+            {
+                return;
+            };
             this._filesLoaded++;
             if (hasEventListener(ResourceErrorEvent.ERROR))
             {
@@ -137,7 +141,7 @@
         private function dispatchComplete():void
         {
             var rlpe:ResourceLoaderProgressEvent;
-            if (!(this._completed))
+            if (!this._completed)
             {
                 this._completed = true;
                 rlpe = new ResourceLoaderProgressEvent(ResourceLoaderProgressEvent.LOADER_COMPLETE);
@@ -169,5 +173,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.resources.loaders
+} com.ankamagames.jerakine.resources.loaders
 

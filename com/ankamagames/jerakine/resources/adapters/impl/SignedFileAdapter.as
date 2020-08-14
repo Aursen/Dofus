@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.resources.adapters.impl
+package com.ankamagames.jerakine.resources.adapters.impl
 {
     import com.ankamagames.jerakine.resources.adapters.AbstractUrlLoaderAdapter;
     import com.ankamagames.jerakine.resources.adapters.IAdapter;
@@ -21,7 +21,7 @@
         private var _signatureKey:SignatureKey;
         private var _uri:Uri;
         private var _resourceObserverWrapper:ResourceObserverWrapper;
-        private var _resource;
+        private var _resource:*;
         private var _rawContent:Boolean;
 
         public function SignedFileAdapter(signatureKey:SignatureKey=null, rawContent:Boolean=false)
@@ -35,7 +35,7 @@
             {
                 this._signatureKey = _defaultSignatureKey;
             };
-            if (!(this._signatureKey))
+            if (!this._signatureKey)
             {
                 throw (new ArgumentError("A signature key must be defined (you can also set defaultSignatureKey)"));
             };
@@ -72,7 +72,7 @@
             super.free();
         }
 
-        override protected function getResource(dataFormat:String, data:*)
+        override protected function getResource(dataFormat:String, data:*):*
         {
             return (this._resource);
         }
@@ -88,7 +88,7 @@
             var content:ByteArray = new ByteArray();
             try
             {
-                if (!(sig.verify(data, content)))
+                if (!sig.verify(data, content))
                 {
                     dispatchFailure("Invalid signature", ResourceErrorCode.INVALID_SIGNATURE);
                     return;
@@ -100,14 +100,14 @@
             };
             var contentUri:Uri = new Uri(this._uri.path.substr(0, (this._uri.path.length - 1)));
             var contentAdapter:IAdapter = AdapterFactory.getAdapter(contentUri);
-            if (!(contentAdapter))
+            if (!contentAdapter)
             {
                 dispatchFailure("Cannot found any adapted adpter for file content", ResourceErrorCode.INCOMPATIBLE_ADAPTER);
                 return;
             };
-            if (!(this._rawContent))
+            if (!this._rawContent)
             {
-                if (!(this._resourceObserverWrapper))
+                if (!this._resourceObserverWrapper)
                 {
                     this._resourceObserverWrapper = new ResourceObserverWrapper(this.onContentLoad, this.onContentLoadFailed);
                 };
@@ -137,5 +137,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.resources.adapters.impl
+} com.ankamagames.jerakine.resources.adapters.impl
 

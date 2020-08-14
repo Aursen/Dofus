@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.messages
+package com.ankamagames.jerakine.messages
 {
     import flash.utils.Dictionary;
     import com.ankamagames.jerakine.utils.errors.AbstractMethodCallError;
@@ -46,13 +46,17 @@
             return (true);
         }
 
-        protected function register(type:Class, handler:Function):void
+        protected function register(_arg_1:Class, handler:Function):void
         {
-            if (((((!(this._allowsRegistration)) || (!(type)))) || (this._registeredTypes[type])))
+            if (((!(this._allowsRegistration)) || (!(_arg_1))))
             {
                 throw (new IllegalOperationError());
             };
-            this._registeredTypes[type] = handler;
+            if (this._registeredTypes[_arg_1])
+            {
+                throw (new IllegalOperationError("Cannot register twice a message"));
+            };
+            this._registeredTypes[_arg_1] = handler;
         }
 
         private function initialize():void
@@ -65,5 +69,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.messages
+} com.ankamagames.jerakine.messages
 

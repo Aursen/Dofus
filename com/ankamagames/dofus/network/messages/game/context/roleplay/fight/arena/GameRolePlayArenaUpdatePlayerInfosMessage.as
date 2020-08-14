@@ -1,24 +1,22 @@
-﻿package com.ankamagames.dofus.network.messages.game.context.roleplay.fight.arena
+package com.ankamagames.dofus.network.messages.game.context.roleplay.fight.arena
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
+    import com.ankamagames.dofus.network.types.game.context.roleplay.fight.arena.ArenaRankInfos;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
 
-    [Trusted]
     public class GameRolePlayArenaUpdatePlayerInfosMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 6301;
 
         private var _isInitialized:Boolean = false;
-        public var rank:uint = 0;
-        public var bestDailyRank:uint = 0;
-        public var bestRank:uint = 0;
-        public var victoryCount:uint = 0;
-        public var arenaFightcount:uint = 0;
+        public var solo:ArenaRankInfos = new ArenaRankInfos();
+        private var _solotree:FuncTree;
 
 
         override public function get isInitialized():Boolean
@@ -31,24 +29,16 @@
             return (6301);
         }
 
-        public function initGameRolePlayArenaUpdatePlayerInfosMessage(rank:uint=0, bestDailyRank:uint=0, bestRank:uint=0, victoryCount:uint=0, arenaFightcount:uint=0):GameRolePlayArenaUpdatePlayerInfosMessage
+        public function initGameRolePlayArenaUpdatePlayerInfosMessage(solo:ArenaRankInfos=null):GameRolePlayArenaUpdatePlayerInfosMessage
         {
-            this.rank = rank;
-            this.bestDailyRank = bestDailyRank;
-            this.bestRank = bestRank;
-            this.victoryCount = victoryCount;
-            this.arenaFightcount = arenaFightcount;
+            this.solo = solo;
             this._isInitialized = true;
             return (this);
         }
 
         override public function reset():void
         {
-            this.rank = 0;
-            this.bestDailyRank = 0;
-            this.bestRank = 0;
-            this.victoryCount = 0;
-            this.arenaFightcount = 0;
+            this.solo = new ArenaRankInfos();
             this._isInitialized = false;
         }
 
@@ -64,6 +54,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_GameRolePlayArenaUpdatePlayerInfosMessage(output);
@@ -71,31 +69,7 @@
 
         public function serializeAs_GameRolePlayArenaUpdatePlayerInfosMessage(output:ICustomDataOutput):void
         {
-            if ((((this.rank < 0)) || ((this.rank > 2300))))
-            {
-                throw (new Error((("Forbidden value (" + this.rank) + ") on element rank.")));
-            };
-            output.writeVarShort(this.rank);
-            if ((((this.bestDailyRank < 0)) || ((this.bestDailyRank > 2300))))
-            {
-                throw (new Error((("Forbidden value (" + this.bestDailyRank) + ") on element bestDailyRank.")));
-            };
-            output.writeVarShort(this.bestDailyRank);
-            if ((((this.bestRank < 0)) || ((this.bestRank > 2300))))
-            {
-                throw (new Error((("Forbidden value (" + this.bestRank) + ") on element bestRank.")));
-            };
-            output.writeVarShort(this.bestRank);
-            if (this.victoryCount < 0)
-            {
-                throw (new Error((("Forbidden value (" + this.victoryCount) + ") on element victoryCount.")));
-            };
-            output.writeVarShort(this.victoryCount);
-            if (this.arenaFightcount < 0)
-            {
-                throw (new Error((("Forbidden value (" + this.arenaFightcount) + ") on element arenaFightcount.")));
-            };
-            output.writeVarShort(this.arenaFightcount);
+            this.solo.serializeAs_ArenaRankInfos(output);
         }
 
         public function deserialize(input:ICustomDataInput):void
@@ -105,34 +79,27 @@
 
         public function deserializeAs_GameRolePlayArenaUpdatePlayerInfosMessage(input:ICustomDataInput):void
         {
-            this.rank = input.readVarUhShort();
-            if ((((this.rank < 0)) || ((this.rank > 2300))))
-            {
-                throw (new Error((("Forbidden value (" + this.rank) + ") on element of GameRolePlayArenaUpdatePlayerInfosMessage.rank.")));
-            };
-            this.bestDailyRank = input.readVarUhShort();
-            if ((((this.bestDailyRank < 0)) || ((this.bestDailyRank > 2300))))
-            {
-                throw (new Error((("Forbidden value (" + this.bestDailyRank) + ") on element of GameRolePlayArenaUpdatePlayerInfosMessage.bestDailyRank.")));
-            };
-            this.bestRank = input.readVarUhShort();
-            if ((((this.bestRank < 0)) || ((this.bestRank > 2300))))
-            {
-                throw (new Error((("Forbidden value (" + this.bestRank) + ") on element of GameRolePlayArenaUpdatePlayerInfosMessage.bestRank.")));
-            };
-            this.victoryCount = input.readVarUhShort();
-            if (this.victoryCount < 0)
-            {
-                throw (new Error((("Forbidden value (" + this.victoryCount) + ") on element of GameRolePlayArenaUpdatePlayerInfosMessage.victoryCount.")));
-            };
-            this.arenaFightcount = input.readVarUhShort();
-            if (this.arenaFightcount < 0)
-            {
-                throw (new Error((("Forbidden value (" + this.arenaFightcount) + ") on element of GameRolePlayArenaUpdatePlayerInfosMessage.arenaFightcount.")));
-            };
+            this.solo = new ArenaRankInfos();
+            this.solo.deserialize(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GameRolePlayArenaUpdatePlayerInfosMessage(tree);
+        }
+
+        public function deserializeAsyncAs_GameRolePlayArenaUpdatePlayerInfosMessage(tree:FuncTree):void
+        {
+            this._solotree = tree.addChild(this._solotreeFunc);
+        }
+
+        private function _solotreeFunc(input:ICustomDataInput):void
+        {
+            this.solo = new ArenaRankInfos();
+            this.solo.deserializeAsync(this._solotree);
         }
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.context.roleplay.fight.arena
+} com.ankamagames.dofus.network.messages.game.context.roleplay.fight.arena
 

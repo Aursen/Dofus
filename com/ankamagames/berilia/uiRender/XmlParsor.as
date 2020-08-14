@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.uiRender
+package com.ankamagames.berilia.uiRender
 {
     import flash.events.EventDispatcher;
     import com.ankamagames.berilia.utils.ComponentList;
@@ -7,20 +7,22 @@
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
     import flash.xml.XMLDocument;
+    import com.ankamagames.berilia.types.graphic.GraphicLocation;
     import com.ankamagames.jerakine.resources.loaders.IResourceLoader;
     import com.ankamagames.jerakine.resources.loaders.ResourceLoaderFactory;
     import com.ankamagames.jerakine.resources.loaders.ResourceLoaderType;
-    import com.ankamagames.jerakine.utils.misc.DescribeTypeCache;
     import com.ankamagames.jerakine.resources.events.ResourceLoadedEvent;
     import com.ankamagames.jerakine.resources.events.ResourceErrorEvent;
     import com.ankamagames.jerakine.types.Uri;
     import com.ankamagames.berilia.types.event.ParsorEvent;
     import com.ankamagames.berilia.types.event.PreProcessEndEvent;
-    import flash.xml.XMLNode;
     import com.ankamagames.berilia.types.uiDefinition.UiDefinition;
+    import flash.xml.XMLNode;
+    import com.ankamagames.berilia.types.uiDefinition.BasicElement;
     import com.ankamagames.berilia.enums.XmlAttributesEnum;
     import com.ankamagames.berilia.enums.XmlTagsEnum;
     import com.ankamagames.jerakine.managers.LangManager;
+    import com.ankamagames.berilia.types.graphic.GraphicSize;
     import com.ankamagames.berilia.types.uiDefinition.ContainerElement;
     import com.ankamagames.berilia.types.graphic.GraphicContainer;
     import com.ankamagames.berilia.types.uiDefinition.ScrollContainerElement;
@@ -35,12 +37,13 @@
     import com.ankamagames.berilia.types.uiDefinition.ButtonElement;
     import com.ankamagames.berilia.types.graphic.ButtonContainer;
     import com.ankamagames.berilia.types.uiDefinition.ComponentElement;
-    import flash.utils.getDefinitionByName;
     import flash.system.ApplicationDomain;
-    import com.ankamagames.berilia.types.uiDefinition.BasicElement;
+    import com.adobe.utils.StringUtil;
     import com.ankamagames.berilia.enums.StatesEnum;
-    import com.ankamagames.berilia.types.graphic.GraphicSize;
-    import com.ankamagames.berilia.types.graphic.GraphicLocation;
+    import com.ankamagames.jerakine.data.GameDataField;
+    import __AS3__.vec.Vector;
+    import com.ankamagames.jerakine.utils.misc.classInfo.MetadataInfo;
+    import com.ankamagames.jerakine.utils.misc.DescribeTypeCache;
     import com.ankamagames.berilia.enums.LocationTypeEnum;
     import com.ankamagames.berilia.managers.BindsManager;
     import com.ankamagames.berilia.enums.EventEnums;
@@ -58,18 +61,15 @@
         protected const _GridItemList:GridItemList = null;
         protected const _log:Logger = Log.getLogger(getQualifiedClassName(XmlParsor));
 
-        private var _xmlDoc:XMLDocument;
-        private var _sUrl:String;
+        protected var _xmlDoc:XMLDocument;
+        protected var _sUrl:String;
         protected var _aName:Array;
-        private var _loader:IResourceLoader;
-        private var _describeType:Function;
+        protected var _glPoint:GraphicLocation;
+        private var _loader:IResourceLoader = ResourceLoaderFactory.getLoader(ResourceLoaderType.PARALLEL_LOADER);
         public var rootPath:String;
 
         public function XmlParsor()
         {
-            this._loader = ResourceLoaderFactory.getLoader(ResourceLoaderType.PARALLEL_LOADER);
-            this._describeType = DescribeTypeCache.typeDescription;
-            super();
             this._loader.addEventListener(ResourceLoadedEvent.LOADED, this.onXmlLoadComplete);
             this._loader.addEventListener(ResourceErrorEvent.ERROR, this.onXmlLoadError);
         }
@@ -81,7 +81,7 @@
 
         public function get xmlDocString():String
         {
-            return (((this._xmlDoc) ? this._xmlDoc.toString() : null));
+            return ((this._xmlDoc) ? this._xmlDoc.toString() : null);
         }
 
         public function processFile(sUrl:String):void
@@ -121,14 +121,11 @@
                         if (tmp[i].substr((tmp[i].length - 1)) != "/")
                         {
                             tag = tmp[i].match(regOpenTag)[0];
-                            if (!(openTag[tag]))
+                            if (!openTag[tag])
                             {
                                 openTag[tag] = 0;
                             };
-                            var _local_4 = openTag;
-                            var _local_5 = tag;
-                            var _local_6 = (_local_4[_local_5] + 1);
-                            _local_4[_local_5] = _local_6;
+                            openTag[tag]++;
                         };
                         i++;
                     };
@@ -139,28 +136,25 @@
                     while (i < tmp.length)
                     {
                         tag = ("<" + tmp[i].substr(2));
-                        if (!(closeTag[tag]))
+                        if (!closeTag[tag])
                         {
                             closeTag[tag] = 0;
                         };
-                        _local_4 = closeTag;
-                        _local_5 = tag;
-                        _local_6 = (_local_4[_local_5] + 1);
-                        _local_4[_local_5] = _local_6;
+                        closeTag[tag]++;
                         i++;
                     };
                 };
                 errorLog = "";
                 for (tag in openTag)
                 {
-                    if (((!(closeTag[tag])) || (!((closeTag[tag] == openTag[tag])))))
+                    if (((!(closeTag[tag])) || (!(closeTag[tag] == openTag[tag]))))
                     {
                         errorLog = (errorLog + (("\n - " + tag) + " have no closing tag"));
                     };
                 };
                 for (tag in closeTag)
                 {
-                    if (((!(openTag[tag])) || (!((openTag[tag] == closeTag[tag])))))
+                    if (((!(openTag[tag])) || (!(openTag[tag] == closeTag[tag]))))
                     {
                         errorLog = (errorLog + (("\n - </" + tag.substr(1)) + "> is lonely closing tag"));
                     };
@@ -181,9 +175,18 @@
 
         private function mainProcess():void
         {
+            var parsedMainNode:UiDefinition;
+            var parsorEvent:ParsorEvent;
+            var retour:Boolean;
             if (((this._xmlDoc) && (this._xmlDoc.firstChild)))
             {
-                dispatchEvent(new ParsorEvent(this.parseMainNode(this._xmlDoc.firstChild), false));
+                parsedMainNode = this.parseMainNode(this._xmlDoc.firstChild);
+                parsorEvent = new ParsorEvent(parsedMainNode, false);
+                retour = dispatchEvent(parsorEvent);
+                if (!retour)
+                {
+                    this._log.fatal("fail dispatch event after completing parsing ui");
+                };
             }
             else
             {
@@ -195,9 +198,11 @@
         {
             var xnNode:XMLNode;
             var i:int;
+            var tmpBe:BasicElement;
+            var suggestion:String;
             var ui:UiDefinition = new UiDefinition();
             var aNodes:Array = mainNodes.childNodes;
-            if (!(aNodes.length))
+            if (!aNodes.length)
             {
                 return (null);
             };
@@ -209,6 +214,9 @@
             var attributesScalable:String = mainNodesAttributes[XmlAttributesEnum.ATTRIBUTE_SCALABLE];
             var attributesFocus:String = mainNodesAttributes[XmlAttributesEnum.ATTRIBUTE_FOCUS];
             var attributesTransmitFocus:String = mainNodesAttributes[XmlAttributesEnum.ATTRIBUTE_TRANSMITFOCUS];
+            var attributesLabelDebug:String = mainNodesAttributes[XmlAttributesEnum.ATTRIBUTE_LABEL_DEBUG];
+            var attributesFullscreen:String = mainNodesAttributes[XmlAttributesEnum.ATTRIBUTE_FULLSCREEN];
+            var attributesSetOnTopOnClick:String = mainNodesAttributes[XmlAttributesEnum.ATTRIBUTE_SETONTOP_ONCLICK];
             if (attributesDebug)
             {
                 ui.debug = (attributesDebug == "true");
@@ -237,7 +245,20 @@
             {
                 ui.transmitFocus = (attributesTransmitFocus == "true");
             };
+            if (attributesLabelDebug)
+            {
+                ui.labelDebug = (attributesLabelDebug == "true");
+            };
+            if (attributesFullscreen)
+            {
+                ui.fullscreen = (attributesFullscreen == "true");
+            };
+            if (attributesSetOnTopOnClick)
+            {
+                ui.setOnTopOnClick = (attributesSetOnTopOnClick == "true");
+            };
             var numNodes:int = aNodes.length;
+            this._glPoint = new GraphicLocation();
             i = 0;
             while (i < numNodes)
             {
@@ -251,17 +272,27 @@
                     case XmlTagsEnum.TAG_SCROLLCONTAINER:
                     case XmlTagsEnum.TAG_STATECONTAINER:
                     case XmlTagsEnum.TAG_BUTTON:
-                        ui.graphicTree.push(this.parseGraphicElement(xnNode));
+                        tmpBe = this.parseGraphicElement(xnNode);
+                        if (tmpBe)
+                        {
+                            ui.graphicTree.push(tmpBe);
+                        };
                         break;
                     case XmlTagsEnum.TAG_SHORTCUTS:
                         ui.shortcutsEvents = this.parseShortcutsEvent(xnNode);
                         break;
                     default:
-                        this._log.warn(((((("[" + this._sUrl) + "] ") + xnNode.nodeName) + " is not allowed or unknown. ") + this.suggest(xnNode.nodeName, [XmlTagsEnum.TAG_CONTAINER, XmlTagsEnum.TAG_STATECONTAINER, XmlTagsEnum.TAG_BUTTON, XmlTagsEnum.TAG_SHORTCUTS])));
+                        suggestion = "";
+                        if (((xnNode) && (xnNode.nodeName)))
+                        {
+                            suggestion = this.suggest(xnNode.nodeName, [XmlTagsEnum.TAG_CONTAINER, XmlTagsEnum.TAG_STATECONTAINER, XmlTagsEnum.TAG_BUTTON, XmlTagsEnum.TAG_SHORTCUTS]);
+                        };
+                        this._log.warn(((((("[" + this._sUrl) + "] ") + xnNode.nodeName) + " is not allowed or unknown. ") + suggestion));
                 };
                 i = (i + 1);
             };
             this.cleanLocalConstants(ui.constants);
+            this._glPoint = null;
             return (ui);
         }
 
@@ -296,7 +327,7 @@
                 else
                 {
                     nameAttribute = xnCurrentNode.attributes["name"];
-                    if (!(nameAttribute))
+                    if (!nameAttribute)
                     {
                         this._log.error(("Constant name's not found in " + this._sUrl));
                     }
@@ -319,7 +350,7 @@
                                 }
                                 else
                                 {
-                                    if ((((typeAttribute == "UINT")) || ((typeAttribute == "INT"))))
+                                    if (((typeAttribute == "UINT") || (typeAttribute == "INT")))
                                     {
                                         constants[nameAttribute] = int(value);
                                     }
@@ -356,20 +387,19 @@
             var xnCurrentNode:XMLNode;
             var i:int;
             var j:String;
-            var _local_9:Class;
-            var _local_10:*;
-            var _local_11:Object;
-            var xmlStr:String;
-            var contentstr:String;
-            var _local_14:Class;
+            var s:GraphicSize;
+            var c:*;
+            var val:*;
+            var tmpBasicElement:BasicElement;
+            var tmpBe:BasicElement;
             var xmlStr2:String;
             var xnNodeChildNodes:Array = xnNode.childNodes;
             var xnNodeChildNodesLength:int = xnNodeChildNodes.length;
-            if (!(parentNode))
+            if (!parentNode)
             {
                 parentNode = xnNode;
             };
-            if (!(be))
+            if (!be)
             {
                 switch (parentNode.nodeName)
                 {
@@ -424,6 +454,12 @@
                     case XmlAttributesEnum.ATTRIBUTE_STRATA:
                         be.strata = this.getStrataNum(parentNode.attributes[j]);
                         break;
+                    case XmlAttributesEnum.ATTRIBUTE_IGNORE:
+                        if (((parentNode.attributes[j] == "1") || (parentNode.attributes[j] == "true")))
+                        {
+                            return (null);
+                        };
+                        break;
                     default:
                         this._log.warn((((((("[" + this._sUrl) + "] Unknown attribute '") + j) + "' in ") + XmlTagsEnum.TAG_CONTAINER) + " tag"));
                 };
@@ -438,7 +474,11 @@
                         be.anchors = this.parseAnchors(xnCurrentNode);
                         break;
                     case XmlTagsEnum.TAG_SIZE:
-                        be.size = this.parseSize(xnCurrentNode, true).toSizeElement();
+                        s = this.parseSize(xnCurrentNode, true);
+                        if (s)
+                        {
+                            be.size = s.toSizeElement();
+                        };
                         break;
                     case XmlTagsEnum.TAG_EVENTS:
                         be.event = this.parseEvent(xnCurrentNode);
@@ -465,7 +505,11 @@
                             case XmlTagsEnum.TAG_INPUTCOMBOBOX:
                             case XmlTagsEnum.TAG_TREE:
                             case XmlTagsEnum.TAG_GRID:
-                                ContainerElement(be).childs.push(this.parseGraphicElement(xnCurrentNode));
+                                tmpBasicElement = this.parseGraphicElement(xnCurrentNode);
+                                if (tmpBasicElement)
+                                {
+                                    ContainerElement(be).childs.push(tmpBasicElement);
+                                };
                                 break;
                             default:
                                 this._log.warn(((((("[" + this._sUrl) + "] ") + parentNode.nodeName) + " cannot contains ") + xnCurrentNode.nodeName));
@@ -482,7 +526,10 @@
                             case XmlTagsEnum.TAG_COMBOBOX:
                             case XmlTagsEnum.TAG_INPUTCOMBOBOX:
                             case XmlTagsEnum.TAG_TREE:
-                                ContainerElement(be).childs.push(this.parseStateContainer(xnCurrentNode, xnCurrentNode.nodeName));
+                                if (xnCurrentNode.attributes["ignore"] != "true")
+                                {
+                                    ContainerElement(be).childs.push(this.parseStateContainer(xnCurrentNode, xnCurrentNode.nodeName));
+                                };
                                 break;
                             default:
                                 this._log.warn((((("[" + this._sUrl) + "] ") + parentNode.nodeName) + " cannot contains Button"));
@@ -492,52 +539,36 @@
                         switch (parentNode.nodeName)
                         {
                             case XmlTagsEnum.TAG_CONTAINER:
-                                _local_9 = GraphicContainer;
+                                c = new GraphicContainer();
                                 break;
                             case XmlTagsEnum.TAG_BUTTON:
-                                _local_9 = ButtonContainer;
+                                c = new ButtonContainer();
                                 break;
                             case XmlTagsEnum.TAG_STATECONTAINER:
-                                _local_9 = StateContainer;
+                                c = new StateContainer();
                                 break;
                             case XmlTagsEnum.TAG_SCROLLCONTAINER:
-                                _local_9 = ScrollContainer;
+                                c = new ScrollContainer();
                                 break;
                             case XmlTagsEnum.TAG_GRID:
-                                _local_9 = Grid;
+                                c = new Grid();
                                 break;
                             case XmlTagsEnum.TAG_COMBOBOX:
-                                _local_9 = ComboBox;
+                                c = new ComboBox();
                                 break;
                             case XmlTagsEnum.TAG_INPUTCOMBOBOX:
-                                _local_9 = InputComboBox;
+                                c = new InputComboBox();
                                 break;
                             case XmlTagsEnum.TAG_TREE:
-                                _local_9 = Tree;
+                                c = new Tree();
                                 break;
                         };
-                        _local_11 = this.getClassDesc(_local_9);
-                        if (_local_11[xnCurrentNode.nodeName])
+                        if (((!(c == null)) && (c.hasOwnProperty(xnCurrentNode.nodeName))))
                         {
                             if (xnCurrentNode.firstChild)
                             {
-                                xmlStr = xnCurrentNode.toString();
-                                contentstr = xmlStr.substr((xnCurrentNode.nodeName.length + 2), ((xmlStr.length - (xnCurrentNode.nodeName.length * 2)) - 5));
-                                _local_10 = LangManager.getInstance().replaceKey(contentstr);
-                                switch (_local_11[xnCurrentNode.nodeName])
-                                {
-                                    case "Boolean":
-                                        _local_10 = !((_local_10 == "false"));
-                                        break;
-                                    default:
-                                        if ((((_local_10.charAt(0) == "[")) && ((_local_10.charAt((_local_10.length - 1)) == "]"))))
-                                        {
-                                            break;
-                                        };
-                                        _local_14 = (getDefinitionByName(_local_11[xnCurrentNode.nodeName]) as Class);
-                                        _local_10 = new (_local_14)(_local_10);
-                                };
-                                ContainerElement(be).properties[xnCurrentNode.nodeName] = _local_10;
+                                val = LangManager.getInstance().replaceKey(xnCurrentNode.firstChild.toString());
+                                ContainerElement(be).properties[xnCurrentNode.nodeName] = this.getValueFromString(c, xnCurrentNode.nodeName, val);
                             };
                         }
                         else
@@ -554,11 +585,18 @@
                                 case XmlTagsEnum.TAG_TREE:
                                     if (ApplicationDomain.currentDomain.hasDefinition(("com.ankamagames.berilia.components." + xnCurrentNode.nodeName)))
                                     {
-                                        ContainerElement(be).childs.push(this.parseGraphicElement(xnCurrentNode));
+                                        tmpBe = this.parseGraphicElement(xnCurrentNode);
+                                        if (tmpBe)
+                                        {
+                                            ContainerElement(be).childs.push(tmpBe);
+                                        };
                                     }
                                     else
                                     {
-                                        this._log.warn(((((("[" + this._sUrl) + "] ") + xnCurrentNode.nodeName) + " is unknown component / property on ") + parentNode.nodeName));
+                                        if (((!(xnCurrentNode.nodeValue)) || (StringUtil.trim(xnCurrentNode.nodeValue).length > 0)))
+                                        {
+                                            this._log.warn(((((("[" + this._sUrl) + "] ") + xnCurrentNode.nodeName) + " is unknown component / property on ") + parentNode.nodeName));
+                                        };
                                     };
                                     break;
                                 default:
@@ -579,14 +617,14 @@
             return (be);
         }
 
-        protected function parseStateContainer(xnNode:XMLNode, elementType:String)
+        protected function parseStateContainer(xnNode:XMLNode, elementType:String):*
         {
             var xnCurrentNode:XMLNode;
             var i:int;
             var stateContainerElement:StateContainerElement;
             var stateConst:*;
-            var _local_9:String;
-            var _local_10:Array;
+            var stateType:String;
+            var possibilities:Array;
             var xnNodeChildNodes:Array = xnNode.childNodes;
             var xnNodeChildNodesLength:int = xnNodeChildNodes.length;
             if (elementType == XmlTagsEnum.TAG_BUTTON)
@@ -608,17 +646,17 @@
                         this.parseGraphicElement(xnCurrentNode, xnNode, stateContainerElement);
                         break;
                     case XmlTagsEnum.TAG_STATE:
-                        _local_9 = xnCurrentNode.attributes[XmlAttributesEnum.ATTRIBUTE_TYPE];
-                        if (_local_9)
+                        stateType = xnCurrentNode.attributes[XmlAttributesEnum.ATTRIBUTE_TYPE];
+                        if (stateType)
                         {
                             if (elementType == XmlTagsEnum.TAG_STATECONTAINER)
                             {
-                                stateConst = _local_9;
+                                stateConst = stateType;
                             }
                             else
                             {
                                 stateConst = 9999;
-                                switch (_local_9)
+                                switch (stateType)
                                 {
                                     case StatesEnum.STATE_CLICKED_STRING:
                                         stateConst = StatesEnum.STATE_CLICKED;
@@ -639,13 +677,13 @@
                                         stateConst = StatesEnum.STATE_SELECTED_CLICKED;
                                         break;
                                     default:
-                                        _local_10 = new Array(StatesEnum.STATE_CLICKED_STRING, StatesEnum.STATE_OVER_STRING, StatesEnum.STATE_SELECTED_STRING, StatesEnum.STATE_SELECTED_OVER_STRING, StatesEnum.STATE_SELECTED_CLICKED_STRING, StatesEnum.STATE_DISABLED_STRING);
-                                        this._log.warn(((_local_9 + " is not a valid state") + this.suggest(_local_9, _local_10)));
+                                        possibilities = new Array(StatesEnum.STATE_CLICKED_STRING, StatesEnum.STATE_OVER_STRING, StatesEnum.STATE_SELECTED_STRING, StatesEnum.STATE_SELECTED_OVER_STRING, StatesEnum.STATE_SELECTED_CLICKED_STRING, StatesEnum.STATE_DISABLED_STRING);
+                                        this._log.warn(((((("[" + this._sUrl) + "] ") + stateType) + " is not a valid state ") + this.suggest(stateType, possibilities)));
                                 };
                             };
                             if (stateConst != 9999)
                             {
-                                if (!(stateContainerElement.stateChangingProperties[stateConst]))
+                                if (!stateContainerElement.stateChangingProperties[stateConst])
                                 {
                                     stateContainerElement.stateChangingProperties[stateConst] = new Array();
                                 };
@@ -654,11 +692,11 @@
                         }
                         else
                         {
-                            this._log.warn((((XmlTagsEnum.TAG_STATE + " must have attribute [") + XmlAttributesEnum.ATTRIBUTE_TYPE) + "]"));
+                            this._log.warn((((((("[" + this._sUrl) + "] ") + XmlTagsEnum.TAG_STATE) + " must have attribute [") + XmlAttributesEnum.ATTRIBUTE_TYPE) + "]"));
                         };
                         break;
                     default:
-                        this._log.warn((((elementType + " does not allow ") + xnCurrentNode.nodeName) + this.suggest(xnCurrentNode.nodeName, [XmlTagsEnum.TAG_COMMON, XmlTagsEnum.TAG_STATE])));
+                        this._log.warn((((((("[" + this._sUrl) + "] ") + elementType) + " does not allow ") + xnCurrentNode.nodeName) + this.suggest(xnCurrentNode.nodeName, [XmlTagsEnum.TAG_COMMON, XmlTagsEnum.TAG_STATE])));
                 };
                 i = (i + 1);
             };
@@ -678,17 +716,24 @@
             var xnNodeChildNodes:Array = xnNode.childNodes;
             var xnNodeChildNodesLength:int = xnNodeChildNodes.length;
             i = 0;
-            while (i < xnNodeChildNodesLength)
+            for (;i < xnNodeChildNodesLength;(i = (i + 1)))
             {
                 xnCurrentNode = xnNodeChildNodes[i];
                 if (xnCurrentNode.nodeName == XmlTagsEnum.TAG_SETPROPERTY)
                 {
+                    if (xnCurrentNode.attributes[XmlAttributesEnum.ATTRIBUTE_IGNORE])
+                    {
+                        if (xnCurrentNode.attributes[XmlAttributesEnum.ATTRIBUTE_IGNORE] == "true")
+                        {
+                            continue;
+                        };
+                    };
                     target = xnCurrentNode.attributes[XmlAttributesEnum.ATTRIBUTE_TARGET];
                     if (target)
                     {
                         if (this._aName[target])
                         {
-                            if (!(item[target]))
+                            if (!item[target])
                             {
                                 item[target] = new Array();
                             };
@@ -706,71 +751,57 @@
                         }
                         else
                         {
-                            this._log.warn(((('Unknown reference to "' + target) + '" in ') + XmlTagsEnum.TAG_SETPROPERTY));
+                            this._log.warn((((((("[" + this._sUrl) + "] ") + 'Unknown reference to "') + target) + '" in ') + XmlTagsEnum.TAG_SETPROPERTY));
                         };
                     }
                     else
                     {
-                        this._log.warn("Cannot set button properties, not yet implemented");
+                        this._log.warn(((("[" + this._sUrl) + "] ") + "Cannot set button properties, not yet implemented"));
                     };
                 }
                 else
                 {
-                    this._log.warn((((((("Only " + XmlTagsEnum.TAG_SETPROPERTY) + " tags are authorized in ") + XmlTagsEnum.TAG_STATE) + " tags (found ") + xnCurrentNode.nodeName) + ")"));
+                    this._log.warn(((((((((("[" + this._sUrl) + "] ") + "Only ") + XmlTagsEnum.TAG_SETPROPERTY) + " tags are authorized in ") + XmlTagsEnum.TAG_STATE) + " tags (found ") + xnCurrentNode.nodeName) + ")"));
                 };
-                i = (i + 1);
             };
         }
 
         private function cleanComponentProperty(be:BasicElement, properties:Array=null):Boolean
         {
             var val:*;
-            var clazz:Class;
             var sProperty:String;
             var key:String;
-            var _local_10:Array;
-            var _local_11:String;
-            if (!(properties))
+            var possibilities:Array;
+            var propName:String;
+            if (!properties)
             {
                 properties = be.properties;
             };
-            var cComponent:Class = (getDefinitionByName(be.className) as Class);
-            var classProp:Object = this.getClassDesc(cComponent);
-            var aNewProperties:Array = new Array();
+            var cComponent:Class = GameDataField.getClassByName(be.className);
+            var cInstance:* = new (cComponent)();
+            var aNewProperties:Array = [];
             for (sProperty in properties)
             {
-                if (classProp[sProperty])
+                if (cInstance.hasOwnProperty(sProperty))
                 {
-                    val = LangManager.getInstance().replaceKey(properties[sProperty]);
-                    switch (classProp[sProperty])
+                    if (((sProperty == "text") && (properties["parseText"] == "false")))
                     {
-                        case "Boolean":
-                            val = !((val == "false"));
-                            break;
-                        case getQualifiedClassName(Uri):
-                            clazz = (getDefinitionByName(classProp[sProperty]) as Class);
-                            val = new (clazz)(val);
-                            break;
-                        case "*":
-                            break;
-                        default:
-                            if ((((val.charAt(0) == "[")) && ((val.charAt((val.length - 1)) == "]"))))
-                            {
-                                break;
-                            };
-                            clazz = (getDefinitionByName(classProp[sProperty]) as Class);
-                            val = new (clazz)(val);
+                        val = properties[sProperty];
+                    }
+                    else
+                    {
+                        val = LangManager.getInstance().replaceKey(properties[sProperty]);
                     };
-                    aNewProperties[sProperty] = val;
+                    aNewProperties[sProperty] = this.getValueFromString(cInstance, sProperty, val);
                 }
                 else
                 {
-                    _local_10 = new Array();
-                    for (_local_11 in classProp)
+                    possibilities = [];
+                    for (propName in cInstance)
                     {
-                        _local_10.push(_local_11);
+                        possibilities.push(propName);
                     };
-                    this._log.warn(((((((("[" + this._sUrl) + "]") + sProperty) + " is unknown for ") + be.className) + " component") + this.suggest(sProperty, _local_10)));
+                    this._log.warn(((((((("[" + this._sUrl) + "] ") + sProperty) + " is unknown for ") + be.className) + " component ") + this.suggest(sProperty, possibilities)));
                 };
             };
             for (key in aNewProperties)
@@ -780,26 +811,34 @@
             return (true);
         }
 
-        protected function getClassDesc(o:Object):Object
+        private function getValueFromString(cInstance:*, sProperty:String, val:*):*
         {
-            var acc:XML;
-            var v:XML;
-            var cn:String = getQualifiedClassName(o);
-            if (_classDescCache[cn])
+            var metas:Vector.<MetadataInfo>;
+            var isUri:Boolean;
+            var meta:MetadataInfo;
+            if (((val == "true") || (val == "false")))
             {
-                return (_classDescCache[cn]);
+                return (!(val == "false"));
             };
-            var xmlClassDef:XML = this._describeType(o);
-            var res:Object = new Object();
-            for each (acc in xmlClassDef..accessor)
+            if (this.isNumber(val))
             {
-                res[acc.@name.toString()] = acc.@type.toString();
+                return (parseFloat(val));
             };
-            for each (v in xmlClassDef..variable)
+            metas = DescribeTypeCache.getVariableMetadata(cInstance, sProperty);
+            isUri = false;
+            for each (meta in metas)
             {
-                res[v.@name.toString()] = v.@type.toString();
+                if (meta.name == "Uri")
+                {
+                    isUri = true;
+                    break;
+                };
             };
-            return (res);
+            if (isUri)
+            {
+                return (new Uri(val));
+            };
+            return (val);
         }
 
         protected function parseSize(xnNode:XMLNode, bAllowRelativeSize:Boolean):GraphicSize
@@ -808,9 +847,19 @@
             var k:int;
             var posX:String;
             var posY:String;
-            if (xnNode.attributes.length)
+            if (((xnNode.attributes.length > 0) || (xnNode.attributes["ignore"])))
             {
-                this._log.warn((((("[" + this._sUrl) + "]") + xnNode.nodeName) + " cannot have attribut"));
+                if (xnNode.attributes["ignore"])
+                {
+                    if (xnNode.attributes["ignore"] == "true")
+                    {
+                        return (null);
+                    };
+                }
+                else
+                {
+                    this._log.warn((((("[" + this._sUrl) + "] ") + xnNode.nodeName) + " cannot have attribut except ignore"));
+                };
             };
             var xnNodeChildNodes:Array = xnNode.childNodes;
             var xnNodeChildNodesLength:int = xnNodeChildNodes.length;
@@ -821,9 +870,9 @@
                 xnCurrentNode = xnNodeChildNodes[k];
                 if (xnCurrentNode.nodeName == XmlTagsEnum.TAG_RELDIMENSION)
                 {
-                    if (!(bAllowRelativeSize))
+                    if (!bAllowRelativeSize)
                     {
-                        this._log.warn((((("[" + this._sUrl) + "]") + xnNode.nodeName) + " does not allow relative size"));
+                        this._log.warn((((("[" + this._sUrl) + "] ") + xnNode.nodeName) + " does not allow relative size"));
                     }
                     else
                     {
@@ -863,13 +912,12 @@
             var i:int;
             var k:int;
             var xnOffsetNode:XMLNode;
-            var glPoint:GraphicLocation;
             var j:String;
             var xnCurrentNodeChildNodes:Array;
             var xnCurrentNodeChildNodesLength:int;
             if (xnNode.attributes.length)
             {
-                this._log.warn((((("[" + this._sUrl) + "]") + xnNode.nodeName) + " cannot have attribut"));
+                this._log.warn((((("[" + this._sUrl) + "] ") + xnNode.nodeName) + " cannot have attributes"));
             };
             var xnNodeChildNodes:Array = xnNode.childNodes;
             var xnNodeChildNodesLength:int = xnNodeChildNodes.length;
@@ -877,7 +925,7 @@
             i = 0;
             while (i < xnNodeChildNodesLength)
             {
-                glPoint = new GraphicLocation();
+                this._glPoint.reset();
                 xnCurrentNode = xnNodeChildNodes[i];
                 if (xnCurrentNode.nodeName == XmlTagsEnum.TAG_ANCHOR)
                 {
@@ -892,17 +940,17 @@
                                 }
                                 else
                                 {
-                                    glPoint.setPoint(xnCurrentNode.attributes[j]);
+                                    this._glPoint.setPoint(xnCurrentNode.attributes[j]);
                                 };
                                 break;
                             case XmlAttributesEnum.ATTRIBUTE_RELATIVEPOINT:
-                                glPoint.setRelativePoint(xnCurrentNode.attributes[j]);
+                                this._glPoint.setRelativePoint(xnCurrentNode.attributes[j]);
                                 break;
                             case XmlAttributesEnum.ATTRIBUTE_RELATIVETO:
-                                glPoint.setRelativeTo(xnCurrentNode.attributes[j]);
+                                this._glPoint.setRelativeTo(xnCurrentNode.attributes[j]);
                                 break;
                             default:
-                                this._log.warn((((((("[" + this._sUrl) + "]") + xnNode.nodeName) + " cannot have ") + j) + " attribut"));
+                                this._log.warn(((((("[" + this._sUrl) + "] ") + xnNode.nodeName) + " cannot have attribute ") + j));
                         };
                     };
                     xnCurrentNodeChildNodes = xnCurrentNode.childNodes;
@@ -919,31 +967,31 @@
                             case XmlTagsEnum.TAG_RELDIMENSION:
                                 if (xnOffsetNode.attributes["x"] != null)
                                 {
-                                    glPoint.offsetXType = LocationTypeEnum.LOCATION_TYPE_RELATIVE;
-                                    glPoint.setOffsetX(xnOffsetNode.attributes["x"]);
+                                    this._glPoint.offsetXType = LocationTypeEnum.LOCATION_TYPE_RELATIVE;
+                                    this._glPoint.setOffsetX(xnOffsetNode.attributes["x"]);
                                 };
                                 if (xnOffsetNode.attributes["y"] != null)
                                 {
-                                    glPoint.offsetYType = LocationTypeEnum.LOCATION_TYPE_RELATIVE;
-                                    glPoint.setOffsetY(xnOffsetNode.attributes["y"]);
+                                    this._glPoint.offsetYType = LocationTypeEnum.LOCATION_TYPE_RELATIVE;
+                                    this._glPoint.setOffsetY(xnOffsetNode.attributes["y"]);
                                 };
                                 break;
                             case XmlTagsEnum.TAG_ABSDIMENSION:
                                 if (xnOffsetNode.attributes["x"] != null)
                                 {
-                                    glPoint.offsetXType = LocationTypeEnum.LOCATION_TYPE_ABSOLUTE;
-                                    glPoint.setOffsetX(xnOffsetNode.attributes["x"]);
+                                    this._glPoint.offsetXType = LocationTypeEnum.LOCATION_TYPE_ABSOLUTE;
+                                    this._glPoint.setOffsetX(xnOffsetNode.attributes["x"]);
                                 };
                                 if (xnOffsetNode.attributes["y"] != null)
                                 {
-                                    glPoint.offsetYType = LocationTypeEnum.LOCATION_TYPE_ABSOLUTE;
-                                    glPoint.setOffsetY(xnOffsetNode.attributes["y"]);
+                                    this._glPoint.offsetYType = LocationTypeEnum.LOCATION_TYPE_ABSOLUTE;
+                                    this._glPoint.setOffsetY(xnOffsetNode.attributes["y"]);
                                 };
                                 break;
                         };
                         k = (k + 1);
                     };
-                    aResult.push(glPoint.toLocationElement());
+                    aResult.push(this._glPoint.toLocationElement());
                 }
                 else
                 {
@@ -951,7 +999,7 @@
                 };
                 i = (i + 1);
             };
-            return (((aResult.length) ? aResult : null));
+            return ((aResult.length) ? aResult : null);
         }
 
         protected function parseShortcutsEvent(xnNode:XMLNode):Array
@@ -967,7 +1015,7 @@
             {
                 xnCurrentNode = xnNodeChildNodes[k];
                 sShortcutName = xnCurrentNode.nodeName;
-                if (!(BindsManager.getInstance().isRegisteredName(sShortcutName)))
+                if (!BindsManager.getInstance().isRegisteredName(sShortcutName))
                 {
                     this._log.info((((("[" + this._sUrl) + "] Shortcut ") + sShortcutName) + " is not defined."));
                 };
@@ -982,7 +1030,7 @@
             var xnCurrentNode:XMLNode;
             var k:int;
             var sEventClass:String;
-            var _local_8:Array;
+            var possiblilities:Array;
             var xnNodeChildNodes:Array = xnNode.childNodes;
             var xnNodeChildNodesLength:int = xnNodeChildNodes.length;
             var aResult:Array = new Array();
@@ -1071,14 +1119,17 @@
                     case EventEnums.EVENT_ONMAPROLLOVER:
                         sEventClass = EventEnums.EVENT_ONMAPROLLOVER_MSG;
                         break;
+                    case EventEnums.EVENT_ONMAPROLLOUT:
+                        sEventClass = EventEnums.EVENT_ONMAPROLLOUT_MSG;
+                        break;
                     case EventEnums.EVENT_ONCOMPONENTREADY:
                         sEventClass = EventEnums.EVENT_ONCOMPONENTREADY_MSG;
                         break;
                     default:
-                        _local_8 = [EventEnums.EVENT_ONPRESS, EventEnums.EVENT_ONRELEASE, EventEnums.EVENT_ONROLLOUT, EventEnums.EVENT_ONROLLOVER, EventEnums.EVENT_ONRIGHTCLICK, EventEnums.EVENT_ONRELEASEOUTSIDE, EventEnums.EVENT_ONDOUBLECLICK, EventEnums.EVENT_ONCOLORCHANGE, EventEnums.EVENT_ONENTITYREADY, EventEnums.EVENT_ONSELECTITEM, EventEnums.EVENT_ONSELECTEMPTYITEM, EventEnums.EVENT_ONITEMROLLOVER, EventEnums.EVENT_ONITEMROLLOUT, EventEnums.EVENT_ONDROP, EventEnums.EVENT_ONWHEEL, EventEnums.EVENT_ONMOUSEUP, EventEnums.EVENT_ONMAPELEMENTROLLOUT, EventEnums.EVENT_ONMAPELEMENTROLLOVER, EventEnums.EVENT_ONMAPELEMENTRIGHTCLICK, EventEnums.EVENT_ONCREATETAB, EventEnums.EVENT_ONDELETETAB, EventEnums.EVENT_MIDDLECLICK];
-                        this._log.warn(((((("[" + this._sUrl) + "] ") + xnCurrentNode.nodeName) + " is an unknown event name") + this.suggest(xnCurrentNode.nodeName, _local_8)));
+                        possiblilities = [EventEnums.EVENT_ONPRESS, EventEnums.EVENT_ONRELEASE, EventEnums.EVENT_ONROLLOUT, EventEnums.EVENT_ONROLLOVER, EventEnums.EVENT_ONRIGHTCLICK, EventEnums.EVENT_ONRELEASEOUTSIDE, EventEnums.EVENT_ONDOUBLECLICK, EventEnums.EVENT_ONCOLORCHANGE, EventEnums.EVENT_ONENTITYREADY, EventEnums.EVENT_ONSELECTITEM, EventEnums.EVENT_ONSELECTEMPTYITEM, EventEnums.EVENT_ONITEMROLLOVER, EventEnums.EVENT_ONITEMROLLOUT, EventEnums.EVENT_ONDROP, EventEnums.EVENT_ONWHEEL, EventEnums.EVENT_ONMOUSEUP, EventEnums.EVENT_ONMAPELEMENTROLLOUT, EventEnums.EVENT_ONMAPELEMENTROLLOVER, EventEnums.EVENT_ONMAPELEMENTRIGHTCLICK, EventEnums.EVENT_ONCREATETAB, EventEnums.EVENT_ONDELETETAB, EventEnums.EVENT_MIDDLECLICK];
+                        this._log.warn(((((("[" + this._sUrl) + "] ") + xnCurrentNode.nodeName) + " is an unknown event name ") + this.suggest(xnCurrentNode.nodeName, possiblilities)));
                 };
-                if (!!(sEventClass.length))
+                if (sEventClass.length)
                 {
                     aResult.push(sEventClass);
                 };
@@ -1089,7 +1140,7 @@
 
         private function getStrataNum(sName:String):uint
         {
-            var _local_2:Array;
+            var possiblilities:Array;
             if (sName == StrataEnum.STRATA_NAME_LOW)
             {
                 return (StrataEnum.STRATA_LOW);
@@ -1110,8 +1161,8 @@
             {
                 return (StrataEnum.STRATA_TOOLTIP);
             };
-            _local_2 = [StrataEnum.STRATA_NAME_LOW, StrataEnum.STRATA_NAME_MEDIUM, StrataEnum.STRATA_NAME_HIGH, StrataEnum.STRATA_NAME_TOP, StrataEnum.STRATA_NAME_TOOLTIP];
-            this._log.warn(((((("[" + this._sUrl) + "] ") + sName) + " is an unknown strata name") + this.suggest(sName, _local_2)));
+            possiblilities = [StrataEnum.STRATA_NAME_LOW, StrataEnum.STRATA_NAME_MEDIUM, StrataEnum.STRATA_NAME_HIGH, StrataEnum.STRATA_NAME_TOP, StrataEnum.STRATA_NAME_TOOLTIP];
+            this._log.warn(((((("[" + this._sUrl) + "] ") + sName) + " is an unknown strata name ") + this.suggest(sName, possiblilities)));
             return (StrataEnum.STRATA_MEDIUM);
         }
 
@@ -1139,9 +1190,9 @@
                 suggest = " (did you mean ";
                 res.sortOn("dist", Array.NUMERIC);
                 i = 0;
-                while ((((i < (res.length - 1))) && ((i < (suggestCount - 1)))))
+                while (((i < (res.length - 1)) && (i < (suggestCount - 1))))
                 {
-                    suggest = (suggest + ((('"' + res[i].word) + '"') + (((i < (res.length - 1))) ? ", " : "")));
+                    suggest = (suggest + ((('"' + res[i].word) + '"') + ((i < (res.length - 1)) ? ", " : "")));
                     i++;
                 };
                 if (res[i])
@@ -1168,7 +1219,13 @@
             dispatchEvent(new ParsingErrorEvent(e.uri.toString(), e.errorMsg));
         }
 
+        private function isNumber(val:String):Boolean
+        {
+            var matches:Array = val.match(/([0-9]+(\,[0-9]+|\.[0-9]*)?)|(\.[0-9]+)/);
+            return ((matches) && (!(matches.indexOf(val) == -1)));
+        }
+
 
     }
-}//package com.ankamagames.berilia.uiRender
+} com.ankamagames.berilia.uiRender
 

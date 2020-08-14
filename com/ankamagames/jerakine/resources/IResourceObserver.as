@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.resources
+package com.ankamagames.jerakine.resources
 {
     import com.ankamagames.jerakine.types.Uri;
 
@@ -10,5 +10,5 @@
         function onProgress(_arg_1:Uri, _arg_2:uint, _arg_3:uint):void;
 
     }
-}//package com.ankamagames.jerakine.resources
+} com.ankamagames.jerakine.resources
 

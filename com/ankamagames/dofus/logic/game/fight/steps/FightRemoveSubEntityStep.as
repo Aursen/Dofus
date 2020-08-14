@@ -1,18 +1,19 @@
-﻿package com.ankamagames.dofus.logic.game.fight.steps
+package com.ankamagames.dofus.logic.game.fight.steps
 {
     import com.ankamagames.jerakine.sequencer.AbstractSequencable;
     import com.ankamagames.dofus.logic.game.common.misc.DofusEntities;
     import com.ankamagames.jerakine.entities.interfaces.IEntity;
     import com.ankamagames.tiphon.display.TiphonSprite;
+    import __AS3__.vec.Vector;
 
     public class FightRemoveSubEntityStep extends AbstractSequencable implements IFightStep 
     {
 
-        private var _fighterId:int;
+        private var _fighterId:Number;
         private var _category:uint;
         private var _slot:uint;
 
-        public function FightRemoveSubEntityStep(fighterId:int, category:uint, slot:uint)
+        public function FightRemoveSubEntityStep(fighterId:Number, category:uint, slot:uint)
         {
             this._fighterId = fighterId;
             this._category = category;
@@ -27,7 +28,7 @@
         override public function start():void
         {
             var parentEntity:IEntity = DofusEntities.getEntity(this._fighterId);
-            if (((parentEntity) && ((parentEntity is TiphonSprite))))
+            if (((parentEntity) && (parentEntity is TiphonSprite)))
             {
                 (parentEntity as TiphonSprite).look.removeSubEntity(this._category, this._slot);
             }
@@ -38,7 +39,12 @@
             executeCallbacks();
         }
 
+        public function get targets():Vector.<Number>
+        {
+            return (new <Number>[this._fighterId]);
+        }
+
 
     }
-}//package com.ankamagames.dofus.logic.game.fight.steps
+} com.ankamagames.dofus.logic.game.fight.steps
 

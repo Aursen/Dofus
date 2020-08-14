@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.context.dungeon
+package com.ankamagames.dofus.network.messages.game.context.dungeon
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class DungeonKeyRingUpdateMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -55,6 +55,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_DungeonKeyRingUpdateMessage(output);
@@ -77,15 +85,36 @@
 
         public function deserializeAs_DungeonKeyRingUpdateMessage(input:ICustomDataInput):void
         {
+            this._dungeonIdFunc(input);
+            this._availableFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_DungeonKeyRingUpdateMessage(tree);
+        }
+
+        public function deserializeAsyncAs_DungeonKeyRingUpdateMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._dungeonIdFunc);
+            tree.addChild(this._availableFunc);
+        }
+
+        private function _dungeonIdFunc(input:ICustomDataInput):void
+        {
             this.dungeonId = input.readVarUhShort();
             if (this.dungeonId < 0)
             {
                 throw (new Error((("Forbidden value (" + this.dungeonId) + ") on element of DungeonKeyRingUpdateMessage.dungeonId.")));
             };
+        }
+
+        private function _availableFunc(input:ICustomDataInput):void
+        {
             this.available = input.readBoolean();
         }
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.context.dungeon
+} com.ankamagames.dofus.network.messages.game.context.dungeon
 

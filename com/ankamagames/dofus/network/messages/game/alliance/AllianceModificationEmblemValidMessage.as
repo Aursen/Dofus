@@ -1,27 +1,23 @@
-﻿package com.ankamagames.dofus.network.messages.game.alliance
+package com.ankamagames.dofus.network.messages.game.alliance
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
     import com.ankamagames.dofus.network.types.game.guild.GuildEmblem;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
 
-    [Trusted]
     public class AllianceModificationEmblemValidMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 6447;
 
         private var _isInitialized:Boolean = false;
-        public var Alliancemblem:GuildEmblem;
+        public var Alliancemblem:GuildEmblem = new GuildEmblem();
+        private var _Alliancemblemtree:FuncTree;
 
-        public function AllianceModificationEmblemValidMessage()
-        {
-            this.Alliancemblem = new GuildEmblem();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
@@ -58,6 +54,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_AllianceModificationEmblemValidMessage(output);
@@ -79,7 +83,23 @@
             this.Alliancemblem.deserialize(input);
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_AllianceModificationEmblemValidMessage(tree);
+        }
+
+        public function deserializeAsyncAs_AllianceModificationEmblemValidMessage(tree:FuncTree):void
+        {
+            this._Alliancemblemtree = tree.addChild(this._AlliancemblemtreeFunc);
+        }
+
+        private function _AlliancemblemtreeFunc(input:ICustomDataInput):void
+        {
+            this.Alliancemblem = new GuildEmblem();
+            this.Alliancemblem.deserializeAsync(this._Alliancemblemtree);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.alliance
+} com.ankamagames.dofus.network.messages.game.alliance
 

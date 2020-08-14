@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.fight.miscs
+package com.ankamagames.dofus.logic.game.fight.miscs
 {
     import com.ankamagames.dofus.logic.game.common.misc.IEntityLocalizer;
     import flash.utils.Dictionary;
@@ -12,17 +12,12 @@
 
         private static var _self:FightEntitiesHolder;
 
-        private var _holdedEntities:Dictionary;
+        private var _holdedEntities:Dictionary = new Dictionary();
 
-        public function FightEntitiesHolder()
-        {
-            this._holdedEntities = new Dictionary();
-            super();
-        }
 
         public static function getInstance():FightEntitiesHolder
         {
-            if (!(_self))
+            if (!_self)
             {
                 _self = new (FightEntitiesHolder)();
                 DofusEntities.registerLocalizer(_self);
@@ -31,7 +26,7 @@
         }
 
 
-        public function getEntity(entityId:int):IEntity
+        public function getEntity(entityId:Number):IEntity
         {
             return (this._holdedEntities[entityId]);
         }
@@ -41,7 +36,7 @@
             this._holdedEntities[entity.id] = entity;
         }
 
-        public function unholdEntity(entityId:int):void
+        public function unholdEntity(entityId:Number):void
         {
             delete this._holdedEntities[entityId];
         }
@@ -76,5 +71,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.fight.miscs
+} com.ankamagames.dofus.logic.game.fight.miscs
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.misc.utils
+package com.ankamagames.dofus.misc.utils
 {
     import flash.events.EventDispatcher;
     import com.ankamagames.jerakine.logger.Logger;
@@ -19,7 +19,7 @@
     public class RpcServiceManager extends EventDispatcher 
     {
 
-        private static const DELAY_BEFORE_TIMED_OUT:int = 1000;
+        private static const DELAY_BEFORE_TIMED_OUT:int = 15000;
         private static const RETRY_AFTER_TIMED_OUT:int = 2;
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(RpcServiceManager));
         public static const SERVER_ERROR:String = "InternalServerError";
@@ -27,7 +27,7 @@
         private var _loader:URLLoader;
         private var _request:URLRequest;
         private var _service:String;
-        private var _params;
+        private var _params:*;
         private var _method:String;
         private var _result:Object;
         private var _type:String;
@@ -36,6 +36,7 @@
         private var _callback:Function;
         private var _timedOutTimer:Timer;
         private var _timedOutRetry:int;
+        private var _ignoreTimedoutRequest:Boolean;
 
         public function RpcServiceManager(pServiceName:String="", pType:String="", pVersion:String="1.0")
         {
@@ -92,6 +93,12 @@
 
         private function onError(pEvt:Event):void
         {
+            var errorText:String = ("catched an Error type : " + pEvt.type);
+            if ((pEvt is ErrorEvent))
+            {
+                errorText = (errorText + (", " + ErrorEvent(pEvt).text));
+            };
+            _log.error(errorText);
             this._busy = false;
             this.clearTimedOutTimer();
             if (this._callback != null)
@@ -112,13 +119,16 @@
         {
             if (this._busy)
             {
-                try
+                if (this._ignoreTimedoutRequest)
                 {
-                    this._loader.close();
-                }
-                catch(e:Error)
-                {
-                    _log.error("RPC timed out while its loader was already closed");
+                    try
+                    {
+                        this._loader.close();
+                    }
+                    catch(e:Error)
+                    {
+                        _log.error("RPC timed out while its loader was already closed");
+                    };
                 };
                 if (this._timedOutRetry < RETRY_AFTER_TIMED_OUT)
                 {
@@ -138,7 +148,7 @@
             var de:Object;
             try
             {
-                de = JSON.decode(data);
+                de = com.ankamagames.jerakine.json.JSON.decode(data);
             }
             catch(e:Error)
             {
@@ -156,10 +166,10 @@
                 {
                     case "string":
                     case "number":
-                        _log.error(((("ERROR RPC SERVICE: " + de.error) + ((!((de.type == null))) ? (", " + de.type) : "")) + ((!((de.message == null))) ? (", " + de.message) : "")));
+                        _log.error(((("ERROR RPC SERVICE: " + de.error) + ((de.type != null) ? (", " + de.type) : "")) + ((de.message != null) ? (", " + de.message) : "")));
                         break;
                     case "object":
-                        _log.error(((((!((de.error.type == null))) ? de.error.type : de.error.code) + " -> ") + de.error.message));
+                        _log.error(((((de.error.type != null) ? de.error.type : de.error.code) + " -> ") + de.error.message));
                         break;
                     default:
                         _log.error(("ERROR RPC SERVICE: " + de.error));
@@ -167,7 +177,7 @@
                 return (false);
             };
             this._result = de.result;
-            return ((((((this._result is Boolean)) && (this._result))) || (!(((((!((this._result is Boolean))) && (!((this._result.success == null))))) && ((this._result.success == false)))))));
+            return (((this._result is Boolean) && (this._result)) || (!(((!(this._result is Boolean)) && (!(this._result.success == null))) && (this._result.success == false))));
         }
 
         private function createRpcObject(method:String):Object
@@ -187,7 +197,7 @@
                     };
                     rpcObject.method = method;
                     rpcObject.params = this._params;
-                    rpcObject.id = 1;
+                    rpcObject.id = GameID.current;
                     break;
                 case "xml":
                     break;
@@ -226,12 +236,12 @@
             this._busy = false;
         }
 
-        public function getAllResultData()
+        public function getAllResultData():*
         {
             return (this._result);
         }
 
-        public function getResultData(name:String)
+        public function getResultData(name:String):*
         {
             if (this._result == null)
             {
@@ -240,35 +250,42 @@
             return (this._result[name]);
         }
 
-        public function callMethod(name:String, params:*, callback:Function=null, retryOnTimedout:Boolean=true):void
+        public function callMethod(name:String, params:*, callback:Function=null, retryOnTimedout:Boolean=true, ignoreTimedoutRequest:Boolean=true):void
         {
-            var _local_5:Object;
+            var obj:Object;
             this._busy = true;
             this._method = name;
             this._params = params;
             this._callback = callback;
-            if ((((this._request == null)) || ((this._loader == null))))
+            this._ignoreTimedoutRequest = ignoreTimedoutRequest;
+            if (((this._request == null) || (this._loader == null)))
             {
                 throw (new Error("there is no data to handle ..."));
             };
-            _local_5 = this.createRpcObject(name);
+            obj = this.createRpcObject(name);
             switch (this._type)
             {
                 case "json":
-                    this._request.data = JSON.encode(_local_5);
+                    this._request.data = com.ankamagames.jerakine.json.JSON.encode(obj);
                     break;
                 case "xml":
                     throw (new Error("Not implemented yet"));
             };
-            if (!(retryOnTimedout))
+            if (!retryOnTimedout)
             {
                 this._timedOutRetry = RETRY_AFTER_TIMED_OUT;
             };
-            this._timedOutTimer = new Timer(5000, 1);
+            this._timedOutTimer = new Timer(DELAY_BEFORE_TIMED_OUT, 1);
             this._timedOutTimer.addEventListener(TimerEvent.TIMER_COMPLETE, this.onTimedOut);
             this._timedOutTimer.start();
-            this._loader.load(this._request);
-            _log.debug(("callMethod() - " + this._request.data));
+            try
+            {
+                this._loader.load(this._request);
+            }
+            catch(e:Error)
+            {
+                _log.error(("Error during the request load " + e.message));
+            };
         }
 
         public function set type(val:String):void
@@ -279,7 +296,7 @@
                 case "json":
                 case "jsonrpc":
                     this._type = "json";
-                    return;
+                    break;
                 case "xmlrpc":
                 case "xml":
                 default:
@@ -296,7 +313,7 @@
         {
             this._service = val;
             this.clearTimedOutTimer();
-            if (!(this._request))
+            if (!this._request)
             {
                 this._request = new URLRequest(this._service);
                 this._request.method = URLRequestMethod.POST;
@@ -305,7 +322,7 @@
             {
                 this._request.url = this._service;
             };
-            if (!(this._loader))
+            if (!this._loader)
             {
                 this._loader = new URLLoader();
                 this._loader.addEventListener(Event.COMPLETE, this.onComplete);
@@ -320,17 +337,18 @@
                 }
                 catch(error:Error)
                 {
+                    _log.error(("Erreur du set Service : " + error.message));
                 };
             };
         }
 
-        public function get requestData()
+        public function get requestData():*
         {
             if (this._request == null)
             {
                 return (null);
             };
-            return (JSON.decode((this._request.data as String)));
+            return (com.ankamagames.jerakine.json.JSON.decode((this._request.data as String)));
         }
 
         public function get busy():Boolean
@@ -340,5 +358,5 @@
 
 
     }
-}//package com.ankamagames.dofus.misc.utils
+} com.ankamagames.dofus.misc.utils
 

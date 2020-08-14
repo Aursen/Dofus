@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.types.data
+package com.ankamagames.berilia.types.data
 {
     import com.ankamagames.jerakine.interfaces.ISlotDataHolder;
     import com.ankamagames.jerakine.interfaces.ISlotData;
@@ -16,5 +16,5 @@
         }
 
     }
-}//package com.ankamagames.berilia.types.data
+} com.ankamagames.berilia.types.data
 

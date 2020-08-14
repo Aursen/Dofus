@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.fight.frames
+package com.ankamagames.dofus.logic.game.fight.frames
 {
     import com.ankamagames.jerakine.messages.Frame;
     import com.ankamagames.jerakine.types.enums.Priority;
@@ -41,5 +41,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.fight.frames
+} com.ankamagames.dofus.logic.game.fight.frames
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.context.roleplay.fight.arena
+package com.ankamagames.dofus.network.messages.game.context.roleplay.fight.arena
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class GameRolePlayArenaRegistrationStatusMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -58,6 +58,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_GameRolePlayArenaRegistrationStatusMessage(output);
@@ -77,12 +85,39 @@
 
         public function deserializeAs_GameRolePlayArenaRegistrationStatusMessage(input:ICustomDataInput):void
         {
+            this._registeredFunc(input);
+            this._stepFunc(input);
+            this._battleModeFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GameRolePlayArenaRegistrationStatusMessage(tree);
+        }
+
+        public function deserializeAsyncAs_GameRolePlayArenaRegistrationStatusMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._registeredFunc);
+            tree.addChild(this._stepFunc);
+            tree.addChild(this._battleModeFunc);
+        }
+
+        private function _registeredFunc(input:ICustomDataInput):void
+        {
             this.registered = input.readBoolean();
+        }
+
+        private function _stepFunc(input:ICustomDataInput):void
+        {
             this.step = input.readByte();
             if (this.step < 0)
             {
                 throw (new Error((("Forbidden value (" + this.step) + ") on element of GameRolePlayArenaRegistrationStatusMessage.step.")));
             };
+        }
+
+        private function _battleModeFunc(input:ICustomDataInput):void
+        {
             this.battleMode = input.readInt();
             if (this.battleMode < 0)
             {
@@ -92,5 +127,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.context.roleplay.fight.arena
+} com.ankamagames.dofus.network.messages.game.context.roleplay.fight.arena
 

@@ -1,28 +1,24 @@
-﻿package com.ankamagames.dofus.network.messages.game.context.fight.character
+package com.ankamagames.dofus.network.messages.game.context.fight.character
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
     import com.ankamagames.dofus.network.types.game.context.GameContextActorInformations;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
     import com.ankamagames.dofus.network.ProtocolTypeManager;
 
-    [Trusted]
     public class GameFightRefreshFighterMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 6309;
 
         private var _isInitialized:Boolean = false;
-        public var informations:GameContextActorInformations;
+        public var informations:GameContextActorInformations = new GameContextActorInformations();
+        private var _informationstree:FuncTree;
 
-        public function GameFightRefreshFighterMessage()
-        {
-            this.informations = new GameContextActorInformations();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
@@ -59,6 +55,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_GameFightRefreshFighterMessage(output);
@@ -82,7 +86,24 @@
             this.informations.deserialize(input);
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GameFightRefreshFighterMessage(tree);
+        }
+
+        public function deserializeAsyncAs_GameFightRefreshFighterMessage(tree:FuncTree):void
+        {
+            this._informationstree = tree.addChild(this._informationstreeFunc);
+        }
+
+        private function _informationstreeFunc(input:ICustomDataInput):void
+        {
+            var _id:uint = input.readUnsignedShort();
+            this.informations = ProtocolTypeManager.getInstance(GameContextActorInformations, _id);
+            this.informations.deserializeAsync(this._informationstree);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.context.fight.character
+} com.ankamagames.dofus.network.messages.game.context.fight.character
 

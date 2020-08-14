@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.fight.frames
+package com.ankamagames.dofus.logic.game.fight.frames
 {
     import com.ankamagames.jerakine.messages.Frame;
     import com.ankamagames.jerakine.logger.Logger;
@@ -17,30 +17,35 @@
     import com.ankamagames.dofus.kernel.Kernel;
     import flash.events.TimerEvent;
     import com.ankamagames.dofus.kernel.sound.enum.UISoundEnum;
+    import com.ankamagames.dofus.kernel.sound.SoundManager;
     import com.ankamagames.dofus.network.messages.game.context.fight.GameFightTurnListMessage;
     import com.ankamagames.dofus.network.messages.game.context.fight.GameFightSynchronizeMessage;
+    import com.ankamagames.dofus.network.messages.game.actions.fight.GameActionUpdateEffectTriggerCountMessage;
     import com.ankamagames.dofus.network.messages.game.context.fight.SlaveSwitchContextMessage;
+    import com.ankamagames.dofus.network.messages.game.context.fight.SlaveNoLongerControledMessage;
     import com.ankamagames.dofus.network.messages.game.context.fight.GameFightTurnStartMessage;
     import com.ankamagames.dofus.uiApi.SoundApi;
     import com.ankamagames.dofus.network.messages.game.context.fight.GameFightTurnEndMessage;
     import com.ankamagames.dofus.network.types.game.context.GameContextActorInformations;
-    import com.ankamagames.dofus.network.messages.game.actions.sequence.SequenceStartMessage;
     import com.ankamagames.dofus.network.messages.game.actions.sequence.SequenceEndMessage;
     import com.ankamagames.dofus.network.messages.game.context.fight.GameFightNewWaveMessage;
     import com.ankamagames.dofus.network.messages.game.context.fight.GameFightNewRoundMessage;
     import com.ankamagames.dofus.network.messages.game.context.fight.GameFightLeaveMessage;
-    import com.ankamagames.dofus.network.messages.game.character.stats.FighterStatsListMessage;
+    import com.ankamagames.dofus.network.messages.game.context.fight.GameFightPauseMessage;
+    import com.ankamagames.dofus.network.messages.game.context.fight.RefreshCharacterStatsMessage;
+    import com.ankamagames.dofus.network.types.game.context.fight.GameFightEffectTriggerCount;
+    import com.ankamagames.dofus.logic.game.fight.types.BasicBuff;
     import com.ankamagames.jerakine.sequencer.SerialSequencer;
     import com.ankamagames.jerakine.handlers.messages.Action;
     import com.ankamagames.dofus.logic.game.fight.messages.GameActionFightLeaveMessage;
+    import com.ankamagames.dofus.logic.game.fight.managers.BuffManager;
+    import com.ankamagames.dofus.logic.game.fight.types.TriggeredBuff;
     import com.ankamagames.dofus.logic.game.common.managers.PlayedCharacterManager;
     import com.ankamagames.dofus.network.messages.game.context.fight.GameFightTurnResumeMessage;
-    import com.ankamagames.dofus.logic.game.fight.managers.BuffManager;
     import com.ankamagames.dofus.logic.game.fight.managers.CurrentPlayedFighterManager;
     import com.ankamagames.dofus.logic.game.fight.miscs.FightEntitiesHolder;
     import com.ankamagames.dofus.logic.game.common.misc.DofusEntities;
     import com.ankamagames.dofus.types.sequences.AddGfxEntityStep;
-    import com.ankamagames.dofus.kernel.sound.SoundManager;
     import com.ankamagames.dofus.internalDatacenter.spells.SpellWrapper;
     import com.ankamagames.berilia.managers.KernelEventsManager;
     import com.ankamagames.dofus.misc.lists.HookList;
@@ -50,8 +55,11 @@
     import com.ankamagames.dofus.network.types.game.context.fight.GameFightCharacterInformations;
     import com.ankamagames.jerakine.managers.OptionManager;
     import com.ankamagames.dofus.misc.lists.FightHookList;
+    import com.ankamagames.dofus.logic.game.common.managers.SpeakingItemManager;
     import com.ankamagames.dofus.network.messages.game.context.fight.GameFightTurnStartPlayingMessage;
+    import com.ankamagames.dofus.network.messages.game.actions.sequence.SequenceStartMessage;
     import com.ankamagames.dofus.network.messages.game.context.fight.GameFightTurnReadyRequestMessage;
+    import com.ankamagames.dofus.misc.utils.GameDebugManager;
     import com.ankamagames.dofus.logic.game.fight.managers.FightersStateManager;
     import com.ankamagames.dofus.network.messages.game.context.GameContextDestroyMessage;
     import com.ankamagames.dofus.logic.game.fight.actions.DisableAfkAction;
@@ -61,6 +69,7 @@
     import com.ankamagames.dofus.logic.game.fight.managers.MarkedCellsManager;
     import com.ankamagames.dofus.logic.game.fight.managers.LinkedCellsManager;
     import com.ankamagames.berilia.managers.TooltipManager;
+    import com.ankamagames.dofus.uiApi.FightApi;
     import com.ankamagames.dofus.misc.lists.CustomUiHookList;
     import com.ankamagames.dofus.network.messages.game.actions.GameActionAcknowledgementMessage;
     import com.ankamagames.dofus.kernel.net.ConnectionsHandler;
@@ -68,9 +77,12 @@
     import com.ankamagames.dofus.logic.game.common.frames.PlayedCharacterUpdatesFrame;
     import com.ankamagames.dofus.network.types.game.character.characteristic.CharacterCharacteristicsInformations;
     import com.ankamagames.dofus.network.messages.game.context.fight.GameFightTurnReadyMessage;
+    import com.ankamagames.atouin.managers.EntitiesManager;
     import flash.utils.Dictionary;
+    import com.ankamagames.dofus.logic.game.fight.types.StatBuff;
     import com.ankamagames.dofus.logic.game.common.steps.WaitStep;
     import com.ankamagames.dofus.logic.game.fight.steps.FightVisibilityStep;
+    import com.ankamagames.dofus.logic.game.fight.frames.FightContextFrame;
     import __AS3__.vec.*;
 
     public class FightBattleFrame implements Frame 
@@ -86,67 +98,68 @@
         private var _executingSequence:Boolean;
         private var _confirmTurnEnd:Boolean;
         private var _endBattle:Boolean;
-        private var _leaveSpectator:Boolean;
         private var _battleResults:GameFightEndMessage;
         private var _refreshTurnsList:Boolean;
-        private var _newTurnsList:Vector.<int>;
-        private var _newDeadTurnsList:Vector.<int>;
-        private var _turnsList:Vector.<int>;
-        private var _deadTurnsList:Vector.<int>;
-        private var _playerTargetedEntitiesList:Vector.<int>;
+        private var _newTurnsList:Vector.<Number>;
+        private var _newDeadTurnsList:Vector.<Number>;
+        private var _turnsList:Vector.<Number>;
+        private var _deadTurnsList:Vector.<Number>;
+        private var _playerTargetedEntitiesList:Vector.<Number> = new Vector.<Number>(0);
+        private var _fightIsPaused:Boolean = false;
+        private var _deathPlayingNumber:int = 0;
         private var _synchroniseFighters:Vector.<GameFightFighterInformations> = null;
         private var _synchroniseFightersInstanceId:uint = 0xFFFFFFFF;
+        private var _neverSynchronizedBefore:Boolean = true;
         private var _delayCslmsg:CharacterStatsListMessage;
         private var _playerNewTurn:AnimatedCharacter;
         private var _turnsCount:uint = 0;
         private var _destroyed:Boolean;
         private var _playingSlaveEntity:Boolean = false;
-        private var _lastPlayerId:int;
-        private var _currentPlayerId:int;
+        private var _lastPlayerId:Number;
+        private var _nextLastPlayerId:Number;
+        private var _currentPlayerId:Number = 0;
         private var _skipTurnTimer:Timer;
-        private var _infoEntitiesFrame:InfoEntitiesFrame;
-        private var _masterId:int;
-        private var _slaveId:int;
+        private var _infoEntitiesFrame:InfoEntitiesFrame = new InfoEntitiesFrame();
+        private var _masterId:Number;
+        private var _slaveId:Number;
         private var _autoEndTurn:Boolean = false;
         private var _autoEndTurnTimer:Timer;
         private var _newWave:Boolean;
         private var _newWaveId:int;
         private var _waveSound:SoundDofus;
 
-        public function FightBattleFrame()
-        {
-            this._turnFrame = new FightTurnFrame();
-            this._playerTargetedEntitiesList = new Vector.<int>(0);
-            this._infoEntitiesFrame = new InfoEntitiesFrame();
-            super();
-        }
 
         public function get priority():int
         {
             return (Priority.HIGH);
         }
 
-        public function get fightersList():Vector.<int>
+        public function get fightIsPaused():Boolean
+        {
+            return (this._fightIsPaused);
+        }
+
+        public function get fightersList():Vector.<Number>
         {
             return (this._turnsList);
         }
 
-        public function set fightersList(turnList:Vector.<int>):void
+        public function set fightersList(turnList:Vector.<Number>):void
         {
             this._turnsList = turnList;
         }
 
-        public function get deadFightersList():Vector.<int>
+        public function get deadFightersList():Vector.<Number>
         {
             return (this._deadTurnsList);
         }
 
-        public function set deadFightersList(deadTurnList:Vector.<int>):void
+        public function set deadFightersList(deadTurnList:Vector.<Number>):void
         {
             this._deadTurnsList = deadTurnList;
         }
 
-        public function get targetedEntities():Vector.<int>
+        public function get targetedEntities():Vector.<Number>
         {
             return (this._playerTargetedEntitiesList);
         }
@@ -161,7 +174,7 @@
             this._turnsCount = turn;
         }
 
-        public function get currentPlayerId():int
+        public function get currentPlayerId():Number
         {
             return (this._currentPlayerId);
         }
@@ -181,20 +194,31 @@
             return (this._playingSlaveEntity);
         }
 
-        public function get slaveId():int
+        public function get slaveId():Number
         {
             return (this._slaveId);
         }
 
-        public function get masterId():int
+        public function get masterId():Number
         {
             return (this._masterId);
         }
 
+        public function get deathPlayingNumber():int
+        {
+            return (this._deathPlayingNumber);
+        }
+
+        public function set deathPlayingNumber(n:int):void
+        {
+            this._deathPlayingNumber = n;
+        }
+
         public function pushed():Boolean
         {
+            this._turnFrame = new FightTurnFrame();
             this._playingSlaveEntity = false;
-            this._sequenceFrames = new Array();
+            this._sequenceFrames = [];
             DataMapProvider.getInstance().isInFight = true;
             Kernel.getWorker().addFrame(this._turnFrame);
             this._destroyed = false;
@@ -202,74 +226,85 @@
             this._autoEndTurnTimer.addEventListener(TimerEvent.TIMER_COMPLETE, this.sendAutoEndTurn);
             this._waveSound = new SoundDofus(UISoundEnum.FIGHT_NEW_WAVE);
             this._waveSound.volume = 1;
+            SoundManager.getInstance().manager.upFightMusicVolume();
+            this._neverSynchronizedBefore = true;
             return (true);
         }
 
         public function process(msg:Message):Boolean
         {
-            var _local_2:GameFightTurnListMessage;
-            var _local_3:GameFightSynchronizeMessage;
-            var _local_4:SlaveSwitchContextMessage;
-            var _local_5:GameFightTurnStartMessage;
-            var _local_6:int;
-            var _local_7:Boolean;
-            var _local_8:SoundApi;
-            var _local_9:GameFightFighterInformations;
-            var _local_10:GameFightFighterInformations;
-            var _local_11:Boolean;
-            var _local_12:Boolean;
-            var _local_13:FightContextFrame;
-            var _local_14:int;
-            var _local_15:GameFightTurnEndMessage;
-            var _local_16:GameContextActorInformations;
-            var _local_17:SequenceStartMessage;
-            var _local_18:SequenceEndMessage;
-            var _local_19:GameFightNewWaveMessage;
-            var _local_20:GameFightNewRoundMessage;
-            var _local_21:GameFightLeaveMessage;
-            var _local_22:GameFightFighterInformations;
-            var _local_23:FightSequenceFrame;
-            var _local_24:GameFightEndMessage;
-            var _local_25:uint;
-            var _local_26:FighterStatsListMessage;
+            var gftmsg:GameFightTurnListMessage;
+            var gftcimsg:GameFightSynchronizeMessage;
+            var gauetcmsg:GameActionUpdateEffectTriggerCountMessage;
+            var sscmsg:SlaveSwitchContextMessage;
+            var snlcmsg:SlaveNoLongerControledMessage;
+            var gftsmsg:GameFightTurnStartMessage;
+            var playerId:Number;
+            var isResumeMessage:Boolean;
+            var sapi:SoundApi;
+            var deadEntityInfo:GameFightFighterInformations;
+            var entitiesFrame:FightEntitiesFrame;
+            var entitiesIds:Vector.<Number>;
+            var numEntities:uint;
+            var fighterInfos:GameFightFighterInformations;
+            var i:int;
+            var gftemsg:GameFightTurnEndMessage;
+            var entityInfos:GameContextActorInformations;
+            var semsg:SequenceEndMessage;
+            var gfnwmsg:GameFightNewWaveMessage;
+            var gfnrmsg:GameFightNewRoundMessage;
+            var gflmsg:GameFightLeaveMessage;
+            var fighterInfos2:GameFightFighterInformations;
+            var leaveSequenceFrame:FightSequenceFrame;
+            var gfemsg:GameFightEndMessage;
+            var maxEndRescue:uint;
+            var gfpmsg:GameFightPauseMessage;
+            var rcmsg2:RefreshCharacterStatsMessage;
+            var infos:GameFightFighterInformations;
             var fighter:GameFightFighterInformations;
-            var _local_28:int;
+            var effectTrigger:GameFightEffectTriggerCount;
+            var buffTriggered:BasicBuff;
+            var currentPlayedFighterId:Number;
+            var nextPlayable:Number;
             var entity:AnimatedCharacter;
             var ss:SerialSequencer;
             var yOffset:Number;
             var ss2:SerialSequencer;
             var time:int;
             var action:Action;
-            var _local_35:FightEntitiesFrame;
-            var _local_36:int;
-            var _local_37:GameContextActorInformations;
+            var fightEntitesFrame:FightEntitiesFrame;
+            var alivePlayers:int;
+            var en:GameContextActorInformations;
+            var mouseOverEntityInfos:GameFightFighterInformations;
+            var mouseOverEntity:Boolean;
+            var mouseOverTimelineEntity:Boolean;
             var fighterInfosTE:GameFightFighterInformations;
             var fakeDeathMessage:GameActionFightLeaveMessage;
             var seqEnd:SequenceEndMessage;
-            var _local_41:GameFightEndMessage;
+            var fakegfemsg:GameFightEndMessage;
             switch (true)
             {
                 case (msg is GameFightTurnListMessage):
-                    _local_2 = (msg as GameFightTurnListMessage);
+                    gftmsg = (msg as GameFightTurnListMessage);
                     if (((this._executingSequence) || (this._currentSequenceFrame)))
                     {
                         _log.warn("There was a turns list update during this sequence... Let's wait its finish before doing it.");
                         this._refreshTurnsList = true;
-                        this._newTurnsList = _local_2.ids;
-                        this._newDeadTurnsList = _local_2.deadsIds;
+                        this._newTurnsList = gftmsg.ids;
+                        this._newDeadTurnsList = gftmsg.deadsIds;
                     }
                     else
                     {
-                        this.updateTurnsList(_local_2.ids, _local_2.deadsIds);
+                        this.updateTurnsList(gftmsg.ids, gftmsg.deadsIds);
                     };
                     return (true);
                 case (msg is GameFightSynchronizeMessage):
-                    _local_3 = (msg as GameFightSynchronizeMessage);
+                    gftcimsg = (msg as GameFightSynchronizeMessage);
                     if (this._newWave)
                     {
-                        for each (fighter in _local_3.fighters)
+                        for each (fighter in gftcimsg.fighters)
                         {
-                            if (((((fighter.alive) && ((fighter.wave == this._newWaveId)))) && (!(FightEntitiesFrame.getCurrentInstance().getEntityInfos(fighter.contextualId)))))
+                            if ((((fighter.spawnInfo.alive) && (fighter.wave == this._newWaveId)) && (!(FightEntitiesFrame.getCurrentInstance().getEntityInfos(fighter.contextualId)))))
                             {
                                 FightEntitiesFrame.getCurrentInstance().registerActor(fighter);
                             };
@@ -277,51 +312,87 @@
                     };
                     if (this._executingSequence)
                     {
-                        this._synchroniseFighters = _local_3.fighters;
+                        this._synchroniseFighters = gftcimsg.fighters;
                         this._synchroniseFightersInstanceId = FightSequenceFrame.currentInstanceId;
                     }
                     else
                     {
-                        this.gameFightSynchronize(_local_3.fighters, false);
+                        this.gameFightSynchronize(gftcimsg.fighters);
+                    };
+                    return (false);
+                case (msg is GameActionUpdateEffectTriggerCountMessage):
+                    gauetcmsg = (msg as GameActionUpdateEffectTriggerCountMessage);
+                    for each (effectTrigger in gauetcmsg.targetIds)
+                    {
+                        for each (buffTriggered in BuffManager.getInstance().getAllBuff(effectTrigger.targetId))
+                        {
+                            if (((buffTriggered is TriggeredBuff) && (buffTriggered.effect.effectUid == effectTrigger.effectId)))
+                            {
+                                (buffTriggered as TriggeredBuff).triggerCount = effectTrigger.count;
+                                break;
+                            };
+                        };
                     };
                     return (true);
                 case (msg is SlaveSwitchContextMessage):
-                    _local_4 = (msg as SlaveSwitchContextMessage);
-                    _local_6 = PlayedCharacterManager.getInstance().id;
-                    if (_local_4.masterId == _local_6)
+                    sscmsg = (msg as SlaveSwitchContextMessage);
+                    playerId = PlayedCharacterManager.getInstance().id;
+                    if (sscmsg.masterId == playerId)
                     {
-                        this._masterId = _local_4.masterId;
-                        this._slaveId = _local_4.slaveId;
-                        if (((!(this._currentPlayerId)) && ((this._turnsList.indexOf(this._masterId) > this._turnsList.indexOf(this._slaveId)))))
+                        this._masterId = sscmsg.masterId;
+                        this._slaveId = sscmsg.slaveId;
+                        if (((!(this._currentPlayerId)) && (this._turnsList.indexOf(this._masterId) > this._turnsList.indexOf(this._slaveId))))
                         {
                             this.prepareNextPlayableCharacter(this._masterId);
                         };
                     };
                     return (false);
-                case (msg is GameFightTurnStartMessage):
-                    _local_5 = (msg as GameFightTurnStartMessage);
-                    _local_6 = PlayedCharacterManager.getInstance().id;
-                    this._currentPlayerId = _local_5.id;
-                    this._playingSlaveEntity = (_local_5.id == this._slaveId);
-                    this._turnFrame.turnDuration = _local_5.waitTime;
-                    _local_7 = (msg is GameFightTurnResumeMessage);
-                    if (!(_local_7))
+                case (msg is SlaveNoLongerControledMessage):
+                    snlcmsg = (msg as SlaveNoLongerControledMessage);
+                    playerId = PlayedCharacterManager.getInstance().id;
+                    if (((!(snlcmsg.masterId == playerId)) && (this._slaveId == snlcmsg.slaveId)))
                     {
-                        BuffManager.getInstance().decrementDuration(_local_5.id);
+                        this._masterId = playerId;
+                        this._slaveId = this._masterId;
+                        this.prepareNextPlayableCharacter(playerId);
+                        this._slaveId = 0;
+                    };
+                    return (false);
+                case (msg is GameFightTurnStartMessage):
+                    gftsmsg = (msg as GameFightTurnStartMessage);
+                    playerId = PlayedCharacterManager.getInstance().id;
+                    this._currentPlayerId = gftsmsg.id;
+                    if (!this._lastPlayerId)
+                    {
+                        this._lastPlayerId = this._currentPlayerId;
+                    };
+                    _log.info(("Start turn for entityId: " + this._currentPlayerId));
+                    if (this._currentPlayerId == playerId)
+                    {
+                        this._slaveId = 0;
+                    };
+                    this._playingSlaveEntity = (gftsmsg.id == this._slaveId);
+                    this._turnFrame.turnDuration = (gftsmsg.waitTime * 100);
+                    isResumeMessage = (msg is GameFightTurnResumeMessage);
+                    if (!isResumeMessage)
+                    {
+                        BuffManager.getInstance().decrementDuration(gftsmsg.id);
+                        BuffManager.getInstance().resetTriggerCount(gftsmsg.id);
                     }
                     else
                     {
-                        _local_28 = CurrentPlayedFighterManager.getInstance().currentFighterId;
-                        if (((((this._slaveId) && (!((this._currentPlayerId == _local_28))))) && ((((this._slaveId == this._currentPlayerId)) || ((this.getNextPlayableCharacterId() == this._slaveId))))))
+                        currentPlayedFighterId = CurrentPlayedFighterManager.getInstance().currentFighterId;
+                        nextPlayable = this.getNextPlayableCharacterId();
+                        if ((((this._slaveId) && (!(this._currentPlayerId == currentPlayedFighterId))) && ((this._slaveId == this._currentPlayerId) || (nextPlayable == this._slaveId))))
                         {
                             this.prepareNextPlayableCharacter(this._masterId);
                         };
                     };
-                    if ((((_local_5.id > 0)) || (this._playingSlaveEntity)))
+                    if (((gftsmsg.id > 0) || (this._playingSlaveEntity)))
                     {
-                        if (((!((FightEntitiesFrame.getCurrentInstance().getEntityInfos(_local_5.id).disposition.cellId == -1))) && (!(FightEntitiesHolder.getInstance().getEntity(_local_5.id)))))
+                        if ((((FightEntitiesFrame.getCurrentInstance().getEntityInfos(gftsmsg.id)) && (!(FightEntitiesFrame.getCurrentInstance().getEntityInfos(gftsmsg.id).disposition.cellId == -1))) && (!(FightEntitiesHolder.getInstance().getEntity(gftsmsg.id)))))
                         {
-                            entity = (DofusEntities.getEntity(_local_5.id) as AnimatedCharacter);
+                            entity = (DofusEntities.getEntity(gftsmsg.id) as AnimatedCharacter);
                             if (entity != null)
                             {
                                 ss = new SerialSequencer();
@@ -335,30 +406,30 @@
                             this._playerNewTurn = entity;
                         };
                     };
-                    _local_8 = new SoundApi();
-                    _local_9 = (FightEntitiesFrame.getCurrentInstance().getEntityInfos(_local_5.id) as GameFightFighterInformations);
-                    if ((((((((_local_5.id == _local_6)) && (_local_9))) && (_local_9.alive))) || (this._playingSlaveEntity)))
+                    sapi = new SoundApi();
+                    deadEntityInfo = (FightEntitiesFrame.getCurrentInstance().getEntityInfos(gftsmsg.id) as GameFightFighterInformations);
+                    if (((((gftsmsg.id == playerId) || (this._playingSlaveEntity)) && (deadEntityInfo)) && (deadEntityInfo.spawnInfo.alive)))
                     {
-                        CurrentPlayedFighterManager.getInstance().currentFighterId = _local_5.id;
-                        if (_local_8.playSoundAtTurnStart())
+                        CurrentPlayedFighterManager.getInstance().currentFighterId = gftsmsg.id;
+                        if (sapi.playSoundAtTurnStart())
                         {
                             SoundManager.getInstance().manager.playUISound(UISoundEnum.PLAYER_TURN);
                         };
-                        SpellWrapper.refreshAllPlayerSpellHolder(_local_5.id);
+                        SpellWrapper.refreshAllPlayerSpellHolder(gftsmsg.id);
                         this._turnFrame.myTurn = true;
                     }
                     else
                     {
                         this._turnFrame.myTurn = false;
                     };
-                    KernelEventsManager.getInstance().processCallback(HookList.GameFightTurnStart, _local_5.id, _local_5.waitTime, ((_local_7) ? (msg as GameFightTurnResumeMessage).remainingTime : (_local_5.waitTime)), Dofus.getInstance().options.turnPicture);
+                    KernelEventsManager.getInstance().processCallback(HookList.GameFightTurnStart, gftsmsg.id, (gftsmsg.waitTime * 100), ((isResumeMessage) ? ((msg as GameFightTurnResumeMessage).remainingTime * 100) : (gftsmsg.waitTime * 100)), Dofus.getInstance().options.getOption("turnPicture"));
                     if (this._skipTurnTimer)
                     {
                         this._skipTurnTimer.stop();
                         this._skipTurnTimer.removeEventListener(TimerEvent.TIMER, this.onSkipTurnTimeOut);
                         this._skipTurnTimer = null;
                     };
-                    if ((((_local_5.id == _local_6)) || (this._playingSlaveEntity)))
+                    if (((gftsmsg.id == playerId) || (this._playingSlaveEntity)))
                     {
                         if (AFKFightManager.getInstance().isAfk)
                         {
@@ -377,69 +448,76 @@
                         }
                         else
                         {
-                            _local_35 = (Kernel.getWorker().getFrame(FightEntitiesFrame) as FightEntitiesFrame);
-                            _local_36 = 0;
-                            for each (_local_37 in _local_35.getEntitiesDictionnary())
+                            fightEntitesFrame = (Kernel.getWorker().getFrame(FightEntitiesFrame) as FightEntitiesFrame);
+                            alivePlayers = 0;
+                            for each (en in fightEntitesFrame.getEntitiesDictionnary())
                             {
-                                if ((((((_local_37 is GameFightCharacterInformations)) && (GameFightCharacterInformations(_local_37).alive))) && ((_local_37.contextualId > 0))))
+                                if ((((en is GameFightCharacterInformations) && (GameFightCharacterInformations(en).spawnInfo.alive)) && (en.contextualId > 0)))
                                 {
-                                    _local_36++;
+                                    alivePlayers++;
                                 };
                             };
-                            if (_local_36 > 1)
+                            if (alivePlayers > 0)
                             {
                                 AFKFightManager.getInstance().initialize();
                             };
                         };
-                        if ((((((((this._slaveId < 0)) && ((FightEntitiesFrame.getCurrentInstance().getEntityInfos(this._slaveId) as GameFightFighterInformations).alive))) && ((FightEntitiesFrame.getCurrentInstance().getEntityInfos(this._masterId) as GameFightFighterInformations).alive))) && (Kernel.getWorker().contains(FightSpellCastFrame))))
+                    };
+                    if (((PlayedCharacterManager.getInstance().isSpectator) && (OptionManager.getOptionManager("dofus").getOption("spectatorAutoShowCurrentFighterInfo") == true)))
+                    {
+                        mouseOverEntityInfos = (FightEntitiesFrame.getCurrentInstance().getEntityInfos(FightContextFrame.fighterEntityTooltipId) as GameFightFighterInformations);
+                        mouseOverEntity = ((mouseOverEntityInfos) && (mouseOverEntityInfos.disposition.cellId == FightContextFrame.currentCell));
+                        mouseOverTimelineEntity = (Kernel.getWorker().getFrame(FightContextFrame) as FightContextFrame).timelineOverEntity;
+                        if (((!(mouseOverEntity)) && (!(mouseOverTimelineEntity))))
                         {
-                            Kernel.getWorker().removeFrame(Kernel.getWorker().getFrame(FightSpellCastFrame));
+                            KernelEventsManager.getInstance().processCallback(FightHookList.FighterInfoUpdate, (FightEntitiesFrame.getCurrentInstance().getEntityInfos(gftsmsg.id) as GameFightFighterInformations));
                         };
                     };
-                    _local_10 = (FightEntitiesFrame.getCurrentInstance().getEntityInfos(FightContextFrame.fighterEntityTooltipId) as GameFightFighterInformations);
-                    _local_11 = ((_local_10) && ((_local_10.disposition.cellId == FightContextFrame.currentCell)));
-                    _local_12 = (Kernel.getWorker().getFrame(FightContextFrame) as FightContextFrame).timelineOverEntity;
-                    if (((((((!(_local_11)) && (!(_local_12)))) && (PlayedCharacterManager.getInstance().isSpectator))) && ((OptionManager.getOptionManager("dofus")["spectatorAutoShowCurrentFighterInfo"] == true))))
+                    this.removeSavedPosition(gftsmsg.id);
+                    entitiesFrame = (Kernel.getWorker().getFrame(FightEntitiesFrame) as FightEntitiesFrame);
+                    entitiesIds = entitiesFrame.getEntitiesIdsList();
+                    numEntities = entitiesIds.length;
+                    i = 0;
+                    while (i < numEntities)
                     {
-                        KernelEventsManager.getInstance().processCallback(FightHookList.FighterInfoUpdate, (FightEntitiesFrame.getCurrentInstance().getEntityInfos(_local_5.id) as GameFightFighterInformations));
-                    };
-                    _local_13 = (Kernel.getWorker().getFrame(FightContextFrame) as FightContextFrame);
-                    _local_14 = ((_local_13.fightersPositionsHistory[_local_5.id]) ? _local_13.fightersPositionsHistory[_local_5.id].length : 0);
-                    if (((!(_local_13.fighterNumPositions[_local_5.id])) || ((_local_13.fighterNumPositions[_local_5.id] < _local_14))))
-                    {
-                        _local_13.fighterNumPositions[_local_5.id] = _local_14;
-                    }
-                    else
-                    {
-                        if (_local_13.fighterNumPositions[_local_5.id] == _local_14)
+                        fighterInfos = (entitiesFrame.getEntityInfos(entitiesIds[i]) as GameFightFighterInformations);
+                        if (((fighterInfos) && (fighterInfos.stats.summoner == gftsmsg.id)))
                         {
-                            _local_13.fightersPositionsHistory[_local_5.id] = new Vector.<uint>(0);
-                            delete _local_13.fighterNumPositions[_local_5.id];
+                            this.removeSavedPosition(entitiesIds[i]);
                         };
+                        i++;
                     };
+                    (Kernel.getWorker().getFrame(FightContextFrame) as FightContextFrame).setFighterRoundStartPosition(gftsmsg.id, entitiesFrame.getEntityInfos(gftsmsg.id).disposition.cellId);
                     return (true);
                 case (msg is GameFightTurnStartPlayingMessage):
+                    SpeakingItemManager.getInstance().triggerEvent(SpeakingItemManager.SPEAK_TRIGGER_PLAYER_TURN_START);
                     KernelEventsManager.getInstance().processCallback(HookList.GameFightTurnStartPlaying);
                     return (true);
                 case (msg is GameFightTurnEndMessage):
-                    _local_15 = (msg as GameFightTurnEndMessage);
-                    this._lastPlayerId = _local_15.id;
-                    _local_16 = FightEntitiesFrame.getCurrentInstance().getEntityInfos(_local_15.id);
-                    if ((((_local_16 is GameFightFighterInformations)) && (!((_local_16 as GameFightFighterInformations).alive))))
+                    gftemsg = (msg as GameFightTurnEndMessage);
+                    if (!this._confirmTurnEnd)
                     {
-                        fighterInfosTE = (_local_16 as GameFightFighterInformations);
-                        BuffManager.getInstance().decrementDuration(_local_15.id);
-                        BuffManager.getInstance().markFinishingBuffs(this._lastPlayerId);
+                        this._lastPlayerId = gftemsg.id;
+                    }
+                    else
+                    {
+                        this._nextLastPlayerId = gftemsg.id;
+                    };
+                    entityInfos = FightEntitiesFrame.getCurrentInstance().getEntityInfos(gftemsg.id);
+                    if (((entityInfos is GameFightFighterInformations) && (!((entityInfos as GameFightFighterInformations).spawnInfo.alive))))
+                    {
+                        fighterInfosTE = (entityInfos as GameFightFighterInformations);
+                        BuffManager.getInstance().markFinishingBuffs(gftemsg.id);
                         fighterInfosTE.stats.actionPoints = fighterInfosTE.stats.maxActionPoints;
                         fighterInfosTE.stats.movementPoints = fighterInfosTE.stats.maxMovementPoints;
-                        KernelEventsManager.getInstance().processCallback(HookList.GameFightTurnEnd, this._lastPlayerId);
-                        if (_local_15.id == CurrentPlayedFighterManager.getInstance().currentFighterId)
+                        KernelEventsManager.getInstance().processCallback(HookList.GameFightTurnEnd, gftemsg.id);
+                        if (gftemsg.id == CurrentPlayedFighterManager.getInstance().currentFighterId)
                         {
                             CurrentPlayedFighterManager.getInstance().getSpellCastManager().nextTurn();
-                            SpellWrapper.refreshAllPlayerSpellHolder(_local_15.id);
+                            SpellWrapper.refreshAllPlayerSpellHolder(gftemsg.id);
                         };
                     };
-                    if (_local_15.id == CurrentPlayedFighterManager.getInstance().currentFighterId)
+                    if (gftemsg.id == CurrentPlayedFighterManager.getInstance().currentFighterId)
                     {
                         AFKFightManager.getInstance().lastTurnSkip = getTimer();
                         AFKFightManager.getInstance().confirm = true;
@@ -448,8 +526,7 @@
                     return (true);
                 case (msg is SequenceStartMessage):
                     this._autoEndTurn = false;
-                    _local_17 = (msg as SequenceStartMessage);
-                    if (!(this._sequenceFrameSwitcher))
+                    if (!this._sequenceFrameSwitcher)
                     {
                         this._sequenceFrameSwitcher = new FightSequenceSwitcherFrame();
                         Kernel.getWorker().addFrame(this._sequenceFrameSwitcher);
@@ -458,16 +535,16 @@
                     this._sequenceFrameSwitcher.currentFrame = this._currentSequenceFrame;
                     return (true);
                 case (msg is SequenceEndMessage):
-                    _local_18 = (msg as SequenceEndMessage);
-                    if (!(this._currentSequenceFrame))
+                    semsg = (msg as SequenceEndMessage);
+                    if (!this._currentSequenceFrame)
                     {
                         _log.warn("Wow wow wow, I've got a Sequence End but no Sequence Start? What the hell?");
                         return (true);
                     };
-                    this._currentSequenceFrame.mustAck = (_local_18.authorId == CurrentPlayedFighterManager.getInstance().currentFighterId);
-                    this._currentSequenceFrame.ackIdent = _local_18.actionId;
+                    this._currentSequenceFrame.mustAck = (semsg.authorId == CurrentPlayedFighterManager.getInstance().currentFighterId);
+                    this._currentSequenceFrame.ackIdent = semsg.actionId;
                     this._sequenceFrameSwitcher.currentFrame = null;
-                    if (!(this._currentSequenceFrame.parent))
+                    if (!this._currentSequenceFrame.parent)
                     {
                         Kernel.getWorker().removeFrame(this._sequenceFrameSwitcher);
                         this._sequenceFrameSwitcher = null;
@@ -492,44 +569,44 @@
                     {
                         this.confirmTurnEnd();
                     };
-                    return (true);
+                    return (false);
                 case (msg is GameFightNewWaveMessage):
-                    _local_19 = (msg as GameFightNewWaveMessage);
-                    this._newWaveId = _local_19.id;
+                    gfnwmsg = (msg as GameFightNewWaveMessage);
+                    this._newWaveId = gfnwmsg.id;
                     this._newWave = true;
-                    KernelEventsManager.getInstance().processCallback(FightHookList.WaveUpdated, _local_19.teamId, _local_19.id, _local_19.nbTurnBeforeNextWave);
+                    KernelEventsManager.getInstance().processCallback(FightHookList.WaveUpdated, gfnwmsg.teamId, gfnwmsg.id, gfnwmsg.nbTurnBeforeNextWave);
                     return (true);
                 case (msg is GameFightNewRoundMessage):
-                    _local_20 = (msg as GameFightNewRoundMessage);
-                    this._turnsCount = _local_20.roundNumber;
+                    gfnrmsg = (msg as GameFightNewRoundMessage);
+                    this._turnsCount = gfnrmsg.roundNumber;
                     CurrentPlayedFighterManager.getInstance().getSpellCastManager().currentTurn = (this._turnsCount - 1);
                     KernelEventsManager.getInstance().processCallback(FightHookList.TurnCountUpdated, this._turnsCount);
+                    if (GameDebugManager.getInstance().buffsDebugActivated)
+                    {
+                        _log.debug((("[BUFFS DEBUG] Début du tour de jeu " + this._turnsCount) + " !"));
+                    };
                     BuffManager.getInstance().spellBuffsToIgnore.length = 0;
                     return (true);
                 case (msg is GameFightLeaveMessage):
-                    _local_21 = (msg as GameFightLeaveMessage);
-                    _local_22 = (FightEntitiesFrame.getCurrentInstance().getEntityInfos(this._lastPlayerId) as GameFightFighterInformations);
-                    _local_23 = new FightSequenceFrame(this);
-                    if (((_local_22) && (_local_22.alive)))
+                    gflmsg = (msg as GameFightLeaveMessage);
+                    fighterInfos2 = (FightEntitiesFrame.getCurrentInstance().getEntityInfos(this._lastPlayerId) as GameFightFighterInformations);
+                    leaveSequenceFrame = new FightSequenceFrame(this);
+                    if (((fighterInfos2) && (fighterInfos2.spawnInfo.alive)))
                     {
                         fakeDeathMessage = new GameActionFightLeaveMessage();
-                        _local_23.process(fakeDeathMessage.initGameActionFightLeaveMessage(0, 0, _local_21.charId));
-                        this._sequenceFrames.push(_local_23);
+                        leaveSequenceFrame.process(fakeDeathMessage.initGameActionFightLeaveMessage(0, 0, gflmsg.charId));
+                        this._sequenceFrames.push(leaveSequenceFrame);
                         this.executeNextSequence();
                     };
-                    if ((((_local_21.charId == PlayedCharacterManager.getInstance().id)) && (PlayedCharacterManager.getInstance().isSpectator)))
+                    if (((gflmsg.charId == PlayedCharacterManager.getInstance().id) && (PlayedCharacterManager.getInstance().isSpectator)))
                     {
-                        if (this._executingSequence)
-                        {
-                            this._leaveSpectator = true;
-                        };
-                        KernelEventsManager.getInstance().processCallback(HookList.GameFightLeave, _local_21.charId);
+                        KernelEventsManager.getInstance().processCallback(HookList.GameFightLeave, gflmsg.charId);
                     };
                     return (true);
                 case (msg is GameFightEndMessage):
-                    _local_24 = (msg as GameFightEndMessage);
-                    _local_25 = 5;
-                    while (((this._currentSequenceFrame) && (--_local_25)))
+                    gfemsg = (msg as GameFightEndMessage);
+                    maxEndRescue = 5;
+                    while (((this._currentSequenceFrame) && (--maxEndRescue)))
                     {
                         _log.error("/!\\ Fight end but no SequenceEnd was received");
                         seqEnd = new SequenceEndMessage();
@@ -540,11 +617,11 @@
                     {
                         _log.warn("Delaying fight end because we're still in a sequence.");
                         this._endBattle = true;
-                        this._battleResults = _local_24;
+                        this._battleResults = gfemsg;
                     }
                     else
                     {
-                        this.endBattle(_local_24);
+                        this.endBattle(gfemsg);
                     };
                     FightersStateManager.getInstance().endFight();
                     CurrentPlayedFighterManager.getInstance().endFight();
@@ -559,10 +636,23 @@
                     {
                         _log.debug("Fin de combat brutale (pas de resultat connu)");
                         this._executingSequence = false;
-                        _local_41 = new GameFightEndMessage();
-                        _local_41.initGameFightEndMessage(0, 0, 0, null);
-                        this.process(_local_41);
+                        fakegfemsg = new GameFightEndMessage();
+                        fakegfemsg.initGameFightEndMessage(0, 0, 0, null);
+                        this.process(fakegfemsg);
                     };
+                    return (true);
+                case (msg is GameFightPauseMessage):
+                    gfpmsg = (msg as GameFightPauseMessage);
+                    if (gfpmsg.isPaused)
+                    {
+                        _log.debug("The fight is paused.");
+                    }
+                    else
+                    {
+                        _log.debug("The fight is resuming after pause.");
+                    };
+                    this._fightIsPaused = gfpmsg.isPaused;
+                    KernelEventsManager.getInstance().processCallback(HookList.GameFightPause, gfpmsg.isPaused);
                     return (true);
                 case (msg is DisableAfkAction):
                     AFKFightManager.getInstance().confirm = false;
@@ -578,10 +668,13 @@
                         Kernel.getWorker().addFrame(this._infoEntitiesFrame);
                     };
                     return (true);
-                case (msg is FighterStatsListMessage):
-                    _local_26 = (msg as FighterStatsListMessage);
-                    CurrentPlayedFighterManager.getInstance().setCharacteristicsInformations(PlayedCharacterManager.getInstance().id, _local_26.stats);
-                    SpellWrapper.refreshAllPlayerSpellHolder(PlayedCharacterManager.getInstance().id);
+                case (msg is RefreshCharacterStatsMessage):
+                    rcmsg2 = (msg as RefreshCharacterStatsMessage);
+                    infos = (FightEntitiesFrame.getCurrentInstance().getEntityInfos(rcmsg2.fighterId) as GameFightFighterInformations);
+                    if (infos)
+                    {
+                        infos.stats = rcmsg2.stats;
+                    };
                     return (true);
             };
             return (false);
@@ -589,10 +682,10 @@
 
         public function pulled():Boolean
         {
-            var entityId:int;
+            var entityId:Number;
             var fsf:FightSequenceFrame;
             DataMapProvider.getInstance().isInFight = false;
-            TweenMax.killAllTweens(false);
+            TweenMax.killAll(false);
             if (Kernel.getWorker().contains(FightTurnFrame))
             {
                 Kernel.getWorker().removeFrame(this._turnFrame);
@@ -650,43 +743,48 @@
             this._delayCslmsg = msg;
         }
 
-        public function prepareNextPlayableCharacter(currentCharacterId:int=0):void
+        public function prepareNextPlayableCharacter(currentCharacterId:Number=0):void
         {
             var nextCharacterEntity:GameFightFighterInformations;
-            var nextCharacterId:int;
+            var nextCharacterId:Number;
             if (this._slaveId)
             {
                 if (currentCharacterId)
                 {
-                    nextCharacterId = (((currentCharacterId == this._slaveId)) ? this._masterId : this._slaveId);
+                    nextCharacterId = ((currentCharacterId == this._slaveId) ? this._masterId : this._slaveId);
                 }
                 else
                 {
                     nextCharacterId = this.getNextPlayableCharacterId();
                 };
                 nextCharacterEntity = (FightEntitiesFrame.getCurrentInstance().getEntityInfos(nextCharacterId) as GameFightFighterInformations);
-                if (((!(nextCharacterEntity)) || (!(nextCharacterEntity.alive))))
+                if (((!(nextCharacterEntity)) || (!(nextCharacterEntity.spawnInfo.alive))))
                 {
                     return;
                 };
                 CurrentPlayedFighterManager.getInstance().currentFighterId = nextCharacterId;
                 if (nextCharacterId == this._masterId)
                 {
+                    FightApi.slaveContext = false;
                     CurrentPlayedFighterManager.getInstance().resetPlayerSpellList();
-                };
-                if (nextCharacterId == this._slaveId)
+                    KernelEventsManager.getInstance().processCallback(CustomUiHookList.SpellMovementAllowed, true);
+                }
+                else
                 {
-                    KernelEventsManager.getInstance().processCallback(CustomUiHookList.SpellMovementAllowed, false);
+                    if (nextCharacterId == this._slaveId)
+                    {
+                        KernelEventsManager.getInstance().processCallback(CustomUiHookList.SpellMovementAllowed, false);
+                    };
                 };
             };
         }
 
-        public function getNextPlayableCharacterId():int
+        public function getNextPlayableCharacterId():Number
         {
             var masterIdx:int;
             var slaveIdx:int;
             var currentCharacterIdx:int;
-            var currentPlayedCharacterId:int = CurrentPlayedFighterManager.getInstance().currentFighterId;
+            var currentPlayedCharacterId:Number = CurrentPlayedFighterManager.getInstance().currentFighterId;
             if (((!(this._slaveId)) || (!(this._turnsList))))
             {
                 return (currentPlayedCharacterId);
@@ -719,27 +817,27 @@
             {
                 return (this._masterId);
             };
-            if ((((masterIdx < currentCharacterIdx)) && ((slaveIdx > currentCharacterIdx))))
+            if (((masterIdx < currentCharacterIdx) && (slaveIdx > currentCharacterIdx)))
             {
                 return (this._slaveId);
             };
-            if ((((masterIdx > currentCharacterIdx)) && ((slaveIdx < currentCharacterIdx))))
+            if (((masterIdx > currentCharacterIdx) && (slaveIdx < currentCharacterIdx)))
             {
                 return (this._masterId);
             };
-            if ((((masterIdx > slaveIdx)) && ((masterIdx < currentCharacterIdx))))
+            if (((masterIdx > slaveIdx) && (masterIdx < currentCharacterIdx)))
             {
                 return (this._slaveId);
             };
-            if ((((masterIdx < slaveIdx)) && ((masterIdx < currentCharacterIdx))))
+            if (((masterIdx < slaveIdx) && (masterIdx < currentCharacterIdx)))
             {
                 return (this._masterId);
             };
-            if ((((masterIdx > slaveIdx)) && ((masterIdx > currentCharacterIdx))))
+            if (((masterIdx > slaveIdx) && (masterIdx > currentCharacterIdx)))
             {
                 return (this._slaveId);
             };
-            if ((((masterIdx < slaveIdx)) && ((masterIdx > currentCharacterIdx))))
+            if (((masterIdx < slaveIdx) && (masterIdx > currentCharacterIdx)))
             {
                 return (this._masterId);
             };
@@ -796,9 +894,9 @@
                     _newTurnsList = null;
                     _newDeadTurnsList = null;
                 };
-                if (((((!(_executingSequence)) && (_sequenceFrames.length))) && ((_sequenceFrames[0].instanceId >= _synchroniseFightersInstanceId))))
+                if ((((!(_executingSequence)) && (_sequenceFrames.length)) && (_sequenceFrames[0].instanceId >= _synchroniseFightersInstanceId)))
                 {
-                    gameFightSynchronize(_synchroniseFighters, false);
+                    gameFightSynchronize(_synchroniseFighters);
                     _synchroniseFighters = null;
                 };
                 if (executeNextSequence())
@@ -815,7 +913,7 @@
                     characterFrame = (Kernel.getWorker().getFrame(PlayedCharacterUpdatesFrame) as PlayedCharacterUpdatesFrame);
                     if (characterFrame)
                     {
-                        characterFrame.updateCharacterStatsList(_delayCslmsg);
+                        characterFrame.updateCharacterStatsList(_delayCslmsg.stats);
                     };
                     _delayCslmsg = null;
                 };
@@ -831,6 +929,11 @@
                 {
                     _log.warn("There was a turn end delayed, dispatching now.");
                     _confirmTurnEnd = false;
+                    if (!isNaN(_nextLastPlayerId))
+                    {
+                        _lastPlayerId = _nextLastPlayerId;
+                    };
+                    _nextLastPlayerId = Number.NaN;
                     confirmTurnEnd();
                 };
             });
@@ -848,12 +951,12 @@
             this._autoEndTurnTimer.stop();
         }
 
-        private function updateTurnsList(turnsList:Vector.<int>, deadTurnsList:Vector.<int>):void
+        private function updateTurnsList(turnsList:Vector.<Number>, deadTurnsList:Vector.<Number>):void
         {
             this._turnsList = turnsList;
             this._deadTurnsList = deadTurnsList;
             KernelEventsManager.getInstance().processCallback(HookList.FightersListUpdated);
-            if (((Dofus.getInstance().options.orderFighters) && (Kernel.getWorker().getFrame(FightEntitiesFrame))))
+            if (((Dofus.getInstance().options.getOption("orderFighters")) && (Kernel.getWorker().getFrame(FightEntitiesFrame))))
             {
                 (Kernel.getWorker().getFrame(FightEntitiesFrame) as FightEntitiesFrame).updateAllEntitiesNumber(turnsList);
             };
@@ -861,19 +964,22 @@
 
         private function confirmTurnEnd():void
         {
-            var char:CharacterCharacteristicsInformations;
-            var entityId:int;
+            var character:CharacterCharacteristicsInformations;
+            var entityId:Number;
             var fighterInfos2:GameFightFighterInformations = (FightEntitiesFrame.getCurrentInstance().getEntityInfos(this._lastPlayerId) as GameFightFighterInformations);
             if (fighterInfos2)
             {
                 BuffManager.getInstance().markFinishingBuffs(this._lastPlayerId);
                 fighterInfos2.stats.actionPoints = fighterInfos2.stats.maxActionPoints;
                 fighterInfos2.stats.movementPoints = fighterInfos2.stats.maxMovementPoints;
+                character = CurrentPlayedFighterManager.getInstance().getCharacteristicsInformations(this._lastPlayerId);
+                if (character)
+                {
+                    character.actionPointsCurrent = fighterInfos2.stats.maxActionPoints;
+                    character.movementPointsCurrent = fighterInfos2.stats.maxMovementPoints;
+                };
                 if (this._lastPlayerId == CurrentPlayedFighterManager.getInstance().currentFighterId)
                 {
-                    char = CurrentPlayedFighterManager.getInstance().getCharacteristicsInformations();
-                    char.actionPointsCurrent = fighterInfos2.stats.maxActionPoints;
-                    char.movementPointsCurrent = fighterInfos2.stats.maxMovementPoints;
                     KernelEventsManager.getInstance().processCallback(HookList.CharacterStatsList);
                     CurrentPlayedFighterManager.getInstance().getSpellCastManager().nextTurn();
                     SpellWrapper.refreshAllPlayerSpellHolder(this._lastPlayerId);
@@ -895,6 +1001,7 @@
         {
             var coward:*;
             var fightContextFrame:FightContextFrame;
+            EntitiesManager.getInstance().cleanDeadLook();
             var _holder:FightEntitiesHolder = FightEntitiesHolder.getInstance();
             var entities:Dictionary = _holder.getEntities();
             for each (coward in entities)
@@ -920,41 +1027,48 @@
             };
         }
 
-        private function gameFightSynchronize(fighters:Vector.<GameFightFighterInformations>, synchronizeBuff:Boolean=true):void
+        private function gameFightSynchronize(fighters:Vector.<GameFightFighterInformations>):void
         {
             var newWaveAppeared:Boolean;
             var newWaveMonster:Boolean;
-            var newWaveMonsterIndex:int;
             var fighterInfos:GameFightFighterInformations;
-            var ignoreEntityId:int;
+            var playedFighterCharacteristicsInformations:CharacterCharacteristicsInformations;
+            var buff:BasicBuff;
             var sequencer:SerialSequencer;
             var entitiesFrame:FightEntitiesFrame = (Kernel.getWorker().getFrame(FightEntitiesFrame) as FightEntitiesFrame);
-            var fbf:FightBattleFrame = (Kernel.getWorker().getFrame(FightBattleFrame) as FightBattleFrame);
-            var bm:BuffManager = BuffManager.getInstance();
-            if (synchronizeBuff)
-            {
-                ignoreEntityId = 0;
-                if ((((this.currentPlayerId == this.masterId)) || ((this.currentPlayerId == this.slaveId))))
-                {
-                    ignoreEntityId = (((this.currentPlayerId == this.slaveId)) ? this.masterId : this.slaveId);
-                };
-                BuffManager.getInstance().synchronize(ignoreEntityId);
-            };
+            var newWaveMonsterIndex:int;
+            BuffManager.getInstance().synchronize();
             for each (fighterInfos in fighters)
             {
-                if (fighterInfos.alive)
+                if (fighterInfos.spawnInfo.alive)
                 {
-                    if (fbf)
+                    newWaveMonster = (((fighterInfos.wave == this._newWaveId) && (!(fighterInfos.wave == 0))) && (!(DofusEntities.getEntity(fighterInfos.contextualId))));
+                    entitiesFrame.updateFighter(fighterInfos, null);
+                    playedFighterCharacteristicsInformations = CurrentPlayedFighterManager.getInstance().getCharacteristicsInformations(fighterInfos.contextualId);
+                    if (playedFighterCharacteristicsInformations)
                     {
-                        BuffManager.getInstance().markFinishingBuffs(fighterInfos.contextualId, true);
+                        if (playedFighterCharacteristicsInformations.actionPointsCurrent != fighterInfos.stats.actionPoints)
+                        {
+                            playedFighterCharacteristicsInformations.actionPointsCurrent = fighterInfos.stats.actionPoints;
+                        };
+                        if (playedFighterCharacteristicsInformations.movementPointsCurrent != fighterInfos.stats.movementPoints)
+                        {
+                            playedFighterCharacteristicsInformations.movementPointsCurrent = fighterInfos.stats.movementPoints;
+                        };
                     };
-                    newWaveMonster = (((fighterInfos.wave == this._newWaveId)) && (!(DofusEntities.getEntity(fighterInfos.contextualId))));
-                    entitiesFrame.updateFighter(fighterInfos, null, BuffManager.getInstance().getFinishingBuffs(fighterInfos.contextualId));
+                    BuffManager.getInstance().markFinishingBuffs(fighterInfos.contextualId, false);
+                    for each (buff in BuffManager.getInstance().getAllBuff(fighterInfos.contextualId))
+                    {
+                        if ((buff is StatBuff))
+                        {
+                            (buff as StatBuff).isRecent = false;
+                        };
+                    };
                     if (newWaveMonster)
                     {
                         newWaveAppeared = true;
                         (DofusEntities.getEntity(fighterInfos.contextualId) as AnimatedCharacter).visible = false;
-                        if (((!(OptionManager.getOptionManager("tubul")["tubulIsDesactivated"])) && ((newWaveMonsterIndex == 0))))
+                        if (((!(OptionManager.getOptionManager("tubul").getOption("tubulIsDesactivated"))) && (newWaveMonsterIndex == 0)))
                         {
                             this._waveSound.play();
                         };
@@ -972,58 +1086,40 @@
                 this._newWave = false;
                 this._newWaveId = -1;
             };
+            if (this._neverSynchronizedBefore)
+            {
+                KernelEventsManager.getInstance().processCallback(FightHookList.UpdateFightersLook);
+                this._neverSynchronizedBefore = false;
+            };
+        }
+
+        private function removeSavedPosition(pEntityId:Number):void
+        {
+            var savedPos:Object;
+            var i:int;
+            var nbPos:int;
+            var fightContextFrame:FightContextFrame = (Kernel.getWorker().getFrame(FightContextFrame) as FightContextFrame);
+            var savedPositions:Array = fightContextFrame.fightersPositionsHistory[pEntityId];
+            if (savedPositions)
+            {
+                nbPos = savedPositions.length;
+                i = 0;
+                while (i < nbPos)
+                {
+                    savedPos = savedPositions[i];
+                    savedPos.lives--;
+                    if (savedPos.lives == 0)
+                    {
+                        savedPositions.splice(i, 1);
+                        i--;
+                        nbPos--;
+                    };
+                    i++;
+                };
+            };
         }
 
 
     }
-}//package com.ankamagames.dofus.logic.game.fight.frames
-
-import com.ankamagames.dofus.types.entities.AnimatedCharacter;
-import com.ankamagames.atouin.Atouin;
-import flash.geom.ColorTransform;
-import com.ankamagames.atouin.AtouinConstants;
-import gs.TweenMax;
-
-class PlayerColorTransformManager 
-{
-
-    /*private*/ var _offSetValue:Number;
-    /*private*/ var _alphaValue:Number;
-    /*private*/ var _player:AnimatedCharacter;
-
-    public function PlayerColorTransformManager(pPlayer:AnimatedCharacter)
-    {
-        this._player = pPlayer;
-        this._alphaValue = pPlayer.alpha;
-        this.offSetValue = 0;
-    }
-
-    public function set offSetValue(pValue:Number):void
-    {
-        this._offSetValue = pValue;
-        if (Atouin.getInstance().options.transparentOverlayMode)
-        {
-            this._player.transform.colorTransform = new ColorTransform(1, 1, 1, ((!((this._alphaValue == 1))) ? this._alphaValue : AtouinConstants.OVERLAY_MODE_ALPHA), pValue, pValue, pValue, 0);
-        }
-        else
-        {
-            this._player.transform.colorTransform = new ColorTransform(1, 1, 1, this._alphaValue, pValue, pValue, pValue, 0);
-        };
-    }
-
-    public function get offSetValue():Number
-    {
-        return (this._offSetValue);
-    }
-
-    public function enlightPlayer():void
-    {
-        TweenMax.to(this, 0.7, {
-            "offSetValue":50,
-            "yoyo":1
-        });
-    }
-
-
-}
+} com.ankamagames.dofus.logic.game.fight.frames
 

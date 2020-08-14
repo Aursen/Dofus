@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.fight.steps
+package com.ankamagames.dofus.logic.game.fight.steps
 {
     import com.ankamagames.jerakine.sequencer.AbstractSequencable;
     import com.ankamagames.dofus.network.types.game.context.fight.GameFightFighterInformations;
@@ -8,19 +8,22 @@
     import com.ankamagames.dofus.network.enums.FightSpellCastCriticalEnum;
     import com.ankamagames.dofus.logic.game.fight.frames.FightEntitiesFrame;
     import com.ankamagames.dofus.types.sequences.AddGfxEntityStep;
+    import __AS3__.vec.Vector;
 
     public class FightCloseCombatStep extends AbstractSequencable implements IFightStep 
     {
 
-        private var _fighterId:int;
+        private var _fighterId:Number;
         private var _weaponId:uint;
         private var _critical:uint;
+        private var _verboseCast:Boolean;
 
-        public function FightCloseCombatStep(fighterId:int, weaponId:uint, critical:uint)
+        public function FightCloseCombatStep(fighterId:Number, weaponId:uint, critical:uint, verboseCast:Boolean)
         {
             this._fighterId = fighterId;
             this._weaponId = weaponId;
             this._critical = critical;
+            this._verboseCast = verboseCast;
         }
 
         public function get stepType():String
@@ -32,7 +35,10 @@
         {
             var fighterInfos:GameFightFighterInformations;
             var seq:SerialSequencer;
-            FightEventsHelper.sendFightEvent(FightEventEnum.FIGHTER_CLOSE_COMBAT, [this._fighterId, this._weaponId, this._critical], this._fighterId, castingSpellId, true);
+            if (this._verboseCast)
+            {
+                FightEventsHelper.sendFightEvent(FightEventEnum.FIGHTER_CLOSE_COMBAT, [this._fighterId, this._weaponId, this._critical], this._fighterId, castingSpellId, true);
+            };
             if (this._critical == FightSpellCastCriticalEnum.CRITICAL_HIT)
             {
                 fighterInfos = (FightEntitiesFrame.getCurrentInstance().getEntityInfos(this._fighterId) as GameFightFighterInformations);
@@ -46,7 +52,12 @@
             executeCallbacks();
         }
 
+        public function get targets():Vector.<Number>
+        {
+            return (new <Number>[this._fighterId]);
+        }
+
 
     }
-}//package com.ankamagames.dofus.logic.game.fight.steps
+} com.ankamagames.dofus.logic.game.fight.steps
 

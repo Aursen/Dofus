@@ -1,4 +1,4 @@
-﻿package com.adobe.utils
+package com.adobe.utils
 {
     public class StringUtil 
     {
@@ -6,7 +6,7 @@
 
         public static function beginsWith(input:String, prefix:String):Boolean
         {
-            return ((prefix == input.substring(0, prefix.length)));
+            return (prefix == input.substring(0, prefix.length));
         }
 
         public static function trim(input:String):String
@@ -18,9 +18,9 @@
         {
             if (caseSensitive)
             {
-                return ((s1 == s2));
+                return (s1 == s2);
             };
-            return ((s1.toUpperCase() == s2.toUpperCase()));
+            return (s1.toUpperCase() == s2.toUpperCase());
         }
 
         public static function replace(input:String, replace:String, replaceWith:String):String
@@ -45,12 +45,12 @@
 
         public static function endsWith(input:String, suffix:String):Boolean
         {
-            return ((suffix == input.substring((input.length - suffix.length))));
+            return (suffix == input.substring((input.length - suffix.length)));
         }
 
         public static function stringHasValue(s:String):Boolean
         {
-            return (((!((s == null))) && ((s.length > 0))));
+            return ((!(s == null)) && (s.length > 0));
         }
 
         public static function remove(input:String, remove:String):String
@@ -75,5 +75,5 @@
 
 
     }
-}//package com.adobe.utils
+} com.adobe.utils
 

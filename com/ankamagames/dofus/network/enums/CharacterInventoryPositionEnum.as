@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.enums
+package com.ankamagames.dofus.network.enums
 {
     public class CharacterInventoryPositionEnum 
     {
@@ -11,6 +11,7 @@
         public static const ACCESSORY_POSITION_SHIELD:uint = 15;
         public static const ACCESSORY_POSITION_WEAPON:uint = 1;
         public static const ACCESSORY_POSITION_PETS:uint = 8;
+        public static const ACCESSORY_POSITION_RIDE_HARNESS:uint = 29;
         public static const INVENTORY_POSITION_RING_LEFT:uint = 2;
         public static const INVENTORY_POSITION_RING_RIGHT:uint = 4;
         public static const INVENTORY_POSITION_DOFUS_1:uint = 9;
@@ -28,10 +29,11 @@
         public static const INVENTORY_POSITION_SECOND_MALUS:uint = 25;
         public static const INVENTORY_POSITION_ROLEPLAY_BUFFER:uint = 26;
         public static const INVENTORY_POSITION_FOLLOWER:uint = 27;
-        public static const INVENTORY_POSITION_COMPANION:uint = 28;
+        public static const INVENTORY_POSITION_ENTITY:uint = 28;
+        public static const INVENTORY_POSITION_COSTUME:uint = 30;
         public static const INVENTORY_POSITION_NOT_EQUIPED:uint = 63;
 
 
     }
-}//package com.ankamagames.dofus.network.enums
+} com.ankamagames.dofus.network.enums
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.types
+package com.ankamagames.jerakine.types
 {
     import flash.utils.IExternalizable;
     import com.somerandomdude.colortoolkit.ColorUtil;
@@ -15,7 +15,7 @@
         public var green:uint;
         public var blue:uint;
 
-        public function Color(color:uint=0)
+        public function Color(color:Number=0)
         {
             this.parseColor(color);
         }
@@ -27,7 +27,7 @@
 
         public static function toHex(hsl:HSL):uint
         {
-            return ((hsl.color as uint));
+            return (hsl.color as uint);
         }
 
         public static function setHSLlightness(color:uint, lightness:Number):uint
@@ -46,33 +46,33 @@
 
         public static function generateColorList(methode:int):Array
         {
-            var n:uint = (Math.random() * 0xFFFFFF);
-            var motherColor:Color = new Color(n);
+            var n:uint = uint((Math.random() * 0xFFFFFF));
+            var motherColor:com.somerandomdude.colortoolkit.Color = new com.somerandomdude.colortoolkit.Color(n);
             switch (methode)
             {
                 case ColorGenerationMethodsEnum.MONOCHROME:
-                    return ((motherColor.monochromeScheme.toHex() as Array));
+                    return (motherColor.monochromeScheme.toHex() as Array);
                 case ColorGenerationMethodsEnum.ANALOGOUS:
-                    return ((motherColor.analogousScheme.toHex() as Array));
+                    return (motherColor.analogousScheme.toHex() as Array);
                 case ColorGenerationMethodsEnum.COMPLEMENTARY:
-                    return ((motherColor.complemenartyScheme.toHex() as Array));
+                    return (motherColor.complemenartyScheme.toHex() as Array);
                 case ColorGenerationMethodsEnum.COMPOUND:
-                    return ((motherColor.compoundScheme.toHex() as Array));
+                    return (motherColor.compoundScheme.toHex() as Array);
                 case ColorGenerationMethodsEnum.TETRAD:
-                    return ((motherColor.tetradScheme.toHex() as Array));
+                    return (motherColor.tetradScheme.toHex() as Array);
                 case ColorGenerationMethodsEnum.FLIPPED_COMPOUND:
-                    return ((motherColor.flippedCompoundScheme.toHex() as Array));
+                    return (motherColor.flippedCompoundScheme.toHex() as Array);
             };
             return ([-1, -1, -1, -1, -1, -1]);
         }
 
 
-        public function get color():uint
+        public function get color():Number
         {
-            return (((((this.red & 0xFF) << 16) | ((this.green & 0xFF) << 8)) | (this.blue & 0xFF)));
+            return ((((this.red & 0xFF) << 16) | ((this.green & 0xFF) << 8)) | (this.blue & 0xFF));
         }
 
-        public function set color(value:uint):void
+        public function set color(value:Number):void
         {
             this.parseColor(value);
         }
@@ -93,7 +93,7 @@
 
         public function toString():String
         {
-            return ((((((('[AdvancedColor(R="' + this.red) + '",G="') + this.green) + '",B="') + this.blue) + '")]'));
+            return (((((('[AdvancedColor(R="' + this.red) + '",G="') + this.green) + '",B="') + this.blue) + '")]');
         }
 
         public function release():void
@@ -115,7 +115,7 @@
             this.blue = (this.blue + (nValue * (0xFF - this.blue)));
         }
 
-        private function parseColor(color:uint):void
+        protected function parseColor(color:Number):void
         {
             this.red = ((color & 0xFF0000) >> 16);
             this.green = ((color & 0xFF00) >> 8);
@@ -124,5 +124,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.types
+} com.ankamagames.jerakine.types
 

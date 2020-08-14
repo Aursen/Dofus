@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.managers
+package com.ankamagames.berilia.managers
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
@@ -10,13 +10,8 @@
 
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(GenericEventsManager));
 
-        protected var _aEvent:Array;
+        protected var _aEvent:Array = new Array();
 
-        public function GenericEventsManager()
-        {
-            this._aEvent = new Array();
-            super();
-        }
 
         public function initialize():void
         {
@@ -40,7 +35,7 @@
             var genericListener:GenericListener;
             for (i in this._aEvent)
             {
-                if (!(this._aEvent[i]))
+                if (!this._aEvent[i])
                 {
                 }
                 else
@@ -49,7 +44,7 @@
                     while (j < this._aEvent[i].length)
                     {
                         genericListener = this._aEvent[i][j];
-                        if (!(genericListener))
+                        if (!genericListener)
                         {
                         }
                         else
@@ -63,7 +58,7 @@
                         };
                         j++;
                     };
-                    if (!(this._aEvent[i].length))
+                    if (!this._aEvent[i].length)
                     {
                         this._aEvent[i] = null;
                         delete this._aEvent[i];
@@ -79,7 +74,7 @@
             var genericListener:GenericListener;
             for (i in this._aEvent)
             {
-                if (!(this._aEvent[i]))
+                if (!this._aEvent[i])
                 {
                 }
                 else
@@ -88,7 +83,7 @@
                     while (j < this._aEvent[i].length)
                     {
                         genericListener = this._aEvent[i][j];
-                        if (!(genericListener))
+                        if (!genericListener)
                         {
                         }
                         else
@@ -102,7 +97,7 @@
                         };
                         j++;
                     };
-                    if (!(this._aEvent[i].length))
+                    if (!this._aEvent[i].length)
                     {
                         this._aEvent[i] = null;
                         delete this._aEvent[i];
@@ -113,5 +108,5 @@
 
 
     }
-}//package com.ankamagames.berilia.managers
+} com.ankamagames.berilia.managers
 

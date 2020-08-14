@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.roleplay.frames
+package com.ankamagames.dofus.logic.game.roleplay.frames
 {
     import com.ankamagames.jerakine.messages.Frame;
     import com.ankamagames.jerakine.logger.Logger;
@@ -34,15 +34,15 @@
 
         public function process(msg:Message):Boolean
         {
-            var _local_2:LeaveDialogMessage;
+            var ldm:LeaveDialogMessage;
             switch (true)
             {
                 case (msg is LeaveDialogRequestAction):
                     ConnectionsHandler.getConnection().send(new LeaveDialogRequestMessage());
                     return (true);
                 case (msg is LeaveDialogMessage):
-                    _local_2 = (msg as LeaveDialogMessage);
-                    if (_local_2.dialogType == DialogTypeEnum.DIALOG_BOOK)
+                    ldm = (msg as LeaveDialogMessage);
+                    if (ldm.dialogType == DialogTypeEnum.DIALOG_BOOK)
                     {
                         Kernel.getWorker().process(ChangeWorldInteractionAction.create(true));
                         Kernel.getWorker().removeFrame(this);
@@ -60,5 +60,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.roleplay.frames
+} com.ankamagames.dofus.logic.game.roleplay.frames
 

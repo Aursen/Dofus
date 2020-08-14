@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.roleplay.frames
+package com.ankamagames.dofus.logic.game.roleplay.frames
 {
     import com.ankamagames.jerakine.messages.Frame;
     import com.ankamagames.jerakine.logger.Logger;
@@ -9,6 +9,7 @@
     import com.ankamagames.dofus.logic.game.roleplay.actions.NpcDialogReplyAction;
     import com.ankamagames.dofus.network.messages.game.context.roleplay.npc.NpcDialogReplyMessage;
     import com.ankamagames.dofus.network.messages.game.dialog.LeaveDialogMessage;
+    import com.ankamagames.dofus.logic.game.common.frames.TeleportBuddiesDialogFrame;
     import com.ankamagames.berilia.managers.KernelEventsManager;
     import com.ankamagames.dofus.misc.lists.RoleplayHookList;
     import com.ankamagames.dofus.kernel.net.ConnectionsHandler;
@@ -38,31 +39,44 @@
 
         public function process(msg:Message):Boolean
         {
-            var _local_2:NpcDialogQuestionMessage;
-            var _local_3:NpcDialogReplyAction;
-            var _local_4:NpcDialogReplyMessage;
-            var _local_5:LeaveDialogMessage;
+            var ndcmsg:NpcDialogQuestionMessage;
+            var ndra:NpcDialogReplyAction;
+            var ndrmsg:NpcDialogReplyMessage;
+            var ldm:LeaveDialogMessage;
+            var teleportDFrame:TeleportBuddiesDialogFrame;
             switch (true)
             {
                 case (msg is NpcDialogQuestionMessage):
-                    _local_2 = (msg as NpcDialogQuestionMessage);
-                    KernelEventsManager.getInstance().processCallback(RoleplayHookList.NpcDialogQuestion, _local_2.messageId, _local_2.dialogParams, _local_2.visibleReplies);
+                    ndcmsg = (msg as NpcDialogQuestionMessage);
+                    KernelEventsManager.getInstance().processCallback(RoleplayHookList.NpcDialogQuestion, ndcmsg.messageId, ndcmsg.dialogParams, ndcmsg.visibleReplies);
                     return (true);
                 case (msg is NpcDialogReplyAction):
-                    _local_3 = (msg as NpcDialogReplyAction);
-                    _local_4 = new NpcDialogReplyMessage();
-                    _local_4.initNpcDialogReplyMessage(_local_3.replyId);
-                    ConnectionsHandler.getConnection().send(_local_4);
+                    ndra = (msg as NpcDialogReplyAction);
+                    ndrmsg = new NpcDialogReplyMessage();
+                    ndrmsg.initNpcDialogReplyMessage(ndra.replyId);
+                    ConnectionsHandler.getConnection().send(ndrmsg);
                     return (true);
                 case (msg is LeaveDialogRequestAction):
                     ConnectionsHandler.getConnection().send(new LeaveDialogRequestMessage());
                     return (true);
                 case (msg is LeaveDialogMessage):
-                    _local_5 = (msg as LeaveDialogMessage);
-                    if ((((_local_5.dialogType == DialogTypeEnum.DIALOG_DIALOG)) || ((_local_5.dialogType == DialogTypeEnum.DIALOG_MARRIAGE))))
+                    ldm = (msg as LeaveDialogMessage);
+                    if (((ldm.dialogType == DialogTypeEnum.DIALOG_DIALOG) || (ldm.dialogType == DialogTypeEnum.DIALOG_MARRIAGE)))
                     {
                         Kernel.getWorker().process(ChangeWorldInteractionAction.create(true));
                         Kernel.getWorker().removeFrame(this);
+                    }
+                    else
+                    {
+                        if (ldm.dialogType == DialogTypeEnum.DIALOG_DUNGEON_MEETING)
+                        {
+                            teleportDFrame = (Kernel.getWorker().getFrame(TeleportBuddiesDialogFrame) as TeleportBuddiesDialogFrame);
+                            if (teleportDFrame)
+                            {
+                                teleportDFrame.process(ldm);
+                            };
+                            Kernel.getWorker().removeFrame(this);
+                        };
                     };
                     return (true);
             };
@@ -77,5 +91,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.roleplay.frames
+} com.ankamagames.dofus.logic.game.roleplay.frames
 

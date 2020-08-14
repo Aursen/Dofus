@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.data
+package com.ankamagames.jerakine.data
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
@@ -39,7 +39,7 @@
 
         public static function getInstance():I18nFileAccessor
         {
-            if (!(_self))
+            if (!_self)
             {
                 _self = new (I18nFileAccessor)();
             };
@@ -135,7 +135,7 @@
                 try
                 {
                     f = file.toFile();
-                    if (!(f.exists))
+                    if (!f.exists)
                     {
                         _log.fatal((("Le fichier [" + file) + "] utiliser lors de la surcharge du fichier i18n n'existe pas"));
                         return;
@@ -154,7 +154,7 @@
                     content = new XML(rawContent);
                     for each (override in content..override)
                     {
-                        if ((((override.@type.toString() == "")) || ((override.@type.toString() == "ui"))))
+                        if (((override.@type.toString() == "") || (override.@type.toString() == "ui")))
                         {
                             this._textIndexesOverride[override.@target.toString()] = override.toString();
                         }
@@ -183,12 +183,12 @@
 
         public function getText(key:int):String
         {
-            if (!(this._indexes))
+            if (!this._indexes)
             {
                 return (null);
             };
             var pointer:int = this._indexes[key];
-            if (!(pointer))
+            if (!pointer)
             {
                 return (null);
             };
@@ -203,12 +203,12 @@
 
         public function getUnDiacriticalText(key:int):String
         {
-            if (!(this._unDiacriticalIndex))
+            if (!this._unDiacriticalIndex)
             {
                 return (null);
             };
             var pointer:int = this._unDiacriticalIndex[key];
-            if (!(pointer))
+            if (!pointer)
             {
                 return (null);
             };
@@ -223,12 +223,12 @@
 
         public function hasText(key:int):Boolean
         {
-            return (((this._indexes) && (this._indexes[key])));
+            return ((this._indexes) && (this._indexes[key]));
         }
 
         public function getNamedText(textKey:String):String
         {
-            if (!(this._textIndexes))
+            if (!this._textIndexes)
             {
                 return (null);
             };
@@ -237,7 +237,7 @@
                 textKey = this._textIndexesOverride[textKey];
             };
             var pointer:int = this._textIndexes[textKey];
-            if (!(pointer))
+            if (!pointer)
             {
                 return (null);
             };
@@ -247,7 +247,7 @@
 
         public function hasNamedText(textKey:String):Boolean
         {
-            return (((this._textIndexes) && (this._textIndexes[textKey])));
+            return ((this._textIndexes) && (this._textIndexes[textKey]));
         }
 
         public function useDirectBuffer(bool:Boolean):void
@@ -256,7 +256,7 @@
             {
                 return;
             };
-            if (!(bool))
+            if (!bool)
             {
                 this._directBuffer = null;
             }
@@ -288,5 +288,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.data
+} com.ankamagames.jerakine.data
 

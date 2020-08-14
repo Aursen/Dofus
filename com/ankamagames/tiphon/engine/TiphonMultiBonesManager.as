@@ -1,4 +1,4 @@
-﻿package com.ankamagames.tiphon.engine
+package com.ankamagames.tiphon.engine
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
@@ -20,7 +20,7 @@
 
         public static function getInstance():TiphonMultiBonesManager
         {
-            if (!(_instance))
+            if (!_instance)
             {
                 _instance = new (TiphonMultiBonesManager)();
             };
@@ -32,7 +32,7 @@
         {
             var seTab:*;
             var se:*;
-            if (!(result))
+            if (!result)
             {
                 result = new Array();
             };
@@ -63,22 +63,22 @@
         {
             var bone:uint;
             var hasBone:Boolean;
-            var hasRessource:Boolean;
-            var _local_6:Uri;
+            var hasResource:Boolean;
+            var file:Uri;
             this._nbBonesLoaded = 0;
             this._nbBonesToLoad = bones.length;
             for each (bone in bones)
             {
                 hasBone = BoneIndexManager.getInstance().hasCustomBone(bone);
-                hasRessource = Tiphon.skullLibrary.getResourceById(bone);
-                if (((hasBone) || (hasRessource)))
+                hasResource = (!(Tiphon.skullLibrary.getResourceById(bone) == null));
+                if (((hasBone) || (hasResource)))
                 {
                     this.onLoadedBone(bone, callback);
                 }
                 else
                 {
-                    _local_6 = new Uri(((TiphonConstants.SWF_SKULL_PATH + bone) + ".swl"));
-                    Tiphon.skullLibrary.addResource(bone, _local_6);
+                    file = new Uri(((TiphonConstants.SWF_SKULL_PATH + bone) + ".swl"));
+                    Tiphon.skullLibrary.addResource(bone, file);
                     Tiphon.skullLibrary.askResource(bone, null, new Callback(this.onLoadedBone, bone, callback));
                 };
             };
@@ -86,5 +86,5 @@
 
 
     }
-}//package com.ankamagames.tiphon.engine
+} com.ankamagames.tiphon.engine
 

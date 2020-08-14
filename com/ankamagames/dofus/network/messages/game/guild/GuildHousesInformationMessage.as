@@ -1,29 +1,25 @@
-﻿package com.ankamagames.dofus.network.messages.game.guild
+package com.ankamagames.dofus.network.messages.game.guild
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
     import __AS3__.vec.Vector;
     import com.ankamagames.dofus.network.types.game.house.HouseInformationsForGuild;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
     import __AS3__.vec.*;
 
-    [Trusted]
     public class GuildHousesInformationMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 5919;
 
         private var _isInitialized:Boolean = false;
-        public var housesInformations:Vector.<HouseInformationsForGuild>;
+        public var housesInformations:Vector.<HouseInformationsForGuild> = new Vector.<HouseInformationsForGuild>();
+        private var _housesInformationstree:FuncTree;
 
-        public function GuildHousesInformationMessage()
-        {
-            this.housesInformations = new Vector.<HouseInformationsForGuild>();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
@@ -58,6 +54,14 @@
         override public function unpack(input:ICustomDataInput, length:uint):void
         {
             this.deserialize(input);
+        }
+
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
         }
 
         public function serialize(output:ICustomDataOutput):void
@@ -95,7 +99,35 @@
             };
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GuildHousesInformationMessage(tree);
+        }
+
+        public function deserializeAsyncAs_GuildHousesInformationMessage(tree:FuncTree):void
+        {
+            this._housesInformationstree = tree.addChild(this._housesInformationstreeFunc);
+        }
+
+        private function _housesInformationstreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._housesInformationstree.addChild(this._housesInformationsFunc);
+                i++;
+            };
+        }
+
+        private function _housesInformationsFunc(input:ICustomDataInput):void
+        {
+            var _item:HouseInformationsForGuild = new HouseInformationsForGuild();
+            _item.deserialize(input);
+            this.housesInformations.push(_item);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.guild
+} com.ankamagames.dofus.network.messages.game.guild
 

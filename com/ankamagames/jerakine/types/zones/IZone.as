@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.types.zones
+package com.ankamagames.jerakine.types.zones
 {
     import __AS3__.vec.Vector;
 
@@ -15,5 +15,5 @@
         function getCells(_arg_1:uint=0):Vector.<uint>;
 
     }
-}//package com.ankamagames.jerakine.types.zones
+} com.ankamagames.jerakine.types.zones
 

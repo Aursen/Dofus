@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.context.fight
+package com.ankamagames.dofus.network.messages.game.context.fight
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class GameFightNewWaveMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -58,6 +58,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_GameFightNewWaveMessage(output);
@@ -81,20 +89,47 @@
 
         public function deserializeAs_GameFightNewWaveMessage(input:ICustomDataInput):void
         {
+            this._idFunc(input);
+            this._teamIdFunc(input);
+            this._nbTurnBeforeNextWaveFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GameFightNewWaveMessage(tree);
+        }
+
+        public function deserializeAsyncAs_GameFightNewWaveMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._idFunc);
+            tree.addChild(this._teamIdFunc);
+            tree.addChild(this._nbTurnBeforeNextWaveFunc);
+        }
+
+        private function _idFunc(input:ICustomDataInput):void
+        {
             this.id = input.readByte();
             if (this.id < 0)
             {
                 throw (new Error((("Forbidden value (" + this.id) + ") on element of GameFightNewWaveMessage.id.")));
             };
+        }
+
+        private function _teamIdFunc(input:ICustomDataInput):void
+        {
             this.teamId = input.readByte();
             if (this.teamId < 0)
             {
                 throw (new Error((("Forbidden value (" + this.teamId) + ") on element of GameFightNewWaveMessage.teamId.")));
             };
+        }
+
+        private function _nbTurnBeforeNextWaveFunc(input:ICustomDataInput):void
+        {
             this.nbTurnBeforeNextWave = input.readShort();
         }
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.context.fight
+} com.ankamagames.dofus.network.messages.game.context.fight
 

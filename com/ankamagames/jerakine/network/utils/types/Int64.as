@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.network.utils.types
+package com.ankamagames.jerakine.network.utils.types
 {
     public final class Int64 extends Binary64 
     {
@@ -10,13 +10,13 @@
 
         public static function fromNumber(n:Number):Int64
         {
-            return (new (Int64)(n, Math.floor((n / 4294967296))));
+            return (new Int64(n, Math.floor((n / 4294967296))));
         }
 
         public static function parseInt64(str:String, radix:uint=0):Int64
         {
             var digit:uint;
-            var negative:Boolean = (str.search(/^\-/) == 0);
+            var negative:* = (str.search(/^\-/) == 0);
             var i:uint = ((negative) ? 1 : 0);
             if (radix == 0)
             {
@@ -30,7 +30,7 @@
                     radix = 10;
                 };
             };
-            if ((((radix < 2)) || ((radix > 36))))
+            if (((radix < 2) || (radix > 36)))
             {
                 throw (new ArgumentError());
             };
@@ -39,13 +39,13 @@
             while (i < str.length)
             {
                 digit = str.charCodeAt(i);
-                if ((((digit >= CHAR_CODE_0)) && ((digit <= CHAR_CODE_9))))
+                if (((digit >= CHAR_CODE_0) && (digit <= CHAR_CODE_9)))
                 {
                     digit = (digit - CHAR_CODE_0);
                 }
                 else
                 {
-                    if ((((digit >= CHAR_CODE_A)) && ((digit <= CHAR_CODE_Z))))
+                    if (((digit >= CHAR_CODE_A) && (digit <= CHAR_CODE_Z)))
                     {
                         digit = (digit - CHAR_CODE_A);
                         digit = (digit + 10);
@@ -71,6 +71,94 @@
             return (result);
         }
 
+        public static function make(low:uint, high:uint):Int64
+        {
+            return (new Int64(low, high));
+        }
+
+        public static function shl(a:Int64, b:int):Int64
+        {
+            var i:Int64;
+            b = (b & 0x3F);
+            if (b == 0)
+            {
+                i = a.copy();
+            }
+            else
+            {
+                if (b < 32)
+                {
+                    i = make(((a.high << b) | (a.low >>> (32 - b))), (a.low << b));
+                }
+                else
+                {
+                    i = make((a.low << (b - 32)), 0);
+                };
+            };
+            return (i);
+        }
+
+        public static function shr(a:Int64, b:int):Int64
+        {
+            var i:Int64;
+            b = (b & 0x3F);
+            if (b == 0)
+            {
+                i = a.copy();
+            }
+            else
+            {
+                if (b < 32)
+                {
+                    i = make((a.high >> b), ((a.high << (32 - b)) | (a.low >>> b)));
+                }
+                else
+                {
+                    i = make((a.high >> 31), (a.high >> (b - 32)));
+                };
+            };
+            return (i);
+        }
+
+        public static function ushr(a:Int64, b:int):Int64
+        {
+            var i:Int64;
+            b = (b & 0x3F);
+            if (b == 0)
+            {
+                i = a.copy();
+            }
+            else
+            {
+                if (b < 32)
+                {
+                    i = make((a.high >>> b), ((a.high << (32 - b)) | (a.low >>> b)));
+                }
+                else
+                {
+                    i = make(0, (a.high >>> (b - 32)));
+                };
+            };
+            return (i);
+        }
+
+        public static function xor(a:Int64, b:Int64):Int64
+        {
+            return (make((a.high ^ b.high), (a.low ^ b.low)));
+        }
+
+        public static function and(a:Int64, b:Int64):Int64
+        {
+            return (make((a.high & b.high), (a.low & b.low)));
+        }
+
+        public static function flip(a:Int64):Int64
+        {
+            var i:Int64 = xor(a, Int64.fromNumber(-1));
+            i.add(1);
+            return (i);
+        }
+
 
         final public function set high(value:int):void
         {
@@ -84,13 +172,13 @@
 
         final public function toNumber():Number
         {
-            return (((this.high * 4294967296) + low));
+            return ((this.high * 4294967296) + low);
         }
 
         final public function toString(radix:uint=10):String
         {
-            var _local_4:uint;
-            if ((((radix < 2)) || ((radix > 36))))
+            var digit:uint;
+            if (((radix < 2) || (radix > 36)))
             {
                 throw (new ArgumentError());
             };
@@ -105,7 +193,7 @@
                     };
                     return (int(low).toString(radix));
             };
-            if ((((low == 0)) && ((this.high == 0))))
+            if (((low == 0) && (this.high == 0)))
             {
                 return ("0");
             };
@@ -118,24 +206,29 @@
             };
             do 
             {
-                _local_4 = copyOfThis.div(radix);
-                if (_local_4 < 10)
+                digit = copyOfThis.div(radix);
+                if (digit < 10)
                 {
-                    digitChars.push((_local_4 + CHAR_CODE_0));
+                    digitChars.push((digit + CHAR_CODE_0));
                 }
                 else
                 {
-                    digitChars.push(((_local_4 - 10) + CHAR_CODE_A));
+                    digitChars.push(((digit - 10) + CHAR_CODE_A));
                 };
             } while (copyOfThis.high != 0);
             if (this.high < 0)
             {
-                return ((("-" + copyOfThis.low.toString(radix)) + String.fromCharCode.apply(String, digitChars.reverse())));
+                return (("-" + copyOfThis.low.toString(radix)) + String.fromCharCode.apply(String, digitChars.reverse()));
             };
-            return ((copyOfThis.low.toString(radix) + String.fromCharCode.apply(String, digitChars.reverse())));
+            return (copyOfThis.low.toString(radix) + String.fromCharCode.apply(String, digitChars.reverse()));
+        }
+
+        final public function copy():Int64
+        {
+            return (make(low, this.high));
         }
 
 
     }
-}//package com.ankamagames.jerakine.network.utils.types
+} com.ankamagames.jerakine.network.utils.types
 

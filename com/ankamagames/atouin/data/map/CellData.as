@@ -1,4 +1,4 @@
-﻿package com.ankamagames.atouin.data.map
+package com.ankamagames.atouin.data.map
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
@@ -19,12 +19,14 @@
         private var _floor:int;
         private var _map:Map;
         private var _arrow:int = 0;
+        private var _linkedZone:int;
         private var _mov:Boolean;
         private var _los:Boolean;
         private var _nonWalkableDuringFight:Boolean;
         private var _red:Boolean;
         private var _blue:Boolean;
         private var _farmCell:Boolean;
+        private var _havenbagCell:Boolean;
         private var _visible:Boolean;
         private var _nonWalkableDuringRP:Boolean;
 
@@ -69,6 +71,11 @@
             return (this._farmCell);
         }
 
+        public function get havenbagCell():Boolean
+        {
+            return (this._havenbagCell);
+        }
+
         public function get visible():Boolean
         {
             return (this._visible);
@@ -86,26 +93,51 @@
 
         public function get useTopArrow():Boolean
         {
-            return (!(((this._arrow & 1) == 0)));
+            return (!((this._arrow & 0x01) == 0));
         }
 
         public function get useBottomArrow():Boolean
         {
-            return (!(((this._arrow & 2) == 0)));
+            return (!((this._arrow & 0x02) == 0));
         }
 
         public function get useRightArrow():Boolean
         {
-            return (!(((this._arrow & 4) == 0)));
+            return (!((this._arrow & 0x04) == 0));
         }
 
         public function get useLeftArrow():Boolean
         {
-            return (!(((this._arrow & 8) == 0)));
+            return (!((this._arrow & 0x08) == 0));
+        }
+
+        public function hasLinkedZoneRP():Boolean
+        {
+            return ((this.mov) && (!(this.farmCell)));
+        }
+
+        public function get linkedZoneRP():int
+        {
+            return ((this._linkedZone & 0xF0) >> 4);
+        }
+
+        public function hasLinkedZoneFight():Boolean
+        {
+            return ((((this.mov) && (!(this.nonWalkableDuringFight))) && (!(this.farmCell))) && (!(this.havenbagCell)));
+        }
+
+        public function get linkedZoneFight():int
+        {
+            return (this._linkedZone & 0x0F);
         }
 
         public function fromRaw(raw:IDataInput):void
         {
+            var tmpbytesv9:int;
+            var topArrow:Boolean;
+            var bottomArrow:Boolean;
+            var rightArrow:Boolean;
+            var leftArrow:Boolean;
             var tmpBits:int;
             try
             {
@@ -114,17 +146,71 @@
                 {
                     return;
                 };
-                this._losmov = raw.readUnsignedByte();
+                if (this._map.mapVersion >= 9)
+                {
+                    tmpbytesv9 = raw.readShort();
+                    this._mov = ((tmpbytesv9 & 0x01) == 0);
+                    this._nonWalkableDuringFight = (!((tmpbytesv9 & 0x02) == 0));
+                    this._nonWalkableDuringRP = (!((tmpbytesv9 & 0x04) == 0));
+                    this._los = ((tmpbytesv9 & 0x08) == 0);
+                    this._blue = (!((tmpbytesv9 & 0x10) == 0));
+                    this._red = (!((tmpbytesv9 & 0x20) == 0));
+                    this._visible = (!((tmpbytesv9 & 0x40) == 0));
+                    this._farmCell = (!((tmpbytesv9 & 0x80) == 0));
+                    if (this.map.mapVersion >= 10)
+                    {
+                        this._havenbagCell = (!((tmpbytesv9 & 0x0100) == 0));
+                        topArrow = (!((tmpbytesv9 & 0x0200) == 0));
+                        bottomArrow = (!((tmpbytesv9 & 0x0400) == 0));
+                        rightArrow = (!((tmpbytesv9 & 0x0800) == 0));
+                        leftArrow = (!((tmpbytesv9 & 0x1000) == 0));
+                    }
+                    else
+                    {
+                        topArrow = (!((tmpbytesv9 & 0x0100) == 0));
+                        bottomArrow = (!((tmpbytesv9 & 0x0200) == 0));
+                        rightArrow = (!((tmpbytesv9 & 0x0400) == 0));
+                        leftArrow = (!((tmpbytesv9 & 0x0800) == 0));
+                    };
+                    if (topArrow)
+                    {
+                        this._map.topArrowCell.push(this.id);
+                    };
+                    if (bottomArrow)
+                    {
+                        this._map.bottomArrowCell.push(this.id);
+                    };
+                    if (rightArrow)
+                    {
+                        this._map.rightArrowCell.push(this.id);
+                    };
+                    if (leftArrow)
+                    {
+                        this._map.leftArrowCell.push(this.id);
+                    };
+                }
+                else
+                {
+                    this._losmov = raw.readUnsignedByte();
+                    this._los = (((this._losmov & 0x02) >> 1) == 1);
+                    this._mov = ((this._losmov & 0x01) == 1);
+                    this._visible = (((this._losmov & 0x40) >> 6) == 1);
+                    this._farmCell = (((this._losmov & 0x20) >> 5) == 1);
+                    this._blue = (((this._losmov & 0x10) >> 4) == 1);
+                    this._red = (((this._losmov & 0x08) >> 3) == 1);
+                    this._nonWalkableDuringRP = (((this._losmov & 0x80) >> 7) == 1);
+                    this._nonWalkableDuringFight = (((this._losmov & 0x04) >> 2) == 1);
+                };
                 if (AtouinConstants.DEBUG_FILES_PARSING)
                 {
-                    _log.debug(("  (CellData) LOS+MOV : " + this._losmov));
+                    _log.debug(("  (CellData) LOS : " + this._los));
                 };
                 this.speed = raw.readByte();
                 if (AtouinConstants.DEBUG_FILES_PARSING)
                 {
                     _log.debug(("  (CellData) Speed : " + this.speed));
                 };
-                this.mapChangeData = raw.readUnsignedByte();
+                this.mapChangeData = raw.readByte();
                 if (AtouinConstants.DEBUG_FILES_PARSING)
                 {
                     _log.debug(("  (CellData) MapChangeData : " + this.mapChangeData));
@@ -137,10 +223,19 @@
                         _log.debug(("  (CellData) moveZone : " + this.moveZone));
                     };
                 };
-                if (this._map.mapVersion > 7)
+                if (((this._map.mapVersion > 10) && ((this.hasLinkedZoneRP()) || (this.hasLinkedZoneFight()))))
+                {
+                    this._linkedZone = raw.readUnsignedByte();
+                    if (AtouinConstants.DEBUG_FILES_PARSING)
+                    {
+                        _log.debug(("  (CellData) linkedZoneRP : " + this.linkedZoneRP));
+                        _log.debug(("  (CellData) linkedZoneFight : " + this.linkedZoneFight));
+                    };
+                };
+                if (((this._map.mapVersion > 7) && (this.map.mapVersion < 9)))
                 {
                     tmpBits = raw.readByte();
-                    this._arrow = (15 & tmpBits);
+                    this._arrow = (0x0F & tmpBits);
                     if (this.useTopArrow)
                     {
                         this._map.topArrowCell.push(this.id);
@@ -163,17 +258,14 @@
             {
                 throw (e);
             };
-            this._los = (((this._losmov & 2) >> 1) == 1);
-            this._mov = ((this._losmov & 1) == 1);
-            this._visible = (((this._losmov & 64) >> 6) == 1);
-            this._farmCell = (((this._losmov & 32) >> 5) == 1);
-            this._blue = (((this._losmov & 16) >> 4) == 1);
-            this._red = (((this._losmov & 8) >> 3) == 1);
-            this._nonWalkableDuringRP = (((this._losmov & 128) >> 7) == 1);
-            this._nonWalkableDuringFight = (((this._losmov & 4) >> 2) == 1);
+        }
+
+        public function toString():String
+        {
+            return ((((((((((((((((((((((("map : " + this._map.id) + " CellId : ") + this.id) + " mov : ") + this._mov) + " los : ") + this._los) + " nonWalkableDuringFight : ") + this._nonWalkableDuringFight) + " nonWalkableDuringRp : ") + this._nonWalkableDuringRP) + " farmCell : ") + this._farmCell) + " havenbagCell: ") + this._havenbagCell) + " visbile : ") + this._visible) + " speed: ") + this.speed) + " moveZone: ") + this.moveZone) + " linkedZoneId: ") + this._linkedZone);
         }
 
 
     }
-}//package com.ankamagames.atouin.data.map
+} com.ankamagames.atouin.data.map
 

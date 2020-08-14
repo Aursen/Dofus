@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.fight.miscs
+package com.ankamagames.dofus.logic.game.fight.miscs
 {
     import com.ankamagames.tiphon.types.ISubEntityBehavior;
     import com.ankamagames.tiphon.display.TiphonSprite;
@@ -24,7 +24,10 @@
 
         public function remove():void
         {
-            this._parentData.parent.removeEventListener(TiphonEvent.RENDER_FATHER_SUCCEED, this.onFatherRendered);
+            if (((!(this._parentData == null)) && (!(this._parentData.parent == null))))
+            {
+                this._parentData.parent.removeEventListener(TiphonEvent.RENDER_FATHER_SUCCEED, this.onFatherRendered);
+            };
             this._subentity = null;
             this._parentData = null;
         }
@@ -38,5 +41,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.fight.miscs
+} com.ankamagames.dofus.logic.game.fight.miscs
 

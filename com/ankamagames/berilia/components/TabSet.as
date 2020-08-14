@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.components
+package com.ankamagames.berilia.components
 {
     import com.ankamagames.berilia.types.graphic.GraphicContainer;
     import com.ankamagames.berilia.FinalizableUIComponent;
@@ -55,7 +55,6 @@
         private var _nYPlusTab:int;
         private var _nXLabelTab:int;
         private var _nYLabelTab:int;
-        private var _finalized:Boolean = false;
         private var _bNameEdition:Boolean = false;
 
         public function TabSet()
@@ -219,7 +218,7 @@
         public function set length(i:int):void
         {
             this._nNbTabsRequired = i;
-            if (((this._btnPlus) && ((this._nNbTabsRequired >= 1))))
+            if (((this._btnPlus) && (this._nNbTabsRequired >= 1)))
             {
                 if (this._nNbTabsRequired > this._nNbTabs)
                 {
@@ -255,7 +254,7 @@
 
         public function set selectedTab(i:int):void
         {
-            if (!(this._aCtrs[i]))
+            if (!this._aCtrs[i])
             {
                 if (i < 0)
                 {
@@ -268,7 +267,7 @@
             };
             this._nPreviousSelected = this._nSelected;
             this._nSelected = i;
-            if (((!((this._nPreviousSelected == -1))) && (this._aCtrs[this._nPreviousSelected])))
+            if (((!(this._nPreviousSelected == -1)) && (this._aCtrs[this._nPreviousSelected])))
             {
                 this._aCtrs[this._nPreviousSelected].selected = false;
                 this._aCloses[this._nPreviousSelected].visible = false;
@@ -288,12 +287,12 @@
 
         public function get lastTab():int
         {
-            return ((this._nNbTabs - 1));
+            return (this._nNbTabs - 1);
         }
 
         public function set dataProvider(data:*):void
         {
-            if (!(this.isIterable(data)))
+            if (!this.isIterable(data))
             {
                 throw (new ArgumentError("dataProvider must be either Array or Vector."));
             };
@@ -301,25 +300,15 @@
             this.finalize();
         }
 
-        public function get dataProvider()
+        public function get dataProvider():*
         {
             return (this._aTabsList);
         }
 
-        public function get finalized():Boolean
-        {
-            return (this._finalized);
-        }
-
-        public function set finalized(b:Boolean):void
-        {
-            this._finalized = b;
-        }
-
-        public function finalize():void
+        override public function finalize():void
         {
             this._uiClass = getUi();
-            if (((this._aTabsList) && ((this._aTabsList.length > 0))))
+            if (((this._aTabsList) && (this._aTabsList.length > 0)))
             {
                 this._nNbTabs = this._aTabsList.length;
                 if (this._nNbTabs > 0)
@@ -331,7 +320,8 @@
             {
                 this.tabsDisplay();
             };
-            this._finalized = true;
+            _finalized = true;
+            super.finalize();
             if (this._uiClass)
             {
                 this._uiClass.iAmFinalized(this);
@@ -340,7 +330,7 @@
 
         override public function remove():void
         {
-            if (!(__removed))
+            if (!__removed)
             {
                 this._uiClass = null;
                 this._tabCtr.remove();
@@ -427,10 +417,10 @@
             btn.addChild(texBg);
             btn.addChild(lbl);
             btn.addChild(inp);
-            getUi().registerId(btn.name, new GraphicElement(btn, new Array(), btn.name));
-            getUi().registerId(texBg.name, new GraphicElement(texBg, new Array(), texBg.name));
-            getUi().registerId(lbl.name, new GraphicElement(lbl, new Array(), lbl.name));
-            getUi().registerId(inp.name, new GraphicElement(inp, new Array(), inp.name));
+            getUi().registerId(btn.name, new GraphicElement(btn, null, btn.name));
+            getUi().registerId(texBg.name, new GraphicElement(texBg, null, texBg.name));
+            getUi().registerId(lbl.name, new GraphicElement(lbl, null, lbl.name));
+            getUi().registerId(inp.name, new GraphicElement(inp, null, inp.name));
             var stateChangingProperties:Array = new Array();
             stateChangingProperties[StatesEnum.STATE_OVER] = new Array();
             stateChangingProperties[StatesEnum.STATE_OVER][texBg.name] = new Array();
@@ -456,8 +446,8 @@
             texClose.name = ("tx_closeTab" + this._nCurrentMaxIndex);
             texClose.finalize();
             btnClose.addChild(texClose);
-            getUi().registerId(btnClose.name, new GraphicElement(btnClose, new Array(), btnClose.name));
-            getUi().registerId(texClose.name, new GraphicElement(texClose, new Array(), texClose.name));
+            getUi().registerId(btnClose.name, new GraphicElement(btnClose, null, btnClose.name));
+            getUi().registerId(texClose.name, new GraphicElement(texClose, null, texClose.name));
             var stateChangingPropertiesClose:Array = new Array();
             stateChangingPropertiesClose[StatesEnum.STATE_OVER] = new Array();
             stateChangingPropertiesClose[StatesEnum.STATE_OVER][texClose.name] = new Array();
@@ -501,9 +491,9 @@
             texPlus.finalize();
             this._btnPlus.addChild(texBgPlus);
             this._btnPlus.addChild(texPlus);
-            getUi().registerId(this._btnPlus.name, new GraphicElement(this._btnPlus, new Array(), this._btnPlus.name));
-            getUi().registerId(texBgPlus.name, new GraphicElement(texBgPlus, new Array(), texBgPlus.name));
-            getUi().registerId(texPlus.name, new GraphicElement(texPlus, new Array(), texPlus.name));
+            getUi().registerId(this._btnPlus.name, new GraphicElement(this._btnPlus, null, this._btnPlus.name));
+            getUi().registerId(texBgPlus.name, new GraphicElement(texBgPlus, null, texBgPlus.name));
+            getUi().registerId(texPlus.name, new GraphicElement(texPlus, null, texPlus.name));
             addChild(this._btnPlus);
             var stateChangingProperties:Array = new Array();
             stateChangingProperties[StatesEnum.STATE_OVER] = new Array();
@@ -573,7 +563,7 @@
             {
                 return (true);
             };
-            if (((((((((!((obj["length"] == null))) && (!((obj["length"] == 0))))) && (!(isNaN(obj["length"]))))) && (!((obj[0] == null))))) && (!((obj is String)))))
+            if ((((((!(obj["length"] == null)) && (!(obj["length"] == 0))) && (!(isNaN(obj["length"])))) && (!(obj[0] == null))) && (!(obj is String))))
             {
                 return (true);
             };
@@ -594,24 +584,23 @@
                 this._aInputs[this._nSelected].focus();
                 this._aInputs[this._nSelected].setSelection(0, this._aInputs[this._nSelected].text.length);
             };
-            this._aInputs[this._nSelected].disabled = !(value);
+            this._aInputs[this._nSelected].disabled = (!(value));
             this._aInputs[this._nSelected].visible = value;
-            this._aLbls[this._nSelected].visible = !(value);
+            this._aLbls[this._nSelected].visible = (!(value));
         }
 
-        [HideInFakeClass]
         override public function process(msg:Message):Boolean
         {
-            var _local_2:MouseClickMessage;
-            var _local_3:MouseRightClickMessage;
-            var _local_4:KeyboardKeyUpMessage;
+            var mcm:MouseClickMessage;
+            var mrcm:MouseRightClickMessage;
+            var kkum:KeyboardKeyUpMessage;
             var name:String;
             var i:*;
             var nameEdition:String;
             switch (true)
             {
                 case (msg is MouseClickMessage):
-                    _local_2 = (msg as MouseClickMessage);
+                    mcm = (msg as MouseClickMessage);
                     if (this._bNameEdition)
                     {
                         this._bNameEdition = false;
@@ -622,7 +611,7 @@
                             Berilia.getInstance().handler.process(new RenameTabMessage(this, this._nSelected, name));
                         };
                     };
-                    switch (_local_2.target.name)
+                    switch (mcm.target.name)
                     {
                         case this._btnPlus.name:
                             if ((this._nTotalWidth + this._nWidthTab) < __width)
@@ -638,12 +627,12 @@
                         default:
                             for (i in this._aCtrs)
                             {
-                                if (_local_2.target == this._aCtrs[i])
+                                if (mcm.target == this._aCtrs[i])
                                 {
                                     this.selectedTab = i;
                                 };
                             };
-                            if (_local_2.target == this._aCloses[this._nSelected])
+                            if (mcm.target == this._aCloses[this._nSelected])
                             {
                                 if (this._nNbTabs > 1)
                                 {
@@ -657,8 +646,8 @@
                     };
                     break;
                 case (msg is MouseRightClickMessage):
-                    _local_3 = (msg as MouseRightClickMessage);
-                    if ((((_local_3.target == this._aCtrs[this._nSelected])) && (!(this._bNameEdition))))
+                    mrcm = (msg as MouseRightClickMessage);
+                    if (((mrcm.target == this._aCtrs[this._nSelected]) && (!(this._bNameEdition))))
                     {
                         this.switchToEdition(true);
                     }
@@ -671,10 +660,10 @@
                     };
                     break;
                 case (msg is KeyboardKeyUpMessage):
-                    _local_4 = (msg as KeyboardKeyUpMessage);
+                    kkum = (msg as KeyboardKeyUpMessage);
                     if (this._bNameEdition)
                     {
-                        if (_local_4.keyboardEvent.keyCode == Keyboard.ENTER)
+                        if (kkum.keyboardEvent.keyCode == Keyboard.ENTER)
                         {
                             this._bNameEdition = false;
                             nameEdition = this._aInputs[this._nSelected].text;
@@ -686,7 +675,7 @@
                         }
                         else
                         {
-                            if (_local_4.keyboardEvent.keyCode == Keyboard.ESCAPE)
+                            if (kkum.keyboardEvent.keyCode == Keyboard.ESCAPE)
                             {
                                 this.switchToEdition(false);
                             };
@@ -699,5 +688,5 @@
 
 
     }
-}//package com.ankamagames.berilia.components
+} com.ankamagames.berilia.components
 

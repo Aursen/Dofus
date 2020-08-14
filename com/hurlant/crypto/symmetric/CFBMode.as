@@ -1,4 +1,4 @@
-﻿package com.hurlant.crypto.symmetric
+package com.hurlant.crypto.symmetric
 {
     import flash.utils.ByteArray;
 
@@ -20,7 +20,7 @@
             while (i < src.length)
             {
                 key.encrypt(vector);
-                chunk = ((((i + blockSize))<l) ? blockSize : (l - i));
+                chunk = (((i + blockSize) < l) ? blockSize : (l - i));
                 j = 0;
                 while (j < chunk)
                 {
@@ -44,7 +44,7 @@
             while (i < src.length)
             {
                 key.encrypt(vector);
-                chunk = ((((i + blockSize))<l) ? blockSize : (l - i));
+                chunk = (((i + blockSize) < l) ? blockSize : (l - i));
                 tmp.position = 0;
                 tmp.writeBytes(src, i, chunk);
                 j = 0;
@@ -61,10 +61,10 @@
 
         public function toString():String
         {
-            return ((key.toString() + "-cfb"));
+            return (key.toString() + "-cfb");
         }
 
 
     }
-}//package com.hurlant.crypto.symmetric
+} com.hurlant.crypto.symmetric
 

@@ -1,4 +1,4 @@
-﻿package com.hurlant.util
+package com.hurlant.util
 {
     import flash.net.LocalConnection;
     import flash.system.System;
@@ -26,5 +26,5 @@
 
 
     }
-}//package com.hurlant.util
+} com.hurlant.util
 

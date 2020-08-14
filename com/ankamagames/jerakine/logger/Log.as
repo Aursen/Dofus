@@ -1,16 +1,17 @@
-﻿package com.ankamagames.jerakine.logger
+package com.ankamagames.jerakine.logger
 {
     import com.ankamagames.jerakine.logger.targets.TargetsPreparator;
     import com.ankamagames.jerakine.logger.targets.TemporaryBufferTarget;
+    import com.ankamagames.jerakine.logger.targets.LoggingTarget;
     import flash.utils.Dictionary;
     import flash.events.EventDispatcher;
-    import flash.utils.getQualifiedClassName;
     import flash.net.URLLoader;
     import flash.events.Event;
     import flash.events.IOErrorEvent;
     import flash.events.SecurityErrorEvent;
     import flash.net.URLRequest;
-    import com.ankamagames.jerakine.logger.targets.LoggingTarget;
+    import flash.utils.getQualifiedClassName;
+    import com.ankamagames.jerakine.logger.targets.SentryTarget;
     import flash.utils.getDefinitionByName;
     import com.ankamagames.jerakine.logger.targets.ConfigurableLoggingTarget;
     import com.ankamagames.jerakine.logger.targets.AbstractTarget;
@@ -24,11 +25,19 @@
         private static var _initializing:Boolean;
         private static var _manualInit:Boolean;
         private static var _targets:Array = new Array();
+        private static var _sentryTarget:LoggingTarget;
         private static var _loggers:Dictionary = new Dictionary();
         private static var _dispatcher:EventDispatcher = new EventDispatcher();
-        protected static const _log:Logger = Log.getLogger(flash.utils.getQualifiedClassName(Log));
+        private static var _configfile:String = "";
+        public static var PREFIX:String = "";
+        protected static var _log:Logger;
         public static var exitIfNoConfigFile:Boolean = true;
 
+
+        public static function get CONFIG_FILE():String
+        {
+            return (_configfile);
+        }
 
         public static function initFromString(xml:String):void
         {
@@ -38,13 +47,14 @@
             LogLogger.activeLog(true);
         }
 
-        public static function getLogger(category:String):Logger
+        public static function getLogger(category:String, configFile:String="log4as.xml"):Logger
         {
             var xmlLoader:URLLoader;
-            var _local_3:LogLogger;
-            if (!(_initializing))
+            var logger:LogLogger;
+            if (!_initializing)
             {
                 _initializing = true;
+                _configfile = configFile;
                 _tempTarget = new TemporaryBufferTarget();
                 addTarget(_tempTarget);
                 xmlLoader = new URLLoader();
@@ -53,7 +63,8 @@
                 xmlLoader.addEventListener(SecurityErrorEvent.SECURITY_ERROR, securityErrorHandler);
                 try
                 {
-                    xmlLoader.load(new URLRequest("log4as.xml"));
+                    xmlLoader.load(new URLRequest(_configfile));
+                    _log = Log.getLogger(getQualifiedClassName(Log));
                 }
                 catch(e:Error)
                 {
@@ -63,9 +74,9 @@
             {
                 return (_loggers[category]);
             };
-            _local_3 = new LogLogger(category);
-            _loggers[category] = _local_3;
-            return (_local_3);
+            logger = new LogLogger(category);
+            _loggers[category] = logger;
+            return (logger);
         }
 
         public static function addTarget(target:LoggingTarget):void
@@ -76,9 +87,45 @@
             };
             _dispatcher.addEventListener(LogEvent.LOG_EVENT, target.onLog);
             _targets.push(target);
+            if ((target is SentryTarget))
+            {
+                _sentryTarget = target;
+            };
         }
 
-        private static function removeTarget(target:LoggingTarget):void
+        public static function deactivateLevel(level:uint, deactive:Boolean):void
+        {
+            var logger:LogLogger;
+            for each (logger in _loggers)
+            {
+                logger.setLevelDectivation(level, deactive);
+            };
+        }
+
+        public static function removeTargetType(qualifiedClassName:String):void
+        {
+            var target:LoggingTarget;
+            var i:int;
+            var targetToDelete:Array = new Array();
+            for each (target in _targets)
+            {
+                if (getQualifiedClassName(target) == qualifiedClassName)
+                {
+                    targetToDelete.push(target);
+                };
+            };
+            if (targetToDelete.length > 0)
+            {
+                i = 0;
+                while (i < targetToDelete.length)
+                {
+                    removeTarget(targetToDelete[i]);
+                    i++;
+                };
+            };
+        }
+
+        public static function removeTarget(target:LoggingTarget):void
         {
             var index:int = _targets.indexOf(target);
             if (index > -1)
@@ -90,7 +137,7 @@
 
         private static function containsTarget(target:LoggingTarget):Boolean
         {
-            return ((_targets.indexOf(target) > -1));
+            return (_targets.indexOf(target) > -1);
         }
 
         private static function parseConfiguration(config:XML):void
@@ -116,7 +163,6 @@
                 }
                 catch(e:Error)
                 {
-                    trace("error");
                 };
                 ltf = new LogTargetFilter(filter.@value, allow);
                 filters.push(ltf);
@@ -128,7 +174,7 @@
                     moduleClass = getDefinitionByName(target.@module);
                     targetInstance = new ((moduleClass as Class))();
                     targetInstance.filters = filters;
-                    if (((target.hasComplexContent()) && ((targetInstance is ConfigurableLoggingTarget))))
+                    if (((target.hasComplexContent()) && (targetInstance is ConfigurableLoggingTarget)))
                     {
                         ConfigurableLoggingTarget(targetInstance).configure(target);
                     };
@@ -147,8 +193,9 @@
             };
         }
 
-        private static function configurationFileMissing():void
+        private static function configurationFileMissing(txt:String):void
         {
+            _log.warn(txt);
             if (exitIfNoConfigFile)
             {
                 LogLogger.activeLog(false);
@@ -178,9 +225,17 @@
             _tempTarget = null;
         }
 
-        static function broadcastToTargets(event:LogEvent):void
+        internal static function broadcastToTargets(event:LogEvent):void
         {
             _dispatcher.dispatchEvent(event);
+        }
+
+        internal static function broadcastToSentryTarget(event:LogEvent):void
+        {
+            if (_sentryTarget != null)
+            {
+                _sentryTarget.onLog(event);
+            };
         }
 
         private static function completeHandler(e:Event):void
@@ -191,7 +246,6 @@
             }
             catch(e:Error)
             {
-                trace("Erreur de formatage du fichier log4as.xml");
             };
             flushBuffer();
         }
@@ -202,8 +256,7 @@
             {
                 return;
             };
-            _log.warn("Missing log4as.xml file.");
-            configurationFileMissing();
+            configurationFileMissing((("Missing " + _configfile) + " file."));
         }
 
         private static function securityErrorHandler(se:SecurityErrorEvent):void
@@ -212,11 +265,10 @@
             {
                 return;
             };
-            _log.warn("Can't load log4as.xml file : forbidden by sandbox.");
-            configurationFileMissing();
+            configurationFileMissing((("Can't load " + _configfile) + " file : forbidden by sandbox."));
         }
 
 
     }
-}//package com.ankamagames.jerakine.logger
+} com.ankamagames.jerakine.logger
 

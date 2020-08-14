@@ -1,4 +1,4 @@
-﻿package com.ankamagames.atouin.messages
+package com.ankamagames.atouin.messages
 {
     import com.ankamagames.jerakine.messages.Message;
     import flash.display.DisplayObject;
@@ -27,5 +27,5 @@
 
 
     }
-}//package com.ankamagames.atouin.messages
+} com.ankamagames.atouin.messages
 

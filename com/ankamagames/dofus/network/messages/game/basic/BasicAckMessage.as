@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.basic
+package com.ankamagames.dofus.network.messages.game.basic
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class BasicAckMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -55,6 +55,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_BasicAckMessage(output);
@@ -81,11 +89,32 @@
 
         public function deserializeAs_BasicAckMessage(input:ICustomDataInput):void
         {
+            this._seqFunc(input);
+            this._lastPacketIdFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_BasicAckMessage(tree);
+        }
+
+        public function deserializeAsyncAs_BasicAckMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._seqFunc);
+            tree.addChild(this._lastPacketIdFunc);
+        }
+
+        private function _seqFunc(input:ICustomDataInput):void
+        {
             this.seq = input.readVarUhInt();
             if (this.seq < 0)
             {
                 throw (new Error((("Forbidden value (" + this.seq) + ") on element of BasicAckMessage.seq.")));
             };
+        }
+
+        private function _lastPacketIdFunc(input:ICustomDataInput):void
+        {
             this.lastPacketId = input.readVarUhShort();
             if (this.lastPacketId < 0)
             {
@@ -95,5 +124,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.basic
+} com.ankamagames.dofus.network.messages.game.basic
 

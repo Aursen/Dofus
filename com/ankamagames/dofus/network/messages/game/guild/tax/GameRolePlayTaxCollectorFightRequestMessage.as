@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.guild.tax
+package com.ankamagames.dofus.network.messages.game.guild.tax
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,20 +6,17 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class GameRolePlayTaxCollectorFightRequestMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 5954;
 
-        private var _isInitialized:Boolean = false;
-        public var taxCollectorId:int = 0;
-
 
         override public function get isInitialized():Boolean
         {
-            return (this._isInitialized);
+            return (true);
         }
 
         override public function getMessageId():uint
@@ -27,17 +24,13 @@
             return (5954);
         }
 
-        public function initGameRolePlayTaxCollectorFightRequestMessage(taxCollectorId:int=0):GameRolePlayTaxCollectorFightRequestMessage
+        public function initGameRolePlayTaxCollectorFightRequestMessage():GameRolePlayTaxCollectorFightRequestMessage
         {
-            this.taxCollectorId = taxCollectorId;
-            this._isInitialized = true;
             return (this);
         }
 
         override public function reset():void
         {
-            this.taxCollectorId = 0;
-            this._isInitialized = false;
         }
 
         override public function pack(output:ICustomDataOutput):void
@@ -52,27 +45,39 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
-            this.serializeAs_GameRolePlayTaxCollectorFightRequestMessage(output);
         }
 
         public function serializeAs_GameRolePlayTaxCollectorFightRequestMessage(output:ICustomDataOutput):void
         {
-            output.writeInt(this.taxCollectorId);
         }
 
         public function deserialize(input:ICustomDataInput):void
         {
-            this.deserializeAs_GameRolePlayTaxCollectorFightRequestMessage(input);
         }
 
         public function deserializeAs_GameRolePlayTaxCollectorFightRequestMessage(input:ICustomDataInput):void
         {
-            this.taxCollectorId = input.readInt();
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+        }
+
+        public function deserializeAsyncAs_GameRolePlayTaxCollectorFightRequestMessage(tree:FuncTree):void
+        {
         }
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.guild.tax
+} com.ankamagames.dofus.network.messages.game.guild.tax
 

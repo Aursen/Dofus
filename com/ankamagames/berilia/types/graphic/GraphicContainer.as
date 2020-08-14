@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.types.graphic
+package com.ankamagames.berilia.types.graphic
 {
     import flash.display.Sprite;
     import com.ankamagames.berilia.UIComponent;
@@ -6,53 +6,72 @@
     import com.ankamagames.jerakine.pools.Poolable;
     import com.ankamagames.jerakine.interfaces.IDragAndDropHandler;
     import com.ankamagames.jerakine.interfaces.ICustomUnicNameGetter;
+    import com.ankamagames.berilia.FinalizableUIComponent;
+    import flash.geom.ColorTransform;
     import flash.utils.Dictionary;
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
     import flash.filters.DropShadowFilter;
-    import flash.display.Shape;
-    import com.ankamagames.jerakine.utils.benchmark.monitoring.FpsManager;
-    import com.ankamagames.jerakine.handlers.FocusHandler;
+    import com.ankamagames.berilia.enums.StrataEnum;
+    import com.ankamagames.berilia.managers.ThemeManager;
     import com.ankamagames.berilia.Berilia;
+    import com.ankamagames.jerakine.handlers.FocusHandler;
+    import flash.filters.ColorMatrixFilter;
     import flash.filters.BitmapFilterQuality;
     import flash.display.DisplayObject;
-    import flash.geom.ColorTransform;
     import flash.display.DisplayObjectContainer;
     import com.ankamagames.jerakine.handlers.messages.mouse.MouseClickMessage;
+    import com.ankamagames.jerakine.handlers.messages.mouse.MouseDownMessage;
     import com.ankamagames.jerakine.pools.GenericPool;
     import com.ankamagames.jerakine.messages.Message;
     import flash.geom.Rectangle;
     import com.ankamagames.berilia.managers.SecureCenter;
-    import com.ankamagames.jerakine.utils.display.StageShareManager;
-    import com.ankamagames.jerakine.utils.display.EnterFrameDispatcher;
-    import gs.TweenLite;
     import gs.easing.Strong;
+    import gs.TweenLite;
+    import gs.easing.Circ;
+    import gs.TweenMax;
+    import gs.easing.Expo;
+    import com.ankamagames.jerakine.managers.StoreDataManager;
+    import com.ankamagames.berilia.BeriliaConstants;
     import flash.geom.Point;
+    import com.ankamagames.berilia.types.uiDefinition.SizeElement;
+    import com.ankamagames.berilia.managers.KernelEventsManager;
+    import com.ankamagames.berilia.utils.BeriliaHookList;
     import flash.display.MovieClip;
     import com.ankamagames.tiphon.display.TiphonSprite;
-    import flash.events.Event;
+    import com.ankamagames.jerakine.handlers.messages.mouse.MouseWheelMessage;
     import com.ankamagames.jerakine.handlers.messages.mouse.MouseOutMessage;
     import com.ankamagames.jerakine.handlers.messages.mouse.MouseOverMessage;
     import com.ankamagames.berilia.components.messages.ItemRollOverMessage;
     import com.ankamagames.berilia.components.messages.ItemRollOutMessage;
 
-    public class GraphicContainer extends Sprite implements UIComponent, IRectangle, Poolable, IDragAndDropHandler, ICustomUnicNameGetter 
+    public class GraphicContainer extends Sprite implements UIComponent, IRectangle, Poolable, IDragAndDropHandler, ICustomUnicNameGetter, FinalizableUIComponent 
     {
 
+        public static const COLOR_TRANSFORM_DEFAULT:ColorTransform = new ColorTransform(1, 1, 1, 1);
+        public static const COLOR_TRANSFORM_DISABLED:ColorTransform = new ColorTransform(0.6, 0.6, 0.6, 1);
         public static var MEMORY_LOG:Dictionary = new Dictionary(true);
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(GraphicContainer));
+        private static var DOUBLE_SHARP:String = "##";
+        private static var POS_SKEY_STRING:String = "##pos##";
+        private static var SIZE_SKEY_STRING:String = "##size##";
 
         protected var __width:uint;
-        protected var __widthReal:uint;
+        protected var __widthNoScale:uint;
         protected var __height:uint;
-        protected var __heightReal:uint;
+        protected var __heightNoScale:uint;
         protected var __removed:Boolean;
         protected var _bgColor:int = -1;
         protected var _bgAlpha:Number = 1;
+        protected var _bgMargin:Number = 0;
         protected var _borderColor:int = -1;
         protected var _bgCornerRadius:uint = 0;
-        protected var _aStrata:Array;
+        protected var _isSizeControler:Boolean = false;
+        private var _hintAvailable:Boolean = false;
+        private var _notMovableUIUnderConditions:Boolean = false;
+        private var _isInstance:Boolean = false;
+        protected var _aStrata:Array = [];
         private var _scale:Number = 1;
         private var _sLinkedTo:String;
         private var _bDynamicPosition:Boolean;
@@ -61,104 +80,337 @@
         private var _bGreyedOut:Boolean;
         private var _shadow:DropShadowFilter;
         private var _luminosity:Number = 1;
-        private var _nMouseX:int;
-        private var _nMouseY:int;
-        private var _nStartWidth:int;
-        private var _nStartHeight:int;
-        private var _nLastWidth:int;
-        private var _nLastHeight:int;
-        private var _shResizeBorder:Shape;
-        private var _bUseSimpleResize:Boolean = true;
-        var _uiRootContainer:UiRootContainer;
-        private var _dropValidatorFunction:Function;
-        private var _processDropFunction:Function;
-        private var _removeDropSourceFunction:Function;
-        private var _startSlideTime:int;
-        private var _timeSlide:int;
-        private var _slideBaseX:int;
-        private var _slideBaseY:int;
-        private var _slideWidth:int;
-        private var _slideHeight:int;
+        internal var _uiRootContainer:UiRootContainer;
+        internal var _resizeController:ResizeController;
+        internal var _dragController:DragControler;
+        private var _dropValidatorFunction:Function = defaultDropValidatorFunction;
+        private var _processDropFunction:Function = defaultProcessDropFunction;
+        private var _removeDropSourceFunction:Function = defaultRemoveDropSourceFunction;
+        private var _themeDataId:String;
+        private var _isMagnetic:Boolean;
+        private var _customName:String;
+        protected var _finalized:Boolean;
+        private var _posSKey:String;
+        private var _sizeSKey:String;
         public var minSize:GraphicSize;
         public var maxSize:GraphicSize;
-        private var _customName:String;
 
         public function GraphicContainer()
         {
-            this._dropValidatorFunction = this.defaultDropValidatorFunction;
-            this._processDropFunction = this.defaultProcessDropFunction;
-            this._removeDropSourceFunction = this.defaultRemoveDropSourceFunction;
-            super();
-            this._aStrata = new Array();
             focusRect = false;
             this.mouseEnabled = false;
-            FpsManager.getInstance().watchObject(this);
             doubleClickEnabled = true;
+        }
+
+        public function get isMagnetic():Boolean
+        {
+            return (this._isMagnetic);
+        }
+
+        public function set isMagnetic(value:Boolean):void
+        {
+            this._isMagnetic = value;
+            if (value)
+            {
+                this.getUi().registerMagneticElement(this);
+            }
+            else
+            {
+                this.getUi().removeMagneticElement(this);
+            };
+        }
+
+        public function get dragSavePosition():Boolean
+        {
+            return ((this._dragController != null) ? this._dragController.savePosition : false);
+        }
+
+        public function set dragSavePosition(value:Boolean):void
+        {
+            if (!this._dragController)
+            {
+                this.dragController = true;
+            };
+            this._dragController.savePosition = value;
+        }
+
+        public function get resizeController():Boolean
+        {
+            return (!(this._resizeController == null));
+        }
+
+        public function set resizeController(value:Boolean):void
+        {
+            if (((!(value)) && (this._resizeController)))
+            {
+                if (this._resizeController.parent)
+                {
+                    this._resizeController.parent.removeChild(this._resizeController);
+                };
+                this._resizeController.destroy();
+                this._resizeController = null;
+            }
+            else
+            {
+                if (((value) && (!(this._resizeController))))
+                {
+                    this._resizeController = new ResizeController();
+                    this._resizeController.width = this.width;
+                    this._resizeController.height = this.height;
+                    this._resizeController.controler = this;
+                    this.getStrata(StrataEnum.STRATA_LOW).addChild(this._resizeController);
+                };
+            };
+        }
+
+        public function getResizeController():ResizeController
+        {
+            return (this._resizeController);
+        }
+
+        public function get resizeTarget():String
+        {
+            return ((this._resizeController != null) ? this._resizeController.target : null);
+        }
+
+        public function set resizeTarget(id:String):void
+        {
+            if (!this._resizeController)
+            {
+                this.resizeController = true;
+            };
+            this._resizeController.target = id;
+        }
+
+        public function get dragTarget():String
+        {
+            return ((this._dragController) ? this._dragController.target : null);
+        }
+
+        public function set dragTarget(value:String):void
+        {
+            if (value == "null")
+            {
+                value = null;
+            };
+            if (value)
+            {
+                if (!this.dragController)
+                {
+                    this.dragController = true;
+                };
+                this._dragController.target = value;
+            }
+            else
+            {
+                if (this.dragController)
+                {
+                    this.dragController = false;
+                };
+            };
+        }
+
+        public function set dragBoundsContainer(id:String):void
+        {
+            if (!this.dragController)
+            {
+                this.dragController = true;
+            };
+            this._dragController.boundsContainer = id;
+        }
+
+        public function get dragBoundsContainer():String
+        {
+            return ((this._dragController != null) ? this._dragController.boundsContainer : null);
+        }
+
+        public function set useDragMagnetism(b:Boolean):void
+        {
+            if (!this.dragController)
+            {
+                this.dragController = true;
+            };
+            this._dragController.useDragMagnetism = b;
+        }
+
+        public function get useDragMagnetism():Boolean
+        {
+            return ((this._dragController != null) ? this._dragController.useDragMagnetism : false);
+        }
+
+        public function set restrictionFunctionName(funcName:String):void
+        {
+            if (((this._dragController) && (this.getUi().uiClass.hasOwnProperty(funcName))))
+            {
+                this._dragController.restrictionFunction = this.getUi().uiClass[funcName];
+            };
+        }
+
+        public function get dragController():Boolean
+        {
+            return (!(this._dragController == null));
+        }
+
+        public function set dragController(value:Boolean):void
+        {
+            if (((value) && (!(this._dragController))))
+            {
+                this._dragController = new DragControler();
+                this._dragController.controler = this;
+                this.getUi()._dragControllers[this._dragController] = true;
+            }
+            else
+            {
+                if (!value)
+                {
+                    if (this._dragController)
+                    {
+                        delete this.getUi()._dragControllers[this._dragController];
+                        this._dragController.destroy();
+                        this._dragController = null;
+                    };
+                };
+            };
+        }
+
+        public function get notMovableUIUnderConditions():Boolean
+        {
+            return (this._notMovableUIUnderConditions);
+        }
+
+        public function set notMovableUIUnderConditions(value:Boolean):void
+        {
+            this._notMovableUIUnderConditions = value;
         }
 
         public function get customUnicName():String
         {
-            if (!(this._customName))
+            if (((!(this._customName)) && (this.getUi())))
             {
-                if (this.getUi())
+                if (name.indexOf((this.getUi().name + "::")) == 0)
                 {
-                    if (name.indexOf((this.getUi().name + "::")) == 0)
-                    {
-                        this._customName = name;
-                    }
-                    else
-                    {
-                        this._customName = ((this.getUi().name + "::") + name);
-                    };
+                    this._customName = name;
+                }
+                else
+                {
+                    this._customName = ((this.getUi().name + "::") + name);
                 };
             };
             return (this._customName);
         }
 
-        [NoReplaceInFakeClass]
+        public function set themeDataId(id:String):void
+        {
+            this._themeDataId = id;
+            if (!ThemeManager.getInstance().applyThemeData(this, id))
+            {
+                this._themeDataId = null;
+            };
+        }
+
+        public function get themeDataId():String
+        {
+            return (this._themeDataId);
+        }
+
         public function set dropValidator(dv:Function):void
         {
             this._dropValidatorFunction = dv;
         }
 
-        [NoReplaceInFakeClass]
         public function get dropValidator():Function
         {
             return (this._dropValidatorFunction);
         }
 
-        [NoReplaceInFakeClass]
         public function set removeDropSource(rds:Function):void
         {
             this._removeDropSourceFunction = rds;
         }
 
-        [NoReplaceInFakeClass]
         public function get removeDropSource():Function
         {
             return (this._removeDropSourceFunction);
         }
 
-        [NoReplaceInFakeClass]
         public function set processDrop(pd:Function):void
         {
             this._processDropFunction = pd;
         }
 
-        [NoReplaceInFakeClass]
         public function get processDrop():Function
         {
             return (this._processDropFunction);
         }
 
+        public function set sizeControler(b:Boolean):void
+        {
+            this._isSizeControler = b;
+            if (((this.getUi()) && (this.getUi().windowOwner)))
+            {
+                this.getUi().windowOwner.sizeControler = ((b) ? this : null);
+            };
+        }
+
+        public function get finalized():Boolean
+        {
+            return (this._finalized);
+        }
+
+        public function set finalized(b:Boolean):void
+        {
+            this._finalized = b;
+        }
+
+        public function get hintAvailable():Boolean
+        {
+            return (this._hintAvailable);
+        }
+
+        public function set hintAvailable(value:Boolean):void
+        {
+            this._hintAvailable = value;
+        }
+
+        public function get isInstance():Boolean
+        {
+            return (this._isInstance);
+        }
+
+        public function set isInstance(value:Boolean):void
+        {
+            this._isInstance = value;
+        }
+
+        public function finalize():void
+        {
+            var ui:UiRootContainer = this.getUi();
+            if ((((this._isSizeControler) && (ui)) && (ui.windowOwner)))
+            {
+                ui.windowOwner.sizeControler = this;
+            };
+            this._finalized = true;
+        }
+
         public function focus():void
         {
+            Berilia.getInstance().docMain.stage.focus = this;
             FocusHandler.getInstance().setFocus(this);
         }
 
         public function get hasFocus():Boolean
         {
             return (FocusHandler.getInstance().hasFocus(this));
+        }
+
+        public function get colorTransform():ColorTransform
+        {
+            return (transform.colorTransform);
+        }
+
+        public function set colorTransform(ct:ColorTransform):void
+        {
+            transform.colorTransform = ct;
         }
 
         public function get scale():Number
@@ -168,8 +420,8 @@
 
         public function set scale(nScale:Number):void
         {
-            this.__width = (this.__widthReal * (1 - nScale));
-            this.__height = (this.__heightReal * (1 - nScale));
+            this.__width = (this.__widthNoScale * (1 - nScale));
+            this.__height = (this.__heightNoScale * (1 - nScale));
             scaleX = nScale;
             scaleY = nScale;
             this._scale = nScale;
@@ -190,7 +442,7 @@
             {
                 this.bgColor = this._bgColor;
             };
-            this.__widthReal = this.__width;
+            this.__widthNoScale = this.__width;
             var ui:UiRootContainer = this.getUi();
             if (ui)
             {
@@ -200,6 +452,36 @@
                     ge.size.setX(nW, ge.size.xUnit);
                 };
                 ui.updateLinkedUi();
+            };
+            if (this._resizeController)
+            {
+                this._resizeController.width = this.width;
+            };
+        }
+
+        public function set widthNoCache(nW:Number):void
+        {
+            if (nW < 1)
+            {
+                this.__width = 1;
+            }
+            else
+            {
+                this.__width = nW;
+            };
+            if (this._bgColor != -1)
+            {
+                this.bgColor = this._bgColor;
+            };
+            this.__widthNoScale = this.__width;
+            var ui:UiRootContainer = this.getUi();
+            if (ui)
+            {
+                ui.updateLinkedUi();
+            };
+            if (this._resizeController)
+            {
+                this._resizeController.width = this.width;
             };
         }
 
@@ -218,7 +500,7 @@
             {
                 this.bgColor = this._bgColor;
             };
-            this.__heightReal = this.__height;
+            this.__heightNoScale = this.__height;
             var ui:UiRootContainer = this.getUi();
             if (ui)
             {
@@ -229,24 +511,54 @@
                 };
                 ui.updateLinkedUi();
             };
+            if (this._resizeController)
+            {
+                this._resizeController.height = this.height;
+            };
+        }
+
+        public function set heightNoCache(nH:Number):void
+        {
+            if (nH < 1)
+            {
+                this.__height = 1;
+            }
+            else
+            {
+                this.__height = nH;
+            };
+            if (this._bgColor != -1)
+            {
+                this.bgColor = this._bgColor;
+            };
+            this.__heightNoScale = this.__height;
+            var ui:UiRootContainer = this.getUi();
+            if (ui)
+            {
+                ui.updateLinkedUi();
+            };
+            if (this._resizeController)
+            {
+                this._resizeController.height = this.height;
+            };
         }
 
         override public function get width():Number
         {
             if (((isNaN(this.__width)) || (!(this.__width))))
             {
-                return ((this.getBounds(this).width * scaleX));
+                return (this.contentWidth * scaleX);
             };
-            return ((this.__width * scaleX));
+            return (this.__width * scaleX);
         }
 
         override public function get height():Number
         {
             if (((isNaN(this.__height)) || (!(this.__height))))
             {
-                return ((this.getBounds(this).height * scaleY));
+                return (this.contentHeight * scaleY);
             };
-            return ((this.__height * scaleY));
+            return (this.__height * scaleY);
         }
 
         public function get contentWidth():Number
@@ -275,6 +587,11 @@
             };
         }
 
+        public function set xNoCache(value:Number):void
+        {
+            super.x = value;
+        }
+
         override public function set y(value:Number):void
         {
             var ge:GraphicElement;
@@ -289,6 +606,11 @@
                 };
                 ui.updateLinkedUi();
             };
+        }
+
+        public function set yNoCache(value:Number):void
+        {
+            super.y = value;
         }
 
         public function get anchorY():Number
@@ -321,11 +643,11 @@
             return (NaN);
         }
 
-        public function set bgColor(nColor:int):void
+        public function set bgColor(nColor:*):void
         {
-            this._bgColor = nColor;
+            this.setColorVar(nColor);
             graphics.clear();
-            if ((((((this.bgColor == -1)) || (!(this.width)))) || (!(this.height))))
+            if (((!(this.width)) || (!(this.height))))
             {
                 return;
             };
@@ -333,8 +655,8 @@
             {
                 graphics.lineStyle(1, this._borderColor);
             };
-            graphics.beginFill(nColor, this._bgAlpha);
-            if (!(this._bgCornerRadius))
+            graphics.beginFill(this.bgColor, ((this.bgColor == -1) ? 0 : this._bgAlpha));
+            if (!this._bgCornerRadius)
             {
                 graphics.drawRect(0, 0, this.width, this.height);
             }
@@ -345,7 +667,38 @@
             graphics.endFill();
         }
 
-        public function get bgColor():int
+        protected function setColorVar(nColor:*):void
+        {
+            var base:uint;
+            if ((nColor is String))
+            {
+                base = ((String(nColor).substr(0, 2) == "0x") ? 16 : 10);
+                this._bgColor = parseInt(nColor, base);
+                this._bgColor = ((this._bgColor < 0) ? this._bgColor : (this._bgColor & 0xFFFFFF));
+                if (nColor.length > 8)
+                {
+                    this._bgAlpha = (((parseInt(nColor, base) & 0xFF000000) >> 24) / 0xFF);
+                };
+            }
+            else
+            {
+                if ((((nColor is int) || (nColor is uint)) || (nColor is Number)))
+                {
+                    this._bgColor = nColor;
+                    this._bgColor = ((this._bgColor < 0) ? this._bgColor : (this._bgColor & 0xFFFFFF));
+                    if (((nColor & 0xFF000000) && (!(this._bgColor == -1))))
+                    {
+                        this._bgAlpha = (((nColor & 0xFF000000) >> 24) / 0xFF);
+                    };
+                }
+                else
+                {
+                    this._bgColor = -1;
+                };
+            };
+        }
+
+        public function get bgColor():*
         {
             return (this._bgColor);
         }
@@ -359,6 +712,16 @@
         public function get bgAlpha():Number
         {
             return (this._bgAlpha);
+        }
+
+        public function set bgMargin(nMargin:Number):void
+        {
+            this._bgMargin = nMargin;
+        }
+
+        public function get bgMargin():Number
+        {
+            return (this._bgMargin);
         }
 
         public function set borderColor(color:int):void
@@ -386,6 +749,7 @@
         public function set luminosity(nColor:Number):void
         {
             this._luminosity = nColor;
+            filters = [new ColorMatrixFilter([nColor, 0, 0, 0, 0, 0, nColor, 0, 0, 0, 0, 0, nColor, 0, 0, 0, 0, 0, 1, 0])];
         }
 
         public function get luminosity():Number
@@ -405,27 +769,24 @@
 
         public function set shadowColor(nColor:int):void
         {
-            if (Berilia.getInstance().options.uiShadows)
+            if (nColor >= 0)
             {
-                if (nColor >= 0)
+                this._shadow = new DropShadowFilter(3, 90, nColor, 1, 10, 10, 0.61, BitmapFilterQuality.HIGH);
+                filters = [this._shadow];
+            }
+            else
+            {
+                if (((nColor == -1) && (this._shadow)))
                 {
-                    this._shadow = new DropShadowFilter(3, 90, nColor, 1, 10, 10, 0.61, BitmapFilterQuality.HIGH);
-                    filters = [this._shadow];
-                }
-                else
-                {
-                    if ((((nColor == -1)) && (this._shadow)))
-                    {
-                        this._shadow = null;
-                        filters = [];
-                    };
+                    this._shadow = null;
+                    filters = [];
                 };
             };
         }
 
         public function get shadowColor():int
         {
-            return (((this._shadow) ? this._shadow.color : -1));
+            return ((this._shadow) ? this._shadow.color : -1);
         }
 
         public function get topParent():DisplayObject
@@ -433,20 +794,10 @@
             return (this.getTopParent(this));
         }
 
-        public function setAdvancedGlow(nColor:uint, nAlpha:Number=1, nBlurX:Number=6, nBlurY:Number=6, nStrength:Number=2):void
+        public function getStrata(nStrata:int):Sprite
         {
-        }
-
-        public function clearFilters():void
-        {
-            filters = [];
-        }
-
-        [NoReplaceInFakeClass]
-        public function getStrata(nStrata:uint):Sprite
-        {
-            var _local_2:uint;
-            var _local_3:uint;
+            var nIndex:uint;
+            var i:uint;
             if (this._aStrata[nStrata] != null)
             {
                 return (this._aStrata[nStrata]);
@@ -455,15 +806,15 @@
             this._aStrata[nStrata].name = ("strata_" + nStrata);
             this._aStrata[nStrata].mouseEnabled = false;
             this._aStrata[nStrata].doubleClickEnabled = true;
-            _local_2 = 0;
-            _local_3 = 0;
-            while (_local_3 < this._aStrata.length)
+            nIndex = 0;
+            i = 0;
+            while (i < this._aStrata.length)
             {
-                if (this._aStrata[_local_3] != null)
+                if (this._aStrata[i] != null)
                 {
-                    addChildAt(this._aStrata[_local_3], _local_2++);
+                    addChildAt(this._aStrata[i], nIndex++);
                 };
-                _local_3++;
+                i++;
             };
             return (this._aStrata[nStrata]);
         }
@@ -482,18 +833,38 @@
         {
             if (bool)
             {
-                transform.colorTransform = new ColorTransform(0.6, 0.6, 0.6, 1);
+                transform.colorTransform = COLOR_TRANSFORM_DISABLED;
                 this.handCursor = false;
                 this.mouseEnabled = false;
                 mouseChildren = false;
             }
             else
             {
-                if (!(this.greyedOut))
+                if (!this.greyedOut)
                 {
-                    transform.colorTransform = new ColorTransform(1, 1, 1, 1);
+                    transform.colorTransform = COLOR_TRANSFORM_DEFAULT;
                 };
                 this.handCursor = true;
+                this.mouseEnabled = true;
+                mouseChildren = true;
+            };
+            this._bDisabled = bool;
+        }
+
+        public function set disabledExceptHandCursor(bool:Boolean):void
+        {
+            if (bool)
+            {
+                transform.colorTransform = COLOR_TRANSFORM_DISABLED;
+                this.mouseEnabled = false;
+                mouseChildren = false;
+            }
+            else
+            {
+                if (!this.greyedOut)
+                {
+                    transform.colorTransform = COLOR_TRANSFORM_DEFAULT;
+                };
                 this.mouseEnabled = true;
                 mouseChildren = true;
             };
@@ -511,11 +882,11 @@
             {
                 if (bool)
                 {
-                    transform.colorTransform = new ColorTransform(0.6, 0.6, 0.6, 1);
+                    transform.colorTransform = COLOR_TRANSFORM_DISABLED;
                 }
                 else
                 {
-                    transform.colorTransform = new ColorTransform(1, 1, 1, 1);
+                    transform.colorTransform = COLOR_TRANSFORM_DEFAULT;
                 };
             };
             this._bSoftDisabled = bool;
@@ -532,13 +903,13 @@
             {
                 if (bool)
                 {
-                    transform.colorTransform = new ColorTransform(0.6, 0.6, 0.6, 1);
+                    transform.colorTransform = COLOR_TRANSFORM_DISABLED;
                 }
                 else
                 {
-                    if (!(this.disabled))
+                    if (!this.disabled)
                     {
-                        transform.colorTransform = new ColorTransform(1, 1, 1, 1);
+                        transform.colorTransform = COLOR_TRANSFORM_DEFAULT;
                     };
                 };
             };
@@ -550,27 +921,15 @@
             return (this._bGreyedOut);
         }
 
-        public function get depths():Array
-        {
-            var aDepth:Array = new Array();
-            var doParent:GraphicContainer = this;
-            while (doParent.getParent() != null)
-            {
-                aDepth.unshift(doParent.getParent());
-                doParent = doParent.getParent();
-            };
-            return (aDepth);
-        }
-
         public function set handCursor(bValue:Boolean):void
         {
             this.buttonMode = bValue;
-            this.mouseChildren = !(bValue);
+            this.mouseChildren = (!(bValue));
         }
 
         public function get handCursor():Boolean
         {
-            return (((this.buttonMode) && (!(this.mouseChildren))));
+            return ((this.buttonMode) && (!(this.mouseChildren)));
         }
 
         override public function set mouseEnabled(v:Boolean):void
@@ -583,22 +942,50 @@
             };
         }
 
-        [HideInFakeClass]
         public function process(msg:Message):Boolean
         {
-            var ui:UiRootContainer;
+            var uirc:UiRootContainer;
             var newMsg:MouseClickMessage;
-            if (!(this.canProcessMessage(msg)))
+            if (this._resizeController)
+            {
+                this._resizeController.process(msg);
+            };
+            if (this._dragController)
+            {
+                this._dragController.process(msg);
+            };
+            if (!this.canProcessMessage(msg))
             {
                 return (true);
             };
-            if ((((msg is MouseClickMessage)) && (this._sLinkedTo)))
+            var ui:UiRootContainer = this.getUi();
+            if ((msg is MouseDownMessage))
             {
-                ui = this.getUi();
                 if (ui != null)
                 {
-                    newMsg = GenericPool.get(MouseClickMessage, ui.getElement(this._sLinkedTo), MouseClickMessage(msg).mouseEvent);
-                    ui.getElement(this._sLinkedTo).process(newMsg);
+                    if (((ui.strata == StrataEnum.STRATA_MEDIUM) && (ui.setOnTopOnClick)))
+                    {
+                        for each (uirc in ui.setOnTopBeforeMe)
+                        {
+                            Berilia.getInstance().setUiOnTop(uirc);
+                        };
+                        Berilia.getInstance().setUiOnTop(ui);
+                        for each (uirc in ui.setOnTopAfterMe)
+                        {
+                            Berilia.getInstance().setUiOnTop(uirc);
+                        };
+                    };
+                };
+            };
+            if ((msg is MouseClickMessage))
+            {
+                if (ui != null)
+                {
+                    if (this._sLinkedTo)
+                    {
+                        newMsg = GenericPool.get(MouseClickMessage, ui.getElement(this._sLinkedTo), MouseClickMessage(msg).mouseEvent);
+                        ui.getElement(this._sLinkedTo).process(newMsg);
+                    };
                 };
             };
             return (false);
@@ -618,6 +1005,14 @@
 
         public function remove():void
         {
+            if (this._dragController)
+            {
+                this._dragController.destroy();
+            };
+            if (this._resizeController)
+            {
+                this._resizeController.destroy();
+            };
             var ui:UiRootContainer = this.getUi();
             if (ui)
             {
@@ -632,7 +1027,6 @@
             this.__removed = true;
         }
 
-        [NoReplaceInFakeClass]
         public function addContent(child:GraphicContainer, index:int=-1):GraphicContainer
         {
             if (index == -1)
@@ -656,12 +1050,12 @@
 
         public function getParent():GraphicContainer
         {
-            if ((((this.parent == null)) || ((this is UiRootContainer))))
+            if (((this.parent == null) || (this is UiRootContainer)))
             {
                 return (null);
             };
             var doCurrent:DisplayObjectContainer = DisplayObjectContainer(this.parent);
-            while (!((doCurrent is GraphicContainer)))
+            while ((!(doCurrent is GraphicContainer)))
             {
                 doCurrent = DisplayObjectContainer(doCurrent.parent);
             };
@@ -670,6 +1064,10 @@
 
         public function getUi():UiRootContainer
         {
+            if ((this is UiRootContainer))
+            {
+                return (this as UiRootContainer);
+            };
             if (this._uiRootContainer)
             {
                 return (this._uiRootContainer);
@@ -679,9 +1077,9 @@
                 return (null);
             };
             var doCurrent:Sprite = Sprite(this.parent);
-            while (((!((doCurrent is UiRootContainer))) && (!((doCurrent == null)))))
+            while (((!(doCurrent is UiRootContainer)) && (!(doCurrent == null))))
             {
-                if ((((doCurrent is GraphicContainer)) && (GraphicContainer(doCurrent)._uiRootContainer)))
+                if (((doCurrent is GraphicContainer) && (GraphicContainer(doCurrent)._uiRootContainer)))
                 {
                     doCurrent = GraphicContainer(doCurrent)._uiRootContainer;
                 }
@@ -705,7 +1103,6 @@
             return (UiRootContainer(doCurrent));
         }
 
-        [hideInFakeClass]
         public function setUi(ui:UiRootContainer, key:Object):void
         {
             if (key != SecureCenter.ACCESS_KEY)
@@ -724,41 +1121,152 @@
             return (d);
         }
 
-        public function startResize():void
+        public function slide(endX:int, endY:int, time:int, inAndOut:Boolean=false, bezierX:int=0, bezierY:int=0):void
         {
-            this._nMouseX = StageShareManager.mouseX;
-            this._nMouseY = StageShareManager.mouseY;
-            this._nStartWidth = this.width;
-            this._nStartHeight = this.height;
-            if (this._bUseSimpleResize)
+            var ease:Function = Strong.easeOut;
+            if (inAndOut)
             {
-                this._shResizeBorder = new Shape();
-                addChild(this._shResizeBorder);
+                ease = Strong.easeInOut;
             };
-            this.getUi().removeFromRenderList(name);
-            EnterFrameDispatcher.addEventListener(this.onEnterFrame, "GraphicContainer");
-        }
-
-        public function endResize():void
-        {
-            EnterFrameDispatcher.removeEventListener(this.onEnterFrame);
-            if (this._bUseSimpleResize)
-            {
-                this.getUi().render();
-                if (((this._shResizeBorder) && (this._shResizeBorder.parent)))
-                {
-                    this._shResizeBorder.parent.removeChild(this._shResizeBorder);
-                };
-            };
-        }
-
-        public function slide(endX:int, endY:int, time:int):void
-        {
             TweenLite.to(this, (time / 1000), {
+                "bezier":[{
+                    "x":bezierX,
+                    "y":bezierY
+                }],
                 "x":endX,
                 "y":endY,
-                "ease":Strong.easeOut
+                "ease":ease,
+                "onComplete":this.moveComplete
             });
+        }
+
+        public function alphaFade(endValue:Number, time:int):void
+        {
+            var ease:Function = Circ.easeOut;
+            TweenLite.to(this, (time / 1000), {
+                "alpha":endValue,
+                "ease":ease
+            });
+        }
+
+        public function colorSlide(endValue:Number, time:int, yoyo:Boolean):void
+        {
+            var repeat:int;
+            var repeatDelay:int = 0.5;
+            if (yoyo)
+            {
+                repeat = 1;
+                repeatDelay = 0.5;
+            };
+            TweenMax.to(this, (time / 1000), {
+                "repeat":repeat,
+                "repeatDelay":repeatDelay,
+                "yoyo":yoyo,
+                "ease":Expo.easeIn,
+                "colorTransform":{"exposure":endValue}
+            });
+        }
+
+        private function sKeyIsOutdated(sKey:String):Boolean
+        {
+            var ui:UiRootContainer = this.getUi();
+            return ((((!(sKey)) || (!(sKey.indexOf(ui.name) == 0))) || (!(sKey.indexOf(DOUBLE_SHARP) == ui.name.length))) || (!(sKey.indexOf(Berilia.getInstance().uiSavedModificationPresetName) == (sKey.lastIndexOf(DOUBLE_SHARP) + 2))));
+        }
+
+        public function getPosSKey():String
+        {
+            if (this.sKeyIsOutdated(this._posSKey))
+            {
+                this._posSKey = ((((this.getUi().name + POS_SKEY_STRING) + name) + DOUBLE_SHARP) + Berilia.getInstance().uiSavedModificationPresetName);
+            };
+            return (this._posSKey);
+        }
+
+        public function getSizeSKey():String
+        {
+            if (this.sKeyIsOutdated(this._sizeSKey))
+            {
+                this._sizeSKey = ((((this.getUi().name + SIZE_SKEY_STRING) + name) + DOUBLE_SHARP) + Berilia.getInstance().uiSavedModificationPresetName);
+            };
+            return (this._sizeSKey);
+        }
+
+        public function getSavedPosition():Point
+        {
+            var data:* = StoreDataManager.getInstance().getData(BeriliaConstants.DATASTORE_UI_POSITIONS, this.getPosSKey());
+            if (((data) && (!(data is Point))))
+            {
+                data = new Point(data.x, data.y);
+            };
+            return (data);
+        }
+
+        public function setSavedPosition(x:Number, y:Number):void
+        {
+            StoreDataManager.getInstance().setData(BeriliaConstants.DATASTORE_UI_POSITIONS, this.getPosSKey(), (((isNaN(x)) && (isNaN(y))) ? null : new Point(x, y)));
+            if (this.getUi())
+            {
+                this.getUi().processLocation(this.getUi().getElementById(this.name));
+            };
+        }
+
+        public function getSavedDimension():Point
+        {
+            var data:* = StoreDataManager.getInstance().getData(BeriliaConstants.DATASTORE_UI_POSITIONS, this.getSizeSKey());
+            if (((data) && (!(data is Point))))
+            {
+                data = new Point(data.x, data.y);
+            };
+            return (data);
+        }
+
+        public function setSavedDimension(x:Number, y:Number):void
+        {
+            if (this.getUi())
+            {
+                this.getUi().addDynamicSizeElement(this.getUi().getElementById(name));
+            };
+            StoreDataManager.getInstance().setData(BeriliaConstants.DATASTORE_UI_POSITIONS, this.getSizeSKey(), (((isNaN(x)) && (isNaN(y))) ? null : new Point(x, y)));
+        }
+
+        public function resetSavedInformations(deleteInfo:Boolean=true):void
+        {
+            var ge:GraphicElement;
+            var size:* = (!(this.getSavedDimension() == null));
+            var pos:* = (!(this.getSavedPosition() == null));
+            if (((deleteInfo) && (size)))
+            {
+                this.setSavedDimension(NaN, NaN);
+            };
+            if (((deleteInfo) && (size)))
+            {
+                this.setSavedPosition(NaN, NaN);
+            };
+            if (size)
+            {
+                ge = this.getUi().getElementById(name);
+                if (((ge) && (ge.size)))
+                {
+                    if (ge.size.xUnit == SizeElement.SIZE_PIXEL)
+                    {
+                        this.widthNoCache = ge.size.x;
+                    };
+                    if (ge.size.yUnit == SizeElement.SIZE_PIXEL)
+                    {
+                        this.heightNoCache = ge.size.y;
+                    };
+                };
+            };
+            if (pos)
+            {
+                this.xNoCache = this.anchorX;
+                this.yNoCache = this.anchorY;
+            };
+        }
+
+        private function moveComplete():void
+        {
+            KernelEventsManager.getInstance().processCallback(BeriliaHookList.SlideComplete, this);
         }
 
         private function defaultDropValidatorFunction(target:*, data:*, source:*):Boolean
@@ -767,7 +1275,7 @@
             do 
             {
                 parent = parent.parent;
-            } while (((!((parent is IDragAndDropHandler))) && (parent.parent)));
+            } while (((!(parent is IDragAndDropHandler)) && (parent.parent)));
             if ((parent is IDragAndDropHandler))
             {
                 return ((parent as IDragAndDropHandler).dropValidator(target, data, source));
@@ -781,7 +1289,7 @@
             do 
             {
                 parent = parent.parent;
-            } while (((!((parent is IDragAndDropHandler))) && (parent.parent)));
+            } while (((!(parent is IDragAndDropHandler)) && (parent.parent)));
             if ((parent is IDragAndDropHandler))
             {
                 (parent as IDragAndDropHandler).processDrop(target, data, source);
@@ -794,7 +1302,7 @@
             do 
             {
                 parent = parent.parent;
-            } while (((!((parent is IDragAndDropHandler))) && (parent.parent)));
+            } while (((!(parent is IDragAndDropHandler)) && (parent.parent)));
             if ((parent is IDragAndDropHandler))
             {
                 (parent as IDragAndDropHandler).removeDropSource(target);
@@ -817,12 +1325,14 @@
         protected function destroy(target:DisplayObjectContainer):void
         {
             var item:DisplayObject;
-            if (((!(target)) || ((((target is MovieClip)) && ((MovieClip(target).totalFrames > 1))))))
+            if (((!(target)) || ((target is MovieClip) && (MovieClip(target).totalFrames > 1))))
             {
                 return;
             };
-            var index:uint;
-            var num:int = target.numChildren;
+            if (((this._dragController) && (this.getUi())))
+            {
+                delete this.getUi()._dragControllers[this._dragController];
+            };
             while (target.numChildren)
             {
                 item = target.removeChildAt(0);
@@ -847,9 +1357,9 @@
         public function free():void
         {
             this.__width = 0;
-            this.__widthReal = 0;
+            this.__widthNoScale = 0;
             this.__height = 0;
-            this.__heightReal = 0;
+            this.__heightNoScale = 0;
             this.__removed = false;
             this._bgColor = -1;
             this._bgAlpha = 1;
@@ -861,15 +1371,12 @@
             this._shadow = null;
             this._luminosity = 1;
             this._bgCornerRadius = 0;
-            this._nMouseX = 0;
-            this._nMouseY = 0;
-            this._nStartWidth = 0;
-            this._nStartHeight = 0;
-            this._nLastWidth = 0;
-            this._nLastHeight = 0;
-            this._shResizeBorder = null;
-            this._bUseSimpleResize = false;
             this._uiRootContainer = null;
+            if (this._resizeController)
+            {
+                this._resizeController.destroy();
+            };
+            this._resizeController = null;
         }
 
         override public function contains(child:DisplayObject):Boolean
@@ -877,64 +1384,11 @@
             return (super.contains(child));
         }
 
-        private function onEnterFrame(e:Event):void
-        {
-            var w:int = ((this._nStartWidth + StageShareManager.mouseX) - this._nMouseX);
-            var h:int = ((this._nStartHeight + StageShareManager.mouseY) - this._nMouseY);
-            if (this.minSize != null)
-            {
-                if (((!(isNaN(this.minSize.x))) && ((w < this.minSize.x))))
-                {
-                    w = this.minSize.x;
-                };
-                if (((!(isNaN(this.minSize.y))) && ((h < this.minSize.y))))
-                {
-                    h = this.minSize.y;
-                };
-            };
-            if (this.maxSize != null)
-            {
-                if (((!(isNaN(this.maxSize.x))) && ((w > this.maxSize.x))))
-                {
-                    w = this.maxSize.x;
-                };
-                if (((!(isNaN(this.maxSize.y))) && ((h > this.maxSize.y))))
-                {
-                    h = this.maxSize.y;
-                };
-            };
-            this.width = w;
-            this.height = h;
-            if (((!((this._nLastWidth == this.width))) || (!((this._nLastHeight == this.height)))))
-            {
-                if (this._bUseSimpleResize)
-                {
-                    this._shResizeBorder.graphics.clear();
-                    this._shResizeBorder.graphics.beginFill(0xFFFFFF, 0.05);
-                    this._shResizeBorder.graphics.lineStyle(1, 0, 0.2);
-                    this._shResizeBorder.graphics.drawRect(0, 0, this.width, this.height);
-                    this._shResizeBorder.graphics.endFill();
-                }
-                else
-                {
-                    try
-                    {
-                        this.getUi().render();
-                    }
-                    catch(err:Error)
-                    {
-                    };
-                };
-                this._nLastWidth = this.width;
-                this._nLastHeight = this.height;
-            };
-        }
-
         protected function canProcessMessage(pMsg:Message):Boolean
         {
             if (this._bSoftDisabled)
             {
-                if (!((((((((pMsg is ItemRollOutMessage)) || ((pMsg is ItemRollOverMessage)))) || ((pMsg is MouseOverMessage)))) || ((pMsg is MouseOutMessage)))))
+                if (!(((((pMsg is ItemRollOutMessage) || (pMsg is ItemRollOverMessage)) || (pMsg is MouseOverMessage)) || (pMsg is MouseOutMessage)) || (pMsg is MouseWheelMessage)))
                 {
                     return (false);
                 };
@@ -944,5 +1398,5 @@
 
 
     }
-}//package com.ankamagames.berilia.types.graphic
+} com.ankamagames.berilia.types.graphic
 

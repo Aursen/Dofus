@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.components
+package com.ankamagames.berilia.components
 {
     import com.ankamagames.berilia.types.graphic.GraphicContainer;
     import com.ankamagames.berilia.FinalizableUIComponent;
@@ -6,11 +6,10 @@
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
-    import com.ankamagames.jerakine.data.XmlConfig;
     import com.ankamagames.jerakine.types.Uri;
+    import com.ankamagames.berilia.enums.StatesEnum;
     import com.ankamagames.berilia.managers.CssManager;
     import com.ankamagames.jerakine.types.Callback;
-    import com.ankamagames.berilia.enums.StatesEnum;
     import com.ankamagames.berilia.types.graphic.ButtonContainer;
     import com.ankamagames.berilia.types.graphic.GraphicElement;
     import flash.events.Event;
@@ -26,32 +25,29 @@
     import com.ankamagames.jerakine.handlers.messages.mouse.MouseWheelMessage;
     import com.ankamagames.jerakine.messages.Message;
     import com.ankamagames.berilia.types.data.ExtendedStyleSheet;
+    import com.ankamagames.jerakine.managers.LangManager;
 
     public class ScrollBar extends GraphicContainer implements FinalizableUIComponent 
     {
 
         public static var MEMORY_LOG:Dictionary = new Dictionary(true);
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(ScrollBar));
+        private static const MAX_DECELERATE_FACTOR:uint = 4;
+        private static const FIRST_MAX_DECELERATE_FACTOR:uint = 16;
 
-        private const _common:String = XmlConfig.getInstance().getEntry("config.ui.skin");
-
-        private var _nWidth:uint = 16;
+        private var _nWidth:uint = 10;
         private var _nHeight:uint = 200;
         private var _sCss:Uri;
-        private var _uriTexBack:Uri;
-        private var _uriTexMin:Uri;
-        private var _uriTexMax:Uri;
-        private var _uriTexBox:Uri;
         private var _nMin:int;
         private var _nMax:int;
         private var _nTotal:int = 1;
         private var _nStep:uint = 1;
         private var _nCurrentValue:int = 0;
         private var _bDisabled:Boolean = false;
-        private var _texBack:Texture;
-        private var _texBox:Texture;
-        private var _texMin:Texture;
-        private var _texMax:Texture;
+        private var _texBack:GraphicContainer;
+        private var _texBox:GraphicContainer;
+        private var _texMin:GraphicContainer;
+        private var _texMax:GraphicContainer;
         private var _gcMin:GraphicContainer;
         private var _gcMax:GraphicContainer;
         private var _gcBox:GraphicContainer;
@@ -67,8 +63,9 @@
         private var _bFinalized:Boolean = false;
         private var _nDecelerateScroll:uint = 1;
         private var _nAcelerateScroll:uint = 0;
-        private var _nMaxDecelerateFactor:uint = 4;
+        private var _nMaxDecelerateFactor:uint;
         private var _bOnDrag:Boolean = false;
+        private var _firstScrollUpdate:Boolean;
 
         public function ScrollBar()
         {
@@ -83,7 +80,7 @@
         override public function set width(nValue:Number):void
         {
             this._nWidth = nValue;
-            if (this.finalized)
+            if (finalized)
             {
                 this.scrollBarProcess();
             };
@@ -97,17 +94,19 @@
         override public function set height(nValue:Number):void
         {
             this._nHeight = nValue;
-            if (this.finalized)
+            if (finalized)
             {
                 this.scrollBarProcess();
             };
         }
 
+        [Uri]
         public function get css():Uri
         {
             return (this._sCss);
         }
 
+        [Uri]
         public function set css(sValue:Uri):void
         {
             if (sValue == null)
@@ -117,7 +116,6 @@
             if (sValue != this._sCss)
             {
                 this._sCss = sValue;
-                CssManager.getInstance().askCss(sValue.uri, new Callback(this.fakeCssLoaded));
             };
         }
 
@@ -129,7 +127,7 @@
         public function set min(nValue:int):void
         {
             this._nMin = nValue;
-            if (this.finalized)
+            if (finalized)
             {
                 this.scrollBarProcess();
             };
@@ -143,7 +141,7 @@
         public function set max(nValue:int):void
         {
             this._nMax = nValue;
-            if (this.finalized)
+            if (finalized)
             {
                 this.scrollBarProcess();
             };
@@ -157,7 +155,7 @@
         public function set total(nValue:int):void
         {
             this._nTotal = nValue;
-            if (this.finalized)
+            if (finalized)
             {
                 this.scrollBarProcess();
             };
@@ -171,7 +169,7 @@
         public function set step(nValue:uint):void
         {
             this._nStep = nValue;
-            if (this.finalized)
+            if (finalized)
             {
                 this.scrollBarProcess();
             };
@@ -193,7 +191,7 @@
                 nValue = this._nMin;
             };
             this._nCurrentValue = nValue;
-            if (this.finalized)
+            if (finalized)
             {
                 this._nCurrentPos = (((this._nCurrentValue - this._nMin) * (this._nStep * this._nScrollStep)) + this._nBoxPosMin);
                 this.updateDisplayFromCurrentPos();
@@ -210,16 +208,6 @@
             return (this._nScrollSpeed);
         }
 
-        public function get finalized():Boolean
-        {
-            return (this._bFinalized);
-        }
-
-        public function set finalized(bValue:Boolean):void
-        {
-            this._bFinalized = bValue;
-        }
-
         public function get boxSize():Number
         {
             return (this._nBoxSize);
@@ -228,7 +216,7 @@
         public function set vertical(b:Boolean):void
         {
             this._bVertical = b;
-            if (this.finalized)
+            if (finalized)
             {
                 this.scrollBarProcess();
             };
@@ -247,22 +235,34 @@
             };
             if (bool)
             {
-                if (((((this._texBox) && (this._texMin))) && (this._texMax)))
+                if (this._texBox)
                 {
                     this._texBox.visible = false;
-                    this._texMax.gotoAndStop = StatesEnum.STATE_DISABLED_STRING;
-                    this._texMin.gotoAndStop = StatesEnum.STATE_DISABLED_STRING;
+                };
+                if (((this._texMin) && (this._texMax)))
+                {
+                    if ((this._texMax is Texture))
+                    {
+                        Texture(this._texMax).gotoAndStop = StatesEnum.STATE_DISABLED_STRING;
+                        Texture(this._texMin).gotoAndStop = StatesEnum.STATE_DISABLED_STRING;
+                    };
                 };
                 mouseEnabled = false;
                 mouseChildren = false;
             }
             else
             {
-                if (((((this._texBox) && (this._texMin))) && (this._texMax)))
+                if (this._texBox)
                 {
                     this._texBox.visible = true;
-                    this._texMax.gotoAndStop = StatesEnum.STATE_NORMAL_STRING;
-                    this._texMin.gotoAndStop = StatesEnum.STATE_NORMAL_STRING;
+                };
+                if (((this._texMin) && (this._texMax)))
+                {
+                    if ((this._texMax is Texture))
+                    {
+                        Texture(this._texMax).gotoAndStop = StatesEnum.STATE_NORMAL_STRING;
+                        Texture(this._texMin).gotoAndStop = StatesEnum.STATE_NORMAL_STRING;
+                    };
                 };
                 mouseEnabled = true;
                 mouseChildren = true;
@@ -270,7 +270,7 @@
             this._bDisabled = bool;
         }
 
-        public function finalize():void
+        override public function finalize():void
         {
             if (this._sCss)
             {
@@ -291,51 +291,124 @@
             var stateChangingProperties1:Array;
             var stateChangingProperties2:Array;
             var stateChangingProperties3:Array;
-            if (!(this._gcMin))
+            if (!this._gcBox)
             {
-                this._gcMin = new ButtonContainer();
-                this._gcMax = new ButtonContainer();
                 this._gcBox = new ButtonContainer();
-                (this._gcMin as ButtonContainer).soundId = "-1";
-                (this._gcMax as ButtonContainer).soundId = "-1";
-                this._texMin.name = (name + "_scrollBar_buttonMin");
-                this._texMin.keepRatio = true;
-                getUi().registerId(this._texMin.name, new GraphicElement(this._texMin, new Array(), "buttonMin"));
-                this._texMax.name = (name + "_scrollBar_buttonMax");
-                this._texMax.keepRatio = true;
-                getUi().registerId(this._texMax.name, new GraphicElement(this._texMax, new Array(), "buttonMax"));
                 this._texBox.name = (name + "_scrollBar_buttonBox");
-                getUi().registerId(this._texBox.name, new GraphicElement(this._texBox, new Array(), "buttonBox"));
-                this._gcMin.addChild(this._texMin);
-                this._gcMax.addChild(this._texMax);
+                getUi().registerId(this._texBox.name, new GraphicElement(this._texBox, null, "buttonBox"));
                 this._gcBox.addChild(this._texBox);
                 stateChangingProperties1 = new Array();
                 stateChangingProperties1[StatesEnum.STATE_OVER] = new Array();
                 stateChangingProperties1[StatesEnum.STATE_OVER][this._texBox.name] = new Array();
-                stateChangingProperties1[StatesEnum.STATE_OVER][this._texBox.name]["gotoAndStop"] = StatesEnum.STATE_OVER_STRING.toLocaleLowerCase();
+                if ((this._texBox is Texture))
+                {
+                    stateChangingProperties1[StatesEnum.STATE_OVER][this._texBox.name]["gotoAndStop"] = StatesEnum.STATE_OVER_STRING.toLocaleLowerCase();
+                }
+                else
+                {
+                    if (((this._texBox is TextureBitmap) && (this._texBox.themeDataId)))
+                    {
+                        stateChangingProperties1[StatesEnum.STATE_OVER][this._texBox.name]["themeDataId"] = ((this._texBox.themeDataId.replace("_normal", "") + "_") + StatesEnum.STATE_OVER_STRING.toLocaleLowerCase());
+                    };
+                };
                 stateChangingProperties1[StatesEnum.STATE_CLICKED] = new Array();
                 stateChangingProperties1[StatesEnum.STATE_CLICKED][this._texBox.name] = new Array();
-                stateChangingProperties1[StatesEnum.STATE_CLICKED][this._texBox.name]["gotoAndStop"] = StatesEnum.STATE_CLICKED_STRING.toLocaleLowerCase();
-                stateChangingProperties2 = new Array();
-                stateChangingProperties2[StatesEnum.STATE_OVER] = new Array();
-                stateChangingProperties2[StatesEnum.STATE_OVER][this._texMin.name] = new Array();
-                stateChangingProperties2[StatesEnum.STATE_OVER][this._texMin.name]["gotoAndStop"] = StatesEnum.STATE_OVER_STRING.toLocaleLowerCase();
-                stateChangingProperties2[StatesEnum.STATE_CLICKED] = new Array();
-                stateChangingProperties2[StatesEnum.STATE_CLICKED][this._texMin.name] = new Array();
-                stateChangingProperties2[StatesEnum.STATE_CLICKED][this._texMin.name]["gotoAndStop"] = StatesEnum.STATE_CLICKED_STRING.toLocaleLowerCase();
-                stateChangingProperties3 = new Array();
-                stateChangingProperties3[StatesEnum.STATE_OVER] = new Array();
-                stateChangingProperties3[StatesEnum.STATE_OVER][this._texMax.name] = new Array();
-                stateChangingProperties3[StatesEnum.STATE_OVER][this._texMax.name]["gotoAndStop"] = StatesEnum.STATE_OVER_STRING.toLocaleLowerCase();
-                stateChangingProperties3[StatesEnum.STATE_CLICKED] = new Array();
-                stateChangingProperties3[StatesEnum.STATE_CLICKED][this._texMax.name] = new Array();
-                stateChangingProperties3[StatesEnum.STATE_CLICKED][this._texMax.name]["gotoAndStop"] = StatesEnum.STATE_CLICKED_STRING.toLocaleLowerCase();
+                if ((this._texBox is Texture))
+                {
+                    stateChangingProperties1[StatesEnum.STATE_CLICKED][this._texBox.name]["gotoAndStop"] = StatesEnum.STATE_CLICKED_STRING.toLocaleLowerCase();
+                }
+                else
+                {
+                    if (((this._texBox is TextureBitmap) && (this._texBox.themeDataId)))
+                    {
+                        stateChangingProperties1[StatesEnum.STATE_CLICKED][this._texBox.name]["themeDataId"] = ((this._texBox.themeDataId.replace("_normal", "") + "_") + StatesEnum.STATE_CLICKED_STRING.toLocaleLowerCase());
+                    };
+                };
                 ButtonContainer(this._gcBox).changingStateData = stateChangingProperties1;
-                ButtonContainer(this._gcMin).changingStateData = stateChangingProperties2;
-                ButtonContainer(this._gcMax).changingStateData = stateChangingProperties3;
+                if (this._texMin)
+                {
+                    this._gcMin = new ButtonContainer();
+                    (this._gcMin as ButtonContainer).soundId = "-1";
+                    this._texMin.name = (name + "_scrollBar_buttonMin");
+                    if ((this._texMin is Texture))
+                    {
+                        Texture(this._texMin).keepRatio = true;
+                    };
+                    getUi().registerId(this._texMin.name, new GraphicElement(this._texMin, null, "buttonMin"));
+                    this._gcMin.addChild(this._texMin);
+                    stateChangingProperties2 = new Array();
+                    stateChangingProperties2[StatesEnum.STATE_OVER] = new Array();
+                    stateChangingProperties2[StatesEnum.STATE_OVER][this._texMin.name] = new Array();
+                    if ((this._texMin is Texture))
+                    {
+                        stateChangingProperties2[StatesEnum.STATE_OVER][this._texMin.name]["gotoAndStop"] = StatesEnum.STATE_OVER_STRING.toLocaleLowerCase();
+                    }
+                    else
+                    {
+                        if (((this._texMin is TextureBitmap) && (this._texMin.themeDataId)))
+                        {
+                            stateChangingProperties1[StatesEnum.STATE_OVER][this._texMin.name]["themeDataId"] = ((this._texMin.themeDataId.replace("_normal", "") + "_") + StatesEnum.STATE_OVER_STRING.toLocaleLowerCase());
+                        };
+                    };
+                    stateChangingProperties2[StatesEnum.STATE_CLICKED] = new Array();
+                    stateChangingProperties2[StatesEnum.STATE_CLICKED][this._texMin.name] = new Array();
+                    if ((this._texMin is Texture))
+                    {
+                        stateChangingProperties2[StatesEnum.STATE_CLICKED][this._texMin.name]["gotoAndStop"] = StatesEnum.STATE_CLICKED_STRING.toLocaleLowerCase();
+                    }
+                    else
+                    {
+                        if (((this._texMin is TextureBitmap) && (this._texMin.themeDataId)))
+                        {
+                            stateChangingProperties1[StatesEnum.STATE_CLICKED][this._texMin.name]["themeDataId"] = ((this._texMin.themeDataId.replace("_normal", "") + "_") + StatesEnum.STATE_CLICKED_STRING.toLocaleLowerCase());
+                        };
+                    };
+                    ButtonContainer(this._gcMin).changingStateData = stateChangingProperties2;
+                };
+                if (this._texMax)
+                {
+                    this._gcMax = new ButtonContainer();
+                    (this._gcMax as ButtonContainer).soundId = "-1";
+                    this._texMax.name = (name + "_scrollBar_buttonMax");
+                    if ((this._texMax is Texture))
+                    {
+                        Texture(this._texMax).keepRatio = true;
+                    };
+                    getUi().registerId(this._texMax.name, new GraphicElement(this._texMax, null, "buttonMax"));
+                    this._gcMax.addChild(this._texMax);
+                    stateChangingProperties3 = new Array();
+                    stateChangingProperties3[StatesEnum.STATE_OVER] = new Array();
+                    stateChangingProperties3[StatesEnum.STATE_OVER][this._texMax.name] = new Array();
+                    if ((this._texMax is Texture))
+                    {
+                        stateChangingProperties3[StatesEnum.STATE_OVER][this._texMax.name]["gotoAndStop"] = StatesEnum.STATE_OVER_STRING.toLocaleLowerCase();
+                    }
+                    else
+                    {
+                        if (((this._texMax is TextureBitmap) && (this._texMax.themeDataId)))
+                        {
+                            stateChangingProperties1[StatesEnum.STATE_CLICKED][this._texMax.name]["themeDataId"] = ((this._texMax.themeDataId.replace("_normal", "") + "_") + StatesEnum.STATE_OVER_STRING.toLocaleLowerCase());
+                        };
+                    };
+                    stateChangingProperties3[StatesEnum.STATE_CLICKED] = new Array();
+                    stateChangingProperties3[StatesEnum.STATE_CLICKED][this._texMax.name] = new Array();
+                    if ((this._texMax is Texture))
+                    {
+                        stateChangingProperties3[StatesEnum.STATE_CLICKED][this._texMax.name]["gotoAndStop"] = StatesEnum.STATE_CLICKED_STRING.toLocaleLowerCase();
+                    }
+                    else
+                    {
+                        if (((this._texMax is TextureBitmap) && (this._texMax.themeDataId)))
+                        {
+                            stateChangingProperties1[StatesEnum.STATE_CLICKED][this._texMax.name]["themeDataId"] = ((this._texMax.themeDataId.replace("_normal", "") + "_") + StatesEnum.STATE_CLICKED_STRING.toLocaleLowerCase());
+                        };
+                    };
+                    ButtonContainer(this._gcMax).changingStateData = stateChangingProperties3;
+                };
             };
-            this.finalized = true;
+            finalized = true;
             this.scrollBarProcess();
+            super.finalize();
             getUi().iAmFinalized(this);
         }
 
@@ -343,18 +416,110 @@
         {
             var maxWL:int = Math.max(this._nWidth, this._nHeight);
             this._squareEdge = Math.min(this._nWidth, this._nHeight);
-            this._nBoxSize = ((maxWL - (2 * this._squareEdge)) * ((this._nTotal - this._nMax) / this._nTotal));
-            if (this._nBoxSize < 10)
+            var arrowEdge:uint = this._squareEdge;
+            if (((!(this._texMin)) && (!(this._texMax))))
             {
-                this._nBoxSize = (((maxWL - (2 * this._squareEdge)) - ((this._nMax - this._nMin) + 1)) * this._nStep);
+                arrowEdge = 0;
             };
-            if (this._nBoxSize < this._squareEdge)
+            if (((!(this._texBack.stage)) || (!(this._texBack.finalized))))
             {
-                this._nBoxSize = this._squareEdge;
+                if ((this._texBack is Texture))
+                {
+                    Texture(this._texBack).autoGrid = true;
+                };
+                this._texBack.width = this._nWidth;
+                this._texBack.height = (this._nHeight - (arrowEdge * 0.4));
+                this._texBack.x = 0;
+                this._texBack.y = 0;
+                this._texBack.finalize();
+                addChildAt(this._texBack, 0);
+            }
+            else
+            {
+                this._texBack.width = this._nWidth;
+                this._texBack.height = (this._nHeight - (arrowEdge * 0.4));
             };
-            this._nBoxPosMin = (this._squareEdge - 6);
-            this._nBoxPosMax = int(((maxWL - this._squareEdge) - this._nBoxSize));
-            this._nScrollStep = ((((maxWL - (2 * this._squareEdge)) + 6) - this._nBoxSize) / (this._nMax - this._nMin));
+            this._texBack.mouseEnabled = true;
+            if (this._texMin)
+            {
+                if (!this._texMin.finalized)
+                {
+                    if (this._bVertical)
+                    {
+                        this._texMin.width = arrowEdge;
+                    }
+                    else
+                    {
+                        this._texMin.height = arrowEdge;
+                    };
+                    if ((this._texMin is Texture))
+                    {
+                        Texture(this._texMin).dispatchMessages = true;
+                    };
+                    this._texMin.finalize();
+                    addChild(this._gcMin);
+                }
+                else
+                {
+                    if (this._bVertical)
+                    {
+                        this._texMin.width = arrowEdge;
+                    }
+                    else
+                    {
+                        this._texMin.height = arrowEdge;
+                    };
+                };
+            };
+            if (this._texMax)
+            {
+                if (!this._texMax.finalized)
+                {
+                    if (this._bVertical)
+                    {
+                        this._texMax.width = arrowEdge;
+                    }
+                    else
+                    {
+                        this._texMax.height = arrowEdge;
+                    };
+                    if ((this._texMax is Texture))
+                    {
+                        Texture(this._texMax).dispatchMessages = true;
+                    };
+                    this._texMax.finalize();
+                    this._gcMax.x = ((this._bVertical) ? 0 : (this._nWidth - arrowEdge));
+                    this._gcMax.y = ((this._bVertical) ? (this._nHeight - arrowEdge) : 0);
+                    addChild(this._gcMax);
+                }
+                else
+                {
+                    if (this._bVertical)
+                    {
+                        this._texMax.width = arrowEdge;
+                    }
+                    else
+                    {
+                        this._texMax.height = arrowEdge;
+                    };
+                    this._gcMax.x = ((this._bVertical) ? 0 : (this._nWidth - arrowEdge));
+                    this._gcMax.y = ((this._bVertical) ? (this._nHeight - arrowEdge) : 0);
+                };
+            };
+            this._nBoxSize = ((maxWL - (2 * arrowEdge)) * ((this._nTotal - this._nMax) / ((this._nTotal == 0) ? 1 : this._nTotal)));
+            this._nBoxSize = Math.max(this._squareEdge, this._nBoxSize);
+            var cheatToAvoidAGapAndWeShouldGetRidOfIt:int;
+            if (this._texMin)
+            {
+                cheatToAvoidAGapAndWeShouldGetRidOfIt = 6;
+                this._nBoxPosMin = (arrowEdge - cheatToAvoidAGapAndWeShouldGetRidOfIt);
+            }
+            else
+            {
+                this._nBoxPosMin = 0;
+            };
+            this._nBoxPosMax = Math.ceil(((maxWL - arrowEdge) - this._nBoxSize));
+            this._nScrollStep = ((((maxWL - (2 * arrowEdge)) + cheatToAvoidAGapAndWeShouldGetRidOfIt) - this._nBoxSize) / (this._nMax - this._nMin));
             this._nLastPos = this._nCurrentPos;
             if (this._nCurrentValue > this._nMax)
             {
@@ -369,80 +534,14 @@
             {
                 this.updateDisplayFromCurrentPos();
             };
-            if (!(this._texBack.finalized))
-            {
-                this._texBack.autoGrid = true;
-                this._texBack.width = this._nWidth;
-                this._texBack.height = (this._nHeight - (this._squareEdge * 0.4));
-                this._texBack.x = 0;
-                this._texBack.y = 0;
-                this._texBack.finalize();
-                addChild(this._texBack);
-            }
-            else
-            {
-                this._texBack.width = this._nWidth;
-                this._texBack.height = (this._nHeight - (this._squareEdge * 0.4));
-            };
-            if (!(this._texMin.finalized))
-            {
-                if (this._bVertical)
-                {
-                    this._texMin.width = this._squareEdge;
-                }
-                else
-                {
-                    this._texMin.height = this._squareEdge;
-                };
-                this._texMin.dispatchMessages = true;
-                this._texMin.finalize();
-                addChild(this._gcMin);
-            }
-            else
-            {
-                if (this._bVertical)
-                {
-                    this._texMin.width = this._squareEdge;
-                }
-                else
-                {
-                    this._texMin.height = this._squareEdge;
-                };
-            };
-            if (!(this._texMax.finalized))
-            {
-                if (this._bVertical)
-                {
-                    this._texMax.width = this._squareEdge;
-                }
-                else
-                {
-                    this._texMax.height = this._squareEdge;
-                };
-                this._texMax.dispatchMessages = true;
-                this._texMax.finalize();
-                this._gcMax.x = ((this._bVertical) ? 0 : (this._nWidth - this._squareEdge));
-                this._gcMax.y = ((this._bVertical) ? (this._nHeight - this._squareEdge) : 0);
-                addChild(this._gcMax);
-            }
-            else
-            {
-                if (this._bVertical)
-                {
-                    this._texMax.width = this._squareEdge;
-                }
-                else
-                {
-                    this._texMax.height = this._squareEdge;
-                };
-                this._gcMax.x = ((this._bVertical) ? 0 : (this._nWidth - this._squareEdge));
-                this._gcMax.y = ((this._bVertical) ? (this._nHeight - this._squareEdge) : 0);
-            };
-            if (!(this._texBox.finalized))
+            if (((!(this._texBox.finalized)) || (!(this._gcBox.parent))))
             {
                 this._texBox.width = ((this._bVertical) ? this._squareEdge : this._nBoxSize);
                 this._texBox.height = ((this._bVertical) ? this._nBoxSize : this._squareEdge);
-                this._texBox.autoGrid = true;
+                if ((this._texBox is Texture))
+                {
+                    Texture(this._texBox).autoGrid = true;
+                };
                 this._texBox.finalize();
                 this._gcBox.x = ((this._bVertical) ? 0 : this._nCurrentPos);
                 this._gcBox.y = ((this._bVertical) ? this._nCurrentPos : 0);
@@ -450,9 +549,14 @@
             }
             else
             {
+                this._texBox.finalized = false;
                 this._texBox.width = ((this._bVertical) ? this._squareEdge : this._nBoxSize);
                 this._texBox.height = ((this._bVertical) ? this._nBoxSize : this._squareEdge);
-                this._texBox.autoGrid = true;
+                if ((this._texBox is Texture))
+                {
+                    Texture(this._texBox).autoGrid = true;
+                };
+                this._texBox.finalize();
                 this._gcBox.x = ((this._bVertical) ? 0 : this._nCurrentPos);
                 this._gcBox.y = ((this._bVertical) ? this._nCurrentPos : 0);
             };
@@ -464,23 +568,28 @@
             {
                 this._texBox.visible = true;
             };
-            if (this._texMin.loading)
+            if (((this._texMin) && (this._texMin is Texture)))
             {
-                this._texMin.addEventListener(Event.COMPLETE, this.eventOnTextureReady);
-            }
-            else
-            {
-                this._texMin.gotoAndStop = ((this._bDisabled) ? StatesEnum.STATE_DISABLED_STRING : StatesEnum.STATE_NORMAL_STRING);
+                if (Texture(this._texMin).loading)
+                {
+                    this._texMin.addEventListener(Event.COMPLETE, this.eventOnTextureReady);
+                }
+                else
+                {
+                    Texture(this._texMin).gotoAndStop = ((this._bDisabled) ? StatesEnum.STATE_DISABLED_STRING : StatesEnum.STATE_NORMAL_STRING);
+                };
             };
-            if (this._texMax.loading)
+            if ((this._texMax is Texture))
             {
-                this._texMax.addEventListener(Event.COMPLETE, this.eventOnTextureReady);
-            }
-            else
-            {
-                this._texMax.gotoAndStop = ((this._bDisabled) ? StatesEnum.STATE_DISABLED_STRING : StatesEnum.STATE_NORMAL_STRING);
+                if (Texture(this._texMax).loading)
+                {
+                    this._texMax.addEventListener(Event.COMPLETE, this.eventOnTextureReady);
+                }
+                else
+                {
+                    Texture(this._texMax).gotoAndStop = ((this._bDisabled) ? StatesEnum.STATE_DISABLED_STRING : StatesEnum.STATE_NORMAL_STRING);
+                };
             };
-            this._texBack.mouseEnabled = true;
         }
 
         private function updateDisplayFromCurrentPos():void
@@ -519,7 +628,7 @@
 
         private function approximate(nValue:Number):Number
         {
-            return ((nValue + this._nMin));
+            return (nValue + this._nMin);
         }
 
         private function valueOfPos(nPos:Number):int
@@ -529,7 +638,7 @@
 
         override public function remove():void
         {
-            if (!(__removed))
+            if (!__removed)
             {
                 EnterFrameDispatcher.removeEventListener(this.onDragRunning);
                 EnterFrameDispatcher.removeEventListener(this.onBottomArrowDown);
@@ -550,19 +659,19 @@
 
         private function clear():void
         {
-            if (((!((this._gcBox == null))) && (contains(this._gcBox))))
+            if (((!(this._gcBox == null)) && (contains(this._gcBox))))
             {
                 this._texBox.remove();
                 getUi().removeFromRenderList(this._texBox.name);
                 this._gcBox.remove();
             };
-            if (((!((this._gcMax == null))) && (contains(this._gcMax))))
+            if (((!(this._gcMax == null)) && (contains(this._gcMax))))
             {
                 this._texMax.remove();
                 getUi().removeFromRenderList(this._texMax.name);
                 this._gcMax.remove();
             };
-            if (((!((this._gcMin == null))) && (contains(this._gcMin))))
+            if (((!(this._gcMin == null)) && (contains(this._gcMin))))
             {
                 this._texMin.remove();
                 getUi().removeFromRenderList(this._texMin.name);
@@ -574,13 +683,12 @@
             };
         }
 
-        [HideInFakeClass]
         override public function process(msg:Message):Boolean
         {
-            var _local_4:Number;
+            var ncp:Number;
             var listener:IInterfaceListener;
             var listener2:IInterfaceListener;
-            var curr:int = this.value;
+            var curr:int = this._nCurrentPos;
             var pr:PoolableRectangle = (PoolsManager.getInstance().getRectanglePool().checkOut() as PoolableRectangle);
             switch (true)
             {
@@ -600,13 +708,15 @@
                             {
                                 this._nCurrentPos = this._nBoxPosMax;
                             };
-                            if (curr != this.valueOfPos(this._nCurrentPos))
+                            if (curr != this._nCurrentPos)
                             {
                                 this.updateDisplayFromCurrentPos();
                                 dispatchEvent(new Event(Event.CHANGE));
                             };
                             this._nDecelerateScroll = 1;
                             this._nAcelerateScroll = 0;
+                            this._nMaxDecelerateFactor = FIRST_MAX_DECELERATE_FACTOR;
+                            this._firstScrollUpdate = true;
                             EnterFrameDispatcher.addEventListener(this.onBottomArrowDown, "ScrollBarBottomArrow");
                             break;
                         case this._gcMin:
@@ -622,10 +732,15 @@
                             {
                                 this._nCurrentPos = this._nBoxPosMin;
                             };
-                            this.updateDisplayFromCurrentPos();
-                            dispatchEvent(new Event(Event.CHANGE));
+                            if (curr != this._nCurrentPos)
+                            {
+                                this.updateDisplayFromCurrentPos();
+                                dispatchEvent(new Event(Event.CHANGE));
+                            };
                             this._nDecelerateScroll = 1;
                             this._nAcelerateScroll = 0;
+                            this._nMaxDecelerateFactor = FIRST_MAX_DECELERATE_FACTOR;
+                            this._firstScrollUpdate = true;
                             EnterFrameDispatcher.addEventListener(this.onTopArrowDown, "ScrollBarTopArrow");
                             break;
                         case this._texBack:
@@ -637,9 +752,9 @@
                             {
                                 this._nCurrentPos = this.approximate(int(this._texBack.mouseX));
                             };
-                            _local_4 = (this._nCurrentPos - (this._nCurrentPos % this._nScrollStep));
-                            this._nCurrentPos = (_local_4 - (this._squareEdge / 2));
-                            if ((((this._nCurrentPos > this._nBoxPosMax)) || ((this._nCurrentPos > (this._nBoxPosMax - this._nScrollStep)))))
+                            ncp = (this._nCurrentPos - (this._nCurrentPos % this._nScrollStep));
+                            this._nCurrentPos = (ncp - (this._squareEdge / 2));
+                            if (((this._nCurrentPos > this._nBoxPosMax) || (this._nCurrentPos > (this._nBoxPosMax - this._nScrollStep))))
                             {
                                 this._nCurrentPos = this._nBoxPosMax;
                             };
@@ -746,9 +861,14 @@
         private function onTopArrowDown(e:Event):void
         {
             var framePerSecond:Number = Berilia.getInstance().docMain.stage.frameRate;
-            var currValue:int = this.value;
+            var oldPos:Number = this._nCurrentPos;
             if (this._nDecelerateScroll >= this._nMaxDecelerateFactor)
             {
+                if (this._firstScrollUpdate)
+                {
+                    this._firstScrollUpdate = false;
+                    this._nMaxDecelerateFactor = MAX_DECELERATE_FACTOR;
+                };
                 if ((this._nCurrentPos - this._nScrollStep) >= this._nBoxPosMin)
                 {
                     this._nCurrentPos = (this._nCurrentPos - this._nScrollStep);
@@ -757,8 +877,8 @@
                 {
                     this._nCurrentPos = this._nBoxPosMin;
                 };
-                this._nDecelerateScroll = (((this._nAcelerateScroll < this._nMaxDecelerateFactor)) ? this._nAcelerateScroll++ : (this._nMaxDecelerateFactor - 1));
-                if (currValue != this.valueOfPos(this._nCurrentPos))
+                this._nDecelerateScroll = ((this._nAcelerateScroll < this._nMaxDecelerateFactor) ? this._nAcelerateScroll++ : (this._nMaxDecelerateFactor - 1));
+                if (oldPos != this._nCurrentPos)
                 {
                     this.updateDisplayFromCurrentPos();
                     dispatchEvent(new Event(Event.CHANGE));
@@ -770,10 +890,14 @@
         private function onBottomArrowDown(e:Event):void
         {
             var framePerSecond:Number = Berilia.getInstance().docMain.stage.frameRate;
-            var currValue:int = this.value;
             var oldPos:Number = this._nCurrentPos;
             if (this._nDecelerateScroll >= this._nMaxDecelerateFactor)
             {
+                if (this._firstScrollUpdate)
+                {
+                    this._firstScrollUpdate = false;
+                    this._nMaxDecelerateFactor = MAX_DECELERATE_FACTOR;
+                };
                 if ((this._nCurrentPos + this._nScrollStep) <= this._nBoxPosMax)
                 {
                     this._nCurrentPos = (this._nCurrentPos + this._nScrollStep);
@@ -782,7 +906,7 @@
                 {
                     this._nCurrentPos = this._nBoxPosMax;
                 };
-                this._nDecelerateScroll = (((this._nAcelerateScroll < this._nMaxDecelerateFactor)) ? this._nAcelerateScroll++ : (this._nMaxDecelerateFactor - 1));
+                this._nDecelerateScroll = ((this._nAcelerateScroll < this._nMaxDecelerateFactor) ? this._nAcelerateScroll++ : (this._nMaxDecelerateFactor - 1));
                 if (oldPos != this._nCurrentPos)
                 {
                     this.updateDisplayFromCurrentPos();
@@ -818,42 +942,61 @@
         {
             var _ssSheet:ExtendedStyleSheet;
             var styleObj:Object;
-            if (!(this._gcMin))
+            if (!this._gcBox)
             {
                 _ssSheet = CssManager.getInstance().getCss(this._sCss.uri);
                 styleObj = _ssSheet.getStyle(".skin");
-                this._uriTexBack = new Uri((this._common + styleObj["textureBack"]));
-                this._uriTexBox = new Uri((this._common + styleObj["textureBox"]));
-                this._uriTexMax = new Uri((this._common + styleObj["textureMax"]));
-                this._uriTexMin = new Uri((this._common + styleObj["textureMin"]));
-                this._texBack = new Texture();
-                this._texBack.uri = this._uriTexBack;
-                this._texBox = new Texture();
-                this._texBox.uri = this._uriTexBox;
-                this._texMin = new Texture();
-                this._texMin.uri = this._uriTexMin;
-                this._texMax = new Texture();
-                this._texMax.uri = this._uriTexMax;
+                this._texBack = this.initTexture("Back", styleObj);
+                this._texBox = this.initTexture("Box", styleObj);
+                this._texMax = this.initTexture("Max", styleObj);
+                this._texMin = this.initTexture("Min", styleObj);
             };
             this.scrollBarInit();
         }
 
+        private function initTexture(id:String, styleObj:Object):GraphicContainer
+        {
+            var tb:TextureBitmap;
+            var t:Texture;
+            id = ("texture" + id);
+            if (((styleObj[(id + "Type")]) && (String(styleObj[(id + "Type")]).toLowerCase() == "texturebitmap")))
+            {
+                tb = new TextureBitmap();
+                if (styleObj[id])
+                {
+                    tb.uri = new Uri(LangManager.getInstance().replaceKey(unescape(styleObj[id])));
+                };
+                if (styleObj[(id + "ThemeDataId")])
+                {
+                    tb.themeDataId = styleObj[(id + "ThemeDataId")];
+                };
+                return (tb);
+            };
+            if (!styleObj[id])
+            {
+                return (null);
+            };
+            t = new Texture();
+            t.uri = new Uri(LangManager.getInstance().replaceKey(unescape(styleObj[id])));
+            return (t);
+        }
+
         public function eventOnTextureReady(e:Event):void
         {
-            if (e.target == this._texMin)
+            if (((e.target == this._texMin) && (this._texMin is Texture)))
             {
-                this._texMin.gotoAndStop = ((this._bDisabled) ? StatesEnum.STATE_DISABLED_STRING.toLowerCase() : StatesEnum.STATE_NORMAL_STRING.toLowerCase());
+                Texture(this._texMin).gotoAndStop = ((this._bDisabled) ? StatesEnum.STATE_DISABLED_STRING.toLowerCase() : StatesEnum.STATE_NORMAL_STRING.toLowerCase());
             }
             else
             {
-                if (e.target == this._texMax)
+                if (((e.target == this._texMax) && (this._texMax is Texture)))
                 {
-                    this._texMax.gotoAndStop = ((this._bDisabled) ? StatesEnum.STATE_DISABLED_STRING.toLowerCase() : StatesEnum.STATE_NORMAL_STRING.toLowerCase());
+                    Texture(this._texMax).gotoAndStop = ((this._bDisabled) ? StatesEnum.STATE_DISABLED_STRING.toLowerCase() : StatesEnum.STATE_NORMAL_STRING.toLowerCase());
                 };
             };
         }
 
 
     }
-}//package com.ankamagames.berilia.components
+} com.ankamagames.berilia.components
 

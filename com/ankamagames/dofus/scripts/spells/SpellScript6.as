@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.scripts.spells
+package com.ankamagames.dofus.scripts.spells
 {
     import com.ankamagames.jerakine.sequencer.ISequencable;
     import com.ankamagames.dofus.types.entities.Projectile;
@@ -30,12 +30,12 @@
             var explo:ExplosionEntity;
             super(spellFxRunner);
             var target:MapPoint = FxApi.GetCurrentTargetedCell(runner);
-            if (!(caster))
+            if (!caster)
             {
                 return;
             };
             addCasterSetDirectionStep(target);
-            if (!(FxApi.IsPositionsEquals(FxApi.GetEntityCell(caster), target)))
+            if (!FxApi.IsPositionsEquals(FxApi.GetEntityCell(caster), target))
             {
                 orientation = FxApi.GetOrientationTo(FxApi.GetEntityCell(caster), target);
                 orientationStep = SequenceApi.CreateSetDirectionStep(caster, orientation);
@@ -43,7 +43,7 @@
                 latestStep = orientationStep;
             };
             var animationStep:ISequencable = SequenceApi.CreatePlayAnimationStep(caster, "AnimAttaque403", true, true, "SHOT");
-            if (!(latestStep))
+            if (!latestStep)
             {
                 SpellFxApi.AddFrontStep(runner, animationStep);
             }
@@ -72,8 +72,8 @@
                 {
                     spellGfxCasterShowUnder = SpellFxApi.GetSpellParam(spell, "casterGfxShowUnder");
                 };
-                gfxCasterStep = SequenceApi.CreateAddGfxEntityStep(runner, SpellFxApi.GetSpellParam(spell, "casterGfxId"), FxApi.GetEntityCell(caster), casterGfxAngle, spellGfxCasterYOffset, SpellFxApi.GetSpellParam(spell, "casterGfxDisplayType"), FxApi.GetEntityCell(caster), FxApi.GetCurrentTargetedCell(runner), spellGfxCasterShowUnder);
-                if (!(latestStep))
+                gfxCasterStep = SequenceApi.CreateAddGfxEntityStep(runner, SpellFxApi.GetSpellParam(spell, "casterGfxId"), FxApi.GetEntityCell(caster), casterGfxAngle, spellGfxCasterYOffset, SpellFxApi.GetSpellParam(spell, "casterGfxDisplayType"), FxApi.GetEntityCell(caster), FxApi.GetCurrentTargetedCell(runner), spellGfxCasterShowUnder, caster);
+                if (!latestStep)
                 {
                     SpellFxApi.AddFrontStep(runner, gfxCasterStep);
                 }
@@ -103,8 +103,8 @@
                 {
                     spellGfxTargetShowUnder = SpellFxApi.GetSpellParam(spell, "targetGfxShowUnder");
                 };
-                gfxTargetStep = SequenceApi.CreateAddGfxEntityStep(runner, SpellFxApi.GetSpellParam(spell, "targetGfxId"), target, targetGfxAngle, spellGfxTargetYOffset, SpellFxApi.GetSpellParam(spell, "targetGfxDisplayType"), FxApi.GetEntityCell(caster), FxApi.GetCurrentTargetedCell(runner), spellGfxTargetShowUnder);
-                if (!(latestStep))
+                gfxTargetStep = SequenceApi.CreateAddGfxEntityStep(runner, SpellFxApi.GetSpellParam(spell, "targetGfxId"), target, targetGfxAngle, spellGfxTargetYOffset, SpellFxApi.GetSpellParam(spell, "targetGfxDisplayType"), FxApi.GetEntityCell(caster), FxApi.GetCurrentTargetedCell(runner), spellGfxTargetShowUnder, caster);
+                if (!latestStep)
                 {
                     SpellFxApi.AddFrontStep(runner, gfxTargetStep);
                 }
@@ -140,7 +140,7 @@
                 explo = SpellFxApi.CreateExplosionEntity(runner, SpellFxApi.GetSpellParam(spell, "particleGfxId"), SpellFxApi.GetSpellParam(spell, "particleColor"), SpellFxApi.GetSpellParam(spell, "particleCount"), levelChange, subExplo, SpellFxApi.GetSpellParam(spell, "explosionType"));
                 FxApi.SetSubEntity(missileGfx, explo, 2, 1);
                 gfxTargetStep = SequenceApi.CreateAddWorldEntityStep(missileGfx);
-                if (!(latestStep))
+                if (!latestStep)
                 {
                     SpellFxApi.AddFrontStep(runner, gfxTargetStep);
                 }
@@ -157,9 +157,10 @@
                 };
                 latestStep = gfxTargetStep;
             };
+            addFBackgroundSteps();
             destroy();
         }
 
     }
-}//package com.ankamagames.dofus.scripts.spells
+} com.ankamagames.dofus.scripts.spells
 

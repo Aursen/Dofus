@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.misc.utils
+package com.ankamagames.dofus.misc.utils
 {
     import flash.utils.Dictionary;
     import flash.geom.Matrix;
@@ -35,10 +35,10 @@
         {
             var bmp:Bitmap;
             var bmpdt:BitmapData;
-            if (((useCache) && (!((_cache[className] == null)))))
+            if (((useCache) && (!(_cache[className] == null))))
             {
                 bmp = _cache[className];
-                if (!(unique))
+                if (!unique)
                 {
                     return (bmp);
                 };
@@ -64,7 +64,7 @@
 
         public static function getClass(className:String):Class
         {
-            return ((EmbedAssets[className] as Class));
+            return (EmbedAssets[className] as Class);
         }
 
         private static function saveCache(className:String, data:*):void
@@ -74,5 +74,5 @@
 
 
     }
-}//package com.ankamagames.dofus.misc.utils
+} com.ankamagames.dofus.misc.utils
 

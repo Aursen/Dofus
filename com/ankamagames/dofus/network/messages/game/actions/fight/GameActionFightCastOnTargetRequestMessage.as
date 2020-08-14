@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.actions.fight
+package com.ankamagames.dofus.network.messages.game.actions.fight
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class GameActionFightCastOnTargetRequestMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -15,7 +15,7 @@
 
         private var _isInitialized:Boolean = false;
         public var spellId:uint = 0;
-        public var targetId:int = 0;
+        public var targetId:Number = 0;
 
 
         override public function get isInitialized():Boolean
@@ -28,7 +28,7 @@
             return (6330);
         }
 
-        public function initGameActionFightCastOnTargetRequestMessage(spellId:uint=0, targetId:int=0):GameActionFightCastOnTargetRequestMessage
+        public function initGameActionFightCastOnTargetRequestMessage(spellId:uint=0, targetId:Number=0):GameActionFightCastOnTargetRequestMessage
         {
             this.spellId = spellId;
             this.targetId = targetId;
@@ -55,6 +55,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_GameActionFightCastOnTargetRequestMessage(output);
@@ -67,7 +75,11 @@
                 throw (new Error((("Forbidden value (" + this.spellId) + ") on element spellId.")));
             };
             output.writeVarShort(this.spellId);
-            output.writeInt(this.targetId);
+            if (((this.targetId < -9007199254740992) || (this.targetId > 9007199254740992)))
+            {
+                throw (new Error((("Forbidden value (" + this.targetId) + ") on element targetId.")));
+            };
+            output.writeDouble(this.targetId);
         }
 
         public function deserialize(input:ICustomDataInput):void
@@ -77,15 +89,40 @@
 
         public function deserializeAs_GameActionFightCastOnTargetRequestMessage(input:ICustomDataInput):void
         {
+            this._spellIdFunc(input);
+            this._targetIdFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GameActionFightCastOnTargetRequestMessage(tree);
+        }
+
+        public function deserializeAsyncAs_GameActionFightCastOnTargetRequestMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._spellIdFunc);
+            tree.addChild(this._targetIdFunc);
+        }
+
+        private function _spellIdFunc(input:ICustomDataInput):void
+        {
             this.spellId = input.readVarUhShort();
             if (this.spellId < 0)
             {
                 throw (new Error((("Forbidden value (" + this.spellId) + ") on element of GameActionFightCastOnTargetRequestMessage.spellId.")));
             };
-            this.targetId = input.readInt();
+        }
+
+        private function _targetIdFunc(input:ICustomDataInput):void
+        {
+            this.targetId = input.readDouble();
+            if (((this.targetId < -9007199254740992) || (this.targetId > 9007199254740992)))
+            {
+                throw (new Error((("Forbidden value (" + this.targetId) + ") on element of GameActionFightCastOnTargetRequestMessage.targetId.")));
+            };
         }
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.actions.fight
+} com.ankamagames.dofus.network.messages.game.actions.fight
 

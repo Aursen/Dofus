@@ -1,31 +1,17 @@
-﻿package com.ankamagames.dofus.internalDatacenter.people
+package com.ankamagames.dofus.internalDatacenter.people
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
+    import com.ankamagames.jerakine.enum.SocialCharacterCategoryEnum;
 
-    public class IgnoredWrapper implements IDataCenter 
+    public class IgnoredWrapper extends SocialCharacterWrapper implements IDataCenter 
     {
-
-        public var name:String = "";
-        public var accountId:uint;
-        public var state:int = 1;
-        public var lastConnection:uint = 0;
-        public var online:Boolean = true;
-        public var type:String = "Ignored";
-        public var playerId:int;
-        public var playerName:String = "";
-        public var breed:uint = 0;
-        public var sex:uint = 2;
-        public var level:int = 0;
-        public var alignmentSide:int = -1;
-        public var guildName:String = "";
-        public var achievementPoints:int = -1;
 
         public function IgnoredWrapper(name:String, accountId:uint)
         {
-            this.name = name;
-            this.accountId = accountId;
+            super(name, accountId);
+            this.e_category = SocialCharacterCategoryEnum.CATEGORY_IGNORED;
         }
 
     }
-}//package com.ankamagames.dofus.internalDatacenter.people
+} com.ankamagames.dofus.internalDatacenter.people
 

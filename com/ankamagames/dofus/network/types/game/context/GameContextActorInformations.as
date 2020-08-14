@@ -1,75 +1,79 @@
-﻿package com.ankamagames.dofus.network.types.game.context
+package com.ankamagames.dofus.network.types.game.context
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.dofus.network.types.game.look.EntityLook;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
-    import com.ankamagames.dofus.network.ProtocolTypeManager;
 
-    public class GameContextActorInformations implements INetworkType 
+    public class GameContextActorInformations extends GameContextActorPositionInformations implements INetworkType 
     {
 
         public static const protocolId:uint = 150;
 
-        public var contextualId:int = 0;
-        public var look:EntityLook;
-        public var disposition:EntityDispositionInformations;
+        public var look:EntityLook = new EntityLook();
+        private var _looktree:FuncTree;
 
-        public function GameContextActorInformations()
-        {
-            this.look = new EntityLook();
-            this.disposition = new EntityDispositionInformations();
-            super();
-        }
 
-        public function getTypeId():uint
+        override public function getTypeId():uint
         {
             return (150);
         }
 
-        public function initGameContextActorInformations(contextualId:int=0, look:EntityLook=null, disposition:EntityDispositionInformations=null):GameContextActorInformations
+        public function initGameContextActorInformations(contextualId:Number=0, disposition:EntityDispositionInformations=null, look:EntityLook=null):GameContextActorInformations
         {
-            this.contextualId = contextualId;
+            super.initGameContextActorPositionInformations(contextualId, disposition);
             this.look = look;
-            this.disposition = disposition;
             return (this);
         }
 
-        public function reset():void
+        override public function reset():void
         {
-            this.contextualId = 0;
+            super.reset();
             this.look = new EntityLook();
         }
 
-        public function serialize(output:ICustomDataOutput):void
+        override public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_GameContextActorInformations(output);
         }
 
         public function serializeAs_GameContextActorInformations(output:ICustomDataOutput):void
         {
-            output.writeInt(this.contextualId);
+            super.serializeAs_GameContextActorPositionInformations(output);
             this.look.serializeAs_EntityLook(output);
-            output.writeShort(this.disposition.getTypeId());
-            this.disposition.serialize(output);
         }
 
-        public function deserialize(input:ICustomDataInput):void
+        override public function deserialize(input:ICustomDataInput):void
         {
             this.deserializeAs_GameContextActorInformations(input);
         }
 
         public function deserializeAs_GameContextActorInformations(input:ICustomDataInput):void
         {
-            this.contextualId = input.readInt();
+            super.deserialize(input);
             this.look = new EntityLook();
             this.look.deserialize(input);
-            var _id3:uint = input.readUnsignedShort();
-            this.disposition = ProtocolTypeManager.getInstance(EntityDispositionInformations, _id3);
-            this.disposition.deserialize(input);
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GameContextActorInformations(tree);
+        }
+
+        public function deserializeAsyncAs_GameContextActorInformations(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            this._looktree = tree.addChild(this._looktreeFunc);
+        }
+
+        private function _looktreeFunc(input:ICustomDataInput):void
+        {
+            this.look = new EntityLook();
+            this.look.deserializeAsync(this._looktree);
         }
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.context
+} com.ankamagames.dofus.network.types.game.context
 

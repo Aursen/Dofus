@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.utils.benchmark.monitoring.ui
+package com.ankamagames.jerakine.utils.benchmark.monitoring.ui
 {
     import flash.display.Sprite;
     import __AS3__.vec.Vector;
@@ -32,7 +32,7 @@
             this.color = pColor;
             this.points = new Vector.<int>();
             this._isNewFrame = true;
-            if (!(FpsManagerUtils.isSpecialGraph(this.indice)))
+            if (!FpsManagerUtils.isSpecialGraph(this.indice))
             {
                 this.grapheIsVisible = false;
                 this._menu = new Sprite();
@@ -66,7 +66,7 @@
 
         private function clickHandler(pEvt:MouseEvent):void
         {
-            this.grapheIsVisible = !(this.grapheIsVisible);
+            this.grapheIsVisible = (!(this.grapheIsVisible));
             this._menu.alpha = ((this.grapheIsVisible) ? 1 : MENU_OUT_ALPHA);
             if (this.grapheIsVisible)
             {
@@ -80,7 +80,7 @@
 
         private function mouseOverHandler(pEvt:MouseEvent):void
         {
-            if (!(this.grapheIsVisible))
+            if (!this.grapheIsVisible)
             {
                 this._menu.alpha = 1;
             };
@@ -89,7 +89,7 @@
 
         private function mouseOutHandler(pEvt:MouseEvent):void
         {
-            if (!(this.grapheIsVisible))
+            if (!this.grapheIsVisible)
             {
                 this._menu.alpha = MENU_OUT_ALPHA;
             };
@@ -121,7 +121,7 @@
 
         public function setNewFrame():void
         {
-            if (!(FpsManagerUtils.isSpecialGraph(this.indice)))
+            if (!FpsManagerUtils.isSpecialGraph(this.indice))
             {
                 this.startTime = 0;
             };
@@ -146,5 +146,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.utils.benchmark.monitoring.ui
+} com.ankamagames.jerakine.utils.benchmark.monitoring.ui
 

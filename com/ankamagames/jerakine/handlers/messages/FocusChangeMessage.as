@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.handlers.messages
+package com.ankamagames.jerakine.handlers.messages
 {
     import flash.events.Event;
     import flash.display.InteractiveObject;
@@ -9,14 +9,14 @@
 
         public static function create(target:InteractiveObject, instance:FocusChangeMessage=null):FocusChangeMessage
         {
-            if (!(instance))
+            if (!instance)
             {
                 instance = new (FocusChangeMessage)();
             };
-            return ((HumanInputMessage.create(target, new Event("FocusChange"), instance) as FocusChangeMessage));
+            return (HumanInputMessage.create(target, new Event("FocusChange"), instance) as FocusChangeMessage);
         }
 
 
     }
-}//package com.ankamagames.jerakine.handlers.messages
+} com.ankamagames.jerakine.handlers.messages
 

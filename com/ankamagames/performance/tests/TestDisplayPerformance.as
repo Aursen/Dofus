@@ -1,4 +1,4 @@
-﻿package com.ankamagames.performance.tests
+package com.ankamagames.performance.tests
 {
     import com.ankamagames.performance.IBenchmarkTest;
     import flash.display.Stage;
@@ -71,7 +71,7 @@
                 {
                     this._recordedFps.push(this._currentFps);
                 };
-                if (((this._recordedFps) && ((this._recordedFps.length > 4))))
+                if (((this._recordedFps) && (this._recordedFps.length > 4)))
                 {
                     l = this._recordedFps.length;
                     recentAverageFps = (((this._recordedFps[(l - 2)] + this._recordedFps[(l - 3)]) + this._recordedFps[(l - 4)]) / 3);
@@ -103,7 +103,7 @@
             i = 0;
             while (i < amount)
             {
-                dummy = new DisplayObjectDummy((random.nextDouble() * 0xFFFFFF));
+                dummy = new DisplayObjectDummy((random.nextDouble() * 0xFFFFFF), _stage);
                 dummy.x = (random.nextDouble() * _stage.stageWidth);
                 dummy.y = (random.nextDouble() * _stage.stageHeight);
                 this._ctr.addChild(dummy);
@@ -113,7 +113,7 @@
 
         private function endTest(result:uint):void
         {
-            if (!(_results))
+            if (!_results)
             {
                 _results = [];
             };
@@ -136,13 +136,26 @@
                     i++;
                 };
                 averageFps = Math.floor((averageFps / _results.length));
-                return (("displayPerfTest:" + averageFps.toString()));
+                return ("displayPerfTest:" + averageFps.toString());
             };
             return ("displayPerfTest:none");
         }
 
         private function clean():void
         {
+            var dummy:DisplayObjectDummy;
+            if (this._ctr)
+            {
+                while (this._ctr.numChildren)
+                {
+                    dummy = (this._ctr.getChildAt(0) as DisplayObjectDummy);
+                    if (dummy)
+                    {
+                        dummy.destroy();
+                    };
+                    this._ctr.removeChildAt(0);
+                };
+            };
             if (_stage)
             {
                 _stage.removeEventListener(Event.ENTER_FRAME, this.onFrame);
@@ -160,10 +173,9 @@
             {
                 ExternalInterface.call("eval", (("console.log('" + txt) + "')"));
             };
-            trace(txt);
         }
 
 
     }
-}//package com.ankamagames.performance.tests
+} com.ankamagames.performance.tests
 

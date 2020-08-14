@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.context.roleplay
+package com.ankamagames.dofus.network.messages.game.context.roleplay
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class MapRunningFightDetailsRequestMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -52,6 +52,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_MapRunningFightDetailsRequestMessage(output);
@@ -63,7 +71,7 @@
             {
                 throw (new Error((("Forbidden value (" + this.fightId) + ") on element fightId.")));
             };
-            output.writeInt(this.fightId);
+            output.writeVarShort(this.fightId);
         }
 
         public function deserialize(input:ICustomDataInput):void
@@ -73,7 +81,22 @@
 
         public function deserializeAs_MapRunningFightDetailsRequestMessage(input:ICustomDataInput):void
         {
-            this.fightId = input.readInt();
+            this._fightIdFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_MapRunningFightDetailsRequestMessage(tree);
+        }
+
+        public function deserializeAsyncAs_MapRunningFightDetailsRequestMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._fightIdFunc);
+        }
+
+        private function _fightIdFunc(input:ICustomDataInput):void
+        {
+            this.fightId = input.readVarUhShort();
             if (this.fightId < 0)
             {
                 throw (new Error((("Forbidden value (" + this.fightId) + ") on element of MapRunningFightDetailsRequestMessage.fightId.")));
@@ -82,5 +105,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.context.roleplay
+} com.ankamagames.dofus.network.messages.game.context.roleplay
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.atouin.renderers
+package com.ankamagames.atouin.renderers
 {
     import com.ankamagames.atouin.utils.IZoneRenderer;
     import __AS3__.vec.Vector;
@@ -29,6 +29,11 @@
             this._useThicknessMalus = useThicknessMalus;
         }
 
+        public function getCellLinks():Vector.<CellLink>
+        {
+            return (this._cellLinks);
+        }
+
         public function render(cells:Vector.<uint>, oColor:Color, mapContainer:DataMapContainer, alpha:Boolean=false, updateStrata:Boolean=false):void
         {
             var cellLink:CellLink;
@@ -51,7 +56,7 @@
             {
                 p1 = CellUtil.getPixelsPointFromMapPoint(orderedCheckPoints[i], false);
                 p2 = CellUtil.getPixelsPointFromMapPoint(orderedCheckPoints[(i + 1)], false);
-                if ((((p1.y > p2.y)) || ((((p1.y == p2.y)) && ((p1.x > p2.x))))))
+                if (((p1.y > p2.y) || ((p1.y == p2.y) && (p1.x > p2.x))))
                 {
                     start = orderedCheckPoints[i];
                     end = orderedCheckPoints[(i + 1)];
@@ -93,5 +98,5 @@
 
 
     }
-}//package com.ankamagames.atouin.renderers
+} com.ankamagames.atouin.renderers
 

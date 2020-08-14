@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.connection.actions
+package com.ankamagames.dofus.logic.connection.actions
 {
     public class LoginValidationWithTicketAction extends LoginValidationAction 
     {
@@ -6,11 +6,11 @@
         public var ticket:String;
 
 
-        public static function create(ticket:String, autoSelectServer:Boolean, serverId:uint=0):LoginValidationWithTicketAction
+        public static function create(username:String, ticket:String, autoSelectServer:Boolean, serverId:uint=0):LoginValidationWithTicketAction
         {
             var a:LoginValidationWithTicketAction = new (LoginValidationWithTicketAction)();
             a.password = "";
-            a.username = "";
+            a.username = ((username == null) ? "" : username);
             a.ticket = ticket;
             a.autoSelectServer = autoSelectServer;
             a.serverId = serverId;
@@ -19,5 +19,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.connection.actions
+} com.ankamagames.dofus.logic.connection.actions
 

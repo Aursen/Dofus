@@ -1,12 +1,13 @@
-﻿package com.ankamagames.dofus.console.moduleLogger
+package com.ankamagames.dofus.console.moduleLogger
 {
     import flash.display.Sprite;
     import flash.display.Shape;
     import flash.text.TextField;
     import __AS3__.vec.Vector;
     import com.ankamagames.jerakine.utils.display.StageShareManager;
-    import flash.events.Event;
     import flash.utils.getTimer;
+    import flash.events.Event;
+    import com.ankamagames.jerakine.utils.benchmark.monitoring.FpsManagerUtils;
     import flash.system.System;
     import flash.text.TextFormat;
     import flash.events.MouseEvent;
@@ -34,15 +35,18 @@
         private static var _console3:ConsoleIcon;
 
 
-        public static function display(yes:Boolean):void
+        public static function display(yes:Boolean, withConsoleButtons:Boolean=true):void
         {
             if (yes)
             {
-                if (!(_ui))
+                if (!_ui)
                 {
-                    createUI();
+                    createUI(withConsoleButtons);
                 };
                 StageShareManager.stage.addChild(_ui);
+                _fpsShape.graphics.clear();
+                _valuesList.length = 0;
+                _lastValue = (_lastSecond = getTimer());
                 StageShareManager.stage.addEventListener(Event.ENTER_FRAME, loop);
             }
             else
@@ -54,9 +58,14 @@
             };
         }
 
+        public static function get isDisplayed():Boolean
+        {
+            return ((_ui) && (_ui.parent));
+        }
+
         private static function loop(e:Event):void
         {
-            if (!(_ui.stage))
+            if (!_ui.stage)
             {
                 StageShareManager.stage.removeEventListener(Event.ENTER_FRAME, loop);
                 return;
@@ -64,7 +73,7 @@
             var time:int = getTimer();
             if ((time - _lastSecond) > 1000)
             {
-                _textField.htmlText = (((("<font color='#7C87D1'>fps : " + _numImages) + "</font>\n<font color='#00BBBB'>mem : ") + (int((System.totalMemory / 100000)) / 10)) + " mb</font>");
+                _textField.htmlText = (((((((("<font color='#7C87D1'>FPS: " + _numImages) + " / ") + _ui.stage.frameRate) + "</font>\n<font color='#00BBBB'>MEM: ") + FpsManagerUtils.calculateMB(System.totalMemory).toPrecision(4)) + " / ") + FpsManagerUtils.calculateMB(System.privateMemory).toPrecision(4)) + " MB</font>");
                 _numImages = 0;
                 _lastSecond = time;
             }
@@ -90,7 +99,7 @@
             };
         }
 
-        private static function createUI():void
+        private static function createUI(withConsoleButtons:Boolean):void
         {
             if (_ui)
             {
@@ -102,6 +111,7 @@
             _ui.addChild(_fpsShape);
             _fpsShape.y = 20;
             var bg:Sprite = new Sprite();
+            bg.doubleClickEnabled = true;
             _ui.addChild(bg);
             bg.graphics.beginFill(0, 0.7);
             bg.graphics.lineTo(0, HEIGHT);
@@ -114,31 +124,36 @@
             bg.graphics.lineTo(WIDTH, HEIGHT);
             bg.graphics.lineTo(WIDTH, 0);
             _textField = new TextField();
+            _textField.y = 2;
             _ui.addChild(_textField);
             _textField.multiline = true;
             _textField.wordWrap = false;
             _textField.mouseEnabled = false;
             _textField.width = WIDTH;
             _textField.height = HEIGHT;
-            var format:TextFormat = new TextFormat("Courier New", 15, 12763866);
-            format.leading = -2;
+            var format:TextFormat = new TextFormat("Verdana", 14, 12763866);
+            format.leading = 2;
             _textField.defaultTextFormat = format;
-            _console1 = new ConsoleIcon("screen", 16, "Open/close Module Console");
-            _console1.x = (WIDTH - (_console1.width + 2));
-            _console1.y = (HEIGHT - ((_console1.height * 2) + 4));
-            _console1.addEventListener(MouseEvent.MOUSE_DOWN, onOpenConsole);
-            _ui.addChild(_console1);
-            _console2 = new ConsoleIcon("terminal", 16, "Open/close Console");
-            _console2.x = (WIDTH - (_console2.width + 2));
-            _console2.y = (HEIGHT - (_console2.height + 2));
-            _console2.addEventListener(MouseEvent.MOUSE_DOWN, onOpenLogConsole);
-            _ui.addChild(_console2);
-            _console3 = new ConsoleIcon("script", 16, "Open/close LUA Console");
-            _console3.x = (WIDTH - ((_console3.width + 2) * 2));
-            _console3.y = (HEIGHT - (_console3.height + 2));
-            _console3.addEventListener(MouseEvent.MOUSE_DOWN, onOpenLuaConsole);
-            _ui.addChild(_console3);
+            if (withConsoleButtons)
+            {
+                _console1 = new ConsoleIcon("screen", 16, "Open/close Module Console");
+                _console1.x = (WIDTH - (_console1.width + 2));
+                _console1.y = (HEIGHT - ((_console1.height * 2) + 4));
+                _console1.addEventListener(MouseEvent.MOUSE_DOWN, onOpenConsole);
+                _ui.addChild(_console1);
+                _console2 = new ConsoleIcon("terminal", 16, "Open/close Console");
+                _console2.x = (WIDTH - (_console2.width + 2));
+                _console2.y = (HEIGHT - (_console2.height + 2));
+                _console2.addEventListener(MouseEvent.MOUSE_DOWN, onOpenLogConsole);
+                _ui.addChild(_console2);
+                _console3 = new ConsoleIcon("script", 16, "Open/close LUA Console");
+                _console3.x = (WIDTH - ((_console3.width + 2) * 2));
+                _console3.y = (HEIGHT - (_console3.height + 2));
+                _console3.addEventListener(MouseEvent.MOUSE_DOWN, onOpenLuaConsole);
+                _ui.addChild(_console3);
+            };
             bg.addEventListener(MouseEvent.MOUSE_DOWN, onMouseDown);
+            bg.addEventListener(MouseEvent.DOUBLE_CLICK, onMouseDoubleClick);
         }
 
         private static function onOpenLogConsole(e:Event):void
@@ -148,7 +163,6 @@
 
         private static function onOpenConsole(e:Event):void
         {
-            Console.getInstance().chatMode = false;
             Console.getInstance().toggleDisplay();
         }
 
@@ -178,7 +192,12 @@
             e.updateAfterEvent();
         }
 
+        private static function onMouseDoubleClick(event:MouseEvent):void
+        {
+            System.gc();
+        }
+
 
     }
-}//package com.ankamagames.dofus.console.moduleLogger
+} com.ankamagames.dofus.console.moduleLogger
 

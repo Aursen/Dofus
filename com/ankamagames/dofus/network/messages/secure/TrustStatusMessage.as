@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.secure
+package com.ankamagames.dofus.network.messages.secure
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,9 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
+    import com.ankamagames.jerakine.network.utils.BooleanByteWrapper;
 
-    [Trusted]
     public class TrustStatusMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -15,6 +16,7 @@
 
         private var _isInitialized:Boolean = false;
         public var trusted:Boolean = false;
+        public var certified:Boolean = false;
 
 
         override public function get isInitialized():Boolean
@@ -27,9 +29,10 @@
             return (6267);
         }
 
-        public function initTrustStatusMessage(trusted:Boolean=false):TrustStatusMessage
+        public function initTrustStatusMessage(trusted:Boolean=false, certified:Boolean=false):TrustStatusMessage
         {
             this.trusted = trusted;
+            this.certified = certified;
             this._isInitialized = true;
             return (this);
         }
@@ -37,6 +40,7 @@
         override public function reset():void
         {
             this.trusted = false;
+            this.certified = false;
             this._isInitialized = false;
         }
 
@@ -52,6 +56,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_TrustStatusMessage(output);
@@ -59,7 +71,10 @@
 
         public function serializeAs_TrustStatusMessage(output:ICustomDataOutput):void
         {
-            output.writeBoolean(this.trusted);
+            var _box0:uint;
+            _box0 = BooleanByteWrapper.setFlag(_box0, 0, this.trusted);
+            _box0 = BooleanByteWrapper.setFlag(_box0, 1, this.certified);
+            output.writeByte(_box0);
         }
 
         public function deserialize(input:ICustomDataInput):void
@@ -69,10 +84,27 @@
 
         public function deserializeAs_TrustStatusMessage(input:ICustomDataInput):void
         {
-            this.trusted = input.readBoolean();
+            this.deserializeByteBoxes(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_TrustStatusMessage(tree);
+        }
+
+        public function deserializeAsyncAs_TrustStatusMessage(tree:FuncTree):void
+        {
+            tree.addChild(this.deserializeByteBoxes);
+        }
+
+        private function deserializeByteBoxes(input:ICustomDataInput):void
+        {
+            var _box0:uint = input.readByte();
+            this.trusted = BooleanByteWrapper.getFlag(_box0, 0);
+            this.certified = BooleanByteWrapper.getFlag(_box0, 1);
         }
 
 
     }
-}//package com.ankamagames.dofus.network.messages.secure
+} com.ankamagames.dofus.network.messages.secure
 

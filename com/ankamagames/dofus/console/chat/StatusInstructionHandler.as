@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.console.chat
+package com.ankamagames.dofus.console.chat
 {
     import com.ankamagames.jerakine.console.ConsoleInstructionHandler;
     import com.ankamagames.dofus.network.types.game.character.status.PlayerStatus;
@@ -19,7 +19,7 @@
         public function handle(console:ConsoleHandler, cmd:String, args:Array):void
         {
             var status:PlayerStatus;
-            var _local_6:GameRolePlayFreeSoulRequestMessage;
+            var grpfsrmmsg:GameRolePlayFreeSoulRequestMessage;
             var message:String;
             var s:String;
             var psurmsg:PlayerStatusUpdateRequestMessage = new PlayerStatusUpdateRequestMessage();
@@ -45,29 +45,29 @@
                     };
                     psurmsg.initPlayerStatusUpdateRequestMessage(status);
                     ConnectionsHandler.getConnection().send(psurmsg);
-                    return;
+                    break;
                 case I18n.getUiText("ui.chat.status.solo").toLocaleLowerCase():
                     status = new PlayerStatus();
                     status.initPlayerStatus(PlayerStatusEnum.PLAYER_STATUS_SOLO);
                     psurmsg.initPlayerStatusUpdateRequestMessage(status);
                     ConnectionsHandler.getConnection().send(psurmsg);
-                    return;
+                    break;
                 case I18n.getUiText("ui.chat.status.private").toLocaleLowerCase():
                     status = new PlayerStatus();
                     status.initPlayerStatus(PlayerStatusEnum.PLAYER_STATUS_PRIVATE);
                     psurmsg.initPlayerStatusUpdateRequestMessage(status);
                     ConnectionsHandler.getConnection().send(psurmsg);
-                    return;
+                    break;
                 case I18n.getUiText("ui.chat.status.availiable").toLocaleLowerCase():
                     status = new PlayerStatus();
                     status.initPlayerStatus(PlayerStatusEnum.PLAYER_STATUS_AVAILABLE);
                     psurmsg.initPlayerStatusUpdateRequestMessage(status);
                     ConnectionsHandler.getConnection().send(psurmsg);
-                    return;
+                    break;
                 case "release":
-                    _local_6 = new GameRolePlayFreeSoulRequestMessage();
-                    ConnectionsHandler.getConnection().send(_local_6);
-                    return;
+                    grpfsrmmsg = new GameRolePlayFreeSoulRequestMessage();
+                    ConnectionsHandler.getConnection().send(grpfsrmmsg);
+                    break;
             };
         }
 
@@ -77,13 +77,13 @@
             {
                 case "away":
                 case I18n.getUiText("ui.chat.status.away").toLocaleLowerCase():
-                    return (((("- /" + I18n.getUiText("ui.chat.status.away".toLocaleLowerCase())) + I18n.getUiText("ui.common.colon")) + I18n.getUiText("ui.chat.status.awaytooltip")));
+                    return ((("- /" + I18n.getUiText("ui.chat.status.away".toLocaleLowerCase())) + I18n.getUiText("ui.common.colon")) + I18n.getUiText("ui.chat.status.awaytooltip"));
                 case I18n.getUiText("ui.chat.status.solo").toLocaleLowerCase():
-                    return (((("- /" + I18n.getUiText("ui.chat.status.solo").toLocaleLowerCase()) + I18n.getUiText("ui.common.colon")) + I18n.getUiText("ui.chat.status.solotooltip")));
+                    return ((("- /" + I18n.getUiText("ui.chat.status.solo").toLocaleLowerCase()) + I18n.getUiText("ui.common.colon")) + I18n.getUiText("ui.chat.status.solotooltip"));
                 case I18n.getUiText("ui.chat.status.private").toLocaleLowerCase():
-                    return (((("- /" + I18n.getUiText("ui.chat.status.private").toLocaleLowerCase()) + I18n.getUiText("ui.common.colon")) + I18n.getUiText("ui.chat.status.privatetooltip")));
+                    return ((("- /" + I18n.getUiText("ui.chat.status.private").toLocaleLowerCase()) + I18n.getUiText("ui.common.colon")) + I18n.getUiText("ui.chat.status.privatetooltip"));
                 case I18n.getUiText("ui.chat.status.availiable").toLocaleLowerCase():
-                    return (((("- /" + I18n.getUiText("ui.chat.status.availiable").toLocaleLowerCase()) + I18n.getUiText("ui.common.colon")) + I18n.getUiText("ui.chat.status.availiabletooltip")));
+                    return ((("- /" + I18n.getUiText("ui.chat.status.availiable").toLocaleLowerCase()) + I18n.getUiText("ui.common.colon")) + I18n.getUiText("ui.chat.status.availiabletooltip"));
                 case "release":
                     return (I18n.getUiText("ui.common.freeSoul"));
             };
@@ -97,5 +97,5 @@
 
 
     }
-}//package com.ankamagames.dofus.console.chat
+} com.ankamagames.dofus.console.chat
 

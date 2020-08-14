@@ -1,33 +1,30 @@
-﻿package com.ankamagames.berilia.types.graphic
+package com.ankamagames.berilia.types.graphic
 {
     import com.ankamagames.berilia.UIComponent;
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
-    import com.ankamagames.jerakine.utils.misc.DescribeTypeCache;
     import com.ankamagames.berilia.enums.StatesEnum;
+    import com.ankamagames.jerakine.types.Uri;
+    import com.ankamagames.berilia.components.Texture;
+    import com.ankamagames.jerakine.utils.misc.DescribeTypeCache;
 
     public class StateContainer extends GraphicContainer implements UIComponent 
     {
 
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(StateContainer));
 
-        protected var _state;
+        protected var _state:*;
         protected var _snapshot:Array;
-        protected var _describeType:Function;
         protected var _lockedProperties:Array;
         protected var _lockedPropertiesStr:String;
         private var _changingStateData:Array;
 
         public function StateContainer()
         {
-            this._describeType = DescribeTypeCache.typeDescription;
-            super();
             this._state = StatesEnum.STATE_NORMAL;
             this._snapshot = new Array();
-            this._lockedProperties = new Array();
-            this._lockedPropertiesStr = "";
-            this.lockedProperties = "x,y,width,height,selected,greyedOut";
+            this.lockedProperties = "x,y,width,height,selected,greyedOut,text,htmlText";
         }
 
         public function get changingStateData():Array
@@ -51,10 +48,9 @@
                 newState = StatesEnum.STATE_NORMAL;
             };
             this.changeState(newState);
-            this._state = newState;
         }
 
-        public function get state()
+        public function get state():*
         {
             return (this._state);
         }
@@ -101,7 +97,7 @@
             var ui:UiRootContainer;
             var key:String;
             var property:String;
-            if (!(this._snapshot))
+            if (!this._snapshot)
             {
                 return;
             };
@@ -112,17 +108,17 @@
             }
             else
             {
-                if (((!((this.changingStateData == null))) && (this.changingStateData[newState])))
+                if (((!(this.changingStateData == null)) && (this.changingStateData[newState])))
                 {
                     this._snapshot[this._state] = new Array();
-                    if (this._state != StatesEnum.STATE_NORMAL)
-                    {
-                        this.restoreSnapshot(StatesEnum.STATE_NORMAL);
-                    };
                     for (key in this.changingStateData[newState])
                     {
                         ui = getUi();
-                        if (!(ui)) break;
+                        if (!ui)
+                        {
+                            _log.warn((("Impossible to change state : " + name) + " doesn't have parent"));
+                            break;
+                        };
                         target = ui.getElement(key);
                         if (target)
                         {
@@ -133,9 +129,26 @@
                             properties = this.changingStateData[newState][key];
                             for (property in properties)
                             {
-                                target[property] = properties[property];
+                                if (((target[property] is Boolean) && (properties[property] is String)))
+                                {
+                                    target[property] = (properties[property] == "true");
+                                }
+                                else
+                                {
+                                    if (((property == "uri") && (!(properties[property] is Uri))))
+                                    {
+                                        target[property] = new Uri(properties[property]);
+                                        if ((target is Texture))
+                                        {
+                                            target.finalize();
+                                        };
+                                    }
+                                    else
+                                    {
+                                        target[property] = properties[property];
+                                    };
+                                };
                             };
-                            this.makeSnapshot(this._state, target);
                         };
                     };
                 }
@@ -144,17 +157,17 @@
                     _log.warn((((((name + " : No data for state '") + newState) + "' (") + this.changingStateData.length) + " states)"));
                 };
             };
+            this._state = newState;
         }
 
         protected function makeSnapshot(currentState:*, target:GraphicContainer):void
         {
             var property:String;
-            var propertyXml:XML;
-            if (!(this._snapshot[currentState]))
+            if (!this._snapshot[currentState])
             {
                 this._snapshot[currentState] = new Object();
             };
-            if (!(this._snapshot[currentState][target.name]))
+            if (!this._snapshot[currentState][target.name])
             {
                 this._snapshot[currentState][target.name] = new Object();
             }
@@ -162,25 +175,11 @@
             {
                 return;
             };
-            var def:XML = this._describeType(target);
-            for each (propertyXml in def..accessor)
+            for each (property in DescribeTypeCache.getVariables(target, false, true, true, true))
             {
-                if (propertyXml.@access == "readwrite")
+                if (!this._lockedProperties[property])
                 {
-                    property = propertyXml.@name;
-                    if (!this._lockedProperties[property])
-                    {
-                        switch (true)
-                        {
-                            case (target[property] is Boolean):
-                            case (target[property] is uint):
-                            case (target[property] is int):
-                            case (target[property] is Number):
-                            case (target[property] is String):
-                            case (target[property] == null):
-                                this._snapshot[currentState][target.name][property] = target[property];
-                        };
-                    };
+                    this._snapshot[currentState][target.name][property] = target[property];
                 };
             };
         }
@@ -191,26 +190,40 @@
             var ui:UiRootContainer;
             var target:String;
             var property:String;
-            if (!(this._snapshot))
+            if (!this._snapshot)
             {
                 return;
             };
             for (target in this._snapshot[currentState])
             {
                 ui = getUi();
-                if (!(ui)) break;
+                if (!ui) break;
                 component = ui.getElement(target);
-                if (!!(component))
+                if (component)
                 {
                     for (property in this._snapshot[currentState][target])
                     {
                         if (component[property] !== this._snapshot[currentState][target][property])
                         {
-                            if (((!((component is ButtonContainer))) || (!((property == "selected")))))
+                            if (((!(component is ButtonContainer)) || (!(property == "selected"))))
                             {
-                                if (!this._lockedProperties[property])
+                                if (this._lockedProperties[property])
                                 {
-                                    component[property] = this._snapshot[currentState][target][property];
+                                }
+                                else
+                                {
+                                    if (((component[property] is Boolean) && (this._snapshot[currentState][target][property] is String)))
+                                    {
+                                        component[property] = (this._snapshot[currentState][target][property] == "true");
+                                    }
+                                    else
+                                    {
+                                        component[property] = this._snapshot[currentState][target][property];
+                                        if (property == "uri")
+                                        {
+                                            component.finalize();
+                                        };
+                                    };
                                 };
                             };
                         };
@@ -221,5 +234,5 @@
 
 
     }
-}//package com.ankamagames.berilia.types.graphic
+} com.ankamagames.berilia.types.graphic
 

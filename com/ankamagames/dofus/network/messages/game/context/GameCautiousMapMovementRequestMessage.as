@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.context
+package com.ankamagames.dofus.network.messages.game.context
 {
     import com.ankamagames.jerakine.network.INetworkMessage;
     import __AS3__.vec.Vector;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class GameCautiousMapMovementRequestMessage extends GameMapMovementRequestMessage implements INetworkMessage 
     {
 
@@ -18,7 +18,7 @@
 
         override public function get isInitialized():Boolean
         {
-            return (((super.isInitialized) && (this._isInitialized)));
+            return ((super.isInitialized) && (this._isInitialized));
         }
 
         override public function getMessageId():uint
@@ -26,7 +26,7 @@
             return (6496);
         }
 
-        public function initGameCautiousMapMovementRequestMessage(keyMovements:Vector.<uint>=null, mapId:uint=0):GameCautiousMapMovementRequestMessage
+        public function initGameCautiousMapMovementRequestMessage(keyMovements:Vector.<uint>=null, mapId:Number=0):GameCautiousMapMovementRequestMessage
         {
             super.initGameMapMovementRequestMessage(keyMovements, mapId);
             this._isInitialized = true;
@@ -55,6 +55,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         override public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_GameCautiousMapMovementRequestMessage(output);
@@ -75,7 +83,17 @@
             super.deserialize(input);
         }
 
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GameCautiousMapMovementRequestMessage(tree);
+        }
+
+        public function deserializeAsyncAs_GameCautiousMapMovementRequestMessage(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.context
+} com.ankamagames.dofus.network.messages.game.context
 

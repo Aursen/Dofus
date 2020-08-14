@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.common.actions.exchange
+package com.ankamagames.dofus.logic.game.common.actions.exchange
 {
     import com.ankamagames.jerakine.handlers.messages.Action;
     import __AS3__.vec.Vector;
@@ -20,5 +20,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.actions.exchange
+} com.ankamagames.dofus.logic.game.common.actions.exchange
 

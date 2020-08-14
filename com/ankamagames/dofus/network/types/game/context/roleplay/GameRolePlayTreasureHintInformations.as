@@ -1,10 +1,11 @@
-﻿package com.ankamagames.dofus.network.types.game.context.roleplay
+package com.ankamagames.dofus.network.types.game.context.roleplay
 {
     import com.ankamagames.jerakine.network.INetworkType;
-    import com.ankamagames.dofus.network.types.game.look.EntityLook;
     import com.ankamagames.dofus.network.types.game.context.EntityDispositionInformations;
+    import com.ankamagames.dofus.network.types.game.look.EntityLook;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
     public class GameRolePlayTreasureHintInformations extends GameRolePlayActorInformations implements INetworkType 
     {
@@ -19,9 +20,9 @@
             return (471);
         }
 
-        public function initGameRolePlayTreasureHintInformations(contextualId:int=0, look:EntityLook=null, disposition:EntityDispositionInformations=null, npcId:uint=0):GameRolePlayTreasureHintInformations
+        public function initGameRolePlayTreasureHintInformations(contextualId:Number=0, disposition:EntityDispositionInformations=null, look:EntityLook=null, npcId:uint=0):GameRolePlayTreasureHintInformations
         {
-            super.initGameRolePlayActorInformations(contextualId, look, disposition);
+            super.initGameRolePlayActorInformations(contextualId, disposition, look);
             this.npcId = npcId;
             return (this);
         }
@@ -55,6 +56,22 @@
         public function deserializeAs_GameRolePlayTreasureHintInformations(input:ICustomDataInput):void
         {
             super.deserialize(input);
+            this._npcIdFunc(input);
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GameRolePlayTreasureHintInformations(tree);
+        }
+
+        public function deserializeAsyncAs_GameRolePlayTreasureHintInformations(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._npcIdFunc);
+        }
+
+        private function _npcIdFunc(input:ICustomDataInput):void
+        {
             this.npcId = input.readVarUhShort();
             if (this.npcId < 0)
             {
@@ -64,5 +81,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.context.roleplay
+} com.ankamagames.dofus.network.types.game.context.roleplay
 

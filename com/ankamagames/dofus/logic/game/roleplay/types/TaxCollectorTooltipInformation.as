@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.roleplay.types
+package com.ankamagames.dofus.logic.game.roleplay.types
 {
     import com.ankamagames.dofus.internalDatacenter.guild.GuildWrapper;
     import com.ankamagames.dofus.internalDatacenter.guild.AllianceWrapper;
@@ -11,16 +11,20 @@
         public var guildIdentity:GuildWrapper;
         public var taxCollectorAttack:int;
         public var allianceIdentity:AllianceWrapper;
+        public var checkSuperposition:Boolean;
+        public var cellId:int;
 
-        public function TaxCollectorTooltipInformation(pFirstName:String, pLastName:String, pGuildIdentity:GuildWrapper, pAllianceIdentity:AllianceWrapper, pTaxCollectorAttack:int)
+        public function TaxCollectorTooltipInformation(pFirstName:String, pLastName:String, pGuildIdentity:GuildWrapper, pAllianceIdentity:AllianceWrapper, pTaxCollectorAttack:int, pCheckSuperposition:Boolean=false, pCellId:int=-1)
         {
             this.lastName = pLastName;
             this.firstName = pFirstName;
             this.guildIdentity = pGuildIdentity;
             this.allianceIdentity = pAllianceIdentity;
             this.taxCollectorAttack = pTaxCollectorAttack;
+            this.checkSuperposition = pCheckSuperposition;
+            this.cellId = pCellId;
         }
 
     }
-}//package com.ankamagames.dofus.logic.game.roleplay.types
+} com.ankamagames.dofus.logic.game.roleplay.types
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.common.basic
+package com.ankamagames.dofus.network.messages.common.basic
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class BasicPingMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -52,6 +52,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_BasicPingMessage(output);
@@ -69,10 +77,25 @@
 
         public function deserializeAs_BasicPingMessage(input:ICustomDataInput):void
         {
+            this._quietFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_BasicPingMessage(tree);
+        }
+
+        public function deserializeAsyncAs_BasicPingMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._quietFunc);
+        }
+
+        private function _quietFunc(input:ICustomDataInput):void
+        {
             this.quiet = input.readBoolean();
         }
 
 
     }
-}//package com.ankamagames.dofus.network.messages.common.basic
+} com.ankamagames.dofus.network.messages.common.basic
 

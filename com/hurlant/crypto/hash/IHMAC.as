@@ -1,4 +1,4 @@
-﻿package com.hurlant.crypto.hash
+package com.hurlant.crypto.hash
 {
     import flash.utils.ByteArray;
 
@@ -11,5 +11,5 @@
         function toString():String;
 
     }
-}//package com.hurlant.crypto.hash
+} com.hurlant.crypto.hash
 

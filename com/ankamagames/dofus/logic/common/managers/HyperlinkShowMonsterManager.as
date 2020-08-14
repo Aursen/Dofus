@@ -1,14 +1,16 @@
-﻿package com.ankamagames.dofus.logic.common.managers
+package com.ankamagames.dofus.logic.common.managers
 {
-    import flash.display.DisplayObject;
+    import com.ankamagames.dofus.types.entities.AnimatedCharacter;
+    import com.ankamagames.atouin.types.GraphicCell;
     import flash.geom.Rectangle;
     import flash.utils.Dictionary;
     import com.ankamagames.dofus.kernel.Kernel;
     import com.ankamagames.dofus.logic.game.roleplay.frames.RoleplayEntitiesFrame;
     import com.ankamagames.dofus.network.types.game.context.roleplay.GameRolePlayGroupMonsterInformations;
     import com.ankamagames.dofus.logic.game.common.misc.DofusEntities;
+    import com.ankamagames.atouin.managers.InteractiveCellManager;
+    import com.ankamagames.atouin.AtouinConstants;
     import com.ankamagames.dofus.network.types.game.context.fight.GameFightMonsterInformations;
-    import com.ankamagames.berilia.Berilia;
     import flash.display.Sprite;
     import com.ankamagames.dofus.datacenter.monsters.Monster;
 
@@ -18,7 +20,8 @@
 
         public static function showMonster(monsterId:int, loop:int=0):Sprite
         {
-            var monsterClip:DisplayObject;
+            var monsterEntity:AnimatedCharacter;
+            var graphicCell:GraphicCell;
             var rect:Rectangle;
             var list:Dictionary;
             var monster:Object;
@@ -28,21 +31,24 @@
                 list = roleplayEntitiesFrame.getEntitiesDictionnary();
                 for each (monster in list)
                 {
-                    if ((((monster is GameRolePlayGroupMonsterInformations)) && ((((monster.staticInfos.mainCreatureLightInfos.creatureGenericId == monsterId)) || ((monsterId == -1))))))
+                    if (((monster is GameRolePlayGroupMonsterInformations) && ((monster.staticInfos.mainCreatureLightInfos.genericId == monsterId) || (monsterId == -1))))
                     {
-                        monsterClip = (DofusEntities.getEntity(GameRolePlayGroupMonsterInformations(monster).contextualId) as DisplayObject);
-                        if (((monsterClip) && (monsterClip.stage)))
+                        monsterEntity = (DofusEntities.getEntity(GameRolePlayGroupMonsterInformations(monster).contextualId) as AnimatedCharacter);
+                        if (((monsterEntity) && (monsterEntity.stage)))
                         {
-                            return (HyperlinkDisplayArrowManager.showAbsoluteArrow(new Rectangle(monsterClip.x, (monsterClip.y - 80), 0, 0), 0, 0, 1, loop));
+                            graphicCell = InteractiveCellManager.getInstance().getCell(monsterEntity.position.cellId);
+                            rect = new Rectangle((graphicCell.x + AtouinConstants.CELL_HALF_WIDTH), ((graphicCell.y + AtouinConstants.CELL_HALF_HEIGHT) - 80), 0, 0);
+                            return (HyperlinkDisplayArrowManager.showAbsoluteArrow(rect, 0, 0, 1, loop));
                         };
                         return (null);
                     };
-                    if ((((monster is GameFightMonsterInformations)) && ((((monster.creatureGenericId == monsterId)) || ((monsterId == -1))))))
+                    if (((monster is GameFightMonsterInformations) && ((monster.creatureGenericId == monsterId) || (monsterId == -1))))
                     {
-                        monsterClip = (DofusEntities.getEntity(GameFightMonsterInformations(monster).contextualId) as DisplayObject);
-                        if (((monsterClip) && (monsterClip.stage)))
+                        monsterEntity = (DofusEntities.getEntity(GameFightMonsterInformations(monster).contextualId) as AnimatedCharacter);
+                        if (((monsterEntity) && (monsterEntity.stage)))
                         {
-                            rect = monsterClip.getRect(Berilia.getInstance().docMain);
+                            graphicCell = InteractiveCellManager.getInstance().getCell(monsterEntity.position.cellId);
+                            rect = new Rectangle((graphicCell.x + AtouinConstants.CELL_HALF_WIDTH), ((graphicCell.y + AtouinConstants.CELL_HALF_HEIGHT) - 80), 0, 0);
                             return (HyperlinkDisplayArrowManager.showAbsoluteArrow(rect, 0, 0, 1, loop));
                         };
                         return (null);
@@ -64,5 +70,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.common.managers
+} com.ankamagames.dofus.logic.common.managers
 

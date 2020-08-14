@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.console.debug
+package com.ankamagames.dofus.console.debug
 {
     import com.ankamagames.jerakine.console.ConsoleInstructionHandler;
     import com.ankamagames.jerakine.messages.Frame;
@@ -30,7 +30,7 @@
                         fl.push([split[(split.length - 1)], Priority.toString(f.priority)]);
                     };
                     console.output(StringUtils.formatArray(fl, ["Class", "Priority"]));
-                    return;
+                    break;
                 case "framepriority":
                     if (args.length != 2)
                     {
@@ -74,7 +74,7 @@
                 case "framepriority":
                     return ("overwrite a frame priority");
             };
-            return ((("Unknown command '" + cmd) + "'."));
+            return (("Unknown command '" + cmd) + "'.");
         }
 
         public function getParamPossibilities(cmd:String, paramIndex:uint=0, currentParams:Array=null):Array
@@ -84,5 +84,5 @@
 
 
     }
-}//package com.ankamagames.dofus.console.debug
+} com.ankamagames.dofus.console.debug
 

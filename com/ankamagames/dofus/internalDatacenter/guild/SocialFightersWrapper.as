@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.internalDatacenter.guild
+package com.ankamagames.dofus.internalDatacenter.guild
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.dofus.network.types.game.character.CharacterMinimalPlusLookInformations;
@@ -21,10 +21,6 @@
             if (pFightersInformations.entityLook != null)
             {
                 item.entityLook = EntityLookAdapter.getRiderLook(pFightersInformations.entityLook);
-            }
-            else
-            {
-                trace("Le entityLook est null :(");
             };
             return (item);
         }
@@ -37,14 +33,10 @@
             if (pFightersInformations.entityLook != null)
             {
                 this.entityLook = EntityLookAdapter.getRiderLook(pFightersInformations.entityLook);
-            }
-            else
-            {
-                trace("Le entityLook est null :(");
             };
         }
 
 
     }
-}//package com.ankamagames.dofus.internalDatacenter.guild
+} com.ankamagames.dofus.internalDatacenter.guild
 

@@ -1,15 +1,15 @@
-﻿package com.ankamagames.dofus.logic.game.common.actions.social
+package com.ankamagames.dofus.logic.game.common.actions.social
 {
     import com.ankamagames.jerakine.handlers.messages.Action;
 
     public class CharacterReportAction implements Action 
     {
 
-        public var reportedId:uint;
+        public var reportedId:Number;
         public var reason:uint;
 
 
-        public static function create(reportedId:uint, reason:uint):CharacterReportAction
+        public static function create(reportedId:Number, reason:uint):CharacterReportAction
         {
             var a:CharacterReportAction = new (CharacterReportAction)();
             a.reportedId = reportedId;
@@ -19,5 +19,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.actions.social
+} com.ankamagames.dofus.logic.game.common.actions.social
 

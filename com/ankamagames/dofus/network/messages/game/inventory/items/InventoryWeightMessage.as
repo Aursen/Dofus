@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.inventory.items
+package com.ankamagames.dofus.network.messages.game.inventory.items
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,15 +6,16 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class InventoryWeightMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 3009;
 
         private var _isInitialized:Boolean = false;
-        public var weight:uint = 0;
+        public var inventoryWeight:uint = 0;
+        public var shopWeight:uint = 0;
         public var weightMax:uint = 0;
 
 
@@ -28,9 +29,10 @@
             return (3009);
         }
 
-        public function initInventoryWeightMessage(weight:uint=0, weightMax:uint=0):InventoryWeightMessage
+        public function initInventoryWeightMessage(inventoryWeight:uint=0, shopWeight:uint=0, weightMax:uint=0):InventoryWeightMessage
         {
-            this.weight = weight;
+            this.inventoryWeight = inventoryWeight;
+            this.shopWeight = shopWeight;
             this.weightMax = weightMax;
             this._isInitialized = true;
             return (this);
@@ -38,7 +40,8 @@
 
         override public function reset():void
         {
-            this.weight = 0;
+            this.inventoryWeight = 0;
+            this.shopWeight = 0;
             this.weightMax = 0;
             this._isInitialized = false;
         }
@@ -55,6 +58,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_InventoryWeightMessage(output);
@@ -62,11 +73,16 @@
 
         public function serializeAs_InventoryWeightMessage(output:ICustomDataOutput):void
         {
-            if (this.weight < 0)
+            if (this.inventoryWeight < 0)
             {
-                throw (new Error((("Forbidden value (" + this.weight) + ") on element weight.")));
+                throw (new Error((("Forbidden value (" + this.inventoryWeight) + ") on element inventoryWeight.")));
             };
-            output.writeVarInt(this.weight);
+            output.writeVarInt(this.inventoryWeight);
+            if (this.shopWeight < 0)
+            {
+                throw (new Error((("Forbidden value (" + this.shopWeight) + ") on element shopWeight.")));
+            };
+            output.writeVarInt(this.shopWeight);
             if (this.weightMax < 0)
             {
                 throw (new Error((("Forbidden value (" + this.weightMax) + ") on element weightMax.")));
@@ -81,11 +97,43 @@
 
         public function deserializeAs_InventoryWeightMessage(input:ICustomDataInput):void
         {
-            this.weight = input.readVarUhInt();
-            if (this.weight < 0)
+            this._inventoryWeightFunc(input);
+            this._shopWeightFunc(input);
+            this._weightMaxFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_InventoryWeightMessage(tree);
+        }
+
+        public function deserializeAsyncAs_InventoryWeightMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._inventoryWeightFunc);
+            tree.addChild(this._shopWeightFunc);
+            tree.addChild(this._weightMaxFunc);
+        }
+
+        private function _inventoryWeightFunc(input:ICustomDataInput):void
+        {
+            this.inventoryWeight = input.readVarUhInt();
+            if (this.inventoryWeight < 0)
             {
-                throw (new Error((("Forbidden value (" + this.weight) + ") on element of InventoryWeightMessage.weight.")));
+                throw (new Error((("Forbidden value (" + this.inventoryWeight) + ") on element of InventoryWeightMessage.inventoryWeight.")));
             };
+        }
+
+        private function _shopWeightFunc(input:ICustomDataInput):void
+        {
+            this.shopWeight = input.readVarUhInt();
+            if (this.shopWeight < 0)
+            {
+                throw (new Error((("Forbidden value (" + this.shopWeight) + ") on element of InventoryWeightMessage.shopWeight.")));
+            };
+        }
+
+        private function _weightMaxFunc(input:ICustomDataInput):void
+        {
             this.weightMax = input.readVarUhInt();
             if (this.weightMax < 0)
             {
@@ -95,5 +143,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.inventory.items
+} com.ankamagames.dofus.network.messages.game.inventory.items
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.datacenter.items.criterion
+package com.ankamagames.dofus.datacenter.items.criterion
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.dofus.datacenter.misc.Month;
@@ -17,7 +17,7 @@
         {
             var readableCriterionValue:String = Month.getMonthById(_criterionValue).name;
             var readableCriterionRef:String = I18n.getUiText("ui.time.months");
-            return (((((readableCriterionRef + " ") + _operator.text) + " ") + readableCriterionValue));
+            return ((((readableCriterionRef + " ") + _operator.text) + " ") + readableCriterionValue);
         }
 
         override public function clone():IItemCriterion
@@ -30,10 +30,10 @@
         {
             var date:Date = new Date();
             var monthInt:int = TimeManager.getInstance().getDateFromTime(date.getTime())[3];
-            return ((monthInt - 1));
+            return (monthInt - 1);
         }
 
 
     }
-}//package com.ankamagames.dofus.datacenter.items.criterion
+} com.ankamagames.dofus.datacenter.items.criterion
 

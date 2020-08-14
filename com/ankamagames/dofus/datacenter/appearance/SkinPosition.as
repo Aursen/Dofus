@@ -1,6 +1,7 @@
-﻿package com.ankamagames.dofus.datacenter.appearance
+package com.ankamagames.dofus.datacenter.appearance
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
+    import com.ankamagames.dofus.types.IdAccessors;
     import __AS3__.vec.Vector;
     import com.ankamagames.tiphon.types.TransformData;
     import com.ankamagames.jerakine.data.GameData;
@@ -9,6 +10,7 @@
     {
 
         private static const MODULE:String = "SkinPositions";
+        public static var idAccessors:IdAccessors = new IdAccessors(getSkinPositionById, getAllSkinPositions);
 
         public var id:uint;
         public var transformation:Vector.<TransformData>;
@@ -18,7 +20,7 @@
 
         public static function getSkinPositionById(id:int):SkinPosition
         {
-            return ((GameData.getObject(MODULE, id) as SkinPosition));
+            return (GameData.getObject(MODULE, id) as SkinPosition);
         }
 
         public static function getAllSkinPositions():Array
@@ -28,5 +30,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.appearance
+} com.ankamagames.dofus.datacenter.appearance
 

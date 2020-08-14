@@ -1,15 +1,16 @@
-﻿package com.ankamagames.dofus.network.types.game.context.roleplay.treasureHunt
+package com.ankamagames.dofus.network.types.game.context.roleplay.treasureHunt
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
     public class TreasureHuntFlag implements INetworkType 
     {
 
         public static const protocolId:uint = 473;
 
-        public var mapId:int = 0;
+        public var mapId:Number = 0;
         public var state:uint = 0;
 
 
@@ -18,7 +19,7 @@
             return (473);
         }
 
-        public function initTreasureHuntFlag(mapId:int=0, state:uint=0):TreasureHuntFlag
+        public function initTreasureHuntFlag(mapId:Number=0, state:uint=0):TreasureHuntFlag
         {
             this.mapId = mapId;
             this.state = state;
@@ -38,7 +39,11 @@
 
         public function serializeAs_TreasureHuntFlag(output:ICustomDataOutput):void
         {
-            output.writeInt(this.mapId);
+            if (((this.mapId < 0) || (this.mapId > 9007199254740992)))
+            {
+                throw (new Error((("Forbidden value (" + this.mapId) + ") on element mapId.")));
+            };
+            output.writeDouble(this.mapId);
             output.writeByte(this.state);
         }
 
@@ -49,7 +54,32 @@
 
         public function deserializeAs_TreasureHuntFlag(input:ICustomDataInput):void
         {
-            this.mapId = input.readInt();
+            this._mapIdFunc(input);
+            this._stateFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_TreasureHuntFlag(tree);
+        }
+
+        public function deserializeAsyncAs_TreasureHuntFlag(tree:FuncTree):void
+        {
+            tree.addChild(this._mapIdFunc);
+            tree.addChild(this._stateFunc);
+        }
+
+        private function _mapIdFunc(input:ICustomDataInput):void
+        {
+            this.mapId = input.readDouble();
+            if (((this.mapId < 0) || (this.mapId > 9007199254740992)))
+            {
+                throw (new Error((("Forbidden value (" + this.mapId) + ") on element of TreasureHuntFlag.mapId.")));
+            };
+        }
+
+        private function _stateFunc(input:ICustomDataInput):void
+        {
             this.state = input.readByte();
             if (this.state < 0)
             {
@@ -59,5 +89,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.context.roleplay.treasureHunt
+} com.ankamagames.dofus.network.types.game.context.roleplay.treasureHunt
 

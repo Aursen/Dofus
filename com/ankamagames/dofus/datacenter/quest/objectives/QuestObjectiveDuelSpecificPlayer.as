@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.datacenter.quest.objectives
+package com.ankamagames.dofus.datacenter.quest.objectives
 {
     import com.ankamagames.dofus.datacenter.quest.QuestObjective;
     import com.ankamagames.jerakine.interfaces.IDataCenter;
@@ -14,7 +14,7 @@
 
         public function get specificPlayerTextId():uint
         {
-            if (!(this.parameters))
+            if (!this.parameters)
             {
                 return (0);
             };
@@ -23,7 +23,7 @@
 
         public function get specificPlayerText():String
         {
-            if (!(this._specificPlayerText))
+            if (!this._specificPlayerText)
             {
                 this._specificPlayerText = I18n.getText(this.specificPlayerTextId);
             };
@@ -32,7 +32,7 @@
 
         override public function get text():String
         {
-            if (!(this._text))
+            if (!this._text)
             {
                 this._text = PatternDecoder.getDescription(this.type.name, [this.specificPlayerText]);
             };
@@ -41,5 +41,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.quest.objectives
+} com.ankamagames.dofus.datacenter.quest.objectives
 

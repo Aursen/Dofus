@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.chat.smiley
+package com.ankamagames.dofus.network.messages.game.chat.smiley
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class MoodSmileyUpdateMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -15,8 +15,8 @@
 
         private var _isInitialized:Boolean = false;
         public var accountId:uint = 0;
-        public var playerId:uint = 0;
-        public var smileyId:int = 0;
+        public var playerId:Number = 0;
+        public var smileyId:uint = 0;
 
 
         override public function get isInitialized():Boolean
@@ -29,7 +29,7 @@
             return (6388);
         }
 
-        public function initMoodSmileyUpdateMessage(accountId:uint=0, playerId:uint=0, smileyId:int=0):MoodSmileyUpdateMessage
+        public function initMoodSmileyUpdateMessage(accountId:uint=0, playerId:Number=0, smileyId:uint=0):MoodSmileyUpdateMessage
         {
             this.accountId = accountId;
             this.playerId = playerId;
@@ -58,6 +58,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_MoodSmileyUpdateMessage(output);
@@ -70,12 +78,16 @@
                 throw (new Error((("Forbidden value (" + this.accountId) + ") on element accountId.")));
             };
             output.writeInt(this.accountId);
-            if (this.playerId < 0)
+            if (((this.playerId < 0) || (this.playerId > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.playerId) + ") on element playerId.")));
             };
-            output.writeVarInt(this.playerId);
-            output.writeByte(this.smileyId);
+            output.writeVarLong(this.playerId);
+            if (this.smileyId < 0)
+            {
+                throw (new Error((("Forbidden value (" + this.smileyId) + ") on element smileyId.")));
+            };
+            output.writeVarShort(this.smileyId);
         }
 
         public function deserialize(input:ICustomDataInput):void
@@ -85,20 +97,51 @@
 
         public function deserializeAs_MoodSmileyUpdateMessage(input:ICustomDataInput):void
         {
+            this._accountIdFunc(input);
+            this._playerIdFunc(input);
+            this._smileyIdFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_MoodSmileyUpdateMessage(tree);
+        }
+
+        public function deserializeAsyncAs_MoodSmileyUpdateMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._accountIdFunc);
+            tree.addChild(this._playerIdFunc);
+            tree.addChild(this._smileyIdFunc);
+        }
+
+        private function _accountIdFunc(input:ICustomDataInput):void
+        {
             this.accountId = input.readInt();
             if (this.accountId < 0)
             {
                 throw (new Error((("Forbidden value (" + this.accountId) + ") on element of MoodSmileyUpdateMessage.accountId.")));
             };
-            this.playerId = input.readVarUhInt();
-            if (this.playerId < 0)
+        }
+
+        private function _playerIdFunc(input:ICustomDataInput):void
+        {
+            this.playerId = input.readVarUhLong();
+            if (((this.playerId < 0) || (this.playerId > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.playerId) + ") on element of MoodSmileyUpdateMessage.playerId.")));
             };
-            this.smileyId = input.readByte();
+        }
+
+        private function _smileyIdFunc(input:ICustomDataInput):void
+        {
+            this.smileyId = input.readVarUhShort();
+            if (this.smileyId < 0)
+            {
+                throw (new Error((("Forbidden value (" + this.smileyId) + ") on element of MoodSmileyUpdateMessage.smileyId.")));
+            };
         }
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.chat.smiley
+} com.ankamagames.dofus.network.messages.game.chat.smiley
 

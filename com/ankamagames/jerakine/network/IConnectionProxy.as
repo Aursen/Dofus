@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.network
+package com.ankamagames.jerakine.network
 {
     import flash.utils.IDataOutput;
     import flash.utils.IDataInput;
@@ -10,5 +10,5 @@
         function processAndReceive(_arg_1:IDataInput):INetworkMessage;
 
     }
-}//package com.ankamagames.jerakine.network
+} com.ankamagames.jerakine.network
 

@@ -1,4 +1,4 @@
-﻿package com.hurlant.crypto.symmetric
+package com.hurlant.crypto.symmetric
 {
     import flash.utils.ByteArray;
     import com.hurlant.util.Memory;
@@ -95,7 +95,7 @@
 
         private function F(x:uint):uint
         {
-            return ((((this.S0[(x >>> 24)] + this.S1[((x >>> 16) & 0xFF)]) ^ this.S2[((x >>> 8) & 0xFF)]) + this.S3[(x & 0xFF)]));
+            return (((this.S0[(x >>> 24)] + this.S1[((x >>> 16) & 0xFF)]) ^ this.S2[((x >>> 8) & 0xFF)]) + this.S3[(x & 0xFF)]);
         }
 
         private function processTable(xl:uint, xr:uint, table:Array):void
@@ -193,7 +193,7 @@
 
         private function BytesTo32bits(b:ByteArray, i:uint):uint
         {
-            return ((((((b[i] & 0xFF) << 24) | ((b[(i + 1)] & 0xFF) << 16)) | ((b[(i + 2)] & 0xFF) << 8)) | (b[(i + 3)] & 0xFF)));
+            return (((((b[i] & 0xFF) << 24) | ((b[(i + 1)] & 0xFF) << 16)) | ((b[(i + 2)] & 0xFF) << 8)) | (b[(i + 3)] & 0xFF));
         }
 
         private function Bits32ToBytes(i:uint, b:ByteArray, offset:uint):void
@@ -211,5 +211,5 @@
 
 
     }
-}//package com.hurlant.crypto.symmetric
+} com.hurlant.crypto.symmetric
 

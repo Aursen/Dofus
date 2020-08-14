@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.messages
+package com.ankamagames.jerakine.messages
 {
     import com.ankamagames.jerakine.utils.misc.Prioritizable;
 
@@ -9,5 +9,5 @@
         function pulled():Boolean;
 
     }
-}//package com.ankamagames.jerakine.messages
+} com.ankamagames.jerakine.messages
 

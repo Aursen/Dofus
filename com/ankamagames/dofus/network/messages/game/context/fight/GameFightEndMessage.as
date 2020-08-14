@@ -1,10 +1,11 @@
-﻿package com.ankamagames.dofus.network.messages.game.context.fight
+package com.ankamagames.dofus.network.messages.game.context.fight
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
     import __AS3__.vec.Vector;
     import com.ankamagames.dofus.network.types.game.context.fight.FightResultListEntry;
     import com.ankamagames.dofus.network.types.game.context.roleplay.party.NamedPartyTeamWithOutcome;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
@@ -12,7 +13,6 @@
     import com.ankamagames.dofus.network.ProtocolTypeManager;
     import __AS3__.vec.*;
 
-    [Trusted]
     public class GameFightEndMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -20,17 +20,13 @@
 
         private var _isInitialized:Boolean = false;
         public var duration:uint = 0;
-        public var ageBonus:int = 0;
+        public var rewardRate:int = 0;
         public var lootShareLimitMalus:int = 0;
-        public var results:Vector.<FightResultListEntry>;
-        public var namedPartyTeamsOutcomes:Vector.<NamedPartyTeamWithOutcome>;
+        public var results:Vector.<FightResultListEntry> = new Vector.<FightResultListEntry>();
+        public var namedPartyTeamsOutcomes:Vector.<NamedPartyTeamWithOutcome> = new Vector.<NamedPartyTeamWithOutcome>();
+        private var _resultstree:FuncTree;
+        private var _namedPartyTeamsOutcomestree:FuncTree;
 
-        public function GameFightEndMessage()
-        {
-            this.results = new Vector.<FightResultListEntry>();
-            this.namedPartyTeamsOutcomes = new Vector.<NamedPartyTeamWithOutcome>();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
@@ -42,10 +38,10 @@
             return (720);
         }
 
-        public function initGameFightEndMessage(duration:uint=0, ageBonus:int=0, lootShareLimitMalus:int=0, results:Vector.<FightResultListEntry>=null, namedPartyTeamsOutcomes:Vector.<NamedPartyTeamWithOutcome>=null):GameFightEndMessage
+        public function initGameFightEndMessage(duration:uint=0, rewardRate:int=0, lootShareLimitMalus:int=0, results:Vector.<FightResultListEntry>=null, namedPartyTeamsOutcomes:Vector.<NamedPartyTeamWithOutcome>=null):GameFightEndMessage
         {
             this.duration = duration;
-            this.ageBonus = ageBonus;
+            this.rewardRate = rewardRate;
             this.lootShareLimitMalus = lootShareLimitMalus;
             this.results = results;
             this.namedPartyTeamsOutcomes = namedPartyTeamsOutcomes;
@@ -56,7 +52,7 @@
         override public function reset():void
         {
             this.duration = 0;
-            this.ageBonus = 0;
+            this.rewardRate = 0;
             this.lootShareLimitMalus = 0;
             this.results = new Vector.<FightResultListEntry>();
             this.namedPartyTeamsOutcomes = new Vector.<NamedPartyTeamWithOutcome>();
@@ -75,6 +71,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_GameFightEndMessage(output);
@@ -87,7 +91,7 @@
                 throw (new Error((("Forbidden value (" + this.duration) + ") on element duration.")));
             };
             output.writeInt(this.duration);
-            output.writeShort(this.ageBonus);
+            output.writeVarShort(this.rewardRate);
             output.writeShort(this.lootShareLimitMalus);
             output.writeShort(this.results.length);
             var _i4:uint;
@@ -116,13 +120,9 @@
             var _id4:uint;
             var _item4:FightResultListEntry;
             var _item5:NamedPartyTeamWithOutcome;
-            this.duration = input.readInt();
-            if (this.duration < 0)
-            {
-                throw (new Error((("Forbidden value (" + this.duration) + ") on element of GameFightEndMessage.duration.")));
-            };
-            this.ageBonus = input.readShort();
-            this.lootShareLimitMalus = input.readShort();
+            this._durationFunc(input);
+            this._rewardRateFunc(input);
+            this._lootShareLimitMalusFunc(input);
             var _resultsLen:uint = input.readUnsignedShort();
             var _i4:uint;
             while (_i4 < _resultsLen)
@@ -144,7 +144,77 @@
             };
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GameFightEndMessage(tree);
+        }
+
+        public function deserializeAsyncAs_GameFightEndMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._durationFunc);
+            tree.addChild(this._rewardRateFunc);
+            tree.addChild(this._lootShareLimitMalusFunc);
+            this._resultstree = tree.addChild(this._resultstreeFunc);
+            this._namedPartyTeamsOutcomestree = tree.addChild(this._namedPartyTeamsOutcomestreeFunc);
+        }
+
+        private function _durationFunc(input:ICustomDataInput):void
+        {
+            this.duration = input.readInt();
+            if (this.duration < 0)
+            {
+                throw (new Error((("Forbidden value (" + this.duration) + ") on element of GameFightEndMessage.duration.")));
+            };
+        }
+
+        private function _rewardRateFunc(input:ICustomDataInput):void
+        {
+            this.rewardRate = input.readVarShort();
+        }
+
+        private function _lootShareLimitMalusFunc(input:ICustomDataInput):void
+        {
+            this.lootShareLimitMalus = input.readShort();
+        }
+
+        private function _resultstreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._resultstree.addChild(this._resultsFunc);
+                i++;
+            };
+        }
+
+        private function _resultsFunc(input:ICustomDataInput):void
+        {
+            var _id:uint = input.readUnsignedShort();
+            var _item:FightResultListEntry = ProtocolTypeManager.getInstance(FightResultListEntry, _id);
+            _item.deserialize(input);
+            this.results.push(_item);
+        }
+
+        private function _namedPartyTeamsOutcomestreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._namedPartyTeamsOutcomestree.addChild(this._namedPartyTeamsOutcomesFunc);
+                i++;
+            };
+        }
+
+        private function _namedPartyTeamsOutcomesFunc(input:ICustomDataInput):void
+        {
+            var _item:NamedPartyTeamWithOutcome = new NamedPartyTeamWithOutcome();
+            _item.deserialize(input);
+            this.namedPartyTeamsOutcomes.push(_item);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.context.fight
+} com.ankamagames.dofus.network.messages.game.context.fight
 

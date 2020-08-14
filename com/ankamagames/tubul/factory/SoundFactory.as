@@ -1,4 +1,4 @@
-﻿package com.ankamagames.tubul.factory
+package com.ankamagames.tubul.factory
 {
     import flash.filesystem.File;
     import com.ankamagames.jerakine.types.Uri;
@@ -20,14 +20,14 @@
             var isStereo:Boolean;
             var uriPath:String = pUri.path;
             var parentDirectory:String = uriPath.split("/")[(uriPath.split("/").length - 2)];
-            var test:String = ((uriPath.substring(0, uriPath.indexOf(pUri.fileName)) + parentDirectory) + "_mono");
+            var test:* = ((uriPath.substring(0, uriPath.indexOf(pUri.fileName)) + parentDirectory) + "_mono");
             var subDirectory:File = new File(((File.applicationDirectory.nativePath + "/") + test));
             if (subDirectory.exists)
             {
                 isStereo = true;
                 newUriPath = (((uriPath.substring(0, uriPath.indexOf(pUri.fileName)) + parentDirectory) + "_mono/") + pUri.fileName);
                 fileChecker = new File(((File.applicationDirectory.nativePath + "/") + pUri.path));
-                if (!(fileChecker.exists))
+                if (!fileChecker.exists)
                 {
                     fileChecker = new File(((File.applicationDirectory.nativePath + "/") + newUriPath));
                     if (fileChecker.exists)
@@ -37,27 +37,26 @@
                     };
                 };
             };
+            var uriFileType:String = pUri.fileType.toUpperCase();
             switch (pType)
             {
                 case EnumSoundType.LOCALIZED_SOUND:
-                    switch (pUri.fileType.toUpperCase())
+                    if (uriFileType == "MP3")
                     {
-                        case "MP3":
-                            return (new LocalizedSound(_id++, pUri, isStereo));
+                        return (new LocalizedSound(_id++, pUri, isStereo));
                     };
-                    throw (new ArgumentError(("Unknown type file " + pUri.fileType.toUpperCase())));
+                    throw (new ArgumentError(("Unknown type file " + uriFileType)));
                 case EnumSoundType.UNLOCALIZED_SOUND:
-                    switch (pUri.fileType.toUpperCase())
+                    if (uriFileType == "MP3")
                     {
-                        case "MP3":
-                            return (new UnlocalizedSound(_id++, pUri, isStereo));
+                        return (new UnlocalizedSound(_id++, pUri, isStereo));
                     };
-                    throw (new ArgumentError(("Unknown type file " + pUri.fileType.toUpperCase())));
+                    throw (new ArgumentError(("Unknown type file " + uriFileType)));
             };
             throw (new ArgumentError((("Unknown sound type " + pType) + ". See EnumSoundType")));
         }
 
 
     }
-}//package com.ankamagames.tubul.factory
+} com.ankamagames.tubul.factory
 

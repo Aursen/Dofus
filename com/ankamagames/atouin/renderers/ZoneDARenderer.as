@@ -1,6 +1,6 @@
-﻿package com.ankamagames.atouin.renderers
+package com.ankamagames.atouin.renderers
 {
-    import com.ankamagames.atouin.utils.IZoneRenderer;
+    import com.ankamagames.atouin.utils.IFightZoneRenderer;
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
@@ -9,13 +9,13 @@
     import com.ankamagames.atouin.enums.PlacementStrataEnums;
     import com.ankamagames.atouin.types.ZoneTile;
     import com.ankamagames.atouin.data.map.CellData;
-    import flash.geom.ColorTransform;
     import com.ankamagames.atouin.managers.MapDisplayManager;
+    import com.ankamagames.atouin.data.map.Map;
     import com.ankamagames.atouin.managers.EntitiesDisplayManager;
     import com.ankamagames.jerakine.types.Color;
     import com.ankamagames.atouin.types.DataMapContainer;
 
-    public class ZoneDARenderer implements IZoneRenderer 
+    public class ZoneDARenderer implements IFightZoneRenderer 
     {
 
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(ZoneDARenderer));
@@ -27,8 +27,8 @@
         private var _alpha:Number = 0.7;
         protected var _fixedStrata:Boolean;
         protected var _strata:uint;
-        public var currentStrata:uint = 0;
-        public var showFarmCell:Boolean = true;
+        private var _currentStrata:uint = 0;
+        private var _showFarmCell:Boolean = true;
 
         public function ZoneDARenderer(nStrata:uint=0, alpha:Number=1, fixedStrata:Boolean=false)
         {
@@ -36,7 +36,7 @@
             this._aCellTile = new Array();
             this._strata = nStrata;
             this._fixedStrata = fixedStrata;
-            this.currentStrata = ((((!(this._fixedStrata)) && (Atouin.getInstance().options.transparentOverlayMode))) ? PlacementStrataEnums.STRATA_NO_Z_ORDER : this._strata);
+            this.currentStrata = (((!(this._fixedStrata)) && (Atouin.getInstance().options.getOption("transparentOverlayMode"))) ? PlacementStrataEnums.STRATA_NO_Z_ORDER : this._strata);
             this._alpha = alpha;
         }
 
@@ -56,40 +56,60 @@
         }
 
 
+        public function get showFarmCell():Boolean
+        {
+            return (this._showFarmCell);
+        }
+
+        public function set showFarmCell(value:Boolean):void
+        {
+            this._showFarmCell = value;
+        }
+
+        public function get currentStrata():uint
+        {
+            return (this._currentStrata);
+        }
+
+        public function set currentStrata(value:uint):void
+        {
+            this._currentStrata = value;
+        }
+
         public function render(cells:Vector.<uint>, oColor:Color, mapContainer:DataMapContainer, bAlpha:Boolean=false, updateStrata:Boolean=false):void
         {
             var j:int;
             var zt:ZoneTile;
             var cellData:CellData;
-            var ct:ColorTransform;
             this._cells = cells;
             var num:int = cells.length;
+            var dataMap:Map = MapDisplayManager.getInstance().getDataMapContainer().dataMap;
             j = 0;
             while (j < num)
             {
-                cellData = MapDisplayManager.getInstance().getDataMapContainer().dataMap.cells[cells[j]];
+                cellData = dataMap.cells[cells[j]];
                 if (((!(this.showFarmCell)) && (cellData.farmCell)))
                 {
                 }
                 else
                 {
                     zt = this._aZoneTile[j];
-                    if (!(zt))
+                    if (!zt)
                     {
                         zt = getZoneTile();
                         this._aZoneTile[j] = zt;
                         zt.strata = this.currentStrata;
-                        ct = new ColorTransform();
-                        zt.color = oColor.color;
                     };
                     this._aCellTile[j] = cells[j];
                     zt.cellId = cells[j];
                     zt.text = this.getText(j);
-                    if (((updateStrata) || (!((EntitiesDisplayManager.getInstance()._dStrataRef[zt] == this.currentStrata)))))
+                    zt.color = oColor;
+                    if (((updateStrata) || (!(EntitiesDisplayManager.getInstance()._dStrataRef[zt] == this.currentStrata))))
                     {
                         zt.strata = (EntitiesDisplayManager.getInstance()._dStrataRef[zt] = this.currentStrata);
                     };
                     zt.display();
+                    zt.alpha = this._alpha;
                 };
                 j++;
             };
@@ -109,11 +129,24 @@
             return (null);
         }
 
+        public function updateDisplay():void
+        {
+            var j:int;
+            while (j < this._aZoneTile.length)
+            {
+                if (this._aZoneTile[j])
+                {
+                    this._aZoneTile[j].display(this._strata);
+                };
+                j++;
+            };
+        }
+
         public function remove(cells:Vector.<uint>, mapContainer:DataMapContainer):void
         {
             var j:int;
             var zt:ZoneTile;
-            if (!(cells))
+            if (!cells)
             {
                 return;
             };
@@ -152,6 +185,11 @@
             return (this._fixedStrata);
         }
 
+        public function set fixedStrata(value:Boolean):void
+        {
+            this._fixedStrata = value;
+        }
+
         public function restoreStrata():void
         {
             this.currentStrata = this._strata;
@@ -159,5 +197,5 @@
 
 
     }
-}//package com.ankamagames.atouin.renderers
+} com.ankamagames.atouin.renderers
 

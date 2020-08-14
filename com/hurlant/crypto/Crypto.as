@@ -1,4 +1,4 @@
-﻿package com.hurlant.crypto
+package com.hurlant.crypto
 {
     import com.hurlant.util.Base64;
     import com.hurlant.crypto.symmetric.ICipher;
@@ -40,19 +40,19 @@
 
         public static function getCipher(name:String, key:ByteArray, pad:IPad=null):ICipher
         {
-            var _local_5:ICipher;
+            var cipher:ICipher;
             var keys:Array = name.split("-");
             switch (keys[0])
             {
                 case "simple":
                     keys.shift();
                     name = keys.join("-");
-                    _local_5 = getCipher(name, key, pad);
-                    if ((_local_5 is IVMode))
+                    cipher = getCipher(name, key, pad);
+                    if ((cipher is IVMode))
                     {
-                        return (new SimpleIVMode((_local_5 as IVMode)));
+                        return (new SimpleIVMode((cipher as IVMode)));
                     };
-                    return (_local_5);
+                    return (cipher);
                 case "aes":
                 case "aes128":
                 case "aes192":
@@ -69,7 +69,7 @@
                     return (getMode(keys[0], new BlowFishKey(key), pad));
                 case "des":
                     keys.shift();
-                    if (((!((keys[0] == "ede"))) && (!((keys[0] == "ede3")))))
+                    if (((!(keys[0] == "ede")) && (!(keys[0] == "ede3"))))
                     {
                         return (getMode(keys[0], new DESKey(key), pad));
                     };
@@ -107,7 +107,7 @@
                     return (32);
                 case "aes":
                     keys.shift();
-                    return ((parseInt(keys[0]) / 8));
+                    return (parseInt(keys[0]) / 8);
                 case "bf":
                 case "blowfish":
                     return (16);
@@ -130,7 +130,7 @@
                 case "rc4":
                     if (parseInt(keys[1]) > 0)
                     {
-                        return ((parseInt(keys[1]) / 8));
+                        return (parseInt(keys[1]) / 8);
                     };
                     return (16);
             };
@@ -225,5 +225,5 @@
 
 
     }
-}//package com.hurlant.crypto
+} com.hurlant.crypto
 

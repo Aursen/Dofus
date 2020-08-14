@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.console.moduleLUA
+package com.ankamagames.dofus.console.moduleLUA
 {
     public class LuaMoveEnum 
     {
@@ -11,5 +11,5 @@
 
 
     }
-}//package com.ankamagames.dofus.console.moduleLUA
+} com.ankamagames.dofus.console.moduleLUA
 

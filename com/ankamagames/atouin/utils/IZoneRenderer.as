@@ -1,4 +1,4 @@
-﻿package com.ankamagames.atouin.utils
+package com.ankamagames.atouin.utils
 {
     import __AS3__.vec.Vector;
     import com.ankamagames.jerakine.types.Color;
@@ -11,5 +11,5 @@
         function remove(_arg_1:Vector.<uint>, _arg_2:DataMapContainer):void;
 
     }
-}//package com.ankamagames.atouin.utils
+} com.ankamagames.atouin.utils
 

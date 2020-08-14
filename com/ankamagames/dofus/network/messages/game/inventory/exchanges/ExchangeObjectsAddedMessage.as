@@ -1,32 +1,28 @@
-﻿package com.ankamagames.dofus.network.messages.game.inventory.exchanges
+package com.ankamagames.dofus.network.messages.game.inventory.exchanges
 {
     import com.ankamagames.jerakine.network.INetworkMessage;
     import __AS3__.vec.Vector;
     import com.ankamagames.dofus.network.types.game.data.items.ObjectItem;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
     import __AS3__.vec.*;
 
-    [Trusted]
     public class ExchangeObjectsAddedMessage extends ExchangeObjectMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 6535;
 
         private var _isInitialized:Boolean = false;
-        public var object:Vector.<ObjectItem>;
+        public var object:Vector.<ObjectItem> = new Vector.<ObjectItem>();
+        private var _objecttree:FuncTree;
 
-        public function ExchangeObjectsAddedMessage()
-        {
-            this.object = new Vector.<ObjectItem>();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
-            return (((super.isInitialized) && (this._isInitialized)));
+            return ((super.isInitialized) && (this._isInitialized));
         }
 
         override public function getMessageId():uint
@@ -59,6 +55,14 @@
         override public function unpack(input:ICustomDataInput, length:uint):void
         {
             this.deserialize(input);
+        }
+
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
         }
 
         override public function serialize(output:ICustomDataOutput):void
@@ -98,7 +102,36 @@
             };
         }
 
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_ExchangeObjectsAddedMessage(tree);
+        }
+
+        public function deserializeAsyncAs_ExchangeObjectsAddedMessage(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            this._objecttree = tree.addChild(this._objecttreeFunc);
+        }
+
+        private function _objecttreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._objecttree.addChild(this._objectFunc);
+                i++;
+            };
+        }
+
+        private function _objectFunc(input:ICustomDataInput):void
+        {
+            var _item:ObjectItem = new ObjectItem();
+            _item.deserialize(input);
+            this.object.push(_item);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.inventory.exchanges
+} com.ankamagames.dofus.network.messages.game.inventory.exchanges
 

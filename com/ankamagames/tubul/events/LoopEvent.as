@@ -1,4 +1,4 @@
-﻿package com.ankamagames.tubul.events
+package com.ankamagames.tubul.events
 {
     import flash.events.Event;
 
@@ -8,12 +8,12 @@
         public static const SOUND_LOOP:String = "sound_loop";
         public static const SOUND_LOOP_ALL_COMPLETE:String = "sound_loop_all_complete";
 
-        public var sound;
+        public var sound:*;
         public var loop:uint;
 
-        public function LoopEvent(type:String, bubbles:Boolean=false, cancelable:Boolean=false)
+        public function LoopEvent(_arg_1:String, bubbles:Boolean=false, cancelable:Boolean=false)
         {
-            super(type, bubbles, cancelable);
+            super(_arg_1, bubbles, cancelable);
         }
 
         override public function clone():Event
@@ -26,5 +26,5 @@
 
 
     }
-}//package com.ankamagames.tubul.events
+} com.ankamagames.tubul.events
 

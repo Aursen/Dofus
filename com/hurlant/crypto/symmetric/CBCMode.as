@@ -1,4 +1,4 @@
-﻿package com.hurlant.crypto.symmetric
+package com.hurlant.crypto.symmetric
 {
     import flash.utils.ByteArray;
 
@@ -57,10 +57,10 @@
 
         public function toString():String
         {
-            return ((key.toString() + "-cbc"));
+            return (key.toString() + "-cbc");
         }
 
 
     }
-}//package com.hurlant.crypto.symmetric
+} com.hurlant.crypto.symmetric
 

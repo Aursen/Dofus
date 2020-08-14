@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.fight.managers
+package com.ankamagames.dofus.logic.game.fight.managers
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
@@ -8,30 +8,32 @@
     import com.ankamagames.dofus.logic.game.fight.types.CastingSpell;
     import com.ankamagames.jerakine.utils.errors.SingletonError;
     import com.ankamagames.dofus.logic.game.fight.types.BasicBuff;
+    import com.ankamagames.dofus.datacenter.effects.instances.EffectInstanceDice;
+    import com.ankamagames.dofus.datacenter.spells.SpellLevel;
     import com.ankamagames.dofus.network.types.game.actions.fight.FightTemporaryBoostWeaponDamagesEffect;
     import com.ankamagames.dofus.network.types.game.actions.fight.FightTemporarySpellImmunityEffect;
-    import com.ankamagames.dofus.datacenter.spells.SpellLevel;
-    import com.ankamagames.dofus.datacenter.effects.instances.EffectInstanceDice;
+    import com.ankamagames.dofus.misc.utils.GameDebugManager;
     import com.ankamagames.dofus.logic.game.fight.types.SpellBuff;
     import com.ankamagames.dofus.network.types.game.actions.fight.FightTemporarySpellBoostEffect;
     import com.ankamagames.dofus.logic.game.fight.types.TriggeredBuff;
     import com.ankamagames.dofus.network.types.game.actions.fight.FightTriggeredEffect;
     import com.ankamagames.dofus.logic.game.fight.types.StateBuff;
     import com.ankamagames.dofus.network.types.game.actions.fight.FightTemporaryBoostStateEffect;
-    import com.ankamagames.dofus.logic.game.fight.types.StatBuff;
+    import com.ankamagames.dofus.logic.game.fight.miscs.StatBuffFactory;
     import com.ankamagames.dofus.network.types.game.actions.fight.FightTemporaryBoostEffect;
-    import com.ankamagames.dofus.misc.utils.GameDataQuery;
+    import com.ankamagames.dofus.datacenter.spells.Spell;
     import com.ankamagames.dofus.network.types.game.actions.fight.AbstractFightDispellableEffect;
     import com.ankamagames.berilia.managers.KernelEventsManager;
     import com.ankamagames.dofus.misc.lists.FightHookList;
     import com.ankamagames.dofus.misc.lists.HookList;
     import com.ankamagames.dofus.logic.game.fight.fightEvents.FightEventsHelper;
-    import com.ankamagames.dofus.logic.game.fight.frames.FightBattleFrame;
     import com.ankamagames.dofus.kernel.Kernel;
-    import com.ankamagames.dofus.logic.game.common.managers.PlayedCharacterManager;
+    import com.ankamagames.dofus.logic.game.fight.frames.FightBattleFrame;
+    import com.ankama.dofus.enums.ActionIds;
     import com.ankamagames.dofus.internalDatacenter.spells.SpellWrapper;
     import com.ankamagames.dofus.logic.game.fight.frames.FightEntitiesFrame;
     import com.ankamagames.dofus.network.types.game.context.fight.GameFightFighterInformations;
+    import com.ankamagames.dofus.logic.game.fight.miscs.ActionIdProtocol;
     import __AS3__.vec.*;
 
     public class BuffManager 
@@ -42,16 +44,12 @@
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(BuffManager));
         private static var _self:BuffManager;
 
-        private var _buffs:Array;
-        private var _finishingBuffs:Dictionary;
-        public var spellBuffsToIgnore:Vector.<CastingSpell>;
+        private var _buffs:Dictionary = new Dictionary();
+        private var _updateStatList:Boolean = false;
+        public var spellBuffsToIgnore:Vector.<CastingSpell> = new Vector.<CastingSpell>();
 
         public function BuffManager()
         {
-            this._buffs = new Array();
-            this._finishingBuffs = new Dictionary();
-            this.spellBuffsToIgnore = new Vector.<CastingSpell>();
-            super();
             if (_self)
             {
                 throw (new SingletonError());
@@ -60,7 +58,7 @@
 
         public static function getInstance():BuffManager
         {
-            if (!(_self))
+            if (!_self)
             {
                 _self = new (BuffManager)();
             };
@@ -70,55 +68,114 @@
         public static function makeBuffFromEffect(effect:AbstractFightDispellableEffect, castingSpell:CastingSpell, actionId:uint):BasicBuff
         {
             var buff:BasicBuff;
+            var effectInstanceDice:EffectInstanceDice;
             var criticalEffect:Boolean;
-            var _local_7:FightTemporaryBoostWeaponDamagesEffect;
-            var _local_8:FightTemporarySpellImmunityEffect;
+            var level:SpellLevel;
+            var ftbwde:FightTemporaryBoostWeaponDamagesEffect;
+            var ftsie:FightTemporarySpellImmunityEffect;
             var spellLevel:SpellLevel;
             var effects:Vector.<EffectInstanceDice>;
             var effid:EffectInstanceDice;
+            if (GameDebugManager.getInstance().buffsDebugActivated)
+            {
+                _log.debug(("[BUFFS DEBUG] Creation du buff " + effect.uid));
+            };
             switch (true)
             {
                 case (effect is FightTemporarySpellBoostEffect):
                     buff = new SpellBuff((effect as FightTemporarySpellBoostEffect), castingSpell, actionId);
+                    if (GameDebugManager.getInstance().buffsDebugActivated)
+                    {
+                        _log.debug((("[BUFFS DEBUG]      Buff " + effect.uid) + " : type SpellBuff"));
+                    };
                     break;
                 case (effect is FightTriggeredEffect):
                     buff = new TriggeredBuff((effect as FightTriggeredEffect), castingSpell, actionId);
+                    if (GameDebugManager.getInstance().buffsDebugActivated)
+                    {
+                        _log.debug((("[BUFFS DEBUG]      Buff " + effect.uid) + " : type TriggeredBuff"));
+                    };
                     break;
                 case (effect is FightTemporaryBoostWeaponDamagesEffect):
-                    _local_7 = (effect as FightTemporaryBoostWeaponDamagesEffect);
-                    buff = new BasicBuff(effect, castingSpell, actionId, _local_7.weaponTypeId, _local_7.delta, _local_7.weaponTypeId);
+                    ftbwde = (effect as FightTemporaryBoostWeaponDamagesEffect);
+                    buff = new BasicBuff(effect, castingSpell, actionId, ftbwde.weaponTypeId, ftbwde.delta, ftbwde.weaponTypeId);
+                    if (GameDebugManager.getInstance().buffsDebugActivated)
+                    {
+                        _log.debug((("[BUFFS DEBUG]      Buff " + effect.uid) + " : type BasicBuff avec FightTemporaryBoostWeaponDamagesEffect"));
+                    };
                     break;
                 case (effect is FightTemporaryBoostStateEffect):
                     buff = new StateBuff((effect as FightTemporaryBoostStateEffect), castingSpell, actionId);
+                    if (GameDebugManager.getInstance().buffsDebugActivated)
+                    {
+                        _log.debug((("[BUFFS DEBUG]      Buff " + effect.uid) + " : type StateBuff"));
+                    };
                     break;
                 case (effect is FightTemporarySpellImmunityEffect):
-                    _local_8 = (effect as FightTemporarySpellImmunityEffect);
-                    buff = new BasicBuff(effect, castingSpell, actionId, _local_8.immuneSpellId, null, null);
+                    ftsie = (effect as FightTemporarySpellImmunityEffect);
+                    buff = new BasicBuff(effect, castingSpell, actionId, ftsie.immuneSpellId, null, null);
+                    if (GameDebugManager.getInstance().buffsDebugActivated)
+                    {
+                        _log.debug((("[BUFFS DEBUG]      Buff " + effect.uid) + " : type BasicBuff avec FightTemporarySpellImmunityEffect"));
+                    };
                     break;
                 case (effect is FightTemporaryBoostEffect):
-                    buff = new StatBuff((effect as FightTemporaryBoostEffect), castingSpell, actionId);
+                    buff = StatBuffFactory.createStatBuff((effect as FightTemporaryBoostEffect), castingSpell, actionId);
+                    if (GameDebugManager.getInstance().buffsDebugActivated)
+                    {
+                        _log.debug((("[BUFFS DEBUG]      Buff " + effect.uid) + " : type StatBuff"));
+                    };
                     break;
             };
             buff.id = effect.uid;
-            var spellLevelsIds:Vector.<uint> = GameDataQuery.queryEquals(SpellLevel, "effects.effectUid", effect.effectId);
-            if (spellLevelsIds.length == 0)
+            var spellLevelsId:int = -1;
+            var spell:Spell = Spell.getSpellById(effect.spellId);
+            for each (level in spell.spellLevelsInfo)
             {
-                spellLevelsIds = GameDataQuery.queryEquals(SpellLevel, "criticalEffect.effectUid", effect.effectId);
-                criticalEffect = true;
+                for each (effectInstanceDice in level.effects)
+                {
+                    if (effectInstanceDice.effectUid == effect.effectId)
+                    {
+                        spellLevelsId = level.id;
+                        break;
+                    };
+                };
+                if (spellLevelsId == -1)
+                {
+                    for each (effectInstanceDice in level.criticalEffect)
+                    {
+                        if (effectInstanceDice.effectUid == effect.effectId)
+                        {
+                            spellLevelsId = level.id;
+                            criticalEffect = true;
+                            break;
+                        };
+                    };
+                };
+                if (spellLevelsId != -1)
+                {
+                    break;
+                };
             };
-            if (spellLevelsIds.length > 0)
+            if (spellLevelsId != -1)
             {
-                spellLevel = SpellLevel.getLevelById(spellLevelsIds[0]);
-                effects = ((!(criticalEffect)) ? spellLevel.effects : spellLevel.criticalEffect);
+                spellLevel = SpellLevel.getLevelById(spellLevelsId);
+                effects = ((criticalEffect) ? spellLevel.criticalEffect : spellLevel.effects);
                 for each (effid in effects)
                 {
                     if (effid.effectUid == effect.effectId)
                     {
-                        buff.effects.order = effid.order;
-                        buff.effects.triggers = effid.triggers;
+                        buff.effect.triggers = effid.triggers;
+                        buff.effect.targetMask = effid.targetMask;
+                        buff.effect.effectElement = effid.effectElement;
                         break;
                     };
                 };
+                buff.castingSpell.spellRank = spellLevel;
+            };
+            if (GameDebugManager.getInstance().buffsDebugActivated)
+            {
+                _log.debug(((((((((("[BUFFS DEBUG]      Buff " + effect.uid) + " : sort lanceur ") + buff.castingSpell.spell.name) + " (") + buff.castingSpell.spell.id) + ") niveau ") + buff.castingSpell.spellRank.grade) + " par ") + buff.castingSpell.casterId));
             };
             return (buff);
         }
@@ -130,72 +187,78 @@
             this.spellBuffsToIgnore.length = 0;
         }
 
-        public function decrementDuration(targetId:int):void
+        public function decrementDuration(targetId:Number):void
         {
             this.incrementDuration(targetId, -1);
         }
 
-        public function synchronize(ignoreEntityId:int=0):void
+        public function synchronize():void
         {
             var entityId:String;
             var buffItem:BasicBuff;
+            if (GameDebugManager.getInstance().buffsDebugActivated)
+            {
+                _log.debug("[BUFFS DEBUG] Annulation du disabled sur tous les buffs");
+            };
             for (entityId in this._buffs)
             {
-                if (((ignoreEntityId) && ((entityId == ignoreEntityId.toString()))))
+                for each (buffItem in this._buffs[entityId])
                 {
-                }
-                else
-                {
-                    for each (buffItem in this._buffs[entityId])
+                    if (buffItem.disabled)
                     {
-                        buffItem.undisable();
+                        buffItem.onReenable();
                     };
                 };
             };
         }
 
-        public function incrementDuration(targetId:int, delta:int, dispellEffect:Boolean=false, incrementMode:int=1):void
+        public function incrementDuration(targetId:Number, delta:int, dispellEffect:Boolean=false, incrementMode:int=1):void
         {
-            var buffTarget:Array;
+            var targetBuffs:Array;
             var buffItem:BasicBuff;
             var modified:Boolean;
             var skipBuffUpdate:Boolean;
             var spell:CastingSpell;
-            var _local_12:int;
-            var newBuffs:Array = new Array();
-            var updateStatList:Boolean;
-            for each (buffTarget in this._buffs)
+            var currentFighterId:Number;
+            var newBuffs:Dictionary = new Dictionary();
+            this._updateStatList = false;
+            for each (targetBuffs in this._buffs)
             {
-                for each (buffItem in buffTarget)
+                for each (buffItem in targetBuffs)
                 {
-                    if (((((dispellEffect) && ((buffItem is TriggeredBuff)))) && ((TriggeredBuff(buffItem).delay > 0))))
+                    if ((((dispellEffect) && (buffItem is TriggeredBuff)) && (TriggeredBuff(buffItem).delay > 0)))
                     {
-                        if (!(newBuffs.hasOwnProperty(String(buffItem.targetId))))
+                        if (newBuffs[buffItem.targetId] == null)
                         {
-                            newBuffs[buffItem.targetId] = new Array();
+                            newBuffs[buffItem.targetId] = [];
                         };
                         newBuffs[buffItem.targetId].push(buffItem);
                     }
                     else
                     {
-                        if ((((((incrementMode == INCREMENT_MODE_SOURCE)) && ((buffItem.aliveSource == targetId)))) || ((((incrementMode == INCREMENT_MODE_TARGET)) && ((buffItem.targetId == targetId))))))
+                        if ((((incrementMode == INCREMENT_MODE_SOURCE) && (buffItem.aliveSource == targetId)) || ((incrementMode == INCREMENT_MODE_TARGET) && (buffItem.targetId == targetId))))
                         {
-                            if ((((incrementMode == INCREMENT_MODE_SOURCE)) && (this.spellBuffsToIgnore.length)))
+                            if (((incrementMode == INCREMENT_MODE_SOURCE) && ((this.spellBuffsToIgnore.length) || (buffItem.sourceJustReaffected))))
                             {
                                 skipBuffUpdate = false;
                                 for each (spell in this.spellBuffsToIgnore)
                                 {
-                                    if ((((spell.castingSpellId == buffItem.castingSpell.castingSpellId)) && ((spell.casterId == targetId))))
+                                    if (((spell.castingSpellId == buffItem.castingSpell.castingSpellId) && (spell.casterId == targetId)))
                                     {
                                         skipBuffUpdate = true;
                                         break;
                                     };
                                 };
+                                if (buffItem.sourceJustReaffected)
+                                {
+                                    skipBuffUpdate = true;
+                                    buffItem.sourceJustReaffected = false;
+                                };
                                 if (skipBuffUpdate)
                                 {
-                                    if (!(newBuffs.hasOwnProperty(String(buffItem.targetId))))
+                                    if (newBuffs[buffItem.targetId] == null)
                                     {
-                                        newBuffs[buffItem.targetId] = new Array();
+                                        newBuffs[buffItem.targetId] = [];
                                     };
                                     newBuffs[buffItem.targetId].push(buffItem);
                                     continue;
@@ -204,9 +267,9 @@
                             modified = buffItem.incrementDuration(delta, dispellEffect);
                             if (buffItem.active)
                             {
-                                if (!(newBuffs.hasOwnProperty(String(buffItem.targetId))))
+                                if (newBuffs[buffItem.targetId] == null)
                                 {
-                                    newBuffs[buffItem.targetId] = new Array();
+                                    newBuffs[buffItem.targetId] = [];
                                 };
                                 newBuffs[buffItem.targetId].push(buffItem);
                                 if (modified)
@@ -216,27 +279,27 @@
                             }
                             else
                             {
-                                BasicBuff(buffItem).onRemoved();
+                                buffItem.onRemoved();
                                 KernelEventsManager.getInstance().processCallback(FightHookList.BuffRemove, buffItem, buffItem.targetId, "CoolDown");
-                                _local_12 = CurrentPlayedFighterManager.getInstance().currentFighterId;
-                                if ((((targetId == _local_12)) || ((buffItem.targetId == _local_12))))
+                                currentFighterId = CurrentPlayedFighterManager.getInstance().currentFighterId;
+                                if (((targetId == currentFighterId) || (buffItem.targetId == currentFighterId)))
                                 {
-                                    updateStatList = true;
+                                    this._updateStatList = true;
                                 };
                             };
                         }
                         else
                         {
-                            if (!(newBuffs.hasOwnProperty(String(buffItem.targetId))))
+                            if (newBuffs[buffItem.targetId] == null)
                             {
-                                newBuffs[buffItem.targetId] = new Array();
+                                newBuffs[buffItem.targetId] = [];
                             };
                             newBuffs[buffItem.targetId].push(buffItem);
                         };
                     };
                 };
             };
-            if (updateStatList)
+            if (this._updateStatList)
             {
                 KernelEventsManager.getInstance().processCallback(HookList.CharacterStatsList);
             };
@@ -244,86 +307,145 @@
             FightEventsHelper.sendAllFightEvent(true);
         }
 
-        public function markFinishingBuffs(targetId:int, ignoreCurrent:Boolean=false):void
+        public function markFinishingBuffs(targetId:Number, currentTurnIsEnding:Boolean=true):void
         {
-            var updateStatList:Boolean;
             var buffItem:BasicBuff;
-            var mark:Boolean;
-            var fightBattleFrame:FightBattleFrame;
-            var state:int;
-            var casterFound:Boolean;
-            var fighter:int;
-            var statBuffItem:StatBuff;
-            if (this._buffs.hasOwnProperty(String(targetId)))
+            var buffWillEndBeforeTargetTurn:Boolean;
+            var casterIndex:int;
+            var targetIndex:int;
+            var currentFighterIndex:int;
+            var i:int;
+            var fightersCount:int;
+            var fighterId:Number;
+            var fightBattleFrame:FightBattleFrame = (Kernel.getWorker().getFrame(FightBattleFrame) as FightBattleFrame);
+            if (fightBattleFrame == null)
             {
-                updateStatList = false;
-                for each (buffItem in this._buffs[targetId])
+                return;
+            };
+            var currentFighterId:Number = fightBattleFrame.currentPlayerId;
+            if (GameDebugManager.getInstance().buffsDebugActivated)
+            {
+                _log.debug(((((("[BUFFS DEBUG] Recherche des buffs de " + targetId) + " qui vont finir durant le tour  (combattant actuel ") + currentFighterId) + ")    currentTurnIsEnding ") + currentTurnIsEnding));
+            };
+            if (this._buffs[targetId] == null)
+            {
+                return;
+            };
+            this._updateStatList = false;
+            for each (buffItem in this._buffs[targetId])
+            {
+                if (buffItem.duration != 1)
                 {
-                    mark = false;
-                    if (buffItem.duration == 1)
+                }
+                else
+                {
+                    if (GameDebugManager.getInstance().buffsDebugActivated)
                     {
-                        fightBattleFrame = (Kernel.getWorker().getFrame(FightBattleFrame) as FightBattleFrame);
-                        if (fightBattleFrame == null)
+                        _log.debug((((((("[BUFFS DEBUG]     - Buff " + buffItem.uid) + " n'a plus qu'un tour     (aliveSource ") + buffItem.aliveSource) + "  sourceJustReaffected ") + buffItem.sourceJustReaffected) + ")"));
+                    };
+                    buffWillEndBeforeTargetTurn = false;
+                    casterIndex = -1;
+                    targetIndex = -1;
+                    currentFighterIndex = -1;
+                    i = 0;
+                    fightersCount = fightBattleFrame.fightersList.length;
+                    while (i < fightersCount)
+                    {
+                        fighterId = fightBattleFrame.fightersList[i];
+                        if (fighterId == buffItem.aliveSource)
                         {
-                            return;
-                        };
-                        state = 0;
-                        casterFound = false;
-                        for each (fighter in fightBattleFrame.fightersList)
-                        {
-                            if (fighter == buffItem.aliveSource)
+                            if (buffItem.sourceJustReaffected)
                             {
-                                casterFound = true;
-                            };
-                            if (fighter == fightBattleFrame.currentPlayerId)
+                                buffItem.sourceJustReaffected = false;
+                            }
+                            else
                             {
-                                state = 1;
-                            };
-                            if (state == 1)
-                            {
-                                if (((casterFound) && (((!((fighter == fightBattleFrame.currentPlayerId))) || (!(ignoreCurrent))))))
-                                {
-                                    state = 2;
-                                    mark = true;
-                                }
-                                else
-                                {
-                                    if ((((fighter == targetId)) && (!((fighter == fightBattleFrame.currentPlayerId)))))
-                                    {
-                                        state = 2;
-                                        mark = false;
-                                    };
-                                };
+                                casterIndex = i;
                             };
                         };
-                        if (((mark) && (!(ignoreCurrent))))
+                        if (fighterId == buffItem.targetId)
                         {
-                            buffItem.finishing = true;
-                            if ((((buffItem is StatBuff)) && (!((targetId == PlayedCharacterManager.getInstance().id)))))
+                            targetIndex = i;
+                        };
+                        if (fighterId == currentFighterId)
+                        {
+                            currentFighterIndex = i;
+                        };
+                        i++;
+                    };
+                    if (GameDebugManager.getInstance().buffsDebugActivated)
+                    {
+                        _log.debug(((((("[BUFFS DEBUG]             Index des combattants pour ce buff : lanceur " + casterIndex) + ", cible ") + targetIndex) + "     combattant actuel ") + currentFighterIndex));
+                    };
+                    if ((((casterIndex == -1) || (targetIndex == -1)) || (currentFighterIndex == -1)))
+                    {
+                        _log.warn("Error when marking finishing buff, fighters cannot be found ");
+                        return;
+                    };
+                    if (casterIndex == targetIndex)
+                    {
+                        if (((currentFighterIndex == targetIndex) && (!(currentTurnIsEnding))))
+                        {
+                            if (GameDebugManager.getInstance().buffsDebugActivated)
                             {
-                                statBuffItem = (buffItem as StatBuff);
-                                if (statBuffItem.statName)
-                                {
-                                    targetId = statBuffItem.targetId;
-                                    if (!(this._finishingBuffs[targetId]))
-                                    {
-                                        this._finishingBuffs[targetId] = new Array();
-                                    };
-                                    this._finishingBuffs[targetId].push(buffItem);
-                                };
+                                _log.debug("[BUFFS DEBUG]                 cible = target = combattant actuel et ce n'est pas une fin de tour, on ne desactive pas");
                             };
-                            BasicBuff(buffItem).onDisabled();
-                            if (targetId == CurrentPlayedFighterManager.getInstance().currentFighterId)
+                            continue;
+                        };
+                        buffWillEndBeforeTargetTurn = true;
+                        if (GameDebugManager.getInstance().buffsDebugActivated)
+                        {
+                            _log.debug("[BUFFS DEBUG]                 cible = target, le buff doit etre desactivé");
+                        };
+                    }
+                    else
+                    {
+                        if (((currentFighterIndex == targetIndex) && (currentTurnIsEnding)))
+                        {
+                            buffWillEndBeforeTargetTurn = true;
+                            if (GameDebugManager.getInstance().buffsDebugActivated)
                             {
-                                updateStatList = true;
+                                _log.debug("[BUFFS DEBUG]                 fin du tour de la cible, le buff doit etre desactivé");
+                            };
+                        }
+                        else
+                        {
+                            if (casterIndex > targetIndex)
+                            {
+                                if (currentFighterIndex >= casterIndex)
+                                {
+                                    currentFighterIndex = (currentFighterIndex - fightersCount);
+                                };
+                                casterIndex = (casterIndex - fightersCount);
+                            };
+                            _log.debug(((((("[BUFFS DEBUG]           --->  Index des combattants pour ce buff : lanceur " + casterIndex) + ", cible ") + targetIndex) + "     combattant actuel ") + currentFighterIndex));
+                            if (((currentFighterIndex < casterIndex) || (currentFighterIndex > targetIndex)))
+                            {
+                                buffWillEndBeforeTargetTurn = true;
+                                if (GameDebugManager.getInstance().buffsDebugActivated)
+                                {
+                                    _log.debug("[BUFFS DEBUG]                 le combattant actuel n'est pas entre le caster et la target, le buff doit etre desactivé");
+                                };
                             };
                         };
                     };
+                    if (buffWillEndBeforeTargetTurn)
+                    {
+                        if (GameDebugManager.getInstance().buffsDebugActivated)
+                        {
+                            _log.debug((("[BUFFS DEBUG]                   Buff " + buffItem.uid) + " doit être désactivé, il ne doit plus être affiché dans les stats du combattant"));
+                        };
+                        BasicBuff(buffItem).onDisabled();
+                        if (targetId == CurrentPlayedFighterManager.getInstance().currentFighterId)
+                        {
+                            this._updateStatList = true;
+                        };
+                    };
                 };
-                if (updateStatList)
-                {
-                    KernelEventsManager.getInstance().processCallback(HookList.CharacterStatsList);
-                };
+            };
+            if (this._updateStatList)
+            {
+                KernelEventsManager.getInstance().processCallback(HookList.CharacterStatsList);
             };
         }
 
@@ -331,25 +453,33 @@
         {
             var sameBuff:BasicBuff;
             var actualBuff:BasicBuff;
-            if (!(this._buffs[buff.targetId]))
+            if (!this._buffs[buff.targetId])
             {
-                this._buffs[buff.targetId] = new Array();
+                this._buffs[buff.targetId] = [];
             };
-            for each (actualBuff in this._buffs[buff.targetId])
+            if (GameDebugManager.getInstance().buffsDebugActivated)
             {
+                _log.debug(((("[BUFFS DEBUG] Ajout du buff " + buff.uid) + " sur ") + buff.targetId));
+            };
+            var buffsCount:int = this._buffs[buff.targetId].length;
+            var i:int;
+            while (i < buffsCount)
+            {
+                actualBuff = this._buffs[buff.targetId][i];
                 if (buff.equals(actualBuff))
                 {
                     sameBuff = actualBuff;
                     break;
                 };
+                i++;
             };
-            if (!(sameBuff))
+            if (!sameBuff)
             {
                 this._buffs[buff.targetId].push(buff);
             }
             else
             {
-                if (((((((sameBuff.castingSpell.spellRank) && ((sameBuff.castingSpell.spellRank.maxStack > 0)))) && (sameBuff.stack))) && ((sameBuff.stack.length == sameBuff.castingSpell.spellRank.maxStack))))
+                if ((((sameBuff is TriggeredBuff) && (!(sameBuff.effect.triggers.indexOf("|") == -1))) || ((((sameBuff.castingSpell.spellRank) && (sameBuff.castingSpell.spellRank.maxStack > 0)) && (sameBuff.stack)) && (sameBuff.stack.length == sameBuff.castingSpell.spellRank.maxStack))))
                 {
                     return;
                 };
@@ -357,9 +487,9 @@
             };
             if (applyBuff)
             {
-                buff.onApplyed();
+                buff.onApplied();
             };
-            if (!(sameBuff))
+            if (!sameBuff)
             {
                 KernelEventsManager.getInstance().processCallback(FightHookList.BuffAdd, buff.id, buff.targetId);
             }
@@ -372,8 +502,12 @@
         public function updateBuff(buff:BasicBuff):Boolean
         {
             var oldBuff:BasicBuff;
-            var targetId:int = buff.targetId;
-            if (!(this._buffs[targetId]))
+            var targetId:Number = buff.targetId;
+            if (GameDebugManager.getInstance().buffsDebugActivated)
+            {
+                _log.debug(((("[BUFFS DEBUG] Mise à jour du buff " + buff.uid) + " sur ") + buff.targetId));
+            };
+            if (!this._buffs[targetId])
             {
                 return (false);
             };
@@ -382,73 +516,93 @@
             {
                 return (false);
             };
-            (this._buffs[targetId][i] as BasicBuff).onRemoved();
-            (this._buffs[targetId][i] as BasicBuff).updateParam(buff.param1, buff.param2, buff.param3, buff.id);
+            this._buffs[targetId][i].onRemoved();
+            this._buffs[targetId][i].updateParam(buff.param1, buff.param2, buff.param3, buff.id);
             oldBuff = this._buffs[targetId][i];
-            if (!(oldBuff))
+            if (!oldBuff)
             {
                 return (false);
             };
-            oldBuff.onApplyed();
+            oldBuff.onApplied();
             KernelEventsManager.getInstance().processCallback(FightHookList.BuffUpdate, oldBuff.id, targetId);
             return (true);
         }
 
-        public function dispell(targetId:int, forceUndispellable:Boolean=false, critical:Boolean=false, dying:Boolean=false):void
+        public function dispell(targetId:Number, forceUndispellable:Boolean=false, critical:Boolean=false, dying:Boolean=false):void
         {
             var buff:BasicBuff;
-            var deletedBuffs:Array = new Array();
-            var newBuffs:Array = new Array();
+            if (GameDebugManager.getInstance().buffsDebugActivated)
+            {
+                _log.debug(("[BUFFS DEBUG] Desenvoutement de tous les buffs de " + targetId));
+            };
+            var newBuffs:Array = [];
             for each (buff in this._buffs[targetId])
             {
                 if (buff.canBeDispell(forceUndispellable, int.MIN_VALUE, dying))
                 {
+                    if (GameDebugManager.getInstance().buffsDebugActivated)
+                    {
+                        _log.debug((("[BUFFS DEBUG]      Buff " + buff.uid) + " doit être retiré"));
+                    };
                     KernelEventsManager.getInstance().processCallback(FightHookList.BuffRemove, buff.id, targetId, "Dispell");
                     buff.onRemoved();
-                    deletedBuffs.push(buff);
                 }
                 else
                 {
+                    if (GameDebugManager.getInstance().buffsDebugActivated)
+                    {
+                        _log.debug((("[BUFFS DEBUG]      Buff " + buff.uid) + " reste"));
+                    };
                     newBuffs.push(buff);
                 };
             };
             this._buffs[targetId] = newBuffs;
         }
 
-        public function dispellSpell(targetId:int, spellId:uint, forceUndispellable:Boolean=false, critical:Boolean=false, dying:Boolean=false):void
+        public function dispellSpell(targetId:Number, spellId:uint, forceUndispellable:Boolean=false, critical:Boolean=false, dying:Boolean=false):void
         {
             var buff:BasicBuff;
-            var deletedBuff:BasicBuff;
-            var deletedBuffs:Array = new Array();
-            var newBuffs:Array = new Array();
+            if (GameDebugManager.getInstance().buffsDebugActivated)
+            {
+                _log.debug(((("[BUFFS DEBUG] Desenvoutement de tous les buffs du sort " + spellId) + " de ") + targetId));
+            };
+            var newBuffs:Array = [];
+            var currentFighterId:Number = CurrentPlayedFighterManager.getInstance().currentFighterId;
+            this._updateStatList = false;
             for each (buff in this._buffs[targetId])
             {
-                if ((((spellId == buff.castingSpell.spell.id)) && (buff.canBeDispell(forceUndispellable, int.MIN_VALUE, dying))))
+                if (((spellId == buff.castingSpell.spell.id) && (buff.canBeDispell(forceUndispellable, int.MIN_VALUE, dying))))
                 {
+                    if (GameDebugManager.getInstance().buffsDebugActivated)
+                    {
+                        _log.debug((("[BUFFS DEBUG]      Buff " + buff.uid) + " doit être retiré"));
+                    };
                     buff.onRemoved();
-                    deletedBuffs.push(buff);
+                    if (((targetId == currentFighterId) || (buff.targetId == currentFighterId)))
+                    {
+                        this._updateStatList = true;
+                    };
+                    KernelEventsManager.getInstance().processCallback(FightHookList.BuffRemove, buff, targetId, "Dispell");
                 }
                 else
                 {
+                    if (GameDebugManager.getInstance().buffsDebugActivated)
+                    {
+                        _log.debug((("[BUFFS DEBUG]      Buff " + buff.uid) + " reste"));
+                    };
                     newBuffs.push(buff);
                 };
             };
             this._buffs[targetId] = newBuffs;
-            for each (deletedBuff in deletedBuffs)
+            if (this._updateStatList)
             {
-                if (deletedBuff.stack)
-                {
-                    while (deletedBuff.stack.length)
-                    {
-                        deletedBuff.stack.shift().onRemoved();
-                    };
-                };
-                KernelEventsManager.getInstance().processCallback(FightHookList.BuffRemove, deletedBuff, targetId, "Dispell");
+                KernelEventsManager.getInstance().processCallback(HookList.CharacterStatsList);
             };
         }
 
-        public function dispellUniqueBuff(targetId:int, boostUID:int, forceUndispellable:Boolean=false, dying:Boolean=false, ultimateDebuff:Boolean=true):void
+        public function dispellUniqueBuff(targetId:Number, boostUID:int, forceUndispellable:Boolean=false, dying:Boolean=false, ultimateDebuff:Boolean=true):void
         {
+            var isState:Boolean;
             var i:int = this.getBuffIndex(targetId, boostUID);
             if (i == -1)
             {
@@ -457,25 +611,27 @@
             var buff:BasicBuff = this._buffs[targetId][i];
             if (buff.canBeDispell(forceUndispellable, ((ultimateDebuff) ? boostUID : int.MIN_VALUE), dying))
             {
-                if (((((buff.stack) && ((buff.stack.length > 1)))) && (!(dying))))
+                if ((((buff.stack) && (buff.stack.length > 1)) && (!(dying))))
                 {
+                    if (GameDebugManager.getInstance().buffsDebugActivated)
+                    {
+                        _log.debug(((("[BUFFS DEBUG] Desenvoutement du buff stacké " + boostUID) + " de ") + targetId));
+                    };
                     buff.onRemoved();
+                    isState = false;
                     switch (buff.actionId)
                     {
-                        case 293:
+                        case ActionIds.ACTION_BOOST_SPELL_BASE_DMG:
                             buff.param1 = buff.stack[0].param1;
                             buff.param2 = (buff.param2 - buff.stack[0].param2);
                             buff.param3 = (buff.param3 - buff.stack[0].param3);
-                            if (((((buff.castingSpell.spellRank) && ((buff.castingSpell.spellRank.maxStack > 0)))) && ((buff.stack.length == buff.castingSpell.spellRank.maxStack))))
-                            {
-                                return;
-                            };
                             break;
-                        case 788:
+                        case ActionIds.ACTION_CHARACTER_PUNISHMENT:
                             buff.param1 = (buff.param1 - buff.stack[0].param2);
                             break;
-                        case 950:
-                        case 951:
+                        case ActionIds.ACTION_FIGHT_SET_STATE:
+                        case ActionIds.ACTION_FIGHT_UNSET_STATE:
+                            isState = true;
                             break;
                         default:
                             buff.param1 = (buff.param1 - buff.stack[0].param1);
@@ -484,12 +640,19 @@
                     };
                     buff.stack.shift();
                     buff.refreshDescription();
-                    buff.onApplyed();
+                    if (!isState)
+                    {
+                        buff.onApplied();
+                    };
                     KernelEventsManager.getInstance().processCallback(FightHookList.BuffUpdate, buff.id, buff.targetId);
                 }
                 else
                 {
                     KernelEventsManager.getInstance().processCallback(FightHookList.BuffRemove, buff.id, targetId, "Dispell");
+                    if (GameDebugManager.getInstance().buffsDebugActivated)
+                    {
+                        _log.debug(((("[BUFFS DEBUG] Desenvoutement du buff " + boostUID) + " de ") + targetId));
+                    };
                     this._buffs[targetId].splice(this._buffs[targetId].indexOf(buff), 1);
                     buff.onRemoved();
                     if (targetId == CurrentPlayedFighterManager.getInstance().currentFighterId)
@@ -501,17 +664,22 @@
             };
         }
 
-        public function removeLinkedBuff(sourceId:int, forceUndispellable:Boolean=false, dying:Boolean=false):Array
+        public function removeLinkedBuff(sourceId:Number, forceUndispellable:Boolean=false, dying:Boolean=false):Array
         {
             var buffList:Array;
             var buffListCopy:Array;
             var buff:BasicBuff;
             var impactedTarget:Array = [];
             var entitiesFrame:FightEntitiesFrame = (Kernel.getWorker().getFrame(FightEntitiesFrame) as FightEntitiesFrame);
+            var fightBattleFrame:FightBattleFrame = (Kernel.getWorker().getFrame(FightBattleFrame) as FightBattleFrame);
             var infos:GameFightFighterInformations = (entitiesFrame.getEntityInfos(sourceId) as GameFightFighterInformations);
+            if (GameDebugManager.getInstance().buffsDebugActivated)
+            {
+                _log.debug(("[BUFFS DEBUG] Retrait des buffs lancés par " + sourceId));
+            };
             for each (buffList in this._buffs)
             {
-                buffListCopy = new Array();
+                buffListCopy = [];
                 for each (buff in buffList)
                 {
                     buffListCopy.push(buff);
@@ -520,14 +688,22 @@
                 {
                     if (buff.source == sourceId)
                     {
+                        if (GameDebugManager.getInstance().buffsDebugActivated)
+                        {
+                            _log.debug((("[BUFFS DEBUG]      Buff " + buff.uid) + " doit être retiré"));
+                        };
                         this.dispellUniqueBuff(buff.targetId, buff.id, forceUndispellable, dying, false);
                         if (impactedTarget.indexOf(buff.targetId) == -1)
                         {
                             impactedTarget.push(buff.targetId);
                         };
-                        if (((dying) && (infos.stats.summoned)))
+                        if ((((dying) && (infos.stats.summoned)) && (!(infos.stats.summoner == fightBattleFrame.currentPlayerId))))
                         {
                             buff.aliveSource = infos.stats.summoner;
+                            if (GameDebugManager.getInstance().buffsDebugActivated)
+                            {
+                                _log.debug(((("[BUFFS DEBUG]      Buff " + buff.uid) + " doit être reaffecté à l'invocateur ") + infos.stats.summoner));
+                            };
                         };
                     };
                 };
@@ -535,18 +711,26 @@
             return (impactedTarget);
         }
 
-        public function reaffectBuffs(sourceId:int):void
+        public function reaffectBuffs(sourceId:Number):void
         {
-            var next:int;
+            var next:Number;
+            var frame:FightBattleFrame;
+            var dontDecrementBuffThisTurn:Boolean;
             var buffList:Array;
             var buff:BasicBuff;
             var entity:GameFightFighterInformations = (this.fightEntitiesFrame.getEntityInfos(sourceId) as GameFightFighterInformations);
             if (entity.stats.summoned)
             {
                 next = this.getNextFighter(sourceId);
-                if (next == -1)
+                if (GameDebugManager.getInstance().buffsDebugActivated)
                 {
-                    return;
+                    _log.debug(((("[BUFFS DEBUG] Réaffectation des buffs lancés par " + sourceId) + ", le nouveau 'lanceur' sera ") + next));
+                };
+                frame = (Kernel.getWorker().getFrame(FightBattleFrame) as FightBattleFrame);
+                dontDecrementBuffThisTurn = false;
+                if (frame.currentPlayerId == sourceId)
+                {
+                    dontDecrementBuffThisTurn = true;
                 };
                 for each (buffList in this._buffs)
                 {
@@ -554,20 +738,25 @@
                     {
                         if (buff.aliveSource == sourceId)
                         {
+                            if (GameDebugManager.getInstance().buffsDebugActivated)
+                            {
+                                _log.debug((("[BUFFS DEBUG]      Buff " + buff.uid) + " doit être reaffecté"));
+                            };
                             buff.aliveSource = next;
+                            buff.sourceJustReaffected = dontDecrementBuffThisTurn;
                         };
                     };
                 };
             };
         }
 
-        private function getNextFighter(sourceId:int):int
+        private function getNextFighter(sourceId:Number):Number
         {
-            var fighter:int;
+            var fighter:Number;
             var frame:FightBattleFrame = (Kernel.getWorker().getFrame(FightBattleFrame) as FightBattleFrame);
             if (frame == null)
             {
-                return (-1);
+                return (0);
             };
             var found:Boolean;
             for each (fighter in frame.fightersList)
@@ -585,20 +774,56 @@
             {
                 return (frame.fightersList[0]);
             };
-            return (-1);
+            return (0);
         }
 
-        public function getFighterInfo(targetId:int):GameFightFighterInformations
+        public function getFighterInfo(targetId:Number):GameFightFighterInformations
         {
-            return ((this.fightEntitiesFrame.getEntityInfos(targetId) as GameFightFighterInformations));
+            return (this.fightEntitiesFrame.getEntityInfos(targetId) as GameFightFighterInformations);
         }
 
-        public function getAllBuff(targetId:int):Array
+        public function getAllBuff(targetId:Number):Array
         {
             return (this._buffs[targetId]);
         }
 
-        public function getBuff(buffId:uint, playerId:int):BasicBuff
+        public function getLifeThreshold(targetId:Number):uint
+        {
+            var buffObj:Object;
+            var lifeThreshold:uint;
+            var targetBuffs:Array = this._buffs[targetId];
+            if (!targetBuffs)
+            {
+                return (0);
+            };
+            var index:uint;
+            while (index < targetBuffs.length)
+            {
+                buffObj = targetBuffs[index];
+                if ((((buffObj) && (!(buffObj.removed))) && (buffObj.actionId === ActionIdProtocol.ACTION_CHARACTER_BOOST_THRESHOLD)))
+                {
+                    lifeThreshold = Math.max(lifeThreshold, buffObj.delta);
+                };
+                index++;
+            };
+            return (lifeThreshold);
+        }
+
+        public function resetTriggerCount(targetId:Number):Boolean
+        {
+            var buff:BasicBuff;
+            for each (buff in this._buffs[targetId])
+            {
+                if ((buff is TriggeredBuff))
+                {
+                    TriggeredBuff(buff).triggerCount = 0;
+                    return (true);
+                };
+            };
+            return (false);
+        }
+
+        public function getBuff(buffId:uint, playerId:Number):BasicBuff
         {
             var buff:BasicBuff;
             for each (buff in this._buffs[playerId])
@@ -611,31 +836,50 @@
             return (null);
         }
 
-        public function getFinishingBuffs(fighterid:int):Array
+        public function getSpellBuffs(spellId:int, targetId:Number):Vector.<SpellBuff>
         {
-            var buffArray:Array = this._finishingBuffs[fighterid];
-            delete this._finishingBuffs[fighterid];
-            return (buffArray);
+            var spellBuff:SpellBuff;
+            var buff:BasicBuff;
+            var targetBuffs:Array = this._buffs[targetId];
+            var spellBuffs:Vector.<SpellBuff> = new Vector.<SpellBuff>(0);
+            if (targetBuffs !== null)
+            {
+                for each (buff in targetBuffs)
+                {
+                    if (!(buff is SpellBuff))
+                    {
+                    }
+                    else
+                    {
+                        spellBuff = (buff as SpellBuff);
+                        if (spellBuff.spellId === spellId)
+                        {
+                            spellBuffs.push(spellBuff);
+                        };
+                    };
+                };
+            };
+            return (spellBuffs);
         }
 
         private function get fightEntitiesFrame():FightEntitiesFrame
         {
-            return ((Kernel.getWorker().getFrame(FightEntitiesFrame) as FightEntitiesFrame));
+            return (Kernel.getWorker().getFrame(FightEntitiesFrame) as FightEntitiesFrame);
         }
 
-        private function getBuffIndex(targetId:int, buffId:int):int
+        private function getBuffIndex(targetId:Number, buffId:int):int
         {
             var i:Object;
-            var _local_4:BasicBuff;
+            var subBuff:BasicBuff;
             for (i in this._buffs[targetId])
             {
                 if (buffId == this._buffs[targetId][i].id)
                 {
                     return (int(i));
                 };
-                for each (_local_4 in (this._buffs[targetId][i] as BasicBuff).stack)
+                for each (subBuff in (this._buffs[targetId][i] as BasicBuff).stack)
                 {
-                    if (buffId == _local_4.id)
+                    if (buffId == subBuff.id)
                     {
                         return (int(i));
                     };
@@ -646,5 +890,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.fight.managers
+} com.ankamagames.dofus.logic.game.fight.managers
 

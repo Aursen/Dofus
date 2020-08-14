@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.types.enums
+package com.ankamagames.jerakine.types.enums
 {
     public class DirectionsEnum 
     {
@@ -13,6 +13,32 @@
         public static const UP_RIGHT:int = 7;
 
 
+        public static function getNameFromDirection(dir:uint):String
+        {
+            switch (dir)
+            {
+                case RIGHT:
+                    return ("RIGHT");
+                case DOWN_RIGHT:
+                    return ("DOWN_RIGHT");
+                case DOWN:
+                    return ("DOWN");
+                case DOWN_LEFT:
+                    return ("DOWN_LEFT");
+                case LEFT:
+                    return ("LEFT");
+                case UP_LEFT:
+                    return ("UP_LEFT");
+                case UP:
+                    return ("UP");
+                case UP_RIGHT:
+                    return ("UP_RIGHT");
+                default:
+                    throw (new Error("DirectionEnum  : Direction is unknown"));
+            };
+        }
+
+
     }
-}//package com.ankamagames.jerakine.types.enums
+} com.ankamagames.jerakine.types.enums
 

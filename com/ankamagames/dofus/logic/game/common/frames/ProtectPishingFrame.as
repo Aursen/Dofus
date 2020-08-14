@@ -1,10 +1,9 @@
-﻿package com.ankamagames.dofus.logic.game.common.frames
+package com.ankamagames.dofus.logic.game.common.frames
 {
     import com.ankamagames.jerakine.messages.Frame;
     import flash.utils.Dictionary;
     import com.ankamagames.jerakine.utils.display.StageShareManager;
     import flash.events.Event;
-    import flash.events.TextEvent;
     import com.ankamagames.berilia.components.Input;
     import com.ankamagames.berilia.components.messages.ChangeMessage;
     import com.ankamagames.berilia.managers.UiModuleManager;
@@ -13,7 +12,6 @@
     import com.ankamagames.jerakine.types.enums.Priority;
     import flash.text.TextField;
     import by.blooddy.crypto.MD5;
-    import flash.utils.getTimer;
 
     public class ProtectPishingFrame implements Frame 
     {
@@ -21,19 +19,9 @@
         private static var _passwordHash:String;
         private static var _passwordLength:uint;
 
-        private var _inputBufferRef:Dictionary;
-        private var _advancedInputBufferRef:Dictionary;
-        private var _cancelTarget:Dictionary;
-        private var _globalModBuffer:String;
-        private var _globalBuffer:String;
+        private var _inputBufferRef:Dictionary = new Dictionary(true);
+        private var _cancelTarget:Dictionary = new Dictionary(true);
 
-        public function ProtectPishingFrame()
-        {
-            this._inputBufferRef = new Dictionary(true);
-            this._advancedInputBufferRef = new Dictionary(true);
-            this._cancelTarget = new Dictionary(true);
-            super();
-        }
 
         public static function setPasswordHash(hash:String, len:uint):void
         {
@@ -47,42 +35,29 @@
             if (((_passwordHash) && (_passwordLength)))
             {
                 StageShareManager.stage.addEventListener(Event.CHANGE, this.onChange);
-                StageShareManager.stage.addEventListener(TextEvent.TEXT_INPUT, this.onTextInput);
             };
-            return (!((_passwordLength == 0)));
+            return (!(_passwordLength == 0));
         }
 
         public function pulled():Boolean
         {
-            if (((_passwordHash) && (_passwordLength)))
-            {
-                StageShareManager.stage.removeEventListener(Event.CHANGE, this.onChange);
-                StageShareManager.stage.removeEventListener(TextEvent.TEXT_INPUT, this.onTextInput);
-            };
+            StageShareManager.stage.removeEventListener(Event.CHANGE, this.onChange);
             return (true);
         }
 
         public function process(msg:Message):Boolean
         {
-            var _local_2:Input;
+            var input:Input;
             var commonMod:Object;
             switch (true)
             {
                 case (msg is ChangeMessage):
-                    _local_2 = (ChangeMessage(msg).target as Input);
-                    if (((_local_2) && (this._cancelTarget[_local_2.textfield])))
+                    input = (ChangeMessage(msg).target as Input);
+                    if (((input) && (this._cancelTarget[input.textfield])))
                     {
                         this._cancelTarget[Input(ChangeMessage(msg).target).textfield] = false;
                         commonMod = UiModuleManager.getInstance().getModule("Ankama_Common").mainClass;
-                        if (_local_2.getUi().uiModule.trusted)
-                        {
-                            commonMod.openPopup(I18n.getUiText("ui.popup.warning"), I18n.getUiText("ui.popup.warning.password"), [I18n.getUiText("ui.common.ok")]);
-                        }
-                        else
-                        {
-                            commonMod.openPopup(I18n.getUiText("ui.popup.warning.pishing.title"), I18n.getUiText("ui.popup.warning.pishing.content"), [I18n.getUiText("ui.common.ok")]);
-                            _local_2.getUi().uiModule.enable = false;
-                        };
+                        commonMod.openPopup(I18n.getUiText("ui.popup.warning"), I18n.getUiText("ui.popup.warning.password"), [I18n.getUiText("ui.common.ok")]);
                         return (true);
                     };
                     break;
@@ -95,86 +70,17 @@
             return (Priority.ULTIMATE_HIGHEST_DEPTH_OF_DOOM);
         }
 
-        private function onTextInput(te:TextEvent):void
-        {
-            var len:uint;
-            this._globalBuffer = (this._globalBuffer + te.text);
-            if (!((((((((te.target is TextField)) && ((TextField(te.target).parent is Input)))) && (Input(TextField(te.target).parent).getUi()))) && (!(Input(TextField(te.target).parent).getUi().uiModule.trusted)))))
-            {
-                return;
-            };
-            this._globalModBuffer = (this._globalModBuffer + te.text);
-            if (!(this._advancedInputBufferRef[te.target]))
-            {
-                this._advancedInputBufferRef[te.target] = "";
-            };
-            var inputBuffer:String = this._advancedInputBufferRef[te.target];
-            var oldBuffer:String = inputBuffer;
-            inputBuffer = (inputBuffer + te.text);
-            if (inputBuffer.length >= _passwordLength)
-            {
-                len = ((inputBuffer.length - _passwordLength) + 1);
-                if (this.detectHash(inputBuffer, _passwordHash, _passwordLength))
-                {
-                    te.preventDefault();
-                    this._cancelTarget[te.target] = true;
-                    this._advancedInputBufferRef[te.target] = oldBuffer;
-                    return;
-                };
-                inputBuffer = inputBuffer.substr(len);
-            };
-            if (this._globalBuffer.length >= _passwordLength)
-            {
-                len = ((this._globalBuffer.length - _passwordLength) + 1);
-                if (this.detectHash(this._globalBuffer, _passwordHash, _passwordLength))
-                {
-                    te.preventDefault();
-                    this._cancelTarget[te.target] = true;
-                    return;
-                };
-                this._globalBuffer = this._globalBuffer.substr(len);
-            };
-            if (this._globalModBuffer.length >= _passwordLength)
-            {
-                len = ((this._globalModBuffer.length - _passwordLength) + 1);
-                if (this.detectHash(this._globalModBuffer, _passwordHash, _passwordLength))
-                {
-                    te.preventDefault();
-                    this._cancelTarget[te.target] = true;
-                    return;
-                };
-                this._globalModBuffer = this._globalModBuffer.substr(len);
-            };
-            this._advancedInputBufferRef[te.target] = inputBuffer;
-        }
-
-        private function detectHash(input:String, hash:String, originalLength:uint):Boolean
-        {
-            var len:uint = ((input.length - originalLength) + 1);
-            var i:uint;
-            while (i < len)
-            {
-                if (MD5.hash(input.substr(i, originalLength).toUpperCase()) == hash)
-                {
-                    return (true);
-                };
-                i++;
-            };
-            return (false);
-        }
-
         protected function onChange(e:Event):void
         {
             var len:uint;
             var upperBuffer:String;
             var i:uint;
-            var ts:uint = getTimer();
             var tf:TextField = (e.target as TextField);
-            if (!(tf))
+            if (!tf)
             {
                 return;
             };
-            if (!(this._inputBufferRef[e.target]))
+            if (!this._inputBufferRef[e.target])
             {
                 this._inputBufferRef[e.target] = "";
             };
@@ -223,5 +129,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.frames
+} com.ankamagames.dofus.logic.game.common.frames
 

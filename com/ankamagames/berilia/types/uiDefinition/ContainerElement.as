@@ -1,16 +1,11 @@
-﻿package com.ankamagames.berilia.types.uiDefinition
+package com.ankamagames.berilia.types.uiDefinition
 {
     public class ContainerElement extends BasicElement 
     {
 
-        public var childs:Array;
+        public var childs:Array = new Array();
 
-        public function ContainerElement()
-        {
-            this.childs = new Array();
-            super();
-        }
 
     }
-}//package com.ankamagames.berilia.types.uiDefinition
+} com.ankamagames.berilia.types.uiDefinition
 

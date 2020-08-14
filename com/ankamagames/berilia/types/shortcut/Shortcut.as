@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.types.shortcut
+package com.ankamagames.berilia.types.shortcut
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.jerakine.types.DataStoreType;
@@ -7,17 +7,20 @@
     import com.ankamagames.berilia.managers.BindsManager;
     import flash.utils.Dictionary;
     import com.ankamagames.jerakine.managers.StoreDataManager;
+    import com.ankamagames.berilia.api.ApiBinder;
 
     public class Shortcut implements IDataCenter 
     {
 
         private static var _shortcuts:Array = new Array();
         private static var _idCount:uint = 0;
+        private static var _configApi:* = null;
         private static var _datastoreType:DataStoreType = new DataStoreType("Module_Ankama_Config", true, DataStoreEnum.LOCATION_LOCAL, DataStoreEnum.BIND_CHARACTER);
 
         private var _name:String;
         private var _description:String;
         private var _tooltipContent:String;
+        private var _admin:Boolean;
         private var _textfieldEnabled:Boolean;
         private var _bindable:Boolean;
         private var _category:ShortcutCategory;
@@ -26,9 +29,11 @@
         private var _disable:Boolean;
         private var _required:Boolean;
         private var _holdKeys:Boolean;
+        private var _boundFeatureKeyword:String = null;
+        private var _isBoundFeatureEnabled:Boolean = false;
         public var defaultBind:Bind;
 
-        public function Shortcut(name:String, textfieldEnabled:Boolean=false, description:String=null, category:ShortcutCategory=null, bindable:Boolean=true, pVisible:Boolean=true, pRequired:Boolean=false, pHoldKeys:Boolean=false, tooltipContent:String=null)
+        public function Shortcut(name:String, textfieldEnabled:Boolean=false, description:String=null, category:ShortcutCategory=null, bindable:Boolean=true, pVisible:Boolean=true, pRequired:Boolean=false, pHoldKeys:Boolean=false, tooltipContent:String=null, admin:Boolean=false, boundFeatureKeyword:String=null)
         {
             if (_shortcuts[name])
             {
@@ -45,12 +50,31 @@
             this._required = pRequired;
             this._holdKeys = pHoldKeys;
             this._tooltipContent = tooltipContent;
+            this._admin = admin;
             this._disable = false;
+            var isFeatureBound:* = (!(boundFeatureKeyword === null));
+            this._boundFeatureKeyword = boundFeatureKeyword;
+            this._isBoundFeatureEnabled = ((isFeatureBound) && (configApi.isFeatureWithKeywordEnabled(this._boundFeatureKeyword)));
+            if (isFeatureBound)
+            {
+                configApi.addListenerToFeatureWithKeyword(this._boundFeatureKeyword, this.onBoundFeatureUpdated);
+            };
             BindsManager.getInstance().newShortcut(this);
         }
 
         public static function reset():void
         {
+            var shortcut:Shortcut;
+            for each (shortcut in _shortcuts)
+            {
+                if (shortcut === null)
+                {
+                }
+                else
+                {
+                    shortcut.destroy();
+                };
+            };
             BindsManager.destroy();
             _shortcuts = [];
             _idCount = 0;
@@ -69,9 +93,9 @@
             var copy2:Array;
             var len3:int;
             var catIndex:int;
-            var _local_13:int;
-            var _local_14:int;
-            var _local_15:int;
+            var nbCategoryShortcuts:int;
+            var j:int;
+            var len2:int;
             var disabled:Boolean;
             var savedData:Object = StoreDataManager.getInstance().getData(_datastoreType, "openShortcutsCategory");
             if (savedData)
@@ -107,21 +131,21 @@
                             }
                             else
                             {
-                                _local_13 = 0;
-                                _local_14 = catIndex;
-                                _local_15 = copy2.length;
-                                while (++_local_14 < _local_15)
+                                nbCategoryShortcuts = 0;
+                                j = catIndex;
+                                len2 = copy2.length;
+                                while (++j < len2)
                                 {
-                                    if (!((copy2[_local_14] is String)))
+                                    if (!(copy2[j] is String))
                                     {
-                                        _local_13++;
+                                        nbCategoryShortcuts++;
                                     }
                                     else
                                     {
                                         break;
                                     };
                                 };
-                                copy2.splice(((catIndex + _local_13) + 1), 0, s);
+                                copy2.splice(((catIndex + nbCategoryShortcuts) + 1), 0, s);
                             };
                         }
                         else
@@ -156,7 +180,7 @@
                     {
                         if (savedData[sc.category.name] != undefined)
                         {
-                            disabled = !(savedData[sc.category.name]);
+                            disabled = (!(savedData[sc.category.name]));
                         }
                         else
                         {
@@ -179,6 +203,15 @@
             return (_shortcuts);
         }
 
+        private static function get configApi():*
+        {
+            if (_configApi === null)
+            {
+                _configApi = ApiBinder.getApiInstance("ConfigApi");
+            };
+            return (_configApi);
+        }
+
 
         public function get unicID():uint
         {
@@ -198,6 +231,11 @@
         public function get tooltipContent():String
         {
             return (this._tooltipContent);
+        }
+
+        public function get admin():Boolean
+        {
+            return (this._admin);
         }
 
         public function get textfieldEnabled():Boolean
@@ -235,6 +273,28 @@
             return (this._holdKeys);
         }
 
+        public function get canBeEnabled():Boolean
+        {
+            if (this._boundFeatureKeyword === null)
+            {
+                return (true);
+            };
+            return (this._isBoundFeatureEnabled);
+        }
+
+        public function destroy():void
+        {
+            if (this._boundFeatureKeyword !== null)
+            {
+                configApi.removeListenerFromFeatureWithKeyword(this._boundFeatureKeyword, this.onBoundFeatureUpdated);
+            };
+        }
+
+        private function onBoundFeatureUpdated(featureKeyword:String, featureId:int, isEnabled:Boolean):void
+        {
+            this._isBoundFeatureEnabled = isEnabled;
+        }
+
         public function get disable():Boolean
         {
             return (this._disable);
@@ -247,5 +307,5 @@
 
 
     }
-}//package com.ankamagames.berilia.types.shortcut
+} com.ankamagames.berilia.types.shortcut
 

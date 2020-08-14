@@ -1,16 +1,17 @@
-﻿package com.ankamagames.dofus.logic.game.fight.steps
+package com.ankamagames.dofus.logic.game.fight.steps
 {
     import com.ankamagames.jerakine.sequencer.AbstractSequencable;
     import com.ankamagames.dofus.logic.game.common.misc.DofusEntities;
     import flash.display.Sprite;
+    import __AS3__.vec.Vector;
 
     public class FightVisibilityStep extends AbstractSequencable implements IFightStep 
     {
 
-        private var _fighterId:int;
+        private var _fighterId:Number;
         private var _visibility:Boolean;
 
-        public function FightVisibilityStep(fighterId:int, visibility:Boolean)
+        public function FightVisibilityStep(fighterId:Number, visibility:Boolean)
         {
             this._fighterId = fighterId;
             this._visibility = visibility;
@@ -23,15 +24,20 @@
 
         override public function start():void
         {
-            var summonedCreature:Sprite = (DofusEntities.getEntity(this._fighterId) as Sprite);
-            if (summonedCreature)
+            var entity:Sprite = (DofusEntities.getEntity(this._fighterId) as Sprite);
+            if (entity)
             {
-                summonedCreature.visible = this._visibility;
+                entity.visible = this._visibility;
             };
             executeCallbacks();
         }
 
+        public function get targets():Vector.<Number>
+        {
+            return (new <Number>[this._fighterId]);
+        }
+
 
     }
-}//package com.ankamagames.dofus.logic.game.fight.steps
+} com.ankamagames.dofus.logic.game.fight.steps
 

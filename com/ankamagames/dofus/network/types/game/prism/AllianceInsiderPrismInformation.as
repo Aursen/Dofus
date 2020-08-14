@@ -1,7 +1,9 @@
-﻿package com.ankamagames.dofus.network.types.game.prism
+package com.ankamagames.dofus.network.types.game.prism
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import __AS3__.vec.Vector;
+    import com.ankamagames.dofus.network.types.game.data.items.ObjectItem;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
     import __AS3__.vec.*;
@@ -13,29 +15,25 @@
 
         public var lastTimeSlotModificationDate:uint = 0;
         public var lastTimeSlotModificationAuthorGuildId:uint = 0;
-        public var lastTimeSlotModificationAuthorId:uint = 0;
+        public var lastTimeSlotModificationAuthorId:Number = 0;
         public var lastTimeSlotModificationAuthorName:String = "";
-        public var modulesItemIds:Vector.<uint>;
+        public var modulesObjects:Vector.<ObjectItem> = new Vector.<ObjectItem>();
+        private var _modulesObjectstree:FuncTree;
 
-        public function AllianceInsiderPrismInformation()
-        {
-            this.modulesItemIds = new Vector.<uint>();
-            super();
-        }
 
         override public function getTypeId():uint
         {
             return (431);
         }
 
-        public function initAllianceInsiderPrismInformation(typeId:uint=0, state:uint=1, nextVulnerabilityDate:uint=0, placementDate:uint=0, rewardTokenCount:uint=0, lastTimeSlotModificationDate:uint=0, lastTimeSlotModificationAuthorGuildId:uint=0, lastTimeSlotModificationAuthorId:uint=0, lastTimeSlotModificationAuthorName:String="", modulesItemIds:Vector.<uint>=null):AllianceInsiderPrismInformation
+        public function initAllianceInsiderPrismInformation(typeId:uint=0, state:uint=1, nextVulnerabilityDate:uint=0, placementDate:uint=0, rewardTokenCount:uint=0, lastTimeSlotModificationDate:uint=0, lastTimeSlotModificationAuthorGuildId:uint=0, lastTimeSlotModificationAuthorId:Number=0, lastTimeSlotModificationAuthorName:String="", modulesObjects:Vector.<ObjectItem>=null):AllianceInsiderPrismInformation
         {
             super.initPrismInformation(typeId, state, nextVulnerabilityDate, placementDate, rewardTokenCount);
             this.lastTimeSlotModificationDate = lastTimeSlotModificationDate;
             this.lastTimeSlotModificationAuthorGuildId = lastTimeSlotModificationAuthorGuildId;
             this.lastTimeSlotModificationAuthorId = lastTimeSlotModificationAuthorId;
             this.lastTimeSlotModificationAuthorName = lastTimeSlotModificationAuthorName;
-            this.modulesItemIds = modulesItemIds;
+            this.modulesObjects = modulesObjects;
             return (this);
         }
 
@@ -46,7 +44,7 @@
             this.lastTimeSlotModificationAuthorGuildId = 0;
             this.lastTimeSlotModificationAuthorId = 0;
             this.lastTimeSlotModificationAuthorName = "";
-            this.modulesItemIds = new Vector.<uint>();
+            this.modulesObjects = new Vector.<ObjectItem>();
         }
 
         override public function serialize(output:ICustomDataOutput):void
@@ -67,21 +65,17 @@
                 throw (new Error((("Forbidden value (" + this.lastTimeSlotModificationAuthorGuildId) + ") on element lastTimeSlotModificationAuthorGuildId.")));
             };
             output.writeVarInt(this.lastTimeSlotModificationAuthorGuildId);
-            if (this.lastTimeSlotModificationAuthorId < 0)
+            if (((this.lastTimeSlotModificationAuthorId < 0) || (this.lastTimeSlotModificationAuthorId > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.lastTimeSlotModificationAuthorId) + ") on element lastTimeSlotModificationAuthorId.")));
             };
-            output.writeVarInt(this.lastTimeSlotModificationAuthorId);
+            output.writeVarLong(this.lastTimeSlotModificationAuthorId);
             output.writeUTF(this.lastTimeSlotModificationAuthorName);
-            output.writeShort(this.modulesItemIds.length);
+            output.writeShort(this.modulesObjects.length);
             var _i5:uint;
-            while (_i5 < this.modulesItemIds.length)
+            while (_i5 < this.modulesObjects.length)
             {
-                if (this.modulesItemIds[_i5] < 0)
-                {
-                    throw (new Error((("Forbidden value (" + this.modulesItemIds[_i5]) + ") on element 5 (starting at 1) of modulesItemIds.")));
-                };
-                output.writeVarInt(this.modulesItemIds[_i5]);
+                (this.modulesObjects[_i5] as ObjectItem).serializeAs_ObjectItem(output);
                 _i5++;
             };
         }
@@ -93,39 +87,89 @@
 
         public function deserializeAs_AllianceInsiderPrismInformation(input:ICustomDataInput):void
         {
-            var _val5:uint;
+            var _item5:ObjectItem;
             super.deserialize(input);
+            this._lastTimeSlotModificationDateFunc(input);
+            this._lastTimeSlotModificationAuthorGuildIdFunc(input);
+            this._lastTimeSlotModificationAuthorIdFunc(input);
+            this._lastTimeSlotModificationAuthorNameFunc(input);
+            var _modulesObjectsLen:uint = input.readUnsignedShort();
+            var _i5:uint;
+            while (_i5 < _modulesObjectsLen)
+            {
+                _item5 = new ObjectItem();
+                _item5.deserialize(input);
+                this.modulesObjects.push(_item5);
+                _i5++;
+            };
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_AllianceInsiderPrismInformation(tree);
+        }
+
+        public function deserializeAsyncAs_AllianceInsiderPrismInformation(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._lastTimeSlotModificationDateFunc);
+            tree.addChild(this._lastTimeSlotModificationAuthorGuildIdFunc);
+            tree.addChild(this._lastTimeSlotModificationAuthorIdFunc);
+            tree.addChild(this._lastTimeSlotModificationAuthorNameFunc);
+            this._modulesObjectstree = tree.addChild(this._modulesObjectstreeFunc);
+        }
+
+        private function _lastTimeSlotModificationDateFunc(input:ICustomDataInput):void
+        {
             this.lastTimeSlotModificationDate = input.readInt();
             if (this.lastTimeSlotModificationDate < 0)
             {
                 throw (new Error((("Forbidden value (" + this.lastTimeSlotModificationDate) + ") on element of AllianceInsiderPrismInformation.lastTimeSlotModificationDate.")));
             };
+        }
+
+        private function _lastTimeSlotModificationAuthorGuildIdFunc(input:ICustomDataInput):void
+        {
             this.lastTimeSlotModificationAuthorGuildId = input.readVarUhInt();
             if (this.lastTimeSlotModificationAuthorGuildId < 0)
             {
                 throw (new Error((("Forbidden value (" + this.lastTimeSlotModificationAuthorGuildId) + ") on element of AllianceInsiderPrismInformation.lastTimeSlotModificationAuthorGuildId.")));
             };
-            this.lastTimeSlotModificationAuthorId = input.readVarUhInt();
-            if (this.lastTimeSlotModificationAuthorId < 0)
+        }
+
+        private function _lastTimeSlotModificationAuthorIdFunc(input:ICustomDataInput):void
+        {
+            this.lastTimeSlotModificationAuthorId = input.readVarUhLong();
+            if (((this.lastTimeSlotModificationAuthorId < 0) || (this.lastTimeSlotModificationAuthorId > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.lastTimeSlotModificationAuthorId) + ") on element of AllianceInsiderPrismInformation.lastTimeSlotModificationAuthorId.")));
             };
+        }
+
+        private function _lastTimeSlotModificationAuthorNameFunc(input:ICustomDataInput):void
+        {
             this.lastTimeSlotModificationAuthorName = input.readUTF();
-            var _modulesItemIdsLen:uint = input.readUnsignedShort();
-            var _i5:uint;
-            while (_i5 < _modulesItemIdsLen)
+        }
+
+        private function _modulesObjectstreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
             {
-                _val5 = input.readVarUhInt();
-                if (_val5 < 0)
-                {
-                    throw (new Error((("Forbidden value (" + _val5) + ") on elements of modulesItemIds.")));
-                };
-                this.modulesItemIds.push(_val5);
-                _i5++;
+                this._modulesObjectstree.addChild(this._modulesObjectsFunc);
+                i++;
             };
+        }
+
+        private function _modulesObjectsFunc(input:ICustomDataInput):void
+        {
+            var _item:ObjectItem = new ObjectItem();
+            _item.deserialize(input);
+            this.modulesObjects.push(_item);
         }
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.prism
+} com.ankamagames.dofus.network.types.game.prism
 

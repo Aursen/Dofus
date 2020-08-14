@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.security
+package com.ankamagames.dofus.network.messages.security
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class CheckFileMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -29,10 +29,10 @@
             return (6156);
         }
 
-        public function initCheckFileMessage(filenameHash:String="", type:uint=0, value:String=""):CheckFileMessage
+        public function initCheckFileMessage(filenameHash:String="", _arg_2:uint=0, value:String=""):CheckFileMessage
         {
             this.filenameHash = filenameHash;
-            this.type = type;
+            this.type = _arg_2;
             this.value = value;
             this._isInitialized = true;
             return (this);
@@ -58,6 +58,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_CheckFileMessage(output);
@@ -77,16 +85,43 @@
 
         public function deserializeAs_CheckFileMessage(input:ICustomDataInput):void
         {
+            this._filenameHashFunc(input);
+            this._typeFunc(input);
+            this._valueFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_CheckFileMessage(tree);
+        }
+
+        public function deserializeAsyncAs_CheckFileMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._filenameHashFunc);
+            tree.addChild(this._typeFunc);
+            tree.addChild(this._valueFunc);
+        }
+
+        private function _filenameHashFunc(input:ICustomDataInput):void
+        {
             this.filenameHash = input.readUTF();
+        }
+
+        private function _typeFunc(input:ICustomDataInput):void
+        {
             this.type = input.readByte();
             if (this.type < 0)
             {
                 throw (new Error((("Forbidden value (" + this.type) + ") on element of CheckFileMessage.type.")));
             };
+        }
+
+        private function _valueFunc(input:ICustomDataInput):void
+        {
             this.value = input.readUTF();
         }
 
 
     }
-}//package com.ankamagames.dofus.network.messages.security
+} com.ankamagames.dofus.network.messages.security
 

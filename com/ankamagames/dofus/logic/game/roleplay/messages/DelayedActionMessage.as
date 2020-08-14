@@ -1,22 +1,22 @@
-﻿package com.ankamagames.dofus.logic.game.roleplay.messages
+package com.ankamagames.dofus.logic.game.roleplay.messages
 {
     import com.ankamagames.jerakine.messages.Message;
 
     public class DelayedActionMessage implements Message 
     {
 
-        private var _playerId:int;
+        private var _playerId:Number;
         private var _itemId:uint;
         private var _endTime:Number;
 
-        public function DelayedActionMessage(playerId:int, itemId:uint, endTime:Number)
+        public function DelayedActionMessage(playerId:Number, itemId:uint, endTime:Number)
         {
             this._playerId = playerId;
             this._itemId = itemId;
             this._endTime = endTime;
         }
 
-        public function get playerId():int
+        public function get playerId():Number
         {
             return (this._playerId);
         }
@@ -33,5 +33,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.roleplay.messages
+} com.ankamagames.dofus.logic.game.roleplay.messages
 

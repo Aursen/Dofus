@@ -1,28 +1,24 @@
-﻿package com.ankamagames.dofus.network.messages.game.inventory.exchanges
+package com.ankamagames.dofus.network.messages.game.inventory.exchanges
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
     import __AS3__.vec.Vector;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
     import __AS3__.vec.*;
 
-    [Trusted]
     public class ExchangeShopStockMultiMovementRemovedMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 6037;
 
         private var _isInitialized:Boolean = false;
-        public var objectIdList:Vector.<uint>;
+        public var objectIdList:Vector.<uint> = new Vector.<uint>();
+        private var _objectIdListtree:FuncTree;
 
-        public function ExchangeShopStockMultiMovementRemovedMessage()
-        {
-            this.objectIdList = new Vector.<uint>();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
@@ -57,6 +53,14 @@
         override public function unpack(input:ICustomDataInput, length:uint):void
         {
             this.deserialize(input);
+        }
+
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
         }
 
         public function serialize(output:ICustomDataOutput):void
@@ -101,7 +105,38 @@
             };
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_ExchangeShopStockMultiMovementRemovedMessage(tree);
+        }
+
+        public function deserializeAsyncAs_ExchangeShopStockMultiMovementRemovedMessage(tree:FuncTree):void
+        {
+            this._objectIdListtree = tree.addChild(this._objectIdListtreeFunc);
+        }
+
+        private function _objectIdListtreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._objectIdListtree.addChild(this._objectIdListFunc);
+                i++;
+            };
+        }
+
+        private function _objectIdListFunc(input:ICustomDataInput):void
+        {
+            var _val:uint = input.readVarUhInt();
+            if (_val < 0)
+            {
+                throw (new Error((("Forbidden value (" + _val) + ") on elements of objectIdList.")));
+            };
+            this.objectIdList.push(_val);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.inventory.exchanges
+} com.ankamagames.dofus.network.messages.game.inventory.exchanges
 

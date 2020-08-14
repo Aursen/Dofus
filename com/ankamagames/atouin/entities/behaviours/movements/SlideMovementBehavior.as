@@ -1,4 +1,4 @@
-﻿package com.ankamagames.atouin.entities.behaviours.movements
+package com.ankamagames.atouin.entities.behaviours.movements
 {
     import com.ankamagames.jerakine.utils.errors.SingletonError;
 
@@ -21,7 +21,7 @@
 
         public static function getInstance():SlideMovementBehavior
         {
-            if (!(_self))
+            if (!_self)
             {
                 _self = new (SlideMovementBehavior)();
             };
@@ -56,5 +56,5 @@
 
 
     }
-}//package com.ankamagames.atouin.entities.behaviours.movements
+} com.ankamagames.atouin.entities.behaviours.movements
 

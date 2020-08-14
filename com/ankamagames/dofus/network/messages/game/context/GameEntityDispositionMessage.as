@@ -1,27 +1,23 @@
-﻿package com.ankamagames.dofus.network.messages.game.context
+package com.ankamagames.dofus.network.messages.game.context
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
     import com.ankamagames.dofus.network.types.game.context.IdentifiedEntityDispositionInformations;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
 
-    [Trusted]
     public class GameEntityDispositionMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 5693;
 
         private var _isInitialized:Boolean = false;
-        public var disposition:IdentifiedEntityDispositionInformations;
+        public var disposition:IdentifiedEntityDispositionInformations = new IdentifiedEntityDispositionInformations();
+        private var _dispositiontree:FuncTree;
 
-        public function GameEntityDispositionMessage()
-        {
-            this.disposition = new IdentifiedEntityDispositionInformations();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
@@ -58,6 +54,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_GameEntityDispositionMessage(output);
@@ -79,7 +83,23 @@
             this.disposition.deserialize(input);
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GameEntityDispositionMessage(tree);
+        }
+
+        public function deserializeAsyncAs_GameEntityDispositionMessage(tree:FuncTree):void
+        {
+            this._dispositiontree = tree.addChild(this._dispositiontreeFunc);
+        }
+
+        private function _dispositiontreeFunc(input:ICustomDataInput):void
+        {
+            this.disposition = new IdentifiedEntityDispositionInformations();
+            this.disposition.deserializeAsync(this._dispositiontree);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.context
+} com.ankamagames.dofus.network.messages.game.context
 

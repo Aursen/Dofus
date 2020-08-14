@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.datacenter.items.criterion
+package com.ankamagames.dofus.datacenter.items.criterion
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.dofus.datacenter.world.Area;
@@ -20,8 +20,6 @@
                 case ItemCriterionOperator.EQUAL:
                 case ItemCriterionOperator.DIFFERENT:
                     return (super.isRespected);
-                default:
-                    trace(("Opérateur non conforme : " + _serverCriterionForm));
             };
             return (false);
         }
@@ -30,7 +28,7 @@
         {
             var readableCriterion:String;
             var area:Area = Area.getAreaById(_criterionValue);
-            if (!(area))
+            if (!area)
             {
                 return ("error on AreaItemCriterion");
             };
@@ -43,8 +41,6 @@
                 case ItemCriterionOperator.DIFFERENT:
                     readableCriterion = I18n.getUiText("ui.tooltip.dontBeInArea", [areaName]);
                     break;
-                default:
-                    trace(("Opérateur non conforme : " + _serverCriterionForm));
             };
             return (readableCriterion);
         }
@@ -62,5 +58,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.items.criterion
+} com.ankamagames.dofus.datacenter.items.criterion
 

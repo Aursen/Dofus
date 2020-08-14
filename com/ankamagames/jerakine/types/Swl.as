@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.types
+package com.ankamagames.jerakine.types
 {
     import flash.system.ApplicationDomain;
 
@@ -38,5 +38,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.types
+} com.ankamagames.jerakine.types
 

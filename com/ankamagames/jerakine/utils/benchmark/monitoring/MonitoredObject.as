@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.utils.benchmark.monitoring
+package com.ankamagames.jerakine.utils.benchmark.monitoring
 {
     import flash.utils.Dictionary;
     import __AS3__.vec.Vector;
@@ -48,5 +48,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.utils.benchmark.monitoring
+} com.ankamagames.jerakine.utils.benchmark.monitoring
 

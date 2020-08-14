@@ -1,43 +1,42 @@
-﻿package com.ankamagames.dofus.network.types.game.friend
+package com.ankamagames.dofus.network.types.game.friend
 {
     import com.ankamagames.jerakine.network.INetworkType;
-    import com.ankamagames.dofus.network.types.game.context.roleplay.BasicGuildInformations;
+    import com.ankamagames.dofus.network.types.game.context.roleplay.GuildInformations;
     import com.ankamagames.dofus.network.types.game.character.status.PlayerStatus;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
+    import com.ankamagames.jerakine.network.utils.BooleanByteWrapper;
     import com.ankamagames.jerakine.network.ICustomDataInput;
-    import com.ankamagames.dofus.network.enums.PlayableBreedEnum;
     import com.ankamagames.dofus.network.ProtocolTypeManager;
+    import com.ankamagames.dofus.network.enums.PlayableBreedEnum;
 
     public class FriendOnlineInformations extends FriendInformations implements INetworkType 
     {
 
         public static const protocolId:uint = 92;
 
-        public var playerId:uint = 0;
+        public var playerId:Number = 0;
         public var playerName:String = "";
         public var level:uint = 0;
         public var alignmentSide:int = 0;
         public var breed:int = 0;
         public var sex:Boolean = false;
-        public var guildInfo:BasicGuildInformations;
-        public var moodSmileyId:int = 0;
-        public var status:PlayerStatus;
+        public var guildInfo:GuildInformations = new GuildInformations();
+        public var moodSmileyId:uint = 0;
+        public var status:PlayerStatus = new PlayerStatus();
+        public var havenBagShared:Boolean = false;
+        private var _guildInfotree:FuncTree;
+        private var _statustree:FuncTree;
 
-        public function FriendOnlineInformations()
-        {
-            this.guildInfo = new BasicGuildInformations();
-            this.status = new PlayerStatus();
-            super();
-        }
 
         override public function getTypeId():uint
         {
             return (92);
         }
 
-        public function initFriendOnlineInformations(accountId:uint=0, accountName:String="", playerState:uint=99, lastConnection:uint=0, achievementPoints:int=0, playerId:uint=0, playerName:String="", level:uint=0, alignmentSide:int=0, breed:int=0, sex:Boolean=false, guildInfo:BasicGuildInformations=null, moodSmileyId:int=0, status:PlayerStatus=null):FriendOnlineInformations
+        public function initFriendOnlineInformations(accountId:uint=0, accountName:String="", playerState:uint=99, lastConnection:uint=0, achievementPoints:int=0, leagueId:int=0, ladderPosition:int=0, playerId:Number=0, playerName:String="", level:uint=0, alignmentSide:int=0, breed:int=0, sex:Boolean=false, guildInfo:GuildInformations=null, moodSmileyId:uint=0, status:PlayerStatus=null, havenBagShared:Boolean=false):FriendOnlineInformations
         {
-            super.initFriendInformations(accountId, accountName, playerState, lastConnection, achievementPoints);
+            super.initFriendInformations(accountId, accountName, playerState, lastConnection, achievementPoints, leagueId, ladderPosition);
             this.playerId = playerId;
             this.playerName = playerName;
             this.level = level;
@@ -47,6 +46,7 @@
             this.guildInfo = guildInfo;
             this.moodSmileyId = moodSmileyId;
             this.status = status;
+            this.havenBagShared = havenBagShared;
             return (this);
         }
 
@@ -59,7 +59,7 @@
             this.alignmentSide = 0;
             this.breed = 0;
             this.sex = false;
-            this.guildInfo = new BasicGuildInformations();
+            this.guildInfo = new GuildInformations();
             this.status = new PlayerStatus();
         }
 
@@ -71,22 +71,29 @@
         public function serializeAs_FriendOnlineInformations(output:ICustomDataOutput):void
         {
             super.serializeAs_FriendInformations(output);
-            if (this.playerId < 0)
+            var _box0:uint;
+            _box0 = BooleanByteWrapper.setFlag(_box0, 0, this.sex);
+            _box0 = BooleanByteWrapper.setFlag(_box0, 1, this.havenBagShared);
+            output.writeByte(_box0);
+            if (((this.playerId < 0) || (this.playerId > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.playerId) + ") on element playerId.")));
             };
-            output.writeVarInt(this.playerId);
+            output.writeVarLong(this.playerId);
             output.writeUTF(this.playerName);
-            if ((((this.level < 0)) || ((this.level > 200))))
+            if (this.level < 0)
             {
                 throw (new Error((("Forbidden value (" + this.level) + ") on element level.")));
             };
-            output.writeByte(this.level);
+            output.writeVarShort(this.level);
             output.writeByte(this.alignmentSide);
             output.writeByte(this.breed);
-            output.writeBoolean(this.sex);
-            this.guildInfo.serializeAs_BasicGuildInformations(output);
-            output.writeByte(this.moodSmileyId);
+            this.guildInfo.serializeAs_GuildInformations(output);
+            if (this.moodSmileyId < 0)
+            {
+                throw (new Error((("Forbidden value (" + this.moodSmileyId) + ") on element moodSmileyId.")));
+            };
+            output.writeVarShort(this.moodSmileyId);
             output.writeShort(this.status.getTypeId());
             this.status.serialize(output);
         }
@@ -99,33 +106,106 @@
         public function deserializeAs_FriendOnlineInformations(input:ICustomDataInput):void
         {
             super.deserialize(input);
-            this.playerId = input.readVarUhInt();
-            if (this.playerId < 0)
-            {
-                throw (new Error((("Forbidden value (" + this.playerId) + ") on element of FriendOnlineInformations.playerId.")));
-            };
-            this.playerName = input.readUTF();
-            this.level = input.readUnsignedByte();
-            if ((((this.level < 0)) || ((this.level > 200))))
-            {
-                throw (new Error((("Forbidden value (" + this.level) + ") on element of FriendOnlineInformations.level.")));
-            };
-            this.alignmentSide = input.readByte();
-            this.breed = input.readByte();
-            if ((((this.breed < PlayableBreedEnum.Feca)) || ((this.breed > PlayableBreedEnum.Eliatrope))))
-            {
-                throw (new Error((("Forbidden value (" + this.breed) + ") on element of FriendOnlineInformations.breed.")));
-            };
-            this.sex = input.readBoolean();
-            this.guildInfo = new BasicGuildInformations();
+            this.deserializeByteBoxes(input);
+            this._playerIdFunc(input);
+            this._playerNameFunc(input);
+            this._levelFunc(input);
+            this._alignmentSideFunc(input);
+            this._breedFunc(input);
+            this.guildInfo = new GuildInformations();
             this.guildInfo.deserialize(input);
-            this.moodSmileyId = input.readByte();
+            this._moodSmileyIdFunc(input);
             var _id9:uint = input.readUnsignedShort();
             this.status = ProtocolTypeManager.getInstance(PlayerStatus, _id9);
             this.status.deserialize(input);
         }
 
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_FriendOnlineInformations(tree);
+        }
+
+        public function deserializeAsyncAs_FriendOnlineInformations(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this.deserializeByteBoxes);
+            tree.addChild(this._playerIdFunc);
+            tree.addChild(this._playerNameFunc);
+            tree.addChild(this._levelFunc);
+            tree.addChild(this._alignmentSideFunc);
+            tree.addChild(this._breedFunc);
+            this._guildInfotree = tree.addChild(this._guildInfotreeFunc);
+            tree.addChild(this._moodSmileyIdFunc);
+            this._statustree = tree.addChild(this._statustreeFunc);
+        }
+
+        private function deserializeByteBoxes(input:ICustomDataInput):void
+        {
+            var _box0:uint = input.readByte();
+            this.sex = BooleanByteWrapper.getFlag(_box0, 0);
+            this.havenBagShared = BooleanByteWrapper.getFlag(_box0, 1);
+        }
+
+        private function _playerIdFunc(input:ICustomDataInput):void
+        {
+            this.playerId = input.readVarUhLong();
+            if (((this.playerId < 0) || (this.playerId > 9007199254740992)))
+            {
+                throw (new Error((("Forbidden value (" + this.playerId) + ") on element of FriendOnlineInformations.playerId.")));
+            };
+        }
+
+        private function _playerNameFunc(input:ICustomDataInput):void
+        {
+            this.playerName = input.readUTF();
+        }
+
+        private function _levelFunc(input:ICustomDataInput):void
+        {
+            this.level = input.readVarUhShort();
+            if (this.level < 0)
+            {
+                throw (new Error((("Forbidden value (" + this.level) + ") on element of FriendOnlineInformations.level.")));
+            };
+        }
+
+        private function _alignmentSideFunc(input:ICustomDataInput):void
+        {
+            this.alignmentSide = input.readByte();
+        }
+
+        private function _breedFunc(input:ICustomDataInput):void
+        {
+            this.breed = input.readByte();
+            if (((this.breed < PlayableBreedEnum.Feca) || (this.breed > PlayableBreedEnum.Ouginak)))
+            {
+                throw (new Error((("Forbidden value (" + this.breed) + ") on element of FriendOnlineInformations.breed.")));
+            };
+        }
+
+        private function _guildInfotreeFunc(input:ICustomDataInput):void
+        {
+            this.guildInfo = new GuildInformations();
+            this.guildInfo.deserializeAsync(this._guildInfotree);
+        }
+
+        private function _moodSmileyIdFunc(input:ICustomDataInput):void
+        {
+            this.moodSmileyId = input.readVarUhShort();
+            if (this.moodSmileyId < 0)
+            {
+                throw (new Error((("Forbidden value (" + this.moodSmileyId) + ") on element of FriendOnlineInformations.moodSmileyId.")));
+            };
+        }
+
+        private function _statustreeFunc(input:ICustomDataInput):void
+        {
+            var _id:uint = input.readUnsignedShort();
+            this.status = ProtocolTypeManager.getInstance(PlayerStatus, _id);
+            this.status.deserializeAsync(this._statustree);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.types.game.friend
+} com.ankamagames.dofus.network.types.game.friend
 

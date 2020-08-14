@@ -1,4 +1,4 @@
-﻿package com.ankamagames.tubul.types.bus
+package com.ankamagames.tubul.types.bus
 {
     import com.ankamagames.tubul.interfaces.ISound;
     import com.ankamagames.tubul.types.sounds.LocalizedSound;
@@ -26,5 +26,5 @@
 
 
     }
-}//package com.ankamagames.tubul.types.bus
+} com.ankamagames.tubul.types.bus
 

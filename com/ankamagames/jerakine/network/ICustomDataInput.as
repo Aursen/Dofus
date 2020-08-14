@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.network
+package com.ankamagames.jerakine.network
 {
     import flash.utils.IDataInput;
 
@@ -13,5 +13,5 @@
         function readVarUhLong():Number;
 
     }
-}//package com.ankamagames.jerakine.network
+} com.ankamagames.jerakine.network
 

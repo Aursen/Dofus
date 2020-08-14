@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.managers
+package com.ankamagames.berilia.managers
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
@@ -16,15 +16,12 @@
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(LinkedCursorSpriteManager));
         private static var _self:LinkedCursorSpriteManager;
 
-        private var items:Array;
-        private var _mustBeRemoved:Array;
+        private var items:Array = new Array();
+        private var _mustBeRemoved:Array = new Array();
         private var _mustClean:Boolean;
 
         public function LinkedCursorSpriteManager()
         {
-            this.items = new Array();
-            this._mustBeRemoved = new Array();
-            super();
             if (_self)
             {
                 throw (new SingletonError());
@@ -33,7 +30,7 @@
 
         public static function getInstance():LinkedCursorSpriteManager
         {
-            if (!(_self))
+            if (!_self)
             {
                 _self = new (LinkedCursorSpriteManager)();
             };
@@ -64,20 +61,15 @@
             {
                 Berilia.getInstance().strataTooltip.addChild(item.sprite);
             };
-            var fmouseX:* = StageShareManager.mouseX;
-            var fmouseY:* = StageShareManager.mouseY;
             item.sprite.x = (((item.lockX) ? item.sprite.x : StageShareManager.mouseX) - ((item.offset) ? item.offset.x : (item.sprite.width / 2)));
             item.sprite.y = (((item.lockY) ? item.sprite.y : StageShareManager.mouseY) - ((item.offset) ? item.offset.y : (item.sprite.height / 2)));
-            if (((item.lockX) || (item.lockY)))
-            {
-            };
             this.updateCursors();
             EnterFrameDispatcher.addEventListener(this.updateCursors, "updateCursors");
         }
 
         public function removeItem(name:String, asynch:Boolean=false):Boolean
         {
-            if (!(this.items[name]))
+            if (!this.items[name])
             {
                 return (false);
             };
@@ -115,11 +107,11 @@
             {
                 if (item)
                 {
-                    if (!(item.lockX))
+                    if (!item.lockX)
                     {
                         item.sprite.x = (xMouse + ((item.offset) ? item.offset.x : 0));
                     };
-                    if (!(item.lockY))
+                    if (!item.lockY)
                     {
                         item.sprite.y = (yMouse + ((item.offset) ? item.offset.y : 0));
                     };
@@ -151,5 +143,5 @@
 
 
     }
-}//package com.ankamagames.berilia.managers
+} com.ankamagames.berilia.managers
 

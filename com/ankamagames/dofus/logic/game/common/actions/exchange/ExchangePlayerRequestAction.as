@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.common.actions.exchange
+package com.ankamagames.dofus.logic.game.common.actions.exchange
 {
     import com.ankamagames.jerakine.handlers.messages.Action;
 
@@ -6,10 +6,10 @@
     {
 
         public var exchangeType:int;
-        public var target:int;
+        public var target:Number;
 
 
-        public static function create(exchangeType:int, target:uint):ExchangePlayerRequestAction
+        public static function create(exchangeType:int, target:Number):ExchangePlayerRequestAction
         {
             var a:ExchangePlayerRequestAction = new (ExchangePlayerRequestAction)();
             a.exchangeType = exchangeType;
@@ -19,5 +19,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.actions.exchange
+} com.ankamagames.dofus.logic.game.common.actions.exchange
 

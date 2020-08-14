@@ -1,15 +1,16 @@
-﻿package com.ankamagames.dofus.network.types.game.context.fight
+package com.ankamagames.dofus.network.types.game.context.fight
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
     public class FightResultFighterListEntry extends FightResultListEntry implements INetworkType 
     {
 
         public static const protocolId:uint = 189;
 
-        public var id:int = 0;
+        public var id:Number = 0;
         public var alive:Boolean = false;
 
 
@@ -18,7 +19,7 @@
             return (189);
         }
 
-        public function initFightResultFighterListEntry(outcome:uint=0, wave:uint=0, rewards:FightLoot=null, id:int=0, alive:Boolean=false):FightResultFighterListEntry
+        public function initFightResultFighterListEntry(outcome:uint=0, wave:uint=0, rewards:FightLoot=null, id:Number=0, alive:Boolean=false):FightResultFighterListEntry
         {
             super.initFightResultListEntry(outcome, wave, rewards);
             this.id = id;
@@ -41,7 +42,11 @@
         public function serializeAs_FightResultFighterListEntry(output:ICustomDataOutput):void
         {
             super.serializeAs_FightResultListEntry(output);
-            output.writeInt(this.id);
+            if (((this.id < -9007199254740992) || (this.id > 9007199254740992)))
+            {
+                throw (new Error((("Forbidden value (" + this.id) + ") on element id.")));
+            };
+            output.writeDouble(this.id);
             output.writeBoolean(this.alive);
         }
 
@@ -53,11 +58,37 @@
         public function deserializeAs_FightResultFighterListEntry(input:ICustomDataInput):void
         {
             super.deserialize(input);
-            this.id = input.readInt();
+            this._idFunc(input);
+            this._aliveFunc(input);
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_FightResultFighterListEntry(tree);
+        }
+
+        public function deserializeAsyncAs_FightResultFighterListEntry(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._idFunc);
+            tree.addChild(this._aliveFunc);
+        }
+
+        private function _idFunc(input:ICustomDataInput):void
+        {
+            this.id = input.readDouble();
+            if (((this.id < -9007199254740992) || (this.id > 9007199254740992)))
+            {
+                throw (new Error((("Forbidden value (" + this.id) + ") on element of FightResultFighterListEntry.id.")));
+            };
+        }
+
+        private function _aliveFunc(input:ICustomDataInput):void
+        {
             this.alive = input.readBoolean();
         }
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.context.fight
+} com.ankamagames.dofus.network.types.game.context.fight
 

@@ -1,9 +1,12 @@
-﻿package com.ankamagames.dofus.datacenter.items
+package com.ankamagames.dofus.datacenter.items
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
+    import com.ankamagames.dofus.types.IdAccessors;
 
     public class Weapon extends Item implements IDataCenter 
     {
+
+        public static var idAccessors:IdAccessors = new IdAccessors(getWeaponById, getWeapons);
 
         public var apCost:int;
         public var minRange:int;
@@ -48,22 +51,29 @@
             return (true);
         }
 
-        override public function copy(from:Item, to:Item):void
+        override public function copy(from:Item, _arg_2:Item):void
         {
-            super.copy(from, to);
-            Object(to).apCost = Object(from).apCost;
-            Object(to).minRange = Object(from).minRange;
-            Object(to).range = Object(from).range;
-            Object(to).maxCastPerTurn = Object(from).maxCastPerTurn;
-            Object(to).castInLine = Object(from).castInLine;
-            Object(to).castInDiagonal = Object(from).castInDiagonal;
-            Object(to).castTestLos = Object(from).castTestLos;
-            Object(to).criticalHitProbability = Object(from).criticalHitProbability;
-            Object(to).criticalHitBonus = Object(from).criticalHitBonus;
-            Object(to).criticalFailureProbability = Object(from).criticalFailureProbability;
+            super.copy(from, _arg_2);
+            if (((_arg_2.hasOwnProperty("apCost")) && (from.hasOwnProperty("apCost"))))
+            {
+                Object(_arg_2).apCost = Object(from).apCost;
+                Object(_arg_2).minRange = Object(from).minRange;
+                Object(_arg_2).range = Object(from).range;
+                Object(_arg_2).maxCastPerTurn = Object(from).maxCastPerTurn;
+                Object(_arg_2).castInLine = Object(from).castInLine;
+                Object(_arg_2).castInDiagonal = Object(from).castInDiagonal;
+                Object(_arg_2).castTestLos = Object(from).castTestLos;
+                Object(_arg_2).criticalHitProbability = Object(from).criticalHitProbability;
+                Object(_arg_2).criticalHitBonus = Object(from).criticalHitBonus;
+                Object(_arg_2).criticalFailureProbability = Object(from).criticalFailureProbability;
+            }
+            else
+            {
+                _log.error(((("Failed to properly copy weapon data " + from.id) + " to ") + _arg_2.id));
+            };
         }
 
 
     }
-}//package com.ankamagames.dofus.datacenter.items
+} com.ankamagames.dofus.datacenter.items
 

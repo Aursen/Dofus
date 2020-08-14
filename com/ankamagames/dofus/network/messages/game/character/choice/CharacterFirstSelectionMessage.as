@@ -1,12 +1,12 @@
-﻿package com.ankamagames.dofus.network.messages.game.character.choice
+package com.ankamagames.dofus.network.messages.game.character.choice
 {
     import com.ankamagames.jerakine.network.INetworkMessage;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class CharacterFirstSelectionMessage extends CharacterSelectionMessage implements INetworkMessage 
     {
 
@@ -18,7 +18,7 @@
 
         override public function get isInitialized():Boolean
         {
-            return (((super.isInitialized) && (this._isInitialized)));
+            return ((super.isInitialized) && (this._isInitialized));
         }
 
         override public function getMessageId():uint
@@ -26,7 +26,7 @@
             return (6084);
         }
 
-        public function initCharacterFirstSelectionMessage(id:int=0, doTutorial:Boolean=false):CharacterFirstSelectionMessage
+        public function initCharacterFirstSelectionMessage(id:Number=0, doTutorial:Boolean=false):CharacterFirstSelectionMessage
         {
             super.initCharacterSelectionMessage(id);
             this.doTutorial = doTutorial;
@@ -53,6 +53,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         override public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_CharacterFirstSelectionMessage(output);
@@ -72,10 +80,26 @@
         public function deserializeAs_CharacterFirstSelectionMessage(input:ICustomDataInput):void
         {
             super.deserialize(input);
+            this._doTutorialFunc(input);
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_CharacterFirstSelectionMessage(tree);
+        }
+
+        public function deserializeAsyncAs_CharacterFirstSelectionMessage(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._doTutorialFunc);
+        }
+
+        private function _doTutorialFunc(input:ICustomDataInput):void
+        {
             this.doTutorial = input.readBoolean();
         }
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.character.choice
+} com.ankamagames.dofus.network.messages.game.character.choice
 

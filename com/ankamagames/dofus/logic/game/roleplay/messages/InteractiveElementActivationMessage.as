@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.roleplay.messages
+package com.ankamagames.dofus.logic.game.roleplay.messages
 {
     import com.ankamagames.jerakine.messages.Message;
     import com.ankamagames.dofus.network.types.game.interactive.InteractiveElement;
@@ -10,12 +10,16 @@
         private var _ie:InteractiveElement;
         private var _position:MapPoint;
         private var _skillInstanceId:uint;
+        private var _additionalParam:int;
+        public var fromStack:Boolean;
+        public var fromAutotrip:Boolean;
 
-        public function InteractiveElementActivationMessage(ie:InteractiveElement, position:MapPoint, skillInstanceId:uint)
+        public function InteractiveElementActivationMessage(ie:InteractiveElement, position:MapPoint, skillInstanceId:uint, additionalParam:int=0)
         {
             this._ie = ie;
             this._position = position;
             this._skillInstanceId = skillInstanceId;
+            this._additionalParam = additionalParam;
         }
 
         public function get interactiveElement():InteractiveElement
@@ -33,7 +37,12 @@
             return (this._skillInstanceId);
         }
 
+        public function get additionalParam():int
+        {
+            return (this._additionalParam);
+        }
+
 
     }
-}//package com.ankamagames.dofus.logic.game.roleplay.messages
+} com.ankamagames.dofus.logic.game.roleplay.messages
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.types.uiDefinition
+package com.ankamagames.berilia.types.uiDefinition
 {
     public class BasicElement 
     {
@@ -11,20 +11,14 @@
         public var minSize:SizeElement;
         public var maxSize:SizeElement;
         public var anchors:Array;
-        public var event:Array;
-        public var properties:Array;
+        public var event:Array = new Array();
+        public var properties:Array = new Array();
         public var className:String;
         public var cachedWidth:int = 2147483647;
         public var cachedHeight:int = 2147483647;
         public var cachedX:int = 2147483647;
         public var cachedY:int = 2147483647;
 
-        public function BasicElement()
-        {
-            this.event = new Array();
-            this.properties = new Array();
-            super();
-        }
 
         public function setName(sName:String):void
         {
@@ -56,5 +50,5 @@
 
 
     }
-}//package com.ankamagames.berilia.types.uiDefinition
+} com.ankamagames.berilia.types.uiDefinition
 

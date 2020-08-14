@@ -1,13 +1,13 @@
-﻿package com.ankamagames.dofus.network.types.game.startup
+package com.ankamagames.dofus.network.types.game.startup
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import __AS3__.vec.Vector;
     import com.ankamagames.dofus.network.types.game.data.items.ObjectItemInformationWithQuantity;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
     import __AS3__.vec.*;
 
-    [Trusted]
     public class StartupActionAddObject implements INetworkType 
     {
 
@@ -18,13 +18,9 @@
         public var text:String = "";
         public var descUrl:String = "";
         public var pictureUrl:String = "";
-        public var items:Vector.<ObjectItemInformationWithQuantity>;
+        public var items:Vector.<ObjectItemInformationWithQuantity> = new Vector.<ObjectItemInformationWithQuantity>();
+        private var _itemstree:FuncTree;
 
-        public function StartupActionAddObject()
-        {
-            this.items = new Vector.<ObjectItemInformationWithQuantity>();
-            super();
-        }
 
         public function getTypeId():uint
         {
@@ -85,15 +81,11 @@
         public function deserializeAs_StartupActionAddObject(input:ICustomDataInput):void
         {
             var _item6:ObjectItemInformationWithQuantity;
-            this.uid = input.readInt();
-            if (this.uid < 0)
-            {
-                throw (new Error((("Forbidden value (" + this.uid) + ") on element of StartupActionAddObject.uid.")));
-            };
-            this.title = input.readUTF();
-            this.text = input.readUTF();
-            this.descUrl = input.readUTF();
-            this.pictureUrl = input.readUTF();
+            this._uidFunc(input);
+            this._titleFunc(input);
+            this._textFunc(input);
+            this._descUrlFunc(input);
+            this._pictureUrlFunc(input);
             var _itemsLen:uint = input.readUnsignedShort();
             var _i6:uint;
             while (_i6 < _itemsLen)
@@ -105,7 +97,69 @@
             };
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_StartupActionAddObject(tree);
+        }
+
+        public function deserializeAsyncAs_StartupActionAddObject(tree:FuncTree):void
+        {
+            tree.addChild(this._uidFunc);
+            tree.addChild(this._titleFunc);
+            tree.addChild(this._textFunc);
+            tree.addChild(this._descUrlFunc);
+            tree.addChild(this._pictureUrlFunc);
+            this._itemstree = tree.addChild(this._itemstreeFunc);
+        }
+
+        private function _uidFunc(input:ICustomDataInput):void
+        {
+            this.uid = input.readInt();
+            if (this.uid < 0)
+            {
+                throw (new Error((("Forbidden value (" + this.uid) + ") on element of StartupActionAddObject.uid.")));
+            };
+        }
+
+        private function _titleFunc(input:ICustomDataInput):void
+        {
+            this.title = input.readUTF();
+        }
+
+        private function _textFunc(input:ICustomDataInput):void
+        {
+            this.text = input.readUTF();
+        }
+
+        private function _descUrlFunc(input:ICustomDataInput):void
+        {
+            this.descUrl = input.readUTF();
+        }
+
+        private function _pictureUrlFunc(input:ICustomDataInput):void
+        {
+            this.pictureUrl = input.readUTF();
+        }
+
+        private function _itemstreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._itemstree.addChild(this._itemsFunc);
+                i++;
+            };
+        }
+
+        private function _itemsFunc(input:ICustomDataInput):void
+        {
+            var _item:ObjectItemInformationWithQuantity = new ObjectItemInformationWithQuantity();
+            _item.deserialize(input);
+            this.items.push(_item);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.types.game.startup
+} com.ankamagames.dofus.network.types.game.startup
 

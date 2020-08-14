@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.datacenter.items.criterion
+package com.ankamagames.dofus.datacenter.items.criterion
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.dofus.datacenter.alignments.AlignmentSide;
@@ -22,7 +22,7 @@
             {
                 readableOperator = (I18n.getUiText("ui.common.differentFrom") + I18n.getUiText("ui.common.colon"));
             };
-            return (((((readableCriterionRef + " ") + readableOperator) + " ") + readableCriterionValue));
+            return ((((readableCriterionRef + " ") + readableOperator) + " ") + readableCriterionValue);
         }
 
         override public function clone():IItemCriterion
@@ -38,5 +38,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.items.criterion
+} com.ankamagames.dofus.datacenter.items.criterion
 

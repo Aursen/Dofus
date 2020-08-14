@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.datacenter.items.criterion
+package com.ankamagames.dofus.datacenter.items.criterion
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.jerakine.data.I18n;
@@ -15,7 +15,7 @@
         override public function get text():String
         {
             var readableCriterionRef:String = I18n.getUiText("ui.common.name");
-            return (((readableCriterionRef + " ") + this.getReadableOperator()));
+            return ((readableCriterionRef + " ") + this.getReadableOperator());
         }
 
         override public function get isRespected():Boolean
@@ -29,7 +29,7 @@
                     respected = (name == criterionValue);
                     break;
                 case "!":
-                    respected = !((name == criterionValue));
+                    respected = (!(name == criterionValue));
                     break;
                 case "~":
                     respected = (name.toLowerCase() == criterionValue.toLowerCase());
@@ -98,5 +98,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.items.criterion
+} com.ankamagames.dofus.datacenter.items.criterion
 

@@ -1,23 +1,21 @@
-﻿package com.ankamagames.berilia.components
+package com.ankamagames.berilia.components
 {
-    import com.ankamagames.berilia.types.graphic.GraphicContainer;
     import com.ankamagames.berilia.FinalizableUIComponent;
     import com.ankamagames.jerakine.interfaces.IRectangle;
     import flash.utils.Dictionary;
     import com.ankamagames.jerakine.logger.Logger;
+    import com.ankamagames.jerakine.logger.Log;
+    import flash.utils.getQualifiedClassName;
     import com.ankamagames.jerakine.types.Uri;
     import flash.display.DisplayObject;
     import com.ankamagames.jerakine.resources.loaders.IResourceLoader;
     import flash.geom.Rectangle;
     import flash.display.Bitmap;
     import flash.display.BitmapData;
-    import com.ankamagames.jerakine.logger.Log;
-    import flash.utils.getQualifiedClassName;
     import com.ankamagames.jerakine.utils.display.MovieClipUtils;
     import flash.display.MovieClip;
     import flash.display.FrameLabel;
     import flash.display.DisplayObjectContainer;
-    import flash.geom.ColorTransform;
     import com.ankamagames.berilia.Berilia;
     import flash.events.Event;
     import com.ankamagames.berilia.components.messages.TextureReadyMessage;
@@ -25,7 +23,6 @@
     import com.ankamagames.jerakine.resources.loaders.ResourceLoaderType;
     import com.ankamagames.jerakine.resources.events.ResourceLoadedEvent;
     import com.ankamagames.jerakine.resources.events.ResourceErrorEvent;
-    import com.ankamagames.jerakine.utils.system.AirScanner;
     import com.ankamagames.jerakine.resources.adapters.impl.AdvancedSwfAdapter;
     import com.ankamagames.berilia.utils.UriCacheFactory;
     import flash.display.Shape;
@@ -36,20 +33,17 @@
     import com.ankamagames.jerakine.types.DynamicSecureObject;
     import com.ankamagames.berilia.managers.KernelEventsManager;
     import com.ankamagames.berilia.utils.BeriliaHookList;
-    import com.ankamagames.berilia.managers.SecureCenter;
     import com.ankamagames.berilia.types.event.TextureLoadFailedEvent;
     import com.ankamagames.berilia.components.messages.TextureLoadFailMessage;
 
-    public class Texture extends GraphicContainer implements FinalizableUIComponent, IRectangle 
+    public class Texture extends TextureBase implements FinalizableUIComponent, IRectangle 
     {
 
         public static var MEMORY_LOG:Dictionary = new Dictionary(true);
 
-        private var _log:Logger;
-        private var _finalized:Boolean;
-        private var _uri:Uri;
+        private var _log:Logger = Log.getLogger(getQualifiedClassName(Texture));
         private var _realUri:Uri;
-        var _child:DisplayObject;
+        internal var _child:DisplayObject;
         private var _startedWidth:Number;
         private var _startedHeight:Number;
         private var _forcedHeight:Number;
@@ -58,77 +52,45 @@
         private var _dispatchMessages:Boolean;
         private var _autoGrid:Boolean;
         private var _forceReload:Boolean = false;
-        private var _gotoFrame;
+        private var _gotoFrame:*;
         private var _loader:IResourceLoader;
         private var _startBounds:Rectangle;
         private var _disableAnimation:Boolean = false;
-        private var _useCache:Boolean = true;
-        private var _roundCornerRadius:uint = 0;
+        private var _roundCornerRadius:int = -1;
         private var _playOnce:Boolean = false;
         private var _bitmap:Bitmap;
-        private var _showLoadingError:Boolean = true;
         public var defaultBitmapData:BitmapData;
-        private var rle_uri_path;
+        private var rle_uri_path:*;
 
         public function Texture()
         {
-            this._log = Log.getLogger(getQualifiedClassName(Texture));
-            super();
             mouseEnabled = false;
             mouseChildren = false;
+            _smooth = true;
             MEMORY_LOG[this] = 1;
         }
 
-        public function get finalized():Boolean
+        [Uri]
+        override public function set uri(value:Uri):void
         {
-            return (this._finalized);
-        }
-
-        public function set finalized(value:Boolean):void
-        {
-            this._finalized = value;
-        }
-
-        public function get uri():Uri
-        {
-            return (this._uri);
-        }
-
-        public function set uri(value:Uri):void
-        {
-            if (((!((value == this._uri))) || (this._forceReload)))
+            if (((!(value == _uri)) || (this._forceReload)))
             {
-                this._uri = value;
+                _uri = value;
             }
             else
             {
                 return;
             };
-            if (this._finalized)
+            if (_finalized)
             {
                 this.reload();
             };
         }
 
-        public function get useCache():Boolean
-        {
-            return (this._useCache);
-        }
-
-        public function set useCache(value:Boolean):void
-        {
-            this._useCache = value;
-        }
-
-        public function set showLoadingError(value:Boolean):void
-        {
-            this._showLoadingError = value;
-        }
-
         public function set disableAnimation(value:Boolean):void
         {
             this._disableAnimation = value;
-            if (this._finalized)
+            if (_finalized)
             {
                 MovieClipUtils.stopMovieClip(this);
             };
@@ -136,7 +98,7 @@
 
         override public function get height():Number
         {
-            return (((!(isNaN(this._forcedHeight))) ? this._forcedHeight : ((this._child) ? this._child.height : 0)));
+            return ((isNaN(this._forcedHeight)) ? ((this._child) ? this._child.height : 0) : this._forcedHeight);
         }
 
         override public function set height(value:Number):void
@@ -146,7 +108,7 @@
                 return;
             };
             this._forcedHeight = value;
-            if (this._finalized)
+            if (_finalized)
             {
                 this.organize();
             };
@@ -154,7 +116,7 @@
 
         override public function get width():Number
         {
-            return (((!(isNaN(this._forcedWidth))) ? this._forcedWidth : ((this._child) ? this._child.width : 0)));
+            return ((isNaN(this._forcedWidth)) ? ((this._child) ? this._child.width : 0) : this._forcedWidth);
         }
 
         override public function set width(value:Number):void
@@ -164,7 +126,7 @@
                 return;
             };
             this._forcedWidth = value;
-            if (this._finalized)
+            if (_finalized)
             {
                 this.organize();
             };
@@ -178,7 +140,7 @@
         public function set keepRatio(value:Boolean):void
         {
             this._keepRatio = value;
-            if (this._finalized)
+            if (_finalized)
             {
                 this.organize();
             };
@@ -236,7 +198,7 @@
                     this._child.scale9Grid = null;
                 };
             };
-            if (this._finalized)
+            if (_finalized)
             {
                 this.organize();
             };
@@ -260,9 +222,9 @@
             this._gotoFrame = value;
         }
 
-        public function get gotoAndStop()
+        public function get gotoAndStop():*
         {
-            if (((this._child) && ((this._child is MovieClip))))
+            if (((this._child) && (this._child is MovieClip)))
             {
                 return ((this._child as MovieClip).currentFrame.toString());
             };
@@ -285,7 +247,7 @@
 
         public function set gotoAndPlay(value:*):void
         {
-            if (((this._child) && ((this._child is MovieClip))))
+            if (((this._child) && (this._child is MovieClip)))
             {
                 if (value)
                 {
@@ -300,7 +262,7 @@
 
         public function get totalFrames():uint
         {
-            if (((this._child) && ((this._child is MovieClip))))
+            if (((this._child) && (this._child is MovieClip)))
             {
                 return ((this._child as MovieClip).totalFrames);
             };
@@ -309,7 +271,7 @@
 
         public function get currentFrame():uint
         {
-            if (((this._child) && ((this._child is MovieClip))))
+            if (((this._child) && (this._child is MovieClip)))
             {
                 return ((this._child as MovieClip).currentFrame);
             };
@@ -338,7 +300,7 @@
 
         public function get loading():Boolean
         {
-            return (!((this._loader == null)));
+            return (!(this._loader == null));
         }
 
         public function get child():DisplayObject
@@ -346,10 +308,10 @@
             return (this._child);
         }
 
-        public function loadBitmapData(bmpdt:BitmapData):void
+        override public function loadBitmapData(bmpdt:BitmapData):void
         {
-            this._bitmap = new Bitmap(bmpdt, "auto", true);
-            if (this._finalized)
+            this._bitmap = new Bitmap(bmpdt, "auto", _smooth);
+            if (_finalized)
             {
                 this.reload();
             };
@@ -386,7 +348,7 @@
                 while (i < doc.numChildren)
                 {
                     o = DisplayObjectContainer(this._child).getChildAt(i);
-                    if ((((((o is MovieClip)) && (MovieClip(o).totalFrames))) && ((MovieClip(o).totalFrames > t))))
+                    if ((((o is MovieClip) && (MovieClip(o).totalFrames)) && (MovieClip(o).totalFrames > t)))
                     {
                         t = MovieClip(o).totalFrames;
                     };
@@ -433,50 +395,6 @@
             };
         }
 
-        public function colorTransform(colorTransform:ColorTransform, depth:int=0):void
-        {
-            var currentChild:DisplayObjectContainer;
-            var i:int;
-            var child:DisplayObject;
-            if (depth == 0)
-            {
-                transform.colorTransform = colorTransform;
-            }
-            else
-            {
-                if ((this._child is DisplayObjectContainer))
-                {
-                    currentChild = (this._child as DisplayObjectContainer);
-                    i = 0;
-                    while (i < depth)
-                    {
-                        if (currentChild.numChildren > 0)
-                        {
-                            child = currentChild.getChildAt(0);
-                            if ((child is DisplayObjectContainer))
-                            {
-                                currentChild = (child as DisplayObjectContainer);
-                            }
-                            else
-                            {
-                                break;
-                            };
-                        }
-                        else
-                        {
-                            break;
-                        };
-                        i++;
-                    };
-                    currentChild.transform.colorTransform = colorTransform;
-                }
-                else
-                {
-                    transform.colorTransform = colorTransform;
-                };
-            };
-        }
-
         public function get roundCornerRadius():uint
         {
             return (this._roundCornerRadius);
@@ -495,14 +413,14 @@
 
         public function set playOnce(v:Boolean):void
         {
-            if (((this._child) && ((this._child is MovieClip))))
+            if (((this._child) && (this._child is MovieClip)))
             {
                 MovieClip(this._child).addFrameScript((MovieClip(this._child).totalFrames - 1), ((v) ? this.stopAllAnimation : null));
             };
             this._playOnce = v;
         }
 
-        public function finalize():void
+        override public function finalize():void
         {
             this.reload();
         }
@@ -510,8 +428,8 @@
         override public function free():void
         {
             super.free();
-            this._finalized = false;
-            this._uri = null;
+            _finalized = false;
+            _uri = null;
             this._child = null;
             this._startedWidth = 0;
             this._startedHeight = 0;
@@ -529,7 +447,7 @@
 
         override public function getChildByName(name:String):DisplayObject
         {
-            if (((this._child) && ((this._child is DisplayObjectContainer))))
+            if (((this._child) && (this._child is DisplayObjectContainer)))
             {
                 return (DisplayObjectContainer(this._child).getChildByName(name));
             };
@@ -558,7 +476,11 @@
             var realUri:Uri;
             var forcedAdapter:Class;
             var singleFile:Boolean;
-            if (((!((this._bitmap == null))) && (!((this._child == this._bitmap)))))
+            if (_uri)
+            {
+                applyUserColor(_uri.path, this);
+            };
+            if (((!(this._bitmap == null)) && (!(this._child == this._bitmap))))
             {
                 if (((this._child) && (this._child.parent)))
                 {
@@ -575,7 +497,7 @@
                 {
                     MovieClipUtils.stopMovieClip(this);
                 };
-                if (((((this._dispatchMessages) && (Berilia.getInstance()))) && (Berilia.getInstance().handler)))
+                if ((((this._dispatchMessages) && (Berilia.getInstance())) && (Berilia.getInstance().handler)))
                 {
                     dispatchEvent(new Event(Event.COMPLETE));
                     Berilia.getInstance().handler.process(new TextureReadyMessage(this));
@@ -583,9 +505,9 @@
             }
             else
             {
-                if (this._uri)
+                if (_uri)
                 {
-                    if (!(this._loader))
+                    if (!this._loader)
                     {
                         this._loader = ResourceLoaderFactory.getLoader(ResourceLoaderType.SINGLE_LOADER);
                         this._loader.addEventListener(ResourceLoadedEvent.LOADED, this.onLoaded, false, 0, true);
@@ -595,48 +517,45 @@
                     {
                         this._loader.cancel();
                     };
-                    if (this._uri.subPath)
+                    if (_uri.subPath)
                     {
-                        if ((((((((((((this._uri.protocol == "mod")) || ((this._uri.protocol == "theme")))) || ((this._uri.protocol == "pak")))) || ((this._uri.protocol == "d2p")))) || ((this._uri.protocol == "pak2")))) || ((this._uri.protocol == "d2pOld"))))
+                        if (((((((_uri.protocol == "mod") || (_uri.protocol == "theme")) || (_uri.protocol == "pak")) || (_uri.protocol == "d2p")) || (_uri.protocol == "pak2")) || (_uri.protocol == "d2pOld")))
                         {
-                            realUri = new Uri(this._uri.normalizedUri);
+                            realUri = new Uri(_uri.normalizedUri);
                         }
                         else
                         {
-                            if (((AirScanner.hasAir()) && (!((this._uri.protocol == "httpc")))))
-                            {
-                                realUri = new Uri(this._uri.path);
-                            }
-                            else
-                            {
-                                realUri = this._uri;
-                            };
+                            realUri = new Uri(_uri.path);
                         };
-                        realUri.loaderContext = this._uri.loaderContext;
+                        realUri.loaderContext = _uri.loaderContext;
                         this._realUri = realUri;
-                        if (!((((((((this._uri.protocol == "pak")) || ((this._uri.protocol == "d2p")))) || ((this._uri.protocol == "pak2")))) || ((this._uri.protocol == "dp2Old")))))
+                        if (!((((_uri.protocol == "pak") || (_uri.protocol == "d2p")) || (_uri.protocol == "pak2")) || (_uri.protocol == "dp2Old")))
                         {
                             forcedAdapter = AdvancedSwfAdapter;
                         };
                     }
                     else
                     {
-                        realUri = this._uri;
-                    };
-                    if ((((((this._uri.protocol == "httpc")) && (this.defaultBitmapData))) && (!(this._loader.isInCache(this.uri)))))
-                    {
-                        this.loadBitmapData(this.defaultBitmapData);
+                        realUri = _uri;
                     };
                     if (hasEventListener(Event.INIT))
                     {
                         dispatchEvent(new Event(Event.INIT));
                     };
                     singleFile = false;
-                    if (((!(this._useCache)) && (!(this._uri.subPath))))
+                    if (((!(_useCache)) && (!(_uri.subPath))))
                     {
                         singleFile = true;
                     };
-                    this._loader.load(realUri, ((this._useCache) ? UriCacheFactory.getCacheFromUri(realUri) : null), forcedAdapter, singleFile);
+                    if (realUri.fileType.toLowerCase() != "swf")
+                    {
+                        _useCache = false;
+                    }
+                    else
+                    {
+                        _useCache = _useCacheTmp;
+                    };
+                    this._loader.load(realUri, ((_useCache) ? UriCacheFactory.getCacheFromUri(realUri) : null), forcedAdapter, singleFile);
                 }
                 else
                 {
@@ -648,7 +567,8 @@
                         };
                         this._child = null;
                     };
-                    this._finalized = true;
+                    super.finalize();
+                    _finalized = true;
                     if (getUi())
                     {
                         getUi().iAmFinalized(this);
@@ -661,12 +581,12 @@
         {
             var rec:Rectangle;
             var ratio:Number;
-            if (!(this._child))
+            if (!this._child)
             {
                 return;
             };
             var rerender:Boolean;
-            if (((this._gotoFrame) && ((this._child is MovieClip))))
+            if (((this._gotoFrame) && (this._child is MovieClip)))
             {
                 this.gotoAndStop = this._gotoFrame;
             }
@@ -726,7 +646,7 @@
             }
             else
             {
-                if (((((!(isNaN(this._forcedHeight))) && (!((this._forcedHeight == 0))))) && (!((this._forcedHeight == this._child.height)))))
+                if ((((!(isNaN(this._forcedHeight))) && (!(this._forcedHeight == 0))) && (!(this._forcedHeight == this._child.height))))
                 {
                     this._child.height = this._forcedHeight;
                 }
@@ -734,7 +654,7 @@
                 {
                     rerender = true;
                 };
-                if (!(isNaN(this._forcedWidth)))
+                if (!isNaN(this._forcedWidth))
                 {
                     this._child.width = this._forcedWidth;
                 }
@@ -743,9 +663,10 @@
                     rerender = true;
                 };
             };
-            if (!(this._finalized))
+            if (!_finalized)
             {
-                this._finalized = true;
+                super.finalize();
+                _finalized = true;
                 if (getUi())
                 {
                     getUi().iAmFinalized(this);
@@ -755,6 +676,7 @@
             {
                 if (((rerender) || (true)))
                 {
+                    super.finalize();
                     if (getUi())
                     {
                         getUi().iAmFinalized(this);
@@ -765,7 +687,11 @@
 
         private function initMask():void
         {
-            if (((mask) && ((mask.parent == this))))
+            if (this._roundCornerRadius == -1)
+            {
+                return;
+            };
+            if (((mask) && (mask.parent == this)))
             {
                 removeChild(mask);
             };
@@ -781,7 +707,7 @@
             mask = maskCtr;
         }
 
-        private function onLoaded(rle:ResourceLoadedEvent):void
+        override protected function onLoaded(rle:ResourceLoadedEvent):void
         {
             var aswf:ASwf;
             var error:ResourceErrorEvent;
@@ -797,8 +723,7 @@
                 };
                 this._bitmap = null;
             };
-            var pattern:RegExp = /\/(_[0-9]*_\/)/i;
-            if ((((this._uri == null)) || (((!((this._uri.path == rle.uri.path))) && (!((this._uri.normalizedUri == rle.uri.path)))))))
+            if (((_uri == null) || ((!(_uri.path == rle.uri.path)) && (!(_uri.normalizedUri == rle.uri.path)))))
             {
                 this.rle_uri_path = rle.uri.path;
                 return;
@@ -814,7 +739,7 @@
             };
             if (rle.resourceType == ResourceType.RESOURCE_SWF)
             {
-                if (!(rle.resource))
+                if (!rle.resource)
                 {
                     this._log.warn(((("Empty SWF : " + rle.uri) + " in ") + getUi().name));
                     return;
@@ -830,17 +755,22 @@
                 if (rle.resourceType == ResourceType.RESOURCE_BITMAP)
                 {
                     this._child = addChild(new Bitmap(rle.resource, "auto", true));
+                    if (autoCenterBitmap)
+                    {
+                        this._child.x = (this._child.x - (this._child.width / 2));
+                        this._child.y = (this._child.y - (this._child.height / 2));
+                    };
                 }
                 else
                 {
                     if (rle.resourceType == ResourceType.RESOURCE_ASWF)
                     {
                         aswf = ASwf(rle.resource);
-                        if (this._uri.subPath)
+                        if (_uri.subPath)
                         {
                             try
                             {
-                                this._child = addChild((new ((aswf.applicationDomain.getDefinition(this._uri.subPath) as Class))() as DisplayObject));
+                                this._child = addChild((new ((aswf.applicationDomain.getDefinition(_uri.subPath) as Class))() as DisplayObject));
                             }
                             catch(e:Error)
                             {
@@ -882,14 +812,14 @@
             {
                 dispatchEvent(new Event(Event.COMPLETE));
             };
-            if (((((this._dispatchMessages) && (Berilia.getInstance()))) && (Berilia.getInstance().handler)))
+            if ((((this._dispatchMessages) && (Berilia.getInstance())) && (Berilia.getInstance().handler)))
             {
                 Berilia.getInstance().handler.process(new TextureReadyMessage(this));
             };
             this.initMask();
         }
 
-        private function onFailed(ree:ResourceErrorEvent):void
+        override protected function onFailed(ree:ResourceErrorEvent):void
         {
             var shp:Shape;
             if (__removed)
@@ -900,19 +830,19 @@
             behavior.cancel = false;
             if (KernelEventsManager.getInstance().isRegisteredEvent(BeriliaHookList.TextureLoadFailed.name))
             {
-                this._finalized = true;
-                KernelEventsManager.getInstance().processCallback(BeriliaHookList.TextureLoadFailed, SecureCenter.secure(this, ((getUi()) ? getUi().uiModule.trusted : false)), behavior);
+                _finalized = true;
+                KernelEventsManager.getInstance().processCallback(BeriliaHookList.TextureLoadFailed, this, behavior);
             }
             else
             {
-                this._log.error(((((("UI " + ((getUi()) ? getUi().name : "unknow")) + ", texture resource not found: ") + ((ree) ? ree.errorMsg : "No ressource specified.")) + ", requested uri : ") + ree.uri));
+                this._log.error(((((((("UI " + ((getUi()) ? getUi().name : "unknow")) + "/") + name) + ", texture resource not found: ") + ((ree) ? ree.errorMsg : "No ressource specified.")) + ", requested uri : ") + ree.uri));
             };
             dispatchEvent(new TextureLoadFailedEvent(this, behavior));
             Berilia.getInstance().handler.process(new TextureLoadFailMessage(this));
-            if (((!(behavior.cancel)) && ((ree.uri == this._uri))))
+            if (((!(behavior.cancel)) && (ree.uri == _uri)))
             {
                 this._loader = null;
-                if (ree.uri == this._uri)
+                if (ree.uri == _uri)
                 {
                     if (this._child)
                     {
@@ -923,17 +853,18 @@
                         this._child = null;
                         this._bitmap = null;
                     };
-                    if (this._showLoadingError)
+                    if (_showLoadingError)
                     {
                         shp = new Shape();
                         shp.graphics.beginFill(0xFF00FF);
-                        shp.graphics.drawRect(0, 0, ((((!(isNaN(this._forcedWidth))) && (!((this._forcedWidth == 0))))) ? this._forcedWidth : (10)), ((((!(isNaN(this._forcedHeight))) && (!((this._forcedHeight == 0))))) ? this._forcedHeight : 10));
+                        shp.graphics.drawRect(0, 0, (((!(isNaN(this._forcedWidth))) && (!(this._forcedWidth == 0))) ? this._forcedWidth : 10), (((!(isNaN(this._forcedHeight))) && (!(this._forcedHeight == 0))) ? this._forcedHeight : 10));
                         shp.graphics.endFill();
                         this._child = addChild(shp);
                     };
                 };
             };
-            this._finalized = true;
+            _finalized = true;
+            super.finalize();
             if (getUi())
             {
                 getUi().iAmFinalized(this);
@@ -942,7 +873,7 @@
 
         override public function remove():void
         {
-            if (!(__removed))
+            if (!__removed)
             {
                 __removed = true;
                 if (this._child)
@@ -970,5 +901,5 @@
 
 
     }
-}//package com.ankamagames.berilia.components
+} com.ankamagames.berilia.components
 

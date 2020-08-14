@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.types.events
+package com.ankamagames.jerakine.types.events
 {
     import flash.events.Event;
 
@@ -7,10 +7,10 @@
 
         public static var PROPERTY_CHANGED:String = "watchPropertyChanged";
 
-        private var _watchedClassInstance;
+        private var _watchedClassInstance:*;
         private var _propertyName:String;
-        private var _propertyValue;
-        private var _propertyOldValue;
+        private var _propertyValue:*;
+        private var _propertyOldValue:*;
 
         public function PropertyChangeEvent(watchedClassInstance:*, propertyName:String, propertyValue:*, propertyOldValue:*)
         {
@@ -21,7 +21,7 @@
             this._propertyOldValue = propertyOldValue;
         }
 
-        public function get watchedClassInstance()
+        public function get watchedClassInstance():*
         {
             return (this._watchedClassInstance);
         }
@@ -31,17 +31,17 @@
             return (this._propertyName);
         }
 
-        public function get propertyValue()
+        public function get propertyValue():*
         {
             return (this._propertyValue);
         }
 
-        public function get propertyOldValue()
+        public function get propertyOldValue():*
         {
             return (this._propertyOldValue);
         }
 
 
     }
-}//package com.ankamagames.jerakine.types.events
+} com.ankamagames.jerakine.types.events
 

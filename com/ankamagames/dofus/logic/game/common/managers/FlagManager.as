@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.common.managers
+package com.ankamagames.dofus.logic.game.common.managers
 {
     import com.ankamagames.dofus.datacenter.world.Phoenix;
 
@@ -14,7 +14,7 @@
         {
             var phoenixes:Array;
             var phoenix:Phoenix;
-            if (!(_self))
+            if (!_self)
             {
                 _self = new (FlagManager)();
                 phoenixes = Phoenix.getAllPhoenixes();
@@ -40,5 +40,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.managers
+} com.ankamagames.dofus.logic.game.common.managers
 

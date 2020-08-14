@@ -1,8 +1,7 @@
-﻿package com.ankamagames.berilia.pools
+package com.ankamagames.berilia.pools
 {
     import com.ankamagames.jerakine.pools.Pool;
     import com.ankamagames.jerakine.utils.errors.SingletonError;
-    import com.ankamagames.jerakine.pools.PoolableLoader;
 
     public class PoolsManager 
     {
@@ -31,15 +30,6 @@
         }
 
 
-        public function getLoadersPool():Pool
-        {
-            if (this._loadersPool == null)
-            {
-                this._loadersPool = new Pool(PoolableLoader, 1, 1, 1);
-            };
-            return (this._loadersPool);
-        }
-
         public function getXmlParsorPool():Pool
         {
             if (this._xmlParsorPool == null)
@@ -60,5 +50,5 @@
 
 
     }
-}//package com.ankamagames.berilia.pools
+} com.ankamagames.berilia.pools
 

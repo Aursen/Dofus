@@ -1,16 +1,18 @@
-﻿package com.ankamagames.dofus.logic.game.common.misc.stackedMessages
+package com.ankamagames.dofus.logic.game.common.misc.stackedMessages
 {
     import flash.filters.GlowFilter;
     import com.ankamagames.dofus.network.types.game.interactive.InteractiveElement;
     import com.ankamagames.dofus.logic.game.roleplay.messages.InteractiveElementActivationMessage;
     import com.ankamagames.dofus.datacenter.interactives.Interactive;
-    import com.ankamagames.dofus.network.messages.game.interactive.InteractiveElementUpdatedMessage;
-    import com.ankamagames.dofus.logic.game.common.misc.DofusEntities;
-    import com.ankamagames.dofus.logic.game.common.managers.PlayedCharacterManager;
+    import com.ankamagames.dofus.datacenter.jobs.Skill;
+    import com.ankamagames.dofus.network.types.game.interactive.InteractiveElementSkill;
     import com.ankamagames.jerakine.entities.interfaces.IEntity;
+    import com.ankamagames.dofus.network.messages.game.interactive.InteractiveElementUpdatedMessage;
     import com.ankamagames.jerakine.handlers.messages.mouse.MouseClickMessage;
     import com.ankamagames.atouin.types.SpriteWrapper;
     import com.ankamagames.dofus.network.messages.game.context.GameMapMovementMessage;
+    import com.ankamagames.dofus.logic.game.common.misc.DofusEntities;
+    import com.ankamagames.dofus.logic.game.common.managers.PlayedCharacterManager;
     import com.ankamagames.dofus.logic.game.roleplay.messages.CharacterMovementStoppedMessage;
     import com.ankamagames.atouin.messages.CellClickMessage;
     import com.ankamagames.jerakine.messages.Message;
@@ -18,12 +20,10 @@
     import com.ankamagames.dofus.network.messages.game.interactive.InteractiveUsedMessage;
     import com.ankamagames.dofus.network.messages.game.interactive.InteractiveUseEndedMessage;
     import com.ankamagames.dofus.network.messages.game.interactive.InteractiveUseErrorMessage;
-    import com.ankamagames.dofus.network.types.game.interactive.InteractiveElementSkill;
-    import com.ankamagames.dofus.datacenter.jobs.Skill;
     import flash.display.InteractiveObject;
+    import com.ankamagames.atouin.Atouin;
     import com.ankamagames.dofus.logic.game.roleplay.frames.RoleplayInteractivesFrame;
     import flash.geom.ColorTransform;
-    import com.ankamagames.atouin.Atouin;
     import com.ankamagames.jerakine.managers.FiltersManager;
     import com.ankamagames.jerakine.types.positions.MapPoint;
 
@@ -32,6 +32,8 @@
 
         private static var interactiveElements:Array = new Array();
         private static var currentElementId:int = -1;
+        private static const ACTION_WAYPOINT:uint = 3;
+        private static const ACTION_CLASS_STATUE:uint = 15;
         private static const FILTER_1:GlowFilter = new GlowFilter(0xFFFFFF, 0.8, 6, 6, 4);
         private static const FILTER_2:GlowFilter = new GlowFilter(2845168, 0.8, 4, 4, 2);
 
@@ -59,13 +61,15 @@
         {
             var msg:InteractiveElementActivationMessage;
             var interactive:Interactive;
+            var skill:Skill;
+            var interactiveSkill:InteractiveElementSkill;
+            var entity:IEntity;
             var ieumsg:InteractiveElementUpdatedMessage;
             canBeStacked = true;
-            var entity:IEntity = DofusEntities.getEntity(PlayedCharacterManager.getInstance().id);
             var returnValue:Boolean;
             if ((pMsgToProcess is MouseClickMessage))
             {
-                this._isFreeMovement = !(((pMsgToProcess as MouseClickMessage).target is SpriteWrapper));
+                this._isFreeMovement = (!((pMsgToProcess as MouseClickMessage).target is SpriteWrapper));
                 return (false);
             };
             if ((pMsgToProcess is InteractiveElementActivationMessage))
@@ -75,12 +79,13 @@
                 interactive = Interactive.getInteractiveById(msg.interactiveElement.elementTypeId);
                 if (interactive)
                 {
-                    switch (interactive.actionId)
+                    for each (interactiveSkill in msg.interactiveElement.enabledSkills)
                     {
-                        case 3:
-                        case 15:
+                        skill = Skill.getSkillById(interactiveSkill.skillId);
+                        if (((skill.elementActionId == ACTION_CLASS_STATUE) || (skill.elementActionId == ACTION_WAYPOINT)))
+                        {
                             type = STOP;
-                            break;
+                        };
                     };
                 }
                 else
@@ -102,16 +107,20 @@
             }
             else
             {
-                if ((((((pMsgToProcess is GameMapMovementMessage)) && (((pMsgToProcess as GameMapMovementMessage).actorId == PlayedCharacterManager.getInstance().id)))) && (((pMsgToProcess as GameMapMovementMessage).keyMovements[0] == entity.position.cellId))))
+                if ((pMsgToProcess is GameMapMovementMessage))
                 {
-                    this._isMoving = true;
-                    if (this._isFreeMovement)
+                    entity = DofusEntities.getEntity(PlayedCharacterManager.getInstance().id);
+                    if ((((pMsgToProcess as GameMapMovementMessage).actorId == PlayedCharacterManager.getInstance().id) && ((pMsgToProcess as GameMapMovementMessage).keyMovements[0] == entity.position.cellId)))
                     {
-                        this._lastCellExpected = (pMsgToProcess as GameMapMovementMessage).keyMovements[((pMsgToProcess as GameMapMovementMessage).keyMovements.length - 1)];
-                    }
-                    else
-                    {
-                        this._lastCellExpected = -1;
+                        this._isMoving = true;
+                        if (this._isFreeMovement)
+                        {
+                            this._lastCellExpected = (pMsgToProcess as GameMapMovementMessage).keyMovements[((pMsgToProcess as GameMapMovementMessage).keyMovements.length - 1)];
+                        }
+                        else
+                        {
+                            this._lastCellExpected = -1;
+                        };
                     };
                 }
                 else
@@ -123,7 +132,7 @@
                     }
                     else
                     {
-                        if ((((((pMode == ALWAYS)) && ((pMsgToProcess is CellClickMessage)))) && (this._isMoving)))
+                        if ((((pMode == ALWAYS) && (pMsgToProcess is CellClickMessage)) && (this._isMoving)))
                         {
                             isAvailableToStart = false;
                             returnValue = true;
@@ -155,7 +164,7 @@
 
         override public function checkAvailability(pMsgToProcess:Message):void
         {
-            if (((!((this._startTime == 0))) && ((getTimer() >= (this._startTime + this._time)))))
+            if (((!(this._startTime == 0)) && (getTimer() >= (this._startTime + this._time))))
             {
                 isAvailableToStart = false;
                 this._startTime = 0;
@@ -167,7 +176,7 @@
             }
             else
             {
-                if ((((pMsgToProcess is InteractiveUsedMessage)) && (((pMsgToProcess as InteractiveUsedMessage).entityId == PlayedCharacterManager.getInstance().id))))
+                if (((pMsgToProcess is InteractiveUsedMessage) && ((pMsgToProcess as InteractiveUsedMessage).entityId == PlayedCharacterManager.getInstance().id)))
                 {
                     isAvailableToStart = true;
                     this._tmpInteractiveElementId = (pMsgToProcess as InteractiveUsedMessage).elemId;
@@ -175,7 +184,7 @@
                 }
                 else
                 {
-                    if ((((pMsgToProcess is InteractiveUseEndedMessage)) && ((this._tmpInteractiveElementId == (pMsgToProcess as InteractiveUseEndedMessage).elemId))))
+                    if (((pMsgToProcess is InteractiveUseEndedMessage) && (this._tmpInteractiveElementId == (pMsgToProcess as InteractiveUseEndedMessage).elemId)))
                     {
                         this._startTime = getTimer();
                     };
@@ -211,7 +220,7 @@
                     }
                     else
                     {
-                        if ((((this._timeOutRecolte > 0)) && ((getTimer() > ((this._timeOutRecolte + this._duration) + 1000)))))
+                        if (((this._timeOutRecolte > 0) && (getTimer() > ((this._timeOutRecolte + this._duration) + 1000))))
                         {
                             this.stopAction();
                             returnValue = true;
@@ -244,7 +253,7 @@
             var ieskill:InteractiveElementSkill;
             var s:Skill;
             var io:InteractiveObject;
-            if (this.interactiveElement == null)
+            if (((this.interactiveElement == null) || (Atouin.getInstance().getIdentifiedElement(this.interactiveElement.elementId) == null)))
             {
                 return;
             };
@@ -305,19 +314,19 @@
         {
             if ((pMsg is GameMapMovementMessage))
             {
-                return (!(((this._isMoving) || (actionStarted))));
+                return (!((this._isMoving) || (actionStarted)));
             };
             return (true);
         }
 
         override public function get canBeRemoved():Boolean
         {
-            return (!((this.interactiveElement.elementId == InteractiveElementBehavior.currentElementId)));
+            return (!(this.interactiveElement.elementId == InteractiveElementBehavior.currentElementId));
         }
 
         override public function get needToWait():Boolean
         {
-            return (((this._isMoving) && (!((this._lastCellExpected == -1)))));
+            return ((this._isMoving) && (!(this._lastCellExpected == -1)));
         }
 
         override public function getFakePosition():MapPoint
@@ -329,5 +338,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.misc.stackedMessages
+} com.ankamagames.dofus.logic.game.common.misc.stackedMessages
 

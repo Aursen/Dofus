@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.datacenter.items.criterion
+package com.ankamagames.dofus.datacenter.items.criterion
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.jerakine.data.I18n;
@@ -13,7 +13,7 @@
 
         override public function get text():String
         {
-            return (((((I18n.getUiText("ui.pvp.rank") + " ") + _operator.text) + " ") + _criterionValue));
+            return ((((I18n.getUiText("ui.pvp.rank") + " ") + _operator.text) + " ") + _criterionValue);
         }
 
         override public function clone():IItemCriterion
@@ -29,5 +29,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.items.criterion
+} com.ankamagames.dofus.datacenter.items.criterion
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.datacenter.items.criterion
+package com.ankamagames.dofus.datacenter.items.criterion
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.jerakine.data.I18n;
@@ -15,12 +15,12 @@
         override public function get text():String
         {
             var readableCriterionRef:String = I18n.getUiText("ui.common.kamas");
-            return (((((readableCriterionRef + " ") + _operator.text) + " ") + _criterionValue));
+            return ((((readableCriterionRef + " ") + _operator.text) + " ") + _criterionValue);
         }
 
         override public function get isRespected():Boolean
         {
-            return (_operator.compare(uint(this.getCriterion()), _criterionValue));
+            return (_operator.compare(PlayedCharacterManager.getInstance().characteristics.kamas, _criterionValue));
         }
 
         override public function clone():IItemCriterion
@@ -29,12 +29,7 @@
             return (clonedCriterion);
         }
 
-        override protected function getCriterion():int
-        {
-            return (PlayedCharacterManager.getInstance().characteristics.kamas);
-        }
-
 
     }
-}//package com.ankamagames.dofus.datacenter.items.criterion
+} com.ankamagames.dofus.datacenter.items.criterion
 

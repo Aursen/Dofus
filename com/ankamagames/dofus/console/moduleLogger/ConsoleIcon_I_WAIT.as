@@ -1,12 +1,15 @@
-﻿package com.ankamagames.dofus.console.moduleLogger
+package com.ankamagames.dofus.console.moduleLogger
 {
     import mx.core.SpriteAsset;
+    import flash.display.DisplayObject;
 
     [ExcludeClass]
     public class ConsoleIcon_I_WAIT extends SpriteAsset 
     {
 
+        public var origine:DisplayObject;
+
 
     }
-}//package com.ankamagames.dofus.console.moduleLogger
+} com.ankamagames.dofus.console.moduleLogger
 

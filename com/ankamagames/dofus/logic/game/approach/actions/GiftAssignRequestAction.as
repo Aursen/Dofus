@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.approach.actions
+package com.ankamagames.dofus.logic.game.approach.actions
 {
     import com.ankamagames.jerakine.handlers.messages.Action;
 
@@ -6,10 +6,10 @@
     {
 
         public var giftId:uint;
-        public var characterId:uint;
+        public var characterId:Number;
 
 
-        public static function create(giftId:uint, characterId:uint):GiftAssignRequestAction
+        public static function create(giftId:uint, characterId:Number):GiftAssignRequestAction
         {
             var action:GiftAssignRequestAction = new (GiftAssignRequestAction)();
             action.giftId = giftId;
@@ -19,5 +19,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.approach.actions
+} com.ankamagames.dofus.logic.game.approach.actions
 

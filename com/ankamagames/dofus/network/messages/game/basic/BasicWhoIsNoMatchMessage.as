@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.basic
+package com.ankamagames.dofus.network.messages.game.basic
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class BasicWhoIsNoMatchMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -52,6 +52,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_BasicWhoIsNoMatchMessage(output);
@@ -69,10 +77,25 @@
 
         public function deserializeAs_BasicWhoIsNoMatchMessage(input:ICustomDataInput):void
         {
+            this._searchFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_BasicWhoIsNoMatchMessage(tree);
+        }
+
+        public function deserializeAsyncAs_BasicWhoIsNoMatchMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._searchFunc);
+        }
+
+        private function _searchFunc(input:ICustomDataInput):void
+        {
             this.search = input.readUTF();
         }
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.basic
+} com.ankamagames.dofus.network.messages.game.basic
 

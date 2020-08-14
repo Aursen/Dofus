@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.fight.steps
+package com.ankamagames.dofus.logic.game.fight.steps
 {
     import com.ankamagames.jerakine.sequencer.AbstractSequencable;
     import __AS3__.vec.Vector;
@@ -21,15 +21,16 @@
     public class FightSpellCastStep extends AbstractSequencable implements IFightStep 
     {
 
-        private var _fighterId:int;
+        private var _fighterId:Number;
         private var _cellId:int;
         private var _sourceCellId:int;
         private var _spellId:int;
         private var _spellRank:uint;
         private var _critical:uint;
         private var _portalIds:Vector.<int>;
+        private var _verboseCast:Boolean;
 
-        public function FightSpellCastStep(fighterId:int, cellId:int, sourceCellId:int, spellId:int, spellRank:uint, critical:uint)
+        public function FightSpellCastStep(fighterId:Number, cellId:int, sourceCellId:int, spellId:int, spellRank:uint, critical:uint, verboseCast:Boolean)
         {
             this._fighterId = fighterId;
             this._cellId = cellId;
@@ -37,6 +38,7 @@
             this._spellId = spellId;
             this._spellRank = spellRank;
             this._critical = critical;
+            this._verboseCast = verboseCast;
         }
 
         public function get stepType():String
@@ -50,7 +52,7 @@
             var seq:SerialSequencer;
             var bubble:ChatBubble;
             var fighterEntity:IDisplayable;
-            if (Spell.getSpellById(this._spellId).verbose_cast)
+            if (((Spell.getSpellById(this._spellId).verbose_cast) && (this._verboseCast)))
             {
                 FightEventsHelper.sendFightEvent(FightEventEnum.FIGHTER_CASTED_SPELL, [this._fighterId, this._cellId, this._sourceCellId, this._spellId, this._spellRank, this._critical], 0, castingSpellId, false);
             };
@@ -58,7 +60,7 @@
             {
                 fighterInfos = (FightEntitiesFrame.getCurrentInstance().getEntityInfos(this._fighterId) as GameFightFighterInformations);
                 seq = new SerialSequencer();
-                if (this._critical == FightSpellCastCriticalEnum.CRITICAL_HIT)
+                if (((this._critical == FightSpellCastCriticalEnum.CRITICAL_HIT) && (!(fighterInfos.disposition.cellId == -1))))
                 {
                     seq.addStep(new AddGfxEntityStep(1062, fighterInfos.disposition.cellId));
                 }
@@ -80,7 +82,12 @@
             executeCallbacks();
         }
 
+        public function get targets():Vector.<Number>
+        {
+            return (new <Number>[this._fighterId]);
+        }
+
 
     }
-}//package com.ankamagames.dofus.logic.game.fight.steps
+} com.ankamagames.dofus.logic.game.fight.steps
 

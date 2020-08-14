@@ -1,38 +1,30 @@
-﻿package com.ankamagames.dofus.uiApi
+package com.ankamagames.dofus.uiApi
 {
     import com.ankamagames.berilia.interfaces.IApi;
     import com.ankamagames.jerakine.logger.Logger;
-    import com.ankamagames.berilia.types.data.UiModule;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
+    import com.ankamagames.berilia.types.data.UiModule;
     import com.ankamagames.dofus.network.enums.ExchangeErrorEnum;
 
     [InstanciedApi]
     public class ExchangeApi implements IApi 
     {
 
-        protected var _log:Logger;
+        protected var _log:Logger = Log.getLogger(getQualifiedClassName(ExchangeApi));
         private var _module:UiModule;
 
-        public function ExchangeApi()
-        {
-            this._log = Log.getLogger(getQualifiedClassName(ExchangeApi));
-            super();
-        }
 
-        [ApiExchange(name="module")]
         public function set module(value:UiModule):void
         {
             this._module = value;
         }
 
-        [Trusted]
         public function destroy():void
         {
             this._module = null;
         }
 
-        [Untrusted]
         public function getExchangeError(typeError:int):String
         {
             switch (typeError)
@@ -63,5 +55,5 @@
 
 
     }
-}//package com.ankamagames.dofus.uiApi
+} com.ankamagames.dofus.uiApi
 

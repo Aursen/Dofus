@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.common.managers
+package com.ankamagames.dofus.logic.common.managers
 {
     import com.ankamagames.berilia.managers.KernelEventsManager;
     import com.ankamagames.dofus.misc.lists.SocialHookList;
@@ -18,14 +18,19 @@
             KernelEventsManager.getInstance().processCallback(SocialHookList.OpenSocial, tab, subTab, args);
         }
 
-        public static function rollOver(pX:int, pY:int, tab:int, subTab:int):void
+        public static function rollOver(pX:int, pY:int, tab:int, subTab:int, ... args):void
         {
-            var target:Rectangle = new Rectangle(pX, pY, 10, 10);
-            var info:TextTooltipInfo = new TextTooltipInfo(I18n.getUiText("ui.tooltip.chat.taxCollectorUnderAttack"));
-            TooltipManager.show(info, target, UiModuleManager.getInstance().getModule("Ankama_GameUiCore"), false, "HyperLink", 6, 2, 3, true, null, null, null, null, false, StrataEnum.STRATA_TOOLTIP, 1);
+            var target:Rectangle;
+            var info:TextTooltipInfo;
+            if (((tab == 1) && (subTab == 2)))
+            {
+                target = new Rectangle(pX, pY, 10, 10);
+                info = new TextTooltipInfo(I18n.getUiText("ui.tooltip.chat.taxCollectorUnderAttack"));
+                TooltipManager.show(info, target, UiModuleManager.getInstance().getModule("Ankama_GameUiCore"), false, "HyperLink", 6, 2, 3, true, null, null, null, null, false, StrataEnum.STRATA_TOOLTIP, 1);
+            };
         }
 
 
     }
-}//package com.ankamagames.dofus.logic.common.managers
+} com.ankamagames.dofus.logic.common.managers
 

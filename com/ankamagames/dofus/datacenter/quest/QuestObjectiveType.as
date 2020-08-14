@@ -1,9 +1,10 @@
-﻿package com.ankamagames.dofus.datacenter.quest
+package com.ankamagames.dofus.datacenter.quest
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
+    import com.ankamagames.dofus.types.IdAccessors;
     import com.ankamagames.jerakine.data.GameData;
     import com.ankamagames.jerakine.data.I18n;
 
@@ -12,6 +13,7 @@
 
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(QuestObjectiveType));
         public static const MODULE:String = "QuestObjectiveTypes";
+        public static var idAccessors:IdAccessors = new IdAccessors(getQuestObjectiveTypeById, getQuestObjectiveTypes);
 
         public var id:uint;
         public var nameId:uint;
@@ -20,7 +22,7 @@
 
         public static function getQuestObjectiveTypeById(id:int):QuestObjectiveType
         {
-            return ((GameData.getObject(MODULE, id) as QuestObjectiveType));
+            return (GameData.getObject(MODULE, id) as QuestObjectiveType);
         }
 
         public static function getQuestObjectiveTypes():Array
@@ -31,7 +33,7 @@
 
         public function get name():String
         {
-            if (!(this._name))
+            if (!this._name)
             {
                 this._name = I18n.getText(this.nameId);
             };
@@ -40,5 +42,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.quest
+} com.ankamagames.dofus.datacenter.quest
 

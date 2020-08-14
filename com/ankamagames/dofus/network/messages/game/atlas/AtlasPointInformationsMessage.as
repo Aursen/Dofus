@@ -1,27 +1,23 @@
-﻿package com.ankamagames.dofus.network.messages.game.atlas
+package com.ankamagames.dofus.network.messages.game.atlas
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
     import com.ankamagames.dofus.network.types.game.context.roleplay.AtlasPointsInformations;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
 
-    [Trusted]
     public class AtlasPointInformationsMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 5956;
 
         private var _isInitialized:Boolean = false;
-        public var type:AtlasPointsInformations;
+        public var type:AtlasPointsInformations = new AtlasPointsInformations();
+        private var _typetree:FuncTree;
 
-        public function AtlasPointInformationsMessage()
-        {
-            this.type = new AtlasPointsInformations();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
@@ -33,9 +29,9 @@
             return (5956);
         }
 
-        public function initAtlasPointInformationsMessage(type:AtlasPointsInformations=null):AtlasPointInformationsMessage
+        public function initAtlasPointInformationsMessage(_arg_1:AtlasPointsInformations=null):AtlasPointInformationsMessage
         {
-            this.type = type;
+            this.type = _arg_1;
             this._isInitialized = true;
             return (this);
         }
@@ -56,6 +52,14 @@
         override public function unpack(input:ICustomDataInput, length:uint):void
         {
             this.deserialize(input);
+        }
+
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
         }
 
         public function serialize(output:ICustomDataOutput):void
@@ -79,7 +83,23 @@
             this.type.deserialize(input);
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_AtlasPointInformationsMessage(tree);
+        }
+
+        public function deserializeAsyncAs_AtlasPointInformationsMessage(tree:FuncTree):void
+        {
+            this._typetree = tree.addChild(this._typetreeFunc);
+        }
+
+        private function _typetreeFunc(input:ICustomDataInput):void
+        {
+            this.type = new AtlasPointsInformations();
+            this.type.deserializeAsync(this._typetree);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.atlas
+} com.ankamagames.dofus.network.messages.game.atlas
 

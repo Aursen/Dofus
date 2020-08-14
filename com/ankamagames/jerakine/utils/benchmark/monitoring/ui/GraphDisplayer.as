@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.utils.benchmark.monitoring.ui
+package com.ankamagames.jerakine.utils.benchmark.monitoring.ui
 {
     import flash.display.Sprite;
     import com.ankamagames.jerakine.logger.Logger;
@@ -7,10 +7,12 @@
     import flash.text.TextField;
     import flash.display.Bitmap;
     import flash.utils.Dictionary;
-    import com.ankamagames.jerakine.utils.benchmark.monitoring.FpsManagerConst;
     import flash.text.TextFormat;
+    import com.ankamagames.jerakine.utils.benchmark.monitoring.FpsManagerConst;
     import com.ankamagames.jerakine.utils.display.StageShareManager;
+    import flash.text.TextFieldAutoSize;
     import flash.display.BitmapData;
+    import flash.display.Shape;
     import flash.geom.Rectangle;
     import com.ankamagames.jerakine.utils.benchmark.monitoring.FpsManagerUtils;
     import flash.utils.getTimer;
@@ -39,22 +41,32 @@
 
         private function initTexts():void
         {
+            var tf:TextFormat;
             this._txtSprite = new Sprite();
             this._txtSprite.mouseEnabled = false;
             this._txtSprite.x = FpsManagerConst.PADDING_LEFT;
             this._txtSprite.y = FpsManagerConst.PADDING_TOP;
-            var tf:TextFormat = new TextFormat("Verdana", 13);
+            tf = new TextFormat("Verdana", 13);
             tf.color = 0xFFFFFF;
             this._fpsTf = new TextField();
+            this._fpsTf.y = -2;
             this._fpsTf.defaultTextFormat = tf;
             this._fpsTf.selectable = false;
-            this._fpsTf.text = (StageShareManager.stage.frameRate + " FPS");
+            if (StageShareManager.stage)
+            {
+                this._fpsTf.text = (StageShareManager.stage.frameRate + " FPS");
+            }
+            else
+            {
+                this._fpsTf.text = "60 FPS";
+            };
             this._txtSprite.addChild(this._fpsTf);
             this._memTf = new TextField();
-            this._memTf.y = 30;
+            this._memTf.y = 32;
             this._memTf.defaultTextFormat = tf;
             this._memTf.selectable = false;
             this._memTf.text = "00 MB";
+            this._memTf.autoSize = TextFieldAutoSize.LEFT;
             this._txtSprite.addChild(this._memTf);
             addChild(this._txtSprite);
         }
@@ -70,7 +82,7 @@
             this._graphDisplay = new Bitmap(new BitmapData(FpsManagerConst.BOX_WIDTH, FpsManagerConst.BOX_HEIGHT, true, 0));
             this._graphDisplay.smoothing = true;
             addChild(this._graphDisplay);
-            var spr:Sprite = new Sprite();
+            var spr:Shape = new Shape();
             spr.graphics.beginFill(0, 0.4);
             spr.graphics.drawRoundRect(0, 0, FpsManagerConst.BOX_FILTER_WIDTH, FpsManagerConst.BOX_HEIGHT, 8, 8);
             addChild(spr);
@@ -82,7 +94,7 @@
             var color:uint;
             var g:Graph;
             this.addConstValue(FpsManagerConst.SPECIAL_GRAPH[1].name, (1000 / StageShareManager.stage.frameRate));
-            if (!(graphicalUpdate))
+            if (!graphicalUpdate)
             {
                 return;
             };
@@ -92,12 +104,12 @@
             this._graphDisplay.bitmapData.fillRect(new Rectangle(px, 1, 1, FpsManagerConst.BOX_HEIGHT), 0xFF0000);
             for each (g in this._graphToDisplay)
             {
-                if (!(FpsManagerUtils.isSpecialGraph(g.indice)))
+                if (!FpsManagerUtils.isSpecialGraph(g.indice))
                 {
                     this.addConstValue(g.indice);
                 };
                 g.setNewFrame();
-                if (!(((g.points.length == 0)) || (!(g.graphVisible))))
+                if (!((g.points.length == 0) || (!(g.graphVisible))))
                 {
                     py = this.formateValue(g.points[(g.points.length - 1)]);
                     color = FpsManagerUtils.addAlphaToColor(g.color, 0xFFFFFFFF);
@@ -105,7 +117,7 @@
                     {
                         this.linkGraphValues(px, py, this.formateValue(g.points[(g.points.length - 2)]), color);
                     };
-                    this._graphDisplay.bitmapData.setPixel32(px, py, (((py == 1)) ? 0xFFFF0000 : color));
+                    this._graphDisplay.bitmapData.setPixel32(px, py, ((py == 1) ? 0xFFFF0000 : color));
                 };
             };
             this._graphDisplay.bitmapData.unlock();
@@ -134,7 +146,7 @@
                 graph = new Graph(pIndice, pColor);
                 graph.addEventListener("showGraph", this.showGraph);
                 graph.addEventListener("hideGraph", this.hideGraph);
-                if (!(FpsManagerUtils.isSpecialGraph(pIndice)))
+                if (!FpsManagerUtils.isSpecialGraph(pIndice))
                 {
                     graph.setMenuPosition(((FpsManagerUtils.countKeys(this._graphToDisplay) - FpsManagerUtils.numberOfSpecialGraphDisplayed(this._graphToDisplay)) * 24), -25);
                 };
@@ -186,7 +198,7 @@
             it = 0;
             while (it < len)
             {
-                px = (((len)<FpsManagerConst.BOX_WIDTH) ? ((FpsManagerConst.BOX_WIDTH - len) + it) : it);
+                px = ((len < FpsManagerConst.BOX_WIDTH) ? ((FpsManagerConst.BOX_WIDTH - len) + it) : it);
                 py = this.formateValue(g.points[it]);
                 if (g.points.length >= 2)
                 {
@@ -216,14 +228,14 @@
                     py = bottom;
                 };
             };
-            return (((py * -1) + FpsManagerConst.BOX_HEIGHT));
+            return ((py * -1) + FpsManagerConst.BOX_HEIGHT);
         }
 
         private function linkGraphValues(px:int, py1:int, py2:int, pColor:uint):void
         {
             if (Math.abs((py1 - py2)) > 1)
             {
-                this._graphDisplay.bitmapData.fillRect(new Rectangle((px - 1), ((((py1 > py2)) ? py2 : py1) + 1), 1, (Math.abs((py1 - py2)) - 1)), pColor);
+                this._graphDisplay.bitmapData.fillRect(new Rectangle((px - 1), (((py1 > py2) ? py2 : py1) + 1), 1, (Math.abs((py1 - py2)) - 1)), pColor);
             };
         }
 
@@ -244,5 +256,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.utils.benchmark.monitoring.ui
+} com.ankamagames.jerakine.utils.benchmark.monitoring.ui
 

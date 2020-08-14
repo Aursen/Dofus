@@ -1,4 +1,4 @@
-﻿package com.ankamagames.atouin.messages
+package com.ankamagames.atouin.messages
 {
     import com.ankamagames.jerakine.messages.Message;
     import com.ankamagames.jerakine.entities.interfaces.IEntity;
@@ -7,7 +7,7 @@
     {
 
         private var _entity:IEntity;
-        public var id:int;
+        public var id:Number;
 
         public function EntityMovementStoppedMessage(entity:IEntity)
         {
@@ -25,5 +25,5 @@
 
 
     }
-}//package com.ankamagames.atouin.messages
+} com.ankamagames.atouin.messages
 

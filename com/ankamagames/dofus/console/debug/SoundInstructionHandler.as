@@ -1,12 +1,10 @@
-﻿package com.ankamagames.dofus.console.debug
+package com.ankamagames.dofus.console.debug
 {
     import com.ankamagames.jerakine.console.ConsoleInstructionHandler;
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
     import com.ankamagames.dofus.kernel.sound.SoundManager;
-    import com.ankamagames.dofus.kernel.sound.manager.ClassicSoundManager;
-    import com.ankamagames.dofus.kernel.sound.manager.RegSoundManager;
     import com.ankamagames.dofus.kernel.sound.manager.RegConnectionManager;
     import com.ankamagames.jerakine.protocolAudio.ProtocolEnum;
     import com.ankamagames.berilia.managers.UiSoundManager;
@@ -15,6 +13,7 @@
     import com.ankamagames.berilia.types.data.UiModule;
     import com.ankamagames.berilia.types.data.UiData;
     import com.ankamagames.berilia.managers.UiModuleManager;
+    import flash.utils.Dictionary;
 
     public class SoundInstructionHandler implements ConsoleInstructionHandler 
     {
@@ -25,15 +24,15 @@
         public function handle(console:ConsoleHandler, cmd:String, args:Array):void
         {
             var soundId:String;
-            var _local_5:String;
-            var _local_6:Number;
-            var _local_7:Boolean;
-            var _local_8:String;
-            var _local_9:Number;
-            var _local_10:Boolean;
-            var _local_11:uint;
-            var _local_12:uint;
-            var _local_13:uint;
+            var sIdm:String;
+            var volm:Number;
+            var loopm:Boolean;
+            var sIda:String;
+            var vola:Number;
+            var loopa:Boolean;
+            var volume:uint;
+            var silenceMin:uint;
+            var silenceMax:uint;
             switch (cmd)
             {
                 case "playmusic":
@@ -42,28 +41,28 @@
                         console.output("COMMAND FAILED ! playmusic must have followings parameters : \n-id\n-volume");
                         return;
                     };
-                    _local_5 = args[0];
-                    _local_6 = args[1];
-                    _local_7 = true;
-                    SoundManager.getInstance().manager.playAdminSound(_local_5, _local_6, _local_7, 0);
-                    return;
+                    sIdm = args[0];
+                    volm = args[1];
+                    loopm = true;
+                    SoundManager.getInstance().manager.playAdminSound(sIdm, volm, loopm, 0);
+                    break;
                 case "stopmusic":
                     SoundManager.getInstance().manager.removeAllSounds();
-                    return;
+                    break;
                 case "playambiance":
                     if (args.length != 2)
                     {
                         console.output("COMMAND FAILED ! playambiance must have followings parameters : \n-id\n-volume");
                         return;
                     };
-                    _local_8 = args[0];
-                    _local_9 = args[1];
-                    _local_10 = true;
-                    SoundManager.getInstance().manager.playAdminSound(_local_8, _local_9, _local_10, 1);
-                    return;
+                    sIda = args[0];
+                    vola = args[1];
+                    loopa = true;
+                    SoundManager.getInstance().manager.playAdminSound(sIda, vola, loopa, 1);
+                    break;
                 case "stopambiance":
                     SoundManager.getInstance().manager.stopAdminSound(1);
-                    return;
+                    break;
                 case "addsoundinplaylist":
                     if (args.length != 4)
                     {
@@ -71,14 +70,14 @@
                         return;
                     };
                     soundId = args[0];
-                    _local_11 = args[1];
-                    _local_12 = args[2];
-                    _local_13 = args[3];
-                    if (!(SoundManager.getInstance().manager.addSoundInPlaylist(soundId, _local_11, _local_12, _local_13)))
+                    volume = args[1];
+                    silenceMin = args[2];
+                    silenceMax = args[3];
+                    if (!SoundManager.getInstance().manager.addSoundInPlaylist(soundId, volume, silenceMin, silenceMax))
                     {
                         console.output("addSoundInPLaylist failed !");
                     };
-                    return;
+                    break;
                 case "stopplaylist":
                     if (args.length != 0)
                     {
@@ -86,7 +85,7 @@
                         return;
                     };
                     SoundManager.getInstance().manager.stopPlaylist();
-                    return;
+                    break;
                 case "playplaylist":
                     if (args.length != 0)
                     {
@@ -94,32 +93,26 @@
                         return;
                     };
                     SoundManager.getInstance().manager.playPlaylist();
-                    return;
+                    break;
                 case "activesounds":
-                    if ((SoundManager.getInstance().manager is ClassicSoundManager))
-                    {
-                        (SoundManager.getInstance().manager as ClassicSoundManager).forceSoundsDebugMode = true;
-                    };
-                    if ((SoundManager.getInstance().manager is RegSoundManager))
-                    {
-                        (SoundManager.getInstance().manager as RegSoundManager).forceSoundsDebugMode = true;
-                    };
-                    return;
+                    SoundManager.getInstance().manager.forceSoundsDebugMode = true;
+                    break;
                 case "clearsoundcache":
+                    RegConnectionManager.getInstance().send(ProtocolEnum.REMOVE_ALL_SOUNDS);
                     RegConnectionManager.getInstance().send(ProtocolEnum.CLEAR_CACHE);
-                    return;
+                    break;
                 case "adduisoundelement":
                     if (args.length < 4)
                     {
                         console.output("4 parameters needed");
                         return;
                     };
-                    if (!(UiSoundManager.getInstance().getUi(args[0])))
+                    if (!UiSoundManager.getInstance().getUi(args[0]))
                     {
                         UiSoundManager.getInstance().registerUi(args[0]);
                     };
                     UiSoundManager.getInstance().registerUiElement(args[0], args[1], args[2], args[3]);
-                    return;
+                    break;
             };
         }
 
@@ -132,7 +125,7 @@
                 case "clearsoundcache":
                     return ("Nettoye les fichiers pré-cachés pour le son afin de les relire directement depuis le disque lors de la prochaine demande de lecture");
             };
-            return ((("Unknown command '" + cmd) + "'."));
+            return (("Unknown command '" + cmd) + "'.");
         }
 
         public function getParamPossibilities(cmd:String, paramIndex:uint=0, currentParams:Array=null):Array
@@ -146,11 +139,11 @@
                 case "adduisoundelement":
                     if (paramIndex == 0)
                     {
-                        return (this.getUiList(((((currentParams) && (currentParams.length))) ? currentParams[0] : null)));
+                        return (this.getUiList((((currentParams) && (currentParams.length)) ? currentParams[0] : null)));
                     };
                     if (paramIndex == 2)
                     {
-                        filter = ((((currentParams) && ((currentParams.length > 2)))) ? currentParams[2].toLowerCase() : "");
+                        filter = (((currentParams) && (currentParams.length > 2)) ? currentParams[2].toLowerCase() : "");
                         hooks = [];
                         hooksList = SoundUiHook.getSoundUiHooks();
                         for each (hook in hooksList)
@@ -173,12 +166,12 @@
             var ui:UiData;
             filter = filter.toLowerCase();
             var uiList:Array = [];
-            var modList:Array = UiModuleManager.getInstance().getModules();
+            var modList:Dictionary = UiModuleManager.getInstance().getModules();
             for each (m in modList)
             {
                 for each (ui in m.uis)
                 {
-                    if (((!(filter)) || (!((ui.name.toLowerCase().indexOf(filter) == -1)))))
+                    if (((!(filter)) || (!(ui.name.toLowerCase().indexOf(filter) == -1))))
                     {
                         uiList.push(ui.name);
                     };
@@ -205,24 +198,24 @@
             return (params);
         }
 
-        private function getParam(value:String, type:String)
+        private function getParam(value:String, _arg_2:String):*
         {
-            switch (type)
+            switch (_arg_2)
             {
                 case "String":
                     return (value);
                 case "Boolean":
-                    return ((((value == "true")) || ((value == "1"))));
+                    return ((value == "true") || (value == "1"));
                 case "int":
                 case "uint":
                     return (parseInt(value));
                 default:
-                    _log.warn((("Unsupported parameter type '" + type) + "'."));
+                    _log.warn((("Unsupported parameter type '" + _arg_2) + "'."));
                     return (value);
             };
         }
 
 
     }
-}//package com.ankamagames.dofus.console.debug
+} com.ankamagames.dofus.console.debug
 

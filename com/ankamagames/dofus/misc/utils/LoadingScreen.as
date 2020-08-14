@@ -1,32 +1,33 @@
-﻿package com.ankamagames.dofus.misc.utils
+package com.ankamagames.dofus.misc.utils
 {
     import com.ankamagames.berilia.types.graphic.UiRootContainer;
     import com.ankamagames.berilia.FinalizableUIComponent;
     import com.ankamagames.jerakine.resources.IResourceObserver;
     import com.ankamagames.jerakine.resources.loaders.IResourceLoader;
+    import com.ankamagames.jerakine.resources.loaders.ResourceLoaderFactory;
+    import com.ankamagames.jerakine.resources.loaders.ResourceLoaderType;
+    import com.ankamagames.berilia.components.TextureBitmap;
     import flash.text.TextField;
-    import flash.display.MovieClip;
     import flash.display.Bitmap;
     import flash.display.Sprite;
     import flash.display.DisplayObject;
     import com.ankamagames.jerakine.resources.adapters.impl.BitmapAdapter;
-    import com.ankamagames.jerakine.resources.loaders.ResourceLoaderFactory;
-    import com.ankamagames.jerakine.resources.loaders.ResourceLoaderType;
-    import com.ankamagames.dofus.kernel.net.ConnectionsHandler;
-    import com.ankamagames.dofus.kernel.Kernel;
-    import com.ankamagames.jerakine.utils.display.EnterFrameDispatcher;
     import flash.events.Event;
     import com.ankamagames.jerakine.types.Uri;
+    import flash.events.MouseEvent;
     import com.ankamagames.jerakine.utils.display.StageShareManager;
     import com.ankamagames.jerakine.managers.FontManager;
     import flash.text.TextFormat;
-    import flash.events.MouseEvent;
-    import flash.system.Capabilities;
+    import flash.geom.Rectangle;
+    import flash.filters.DropShadowFilter;
+    import flash.display.MovieClip;
     import com.ankamagames.dofus.BuildInfos;
-    import com.ankamagames.dofus.misc.BuildTypeParser;
+    import flash.system.Capabilities;
     import flash.display.SimpleButton;
     import com.ankamagames.dofus.network.enums.BuildTypeEnum;
+    import com.ankamagames.dofus.misc.BuildTypeParser;
     import com.ankamagames.dofus.datacenter.quest.AchievementCategory;
+    import com.ankamagames.dofus.network.types.game.achievement.AchievementAchieved;
     import com.ankamagames.jerakine.data.I18n;
     import flash.text.TextFieldAutoSize;
     import flash.geom.ColorTransform;
@@ -34,10 +35,11 @@
     import flash.display.BitmapData;
     import flash.net.navigateToURL;
     import flash.net.URLRequest;
-    import __AS3__.vec.Vector;
-    import com.ankamagames.jerakine.messages.Message;
+    import com.ankamagames.jerakine.utils.display.EnterFrameDispatcher;
+    import com.ankamagames.berilia.frames.UiStatsFrame;
+    import com.ankamagames.berilia.managers.KernelEventsManager;
+    import com.ankamagames.berilia.utils.BeriliaHookList;
 
-    [HideInFakeClass]
     public class LoadingScreen extends UiRootContainer implements FinalizableUIComponent, IResourceObserver 
     {
 
@@ -45,33 +47,30 @@
         public static const IMPORTANT:uint = 1;
         public static const ERROR:uint = 2;
         public static const WARNING:uint = 3;
-        public static const USE_FORGROUND:Boolean = true;
+        public static const USE_FORGROUND:Boolean = false;
 
-        private var _loader:IResourceLoader;
-        private var _logTf:TextField;
+        private var _loader:IResourceLoader = ResourceLoaderFactory.getLoader(ResourceLoaderType.SERIAL_LOADER);
         private var _value:Number = 0;
-        private var _levelColor:Array;
-        private var _background:Class;
-        private var _defaultBackground:Class;
-        private var _bandeau_haut:Class;
-        private var _bandeau_bas:Class;
-        private var _foreground:Class;
-        private var _defaultForeground:Class;
-        private var _logoFr:Class;
-        private var _logoJp:Class;
-        private var _logoRu:Class;
-        private var _dofusProgress:Class;
-        private var _tipsBackground:Class;
-        private var _btnLog:Class;
-        private var _btnContinue:Class;
-        private var _txProgressBar:Class;
-        private var _txProgressBarBackground:Class;
-        private var _progressClip:MovieClip;
+        private var _levelColor:Array = new Array(0x7C7C7C, 9216860, 11556943, 0xFF6600);
+        private var _background:Class = LoadingScreen__background;
+        private var _bandeau_bas:Class = LoadingScreen__bandeau_bas;
+        private var _foreground:Class = LoadingScreen__foreground;
+        private var _logoFr:Class = LoadingScreen__logoFr;
+        private var _progessAnim:Class = LoadingScreen__progessAnim;
+        private var _tipsBackground:Class = LoadingScreen__tipsBackground;
+        private var _logBackgroundTx:Class = LoadingScreen__logBackgroundTx;
+        private var _btnLogTx:Class = LoadingScreen__btnLogTx;
+        private var _btnContinue:Class = LoadingScreen__btnContinue;
+        private var _txProgressBar:Class = LoadingScreen__txProgressBar;
+        private var _txProgressBarBackground:Class = LoadingScreen__txProgressBarBackground;
+        private var _fontProgress:Class = LoadingScreen__fontProgress;
+        private var _fontVersion:Class = LoadingScreen__fontVersion;
+        private var _tipsBackgroundTexture:TextureBitmap;
+        private var _progressTf:TextField;
         private var _backgroundBitmap:Bitmap;
         private var _foregroundBitmap:Bitmap;
         private var _backgroundContainer:Sprite;
         private var _foregroundContainer:Sprite;
-        private var _tipsBackgroundBitmap:DisplayObject;
         private var _tipsTextField:TextField;
         private var _achievementLabel:TextField;
         private var _achievementNumbersLabel:TextField;
@@ -79,40 +78,36 @@
         private var _continueCallBack:Function;
         private var _progressBar:DisplayObject;
         private var _progressBarBackground:DisplayObject;
-        private var _showBigVersion:Boolean;
+        private var _enableTipsScrollBar:Boolean;
+        private var _lsl:LoadingScreenLight;
+        private var _bottom:Sprite;
+        private var _buildsInfo:TextField;
+        private var _buildsInfoBig:TextField;
+        private var _btnLog:DisplayObject;
+        private var _logTf:TextField;
+        private var _showDetailledVersion:Boolean;
         private var _beforeLogin:Boolean;
         private var _customLoadingScreen:CustomLoadingScreen;
+        private var _startLoadingTime:Number;
         private var _workerbufferSize:int = -1;
         private var _connectionBufferSize:int = -1;
+        public var logCallbackHandler:Function;
+        private var _logBg:TextureBitmap;
+        private var _bandeauBas:Bitmap;
 
-        public function LoadingScreen(showBigVersion:Boolean=false, beforeLogin:Boolean=false)
+        public function LoadingScreen(showDetailledVersion:Boolean=false, beforeLogin:Boolean=false, displayMiniUi:Boolean=false)
         {
             var adapter:BitmapAdapter;
-            this._loader = ResourceLoaderFactory.getLoader(ResourceLoaderType.SERIAL_LOADER);
-            this._levelColor = new Array(0x7C7C7C, 9216860, 11556943, 0xFF6600);
-            this._background = LoadingScreen__background;
-            this._defaultBackground = LoadingScreen__defaultBackground;
-            this._bandeau_haut = LoadingScreen__bandeau_haut;
-            this._bandeau_bas = LoadingScreen__bandeau_bas;
-            this._foreground = LoadingScreen__foreground;
-            this._defaultForeground = LoadingScreen__defaultForeground;
-            this._logoFr = LoadingScreen__logoFr;
-            this._logoJp = LoadingScreen__logoJp;
-            this._logoRu = LoadingScreen__logoRu;
-            this._dofusProgress = LoadingScreen__dofusProgress;
-            this._tipsBackground = LoadingScreen__tipsBackground;
-            this._btnLog = LoadingScreen__btnLog;
-            this._btnContinue = LoadingScreen__btnContinue;
-            this._txProgressBar = LoadingScreen__txProgressBar;
-            this._txProgressBarBackground = LoadingScreen__txProgressBarBackground;
             super(null, null);
-            this._showBigVersion = showBigVersion;
+            this._startLoadingTime = new Date().getTime();
+            listenResize(true);
+            this._showDetailledVersion = showDetailledVersion;
             this._beforeLogin = beforeLogin;
-            if (((((!(beforeLogin)) && (Kernel.getWorker()))) && (ConnectionsHandler.getConnection())))
+            if (displayMiniUi)
             {
-                EnterFrameDispatcher.addEventListener(this.onEnterFrame, "loadingScreen");
-                addEventListener(Event.REMOVED_FROM_STAGE, this.onRemoveFromStage);
+                this._lsl = new LoadingScreenLight();
             };
+            addEventListener(Event.REMOVED_FROM_STAGE, this.onRemoveFromStage);
             this._customLoadingScreen = CustomLoadingScreenManager.getInstance().currentLoadingScreen;
             if (((this._customLoadingScreen) && (this._customLoadingScreen.canBeReadOnScreen(beforeLogin))))
             {
@@ -128,7 +123,6 @@
                     {
                         adapter.loadFromData(new Uri(this._customLoadingScreen.foregroundUrl), this._customLoadingScreen.foregroundImg, this, false);
                     };
-                    this._customLoadingScreen.dataStore = CustomLoadingScreenManager.getInstance().dataStore;
                     this._customLoadingScreen.isViewing();
                 }
                 catch(e:Error)
@@ -145,13 +139,30 @@
             this.finalizeInitialization();
         }
 
-        public function get finalized():Boolean
+        override public function get finalized():Boolean
         {
             return (true);
         }
 
-        public function set finalized(b:Boolean):void
+        override public function set finalized(b:Boolean):void
         {
+        }
+
+        public function get closeMiniUiRequestHandler():Function
+        {
+            if (this._lsl)
+            {
+                return (this._lsl.closeRequestHandler);
+            };
+            return (null);
+        }
+
+        public function set closeMiniUiRequestHandler(value:Function):void
+        {
+            if (this._lsl)
+            {
+                this._lsl.closeRequestHandler = value;
+            };
         }
 
         public function set value(v:Number):void
@@ -164,9 +175,12 @@
             {
                 v = 100;
             };
-            Dofus.getInstance().strProgress = v;
+            if (this._lsl)
+            {
+                this._lsl.progression = (v / 100);
+            };
             this._value = v;
-            this._progressClip.gotoAndStop((Math.round(v) + 2));
+            this._progressTf.text = (Math.round(v) + "%");
         }
 
         public function get value():Number
@@ -174,25 +188,12 @@
             return (this._value);
         }
 
-        public function finalize():void
+        override public function finalize():void
         {
         }
 
         private function finalizeInitialization():void
         {
-            var logo:Bitmap;
-            var buildsInfoBig:TextField;
-            this._logTf = new TextField();
-            this._logTf.width = StageShareManager.startWidth;
-            this._logTf.height = 500;
-            this._logTf.x = 10;
-            this._logTf.y = 300;
-            var font:String = ((FontManager.initialized) ? FontManager.getInstance().getFontClassName("Tahoma") : "Tahoma");
-            this._logTf.setTextFormat(new TextFormat(font));
-            this._logTf.defaultTextFormat = new TextFormat(font);
-            this._logTf.multiline = true;
-            addChild(this._logTf);
-            this._logTf.visible = false;
             this._backgroundContainer = new Sprite();
             if (((this._customLoadingScreen) && (this._customLoadingScreen.linkUrl)))
             {
@@ -202,107 +203,129 @@
             };
             if (((!(this._backgroundBitmap)) && (!(this._customLoadingScreen))))
             {
-                this._backgroundBitmap = (this._backgroundContainer.addChild(new ((((Capabilities.language == "ja")) ? this._defaultBackground : this._background))()) as Bitmap);
+                this._backgroundBitmap = (this._backgroundContainer.addChild(new this._background()) as Bitmap);
                 this._backgroundBitmap.smoothing = true;
+                this._backgroundBitmap.x = ((StageShareManager.startWidth - this._backgroundBitmap.width) / 2);
+                this._backgroundBitmap.y = ((StageShareManager.startHeight - this._backgroundBitmap.height) / 2);
             };
             addChild(this._backgroundContainer);
             this._foregroundContainer = new Sprite();
             this._foregroundContainer.mouseEnabled = false;
             this._foregroundContainer.mouseChildren = false;
-            addChild(new (this._bandeau_haut)());
             if (USE_FORGROUND)
             {
                 if (((!(this._foregroundBitmap)) && (!(this._customLoadingScreen))))
                 {
-                    this._foregroundBitmap = (this._foregroundContainer.addChild(new ((((Capabilities.language == "ja")) ? this._defaultForeground : this._foreground))()) as Bitmap);
+                    this._foregroundBitmap = (this._foregroundContainer.addChild(new this._foreground()) as Bitmap);
                     this._foregroundBitmap.smoothing = true;
                 };
             };
-            var bandeauBas:Bitmap = new this._bandeau_bas();
-            bandeauBas.y = (StageShareManager.startHeight - bandeauBas.height);
-            bandeauBas.smoothing = true;
-            addChild(bandeauBas);
-            this._tipsBackgroundBitmap = new this._tipsBackground();
-            this._tipsBackgroundBitmap.x = 89;
-            this._tipsBackgroundBitmap.y = 933;
-            addChild(this._tipsBackgroundBitmap);
-            this._tipsBackgroundBitmap.visible = false;
+            this._logBg = new TextureBitmap();
+            this._logBg.width = 2000;
+            this._logBg.x = ((StageShareManager.startWidth - this._logBg.width) / 2);
+            this._logBg.loadBitmapData(Bitmap(new this._logBackgroundTx()).bitmapData);
+            this._logBg.visible = false;
+            addChild(this._logBg);
+            this._bottom = new Sprite();
+            addChild(this._bottom);
+            this._logTf = new TextField();
+            this._logTf.width = StageShareManager.startWidth;
+            this._logTf.x = 10;
+            var font:String = (((FontManager.initialized) && (FontManager.getInstance().getFontInfo("Tahoma"))) ? FontManager.getInstance().getFontInfo("Tahoma").className : "Tahoma");
+            this._logTf.defaultTextFormat = new TextFormat(font);
+            this._logTf.multiline = true;
+            this._bottom.addChild(this._logTf);
+            this._logTf.visible = false;
+            this._bandeauBas = new this._bandeau_bas();
+            this._bandeauBas.y = (StageShareManager.startHeight - this._bandeauBas.height);
+            this._bandeauBas.x = ((StageShareManager.startWidth - this._bandeauBas.width) / 2);
+            this._bandeauBas.smoothing = true;
+            this._bottom.addChild(this._bandeauBas);
+            this._tipsBackgroundTexture = new TextureBitmap();
+            this._tipsBackgroundTexture.scale9Grid = new Rectangle();
+            this._tipsBackgroundTexture.loadBitmapData(Bitmap(new this._tipsBackground()).bitmapData);
+            this._tipsBackgroundTexture.x = 89;
+            this._tipsBackgroundTexture.y = 922;
+            this._tipsBackgroundTexture.height = 89;
+            this._bottom.addChild(this._tipsBackgroundTexture);
+            this._tipsBackgroundTexture.visible = false;
             this._tipsTextField = new TextField();
-            this._tipsTextField.x = (this._tipsBackgroundBitmap.x + 10);
-            this._tipsTextField.y = (this._tipsBackgroundBitmap.y + 10);
-            this._tipsTextField.width = (this._tipsBackgroundBitmap.width - 20);
-            this._tipsTextField.height = this._tipsBackgroundBitmap.height;
-            this._tipsTextField.defaultTextFormat = new TextFormat(font, 19, 0x999999, null, null, null, null, null, "center");
+            this._tipsTextField.defaultTextFormat = new TextFormat("LoadingScreenFont", 16, 13092805, null, null, null, null, null, "center");
             this._tipsTextField.embedFonts = true;
             this._tipsTextField.selectable = false;
             this._tipsTextField.visible = false;
             this._tipsTextField.multiline = true;
             this._tipsTextField.wordWrap = true;
-            addChild(this._tipsTextField);
+            this._tipsTextField.width = 1000;
+            this._tipsTextField.x = ((StageShareManager.startWidth - this._tipsTextField.width) / 2);
+            this._tipsTextField.height = this._tipsBackgroundTexture.height;
+            this._bottom.addChild(this._tipsTextField);
             addChild(this._foregroundContainer);
-            switch (Capabilities.language)
-            {
-                case "ja":
-                    logo = new this._logoJp();
-                    logo.x = 8;
-                    logo.y = -30;
-                    break;
-                case "ru":
-                    logo = new this._logoRu();
-                    logo.x = 8;
-                    logo.y = 8;
-                    break;
-                default:
-                    logo = new this._logoFr();
-                    logo.x = 8;
-                    logo.y = -30;
-            };
+            this._tipsBackgroundTexture.visible = false;
+            var logo:Bitmap = new this._logoFr();
+            logo.x = 435;
+            logo.y = 653;
             logo.smoothing = true;
-            addChild(logo);
-            this._progressClip = new this._dofusProgress();
-            this._progressClip.x = 608;
-            this._progressClip.y = 821;
-            this._progressClip.scaleX = (this._progressClip.scaleY = 0.5);
-            addChild(this._progressClip);
-            var buildsInfo:TextField = new TextField();
-            buildsInfo.appendText((("Dofus " + BuildInfos.BUILD_VERSION) + "\n"));
-            buildsInfo.appendText((("Mode " + BuildTypeParser.getTypeName(BuildInfos.BUILD_TYPE)) + "\n"));
-            buildsInfo.appendText((BuildInfos.BUILD_DATE + "\n"));
-            buildsInfo.appendText(("Player " + Capabilities.version));
-            buildsInfo.height = 200;
-            buildsInfo.width = 300;
-            buildsInfo.selectable = false;
-            buildsInfo.setTextFormat(new TextFormat(font, null, null, null, null, null, null, null, "right"));
-            buildsInfo.textColor = 0x777777;
-            buildsInfo.y = 5;
-            buildsInfo.x = (StageShareManager.startWidth - buildsInfo.width);
-            addChild(buildsInfo);
-            var btnLog:DisplayObject = new this._btnLog();
-            btnLog.x = 5;
-            btnLog.y = ((StageShareManager.startHeight - btnLog.height) - 5);
-            btnLog.addEventListener(MouseEvent.CLICK, this.onLogClick);
-            addChild(btnLog);
+            this._bottom.addChild(logo);
+            var tfFormat:TextFormat = new TextFormat("LoadingScreenFont", 26, 6908264, null, null, null, null, null);
+            this._progressTf = new TextField();
+            this._progressTf.x = 610;
+            this._progressTf.y = 871;
+            this._progressTf.embedFonts = true;
+            this._progressTf.defaultTextFormat = tfFormat;
+            this._progressTf.filters = [new DropShadowFilter(1, 122, 0, 1, 3, 3)];
+            this._bottom.addChild(this._progressTf);
+            var progessAnim:MovieClip = (new this._progessAnim() as MovieClip);
+            progessAnim.x = ((this._progressTf.x - 3) - progessAnim.width);
+            progessAnim.y = (this._progressTf.y + 9);
+            this._bottom.addChild(progessAnim);
+            this._buildsInfo = new TextField();
+            this._buildsInfo.appendText((("Dofus " + BuildInfos.VERSION) + "\n"));
+            this._buildsInfo.appendText((("Mode " + BuildInfos.buildTypeName) + "\n"));
+            this._buildsInfo.appendText((BuildInfos.BUILD_DATE + "\n"));
+            this._buildsInfo.appendText(("Player " + Capabilities.version));
+            this._buildsInfo.height = 200;
+            this._buildsInfo.width = 300;
+            this._buildsInfo.setTextFormat(new TextFormat("LoadingScreenFont2", 14, 6908264, null, true));
+            this._buildsInfo.embedFonts = true;
+            this._buildsInfo.y = 832;
+            this._bottom.addChild(this._buildsInfo);
+            this._btnLog = new this._btnLogTx();
+            this._btnLog.y = 832;
+            this._btnLog.addEventListener(MouseEvent.CLICK, this.onLogClick);
+            this._bottom.addChild(this._btnLog);
             this._btnContinueClip = (new this._btnContinue() as SimpleButton);
-            this._btnContinueClip.x = (this._progressClip.x + ((this._progressClip.width - this._btnContinueClip.width) / 2));
-            this._btnContinueClip.y = ((this._progressClip.y + this._progressClip.height) + 30);
+            this._btnContinueClip.x = (this._progressTf.x + ((this._progressTf.width - this._btnContinueClip.width) / 2));
+            this._btnContinueClip.y = ((this._progressTf.y + this._progressTf.height) + 30);
             this._btnContinueClip.addEventListener(MouseEvent.CLICK, this.onContinueClick);
             this._btnContinueClip.visible = false;
-            addChild(this._btnContinueClip);
+            this._bottom.addChild(this._btnContinueClip);
             graphics.beginFill(0);
             graphics.drawRect(0, 0, width, height);
             graphics.endFill();
-            if ((((BuildInfos.BUILD_TYPE > BuildTypeEnum.RELEASE)) && (this._showBigVersion)))
+            if (BuildInfos.BUILD_TYPE > BuildTypeEnum.RELEASE)
             {
-                buildsInfoBig = new TextField();
-                buildsInfoBig.appendText((BuildTypeParser.getTypeName(BuildInfos.BUILD_TYPE) + " version"));
-                buildsInfoBig.x = 300;
-                buildsInfoBig.y = 30;
-                buildsInfoBig.width = 400;
-                buildsInfoBig.selectable = false;
-                buildsInfoBig.setTextFormat(new TextFormat(font, 30, BuildTypeParser.getTypeColor(BuildInfos.BUILD_TYPE), true));
-                addChild(buildsInfoBig);
+                this._buildsInfoBig = new TextField();
+                this._buildsInfoBig.appendText((BuildInfos.buildTypeName.toUpperCase() + " version"));
+                this._buildsInfoBig.y = 832;
+                this._buildsInfoBig.width = 400;
+                this._buildsInfoBig.selectable = false;
+                this._buildsInfoBig.embedFonts = true;
+                this._buildsInfoBig.setTextFormat(new TextFormat("LoadingScreenFont2", 40, BuildTypeParser.getTypeColor(BuildInfos.BUILD_TYPE), true));
+                this._bottom.addChild(this._buildsInfoBig);
             };
+            this.hideTips();
+            this.onResize();
             iAmFinalized(this);
+        }
+
+        public function hideMiniUi():void
+        {
+            if (this._lsl)
+            {
+                this._lsl.destroy();
+                this._lsl = null;
+            };
         }
 
         private function displayAchievmentProgressBar(achievmentsInfo:AchievementListMessage):void
@@ -311,10 +334,11 @@
             var category:AchievementCategory;
             var tempCat:AchievementCategory;
             var tempId:uint;
+            var finishedAChievement:AchievementAchieved;
             var font:String;
             var achievementsCategories:Array = AchievementCategory.getAchievementCategories();
             var isAParent:Boolean;
-            while (!(isAParent))
+            while ((!(isAParent)))
             {
                 randomIndex = Math.round((Math.random() * (achievementsCategories.length - 1)));
                 category = achievementsCategories[randomIndex];
@@ -328,19 +352,22 @@
                 };
             };
             achievementsCategories = AchievementCategory.getAchievementCategories();
-            var finishedAchievement:int;
-            var totalAchievement:int;
+            var finishedAchievementCount:int;
+            var totalAchievementCount:int;
             for each (tempCat in achievementsCategories)
             {
-                if ((((tempCat.parentId == category.id)) || ((tempCat.id == category.id))))
+                if (((tempCat.parentId == category.id) || (tempCat.id == category.id)))
                 {
                     for each (tempId in tempCat.achievementIds)
                     {
-                        if (achievmentsInfo.finishedAchievementsIds.indexOf(tempId) != -1)
+                        for each (finishedAChievement in achievmentsInfo.finishedAchievements)
                         {
-                            finishedAchievement++;
+                            if (finishedAChievement.id == tempId)
+                            {
+                                finishedAchievementCount++;
+                            };
                         };
-                        totalAchievement++;
+                        totalAchievementCount++;
                     };
                 };
             };
@@ -348,11 +375,11 @@
             this._progressBarBackground = new this._txProgressBarBackground();
             this._achievementLabel = new TextField();
             this._achievementNumbersLabel = new TextField();
-            this._tipsBackgroundBitmap.y = (this._tipsBackgroundBitmap.y - 18);
-            this._tipsBackgroundBitmap.height = (this._tipsBackgroundBitmap.height - 200);
-            this._tipsTextField.y = (this._tipsBackgroundBitmap.y + 10);
-            font = ((FontManager.initialized) ? FontManager.getInstance().getFontClassName("Tahoma") : "Tahoma");
-            this._achievementLabel.x = this._tipsBackgroundBitmap.x;
+            this._tipsBackgroundTexture.y = (this._tipsBackgroundTexture.y - 18);
+            this._tipsBackgroundTexture.height = (this._tipsBackgroundTexture.height - 200);
+            this._tipsTextField.y = (this._tipsBackgroundTexture.y + 10);
+            font = (((FontManager.initialized) && (FontManager.getInstance().getFontInfo("Tahoma"))) ? FontManager.getInstance().getFontInfo("Tahoma").className : "Tahoma");
+            this._achievementLabel.x = this._tipsBackgroundTexture.x;
             this._achievementLabel.defaultTextFormat = new TextFormat(font, 19, 0xFFFFFF, null, null, null, null, null, "center");
             this._achievementLabel.embedFonts = true;
             this._achievementLabel.selectable = false;
@@ -365,23 +392,23 @@
             this._achievementNumbersLabel.selectable = false;
             this._achievementNumbersLabel.visible = true;
             this._achievementNumbersLabel.multiline = false;
-            this._achievementNumbersLabel.text = ((finishedAchievement + " / ") + totalAchievement);
+            this._achievementNumbersLabel.text = ((finishedAchievementCount + " / ") + totalAchievementCount);
             this._achievementNumbersLabel.autoSize = TextFieldAutoSize.LEFT;
-            this._achievementNumbersLabel.x = ((this._tipsBackgroundBitmap.x + this._tipsBackgroundBitmap.width) - this._achievementNumbersLabel.width);
+            this._achievementNumbersLabel.x = ((this._tipsBackgroundTexture.x + this._tipsBackgroundTexture.width) - this._achievementNumbersLabel.width);
             this._progressBarBackground.height = -3;
             this._progressBarBackground.x = ((this._achievementLabel.x + this._achievementLabel.width) + 5);
-            this._progressBarBackground.y = ((this._tipsBackgroundBitmap.y + this._tipsBackgroundBitmap.height) + 5);
+            this._progressBarBackground.y = ((this._tipsBackgroundTexture.y + this._tipsBackgroundTexture.height) + 5);
             this._achievementLabel.y = (this._progressBarBackground.y - (this._achievementLabel.height / 4));
             this._achievementLabel.height = this._progressBarBackground.height;
             this._achievementNumbersLabel.height = this._progressBarBackground.height;
             this._achievementNumbersLabel.y = (this._progressBarBackground.y - (this._achievementNumbersLabel.height / 4));
             this._progressBar.x = this._progressBarBackground.x;
             this._progressBar.y = this._progressBarBackground.y;
-            this._progressBarBackground.width = ((((this._tipsBackgroundBitmap.x + this._tipsBackgroundBitmap.width) - this._achievementNumbersLabel.width) - this._progressBarBackground.x) - 5);
+            this._progressBarBackground.width = ((((this._tipsBackgroundTexture.x + this._tipsBackgroundTexture.width) - this._achievementNumbersLabel.width) - this._progressBarBackground.x) - 5);
             var colorTransfom:ColorTransform = new ColorTransform();
             colorTransfom.color = uint(category.color);
             this._progressBar.transform.colorTransform = colorTransfom;
-            var achievementPercent:Number = (finishedAchievement / totalAchievement);
+            var achievementPercent:Number = (finishedAchievementCount / totalAchievementCount);
             this._progressBar.width = (achievementPercent * this._progressBarBackground.width);
             this._progressBar.visible = true;
             this._progressBarBackground.visible = true;
@@ -394,45 +421,59 @@
         public function log(text:String, level:uint):void
         {
             var tc:ColorTransform;
-            if ((((level == ERROR)) || ((level == WARNING))))
+            if (((level == ERROR) || (level == WARNING)))
             {
                 tc = new ColorTransform();
                 tc.color = this._levelColor[level];
-                this._progressClip.transform.colorTransform = tc;
+                this._progressTf.transform.colorTransform = tc;
                 this.showLog(true);
             };
-            this._logTf.htmlText = ((((('<p><font color="#' + uint(this._levelColor[level]).toString(16)) + '">') + text) + "</font></p>") + this._logTf.htmlText);
+            this._logTf.htmlText = (this._logTf.htmlText + (((('<p><font color="#' + uint(this._levelColor[level]).toString(16)) + '">') + text) + "</font></p>"));
+            this._logTf.scrollV = this._logTf.maxScrollV;
+            if (this.logCallbackHandler != null)
+            {
+                this.logCallbackHandler(text, level);
+            };
         }
 
         public function showLog(b:Boolean):void
         {
-            if (this._foregroundBitmap)
-            {
-                this._foregroundBitmap.visible = !(b);
-            };
-            if (this._backgroundBitmap)
-            {
-                this._backgroundBitmap.visible = !(b);
-            };
+            this._logBg.visible = b;
             this._logTf.visible = b;
         }
 
         public function hideTips():void
         {
+            this._bottom.y = 102;
             this._tipsTextField.visible = false;
-            this._tipsBackgroundBitmap.visible = false;
-        }
-
-        public function set useEmbedFont(b:Boolean):void
-        {
-            this._tipsTextField.embedFonts = false;
+            this._tipsBackgroundTexture.visible = false;
         }
 
         public function set tip(txt:String):void
         {
+            var sb:Scrollbar;
+            this._bottom.y = 0;
             this._tipsTextField.visible = true;
-            this._tipsBackgroundBitmap.visible = true;
+            this._tipsBackgroundTexture.visible = true;
             this._tipsTextField.htmlText = txt;
+            this._tipsTextField.y = (this._tipsBackgroundTexture.y + ((this._tipsBackgroundTexture.height - this._tipsTextField.textHeight) / 2));
+            if (((this._tipsTextField.numLines > 3) && (this._enableTipsScrollBar)))
+            {
+                sb = new Scrollbar(this._tipsTextField);
+                sb.y = this._tipsBackgroundTexture.y;
+                sb.x = 1170;
+                addChild(sb);
+            };
+        }
+
+        public function set tipSelectable(value:Boolean):void
+        {
+            this._tipsTextField.selectable = value;
+        }
+
+        public function set enableTipsScrollBar(value:Boolean):void
+        {
+            this._enableTipsScrollBar = value;
         }
 
         public function set continueCallbak(cb:Function):void
@@ -445,7 +486,7 @@
 
         private function onLogClick(e:Event):void
         {
-            this.showLog(!(this._logTf.visible));
+            this.showLog((!(this._logTf.visible)));
         }
 
         private function onContinueClick(e:Event):void
@@ -466,8 +507,10 @@
                         };
                         this._backgroundBitmap = new Bitmap((resource as BitmapData));
                         this._backgroundBitmap.smoothing = true;
+                        this._backgroundBitmap.x = ((StageShareManager.startWidth - this._backgroundBitmap.width) / 2);
+                        this._backgroundBitmap.y = ((StageShareManager.startHeight - this._backgroundBitmap.height) / 2);
                         this._backgroundContainer.addChild(this._backgroundBitmap);
-                        return;
+                        break;
                     case new Uri(this._customLoadingScreen.foregroundUrl).toString():
                         if (this._foregroundBitmap)
                         {
@@ -475,15 +518,20 @@
                         };
                         this._foregroundBitmap = new Bitmap((resource as BitmapData));
                         this._foregroundBitmap.smoothing = true;
+                        if (this._backgroundBitmap)
+                        {
+                            this._backgroundBitmap.x = ((StageShareManager.startWidth - this._backgroundBitmap.width) / 2);
+                            this._backgroundBitmap.y = ((StageShareManager.startHeight - this._backgroundBitmap.height) / 2);
+                        };
                         this._foregroundContainer.addChild(this._foregroundBitmap);
-                        return;
+                        break;
                 };
             };
         }
 
         public function onClick(e:MouseEvent):void
         {
-            if (((((this._customLoadingScreen) && (this._customLoadingScreen.canBeReadOnScreen(this._beforeLogin)))) && (this._customLoadingScreen.linkUrl)))
+            if ((((this._customLoadingScreen) && (this._customLoadingScreen.canBeReadOnScreen(this._beforeLogin))) && (this._customLoadingScreen.linkUrl)))
             {
                 navigateToURL(new URLRequest(this._customLoadingScreen.linkUrl));
             };
@@ -500,56 +548,31 @@
 
         public function onEnterFrame(e:Event):void
         {
-            var i:int;
-            var workerMessageBuffer:Vector.<Message> = Kernel.getWorker().pausedQueue;
-            var connectionMessageBuffer:Array = ConnectionsHandler.getConnection().getPauseBuffer();
-            var achievmentsInfo:AchievementListMessage;
-            if (workerMessageBuffer.length > this._workerbufferSize)
+            EnterFrameDispatcher.removeEventListener(this.onEnterFrame);
+        }
+
+        public function refreshSize():void
+        {
+            this.onResize();
+        }
+
+        override protected function onResize(event:Event=null):void
+        {
+            var stageVisibleBounds:Rectangle;
+            if (this._logTf)
             {
-                if (this._workerbufferSize <= 0)
+                stageVisibleBounds = StageShareManager.stageVisibleBounds;
+                this._logTf.x = (stageVisibleBounds.left + 10);
+                this._buildsInfo.x = (stageVisibleBounds.left + 50);
+                if (this._buildsInfoBig)
                 {
-                    i = 0;
-                }
-                else
-                {
-                    i = (this._workerbufferSize - 1);
+                    this._buildsInfoBig.x = ((stageVisibleBounds.right - this._buildsInfoBig.textWidth) - 10);
                 };
-                this._workerbufferSize = workerMessageBuffer.length;
-                while (i < this._workerbufferSize)
-                {
-                    if ((workerMessageBuffer[i] is AchievementListMessage))
-                    {
-                        achievmentsInfo = (workerMessageBuffer[i] as AchievementListMessage);
-                        break;
-                    };
-                    i++;
-                };
-            };
-            if (((!(achievmentsInfo)) && ((connectionMessageBuffer.length > this._connectionBufferSize))))
-            {
-                if (this._connectionBufferSize <= 0)
-                {
-                    i = 0;
-                }
-                else
-                {
-                    i = (this._connectionBufferSize - 1);
-                };
-                this._connectionBufferSize = connectionMessageBuffer.length;
-                while (i < this._connectionBufferSize)
-                {
-                    if ((connectionMessageBuffer[i] is AchievementListMessage))
-                    {
-                        achievmentsInfo = (connectionMessageBuffer[i] as AchievementListMessage);
-                        break;
-                    };
-                    i++;
-                };
-            };
-            if (achievmentsInfo)
-            {
-                EnterFrameDispatcher.removeEventListener(this.onEnterFrame);
-                this.displayAchievmentProgressBar(achievmentsInfo);
+                this._btnLog.x = (stageVisibleBounds.left + 10);
+                this._tipsBackgroundTexture.width = (stageVisibleBounds.width - 100);
+                this._tipsBackgroundTexture.x = (stageVisibleBounds.left + ((stageVisibleBounds.width - this._tipsBackgroundTexture.width) / 2));
+                this._logTf.y = -(this._bottom.y);
+                this._logTf.height = ((this._bottom.y + this._bandeauBas.y) - 5);
             };
         }
 
@@ -557,9 +580,122 @@
         {
             EnterFrameDispatcher.removeEventListener(this.onEnterFrame);
             removeEventListener(Event.REMOVED_FROM_STAGE, this.onRemoveFromStage);
+            var stats:Object = UiStatsFrame.getStatsData();
+            var id:String = ((this._beforeLogin) ? "first_loading_duration" : "loading_duration");
+            var value:uint = uint(((new Date().getTime() - this._startLoadingTime) / 1000));
+            if (((!(stats.hasOwnProperty(id))) || (stats[id] < value)))
+            {
+                UiStatsFrame.setStat(id, value);
+            };
+            KernelEventsManager.getInstance().processCallback(BeriliaHookList.LoadingFinished);
+            if (this._lsl)
+            {
+                this._lsl.destroy();
+            };
         }
 
 
     }
-}//package com.ankamagames.dofus.misc.utils
+} com.ankamagames.dofus.misc.utils
+
+import flash.display.Sprite;
+import flash.text.TextField;
+import flash.display.MovieClip;
+import flash.geom.Rectangle;
+import flash.events.MouseEvent;
+import flash.events.Event;
+import com.ankamagames.jerakine.utils.display.StageShareManager;
+import com.ankamagames.jerakine.utils.display.EnterFrameDispatcher;
+
+class Scrollbar extends Sprite 
+{
+
+    /*private*/ var _sbDownArrow:Class = Scrollbar__sbDownArrow;
+    /*private*/ var _sbUpArrow:Class = Scrollbar__sbUpArrow;
+    /*private*/ var _sbCursor:Class = Scrollbar__sbCursor;
+    /*private*/ var _textfield:TextField;
+    /*private*/ var _cursor:MovieClip;
+    /*private*/ var _cursorY:Number;
+    /*private*/ var _lastCursorY:Number;
+    /*private*/ var _scrollStep:Number;
+    /*private*/ var _scrollHeight:Number;
+
+    public function Scrollbar(pTextfield:TextField)
+    {
+        var dragBounds:Rectangle;
+        super();
+        this._textfield = pTextfield;
+        var upArrow:MovieClip = new this._sbUpArrow();
+        var downArrow:MovieClip = new this._sbDownArrow();
+        this._cursor = new this._sbCursor();
+        upArrow.gotoAndStop(0);
+        upArrow.buttonMode = true;
+        downArrow.gotoAndStop(0);
+        downArrow.buttonMode = true;
+        this._cursor.gotoAndStop(0);
+        this._cursor.buttonMode = true;
+        this._cursorY = upArrow.height;
+        addChild(upArrow);
+        downArrow.y = (this._textfield.height - downArrow.height);
+        addChild(downArrow);
+        addChild(this._cursor);
+        this._scrollHeight = ((downArrow.y - this._cursor.height) - this._cursorY);
+        this._scrollStep = (this._scrollHeight / (this._textfield.maxScrollV - 1));
+        this.updateCursorPos();
+        upArrow.addEventListener(MouseEvent.CLICK, function (e:MouseEvent):void
+        {
+            if (_textfield.scrollV > 1)
+            {
+                _textfield.scrollV--;
+            };
+            updateCursorPos();
+        });
+        downArrow.addEventListener(MouseEvent.CLICK, function (e:MouseEvent):void
+        {
+            if (_textfield.scrollV < _textfield.maxScrollV)
+            {
+                _textfield.scrollV++;
+            };
+            updateCursorPos();
+        });
+        this._textfield.addEventListener(Event.SCROLL, function (e:Event):void
+        {
+            updateCursorPos();
+        });
+        dragBounds = new Rectangle(0, this._cursorY, 0, this._scrollHeight);
+        this._cursor.addEventListener(MouseEvent.MOUSE_DOWN, function (e:MouseEvent):void
+        {
+            _cursor.startDrag(false, dragBounds);
+        });
+        StageShareManager.stage.addEventListener(MouseEvent.MOUSE_UP, function (e:MouseEvent):void
+        {
+            _cursor.stopDrag();
+        });
+        EnterFrameDispatcher.addEventListener(this.updateScroll, "LoadingScreenScrollbar");
+    }
+
+    /*private*/ function updateCursorPos():void
+    {
+        this._cursor.y = (this._cursorY + ((this._textfield.scrollV - 1) * this._scrollStep));
+    }
+
+    /*private*/ function updateScroll(e:Event):void
+    {
+        var currentPos:Number = (this._cursorY + ((this._textfield.scrollV - 1) * this._scrollStep));
+        if (((this._cursor.y <= (currentPos - this._scrollStep)) && (this._textfield.scrollV > 1)))
+        {
+            this._textfield.scrollV--;
+        }
+        else
+        {
+            if (((this._cursor.y >= (currentPos + this._scrollStep)) && (this._textfield.scrollV < this._textfield.maxScrollV)))
+            {
+                this._textfield.scrollV++;
+            };
+        };
+    }
+
+
+}
+
 

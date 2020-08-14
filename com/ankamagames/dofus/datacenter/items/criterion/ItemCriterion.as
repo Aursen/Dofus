@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.datacenter.items.criterion
+package com.ankamagames.dofus.datacenter.items.criterion
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.jerakine.logger.Logger;
@@ -7,7 +7,6 @@
     import __AS3__.vec.Vector;
     import com.ankamagames.dofus.logic.game.common.managers.PlayedCharacterManager;
     import com.ankamagames.jerakine.data.I18n;
-    import com.ankamagames.jerakine.utils.misc.StringUtils;
     import com.ankamagames.dofus.network.types.game.character.characteristic.CharacterBaseCharacteristic;
     import __AS3__.vec.*;
 
@@ -40,6 +39,16 @@
             return (this._criterionValue);
         }
 
+        public function get operatorText():String
+        {
+            return ((this._operator) ? this._operator.text : null);
+        }
+
+        public function get operator():ItemCriterionOperator
+        {
+            return (this._operator);
+        }
+
         public function get isRespected():Boolean
         {
             var player:PlayedCharacterManager = PlayedCharacterManager.getInstance();
@@ -52,7 +61,30 @@
 
         public function get text():String
         {
+            return (this.buildText(false));
+        }
+
+        public function get textForTooltip():String
+        {
+            return (this.buildText(true));
+        }
+
+        public function get basicText():String
+        {
+            return (this._serverCriterionForm);
+        }
+
+        public function clone():IItemCriterion
+        {
+            var clonedCriterion:IItemCriterion = new ItemCriterion(this.basicText);
+            return (clonedCriterion);
+        }
+
+        private function buildText(forTooltip:Boolean=false):String
+        {
             var readableCriterionRef:String;
+            var knownCriteriaList:Array;
+            var index:int;
             switch (this._criterionRef)
             {
                 case "CM":
@@ -74,20 +106,22 @@
                     readableCriterionRef = I18n.getUiText("ui.stats.takleEvade");
                     break;
                 default:
-                    readableCriterionRef = StringUtils.replace(this._criterionRef, ["CS", "Cs", "CV", "Cv", "CA", "Ca", "CI", "Ci", "CW", "Cw", "CC", "Cc", "PG", "PJ", "Pj", "PM", "PA", "PN", "PE", "<NO>", "PS", "PR", "PL", "PK", "Pg", "Pr", "Ps", "Pa", "PP", "PZ", "CM", "Qa", "CP", "ca", "cc", "ci", "cs", "cv", "cw"], I18n.getUiText("ui.item.characteristics").split(","));
+                    knownCriteriaList = ["CS", "Cs", "CV", "Cv", "CA", "Ca", "CI", "Ci", "CW", "Cw", "CC", "Cc", "PG", "PJ", "Pj", "PM", "PA", "PN", "PE", "<NO>", "PS", "PR", "PL", "PK", "Pg", "Pr", "Ps", "Pa", "PP", "PZ", "CM", "Qa", "CP", "ca", "cc", "ci", "cs", "cv", "cw", "Pl"];
+                    index = knownCriteriaList.indexOf(this._criterionRef);
+                    if (index > -1)
+                    {
+                        readableCriterionRef = I18n.getUiText("ui.item.characteristics").split(",")[index];
+                    }
+                    else
+                    {
+                        _log.warn((("Unknown criteria '" + this._criterionRef) + "'"));
+                    };
             };
-            return (((((readableCriterionRef + " ") + this._operator.text) + " ") + this._criterionValue));
-        }
-
-        public function get basicText():String
-        {
-            return (this._serverCriterionForm);
-        }
-
-        public function clone():IItemCriterion
-        {
-            var clonedCriterion:IItemCriterion = new ItemCriterion(this.basicText);
-            return (clonedCriterion);
+            if (forTooltip)
+            {
+                return ((index > -1) ? ((((((readableCriterionRef + " ") + "<span class='#valueCssClass'>") + this._operator.text) + " ") + this._criterionValue) + "</span>") : null);
+            };
+            return ((((readableCriterionRef + " ") + this._operator.text) + " ") + this._criterionValue);
         }
 
         protected function getInfos():void
@@ -101,6 +135,7 @@
                     this._criterionRef = this._serverCriterionForm.split(operator)[0];
                     this._criterionValue = this._serverCriterionForm.split(operator)[1];
                     this._criterionValueText = this._serverCriterionForm.split(operator)[1];
+                    break;
                 };
             };
         }
@@ -195,10 +230,10 @@
 
         private function getTotalCharac(pCharac:CharacterBaseCharacteristic):int
         {
-            return (((((pCharac.base + pCharac.additionnal) + pCharac.alignGiftBonus) + pCharac.contextModif) + pCharac.objectsAndMountBonus));
+            return ((((pCharac.base + pCharac.additionnal) + pCharac.alignGiftBonus) + pCharac.contextModif) + pCharac.objectsAndMountBonus);
         }
 
 
     }
-}//package com.ankamagames.dofus.datacenter.items.criterion
+} com.ankamagames.dofus.datacenter.items.criterion
 

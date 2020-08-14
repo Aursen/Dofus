@@ -1,8 +1,9 @@
-﻿package com.ankamagames.dofus.network.types.game.prism
+package com.ankamagames.dofus.network.types.game.prism
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
     public class PrismSubareaEmptyInfo implements INetworkType 
     {
@@ -57,11 +58,32 @@
 
         public function deserializeAs_PrismSubareaEmptyInfo(input:ICustomDataInput):void
         {
+            this._subAreaIdFunc(input);
+            this._allianceIdFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_PrismSubareaEmptyInfo(tree);
+        }
+
+        public function deserializeAsyncAs_PrismSubareaEmptyInfo(tree:FuncTree):void
+        {
+            tree.addChild(this._subAreaIdFunc);
+            tree.addChild(this._allianceIdFunc);
+        }
+
+        private function _subAreaIdFunc(input:ICustomDataInput):void
+        {
             this.subAreaId = input.readVarUhShort();
             if (this.subAreaId < 0)
             {
                 throw (new Error((("Forbidden value (" + this.subAreaId) + ") on element of PrismSubareaEmptyInfo.subAreaId.")));
             };
+        }
+
+        private function _allianceIdFunc(input:ICustomDataInput):void
+        {
             this.allianceId = input.readVarUhInt();
             if (this.allianceId < 0)
             {
@@ -71,5 +93,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.prism
+} com.ankamagames.dofus.network.types.game.prism
 

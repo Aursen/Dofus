@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.datacenter.items.criterion
+package com.ankamagames.dofus.datacenter.items.criterion
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.jerakine.logger.Logger;
@@ -14,8 +14,8 @@
 
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(GroupItemCriterion));
 
-        private var _criteria:Vector.<IItemCriterion>;
-        private var _operators:Vector.<String>;
+        protected var _criteria:Vector.<IItemCriterion>;
+        protected var _operators:Vector.<String>;
         private var _criterionTextForm:String;
         private var _cleanCriterionTextForm:String;
         private var _malformated:Boolean = false;
@@ -25,13 +25,13 @@
         {
             this._criterionTextForm = pCriterion;
             this._cleanCriterionTextForm = this._criterionTextForm;
-            if (!(pCriterion))
+            if (!pCriterion)
             {
                 return;
             };
             this._cleanCriterionTextForm = StringUtils.replace(this._cleanCriterionTextForm, " ", "");
             var delimitedArray:Vector.<String> = StringUtils.getDelimitedText(this._cleanCriterionTextForm, "(", ")", true);
-            if ((((delimitedArray.length > 0)) && ((delimitedArray[0] == this._cleanCriterionTextForm))))
+            if (((delimitedArray.length > 0) && (delimitedArray[0] == this._cleanCriterionTextForm)))
             {
                 this._cleanCriterionTextForm = this._cleanCriterionTextForm.slice(1);
                 this._cleanCriterionTextForm = this._cleanCriterionTextForm.slice(0, (this._cleanCriterionTextForm.length - 1));
@@ -61,7 +61,7 @@
                 };
                 i++;
             };
-            var group:GroupItemCriterion = new (GroupItemCriterion)(textForm);
+            var group:GroupItemCriterion = new GroupItemCriterion(textForm);
             return (group);
         }
 
@@ -85,7 +85,7 @@
         public function get isRespected():Boolean
         {
             var criterion:IItemCriterion;
-            if (((!(this._criteria)) || ((this._criteria.length == 0))))
+            if (((!(this._criteria)) || (this._criteria.length == 0)))
             {
                 return (true);
             };
@@ -94,11 +94,11 @@
             {
                 return (true);
             };
-            if (((((this._criteria) && ((this._criteria.length == 1)))) && ((this._criteria[0] is ItemCriterion))))
+            if ((((this._criteria) && (this._criteria.length == 1)) && (this._criteria[0] is ItemCriterion)))
             {
                 return ((this._criteria[0] as ItemCriterion).isRespected);
             };
-            if (this._operators[0] == "|")
+            if (((this._operators.length > 0) && (this._operators[0] == "|")))
             {
                 for each (criterion in this._criteria)
                 {
@@ -111,7 +111,7 @@
             };
             for each (criterion in this._criteria)
             {
-                if (!(criterion.isRespected))
+                if (!criterion.isRespected)
                 {
                     return (false);
                 };
@@ -133,14 +133,18 @@
             var i:uint;
             while (i < tabLength)
             {
+                if (textForm != "")
+                {
+                    textForm = (textForm + " ");
+                };
                 pair = (i % 2);
                 if (pair == 0)
                 {
-                    textForm = ((textForm + (this._criteria[criterionIndex++] as IItemCriterion).text) + " ");
+                    textForm = (textForm + (this._criteria[criterionIndex++] as IItemCriterion).text);
                 }
                 else
                 {
-                    textForm = ((textForm + this._operators[operatorIndex++]) + " ");
+                    textForm = (textForm + this._operators[operatorIndex++]);
                 };
                 i++;
             };
@@ -167,7 +171,7 @@
             var crits:Vector.<IItemCriterion>;
             var ops:Vector.<String>;
             var group:GroupItemCriterion;
-            if (((((((this._malformated) || (!(this._criteria)))) || ((this._criteria.length <= 2)))) || (this._singleOperatorType)))
+            if (((((this._malformated) || (!(this._criteria))) || (this._criteria.length <= 2)) || (this._singleOperatorType)))
             {
                 return;
             };
@@ -183,7 +187,7 @@
             };
             curIndex = 0;
             exit = false;
-            while (!(exit))
+            while ((!(exit)))
             {
                 if (copyCriteria.length <= 2)
                 {
@@ -218,15 +222,15 @@
         {
             var criterion:IItemCriterion;
             var indexOfNextCriterion:int;
-            var _local_10:int;
-            var _local_11:String;
+            var index:int;
+            var op:String;
             var criterion2:IItemCriterion;
             var indexOfNextCriterion2:int;
-            var _local_14:int;
-            var _local_15:String;
-            var _local_16:String;
-            var _local_17:String;
-            if (!(this._cleanCriterionTextForm))
+            var index2:int;
+            var firstPart:String;
+            var secondPart:String;
+            var operator:String;
+            if (!this._cleanCriterionTextForm)
             {
                 return;
             };
@@ -239,13 +243,13 @@
             this._operators = new Vector.<String>();
             var andIndexes:Array = StringUtils.getAllIndexOf("&", searchingString);
             var orIndexes:Array = StringUtils.getAllIndexOf("|", searchingString);
-            if ((((andIndexes.length == 0)) || ((orIndexes.length == 0))))
+            if (((andIndexes.length == 0) || (orIndexes.length == 0)))
             {
                 this._singleOperatorType = true;
-                while (!(exit))
+                while ((!(exit)))
                 {
                     criterion = this.getFirstCriterion(searchingString);
-                    if (!(criterion))
+                    if (!criterion)
                     {
                         indexOfNextCriterion = searchingString.indexOf("&");
                         if (indexOfNextCriterion == -1)
@@ -264,15 +268,15 @@
                     else
                     {
                         this._criteria.push(criterion);
-                        _local_10 = searchingString.indexOf(criterion.basicText);
-                        _local_11 = searchingString.slice((_local_10 + criterion.basicText.length), ((_local_10 + 1) + criterion.basicText.length));
-                        if (_local_11)
+                        index = searchingString.indexOf(criterion.basicText);
+                        op = searchingString.slice((index + criterion.basicText.length), ((index + 1) + criterion.basicText.length));
+                        if (op)
                         {
-                            this._operators.push(_local_11);
+                            this._operators.push(op);
                         };
-                        searchingString = searchingString.slice(((_local_10 + 1) + criterion.basicText.length));
+                        searchingString = searchingString.slice(((index + 1) + criterion.basicText.length));
                     };
-                    if (!(searchingString))
+                    if (!searchingString)
                     {
                         exit = true;
                     };
@@ -280,9 +284,9 @@
             }
             else
             {
-                while (!(exit))
+                while ((!(exit)))
                 {
-                    if (!(searchingString))
+                    if (!searchingString)
                     {
                         exit = true;
                     }
@@ -291,7 +295,7 @@
                         if (next == CRITERION)
                         {
                             criterion2 = this.getFirstCriterion(searchingString);
-                            if (!(criterion2))
+                            if (!criterion2)
                             {
                                 indexOfNextCriterion2 = searchingString.indexOf("&");
                                 if (indexOfNextCriterion2 == -1)
@@ -311,26 +315,26 @@
                             {
                                 this._criteria.push(criterion2);
                                 next = OPERATOR;
-                                _local_14 = searchingString.indexOf(criterion2.basicText);
-                                _local_15 = searchingString.slice(0, _local_14);
-                                _local_16 = searchingString.slice((_local_14 + criterion2.basicText.length));
-                                searchingString = (_local_15 + _local_16);
+                                index2 = searchingString.indexOf(criterion2.basicText);
+                                firstPart = searchingString.slice(0, index2);
+                                secondPart = searchingString.slice((index2 + criterion2.basicText.length));
+                                searchingString = (firstPart + secondPart);
                             };
-                            if (!(searchingString))
+                            if (!searchingString)
                             {
                                 exit = true;
                             };
                         }
                         else
                         {
-                            _local_17 = searchingString.slice(0, 1);
-                            if (!(_local_17))
+                            operator = searchingString.slice(0, 1);
+                            if (!operator)
                             {
                                 exit = true;
                             }
                             else
                             {
-                                this._operators.push(_local_17);
+                                this._operators.push(operator);
                                 next = CRITERION;
                                 searchingString = searchingString.slice(1);
                             };
@@ -339,10 +343,9 @@
                 };
                 this._singleOperatorType = this.checkSingleOperatorType(this._operators);
             };
-            if ((((this._operators.length >= this._criteria.length)) && ((((this._operators.length > 0)) && ((this._criteria.length > 0))))))
+            if (((this._operators.length >= this._criteria.length) && ((this._operators.length > 0) && (this._criteria.length > 0))))
             {
                 this._malformated = true;
-                trace((((("Il y a un soucis avec le nombre d'opérateurs et de critères :/ " + this._operators.length) + " opérateur(s) pour ") + this._criteria.length) + " cirtère(s)"));
             };
         }
 
@@ -366,9 +369,9 @@
         {
             var criterion:IItemCriterion;
             var dl:Vector.<String>;
-            var _local_4:int;
-            var _local_5:int;
-            if (!(pCriteria))
+            var ANDindex:int;
+            var ORindex:int;
+            if (!pCriteria)
             {
                 return (null);
             };
@@ -380,15 +383,15 @@
             }
             else
             {
-                _local_4 = pCriteria.indexOf("&");
-                _local_5 = pCriteria.indexOf("|");
-                if ((((_local_4 == -1)) && ((_local_5 == -1))))
+                ANDindex = pCriteria.indexOf("&");
+                ORindex = pCriteria.indexOf("|");
+                if (((ANDindex == -1) && (ORindex == -1)))
                 {
                     criterion = ItemCriterionFactory.create(pCriteria);
                 }
                 else
                 {
-                    if ((((((_local_4 < _local_5)) || ((_local_5 == -1)))) && (!((_local_4 == -1)))))
+                    if ((((ANDindex < ORindex) || (ORindex == -1)) && (!(ANDindex == -1))))
                     {
                         criterion = ItemCriterionFactory.create(pCriteria.split("&")[0]);
                     }
@@ -408,5 +411,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.items.criterion
+} com.ankamagames.dofus.datacenter.items.criterion
 

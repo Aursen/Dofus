@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.components
+package com.ankamagames.berilia.components
 {
     import com.ankamagames.berilia.types.graphic.GraphicContainer;
     import com.ankamagames.berilia.UIComponent;
@@ -8,6 +8,7 @@
     import flash.display.Shape;
     import com.ankamagames.tiphon.types.look.TiphonEntityLook;
     import com.ankamagames.jerakine.sequencer.SerialSequencer;
+    import flash.geom.Point;
     import com.ankamagames.tiphon.types.ISubEntityBehavior;
     import com.ankamagames.tiphon.types.IAnimationModifier;
     import com.ankamagames.tiphon.types.ISkinModifier;
@@ -15,19 +16,21 @@
     import com.ankamagames.jerakine.utils.display.EnterFrameDispatcher;
     import flash.events.MouseEvent;
     import flash.geom.Rectangle;
-    import com.ankamagames.tiphon.types.DisplayInfoSprite;
+    import flash.display.DisplayObject;
     import com.ankamagames.tiphon.sequence.SetDirectionStep;
     import com.ankamagames.tiphon.sequence.PlayAnimationStep;
     import com.ankamagames.tiphon.sequence.SetAnimationStep;
-    import flash.geom.Point;
-    import flash.display.DisplayObject;
+    import com.ankamagames.jerakine.pools.PoolablePoint;
+    import com.ankamagames.jerakine.pools.PoolsManager;
     import flash.events.EventDispatcher;
     import com.ankamagames.tiphon.events.TiphonEvent;
+    import com.ankamagames.jerakine.types.Swl;
+    import com.ankamagames.tiphon.engine.BoneIndexManager;
+    import com.ankamagames.tiphon.engine.Tiphon;
     import com.ankamagames.berilia.Berilia;
     import com.ankamagames.berilia.components.messages.EntityReadyMessage;
     import flash.display.InteractiveObject;
     import flash.events.Event;
-    import com.ankamagames.berilia.managers.SecureCenter;
     import flash.geom.ColorTransform;
 
     public class EntityDisplayer extends GraphicContainer implements UIComponent, IRectangle 
@@ -55,6 +58,11 @@
         private var _gotoAndStop:int = 0;
         private var _autoSize:Boolean = false;
         private var _sequencer:SerialSequencer;
+        private var _realWidth:Number;
+        private var _realHeight:Number;
+        private var _characterReady:Boolean;
+        private var _centerPos:Point;
+        private var _animatedCharacter:TiphonSprite;
         public var yOffset:int = 0;
         public var xOffset:int = 0;
         public var entityScale:Number = 1;
@@ -62,6 +70,7 @@
         public var clearSubEntities:Boolean = true;
         public var clearAuras:Boolean = true;
         public var withoutMount:Boolean = false;
+        public var maskRect:String;
 
         public function EntityDisplayer()
         {
@@ -89,6 +98,7 @@
         {
             var look:TiphonEntityLook;
             var entity:TiphonSprite;
+            this._characterReady = false;
             if (lookAdaptater != null)
             {
                 look = lookAdaptater(rawLook);
@@ -111,9 +121,9 @@
                 {
                     this._sequencer.clear();
                 };
-                this._entity.visible = !((look == null));
+                this._entity.visible = (!(look == null));
             };
-            if (this.withoutMount)
+            if (((look) && (this.withoutMount)))
             {
                 look = TiphonUtility.getLookWithoutMount(look);
             };
@@ -143,6 +153,10 @@
                 };
             };
             this._lookUpdate = ((look) ? look.clone() : look);
+            if (((this._lookUpdate) && (_skinModifier[this._lookUpdate.getBone()])))
+            {
+                this._lookUpdate.skinModifier = _skinModifier[this._lookUpdate.getBone()];
+            };
             if (this._useCache)
             {
                 entity = this._cache[look.toString()];
@@ -165,13 +179,13 @@
 
         public function get look():TiphonEntityLook
         {
-            return (((this._entity) ? this._entity.look : this._lookUpdate));
+            return ((this._entity) ? this._entity.look : this._lookUpdate);
         }
 
         public function set direction(n:uint):void
         {
             this._direction = n;
-            if (((!(this._listenForUpdate)) && ((this._entity is TiphonSprite))))
+            if (((!(this._listenForUpdate)) && (this._entity is TiphonSprite)))
             {
                 TiphonSprite(this._entity).setDirection(n);
             };
@@ -196,6 +210,16 @@
             return (this._animation);
         }
 
+        public function set animatedCharacter(entity:TiphonSprite):void
+        {
+            if (this._animatedCharacter)
+            {
+                this._animatedCharacter.destroy();
+                this._animatedCharacter = null;
+            };
+            this._animatedCharacter = entity;
+        }
+
         public function set gotoAndStop(value:int):void
         {
             if (this._entity)
@@ -215,6 +239,11 @@
             };
         }
 
+        public function get entity():TiphonSprite
+        {
+            return (this._entity);
+        }
+
         public function get autoSize():Boolean
         {
             return (this._autoSize);
@@ -223,18 +252,18 @@
         override public function set width(nW:Number):void
         {
             super.width = nW;
-            this._autoSize = ((!((nW == 0))) && (!((height == 0))));
+            this._autoSize = ((!(nW == 0)) && (!(height == 0)));
         }
 
         override public function set height(nH:Number):void
         {
             super.height = nH;
-            this._autoSize = ((!((nH == 0))) && (!((width == 0))));
+            this._autoSize = ((!(nH == 0)) && (!(width == 0)));
         }
 
         public function set view(value:String):void
         {
-            this._view = value;
+            this._view = ("DisplayInfo_" + value);
             if ((this._entity is TiphonSprite))
             {
                 this._entity.setView(value);
@@ -264,7 +293,7 @@
         public function set useCache(value:Boolean):void
         {
             this._useCache = value;
-            if (!(this._cache))
+            if (!this._cache)
             {
                 this._cache = new Object();
             };
@@ -280,6 +309,33 @@
             _log.fatal("Attention : Il ne faut surtout pas utiliser la propriété cacheAsBitmap sur les EntityDisplayer. TiphonSprite le gère déjà.");
         }
 
+        public function set fixedWidth(pFixedWidth:Number):void
+        {
+            this._entity.height = ((pFixedWidth / (this._realWidth / this._realHeight)) * this.entityScale);
+            this._entity.width = (pFixedWidth * this.entityScale);
+        }
+
+        public function set fixedHeight(pFixedHeight:Number):void
+        {
+            this._entity.height = (pFixedHeight * this.entityScale);
+            this._entity.width = ((pFixedHeight / (this._realHeight / this._realWidth)) * this.entityScale);
+        }
+
+        public function get characterReady():Boolean
+        {
+            return (this._characterReady);
+        }
+
+        public function get centerPos():Point
+        {
+            return (this._centerPos);
+        }
+
+        public function set centerPos(p:Point):void
+        {
+            this._centerPos = p;
+        }
+
         public function update():void
         {
             this.needUpdate();
@@ -287,8 +343,18 @@
 
         public function updateMask():void
         {
-            if ((((((this.entityScale > 1)) || (!((this.yOffset == 0))))) || (!((this.xOffset == 0)))))
+            var rect:Object;
+            var x:Number;
+            var y:Number;
+            var w:Number;
+            var h:Number;
+            if (((((this.entityScale > 1) || (!(this.yOffset == 0))) || (!(this.xOffset == 0))) || (this.maskRect)))
             {
+                rect = ((this.maskRect) ? this.maskRect.split(",") : null);
+                x = ((rect) ? rect[0] : 0);
+                y = ((rect) ? rect[1] : 0);
+                w = ((rect) ? rect[2] : width);
+                h = ((rect) ? rect[3] : height);
                 if (this._mask)
                 {
                     this._mask.graphics.clear();
@@ -298,7 +364,7 @@
                     this._mask = new Shape();
                 };
                 this._mask.graphics.beginFill(0);
-                this._mask.graphics.drawRect(0, 0, width, height);
+                this._mask.graphics.drawRect(x, y, w, h);
                 addChild(this._mask);
                 TiphonSprite(this._entity).mask = this._mask;
                 if (this._oldEntity)
@@ -319,7 +385,7 @@
             }
             else
             {
-                if (((((this._mask) && (this._mask.parent))) && ((this._mask.parent == this))))
+                if ((((this._mask) && (this._mask.parent)) && (this._mask.parent == this)))
                 {
                     removeChild(this._mask);
                 };
@@ -332,11 +398,13 @@
         {
             var entRatio:Number;
             var b:Rectangle;
-            var dis:DisplayInfoSprite;
+            var dis:DisplayObject;
             var r:Number;
             var m:Number;
             this._entity.x = 0;
             this._entity.y = 0;
+            this._entity.width = this._realWidth;
+            this._entity.height = this._realHeight;
             if (this._view != null)
             {
                 dis = TiphonSprite(this._entity).getDisplayInfoSprite(this._view);
@@ -359,7 +427,7 @@
                     this._entity.x = ((((width - this._entity.width) / 2) - b.left) + this.xOffset);
                     this._entity.y = ((((height - this._entity.height) / 2) - b.top) + this.yOffset);
                     r = (dis.width / dis.height);
-                    m = ((((width / height) < (dis.width / dis.height))) ? (width / dis.getRect(this).width) : (height / dis.getRect(this).height));
+                    m = (((width / height) < (dis.width / dis.height)) ? (width / dis.getRect(this).width) : (height / dis.getRect(this).height));
                     this._entity.height = (this._entity.height * m);
                     this._entity.width = (this._entity.width * m);
                     this._entity.x = (this._entity.x - dis.getRect(this).x);
@@ -387,19 +455,19 @@
 
         public function setAnimationAndDirection(anim:String, dir:uint):void
         {
-            if (!(this._fromCache))
+            if (!this._fromCache)
             {
                 this._animation = anim;
                 this._direction = dir;
-                if ((((this._entity is TiphonSprite)) && (!(this._listenForUpdate))))
+                if (((this._entity is TiphonSprite) && (!(this._listenForUpdate))))
                 {
-                    if ((((this._animation == "AnimStatique")) || ((this._animation == "AnimArtwork"))))
+                    if ((((this._animation == "AnimStatique") || (this._animation == "AnimArtwork")) || (this._animation == "AnimDialogue")))
                     {
                         TiphonSprite(this._entity).setAnimationAndDirection(this._animation, this._direction);
                     }
                     else
                     {
-                        if (!(this._sequencer))
+                        if (!this._sequencer)
                         {
                             this._sequencer = new SerialSequencer();
                         }
@@ -412,7 +480,7 @@
                         };
                         this._sequencer.addStep(new SetDirectionStep(TiphonSprite(this._entity), this._direction));
                         this._sequencer.addStep(new PlayAnimationStep(TiphonSprite(this._entity), this._animation, false));
-                        this._sequencer.addStep(new SetAnimationStep(TiphonSprite(this._entity), "AnimStatique"));
+                        this._sequencer.addStep(new SetAnimationStep(TiphonSprite(this._entity), this._animation));
                         this._sequencer.start();
                     };
                 };
@@ -459,17 +527,29 @@
             };
         }
 
+        public function getSlot(name:String):DisplayObject
+        {
+            if (this._entity)
+            {
+                return (this._entity.getSlot(name));
+            };
+            return (null);
+        }
+
         public function getSlotPosition(name:String):Point
         {
             var s:Object;
+            var temp:PoolablePoint;
             var p:Point;
             var point:Point;
-            if (((this._entity) && ((this._entity is TiphonSprite))))
+            if (((this._entity) && (this._entity is TiphonSprite)))
             {
                 s = TiphonSprite(this._entity).getSlot(name);
                 if (s)
                 {
-                    p = s.localToGlobal(new Point(s.x, s.y));
+                    temp = (PoolsManager.getInstance().getPointPool().checkOut() as PoolablePoint);
+                    temp.renew(s.x, s.y);
+                    p = s.localToGlobal(temp.renew(s.x, s.y));
                     point = this.globalToLocal(p);
                     return (point);
                 };
@@ -499,7 +579,12 @@
 
         public function getEntityBounds():Rectangle
         {
-            return (((this._entity) ? this._entity.getBounds(this) : null));
+            return ((this._entity) ? this._entity.getBounds(this) : null);
+        }
+
+        public function getEntityOrigin():Point
+        {
+            return (this._entity.localToGlobal(PoolsManager.getInstance().getPointPool().checkOut()["renew"]()));
         }
 
         override public function remove():void
@@ -511,6 +596,11 @@
                 (this._entity as EventDispatcher).removeEventListener(TiphonEvent.RENDER_SUCCEED, this.onCharacterReady);
                 this._entity.destroy();
                 this._entity = null;
+            };
+            if (this._animatedCharacter)
+            {
+                this._animatedCharacter.destroy();
+                this._animatedCharacter = null;
             };
             if (this._oldEntity)
             {
@@ -570,9 +660,54 @@
             };
         }
 
+        public function hasAnimation(pBoneId:uint, pAnimation:String, pDirection:uint):Boolean
+        {
+            var anims:Array;
+            var resource:Swl;
+            if (BoneIndexManager.getInstance().hasCustomBone(pBoneId))
+            {
+                anims = BoneIndexManager.getInstance().getAllCustomAnimations(pBoneId);
+            };
+            if (!anims)
+            {
+                resource = Tiphon.skullLibrary.getResourceById(pBoneId);
+                anims = ((resource) ? resource.getDefinitions() : null);
+            };
+            return ((anims) ? (!(anims.indexOf(((pAnimation + "_") + pDirection)) == -1)) : false);
+        }
+
+        public function addEndAnimationListener(func:Function):void
+        {
+            TiphonSprite(this._entity).addEventListener(TiphonEvent.ANIMATION_END, func);
+        }
+
+        public function removeEndAnimationListener(func:Function):void
+        {
+            TiphonSprite(this._entity).removeEventListener(TiphonEvent.ANIMATION_END, func);
+            if (this._oldEntity)
+            {
+                TiphonSprite(this._oldEntity).removeEventListener(TiphonEvent.ANIMATION_END, func);
+            };
+        }
+
+        public function addShotAnimationListener(func:Function):void
+        {
+            TiphonSprite(this._entity).addEventListener(TiphonEvent.ANIMATION_SHOT, func);
+        }
+
+        public function removeShotAnimationListener(func:Function):void
+        {
+            TiphonSprite(this._entity).removeEventListener(TiphonEvent.ANIMATION_SHOT, func);
+            if (this._oldEntity)
+            {
+                TiphonSprite(this._oldEntity).removeEventListener(TiphonEvent.ANIMATION_SHOT, func);
+            };
+        }
+
         private function onCharacterReady(e:Event):void
         {
             var cat:*;
+            var entityOrigin:Point;
             (this._entity as EventDispatcher).removeEventListener(TiphonEvent.RENDER_SUCCEED, this.onCharacterReady);
             if (this._entity.rawAnimation)
             {
@@ -605,7 +740,10 @@
                     (this._entity as TiphonSprite).setSubEntityBehaviour(cat, _subEntitiesBehaviors[cat]);
                 };
             };
-            this._entity.visible = true;
+            if (!this._centerPos)
+            {
+                this._entity.visible = true;
+            };
             this.updateMask();
             if (this._oldEntity)
             {
@@ -621,17 +759,26 @@
                     this._oldEntity = null;
                 };
             };
+            this._realWidth = this._entity.width;
+            this._realHeight = this._entity.height;
             if (((!(this._entity.height)) || (!(this._autoSize))))
             {
                 Berilia.getInstance().handler.process(new EntityReadyMessage(InteractiveObject(this)));
                 return;
             };
             this.updateScaleAndOffsets();
+            if (this._centerPos)
+            {
+                entityOrigin = this._entity.localToGlobal(new Point());
+                x = (x - (entityOrigin.x - this.centerPos.x));
+                y = (y - (entityOrigin.y - this.centerPos.y));
+            };
             this._entity.visible = true;
             if (Berilia.getInstance().handler)
             {
                 Berilia.getInstance().handler.process(new EntityReadyMessage(InteractiveObject(this)));
             };
+            this._characterReady = true;
         }
 
         private function destroyEntity(entity:TiphonSprite):void
@@ -640,7 +787,7 @@
             {
                 removeChild(entity);
             };
-            if (!(this._useCache))
+            if (!this._useCache)
             {
                 entity.destroy();
             };
@@ -657,7 +804,7 @@
                 this.destroyEntity(this._oldEntity);
                 this._oldEntity = null;
             };
-            if (!(this._lookUpdate))
+            if (!this._lookUpdate)
             {
                 if (this._entity)
                 {
@@ -667,7 +814,7 @@
                 return;
             };
             this._oldEntity = this._entity;
-            this._entity = new TiphonSprite(SecureCenter.unsecure(this._lookUpdate.clone()));
+            this._entity = new TiphonSprite(this._lookUpdate.clone());
             this._entity.visible = false;
             if (_animationModifier[this._entity.look.getBone()])
             {
@@ -690,12 +837,25 @@
                 };
             };
             (this._entity as EventDispatcher).addEventListener(TiphonEvent.RENDER_SUCCEED, this.onCharacterReady);
+            (this._entity as EventDispatcher).addEventListener(TiphonEvent.PLAYANIM_EVENT, this.onPlayAnim);
             addChild(this._entity);
             this.setAnimationAndDirection(this._animation, this._direction);
             if (((this._waitingForEquipement) && (this._waitingForEquipement.length)))
             {
                 this.equipCharacter(this._waitingForEquipement, 0);
             };
+        }
+
+        private function onPlayAnim(e:TiphonEvent):void
+        {
+            var animsRandom:Array;
+            (this._entity as EventDispatcher).removeEventListener(TiphonEvent.PLAYANIM_EVENT, this.onPlayAnim);
+            var tempStr:String = e.params.substring(6, (e.params.length - 1));
+            animsRandom = tempStr.split(",");
+            var anim:String = animsRandom[int((animsRandom.length * Math.random()))];
+            var dir:uint = parseInt(anim.substring((anim.lastIndexOf("_") + 1)));
+            anim = anim.substring(0, anim.lastIndexOf("_"));
+            this.setAnimationAndDirection(anim, dir);
         }
 
         private function onFade(e:Event):void
@@ -731,5 +891,5 @@
 
 
     }
-}//package com.ankamagames.berilia.components
+} com.ankamagames.berilia.components
 

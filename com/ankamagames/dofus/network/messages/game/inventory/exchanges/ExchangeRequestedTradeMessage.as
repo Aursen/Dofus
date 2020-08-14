@@ -1,25 +1,25 @@
-﻿package com.ankamagames.dofus.network.messages.game.inventory.exchanges
+package com.ankamagames.dofus.network.messages.game.inventory.exchanges
 {
     import com.ankamagames.jerakine.network.INetworkMessage;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class ExchangeRequestedTradeMessage extends ExchangeRequestedMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 5523;
 
         private var _isInitialized:Boolean = false;
-        public var source:uint = 0;
-        public var target:uint = 0;
+        public var source:Number = 0;
+        public var target:Number = 0;
 
 
         override public function get isInitialized():Boolean
         {
-            return (((super.isInitialized) && (this._isInitialized)));
+            return ((super.isInitialized) && (this._isInitialized));
         }
 
         override public function getMessageId():uint
@@ -27,7 +27,7 @@
             return (5523);
         }
 
-        public function initExchangeRequestedTradeMessage(exchangeType:int=0, source:uint=0, target:uint=0):ExchangeRequestedTradeMessage
+        public function initExchangeRequestedTradeMessage(exchangeType:int=0, source:Number=0, target:Number=0):ExchangeRequestedTradeMessage
         {
             super.initExchangeRequestedMessage(exchangeType);
             this.source = source;
@@ -56,6 +56,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         override public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_ExchangeRequestedTradeMessage(output);
@@ -64,16 +72,16 @@
         public function serializeAs_ExchangeRequestedTradeMessage(output:ICustomDataOutput):void
         {
             super.serializeAs_ExchangeRequestedMessage(output);
-            if (this.source < 0)
+            if (((this.source < 0) || (this.source > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.source) + ") on element source.")));
             };
-            output.writeVarInt(this.source);
-            if (this.target < 0)
+            output.writeVarLong(this.source);
+            if (((this.target < 0) || (this.target > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.target) + ") on element target.")));
             };
-            output.writeVarInt(this.target);
+            output.writeVarLong(this.target);
         }
 
         override public function deserialize(input:ICustomDataInput):void
@@ -84,13 +92,35 @@
         public function deserializeAs_ExchangeRequestedTradeMessage(input:ICustomDataInput):void
         {
             super.deserialize(input);
-            this.source = input.readVarUhInt();
-            if (this.source < 0)
+            this._sourceFunc(input);
+            this._targetFunc(input);
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_ExchangeRequestedTradeMessage(tree);
+        }
+
+        public function deserializeAsyncAs_ExchangeRequestedTradeMessage(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._sourceFunc);
+            tree.addChild(this._targetFunc);
+        }
+
+        private function _sourceFunc(input:ICustomDataInput):void
+        {
+            this.source = input.readVarUhLong();
+            if (((this.source < 0) || (this.source > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.source) + ") on element of ExchangeRequestedTradeMessage.source.")));
             };
-            this.target = input.readVarUhInt();
-            if (this.target < 0)
+        }
+
+        private function _targetFunc(input:ICustomDataInput):void
+        {
+            this.target = input.readVarUhLong();
+            if (((this.target < 0) || (this.target > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.target) + ") on element of ExchangeRequestedTradeMessage.target.")));
             };
@@ -98,5 +128,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.inventory.exchanges
+} com.ankamagames.dofus.network.messages.game.inventory.exchanges
 

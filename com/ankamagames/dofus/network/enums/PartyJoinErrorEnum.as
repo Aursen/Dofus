@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.enums
+package com.ankamagames.dofus.network.enums
 {
     public class PartyJoinErrorEnum 
     {
@@ -15,8 +15,9 @@
         public static const PARTY_JOIN_ERROR_UNMET_CRITERION:uint = 10;
         public static const PARTY_JOIN_ERROR_NOT_ENOUGH_ROOM:uint = 11;
         public static const PARTY_JOIN_ERROR_COMPOSITION_CHANGED:uint = 12;
+        public static const PARTY_JOIN_ERROR_PLAYER_IN_TUTORIAL:uint = 13;
 
 
     }
-}//package com.ankamagames.dofus.network.enums
+} com.ankamagames.dofus.network.enums
 

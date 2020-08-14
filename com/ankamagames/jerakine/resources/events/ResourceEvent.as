@@ -1,13 +1,13 @@
-﻿package com.ankamagames.jerakine.resources.events
+package com.ankamagames.jerakine.resources.events
 {
     import flash.events.Event;
 
     public class ResourceEvent extends Event 
     {
 
-        public function ResourceEvent(type:String, bubbles:Boolean=false, cancelable:Boolean=false)
+        public function ResourceEvent(_arg_1:String, bubbles:Boolean=false, cancelable:Boolean=false)
         {
-            super(type, bubbles, cancelable);
+            super(_arg_1, bubbles, cancelable);
         }
 
         override public function clone():Event
@@ -17,5 +17,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.resources.events
+} com.ankamagames.jerakine.resources.events
 

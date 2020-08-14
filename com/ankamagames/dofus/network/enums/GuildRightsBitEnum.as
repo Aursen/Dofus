@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.enums
+package com.ankamagames.dofus.network.enums
 {
     public class GuildRightsBitEnum 
     {
@@ -18,11 +18,11 @@
         public static const GUILD_RIGHT_ORGANIZE_PADDOCKS:uint = 0x2000;
         public static const GUILD_RIGHT_TAKE_OTHERS_MOUNTS_IN_PADDOCKS:uint = 0x4000;
         public static const GUILD_RIGHT_DEFENSE_PRIORITY:uint = 0x8000;
-        public static const GUILD_RIGHT_COLLECT_MY_TAX_COLLECTOR:uint = 65536;
-        public static const GUILD_RIGHT_SET_ALLIANCE_PRISM:uint = 131072;
-        public static const GUILD_RIGHT_TALK_IN_ALLIANCE_CHAN:uint = 262144;
+        public static const GUILD_RIGHT_COLLECT_MY_TAX_COLLECTOR:uint = 0x10000;
+        public static const GUILD_RIGHT_SET_ALLIANCE_PRISM:uint = 0x20000;
+        public static const GUILD_RIGHT_TALK_IN_ALLIANCE_CHAN:uint = 0x40000;
 
 
     }
-}//package com.ankamagames.dofus.network.enums
+} com.ankamagames.dofus.network.enums
 

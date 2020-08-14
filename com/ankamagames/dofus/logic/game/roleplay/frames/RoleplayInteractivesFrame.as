@@ -1,8 +1,8 @@
-﻿package com.ankamagames.dofus.logic.game.roleplay.frames
+package com.ankamagames.dofus.logic.game.roleplay.frames
 {
     import com.ankamagames.jerakine.messages.Frame;
-    import flash.geom.Point;
     import flash.filters.ColorMatrixFilter;
+    import flash.filters.GlowFilter;
     import flash.display.Sprite;
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
@@ -11,7 +11,11 @@
     import com.ankamagames.berilia.managers.UiModuleManager;
     import com.ankamagames.jerakine.types.enums.Priority;
     import com.ankamagames.dofus.kernel.Kernel;
+    import com.ankamagames.jerakine.utils.display.StageShareManager;
+    import flash.events.Event;
+    import com.ankamagames.berilia.frames.ShortcutsFrame;
     import com.ankamagames.dofus.network.messages.game.interactive.InteractiveMapUpdateMessage;
+    import flash.geom.Point;
     import flash.display.DisplayObject;
     import com.ankamagames.dofus.network.messages.game.interactive.InteractiveElementUpdatedMessage;
     import com.ankamagames.dofus.network.messages.game.interactive.InteractiveUsedMessage;
@@ -23,21 +27,25 @@
     import com.ankamagames.dofus.network.messages.game.context.roleplay.MapObstacleUpdateMessage;
     import com.ankamagames.dofus.network.messages.game.interactive.InteractiveUseEndedMessage;
     import com.ankamagames.dofus.logic.game.roleplay.messages.InteractiveElementMouseOverMessage;
+    import com.ankamagames.dofus.logic.game.roleplay.actions.HighlightInteractiveElementsAction;
+    import com.ankamagames.jerakine.handlers.messages.mouse.MouseUpMessage;
     import com.ankamagames.dofus.network.types.game.interactive.InteractiveElement;
     import flash.utils.Timer;
     import com.ankamagames.tiphon.display.TiphonSprite;
     import com.ankamagames.jerakine.sequencer.SerialSequencer;
     import com.ankamagames.dofus.network.types.game.interactive.StatedElement;
     import com.ankamagames.dofus.network.types.game.interactive.MapObstacle;
-    import com.ankamagames.jerakine.utils.display.StageShareManager;
+    import __AS3__.vec.Vector;
+    import com.ankamagames.dofus.network.types.game.interactive.InteractiveElementSkill;
+    import com.ankamagames.atouin.managers.AlwaysAnimatedElementManager;
     import com.ankamagames.dofus.logic.game.common.managers.PlayedCharacterManager;
     import com.ankamagames.atouin.Atouin;
     import com.ankamagames.dofus.logic.game.common.misc.DofusEntities;
     import com.ankamagames.jerakine.entities.interfaces.IAnimated;
     import com.ankamagames.dofus.datacenter.jobs.Skill;
     import flash.events.TimerEvent;
-    import com.ankamagames.dofus.types.entities.AnimatedCharacter;
     import com.ankamagames.jerakine.types.enums.DirectionsEnum;
+    import com.ankamagames.dofus.types.entities.AnimatedCharacter;
     import com.ankamagames.dofus.types.enums.AnimationEnum;
     import com.ankamagames.tiphon.sequence.SetDirectionStep;
     import com.ankamagames.tiphon.sequence.PlayAnimationStep;
@@ -47,43 +55,30 @@
     import com.ankamagames.dofus.logic.game.common.frames.ChatFrame;
     import com.ankamagames.atouin.managers.InteractiveCellManager;
     import com.ankamagames.dofus.network.enums.MapObstacleStateEnum;
-    import com.ankamagames.berilia.frames.ShortcutsFrame;
     import com.ankamagames.jerakine.utils.system.SystemManager;
     import com.ankamagames.jerakine.enum.OperatingSystem;
     import com.ankamagames.jerakine.managers.OptionManager;
-    import com.ankamagames.jerakine.utils.system.AirScanner;
     import com.ankamagames.dofus.logic.game.roleplay.messages.InteractiveElementMouseOutMessage;
+    import com.ankamagames.jerakine.handlers.messages.mouse.MouseDownMessage;
+    import com.ankamagames.dofus.network.messages.game.context.GameContextDestroyMessage;
     import com.ankamagames.jerakine.messages.Message;
+    import com.ankamagames.dofus.misc.lists.HookList;
     import flash.utils.clearTimeout;
-    import __AS3__.vec.Vector;
     import com.ankamagames.jerakine.entities.interfaces.IMovable;
     import flash.display.InteractiveObject;
+    import com.ankamagames.dofus.logic.game.roleplay.managers.SkillManager;
+    import com.ankamagames.atouin.managers.MapDisplayManager;
     import flash.events.MouseEvent;
     import com.ankamagames.dofus.datacenter.interactives.Interactive;
     import flash.display.DisplayObjectContainer;
     import com.ankamagames.tiphon.events.TiphonEvent;
-    import com.ankamagames.berilia.types.data.LinkedCursorData;
+    import com.ankamagames.dofus.uiApi.JobsApi;
     import com.ankamagames.jerakine.managers.FiltersManager;
-    import com.ankamagames.atouin.managers.MapDisplayManager;
     import com.ankamagames.jerakine.managers.PerformanceManager;
     import com.ankamagames.dofus.network.enums.PlayerLifeStatusEnum;
-    import flash.ui.Mouse;
-    import com.ankamagames.berilia.managers.LinkedCursorSpriteManager;
-    import com.ankamagames.dofus.network.types.game.interactive.InteractiveElementSkill;
-    import com.ankamagames.dofus.uiApi.JobsApi;
-    import com.ankamagames.dofus.internalDatacenter.jobs.KnownJob;
-    import com.ankamagames.dofus.internalDatacenter.items.WeaponWrapper;
-    import com.ankamagames.dofus.datacenter.jobs.Job;
+    import com.ankamagames.jerakine.managers.CursorSpriteManager;
     import com.ankamagames.berilia.managers.TooltipManager;
-    import com.ankamagames.dofus.network.types.game.interactive.InteractiveElementNamedSkill;
-    import com.ankamagames.dofus.datacenter.interactives.SkillName;
-    import com.ankamagames.dofus.uiApi.PlayedCharacterApi;
     import com.ankamagames.berilia.factories.MenusFactory;
-    import com.ankamagames.dofus.datacenter.npcs.Npc;
-    import com.ankamagames.dofus.uiApi.MapApi;
-    import com.ankamagames.dofus.logic.common.managers.NotificationManager;
-    import com.ankamagames.dofus.types.enums.NotificationTypeEnum;
-    import com.ankamagames.dofus.network.enums.CompassTypeEnum;
     import com.ankamagames.dofus.logic.game.roleplay.messages.InteractiveElementActivationMessage;
     import com.ankamagames.dofus.logic.common.actions.ChangeWorldInteractionAction;
     import __AS3__.vec.*;
@@ -102,47 +97,46 @@
         private static const INTERACTIVE_CURSOR_8:Class = RoleplayInteractivesFrame_INTERACTIVE_CURSOR_8;
         private static const INTERACTIVE_CURSOR_9:Class = RoleplayInteractivesFrame_INTERACTIVE_CURSOR_9;
         private static const INTERACTIVE_CURSOR_10:Class = RoleplayInteractivesFrame_INTERACTIVE_CURSOR_10;
+        private static const INTERACTIVE_CURSOR_11:Class = RoleplayInteractivesFrame_INTERACTIVE_CURSOR_11;
         private static const INTERACTIVE_CURSOR_DISABLED:Class = RoleplayInteractivesFrame_INTERACTIVE_CURSOR_DISABLED;
+        private static const INTERACTIVE_CURSOR_WAIT:Class = RoleplayInteractivesFrame_INTERACTIVE_CURSOR_WAIT;
+        private static const INTERACTIVE_CURSOR_DISABLED_INDEX:int = 999;
+        private static const INTERACTIVE_CURSOR_WAIT_INDEX:int = 1000;
         private static var cursorList:Array = new Array();
         private static var cursorClassList:Array;
-        private static const INTERACTIVE_CURSOR_OFFSET:Point = new Point(0, 0);
         private static const INTERACTIVE_CURSOR_NAME:String = "interactiveCursor";
         private static const LUMINOSITY_FACTOR:Number = 1.2;
         private static const LUMINOSITY_EFFECTS:ColorMatrixFilter = new ColorMatrixFilter([LUMINOSITY_FACTOR, 0, 0, 0, 0, 0, LUMINOSITY_FACTOR, 0, 0, 0, 0, 0, LUMINOSITY_FACTOR, 0, 0, 0, 0, 0, 1, 0]);
+        private static const HIGHLIGHT_HINT_FILTER:GlowFilter = new GlowFilter(0xFFFFFF, 0.8, 6, 6, 4, 1);
         private static const ALPHA_MODIFICATOR:Number = 0.2;
         private static const COLLECTABLE_COLLECTING_STATE_ID:uint = 2;
         private static const COLLECTABLE_CUT_STATE_ID:uint = 1;
-        private static const COLLECTABLE_INTERACTIVE_ACTION_ID:uint = 1;
+        private static const ACTION_COLLECTABLE_RESOURCES:uint = 1;
+        private static var _highlightInteractiveElements:Boolean;
         public static var currentlyHighlighted:Sprite;
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(RoleplayInteractivesFrame));
 
         private var _modContextMenu:Object;
-        private var _ie:Dictionary;
-        private var _currentUsages:Array;
+        private var _ie:Dictionary = new Dictionary(true);
+        private var _currentUsages:Array = new Array();
         private var _baseAlpha:Number;
         private var i:int;
-        private var _entities:Dictionary;
+        private var _entities:Dictionary = new Dictionary();
         private var _usingInteractive:Boolean = false;
         private var _nextInteractiveUsed:Object;
-        private var _interactiveActionTimers:Dictionary;
+        private var _interactiveActionTimers:Dictionary = new Dictionary(true);
         private var _enableWorldInteraction:Boolean = true;
-        private var _collectableSpritesToBeStopped:Dictionary;
+        private var _collectableSpritesToBeStopped:Dictionary = new Dictionary(true);
         private var _currentRequestedElementId:int = -1;
         private var _currentUsedElementId:int = -1;
-        private var _statedElementsTargetAnimation:Dictionary;
+        private var _statedElementsTargetAnimation:Dictionary = new Dictionary(true);
+        private var _mouseDown:Boolean;
         private var dirmov:uint = 666;
 
         public function RoleplayInteractivesFrame()
         {
-            this._ie = new Dictionary(true);
-            this._currentUsages = new Array();
-            this._entities = new Dictionary();
-            this._interactiveActionTimers = new Dictionary(true);
-            this._collectableSpritesToBeStopped = new Dictionary(true);
-            this._statedElementsTargetAnimation = new Dictionary(true);
-            super();
             this._modContextMenu = UiModuleManager.getInstance().getModule("Ankama_ContextMenu").mainClass;
-            if (!(cursorClassList))
+            if (!cursorClassList)
             {
                 cursorClassList = new Array();
                 cursorClassList[0] = INTERACTIVE_CURSOR_0;
@@ -156,28 +150,50 @@
                 cursorClassList[8] = INTERACTIVE_CURSOR_8;
                 cursorClassList[9] = INTERACTIVE_CURSOR_9;
                 cursorClassList[10] = INTERACTIVE_CURSOR_10;
-                cursorClassList[11] = INTERACTIVE_CURSOR_DISABLED;
+                cursorClassList[11] = INTERACTIVE_CURSOR_11;
+                cursorClassList[INTERACTIVE_CURSOR_DISABLED_INDEX] = INTERACTIVE_CURSOR_DISABLED;
+                cursorClassList[INTERACTIVE_CURSOR_WAIT_INDEX] = INTERACTIVE_CURSOR_WAIT;
             };
         }
 
-        public static function getCursor(id:int, pEnabled:Boolean=true, pCache:Boolean=true):Sprite
+        public static function getCursor(id:int, pEnabled:Boolean=true, pCache:Boolean=true, pWait:Boolean=false):Sprite
         {
             var cross:Sprite;
+            var hourglass:Sprite;
             var cursor:Sprite;
             var cursorClass:Class;
-            if (!(pEnabled))
+            if (!pEnabled)
             {
-                if (cursorList[11])
+                if (cursorList[INTERACTIVE_CURSOR_DISABLED_INDEX])
                 {
-                    cross = cursorList[11];
+                    cross = cursorList[INTERACTIVE_CURSOR_DISABLED_INDEX];
                 }
                 else
                 {
-                    cursorClass = cursorClassList[11];
+                    cursorClass = cursorClassList[INTERACTIVE_CURSOR_DISABLED_INDEX];
                     if (cursorClass)
                     {
                         cross = new (cursorClass)();
-                        cursorList[11] = cross;
+                        cursorList[INTERACTIVE_CURSOR_DISABLED_INDEX] = cross;
+                    };
+                };
+            }
+            else
+            {
+                if (pWait)
+                {
+                    if (cursorList[INTERACTIVE_CURSOR_WAIT_INDEX])
+                    {
+                        hourglass = cursorList[INTERACTIVE_CURSOR_WAIT_INDEX];
+                    }
+                    else
+                    {
+                        cursorClass = cursorClassList[INTERACTIVE_CURSOR_WAIT_INDEX];
+                        if (cursorClass)
+                        {
+                            hourglass = new (cursorClass)();
+                            cursorList[INTERACTIVE_CURSOR_WAIT_INDEX] = hourglass;
+                        };
                     };
                 };
             };
@@ -197,6 +213,13 @@
                 if (cross != null)
                 {
                     cursor.addChild(cross);
+                }
+                else
+                {
+                    if (hourglass != null)
+                    {
+                        cursor.addChild(hourglass);
+                    };
                 };
             };
             if (cursor)
@@ -207,9 +230,16 @@
                 }
                 else
                 {
-                    if (cursor.numChildren > 1)
+                    if (hourglass != null)
                     {
-                        cursor.removeChildAt(0);
+                        cursor.addChild(hourglass);
+                    }
+                    else
+                    {
+                        if (cursor.numChildren > 1)
+                        {
+                            cursor.removeChildAt(0);
+                        };
                     };
                 };
                 return (cursor);
@@ -225,12 +255,12 @@
 
         private function get roleplayContextFrame():RoleplayContextFrame
         {
-            return ((Kernel.getWorker().getFrame(RoleplayContextFrame) as RoleplayContextFrame));
+            return (Kernel.getWorker().getFrame(RoleplayContextFrame) as RoleplayContextFrame);
         }
 
         private function get roleplayWorldFrame():RoleplayWorldFrame
         {
-            return ((Kernel.getWorker().getFrame(RoleplayWorldFrame) as RoleplayWorldFrame));
+            return (Kernel.getWorker().getFrame(RoleplayWorldFrame) as RoleplayWorldFrame);
         }
 
         public function get currentRequestedElementId():int
@@ -265,12 +295,15 @@
 
         public function pushed():Boolean
         {
+            StageShareManager.stage.addEventListener(Event.DEACTIVATE, this.onWindowDeactivate);
             return (true);
         }
 
         public function process(msg:Message):Boolean
         {
+            var sf:ShortcutsFrame;
             var imumsg:InteractiveMapUpdateMessage;
+            var shortcutsFrame:ShortcutsFrame;
             var mousePos:Point;
             var objectsUnder:Array;
             var o:DisplayObject;
@@ -286,6 +319,8 @@
             var iuemsg:InteractiveUseEndedMessage;
             var iemimsg:InteractiveElementMouseOverMessage;
             var iel:Object;
+            var hliea:HighlightInteractiveElementsAction;
+            var mum:MouseUpMessage;
             var ie:InteractiveElement;
             var useAnimation:String;
             var useDirection:uint;
@@ -298,6 +333,7 @@
             var rwf:RoleplayWorldFrame;
             var se:StatedElement;
             var mo:MapObstacle;
+            var skills:Vector.<InteractiveElementSkill>;
             switch (true)
             {
                 case (msg is InteractiveMapUpdateMessage):
@@ -317,6 +353,10 @@
                             };
                         };
                     };
+                    AlwaysAnimatedElementManager.startAnims();
+                    shortcutsFrame = (Kernel.getWorker().getFrame(ShortcutsFrame) as ShortcutsFrame);
+                    _highlightInteractiveElements = ((StageShareManager.isActive) && (!(shortcutsFrame.heldShortcuts.indexOf("highlightInteractiveElements") == -1)));
+                    this.highlightInteractiveElements(_highlightInteractiveElements);
                     mousePos = new Point(StageShareManager.stage.mouseX, StageShareManager.stage.mouseY);
                     objectsUnder = StageShareManager.stage.getObjectsUnderPoint(mousePos);
                     for each (o in objectsUnder)
@@ -351,7 +391,7 @@
                     return (true);
                 case (msg is InteractiveUsedMessage):
                     iumsg = (msg as InteractiveUsedMessage);
-                    if (PlayedCharacterManager.getInstance().id == iumsg.entityId)
+                    if (((PlayedCharacterManager.getInstance().id == iumsg.entityId) && (iumsg.duration > 0)))
                     {
                         this._currentUsedElementId = iumsg.elemId;
                     };
@@ -367,7 +407,7 @@
                         useDirection = this.getUseDirection((user as TiphonSprite), useAnimation, worldPos);
                         if (iumsg.duration > 0)
                         {
-                            if (!(this._interactiveActionTimers[user]))
+                            if (!this._interactiveActionTimers[user])
                             {
                                 this._interactiveActionTimers[user] = new Timer(1, 1);
                             };
@@ -388,14 +428,14 @@
                                 if (currentSpriteAnimation.indexOf((user as TiphonSprite).getAnimation()) != -1)
                                 {
                                     userTs = (user as TiphonSprite);
-                                    if ((((userTs is AnimatedCharacter)) && (!((userTs.getDirection() == DirectionsEnum.DOWN)))))
+                                    if (((userTs is AnimatedCharacter) && (!(userTs.getDirection() == DirectionsEnum.DOWN))))
                                     {
                                         (userTs as AnimatedCharacter).visibleAura = false;
                                     };
                                     userTs.setAnimation(AnimationEnum.ANIM_STATIQUE);
                                 };
                             };
-                            if (!(t.hasEventListener(TimerEvent.TIMER)))
+                            if (!t.hasEventListener(TimerEvent.TIMER))
                             {
                                 t.addEventListener(TimerEvent.TIMER, fct);
                             };
@@ -424,7 +464,7 @@
                         };
                         this._entities[iumsg.elemId] = iumsg.entityId;
                     };
-                    return (true);
+                    return (false);
                 case (msg is InteractiveUseErrorMessage):
                     iuem = (msg as InteractiveUseErrorMessage);
                     if (iuem.elemId == this._currentRequestedElementId)
@@ -432,9 +472,10 @@
                         this._currentRequestedElementId = -1;
                     };
                     KernelEventsManager.getInstance().processCallback(ChatHookList.TextInformation, I18n.getUiText("ui.popup.impossible_action"), ChatFrame.RED_CHANNEL_ID);
-                    return (true);
+                    return (false);
                 case (msg is StatedMapUpdateMessage):
                     smumsg = (msg as StatedMapUpdateMessage);
+                    this._usingInteractive = false;
                     for each (se in smumsg.statedElements)
                     {
                         this.updateStatedElement(se, true);
@@ -455,9 +496,9 @@
                     iuemsg = InteractiveUseEndedMessage(msg);
                     this.interactiveUsageFinished(this._entities[iuemsg.elemId], iuemsg.elemId, iuemsg.skillId);
                     delete this._entities[iuemsg.elemId];
-                    return (true);
+                    return (false);
                 case (msg is InteractiveElementMouseOverMessage):
-                    if (((((!(AirScanner.isStreamingVersion())) && ((OptionManager.getOptionManager("dofus")["enableForceWalk"] == true)))) && (((ShortcutsFrame.ctrlKeyDown) || ((((SystemManager.getSingleton().os == OperatingSystem.MAC_OS)) && (ShortcutsFrame.altKeyDown)))))))
+                    if (((OptionManager.getOptionManager("dofus").getOption("enableForceWalk") == true) && ((ShortcutsFrame.ctrlKeyDown) || ((SystemManager.getSingleton().os == OperatingSystem.MAC_OS) && (ShortcutsFrame.altKeyDown)))))
                     {
                         return (false);
                     };
@@ -465,12 +506,48 @@
                     iel = this._ie[iemimsg.sprite];
                     if (((iel) && (iel.element)))
                     {
-                        this.highlightInteractiveApparence(iemimsg.sprite, iel.firstSkill, (iel.element.enabledSkills.length > 0));
+                        skills = iel.element.enabledSkills;
+                        skills = ((skills) ? skills.concat(iel.element.disabledSkills) : iel.element.disabledSkills);
+                        this.highlightInteractiveApparence(iemimsg.sprite, skills, (iel.element.enabledSkills.length > 0));
                     };
                     return (false);
                 case (msg is InteractiveElementMouseOutMessage):
                     this.resetInteractiveApparence();
                     currentlyHighlighted = null;
+                    return (false);
+                case (msg is HighlightInteractiveElementsAction):
+                    hliea = (msg as HighlightInteractiveElementsAction);
+                    sf = (Kernel.getWorker().getFrame(ShortcutsFrame) as ShortcutsFrame);
+                    if (_highlightInteractiveElements)
+                    {
+                        _highlightInteractiveElements = false;
+                        this.highlightInteractiveElements(_highlightInteractiveElements);
+                    }
+                    else
+                    {
+                        if (((StageShareManager.isActive) && (((hliea.fromShortcut) && (!(sf.heldShortcuts.indexOf("highlightInteractiveElements") == -1))) || (this._mouseDown))))
+                        {
+                            _highlightInteractiveElements = true;
+                            this.highlightInteractiveElements(_highlightInteractiveElements);
+                        };
+                    };
+                    return (true);
+                case (msg is MouseDownMessage):
+                    this._mouseDown = true;
+                    break;
+                case (msg is MouseUpMessage):
+                    this._mouseDown = false;
+                    mum = (msg as MouseUpMessage);
+                    sf = (Kernel.getWorker().getFrame(ShortcutsFrame) as ShortcutsFrame);
+                    if (((sf.heldShortcuts.indexOf("highlightInteractiveElements") == -1) && (_highlightInteractiveElements)))
+                    {
+                        _highlightInteractiveElements = false;
+                        this.highlightInteractiveElements(_highlightInteractiveElements);
+                    };
+                    break;
+                case (msg is GameContextDestroyMessage):
+                    _highlightInteractiveElements = false;
+                    this.highlightInteractiveElements(_highlightInteractiveElements);
                     return (false);
             };
             return (false);
@@ -483,7 +560,7 @@
             for (sprite in this._collectableSpritesToBeStopped)
             {
                 ts = (sprite as TiphonSprite);
-                if (!!(ts))
+                if (ts)
                 {
                     ts.setAnimationAndDirection(("AnimState" + COLLECTABLE_CUT_STATE_ID), 0);
                 };
@@ -495,6 +572,8 @@
             this._currentUsages = new Array();
             this._nextInteractiveUsed = null;
             this._interactiveActionTimers = new Dictionary(true);
+            StageShareManager.stage.removeEventListener(Event.DEACTIVATE, this.onWindowDeactivate);
+            KernelEventsManager.getInstance().processCallback(HookList.HighlightInteractiveElements, false);
             return (true);
         }
 
@@ -506,14 +585,18 @@
         public function clear():void
         {
             var timeout:int;
-            var obj:Object;
+            var ieObj:*;
             for each (timeout in this._currentUsages)
             {
                 clearTimeout(timeout);
             };
-            for each (obj in this._ie)
+            for (ieObj in this._ie)
             {
-                this.removeInteractive((obj.element as InteractiveElement));
+                if (_highlightInteractiveElements)
+                {
+                    this.highlightInteractiveElement(ieObj, false);
+                };
+                this.removeInteractive(this._ie[ieObj].element);
             };
         }
 
@@ -556,7 +639,7 @@
             var useDirection:uint;
             var k:int;
             var playerPos:MapPoint = (user as IMovable).position;
-            if ((((playerPos.x == worldPos.x)) && ((playerPos.y == worldPos.y))))
+            if (((playerPos.x == worldPos.x) && (playerPos.y == worldPos.y)))
             {
                 useDirection = user.getDirection();
             }
@@ -604,18 +687,54 @@
             return (useDirection);
         }
 
+        public function enableInteractiveElements(enabled:Boolean):void
+        {
+            var worldObject:*;
+            for (worldObject in this._ie)
+            {
+                worldObject.mouseEnabled = enabled;
+                worldObject.useHandCursor = enabled;
+                worldObject.buttonMode = enabled;
+            };
+        }
+
+        public function getInteractiveElement(pObject:DisplayObject):InteractiveElement
+        {
+            var ie:Object = this._ie[pObject];
+            return ((ie) ? ie.element : null);
+        }
+
         private function registerInteractive(ie:InteractiveElement, firstSkill:int):void
         {
+            var skill:InteractiveElementSkill;
+            var skilld:InteractiveElementSkill;
+            var entitiesFrame:RoleplayEntitiesFrame;
             var found:Boolean;
             var s:String;
             var cie:InteractiveElement;
             var worldObject:InteractiveObject = Atouin.getInstance().getIdentifiedElement(ie.elementId);
-            if (!(worldObject))
+            if (!worldObject)
             {
                 _log.error((("Unknown identified element " + ie.elementId) + ", unable to register it as interactive."));
                 return;
             };
-            var entitiesFrame:RoleplayEntitiesFrame = (Kernel.getWorker().getFrame(RoleplayEntitiesFrame) as RoleplayEntitiesFrame);
+            for each (skill in ie.enabledSkills)
+            {
+                if (SkillManager.getInstance().isDoorCursorSkill(skill.skillId))
+                {
+                    MapDisplayManager.getInstance().getDataMapContainer().addAlwayAnimatedElement(ie.elementId);
+                    break;
+                };
+            };
+            for each (skilld in ie.disabledSkills)
+            {
+                if (SkillManager.getInstance().isDoorCursorSkill(skilld.skillId))
+                {
+                    MapDisplayManager.getInstance().getDataMapContainer().addAlwayAnimatedElement(ie.elementId);
+                    break;
+                };
+            };
+            entitiesFrame = (Kernel.getWorker().getFrame(RoleplayEntitiesFrame) as RoleplayEntitiesFrame);
             if (entitiesFrame)
             {
                 found = false;
@@ -629,23 +748,25 @@
                         break;
                     };
                 };
-                if (!(found))
+                if (!found)
                 {
                     entitiesFrame.interactiveElements.push(ie);
                 };
             };
             var worldPos:MapPoint = Atouin.getInstance().getIdentifiedElementPosition(ie.elementId);
-            if (!(worldObject.hasEventListener(MouseEvent.MOUSE_OVER)))
+            if (ie.onCurrentMap)
             {
-                worldObject.addEventListener(MouseEvent.MOUSE_OVER, this.over, false, 0, true);
-                worldObject.addEventListener(MouseEvent.MOUSE_OUT, this.out, false, 0, true);
-                worldObject.addEventListener(MouseEvent.CLICK, this.click, false, 0, true);
-                _log.debug((((((("Add interaction for element " + ie.elementId) + " on cell ") + worldPos.cellId) + " with ") + ((ie.enabledSkills) ? ie.enabledSkills.length : 0)) + " skill actifs"));
-            };
-            if ((worldObject is Sprite))
-            {
-                (worldObject as Sprite).useHandCursor = true;
-                (worldObject as Sprite).buttonMode = true;
+                if (!worldObject.hasEventListener(MouseEvent.MOUSE_OVER))
+                {
+                    worldObject.addEventListener(MouseEvent.MOUSE_OVER, this.over, false, 0, true);
+                    worldObject.addEventListener(MouseEvent.MOUSE_OUT, this.out, false, 0, true);
+                    worldObject.addEventListener(MouseEvent.CLICK, this.click, false, 0, true);
+                };
+                if ((worldObject is Sprite))
+                {
+                    (worldObject as Sprite).useHandCursor = true;
+                    (worldObject as Sprite).buttonMode = true;
+                };
             };
             this._ie[worldObject] = {
                 "element":ie,
@@ -678,14 +799,17 @@
         private function updateStatedElement(se:StatedElement, global:Boolean=false):void
         {
             var interactive:Interactive;
+            var isCollectable:Boolean;
+            var skill:Skill;
+            var interactiveSkill:InteractiveElementSkill;
             var worldObject:InteractiveObject = Atouin.getInstance().getIdentifiedElement(se.elementId);
-            if (!(worldObject))
+            if (!worldObject)
             {
                 _log.error((((("Unknown identified element " + se.elementId) + "; unable to change its state to ") + se.elementState) + " !"));
                 return;
             };
-            var ts:TiphonSprite = (((worldObject is DisplayObjectContainer)) ? this.findTiphonSprite((worldObject as DisplayObjectContainer)) : null);
-            if (!(ts))
+            var ts:TiphonSprite = ((worldObject is DisplayObjectContainer) ? this.findTiphonSprite((worldObject as DisplayObjectContainer)) : null);
+            if (!ts)
             {
                 _log.warn((((("Unable to find an animated element for the stated element " + se.elementId) + " on cell ") + se.elementCellId) + ", this element is probably invisible or is not configured as an animated element."));
                 return;
@@ -695,27 +819,76 @@
                 this._usingInteractive = true;
                 this.resetInteractiveApparence();
             };
-            if (((((this._ie[worldObject]) && (this._ie[worldObject].element))) && ((this._ie[worldObject].element.elementId == se.elementId))))
+            if ((((this._ie[worldObject]) && (this._ie[worldObject].element)) && (this._ie[worldObject].element.elementId == se.elementId)))
             {
                 interactive = Interactive.getInteractiveById(this._ie[worldObject].element.elementTypeId);
-                if (((interactive) && ((interactive.actionId == COLLECTABLE_INTERACTIVE_ACTION_ID))))
+                if (interactive)
                 {
-                    this._collectableSpritesToBeStopped[ts] = null;
-                }
-                else
-                {
-                    this._statedElementsTargetAnimation[ts] = {
-                        "elemId":se.elementId,
-                        "animation":("AnimState" + se.elementState)
+                    isCollectable = false;
+                    for each (interactiveSkill in this._ie[worldObject].element.enabledSkills)
+                    {
+                        skill = Skill.getSkillById(interactiveSkill.skillId);
+                        if (skill.elementActionId == ACTION_COLLECTABLE_RESOURCES)
+                        {
+                            isCollectable = true;
+                            break;
+                        };
                     };
-                    ts.addEventListener(TiphonEvent.RENDER_SUCCEED, this.onAnimRendered);
+                    if (!isCollectable)
+                    {
+                        for each (interactiveSkill in this._ie[worldObject].element.disabledSkills)
+                        {
+                            skill = Skill.getSkillById(interactiveSkill.skillId);
+                            if (skill.elementActionId == ACTION_COLLECTABLE_RESOURCES)
+                            {
+                                isCollectable = true;
+                                break;
+                            };
+                        };
+                    };
+                    if (isCollectable)
+                    {
+                        this._collectableSpritesToBeStopped[ts] = null;
+                    }
+                    else
+                    {
+                        if (((ts.hasAnimation("AnimStatique")) && (!(Atouin.getInstance().options.getOption("allowAnimatedGfx")))))
+                        {
+                            this._statedElementsTargetAnimation[ts] = {
+                                "elemId":se.elementId,
+                                "animation":"AnimStatique"
+                            };
+                        }
+                        else
+                        {
+                            this._statedElementsTargetAnimation[ts] = {
+                                "elemId":se.elementId,
+                                "animation":("AnimState" + se.elementState)
+                            };
+                        };
+                        ts.addEventListener(TiphonEvent.RENDER_SUCCEED, this.onAnimRendered);
+                    };
                 };
             }
             else
             {
                 delete this._collectableSpritesToBeStopped[ts];
             };
-            ts.setAnimationAndDirection(("AnimState" + se.elementState), 0, global);
+            if ((((ts.look.getBone() == 5247) || (ts.look.getBone() == 5249)) || (ts.look.getBone() == 5250)))
+            {
+                if (((ts.hasAnimation("AnimStatique")) && (!(Atouin.getInstance().options.getOption("allowAnimatedGfx")))))
+                {
+                    ts.setAnimationAndDirection("AnimStatique", se.elementState, global);
+                }
+                else
+                {
+                    ts.setAnimationAndDirection(("AnimState" + se.elementState), 0, global);
+                };
+            }
+            else
+            {
+                ts.setAnimationAndDirection(("AnimState" + se.elementState), 0, global);
+            };
         }
 
         private function findTiphonSprite(doc:DisplayObjectContainer):TiphonSprite
@@ -723,9 +896,9 @@
             var child:DisplayObject;
             if ((doc is TiphonSprite))
             {
-                return ((doc as TiphonSprite));
+                return (doc as TiphonSprite);
             };
-            if (!(doc.numChildren))
+            if (!doc.numChildren)
             {
                 return (null);
             };
@@ -735,7 +908,7 @@
                 child = doc.getChildAt(i);
                 if ((child is TiphonSprite))
                 {
-                    return ((child as TiphonSprite));
+                    return (child as TiphonSprite);
                 };
                 if ((child is DisplayObjectContainer))
                 {
@@ -746,11 +919,17 @@
             return (null);
         }
 
-        private function highlightInteractiveApparence(ie:Sprite, firstSkill:int, pSkillIsEnabled:Boolean=true):void
+        private function highlightInteractiveApparence(ie:Sprite, skills:Vector.<InteractiveElementSkill>, pSkillIsEnabled:Boolean=true):void
         {
-            var lcd:LinkedCursorData;
+            var skill:Skill;
+            var cursorId:int;
+            var jobsApi:JobsApi;
+            var jobXp:*;
+            var cursorNamesuffix:String;
+            var cursorSprite:Sprite;
+            var cursorName:String;
             var infos:Object = this._ie[ie];
-            if (!(infos))
+            if (!infos)
             {
                 return;
             };
@@ -770,13 +949,45 @@
             {
                 ie.alpha = ALPHA_MODIFICATOR;
             };
-            if ((((PlayedCharacterManager.getInstance().state == PlayerLifeStatusEnum.STATUS_ALIVE_AND_KICKING)) && (!(PerformanceManager.optimize))))
+            if (skills)
             {
-                lcd = new LinkedCursorData();
-                lcd.sprite = getCursor(Skill.getSkillById(firstSkill).cursor, pSkillIsEnabled);
-                Mouse.hide();
-                lcd.offset = INTERACTIVE_CURSOR_OFFSET;
-                LinkedCursorSpriteManager.getInstance().addItem(INTERACTIVE_CURSOR_NAME, lcd);
+                if (((SkillManager.getInstance().isDirectionalPanel(skills[0].skillId)) && (skills.length > 1)))
+                {
+                    skill = Skill.getSkillById(skills[1].skillId);
+                }
+                else
+                {
+                    if (!SkillManager.getInstance().isDirectionalPanel(skills[0].skillId))
+                    {
+                        skill = Skill.getSkillById(skills[0].skillId);
+                    };
+                };
+                if ((((PlayedCharacterManager.getInstance().state == PlayerLifeStatusEnum.STATUS_ALIVE_AND_KICKING) && (!(PerformanceManager.optimize))) && (skill)))
+                {
+                    cursorId = skill.cursor;
+                    jobsApi = new JobsApi();
+                    jobXp = jobsApi.getJobExperience(skill.parentJobId);
+                    cursorNamesuffix = "";
+                    if (!pSkillIsEnabled)
+                    {
+                        if (((!(jobXp)) || (jobXp.currentLevel < skill.levelMin)))
+                        {
+                            cursorSprite = getCursor(cursorId, false);
+                            cursorNamesuffix = "Cross";
+                        }
+                        else
+                        {
+                            cursorSprite = getCursor(cursorId, true, true, true);
+                            cursorNamesuffix = "Hourglass";
+                        };
+                    }
+                    else
+                    {
+                        cursorSprite = getCursor(cursorId, true);
+                    };
+                    cursorName = ((INTERACTIVE_CURSOR_NAME + cursorId) + cursorNamesuffix);
+                    CursorSpriteManager.displaySpecificCursor(cursorName, cursorSprite);
+                };
             };
             currentlyHighlighted = ie;
         }
@@ -787,7 +998,7 @@
             {
                 return;
             };
-            if (((removeIcon) && ((currentlyHighlighted.getChildAt(0) is TiphonSprite))))
+            if ((((removeIcon) && (currentlyHighlighted.numChildren)) && (currentlyHighlighted.getChildAt(0) is TiphonSprite)))
             {
                 FiltersManager.getInstance().removeEffect((currentlyHighlighted.getChildAt(0) as TiphonSprite).rawAnimation, LUMINOSITY_EFFECTS);
             }
@@ -800,17 +1011,19 @@
             };
             if (removeIcon)
             {
-                LinkedCursorSpriteManager.getInstance().removeItem(INTERACTIVE_CURSOR_NAME);
-                Mouse.show();
+                CursorSpriteManager.resetCursor();
             };
             var infos:Object = this._ie[currentlyHighlighted];
-            if (!(infos))
+            if (!infos)
             {
                 return;
             };
             if (MapDisplayManager.getInstance().isBoundingBox(infos.element.elementId))
             {
-                currentlyHighlighted.alpha = 0;
+                if (currentlyHighlighted.filters.length == 0)
+                {
+                    currentlyHighlighted.alpha = 0;
+                };
                 currentlyHighlighted = null;
             };
         }
@@ -839,22 +1052,6 @@
 
         private function click(me:MouseEvent):void
         {
-            var skillNameStr:String;
-            var enabledSkill:InteractiveElementSkill;
-            var jobsApi:JobsApi;
-            var skillDisabledData:Skill;
-            var jobsDetails:Array;
-            var disabledSkill:InteractiveElementSkill;
-            var nbSkillsAvailable:int;
-            var skillIndex:int;
-            var skill:Object;
-            var details:Object;
-            var knownJob:KnownJob;
-            var _local_16:int;
-            var _local_17:WeaponWrapper;
-            var _local_18:Job;
-            var isAlreadyChecked:Boolean;
-            var j:Object;
             if (((!(this.roleplayWorldFrame)) || (!(this.roleplayContextFrame.hasWorldInteraction))))
             {
                 return;
@@ -866,242 +1063,26 @@
             {
                 interactive = Interactive.getInteractiveById(ie.element.elementTypeId);
             };
-            if (((((!(AirScanner.isStreamingVersion())) && ((OptionManager.getOptionManager("dofus")["enableForceWalk"] == true)))) && (((ShortcutsFrame.ctrlKeyDown) || ((((SystemManager.getSingleton().os == OperatingSystem.MAC_OS)) && (ShortcutsFrame.altKeyDown)))))))
+            if (((OptionManager.getOptionManager("dofus").getOption("enableForceWalk") == true) && ((ShortcutsFrame.ctrlKeyDown) || ((SystemManager.getSingleton().os == OperatingSystem.MAC_OS) && (ShortcutsFrame.altKeyDown)))))
             {
                 this.out(me);
                 InteractiveCellManager.getInstance().getCell(ie.position.cellId).dispatchEvent(new MouseEvent(MouseEvent.CLICK));
                 return;
             };
             var skills:Array = [];
-            for each (enabledSkill in ie.element.enabledSkills)
+            var result:Object = SkillManager.getInstance().prepareContextualMenu(skills, ie);
+            if (((result.nbSkills == 1) && (!(result.severalInstances))))
             {
-                if ((enabledSkill is InteractiveElementNamedSkill))
-                {
-                    skillNameStr = SkillName.getSkillNameById((enabledSkill as InteractiveElementNamedSkill).nameId).name;
-                }
-                else
-                {
-                    skillNameStr = Skill.getSkillById(enabledSkill.skillId).name;
-                };
-                skills.push({
-                    "id":enabledSkill.skillId,
-                    "instanceId":enabledSkill.skillInstanceUid,
-                    "name":skillNameStr,
-                    "enabled":true
-                });
-            };
-            jobsApi = new JobsApi();
-            jobsDetails = new Array();
-            for each (disabledSkill in ie.element.disabledSkills)
+                this.skillClicked(ie, skills[result.skillIndex].instanceId);
+            }
+            else
             {
-                if ((disabledSkill is InteractiveElementNamedSkill))
+                if (((result.nbSkills > 0) && ((skills.length > 1) || (result.severalInstances))))
                 {
-                    skillNameStr = SkillName.getSkillNameById((disabledSkill as InteractiveElementNamedSkill).nameId).name;
-                }
-                else
-                {
-                    skillNameStr = Skill.getSkillById(disabledSkill.skillId).name;
-                };
-                skillDisabledData = Skill.getSkillById(disabledSkill.skillId);
-                skillNameStr = skillDisabledData.name;
-                if (skillDisabledData.parentJobId != 1)
-                {
-                    knownJob = jobsApi.getKnownJob(skillDisabledData.parentJobId);
-                    if (knownJob == null)
-                    {
-                        details = new Object();
-                        details.job = skillDisabledData.parentJob.name;
-                        details.jobId = skillDisabledData.parentJob.id;
-                        details.type = "job";
-                        details.value = [skillDisabledData.parentJob.name];
-                    }
-                    else
-                    {
-                        _local_16 = knownJob.jobExperience.jobLevel;
-                        if (_local_16 < skillDisabledData.levelMin)
-                        {
-                            details = new Object();
-                            details.job = skillDisabledData.parentJob.name;
-                            details.jobId = skillDisabledData.parentJob.id;
-                            details.type = "level";
-                            details.value = [skillDisabledData.parentJob.name, skillDisabledData.levelMin, _local_16];
-                        }
-                        else
-                        {
-                            _local_17 = PlayedCharacterApi.getWeapon();
-                            _local_18 = skillDisabledData.parentJob;
-                            if ((((_local_17 == null)) || ((_local_18.toolIds.indexOf(_local_17.id) == -1))))
-                            {
-                                details = new Object();
-                                details.job = skillDisabledData.parentJob.name;
-                                details.jobId = skillDisabledData.parentJob.id;
-                                details.type = "tool";
-                                details.value = [skillDisabledData.parentJob.name];
-                            };
-                        };
-                    };
-                    if (details != null)
-                    {
-                        isAlreadyChecked = false;
-                        for each (j in jobsDetails)
-                        {
-                            if (j.jobId == details.jobId)
-                            {
-                                isAlreadyChecked = true;
-                                break;
-                            };
-                        };
-                        if (!(isAlreadyChecked))
-                        {
-                            jobsDetails.push(details);
-                        };
-                    };
-                    skills.push({
-                        "id":disabledSkill.skillId,
-                        "instanceId":disabledSkill.skillInstanceUid,
-                        "name":skillNameStr,
-                        "enabled":false
-                    });
+                    this._modContextMenu = UiModuleManager.getInstance().getModule("Ankama_ContextMenu").mainClass;
+                    this._modContextMenu.createContextMenu(MenusFactory.create(skills, "skill", [ie, interactive]));
                 };
             };
-            nbSkillsAvailable = 0;
-            for each (skill in skills)
-            {
-                if (skill.enabled)
-                {
-                    skillIndex = skills.indexOf(skill);
-                    nbSkillsAvailable++;
-                };
-            };
-            if (nbSkillsAvailable == 1)
-            {
-                this.skillClicked(ie, skills[skillIndex].instanceId);
-                return;
-            };
-            if ((((nbSkillsAvailable > 0)) && ((skills.length > 1))))
-            {
-                this._modContextMenu = UiModuleManager.getInstance().getModule("Ankama_ContextMenu").mainClass;
-                this._modContextMenu.createContextMenu(MenusFactory.create(skills, "skill", [ie, interactive]));
-            };
-            if (nbSkillsAvailable == 0)
-            {
-                this.showInteractiveElementNotification(jobsDetails);
-            };
-        }
-
-        private function showInteractiveElementNotification(dataTab:Array):void
-        {
-            var details:String;
-            var needBtn:Boolean;
-            var data:Object;
-            var npcName:String;
-            var jobKnown:Array;
-            var noToolsStr:String;
-            var noLvlStr:String;
-            var _local_9:Npc;
-            var _local_10:Point;
-            var _local_11:MapApi;
-            var _local_12:String;
-            var nid:uint;
-            if (dataTab.length > 0)
-            {
-                details = "";
-                needBtn = false;
-                jobKnown = this.getJobKnown(dataTab);
-                if (jobKnown.length > 0)
-                {
-                    noToolsStr = "";
-                    noLvlStr = "";
-                    for each (data in jobKnown)
-                    {
-                        if (data.type == "level")
-                        {
-                            noLvlStr = (noLvlStr + (((jobKnown.length > 1)) ? "<li>" : ""));
-                            noLvlStr = (noLvlStr + I18n.getUiText("ui.skill.levelLowJob", data.value));
-                            noLvlStr = (noLvlStr + (((jobKnown.length > 1)) ? "</li>" : ""));
-                        }
-                        else
-                        {
-                            if (data.type == "tool")
-                            {
-                                noToolsStr = (noToolsStr + (((jobKnown.length > 1)) ? "<li>" : ""));
-                                noToolsStr = (noToolsStr + data.value[0]);
-                                noToolsStr = (noToolsStr + (((jobKnown.length > 1)) ? "</li>" : ""));
-                            };
-                        };
-                    };
-                    if (noLvlStr != "")
-                    {
-                        details = (details + I18n.getUiText("ui.skill.levelLow", [(((((jobKnown.length > 1)) ? "<ul>" : "") + noLvlStr) + (((jobKnown.length > 1)) ? "</ul>" : "."))]));
-                    };
-                    if (noToolsStr != "")
-                    {
-                        details = (details + I18n.getUiText("ui.skill.toolNeeded", [(((((jobKnown.length > 1)) ? "<ul>" : "") + noToolsStr) + (((jobKnown.length > 1)) ? "</ul>" : "."))]));
-                    };
-                }
-                else
-                {
-                    _local_11 = new MapApi();
-                    if (_local_11.isInIncarnam())
-                    {
-                        _local_9 = Npc.getNpcById(849);
-                        _local_10 = _local_11.getMapCoords(80218116);
-                    }
-                    else
-                    {
-                        _local_9 = Npc.getNpcById(601);
-                        _local_10 = _local_11.getMapCoords(83889152);
-                    };
-                    _local_12 = "";
-                    for each (data in dataTab)
-                    {
-                        _local_12 = (_local_12 + (((((dataTab.length > 1)) ? "<li>" : "") + data.value[0]) + (((dataTab.length > 1)) ? "</li>" : "")));
-                    };
-                    details = I18n.getUiText("ui.skill.jobNotKnown", [(((((dataTab.length > 1)) ? "<ul>" : "") + _local_12) + (((dataTab.length > 1)) ? "</ul>" : "."))]);
-                    details = (details + "\n");
-                    details = (details + I18n.getUiText("ui.npc.learnJobs", [_local_9.name, _local_10.x, _local_10.y]));
-                    npcName = _local_9.name;
-                    needBtn = true;
-                };
-                if (details != "")
-                {
-                    nid = NotificationManager.getInstance().prepareNotification(I18n.getUiText("ui.skill.disabled"), details, NotificationTypeEnum.INFORMATION, "interactiveElementDisabled");
-                    if (needBtn)
-                    {
-                        NotificationManager.getInstance().addButtonToNotification(nid, I18n.getUiText("ui.npc.location"), "AddMapFlag", [(("flag_srv" + CompassTypeEnum.COMPASS_TYPE_SIMPLE) + "_job"), (((((npcName + " (") + _local_10.x) + ",") + _local_10.y) + ")"), PlayedCharacterManager.getInstance().currentWorldMap.id, _local_10.x, _local_10.y, 0x558800, false, true], false, 150, 0, "hook");
-                    };
-                    NotificationManager.getInstance().addTimerToNotification(nid, 30, true);
-                    NotificationManager.getInstance().sendNotification(nid);
-                };
-            };
-        }
-
-        private function getJobKnown(data:Array):Array
-        {
-            var pb:Object;
-            var newData:Array = new Array();
-            for each (pb in data)
-            {
-                if (pb.type != "job")
-                {
-                    newData.push(pb);
-                };
-            };
-            return (newData);
-        }
-
-        private function formateInteractiveElementProblem(type:String, data:Array):String
-        {
-            switch (type)
-            {
-                case "job":
-                    return (I18n.getUiText("ui.skill.jobNotKnown", data));
-                case "level":
-                    return (I18n.getUiText("ui.skill.levelLow", data));
-                case "tool":
-                    return (I18n.getUiText("ui.skill.toolNeeded", data));
-            };
-            return (null);
         }
 
         private function skillClicked(ie:Object, skillInstanceId:int):void
@@ -1110,7 +1091,7 @@
             Kernel.getWorker().process(msg);
         }
 
-        private function interactiveUsageFinished(entityId:int, elementId:uint, skillId:uint):void
+        private function interactiveUsageFinished(entityId:Number, elementId:uint, skillId:uint):void
         {
             var ieamsg:InteractiveElementActivationMessage;
             if (entityId == PlayedCharacterManager.getInstance().id)
@@ -1134,7 +1115,7 @@
         private function onAnimRendered(pEvent:TiphonEvent):void
         {
             var ts:TiphonSprite = (pEvent.currentTarget as TiphonSprite);
-            if (pEvent.animationType == this._statedElementsTargetAnimation[ts].animation)
+            if (((this._statedElementsTargetAnimation[ts]) && (pEvent.animationType == this._statedElementsTargetAnimation[ts].animation)))
             {
                 ts.removeEventListener(TiphonEvent.RENDER_SUCCEED, this.onAnimRendered);
                 if (this._statedElementsTargetAnimation[ts].elemId == this._currentUsedElementId)
@@ -1142,7 +1123,7 @@
                     this._usingInteractive = false;
                     this._currentUsedElementId = -1;
                 };
-                if (((((ts.getBounds(StageShareManager.stage).contains(StageShareManager.stage.mouseX, StageShareManager.stage.mouseY)) && (this._ie[currentlyHighlighted]))) && ((this._ie[currentlyHighlighted].element.elementId == this._statedElementsTargetAnimation[ts].elemId))))
+                if ((((ts.getBounds(StageShareManager.stage).contains(StageShareManager.stage.mouseX, StageShareManager.stage.mouseY)) && (this._ie[currentlyHighlighted])) && (this._ie[currentlyHighlighted].element.elementId == this._statedElementsTargetAnimation[ts].elemId)))
                 {
                     Kernel.getWorker().process(new InteractiveElementMouseOverMessage(this._ie[currentlyHighlighted].element, currentlyHighlighted));
                 };
@@ -1150,7 +1131,45 @@
             };
         }
 
+        private function highlightInteractiveElements(pHighlight:Boolean):void
+        {
+            var ieObj:*;
+            for (ieObj in this._ie)
+            {
+                if (((ieObj is DisplayObject) && (!(ieObj.hasEventListener(MouseEvent.MOUSE_OVER)))))
+                {
+                }
+                else
+                {
+                    this.highlightInteractiveElement(ieObj, pHighlight);
+                };
+            };
+            KernelEventsManager.getInstance().processCallback(HookList.HighlightInteractiveElements, pHighlight);
+        }
+
+        private function highlightInteractiveElement(ieSprite:Sprite, highlight:Boolean):void
+        {
+            if (highlight)
+            {
+                FiltersManager.getInstance().addEffect(ieSprite, HIGHLIGHT_HINT_FILTER);
+            }
+            else
+            {
+                FiltersManager.getInstance().removeEffect(ieSprite, HIGHLIGHT_HINT_FILTER);
+            };
+            if (MapDisplayManager.getInstance().isBoundingBox(this._ie[ieSprite].element.elementId))
+            {
+                ieSprite.alpha = ((ieSprite.filters.length > 0) ? ALPHA_MODIFICATOR : 0);
+            };
+        }
+
+        private function onWindowDeactivate(pEvent:Event):void
+        {
+            _highlightInteractiveElements = false;
+            this.highlightInteractiveElements(_highlightInteractiveElements);
+        }
+
 
     }
-}//package com.ankamagames.dofus.logic.game.roleplay.frames
+} com.ankamagames.dofus.logic.game.roleplay.frames
 

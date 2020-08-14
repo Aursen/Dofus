@@ -1,4 +1,4 @@
-﻿package com.ankamagames.tiphon.types
+package com.ankamagames.tiphon.types
 {
     import flash.events.EventDispatcher;
     import flash.utils.Dictionary;
@@ -11,24 +11,21 @@
     public class GraphicLibrary extends EventDispatcher 
     {
 
-        private var _swl:Dictionary;
+        private var _swl:Dictionary = new Dictionary();
         public var gfxId:uint;
         private var _swlCount:uint = 0;
         private var _isBone:Boolean;
-        private var _waitingSwl:Dictionary;
+        private var _waitingSwl:Dictionary = new Dictionary();
 
         public function GraphicLibrary(pGfxId:uint, isBone:Boolean=false)
         {
-            this._swl = new Dictionary();
-            this._waitingSwl = new Dictionary();
-            super();
             this.gfxId = pGfxId;
             this._isBone = isBone;
         }
 
         public function addSwl(swl:Swl, url:String):void
         {
-            if (!(this._swl[url]))
+            if (!this._swl[url])
             {
                 this._swlCount++;
             };
@@ -43,7 +40,7 @@
 
         public function updateSwfState(uri:Uri):void
         {
-            if (!(this._swl[uri.toString()]))
+            if (!this._swl[uri.toString()])
             {
                 this._swlCount++;
             };
@@ -52,43 +49,45 @@
 
         public function hasClass(className:String):Boolean
         {
-            var swlUri:Uri = ((this._isBone) ? (BoneIndexManager.getInstance().getBoneFile(this.gfxId, className)) : new Uri(((TiphonConstants.SWF_SKIN_PATH + this.gfxId) + ".swl")));
-            return (!((this._swl[swlUri.toString()] == null)));
+            var swlUri:Uri = ((this._isBone) ? (BoneIndexManager.getInstance().getBoneFile(this.gfxId, className)) : (new Uri(((TiphonConstants.SWF_SKIN_PATH + this.gfxId) + ".swl"))));
+            return (!(this._swl[swlUri.toString()] == null));
         }
 
         public function hasClassAvaible(className:String=null):Boolean
         {
             if (this.isSingleFile)
             {
-                return (!((this.getSwl(className) == null)));
+                return (!(this.getSwl(className) == null));
             };
-            var swlUri:Uri = ((this._isBone) ? (BoneIndexManager.getInstance().getBoneFile(this.gfxId, className)) : new Uri(((TiphonConstants.SWF_SKIN_PATH + this.gfxId) + ".swl")));
-            return (((!((this._swl[swlUri.toString()] == null))) && (!((this._swl[swlUri.toString()] == false)))));
+            var swlUri:Uri = ((this._isBone) ? (BoneIndexManager.getInstance().getBoneFile(this.gfxId, className)) : (new Uri(((TiphonConstants.SWF_SKIN_PATH + this.gfxId) + ".swl"))));
+            return ((!(this._swl[swlUri.toString()] == null)) && (!(this._swl[swlUri.toString()] == false)));
         }
 
         public function hasSwl(uri:Uri=null):Boolean
         {
-            if (!(uri))
+            if (!uri)
             {
-                return (!((this._swlCount == 0)));
+                return (!(this._swlCount == 0));
             };
-            return (!((this._swl[uri.toString()] == null)));
+            return (!(this._swl[uri.toString()] == null));
         }
 
         public function getSwl(className:String=null, waitForIt:Boolean=false):Swl
         {
             var s:*;
             var swlUri:Uri;
+            var swlUriString:String;
             if (((className) || (!(this._isBone))))
             {
-                swlUri = ((this._isBone) ? (BoneIndexManager.getInstance().getBoneFile(this.gfxId, className)) : new Uri(((TiphonConstants.SWF_SKIN_PATH + this.gfxId) + ".swl")));
-                if (this._swl[swlUri.toString()] != false)
+                swlUri = ((this._isBone) ? (BoneIndexManager.getInstance().getBoneFile(this.gfxId, className)) : (new Uri(((TiphonConstants.SWF_SKIN_PATH + this.gfxId) + ".swl"))));
+                swlUriString = swlUri.toString();
+                if (this._swl[swlUriString] != false)
                 {
-                    return (this._swl[swlUri.toString()]);
+                    return (this._swl[swlUriString]);
                 };
                 if (waitForIt)
                 {
-                    this._waitingSwl[swlUri.toString()] = true;
+                    this._waitingSwl[swlUriString] = true;
                     return (null);
                 };
             };
@@ -104,10 +103,10 @@
 
         public function get isSingleFile():Boolean
         {
-            return (((!(this._isBone)) || (!(BoneIndexManager.getInstance().hasCustomBone(this.gfxId)))));
+            return ((!(this._isBone)) || (!(BoneIndexManager.getInstance().hasCustomBone(this.gfxId))));
         }
 
 
     }
-}//package com.ankamagames.tiphon.types
+} com.ankamagames.tiphon.types
 

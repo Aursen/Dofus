@@ -1,35 +1,31 @@
-﻿package com.ankamagames.berilia.components.gridRenderer
+package com.ankamagames.berilia.components.gridRenderer
 {
     import com.ankamagames.berilia.interfaces.IGridRenderer;
     import com.ankamagames.jerakine.logger.Logger;
+    import com.ankamagames.jerakine.logger.Log;
+    import flash.utils.getQualifiedClassName;
     import com.ankamagames.berilia.components.Grid;
     import com.ankamagames.jerakine.types.Uri;
     import flash.display.Sprite;
-    import com.ankamagames.jerakine.logger.Log;
-    import flash.utils.getQualifiedClassName;
     import com.ankamagames.berilia.components.EntityDisplayer;
     import com.ankamagames.berilia.types.graphic.GraphicContainer;
     import com.ankamagames.berilia.components.Texture;
     import flash.display.DisplayObject;
-    import com.ankamagames.berilia.managers.SecureCenter;
     import com.ankamagames.jerakine.messages.Message;
     import com.ankamagames.berilia.UIComponent;
 
-    [RendererArgs(emptySlotBackground="com.ankamagames.jerakine.types::Uri")]
     public class EntityGridRenderer implements IGridRenderer 
     {
 
-        protected var _log:Logger;
+        protected var _log:Logger = Log.getLogger(getQualifiedClassName(EntityGridRenderer));
         private var _grid:Grid;
         private var _emptyTexture:Uri;
         private var _mask:Sprite;
 
         public function EntityGridRenderer(strParams:String)
         {
-            this._log = Log.getLogger(getQualifiedClassName(EntityGridRenderer));
-            super();
             var params:Array = ((strParams) ? strParams.split(",") : []);
-            this._emptyTexture = ((((params[0]) && (params[0].length))) ? new Uri(params[0]) : null);
+            this._emptyTexture = (((params[0]) && (params[0].length)) ? new Uri(params[0]) : null);
             this._mask = new Sprite();
         }
 
@@ -57,10 +53,10 @@
                 entDisp.name = "entity";
                 entDisp.width = this._grid.slotWidth;
                 entDisp.height = this._grid.slotHeight;
-                entDisp.look = data.entityLook;
                 entDisp.direction = 3;
-                entDisp.scale = 2;
+                entDisp.entityScale = 2;
                 entDisp.yOffset = 20;
+                entDisp.look = data.entityLook;
                 ctr.addChild(entDisp);
                 this._mask = new Sprite();
                 this._mask.graphics.beginFill(0xFF0000);
@@ -76,7 +72,7 @@
         {
             var ctr:GraphicContainer;
             var ed:EntityDisplayer;
-            var _local_8:EntityDisplayer;
+            var entDisp:EntityDisplayer;
             if ((dispObj is GraphicContainer))
             {
                 ctr = GraphicContainer(dispObj);
@@ -90,25 +86,25 @@
                         {
                             return;
                         };
-                        ed.look = SecureCenter.unsecure(data.entityLook);
+                        ed.look = data.entityLook;
                     }
                     else
                     {
-                        _local_8 = new EntityDisplayer();
-                        _local_8.name = "entity";
-                        _local_8.width = this._grid.slotWidth;
-                        _local_8.height = this._grid.slotHeight;
-                        _local_8.look = SecureCenter.unsecure(data.entityLook);
-                        _local_8.direction = 3;
-                        _local_8.scale = 2;
-                        _local_8.yOffset = 20;
-                        ctr.addChild(_local_8);
+                        entDisp = new EntityDisplayer();
+                        entDisp.name = "entity";
+                        entDisp.width = this._grid.slotWidth;
+                        entDisp.height = this._grid.slotHeight;
+                        entDisp.look = data.entityLook;
+                        entDisp.direction = 3;
+                        entDisp.entityScale = 2;
+                        entDisp.yOffset = 20;
+                        ctr.addChild(entDisp);
                         this._mask = new Sprite();
                         this._mask.graphics.beginFill(0xFF);
                         this._mask.graphics.drawRoundRect(3, 3, (ctr.width - 6), (ctr.height - 6), 6, 6);
                         this._mask.graphics.endFill();
                         ctr.addChild(this._mask);
-                        _local_8.mask = this._mask;
+                        entDisp.mask = this._mask;
                     };
                 }
                 else
@@ -128,7 +124,7 @@
 
         public function getDataLength(data:*, selected:Boolean):uint
         {
-            return ((data % 2));
+            return (data % 2);
         }
 
         public function remove(dispObj:DisplayObject):void
@@ -170,5 +166,5 @@
 
 
     }
-}//package com.ankamagames.berilia.components.gridRenderer
+} com.ankamagames.berilia.components.gridRenderer
 

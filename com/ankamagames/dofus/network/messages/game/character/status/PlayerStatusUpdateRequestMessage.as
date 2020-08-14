@@ -1,28 +1,24 @@
-﻿package com.ankamagames.dofus.network.messages.game.character.status
+package com.ankamagames.dofus.network.messages.game.character.status
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
     import com.ankamagames.dofus.network.types.game.character.status.PlayerStatus;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
     import com.ankamagames.dofus.network.ProtocolTypeManager;
 
-    [Trusted]
     public class PlayerStatusUpdateRequestMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 6387;
 
         private var _isInitialized:Boolean = false;
-        public var status:PlayerStatus;
+        public var status:PlayerStatus = new PlayerStatus();
+        private var _statustree:FuncTree;
 
-        public function PlayerStatusUpdateRequestMessage()
-        {
-            this.status = new PlayerStatus();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
@@ -59,6 +55,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_PlayerStatusUpdateRequestMessage(output);
@@ -82,7 +86,24 @@
             this.status.deserialize(input);
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_PlayerStatusUpdateRequestMessage(tree);
+        }
+
+        public function deserializeAsyncAs_PlayerStatusUpdateRequestMessage(tree:FuncTree):void
+        {
+            this._statustree = tree.addChild(this._statustreeFunc);
+        }
+
+        private function _statustreeFunc(input:ICustomDataInput):void
+        {
+            var _id:uint = input.readUnsignedShort();
+            this.status = ProtocolTypeManager.getInstance(PlayerStatus, _id);
+            this.status.deserializeAsync(this._statustree);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.character.status
+} com.ankamagames.dofus.network.messages.game.character.status
 

@@ -1,30 +1,26 @@
-﻿package com.ankamagames.dofus.network.messages.game.inventory
+package com.ankamagames.dofus.network.messages.game.inventory
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
     import __AS3__.vec.Vector;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
     import __AS3__.vec.*;
 
-    [Trusted]
     public class ObjectAveragePricesMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 6335;
 
         private var _isInitialized:Boolean = false;
-        public var ids:Vector.<uint>;
-        public var avgPrices:Vector.<uint>;
+        public var ids:Vector.<uint> = new Vector.<uint>();
+        public var avgPrices:Vector.<Number> = new Vector.<Number>();
+        private var _idstree:FuncTree;
+        private var _avgPricestree:FuncTree;
 
-        public function ObjectAveragePricesMessage()
-        {
-            this.ids = new Vector.<uint>();
-            this.avgPrices = new Vector.<uint>();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
@@ -36,7 +32,7 @@
             return (6335);
         }
 
-        public function initObjectAveragePricesMessage(ids:Vector.<uint>=null, avgPrices:Vector.<uint>=null):ObjectAveragePricesMessage
+        public function initObjectAveragePricesMessage(ids:Vector.<uint>=null, avgPrices:Vector.<Number>=null):ObjectAveragePricesMessage
         {
             this.ids = ids;
             this.avgPrices = avgPrices;
@@ -47,7 +43,7 @@
         override public function reset():void
         {
             this.ids = new Vector.<uint>();
-            this.avgPrices = new Vector.<uint>();
+            this.avgPrices = new Vector.<Number>();
             this._isInitialized = false;
         }
 
@@ -61,6 +57,14 @@
         override public function unpack(input:ICustomDataInput, length:uint):void
         {
             this.deserialize(input);
+        }
+
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
         }
 
         public function serialize(output:ICustomDataOutput):void
@@ -85,11 +89,11 @@
             var _i2:uint;
             while (_i2 < this.avgPrices.length)
             {
-                if (this.avgPrices[_i2] < 0)
+                if (((this.avgPrices[_i2] < 0) || (this.avgPrices[_i2] > 9007199254740992)))
                 {
                     throw (new Error((("Forbidden value (" + this.avgPrices[_i2]) + ") on element 2 (starting at 1) of avgPrices.")));
                 };
-                output.writeVarInt(this.avgPrices[_i2]);
+                output.writeVarLong(this.avgPrices[_i2]);
                 _i2++;
             };
         }
@@ -102,7 +106,7 @@
         public function deserializeAs_ObjectAveragePricesMessage(input:ICustomDataInput):void
         {
             var _val1:uint;
-            var _val2:uint;
+            var _val2:Number;
             var _idsLen:uint = input.readUnsignedShort();
             var _i1:uint;
             while (_i1 < _idsLen)
@@ -119,8 +123,8 @@
             var _i2:uint;
             while (_i2 < _avgPricesLen)
             {
-                _val2 = input.readVarUhInt();
-                if (_val2 < 0)
+                _val2 = input.readVarUhLong();
+                if (((_val2 < 0) || (_val2 > 9007199254740992)))
                 {
                     throw (new Error((("Forbidden value (" + _val2) + ") on elements of avgPrices.")));
                 };
@@ -129,7 +133,60 @@
             };
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_ObjectAveragePricesMessage(tree);
+        }
+
+        public function deserializeAsyncAs_ObjectAveragePricesMessage(tree:FuncTree):void
+        {
+            this._idstree = tree.addChild(this._idstreeFunc);
+            this._avgPricestree = tree.addChild(this._avgPricestreeFunc);
+        }
+
+        private function _idstreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._idstree.addChild(this._idsFunc);
+                i++;
+            };
+        }
+
+        private function _idsFunc(input:ICustomDataInput):void
+        {
+            var _val:uint = input.readVarUhShort();
+            if (_val < 0)
+            {
+                throw (new Error((("Forbidden value (" + _val) + ") on elements of ids.")));
+            };
+            this.ids.push(_val);
+        }
+
+        private function _avgPricestreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._avgPricestree.addChild(this._avgPricesFunc);
+                i++;
+            };
+        }
+
+        private function _avgPricesFunc(input:ICustomDataInput):void
+        {
+            var _val:Number = input.readVarUhLong();
+            if (((_val < 0) || (_val > 9007199254740992)))
+            {
+                throw (new Error((("Forbidden value (" + _val) + ") on elements of avgPrices.")));
+            };
+            this.avgPrices.push(_val);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.inventory
+} com.ankamagames.dofus.network.messages.game.inventory
 

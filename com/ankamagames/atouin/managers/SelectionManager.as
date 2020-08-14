@@ -1,4 +1,4 @@
-﻿package com.ankamagames.atouin.managers
+package com.ankamagames.atouin.managers
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
@@ -32,7 +32,7 @@
 
         public static function getInstance():SelectionManager
         {
-            if (!(_self))
+            if (!_self)
             {
                 _self = new (SelectionManager)();
             };
@@ -69,14 +69,14 @@
             var aCell:Vector.<uint>;
             var aOldCells:Vector.<uint>;
             var s:Selection = this.getSelection(name);
-            if (!(s))
+            if (!s)
             {
                 return;
             };
             if (s.zone)
             {
                 aCell = s.zone.getCells(cellId);
-                aOldCells = ((!(s.cells)) ? null : s.cells.concat());
+                aOldCells = ((s.cells) ? s.cells.concat() : null);
                 s.remove(aOldCells);
                 s.cells = aCell;
                 if (s.renderer)
@@ -87,17 +87,13 @@
                 {
                     _log.error((("No renderer set for selection [" + name) + "]"));
                 };
-            }
-            else
-            {
-                _log.error((("No zone set for selection [" + name) + "]"));
             };
         }
 
         public function isInside(cellId:uint, selectionName:String):Boolean
         {
             var s:Selection = this.getSelection(selectionName);
-            if (!(s))
+            if (!s)
             {
                 return (false);
             };
@@ -113,7 +109,7 @@
                 for each (s in this._aSelection)
                 {
                     renderer = (s.renderer as ZoneDARenderer);
-                    if (((((renderer) && (s.visible))) && (!(renderer.fixedStrata))))
+                    if ((((renderer) && (s.visible)) && (!(renderer.fixedStrata))))
                     {
                         if (pEvent.propertyValue == true)
                         {
@@ -145,5 +141,5 @@
 
 
     }
-}//package com.ankamagames.atouin.managers
+} com.ankamagames.atouin.managers
 

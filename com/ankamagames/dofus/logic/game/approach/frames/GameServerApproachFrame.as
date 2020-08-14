@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.approach.frames
+package com.ankamagames.dofus.logic.game.approach.frames
 {
     import com.ankamagames.jerakine.messages.Frame;
     import com.ankamagames.jerakine.logger.Logger;
@@ -14,21 +14,22 @@
     import flash.system.LoaderContext;
     import flash.system.ApplicationDomain;
     import com.ankamagames.berilia.managers.UiModuleManager;
-    import flash.events.IOErrorEvent;
-    import flash.events.Event;
     import com.ankamagames.jerakine.types.enums.Priority;
     import com.ankamagames.dofus.logic.shield.SecureModeManager;
     import com.ankamagames.jerakine.utils.system.AirScanner;
     import com.ankamagames.dofus.kernel.Kernel;
     import com.ankamagames.dofus.logic.common.frames.MiscFrame;
+    import com.ankamagames.dofus.logic.common.frames.FeatureFrame;
     import com.ankamagames.dofus.network.messages.game.approach.AuthenticationTicketMessage;
-    import com.ankamagames.dofus.network.messages.game.approach.AuthenticationTicketAcceptedMessage;
     import com.ankamagames.dofus.network.messages.game.approach.AuthenticationTicketRefusedMessage;
     import com.ankamagames.jerakine.network.messages.ServerConnectionFailedMessage;
     import com.ankamagames.dofus.network.messages.game.approach.AlreadyConnectedMessage;
     import com.ankamagames.dofus.network.messages.game.character.choice.CharactersListMessage;
     import com.ankamagames.dofus.datacenter.servers.Server;
+    import com.ankamagames.berilia.types.data.UiModule;
+    import com.ankamagames.jerakine.types.DataStoreType;
     import com.ankamagames.dofus.network.messages.game.character.choice.BasicCharactersListMessage;
+    import com.ankamagames.dofus.network.messages.game.character.creation.CharacterCanBeCreatedResultMessage;
     import com.ankamagames.dofus.network.messages.game.approach.AccountCapabilitiesMessage;
     import com.ankamagames.dofus.logic.game.approach.actions.CharacterCreationAction;
     import com.ankamagames.dofus.network.messages.game.character.creation.CharacterCreationRequestMessage;
@@ -42,27 +43,28 @@
     import com.ankamagames.dofus.network.messages.game.character.creation.CharacterNameSuggestionFailureMessage;
     import com.ankamagames.dofus.logic.game.approach.actions.CharacterRemodelSelectionAction;
     import com.ankamagames.dofus.network.types.game.character.choice.RemodelingInformation;
-    import com.ankamagames.dofus.network.messages.security.ClientKeyMessage;
     import com.ankamagames.dofus.network.messages.game.context.GameContextCreateRequestMessage;
     import com.ankamagames.dofus.uiApi.SoundApi;
-    import com.ankamagames.jerakine.lua.LuaPlayer;
     import com.ankamagames.dofus.network.messages.game.character.choice.CharacterSelectedErrorMessage;
     import com.ankamagames.dofus.network.messages.game.basic.BasicTimeMessage;
     import com.ankamagames.dofus.network.messages.game.startup.StartupActionsListMessage;
     import com.ankamagames.dofus.network.messages.authorized.ConsoleCommandsListMessage;
+    import com.ankamagames.dofus.logic.game.common.frames.ServerTransferFrame;
+    import com.ankamagames.dofus.network.messages.game.character.creation.CharacterCanBeCreatedRequestMessage;
     import com.ankamagames.dofus.network.messages.game.character.choice.CharactersListWithRemodelingMessage;
     import com.ankamagames.dofus.network.types.game.character.choice.CharacterToRemodelInformations;
     import com.ankamagames.dofus.network.types.game.character.choice.CharacterHardcoreOrEpicInformations;
+    import com.ankamagames.dofus.logic.common.managers.FeatureManager;
     import com.ankamagames.dofus.network.types.game.character.choice.CharacterBaseInformations;
     import com.ankamagames.dofus.network.messages.game.startup.StartupActionsExecuteMessage;
-    import com.ankamagames.dofus.logic.game.approach.actions.CharacterSelectionAction;
     import com.ankamagames.dofus.network.messages.game.character.choice.CharacterReplayWithRemodelRequestMessage;
     import com.ankamagames.dofus.network.messages.game.character.choice.CharacterSelectionWithRemodelMessage;
     import com.ankamagames.dofus.internalDatacenter.connection.CreationCharacterWrapper;
     import com.ankamagames.dofus.network.messages.game.character.choice.CharacterFirstSelectionMessage;
     import com.ankamagames.dofus.network.messages.game.character.replay.CharacterReplayRequestMessage;
     import com.ankamagames.dofus.network.messages.game.character.choice.CharacterSelectionMessage;
-    import com.ankamagames.dofus.network.messages.security.RawDataMessage;
+    import com.ankamagames.dofus.network.messages.security.ClientKeyMessage;
+    import com.ankamagames.jerakine.lua.LuaPlayer;
     import com.ankamagames.dofus.network.types.game.startup.StartupActionAddObject;
     import com.ankamagames.dofus.network.types.game.data.items.ObjectItemInformationWithQuantity;
     import com.ankamagames.dofus.internalDatacenter.items.ItemWrapper;
@@ -70,15 +72,18 @@
     import com.ankamagames.dofus.network.messages.game.startup.StartupActionsObjetAttributionMessage;
     import com.ankamagames.dofus.network.messages.game.startup.StartupActionFinishedMessage;
     import com.ankamagames.dofus.kernel.net.ConnectionsHandler;
-    import com.ankamagames.dofus.logic.game.approach.managers.PartManager;
     import com.ankamagames.jerakine.managers.LangManager;
     import com.ankamagames.dofus.logic.connection.managers.AuthentificationManager;
     import com.ankamagames.dofus.logic.game.common.managers.InactivityManager;
     import com.ankamagames.dofus.misc.lists.HookList;
     import com.ankamagames.dofus.network.messages.game.approach.HelloGameMessage;
     import flash.utils.setTimeout;
+    import com.ankamagames.dofus.network.messages.game.approach.AuthenticationTicketAcceptedMessage;
     import com.ankamagames.dofus.logic.common.managers.PlayerManager;
     import com.ankamagames.jerakine.data.I18n;
+    import com.ankamagames.dofus.network.enums.GameServerTypeEnum;
+    import com.ankamagames.jerakine.types.enums.DataStoreEnum;
+    import com.ankamagames.jerakine.managers.StoreDataManager;
     import com.ankamagames.berilia.Berilia;
     import com.ankamagames.dofus.network.messages.game.character.choice.CharactersListErrorMessage;
     import com.ankamagames.dofus.network.ProtocolConstantsEnum;
@@ -87,14 +92,20 @@
     import com.ankamagames.dofus.network.messages.game.character.choice.CharacterSelectedForceMessage;
     import com.ankamagames.dofus.network.messages.game.character.choice.CharacterSelectedForceReadyMessage;
     import com.ankamagames.dofus.logic.game.approach.actions.CharacterDeselectionAction;
+    import com.ankamagames.dofus.logic.game.common.actions.CharacterAutoConnectAction;
+    import com.ankamagames.dofus.logic.game.approach.actions.CharacterSelectionAction;
     import com.ankamagames.dofus.logic.game.approach.actions.CharacterReplayRequestAction;
     import com.ankamagames.dofus.network.enums.CharacterRemodelingEnum;
+    import com.ankamagames.dofus.logic.connection.frames.ServerSelectionFrame;
     import com.ankamagames.dofus.logic.game.common.managers.PlayedCharacterManager;
-    import com.ankamagames.jerakine.types.DataStoreType;
     import com.ankamagames.dofus.Constants;
+    import com.ankamagames.dofus.BuildInfos;
     import com.ankamagames.dofus.externalnotification.ExternalNotificationManager;
     import com.ankamagames.dofus.misc.stats.StatisticsManager;
-    import by.blooddy.crypto.Base64;
+    import com.ankamagames.dofus.logic.game.common.managers.DebtManager;
+    import com.ankamagames.dofus.network.enums.BuildTypeEnum;
+    import com.ankamagames.jerakine.logger.LogLogger;
+    import com.ankamagames.dofus.misc.utils.errormanager.DofusErrorHandler;
     import com.ankamagames.dofus.logic.game.common.frames.WorldFrame;
     import com.ankamagames.dofus.logic.game.common.frames.AlignmentFrame;
     import com.ankamagames.dofus.logic.game.common.frames.SynchronisationFrame;
@@ -109,7 +120,6 @@
     import com.ankamagames.dofus.logic.game.common.frames.ChatFrame;
     import com.ankamagames.dofus.logic.game.common.frames.JobsFrame;
     import com.ankamagames.dofus.logic.game.common.frames.MountFrame;
-    import com.ankamagames.dofus.logic.game.common.frames.HouseFrame;
     import com.ankamagames.dofus.logic.game.common.frames.EmoticonFrame;
     import com.ankamagames.dofus.logic.game.common.frames.QuestFrame;
     import com.ankamagames.dofus.logic.game.common.frames.TinselFrame;
@@ -119,22 +129,33 @@
     import com.ankamagames.dofus.logic.game.common.frames.ExternalGameFrame;
     import com.ankamagames.dofus.logic.game.common.frames.AveragePricesFrame;
     import com.ankamagames.dofus.logic.game.common.frames.CameraControlFrame;
+    import com.ankamagames.dofus.logic.game.common.frames.IdolsFrame;
+    import com.ankamagames.dofus.logic.game.roleplay.frames.RoleplayIntroductionFrame;
+    import com.ankamagames.dofus.logic.game.common.frames.ScreenCaptureFrame;
+    import com.ankamagames.dofus.datacenter.servers.ServerTemporisSeason;
+    import com.ankamagames.dofus.logic.game.common.frames.TemporisSpellsUiFrame;
+    import com.ankamagames.dofus.logic.game.common.frames.HouseFrame;
     import com.ankamagames.dofus.logic.connection.frames.GameStartingFrame;
     import com.ankamagames.dofus.misc.interClient.InterClientManager;
     import com.ankamagames.jerakine.data.XmlConfig;
     import com.ankamagames.dofus.console.moduleLogger.ModuleDebugManager;
     import com.ankamagames.dofus.console.moduleLogger.Console;
     import com.ankamagames.dofus.console.moduleLUA.ConsoleLUA;
-    import com.ankamagames.dofus.logic.game.common.frames.ServerTransferFrame;
+    import com.ankamagames.jerakine.utils.benchmark.monitoring.FpsManager;
     import com.ankamagames.berilia.types.shortcut.Shortcut;
     import com.ankamagames.jerakine.script.ScriptsManager;
     import com.ankamagames.dofus.scripts.api.EntityApi;
     import com.ankamagames.dofus.scripts.api.ScriptSequenceApi;
     import com.ankamagames.dofus.scripts.api.CameraApi;
+    import com.ankamagames.jerakine.managers.OptionManager;
+    import com.ankamagames.dofus.uiApi.DataApi;
+    import scopart.raven.RavenClient;
+    import com.ankamagames.dofus.logic.game.spin2.chat.ChatServiceManager;
     import com.ankamagames.berilia.types.messages.AllModulesLoadedMessage;
     import com.ankamagames.jerakine.messages.ConnectionResumedMessage;
     import com.ankamagames.dofus.logic.game.common.managers.TimeManager;
     import com.ankamagames.dofus.types.data.ServerCommand;
+    import com.ankamagames.dofus.network.messages.game.context.roleplay.fight.arena.GameRolePlayArenaSwitchToFightServerMessage;
     import com.ankamagames.dofus.network.messages.game.character.choice.CharactersListRequestMessage;
     import __AS3__.vec.*;
 
@@ -143,42 +164,26 @@
 
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(GameServerApproachFrame));
         private static var _changeLogLoader:Loader = new Loader();
+        public static var authenticationTicketAccepted:Boolean = false;
 
-        private var _charactersList:Vector.<BasicCharacterWrapper>;
-        private var _charactersToRemodelList:Array;
-        private var _kernel:KernelEventsManager;
+        private const LOADING_TIMEOUT:uint = 60000;
+
+        private var _charactersList:Vector.<BasicCharacterWrapper> = new Vector.<BasicCharacterWrapper>();
+        private var _charactersToRemodelList:Array = [];
+        private var _kernel:KernelEventsManager = KernelEventsManager.getInstance();
         private var _gmaf:LoadingModuleFrame;
+        private var _loadingStart:Number;
         private var _waitingMessages:Vector.<Message>;
         private var _cssmsg:CharacterSelectedSuccessMessage;
-        private var _requestedCharacterId:uint;
-        private var _requestedToRemodelCharacterId:uint;
-        private var _lc:LoaderContext;
-        private var commonMod:Object;
-        private var _giftList:Array;
-        private var _charaListMinusDeadPeople:Array;
+        private var _requestedCharacterId:Number;
+        private var _requestedToRemodelCharacterId:Number;
+        private var _waitingForListRefreshAfterDeletion:Boolean;
+        private var _lc:LoaderContext = new LoaderContext(false, ApplicationDomain.currentDomain);
+        private var commonMod:Object = UiModuleManager.getInstance().getModule("Ankama_Common").mainClass;
+        private var _giftList:Array = [];
+        private var _charaListMinusDeadPeople:Array = [];
         private var _reconnectMsgSend:Boolean = false;
-
-        public function GameServerApproachFrame()
-        {
-            this._charactersList = new Vector.<BasicCharacterWrapper>();
-            this._charactersToRemodelList = new Array();
-            this._kernel = KernelEventsManager.getInstance();
-            this._lc = new LoaderContext(false, ApplicationDomain.currentDomain);
-            this.commonMod = UiModuleManager.getInstance().getModule("Ankama_Common").mainClass;
-            this._giftList = new Array();
-            this._charaListMinusDeadPeople = new Array();
-            super();
-        }
-
-        private static function onChangeLogError(e:IOErrorEvent):void
-        {
-            trace("fail");
-        }
-
-        private static function onChangeLogLoaded(e:Event):void
-        {
-            trace("New change");
-        }
+        private var _openCharsList:Boolean = true;
 
 
         public function get priority():int
@@ -196,17 +201,17 @@
             return (this._charaListMinusDeadPeople);
         }
 
-        public function get requestedCharaId():uint
+        public function get requestedCharaId():Number
         {
             return (this._requestedCharacterId);
         }
 
-        public function set requestedCharaId(id:uint):void
+        public function set requestedCharaId(id:Number):void
         {
             this._requestedCharacterId = id;
         }
 
-        public function isCharacterWaitingForChange(id:uint):Boolean
+        public function isCharacterWaitingForChange(id:Number):Boolean
         {
             if (this._charactersToRemodelList[id])
             {
@@ -220,32 +225,31 @@
             SecureModeManager.getInstance().checkMigrate();
             AirScanner.allowByteCodeExecution(this._lc, true);
             Kernel.getWorker().addFrame(new MiscFrame());
+            Kernel.getWorker().addFrame(new FeatureFrame());
             return (true);
         }
 
         public function process(msg:Message):Boolean
         {
             var perso:BasicCharacterWrapper;
-            var color:int;
-            var characterId:int;
-            var characterColors:Array;
-            var characterName:String;
-            var characterHead:int;
-            var recolors:Vector.<int>;
+            var characterId:Number;
             var isReplay:Boolean;
-            var parts:Vector.<uint>;
             var atmsg:AuthenticationTicketMessage;
-            var atamsg:AuthenticationTicketAcceptedMessage;
             var atrmsg:AuthenticationTicketRefusedMessage;
             var scfMsg:ServerConnectionFailedMessage;
             var acmsg:AlreadyConnectedMessage;
             var clmsg:CharactersListMessage;
-            var unusableCharacters:Vector.<uint>;
+            var unusableCharacters:Vector.<Number>;
             var o:BasicCharacterWrapper;
             var unusable:Boolean;
             var server:Server;
+            var bonusXp:int;
+            var mod:UiModule;
+            var dst:DataStoreType;
+            var isCharacterCreationDisplayForced:Boolean;
             var bclmsg:BasicCharactersListMessage;
             var b:BasicCharacterWrapper;
+            var ccbcmsg:CharacterCanBeCreatedResultMessage;
             var accmsg:AccountCapabilitiesMessage;
             var cca:CharacterCreationAction;
             var ccmsg:CharacterCreationRequestMessage;
@@ -262,46 +266,57 @@
             var crsa:CharacterRemodelSelectionAction;
             var remodel:RemodelingInformation;
             var tempColorsArray:Vector.<int>;
+            var characterToConnect:BasicCharacterWrapper;
+            var currentServer:Server;
             var bTutorial:Boolean;
             var cssmsg:CharacterSelectedSuccessMessage;
-            var flashKeyMsg:ClientKeyMessage;
+            var isRelease:Boolean;
             var gccrmsg:GameContextCreateRequestMessage;
             var soundApi:SoundApi;
-            var luaPlayer:LuaPlayer;
+            var devMode:Boolean;
+            var now:Number;
+            var delta:Number;
             var csemsg:CharacterSelectedErrorMessage;
             var btmsg:BasicTimeMessage;
             var date:Date;
             var salm:StartupActionsListMessage;
             var cclMsg:ConsoleCommandsListMessage;
+            var stf:ServerTransferFrame;
+            var ccbcrm:CharacterCanBeCreatedRequestMessage;
             var clwrmsg:CharactersListWithRemodelingMessage;
             var ctri:CharacterToRemodelInformations;
             var chi:CharacterHardcoreOrEpicInformations;
+            var featureManager:FeatureManager;
+            var bonusXpFeatureActivated:Boolean;
             var cbi:CharacterBaseInformations;
-            var bonusXp:int;
             var cbi2:CharacterBaseInformations;
-            var openCharsList:Boolean;
-            var saem:StartupActionsExecuteMessage;
             var charToConnect:BasicCharacterWrapper;
-            var charToConnectSpecificallyId:int;
-            var ctc:BasicCharacterWrapper;
-            var fakacsa:CharacterSelectionAction;
+            var saem:StartupActionsExecuteMessage;
+            var ccbcrmsg:CharacterCanBeCreatedRequestMessage;
             var bChi:CharacterHardcoreOrEpicInformations;
             var bCbi:CharacterBaseInformations;
-            var c:* = undefined;
-            var colorIndex:* = undefined;
+            var c:*;
+            var colorIndex:*;
+            var colorInteger:int;
             var person2:Object;
             var crwrrmsg:CharacterReplayWithRemodelRequestMessage;
             var cswrmsg:CharacterSelectionWithRemodelMessage;
             var charToRemodel:Object;
             var indexedColors:Vector.<int>;
-            var char:CreationCharacterWrapper;
+            var _local_74:CreationCharacterWrapper;
             var modificationModules:Array;
             var mandatoryModules:Array;
             var firstSelection:Boolean;
             var cfsmsg:CharacterFirstSelectionMessage;
             var crrmsg:CharacterReplayRequestMessage;
             var csmsg:CharacterSelectionMessage;
-            var rdm:RawDataMessage;
+            var j:int;
+            var bchar:BasicCharacterWrapper;
+            var flashKeyMsg:ClientKeyMessage;
+            var fpsManagerState:uint;
+            var i:uint;
+            var luaPlayer:LuaPlayer;
+            var tag:Object;
             var gift:StartupActionAddObject;
             var _items:Array;
             var item:ObjectItemInformationWithQuantity;
@@ -317,7 +332,7 @@
             {
                 case (msg is HelloGameMessage):
                     ConnectionsHandler.confirmGameServerConnection();
-                    parts = PartManager.getInstance().getServerPartList();
+                    authenticationTicketAccepted = false;
                     atmsg = new AuthenticationTicketMessage();
                     atmsg.initAuthenticationTicketMessage(LangManager.getInstance().getEntry("config.lang.current"), AuthentificationManager.getInstance().gameServerTicket);
                     ConnectionsHandler.getConnection().send(atmsg);
@@ -325,16 +340,18 @@
                     this._kernel.processCallback(HookList.AuthenticationTicket);
                     return (true);
                 case (msg is AuthenticationTicketAcceptedMessage):
-                    atamsg = (msg as AuthenticationTicketAcceptedMessage);
                     setTimeout(this.requestCharactersList, 500);
+                    authenticationTicketAccepted = true;
                     this._kernel.processCallback(HookList.AuthenticationTicketAccepted);
                     return (true);
                 case (msg is AuthenticationTicketRefusedMessage):
                     atrmsg = (msg as AuthenticationTicketRefusedMessage);
+                    authenticationTicketAccepted = false;
                     this._kernel.processCallback(HookList.AuthenticationTicketRefused);
                     return (true);
                 case (msg is ServerConnectionFailedMessage):
                     scfMsg = ServerConnectionFailedMessage(msg);
+                    authenticationTicketAccepted = false;
                     if (scfMsg.failedConnection == ConnectionsHandler.getConnection().getSubConnection(scfMsg))
                     {
                         PlayerManager.getInstance().destroy();
@@ -344,11 +361,19 @@
                     return (true);
                 case (msg is AlreadyConnectedMessage):
                     acmsg = AlreadyConnectedMessage(msg);
+                    PlayerManager.getInstance().wasAlreadyConnected = true;
                     KernelEventsManager.getInstance().processCallback(HookList.AlreadyConnected);
                     return (true);
                 case (msg is CharactersListMessage):
                     clmsg = (msg as CharactersListMessage);
-                    unusableCharacters = new Vector.<uint>();
+                    if (this._waitingForListRefreshAfterDeletion)
+                    {
+                        ccbcrm = new CharacterCanBeCreatedRequestMessage();
+                        ccbcrm.initCharacterCanBeCreatedRequestMessage();
+                        ConnectionsHandler.getConnection().send(ccbcrm);
+                        this._waitingForListRefreshAfterDeletion = false;
+                    };
+                    unusableCharacters = new Vector.<Number>();
                     if ((msg is CharactersListWithRemodelingMessage))
                     {
                         clwrmsg = (msg as CharactersListWithRemodelingMessage);
@@ -360,7 +385,8 @@
                     this._charactersList = new Vector.<BasicCharacterWrapper>();
                     unusable = false;
                     server = PlayerManager.getInstance().server;
-                    if ((((server.gameTypeId == 1)) || ((server.gameTypeId == 4))))
+                    bonusXp = 1;
+                    if (((server.gameTypeId == GameServerTypeEnum.SERVER_TYPE_HARDCORE) || (server.gameTypeId == GameServerTypeEnum.SERVER_TYPE_EPIC)))
                     {
                         for each (chi in clmsg.characters)
                         {
@@ -368,76 +394,68 @@
                             {
                                 unusable = true;
                             };
-                            o = BasicCharacterWrapper.create(chi.id, chi.name, chi.level, chi.entityLook, chi.breed, chi.sex, chi.deathState, chi.deathCount, 1, unusable);
+                            if (chi.deathMaxLevel > chi.level)
+                            {
+                                bonusXp = 6;
+                            }
+                            else
+                            {
+                                bonusXp = 3;
+                            };
+                            o = BasicCharacterWrapper.create(chi.id, chi.name, chi.level, chi.entityLook, chi.breed, chi.sex, chi.deathState, chi.deathCount, chi.deathMaxLevel, bonusXp, unusable);
                             this._charactersList.push(o);
                         };
                     }
                     else
                     {
+                        featureManager = FeatureManager.getInstance();
+                        bonusXpFeatureActivated = ((!(featureManager)) || (!(featureManager.isFeatureWithKeywordEnabled("character.xp.bonusForYoungerCharacters"))));
                         for each (cbi in clmsg.characters)
                         {
+                            bonusXp = 1;
                             if (unusableCharacters.indexOf(cbi.id) != -1)
                             {
                                 unusable = true;
                             };
-                            bonusXp = 1;
-                            for each (cbi2 in clmsg.characters)
+                            if (bonusXpFeatureActivated)
                             {
-                                if (((((!((cbi2.id == cbi.id))) && ((cbi2.level > cbi.level)))) && ((bonusXp < 4))))
+                                for each (cbi2 in clmsg.characters)
                                 {
-                                    bonusXp = (bonusXp + 1);
+                                    if ((((!(cbi2.id == cbi.id)) && (cbi2.level > cbi.level)) && (bonusXp < 4)))
+                                    {
+                                        bonusXp++;
+                                    };
                                 };
                             };
-                            o = BasicCharacterWrapper.create(cbi.id, cbi.name, cbi.level, cbi.entityLook, cbi.breed, cbi.sex, 0, 0, bonusXp, unusable);
+                            o = BasicCharacterWrapper.create(cbi.id, cbi.name, cbi.level, cbi.entityLook, cbi.breed, cbi.sex, 0, 0, 0, bonusXp, unusable);
                             this._charactersList.push(o);
                         };
                     };
                     PlayerManager.getInstance().charactersList = this._charactersList;
-                    if (this._charactersList.length)
+                    mod = UiModuleManager.getInstance().getModule("Ankama_Connection");
+                    dst = new DataStoreType(("AccountModule_" + mod.id), true, DataStoreEnum.LOCATION_LOCAL, DataStoreEnum.BIND_ACCOUNT);
+                    isCharacterCreationDisplayForced = StoreDataManager.getInstance().getData(dst, "forceCharacterCreationDisplay");
+                    if (((this._charactersList.length) && (!(isCharacterCreationDisplayForced))))
                     {
-                        openCharsList = true;
-                        if (clmsg.hasStartupActions)
+                        this._openCharsList = true;
+                        charToConnect = this.getCharacterToConnect();
+                        if (((clmsg.hasStartupActions) && (!(charToConnect))))
                         {
                             saem = new StartupActionsExecuteMessage();
                             saem.initStartupActionsExecuteMessage();
                             ConnectionsHandler.getConnection().send(saem);
-                            openCharsList = false;
+                            this._openCharsList = false;
                         }
                         else
                         {
-                            if (((((((Dofus.getInstance().options) && ((Dofus.getInstance().options.autoConnectType == 2)))) || ((PlayerManager.getInstance().autoConnectOfASpecificCharacterId > -1)))) && (PlayerManager.getInstance().allowAutoConnectCharacter)))
+                            if (charToConnect)
                             {
-                                charToConnectSpecificallyId = PlayerManager.getInstance().autoConnectOfASpecificCharacterId;
-                                if (charToConnectSpecificallyId == -1)
-                                {
-                                    charToConnect = this._charactersList[0];
-                                }
-                                else
-                                {
-                                    for each (ctc in this._charactersList)
-                                    {
-                                        if (ctc.id == charToConnectSpecificallyId)
-                                        {
-                                            charToConnect = ctc;
-                                            break;
-                                        };
-                                    };
-                                };
-                                if (((charToConnect) && (((((((((!((server.gameTypeId == 1))) && (!((server.gameTypeId == 4))))) || ((charToConnect.deathState == 0)))) && (!(SecureModeManager.getInstance().active)))) && (!(this.isCharacterWaitingForChange(charToConnect.id)))))))
-                                {
-                                    openCharsList = false;
-                                    this._kernel.processCallback(HookList.CharactersListUpdated, this._charactersList);
-                                    fakacsa = new CharacterSelectionAction();
-                                    fakacsa.btutoriel = false;
-                                    fakacsa.characterId = charToConnect.id;
-                                    this.process(fakacsa);
-                                    PlayerManager.getInstance().allowAutoConnectCharacter = false;
-                                };
+                                this.launchAutoConnect(charToConnect, server);
                             };
                         };
-                        if (openCharsList)
+                        if (this._openCharsList)
                         {
-                            if (!(Berilia.getInstance().getUi("characterSelection")))
+                            if (!Berilia.getInstance().getUi("characterSelection"))
                             {
                                 this._kernel.processCallback(HookList.CharacterSelectionStart, this._charactersList);
                             }
@@ -455,12 +473,19 @@
                     return (true);
                 case (msg is BasicCharactersListMessage):
                     bclmsg = (msg as BasicCharactersListMessage);
+                    if (this._waitingForListRefreshAfterDeletion)
+                    {
+                        ccbcrmsg = new CharacterCanBeCreatedRequestMessage();
+                        ccbcrmsg.initCharacterCanBeCreatedRequestMessage();
+                        ConnectionsHandler.getConnection().send(ccbcrmsg);
+                        this._waitingForListRefreshAfterDeletion = false;
+                    };
                     this._charactersList = new Vector.<BasicCharacterWrapper>();
-                    if ((((PlayerManager.getInstance().server.gameTypeId == 1)) || ((PlayerManager.getInstance().server.gameTypeId == 4))))
+                    if (((PlayerManager.getInstance().server.gameTypeId == GameServerTypeEnum.SERVER_TYPE_HARDCORE) || (PlayerManager.getInstance().server.gameTypeId == GameServerTypeEnum.SERVER_TYPE_EPIC)))
                     {
                         for each (bChi in bclmsg.characters)
                         {
-                            b = BasicCharacterWrapper.create(bChi.id, bChi.name, bChi.level, bChi.entityLook, bChi.breed, bChi.sex, bChi.deathState, bChi.deathCount, 1, false);
+                            b = BasicCharacterWrapper.create(bChi.id, bChi.name, bChi.level, bChi.entityLook, bChi.breed, bChi.sex, bChi.deathState, bChi.deathCount, bChi.deathMaxLevel, 1, false);
                             this._charactersList.push(b);
                         };
                     }
@@ -468,7 +493,7 @@
                     {
                         for each (bCbi in bclmsg.characters)
                         {
-                            b = BasicCharacterWrapper.create(bCbi.id, bCbi.name, bCbi.level, bCbi.entityLook, bCbi.breed, bCbi.sex, 0, 0, 1, false);
+                            b = BasicCharacterWrapper.create(bCbi.id, bCbi.name, bCbi.level, bCbi.entityLook, bCbi.breed, bCbi.sex, 0, 0, 0, 1, false);
                             this._charactersList.push(b);
                         };
                     };
@@ -477,11 +502,17 @@
                 case (msg is CharactersListErrorMessage):
                     this.commonMod.openPopup(I18n.getUiText("ui.common.error"), I18n.getUiText("ui.connexion.charactersListError"), [I18n.getUiText("ui.common.ok")]);
                     return (false);
+                case (msg is CharacterCanBeCreatedResultMessage):
+                    ccbcmsg = (msg as CharacterCanBeCreatedResultMessage);
+                    PlayerManager.getInstance().canCreateNewCharacter = ccbcmsg.yesYouCan;
+                    KernelEventsManager.getInstance().processCallback(HookList.CharacterCanBeCreated);
+                    return (true);
                 case (msg is AccountCapabilitiesMessage):
                     accmsg = (msg as AccountCapabilitiesMessage);
                     this._kernel.processCallback(HookList.TutorielAvailable, accmsg.tutorialAvailable);
                     this._kernel.processCallback(HookList.BreedsAvailable, accmsg.breedsAvailable, accmsg.breedsVisible);
                     PlayerManager.getInstance().adminStatus = accmsg.status;
+                    PlayerManager.getInstance().canCreateNewCharacter = accmsg.canCreateNewCharacter;
                     KernelEventsManager.getInstance().processCallback(HookList.CharacterCreationStart, [["create"]]);
                     return (true);
                 case (msg is CharacterCreationAction):
@@ -505,12 +536,14 @@
                     return (true);
                 case (msg is CharacterDeletionAction):
                     cda = (msg as CharacterDeletionAction);
+                    this._waitingForListRefreshAfterDeletion = true;
                     cdrmsg = new CharacterDeletionRequestMessage();
                     cdrmsg.initCharacterDeletionRequestMessage(cda.id, MD5.hash(((cda.id + "~") + cda.answer)));
                     ConnectionsHandler.getConnection().send(cdrmsg);
                     return (true);
                 case (msg is CharacterDeletionErrorMessage):
                     cdemsg = (msg as CharacterDeletionErrorMessage);
+                    this._waitingForListRefreshAfterDeletion = false;
                     reason = "";
                     if (cdemsg.reason == CharacterDeletionErrorEnum.DEL_ERR_TOO_MANY_CHAR_DELETION)
                     {
@@ -531,6 +564,7 @@
                         };
                     };
                     this._kernel.processCallback(HookList.CharacterDeletionError, reason);
+                    this._requestedCharacterId = 0;
                     return (true);
                 case (msg is CharacterNameSuggestionRequestAction):
                     cnsra = (msg as CharacterNameSuggestionRequestAction);
@@ -547,7 +581,7 @@
                     _log.error("Generation de nom impossible !");
                     return (true);
                 case (msg is CharacterSelectedForceMessage):
-                    if (!(this._reconnectMsgSend))
+                    if (!this._reconnectMsgSend)
                     {
                         Kernel.beingInReconection = true;
                         characterId = CharacterSelectedForceMessage(msg).id;
@@ -565,15 +599,15 @@
                     tempColorsArray = new Vector.<int>();
                     for (colorIndex in crsa.colors)
                     {
-                        color = crsa.colors[colorIndex];
-                        if (color >= 0)
+                        colorInteger = crsa.colors[colorIndex];
+                        if (colorInteger >= 0)
                         {
-                            color = (color & 0xFFFFFF);
-                            tempColorsArray.push((color | ((int(colorIndex) + 1) << 24)));
+                            colorInteger = (colorInteger & 0xFFFFFF);
+                            tempColorsArray.push((colorInteger | ((int(colorIndex) + 1) << 24)));
                         };
                     };
                     remodel.colors = tempColorsArray;
-                    if ((((PlayerManager.getInstance().server.gameTypeId == 1)) || ((PlayerManager.getInstance().server.gameTypeId == 4))))
+                    if (((PlayerManager.getInstance().server.gameTypeId == GameServerTypeEnum.SERVER_TYPE_HARDCORE) || (PlayerManager.getInstance().server.gameTypeId == GameServerTypeEnum.SERVER_TYPE_EPIC)))
                     {
                         for each (person2 in this._charactersList)
                         {
@@ -617,6 +651,14 @@
                 case (msg is CharacterDeselectionAction):
                     this._requestedCharacterId = 0;
                     return (true);
+                case (msg is CharacterAutoConnectAction):
+                    characterToConnect = this.getCharacterToConnect();
+                    currentServer = PlayerManager.getInstance().server;
+                    if (((characterToConnect) && (currentServer)))
+                    {
+                        this.launchAutoConnect(characterToConnect, currentServer);
+                    };
+                    break;
                 case (msg is CharacterSelectionAction):
                 case (msg is CharacterReplayRequestAction):
                     if (this._requestedCharacterId)
@@ -645,15 +687,15 @@
                         this._requestedToRemodelCharacterId = characterId;
                         charToRemodel = this._charactersToRemodelList[characterId];
                         indexedColors = this.getCharacterColorsInformations(charToRemodel);
-                        char = CreationCharacterWrapper.create(charToRemodel.name, charToRemodel.sex, charToRemodel.breed, charToRemodel.cosmeticId, indexedColors);
+                        _local_74 = CreationCharacterWrapper.create(charToRemodel.name, charToRemodel.sex, charToRemodel.breed, charToRemodel.cosmeticId, indexedColors);
                         for each (perso in this._charactersList)
                         {
                             if (perso.id == characterId)
                             {
-                                char.entityLook = perso.entityLook;
+                                _local_74.entityLook = perso.entityLook;
                             };
                         };
-                        modificationModules = new Array();
+                        modificationModules = [];
                         if ((charToRemodel.possibleChangeMask & CharacterRemodelingEnum.CHARACTER_REMODELING_BREED) > 0)
                         {
                             modificationModules.push("rebreed");
@@ -674,7 +716,7 @@
                         {
                             modificationModules.push("regender");
                         };
-                        mandatoryModules = new Array();
+                        mandatoryModules = [];
                         if ((charToRemodel.mandatoryChangeMask & CharacterRemodelingEnum.CHARACTER_REMODELING_BREED) > 0)
                         {
                             mandatoryModules.push("rebreed");
@@ -695,10 +737,15 @@
                         {
                             mandatoryModules.push("regender");
                         };
-                        this._kernel.processCallback(HookList.CharacterCreationStart, new Array(modificationModules, mandatoryModules, char));
+                        if ((charToRemodel.mandatoryChangeMask & CharacterRemodelingEnum.CHARACTER_OPT_REMODELING_NAME) > 0)
+                        {
+                            modificationModules.push("rename");
+                        };
+                        this._kernel.processCallback(HookList.CharacterCreationStart, [modificationModules, mandatoryModules, _local_74]);
                     }
                     else
                     {
+                        this._requestedToRemodelCharacterId = 0;
                         firstSelection = bTutorial;
                         if (bTutorial)
                         {
@@ -725,7 +772,12 @@
                     return (true);
                 case (msg is CharacterSelectedSuccessMessage):
                     cssmsg = (msg as CharacterSelectedSuccessMessage);
+                    this._loadingStart = new Date().time;
                     ConnectionsHandler.pause();
+                    if (Kernel.getWorker().getFrame(ServerSelectionFrame))
+                    {
+                        Kernel.getWorker().removeFrame(Kernel.getWorker().getFrame(ServerSelectionFrame));
+                    };
                     if (this._gmaf == null)
                     {
                         this._gmaf = new LoadingModuleFrame();
@@ -744,27 +796,37 @@
                     {
                         UiModuleManager.getInstance().init(Constants.PRE_GAME_MODULE.concat(Constants.ADMIN_MODULE), false);
                     };
-                    Dofus.getInstance().renameApp(cssmsg.infos.name);
-                    if (AirScanner.hasAir())
+                    Dofus.getInstance().renameApp(((cssmsg.infos.name + " - Dofus ") + BuildInfos.VERSION.toStringForAppName()));
+                    ExternalNotificationManager.getInstance().init();
+                    if (cssmsg.isCollectingStats)
                     {
-                        ExternalNotificationManager.getInstance().init();
+                        StatisticsManager.getInstance().startStats("shortcuts");
+                    }
+                    else
+                    {
+                        StatisticsManager.getInstance().quit();
                     };
-                    StatisticsManager.getInstance().statsEnabled = cssmsg.isCollectingStats;
+                    if (cssmsg.infos.id == this._requestedToRemodelCharacterId)
+                    {
+                        j = 0;
+                        while (j < this._charactersList.length)
+                        {
+                            bchar = this._charactersList[j];
+                            if (bchar.id == cssmsg.infos.id)
+                            {
+                                this._charactersList[j] = BasicCharacterWrapper.create(bchar.id, cssmsg.infos.name, cssmsg.infos.level, cssmsg.infos.entityLook, cssmsg.infos.breed, cssmsg.infos.sex, 0, 0, bchar.bonusXp);
+                                break;
+                            };
+                            j++;
+                        };
+                    };
+                    DebtManager.clean();
                     return (true);
                 case (msg is AllModulesLoadedMessage):
+                    _log.warn("GameServerApproachFrame AllModulesLoaded");
                     this._gmaf = null;
-                    try
-                    {
-                        _changeLogLoader.contentLoaderInfo.addEventListener(IOErrorEvent.IO_ERROR, onChangeLogError);
-                        _changeLogLoader.contentLoaderInfo.addEventListener(Event.COMPLETE, onChangeLogLoaded);
-                        rdm = new RawDataMessage();
-                        rdm.initRawDataMessage(Base64.decode(I18n.getUiText("ui.link.changelog")));
-                        Kernel.getWorker().process(rdm);
-                    }
-                    catch(e:Error)
-                    {
-                        trace("Error on changelog loading.");
-                    };
+                    isRelease = (BuildInfos.BUILD_TYPE == BuildTypeEnum.RELEASE);
+                    LogLogger.activeLog(((!(isRelease)) || ((isRelease) && (DofusErrorHandler.debugManuallyActivated))));
                     Kernel.getWorker().addFrame(new WorldFrame());
                     Kernel.getWorker().addFrame(new AlignmentFrame());
                     Kernel.getWorker().addFrame(new SynchronisationFrame());
@@ -779,7 +841,6 @@
                     Kernel.getWorker().addFrame(new ChatFrame());
                     Kernel.getWorker().addFrame(new JobsFrame());
                     Kernel.getWorker().addFrame(new MountFrame());
-                    Kernel.getWorker().addFrame(new HouseFrame());
                     Kernel.getWorker().addFrame(new EmoticonFrame());
                     Kernel.getWorker().addFrame(new QuestFrame());
                     Kernel.getWorker().addFrame(new TinselFrame());
@@ -789,6 +850,17 @@
                     Kernel.getWorker().addFrame(new ExternalGameFrame());
                     Kernel.getWorker().addFrame(new AveragePricesFrame());
                     Kernel.getWorker().addFrame(new CameraControlFrame());
+                    Kernel.getWorker().addFrame(new IdolsFrame());
+                    Kernel.getWorker().addFrame(new RoleplayIntroductionFrame());
+                    Kernel.getWorker().addFrame(new ScreenCaptureFrame());
+                    if (ServerTemporisSeason.isTemporisSpellsUi)
+                    {
+                        Kernel.getWorker().addFrame(new TemporisSpellsUiFrame());
+                    };
+                    if (!Kernel.getWorker().contains(HouseFrame))
+                    {
+                        Kernel.getWorker().addFrame(new HouseFrame());
+                    };
                     Kernel.getWorker().removeFrame(Kernel.getWorker().getFrame(GameStartingFrame));
                     Kernel.getWorker().resume();
                     ConnectionsHandler.resume();
@@ -797,25 +869,37 @@
                         this._reconnectMsgSend = true;
                         ConnectionsHandler.getConnection().send(new CharacterSelectedForceReadyMessage());
                     };
-                    flashKeyMsg = new ClientKeyMessage();
-                    flashKeyMsg.initClientKeyMessage(InterClientManager.getInstance().flashKey);
-                    ConnectionsHandler.getConnection().send(flashKeyMsg);
+                    if (((InterClientManager.getInstance().flashKey) && ((!(PlayerManager.getInstance())) || ((!(PlayerManager.getInstance().server.id == 129)) && (!(PlayerManager.getInstance().server.id == 130))))))
+                    {
+                        flashKeyMsg = new ClientKeyMessage();
+                        flashKeyMsg.initClientKeyMessage(InterClientManager.getInstance().flashKey);
+                        ConnectionsHandler.getConnection().send(flashKeyMsg);
+                    };
                     if (this._cssmsg != null)
                     {
                         PlayedCharacterManager.getInstance().infos = this._cssmsg.infos;
                         DataStoreType.CHARACTER_ID = this._cssmsg.infos.id.toString();
                     };
                     Kernel.getWorker().removeFrame(this);
-                    if (PlayerManager.getInstance().subscriptionEndDate > 0)
-                    {
-                        PartManager.getInstance().checkAndDownload("all");
-                        PartManager.getInstance().checkAndDownload("subscribed");
-                    };
                     if (XmlConfig.getInstance().getBooleanEntry("config.dev.mode"))
                     {
                         ModuleDebugManager.display(XmlConfig.getInstance().getBooleanEntry("config.dev.auto.display.controler"));
-                        Console.getInstance().display(!(XmlConfig.getInstance().getBooleanEntry("config.dev.auto.display.eventUtil")));
-                        ConsoleLUA.getInstance().display(!(XmlConfig.getInstance().getBooleanEntry("config.dev.auto.display.luaUtil")));
+                        Console.getInstance().display((!(XmlConfig.getInstance().getBooleanEntry("config.dev.auto.display.eventUtil"))));
+                        ConsoleLUA.getInstance().display((!(XmlConfig.getInstance().getBooleanEntry("config.dev.auto.display.luaUtil"))));
+                        if (XmlConfig.getInstance().getBooleanEntry("config.dev.auto.display.fpsManager"))
+                        {
+                            FpsManager.getInstance().display();
+                            fpsManagerState = XmlConfig.getInstance().getEntry("config.dev.auto.display.fpsManager.state");
+                            if (fpsManagerState)
+                            {
+                                i = 0;
+                                while (i < fpsManagerState)
+                                {
+                                    FpsManager.getInstance().changeState();
+                                    i++;
+                                };
+                            };
+                        };
                     }
                     else
                     {
@@ -829,15 +913,43 @@
                     soundApi = new SoundApi();
                     soundApi.stopIntroMusic();
                     Shortcut.loadSavedData();
-                    luaPlayer = (ScriptsManager.getInstance().getPlayer(ScriptsManager.LUA_PLAYER) as LuaPlayer);
-                    if (!(luaPlayer))
+                    devMode = (LangManager.getInstance().getEntry("config.dev.mode") == "true");
+                    if (devMode)
                     {
-                        luaPlayer = new LuaPlayer();
-                        ScriptsManager.getInstance().addPlayer(ScriptsManager.LUA_PLAYER, luaPlayer);
-                        ScriptsManager.getInstance().addPlayerApi(luaPlayer, "EntityApi", new EntityApi());
-                        ScriptsManager.getInstance().addPlayerApi(luaPlayer, "SeqApi", new ScriptSequenceApi());
-                        ScriptsManager.getInstance().addPlayerApi(luaPlayer, "CameraApi", new CameraApi());
+                        luaPlayer = (ScriptsManager.getInstance().getPlayer(ScriptsManager.LUA_PLAYER) as LuaPlayer);
+                        if (!luaPlayer)
+                        {
+                            luaPlayer = new LuaPlayer();
+                            ScriptsManager.getInstance().addPlayer(ScriptsManager.LUA_PLAYER, luaPlayer);
+                            ScriptsManager.getInstance().addPlayerApi(luaPlayer, "EntityApi", new EntityApi());
+                            ScriptsManager.getInstance().addPlayerApi(luaPlayer, "SeqApi", new ScriptSequenceApi());
+                            ScriptsManager.getInstance().addPlayerApi(luaPlayer, "CameraApi", new CameraApi());
+                        };
                     };
+                    if (BuildInfos.BUILD_TYPE != BuildTypeEnum.DEBUG)
+                    {
+                        if (OptionManager.getOptionManager("dofus").getOption("optimizeMultiAccount"))
+                        {
+                            if (InterClientManager.isMaster())
+                            {
+                                new DataApi().initStaticCartographyData();
+                            };
+                        }
+                        else
+                        {
+                            new DataApi().initStaticCartographyData();
+                        };
+                    };
+                    now = new Date().time;
+                    delta = (now - this._loadingStart);
+                    if (delta > this.LOADING_TIMEOUT)
+                    {
+                        tag = {};
+                        tag.duration = uint((delta / 1000));
+                        _log.warn((("Client took too long to load (" + tag.duration) + "s), reporting."));
+                        DofusErrorHandler.captureMessage("Client loading timeout.", tag, RavenClient.WARN);
+                    };
+                    ChatServiceManager.getInstance().tryToConnect();
                     return (true);
                 case (msg is ConnectionResumedMessage):
                     return (true);
@@ -856,10 +968,10 @@
                     return (true);
                 case (msg is StartupActionsListMessage):
                     salm = (msg as StartupActionsListMessage);
-                    this._giftList = new Array();
+                    this._giftList = [];
                     for each (gift in salm.actions)
                     {
-                        _items = new Array();
+                        _items = [];
                         for each (item in gift.items)
                         {
                             iw = ItemWrapper.create(0, 0, item.objectGID, item.quantity, item.effects, false);
@@ -875,15 +987,15 @@
                     };
                     if (this._giftList.length)
                     {
-                        this._charaListMinusDeadPeople = new Array();
+                        this._charaListMinusDeadPeople = [];
                         for each (perso in this._charactersList)
                         {
-                            if (((!(perso.deathState)) || ((perso.deathState == 0))))
+                            if (((!(perso.deathState)) || (perso.deathState == 0)))
                             {
                                 this._charaListMinusDeadPeople.push(perso);
                             };
                         };
-                        if (!(Berilia.getInstance().getUi("characterSelection")))
+                        if (!Berilia.getInstance().getUi("characterSelection"))
                         {
                             this._kernel.processCallback(HookList.CharacterSelectionStart, this._charactersList);
                         }
@@ -930,6 +1042,14 @@
                         cmdIndex++;
                     };
                     return (true);
+                case (msg is GameRolePlayArenaSwitchToFightServerMessage):
+                    if (Kernel.getWorker().contains(ServerTransferFrame))
+                    {
+                        return (false);
+                    };
+                    stf = new ServerTransferFrame();
+                    Kernel.getWorker().addFrame(stf);
+                    return (stf.process(msg));
             };
             return (false);
         }
@@ -962,7 +1082,7 @@
                 uIndexedColor = ctrci.colors[i];
                 uIndex = ((uIndexedColor >> 24) - 1);
                 uColor = (uIndexedColor & 0xFFFFFF);
-                if ((((uIndex > -1)) && ((uIndex < charColors.length))))
+                if (((uIndex > -1) && (uIndex < charColors.length)))
                 {
                     charColors[uIndex] = uColor;
                 };
@@ -985,7 +1105,61 @@
             };
         }
 
+        private function getCharacterToConnect():BasicCharacterWrapper
+        {
+            var charToConnect:BasicCharacterWrapper;
+            var charToConnectSpecificallyId:Number;
+            var ctc:BasicCharacterWrapper;
+            if (((((Dofus.getInstance().options) && (Dofus.getInstance().options.getOption("autoConnectType") == 2)) || (PlayerManager.getInstance().autoConnectOfASpecificCharacterId > -1)) && (PlayerManager.getInstance().allowAutoConnectCharacter)))
+            {
+                charToConnectSpecificallyId = PlayerManager.getInstance().autoConnectOfASpecificCharacterId;
+                if (charToConnectSpecificallyId == -1)
+                {
+                    if (this._charactersList.length <= 0)
+                    {
+                        return (null);
+                    };
+                    charToConnect = this._charactersList[0];
+                }
+                else
+                {
+                    for each (ctc in this._charactersList)
+                    {
+                        if (ctc.id == charToConnectSpecificallyId)
+                        {
+                            charToConnect = ctc;
+                            break;
+                        };
+                    };
+                };
+                return (charToConnect);
+            };
+            return (null);
+        }
+
+        private function launchAutoConnect(charToConnect:BasicCharacterWrapper, server:Server):void
+        {
+            var updateInformationDisplayed:String;
+            var currentVersion:String;
+            var fakacsa:CharacterSelectionAction;
+            if (((charToConnect) && ((((((!(server.gameTypeId == GameServerTypeEnum.SERVER_TYPE_HARDCORE)) && (!(server.gameTypeId == GameServerTypeEnum.SERVER_TYPE_EPIC))) || (charToConnect.deathState == 0)) && (!(SecureModeManager.getInstance().active))) && (!(this.isCharacterWaitingForChange(charToConnect.id)))) && (!(PlayerManager.getInstance().wasAlreadyConnected)))))
+            {
+                this._openCharsList = false;
+                this._kernel.processCallback(HookList.CharactersListUpdated, this._charactersList);
+                updateInformationDisplayed = StoreDataManager.getInstance().getData(new DataStoreType("ComputerModule_Ankama_Connection", true, DataStoreEnum.LOCATION_LOCAL, DataStoreEnum.BIND_COMPUTER), "updateInformationDisplayed");
+                currentVersion = ((BuildInfos.VERSION.major.toString() + "-") + BuildInfos.VERSION.minor.toString());
+                if (updateInformationDisplayed == currentVersion)
+                {
+                    fakacsa = new CharacterSelectionAction();
+                    fakacsa.btutoriel = false;
+                    fakacsa.characterId = charToConnect.id;
+                    this.process(fakacsa);
+                    PlayerManager.getInstance().allowAutoConnectCharacter = false;
+                };
+            };
+        }
+
 
     }
-}//package com.ankamagames.dofus.logic.game.approach.frames
+} com.ankamagames.dofus.logic.game.approach.frames
 

@@ -1,4 +1,4 @@
-﻿package com.somerandomdude.colortoolkit.spaces
+package com.somerandomdude.colortoolkit.spaces
 {
     import com.somerandomdude.colortoolkit.CoreColor;
 
@@ -201,10 +201,10 @@
             r = Math.floor((r * 0xFF));
             g = Math.floor((g * 0xFF));
             b = Math.floor((b * 0xFF));
-            return ((((r << 16) ^ (g << 8)) ^ b));
+            return (((r << 16) ^ (g << 8)) ^ b);
         }
 
 
     }
-}//package com.somerandomdude.colortoolkit.spaces
+} com.somerandomdude.colortoolkit.spaces
 

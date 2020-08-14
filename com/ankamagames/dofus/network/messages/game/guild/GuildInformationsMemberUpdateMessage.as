@@ -1,27 +1,23 @@
-﻿package com.ankamagames.dofus.network.messages.game.guild
+package com.ankamagames.dofus.network.messages.game.guild
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
     import com.ankamagames.dofus.network.types.game.guild.GuildMember;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
 
-    [Trusted]
     public class GuildInformationsMemberUpdateMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 5597;
 
         private var _isInitialized:Boolean = false;
-        public var member:GuildMember;
+        public var member:GuildMember = new GuildMember();
+        private var _membertree:FuncTree;
 
-        public function GuildInformationsMemberUpdateMessage()
-        {
-            this.member = new GuildMember();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
@@ -58,6 +54,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_GuildInformationsMemberUpdateMessage(output);
@@ -79,7 +83,23 @@
             this.member.deserialize(input);
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GuildInformationsMemberUpdateMessage(tree);
+        }
+
+        public function deserializeAsyncAs_GuildInformationsMemberUpdateMessage(tree:FuncTree):void
+        {
+            this._membertree = tree.addChild(this._membertreeFunc);
+        }
+
+        private function _membertreeFunc(input:ICustomDataInput):void
+        {
+            this.member = new GuildMember();
+            this.member.deserializeAsync(this._membertree);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.guild
+} com.ankamagames.dofus.network.messages.game.guild
 

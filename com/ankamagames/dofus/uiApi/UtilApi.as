@@ -1,11 +1,12 @@
-﻿package com.ankamagames.dofus.uiApi
+package com.ankamagames.dofus.uiApi
 {
     import com.ankamagames.berilia.interfaces.IApi;
     import com.ankamagames.jerakine.logger.Logger;
-    import com.ankamagames.berilia.types.data.UiModule;
-    import flash.globalization.Collator;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
+    import com.ankamagames.berilia.types.data.UiModule;
+    import flash.globalization.Collator;
+    import flash.utils.Dictionary;
     import com.ankamagames.jerakine.utils.misc.CallWithParameters;
     import com.ankamagames.jerakine.utils.misc.StringUtils;
     import com.ankamagames.jerakine.data.I18n;
@@ -17,22 +18,30 @@
     import com.ankamagames.dofus.logic.game.common.managers.EntitiesLooksManager;
     import com.ankamagames.tiphon.types.look.TiphonEntityLook;
     import com.ankamagames.dofus.network.types.game.context.GameContextActorInformations;
-    import com.ankamagames.berilia.managers.SecureCenter;
+    import com.ankamagames.atouin.Atouin;
+    import by.blooddy.crypto.serialization.JSON;
+    import com.ankamagames.jerakine.utils.display.StageShareManager;
+    import com.ankamagames.jerakine.pools.PoolsManager;
+    import com.ankamagames.dofus.datacenter.effects.EffectInstance;
+    import com.ankamagames.dofus.internalDatacenter.spells.SpellWrapper;
+    import com.ankama.dofus.enums.ActionIds;
+    import tools.ActionIdHelper;
+    import com.ankamagames.dofus.internalDatacenter.DataEnum;
+    import com.ankamagames.dofus.logic.game.fight.miscs.DamageUtil;
+    import com.ankamagames.dofus.network.enums.BoostableCharacteristicEnum;
+    import tools.enumeration.ElementEnum;
+    import flash.xml.XMLNode;
     import __AS3__.vec.*;
 
     [InstanciedApi]
     public class UtilApi implements IApi 
     {
 
-        protected var _log:Logger;
+        protected var _log:Logger = Log.getLogger(getQualifiedClassName(UtilApi));
         private var _module:UiModule;
         private var _stringSorter:Collator;
+        private var _triggeredSpells:Dictionary = new Dictionary(true);
 
-        public function UtilApi()
-        {
-            this._log = Log.getLogger(getQualifiedClassName(UtilApi));
-            super();
-        }
 
         [ApiData(name="module")]
         public function set module(value:UiModule):void
@@ -40,49 +49,41 @@
             this._module = value;
         }
 
-        [Trusted]
         public function destroy():void
         {
             this._module = null;
         }
 
-        [Untrusted]
         public function callWithParameters(method:Function, parameters:Array):void
         {
             CallWithParameters.call(method, parameters);
         }
 
-        [Untrusted]
-        public function callConstructorWithParameters(callClass:Class, parameters:Array)
+        public function callConstructorWithParameters(callClass:Class, parameters:Array):*
         {
             return (CallWithParameters.callConstructor(callClass, parameters));
         }
 
-        [Untrusted]
-        public function callRWithParameters(method:Function, parameters:Array)
+        public function callRWithParameters(method:Function, parameters:Array):*
         {
             return (CallWithParameters.callR(method, parameters));
         }
 
-        [Untrusted]
         public function kamasToString(kamas:Number, unit:String="-"):String
         {
             return (StringUtils.kamasToString(kamas, unit));
         }
 
-        [Untrusted]
-        public function formateIntToString(val:Number):String
+        public function formateIntToString(val:Number, precision:int=2):String
         {
-            return (StringUtils.formateIntToString(val));
+            return (StringUtils.formateIntToString(val, precision));
         }
 
-        [Untrusted]
-        public function stringToKamas(string:String, unit:String="-"):int
+        public function stringToKamas(string:String, unit:String="-"):Number
         {
             return (StringUtils.stringToKamas(string, unit));
         }
 
-        [Untrusted]
         public function getTextWithParams(textId:int, params:Array, replace:String="%"):String
         {
             var msgContent:String = I18n.getText(textId);
@@ -93,26 +94,28 @@
             return ("");
         }
 
-        [Untrusted]
         public function applyTextParams(pText:String, pParams:Array, pReplace:String="%"):String
         {
             return (ParamsDecoder.applyParams(pText, pParams, pReplace));
         }
 
-        [Trusted]
         public function noAccent(str:String):String
         {
             return (StringUtils.noAccent(str));
         }
 
-        [Untrusted]
+        public function getAllIndexOf(pStringLookFor:String, pWholeString:String):Array
+        {
+            return (StringUtils.getAllIndexOf(pStringLookFor, pWholeString));
+        }
+
         public function changeColor(obj:Object, color:Number, depth:int, unColor:Boolean=false):void
         {
             var t0:ColorTransform;
-            var _local_6:int;
-            var _local_7:int;
-            var _local_8:int;
-            var _local_9:ColorTransform;
+            var R:int;
+            var V:int;
+            var B:int;
+            var t:ColorTransform;
             if (obj != null)
             {
                 if (unColor)
@@ -120,7 +123,7 @@
                     t0 = new ColorTransform(1, 1, 1, 1, 0, 0, 0);
                     if ((obj is Texture))
                     {
-                        Texture(obj).colorTransform(t0, depth);
+                        Texture(obj).colorTransform = t0;
                     }
                     else
                     {
@@ -132,34 +135,33 @@
                 }
                 else
                 {
-                    _local_6 = ((color >> 16) & 0xFF);
-                    _local_7 = ((color >> 8) & 0xFF);
-                    _local_8 = ((color >> 0) & 0xFF);
-                    _local_9 = new ColorTransform(0, 0, 0, 1, _local_6, _local_7, _local_8);
+                    R = ((color >> 16) & 0xFF);
+                    V = ((color >> 8) & 0xFF);
+                    B = ((color >> 0) & 0xFF);
+                    t = new ColorTransform(0, 0, 0, 1, R, V, B);
                     if ((obj is Texture))
                     {
-                        Texture(obj).colorTransform(_local_9, depth);
+                        Texture(obj).colorTransform = t;
                     }
                     else
                     {
                         if ((obj is DisplayObject))
                         {
-                            DisplayObject(obj).transform.colorTransform = _local_9;
+                            DisplayObject(obj).transform.colorTransform = t;
                         };
                     };
                 };
             };
         }
 
-        [Untrusted]
-        public function sortOnString(list:*, field:String=""):void
+        public function sortOnString(list:*, field:String="", ascending:Boolean=true):void
         {
-            if (((!((list is Array))) && (!((list is Vector.<*>)))))
+            if (((!(list is Array)) && (!(list is Vector.<*>))))
             {
                 this._log.error("Tried to sort something different than an Array or a Vector!");
                 return;
             };
-            if (!(this._stringSorter))
+            if (!this._stringSorter)
             {
                 this._stringSorter = new Collator(XmlConfig.getInstance().getEntry("config.lang.current"));
             };
@@ -167,7 +169,8 @@
             {
                 list.sort(function (a:*, b:*):int
                 {
-                    return (_stringSorter.compare(a[field], b[field]));
+                    var result:int = _stringSorter.compare(a[field], b[field]);
+                    return ((ascending) ? result : (result * -1));
                 });
             }
             else
@@ -176,8 +179,7 @@
             };
         }
 
-        [Untrusted]
-        public function sort(target:*, field:String, ascendand:Boolean=true, isNumeric:Boolean=false)
+        public function sort(target:*, field:String, ascendand:Boolean=true, isNumeric:Boolean=false):*
         {
             var result:* = undefined;
             var sup:int;
@@ -230,11 +232,10 @@
             return (null);
         }
 
-        [Untrusted]
-        public function filter(target:*, pattern:*, field:String)
+        public function filter(target:*, pattern:*, field:String):*
         {
             var searchFor:String;
-            if (!(target))
+            if (!target)
             {
                 return (null);
             };
@@ -267,78 +268,169 @@
             return (result);
         }
 
-        [Untrusted]
-        public function getTiphonEntityLook(pEntityId:int):TiphonEntityLook
+        public function getTiphonEntityLook(pEntityId:Number):TiphonEntityLook
         {
             return (EntitiesLooksManager.getInstance().getTiphonEntityLook(pEntityId));
         }
 
-        [Untrusted]
-        public function getRealTiphonEntityLook(pEntityId:int, pWithoutMount:Boolean=false):TiphonEntityLook
+        public function getRealTiphonEntityLook(pEntityId:Number, pWithoutMount:Boolean=false):TiphonEntityLook
         {
             return (EntitiesLooksManager.getInstance().getRealTiphonEntityLook(pEntityId, pWithoutMount));
         }
 
-        [Untrusted]
-        public function getLookFromContext(pEntityId:int, pForceCreature:Boolean=false):TiphonEntityLook
+        public function getLookFromContext(pEntityId:Number, pForceCreature:Boolean=false):TiphonEntityLook
         {
             return (EntitiesLooksManager.getInstance().getLookFromContext(pEntityId, pForceCreature));
         }
 
-        [Untrusted]
         public function getLookFromContextInfos(pInfos:GameContextActorInformations, pForceCreature:Boolean=false):TiphonEntityLook
         {
             return (EntitiesLooksManager.getInstance().getLookFromContextInfos(pInfos, pForceCreature));
         }
 
-        [Untrusted]
-        public function isCreature(pEntityId:int):Boolean
+        public function isCreature(pEntityId:Number):Boolean
         {
             return (EntitiesLooksManager.getInstance().isCreature(pEntityId));
         }
 
-        [Untrusted]
         public function isCreatureFromLook(pLook:TiphonEntityLook):Boolean
         {
             return (EntitiesLooksManager.getInstance().isCreatureFromLook(pLook));
         }
 
-        [Untrusted]
-        public function isIncarnation(pEntityId:int):Boolean
+        public function isIncarnation(pEntityId:Number):Boolean
         {
             return (EntitiesLooksManager.getInstance().isIncarnation(pEntityId));
         }
 
-        [Untrusted]
         public function isIncarnationFromLook(pLook:TiphonEntityLook):Boolean
         {
             return (EntitiesLooksManager.getInstance().isIncarnationFromLook(pLook));
         }
 
-        [Untrusted]
         public function isCreatureMode():Boolean
         {
             return (EntitiesLooksManager.getInstance().isCreatureMode());
         }
 
-        [Untrusted]
-        public function getCreatureLook(pEntityId:int):TiphonEntityLook
+        public function getCreatureLook(pEntityId:Number):TiphonEntityLook
         {
             return (EntitiesLooksManager.getInstance().getCreatureLook(pEntityId));
         }
 
-        [Untrusted]
-        public function getSecureObjectIndex(pTab:*, pSecureObj:*):int
+        public function getGfxUri(pGfxId:int):String
         {
-            var unsecureObj:* = SecureCenter.unsecure(pSecureObj);
-            if ((((pTab is Array)) || ((pTab is Vector.<*>))))
+            return ((((((Atouin.getInstance().options.getOption("elementsPath") + "/") + Atouin.getInstance().options.getOption("pngSubPath")) + "/") + pGfxId) + ".") + Atouin.getInstance().options.getOption("mapPictoExtension"));
+        }
+
+        public function encodeToJson(value:*):String
+        {
+            return (by.blooddy.crypto.serialization.JSON.encode(value));
+        }
+
+        public function decodeJson(value:String):*
+        {
+            return (by.blooddy.crypto.serialization.JSON.decode(value));
+        }
+
+        public function getObjectsUnderPoint():Array
+        {
+            return (StageShareManager.stage.getObjectsUnderPoint(PoolsManager.getInstance().getPointPool().checkOut()["renew"](StageShareManager.mouseX, StageShareManager.mouseY)));
+        }
+
+        public function isCharacteristicSpell(pSpellWrapper:SpellWrapper, pCharacteristicId:int, pRecursive:Boolean=false):Boolean
+        {
+            var effect:EffectInstance;
+            var triggeredSpell:SpellWrapper;
+            var spellId:*;
+            var characteristicTriggeredSpell:Boolean;
+            var result:Boolean;
+            if (!pRecursive)
             {
-                return (pTab.indexOf(unsecureObj));
+                for (spellId in this._triggeredSpells)
+                {
+                    delete this._triggeredSpells[spellId];
+                };
             };
-            return (-1);
+            for each (effect in pSpellWrapper.effects)
+            {
+                if (effect == null)
+                {
+                }
+                else
+                {
+                    if ((((!(pSpellWrapper.typeId == DataEnum.SPELL_TYPE_TEST)) && (!(pSpellWrapper.id == DataEnum.SPELL_SRAM_TRAPS))) && ((!(effect.effectId == ActionIds.ACTION_FIGHT_LIFE_POINTS_WIN_PERCENT)) && ((ActionIdHelper.isBasedOnTargetLife(effect.effectId)) || (effect.effectId == ActionIds.ACTION_CHARACTER_LIFE_POINTS_MALUS_PERCENT)))))
+                    {
+                        if (((((effect.effectId == ActionIds.ACTION_CASTER_EXECUTE_SPELL) || (((effect.effectId == ActionIds.ACTION_TARGET_EXECUTE_SPELL) && (effect.targetMask)) && (!(effect.targetMask.indexOf("C") == -1)))) || (effect.effectId == ActionIds.ACTION_TARGET_EXECUTE_SPELL_WITH_ANIMATION)) || (effect.effectId == ActionIds.ACTION_FIGHT_ADD_TRAP_CASTING_SPELL)))
+                        {
+                            triggeredSpell = SpellWrapper.create((effect.parameter0 as uint), (effect.parameter1 as int));
+                            if (triggeredSpell == null)
+                            {
+                                continue;
+                            };
+                            if (((!(this._triggeredSpells[triggeredSpell.spellId])) && (!(triggeredSpell.spellId == pSpellWrapper.spellId))))
+                            {
+                                this._triggeredSpells[triggeredSpell.spellId] = true;
+                                characteristicTriggeredSpell = this.isCharacteristicSpell(triggeredSpell, pCharacteristicId, true);
+                                if (characteristicTriggeredSpell)
+                                {
+                                    return (true);
+                                };
+                                continue;
+                            };
+                            delete this._triggeredSpells[triggeredSpell.spellId];
+                        }
+                        else
+                        {
+                            if (((pCharacteristicId == BoostableCharacteristicEnum.BOOSTABLE_CHARAC_VITALITY) && ((effect.effectId == ActionIds.ACTION_CHARACTER_DISPATCH_LIFE_POINTS_PERCENT) || (!(DamageUtil.HP_BASED_DAMAGE_EFFECTS_IDS.indexOf(effect.effectId) == -1)))))
+                            {
+                                return (true);
+                            };
+                            if (((!(DamageUtil.HEALING_EFFECTS_IDS.indexOf(effect.effectId) == -1)) && ((!(effect.effectId == ActionIds.ACTION_CHARACTER_DISPATCH_LIFE_POINTS_PERCENT)) && (pCharacteristicId == BoostableCharacteristicEnum.BOOSTABLE_CHARAC_INTELLIGENCE))))
+                            {
+                                return (true);
+                            };
+                            if (((((DamageUtil.HP_BASED_DAMAGE_EFFECTS_IDS.indexOf(effect.effectId) == -1) && (ActionIdHelper.isBasedOnCasterLifeMissingMaxLife(effect.effectId))) && (DamageUtil.HEALING_EFFECTS_IDS.indexOf(effect.effectId) == -1)) && (effect.category == DataEnum.ACTION_TYPE_DAMAGES)))
+                            {
+                                result = false;
+                                switch (pCharacteristicId)
+                                {
+                                    case BoostableCharacteristicEnum.BOOSTABLE_CHARAC_STRENGTH:
+                                        result = ((effect.effectElement == ElementEnum.ELEMENT_NEUTRAL) || (effect.effectElement == ElementEnum.ELEMENT_EARTH));
+                                        break;
+                                    case BoostableCharacteristicEnum.BOOSTABLE_CHARAC_INTELLIGENCE:
+                                        result = (effect.effectElement == ElementEnum.ELEMENT_FIRE);
+                                        break;
+                                    case BoostableCharacteristicEnum.BOOSTABLE_CHARAC_CHANCE:
+                                        result = (effect.effectElement == ElementEnum.ELEMENT_WATER);
+                                        break;
+                                    case BoostableCharacteristicEnum.BOOSTABLE_CHARAC_AGILITY:
+                                        result = (effect.effectElement == ElementEnum.ELEMENT_AIR);
+                                        break;
+                                };
+                                if (result)
+                                {
+                                    return (true);
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+            return (false);
+        }
+
+        public function escapeHTMLDOM(firstNode:XMLNode):String
+        {
+            return (StringUtils.escapeHTMLDOM(firstNode));
+        }
+
+        public function sanitizeText(text:String):String
+        {
+            return (StringUtils.sanitizeText(text));
         }
 
 
     }
-}//package com.ankamagames.dofus.uiApi
+} com.ankamagames.dofus.uiApi
 

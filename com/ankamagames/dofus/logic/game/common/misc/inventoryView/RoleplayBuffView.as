@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.common.misc.inventoryView
+package com.ankamagames.dofus.logic.game.common.misc.inventoryView
 {
     import com.ankamagames.dofus.logic.game.common.misc.IInventoryView;
     import com.ankamagames.jerakine.logger.Logger;
@@ -17,12 +17,10 @@
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(RoleplayBuffView));
 
         private var _content:Vector.<ItemWrapper>;
-        private var _hookLock:HookLock;
+        private var _hookLock:HookLock = new HookLock();
 
         public function RoleplayBuffView(hookLock:HookLock)
         {
-            this._hookLock = new HookLock();
-            super();
             this._hookLock = hookLock;
         }
 
@@ -77,7 +75,7 @@
 
         public function isListening(item:ItemWrapper):Boolean
         {
-            return ((((((((((((((((item.position == CharacterInventoryPositionEnum.INVENTORY_POSITION_MUTATION)) || ((item.position == CharacterInventoryPositionEnum.INVENTORY_POSITION_BOOST_FOOD)))) || ((item.position == CharacterInventoryPositionEnum.INVENTORY_POSITION_FIRST_BONUS)))) || ((item.position == CharacterInventoryPositionEnum.INVENTORY_POSITION_SECOND_BONUS)))) || ((item.position == CharacterInventoryPositionEnum.INVENTORY_POSITION_FIRST_MALUS)))) || ((item.position == CharacterInventoryPositionEnum.INVENTORY_POSITION_SECOND_MALUS)))) || ((item.position == CharacterInventoryPositionEnum.INVENTORY_POSITION_ROLEPLAY_BUFFER)))) || ((item.position == CharacterInventoryPositionEnum.INVENTORY_POSITION_FOLLOWER))));
+            return ((((((((item.position == CharacterInventoryPositionEnum.INVENTORY_POSITION_MUTATION) || (item.position == CharacterInventoryPositionEnum.INVENTORY_POSITION_BOOST_FOOD)) || (item.position == CharacterInventoryPositionEnum.INVENTORY_POSITION_FIRST_BONUS)) || (item.position == CharacterInventoryPositionEnum.INVENTORY_POSITION_SECOND_BONUS)) || (item.position == CharacterInventoryPositionEnum.INVENTORY_POSITION_FIRST_MALUS)) || (item.position == CharacterInventoryPositionEnum.INVENTORY_POSITION_SECOND_MALUS)) || (item.position == CharacterInventoryPositionEnum.INVENTORY_POSITION_ROLEPLAY_BUFFER)) || (item.position == CharacterInventoryPositionEnum.INVENTORY_POSITION_FOLLOWER));
         }
 
         public function updateView():void
@@ -93,5 +91,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.misc.inventoryView
+} com.ankamagames.dofus.logic.game.common.misc.inventoryView
 

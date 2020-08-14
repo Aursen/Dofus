@@ -1,10 +1,10 @@
-﻿package com.ankamagames.dofus.network.types.game.approach
+package com.ankamagames.dofus.network.types.game.approach
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class ServerSessionConstantString extends ServerSessionConstant implements INetworkType 
     {
 
@@ -50,10 +50,26 @@
         public function deserializeAs_ServerSessionConstantString(input:ICustomDataInput):void
         {
             super.deserialize(input);
+            this._valueFunc(input);
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_ServerSessionConstantString(tree);
+        }
+
+        public function deserializeAsyncAs_ServerSessionConstantString(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._valueFunc);
+        }
+
+        private function _valueFunc(input:ICustomDataInput):void
+        {
             this.value = input.readUTF();
         }
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.approach
+} com.ankamagames.dofus.network.types.game.approach
 

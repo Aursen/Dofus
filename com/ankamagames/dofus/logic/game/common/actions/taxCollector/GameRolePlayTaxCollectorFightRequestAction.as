@@ -1,21 +1,18 @@
-﻿package com.ankamagames.dofus.logic.game.common.actions.taxCollector
+package com.ankamagames.dofus.logic.game.common.actions.taxCollector
 {
     import com.ankamagames.jerakine.handlers.messages.Action;
 
     public class GameRolePlayTaxCollectorFightRequestAction implements Action 
     {
 
-        public var taxCollectorId:uint;
 
-
-        public static function create(pTaxCollectorId:uint):GameRolePlayTaxCollectorFightRequestAction
+        public static function create():GameRolePlayTaxCollectorFightRequestAction
         {
             var action:GameRolePlayTaxCollectorFightRequestAction = new (GameRolePlayTaxCollectorFightRequestAction)();
-            action.taxCollectorId = pTaxCollectorId;
             return (action);
         }
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.actions.taxCollector
+} com.ankamagames.dofus.logic.game.common.actions.taxCollector
 

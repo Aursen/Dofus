@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.sequencer
+package com.ankamagames.jerakine.sequencer
 {
     import com.ankamagames.jerakine.lua.LuaPackage;
 
@@ -6,9 +6,7 @@
     {
 
         function start():void;
-        [HideInFakeClass]
         function addListener(_arg_1:ISequencableListener):void;
-        [HideInFakeClass]
         function removeListener(_arg_1:ISequencableListener):void;
         function toString():String;
         function clear():void;
@@ -18,5 +16,5 @@
         function get hasDefaultTimeout():Boolean;
 
     }
-}//package com.ankamagames.jerakine.sequencer
+} com.ankamagames.jerakine.sequencer
 

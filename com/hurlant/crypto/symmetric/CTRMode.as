@@ -1,4 +1,4 @@
-﻿package com.hurlant.crypto.symmetric
+package com.hurlant.crypto.symmetric
 {
     import flash.utils.ByteArray;
 
@@ -45,10 +45,7 @@
                 j = (blockSize - 1);
                 while (j >= 0)
                 {
-                    var _local_7 = X;
-                    var _local_8 = j;
-                    var _local_9 = (_local_7[_local_8] + 1);
-                    _local_7[_local_8] = _local_9;
+                    X[j]++;
                     if (X[j] != 0)
                     {
                         break;
@@ -61,10 +58,10 @@
 
         public function toString():String
         {
-            return ((key.toString() + "-ctr"));
+            return (key.toString() + "-ctr");
         }
 
 
     }
-}//package com.hurlant.crypto.symmetric
+} com.hurlant.crypto.symmetric
 

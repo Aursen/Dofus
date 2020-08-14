@@ -1,7 +1,8 @@
-﻿package com.ankamagames.dofus.network.types.game.look
+package com.ankamagames.dofus.network.types.game.look
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import __AS3__.vec.Vector;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
     import __AS3__.vec.*;
@@ -12,19 +13,15 @@
         public static const protocolId:uint = 55;
 
         public var bonesId:uint = 0;
-        public var skins:Vector.<uint>;
-        public var indexedColors:Vector.<int>;
-        public var scales:Vector.<int>;
-        public var subentities:Vector.<SubEntity>;
+        public var skins:Vector.<uint> = new Vector.<uint>();
+        public var indexedColors:Vector.<int> = new Vector.<int>();
+        public var scales:Vector.<int> = new Vector.<int>();
+        public var subentities:Vector.<SubEntity> = new Vector.<SubEntity>();
+        private var _skinstree:FuncTree;
+        private var _indexedColorstree:FuncTree;
+        private var _scalestree:FuncTree;
+        private var _subentitiestree:FuncTree;
 
-        public function EntityLook()
-        {
-            this.skins = new Vector.<uint>();
-            this.indexedColors = new Vector.<int>();
-            this.scales = new Vector.<int>();
-            this.subentities = new Vector.<SubEntity>();
-            super();
-        }
 
         public function getTypeId():uint
         {
@@ -107,11 +104,7 @@
             var _val3:int;
             var _val4:int;
             var _item5:SubEntity;
-            this.bonesId = input.readVarUhShort();
-            if (this.bonesId < 0)
-            {
-                throw (new Error((("Forbidden value (" + this.bonesId) + ") on element of EntityLook.bonesId.")));
-            };
+            this._bonesIdFunc(input);
             var _skinsLen:uint = input.readUnsignedShort();
             var _i2:uint;
             while (_i2 < _skinsLen)
@@ -151,7 +144,103 @@
             };
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_EntityLook(tree);
+        }
+
+        public function deserializeAsyncAs_EntityLook(tree:FuncTree):void
+        {
+            tree.addChild(this._bonesIdFunc);
+            this._skinstree = tree.addChild(this._skinstreeFunc);
+            this._indexedColorstree = tree.addChild(this._indexedColorstreeFunc);
+            this._scalestree = tree.addChild(this._scalestreeFunc);
+            this._subentitiestree = tree.addChild(this._subentitiestreeFunc);
+        }
+
+        private function _bonesIdFunc(input:ICustomDataInput):void
+        {
+            this.bonesId = input.readVarUhShort();
+            if (this.bonesId < 0)
+            {
+                throw (new Error((("Forbidden value (" + this.bonesId) + ") on element of EntityLook.bonesId.")));
+            };
+        }
+
+        private function _skinstreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._skinstree.addChild(this._skinsFunc);
+                i++;
+            };
+        }
+
+        private function _skinsFunc(input:ICustomDataInput):void
+        {
+            var _val:uint = input.readVarUhShort();
+            if (_val < 0)
+            {
+                throw (new Error((("Forbidden value (" + _val) + ") on elements of skins.")));
+            };
+            this.skins.push(_val);
+        }
+
+        private function _indexedColorstreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._indexedColorstree.addChild(this._indexedColorsFunc);
+                i++;
+            };
+        }
+
+        private function _indexedColorsFunc(input:ICustomDataInput):void
+        {
+            var _val:int = input.readInt();
+            this.indexedColors.push(_val);
+        }
+
+        private function _scalestreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._scalestree.addChild(this._scalesFunc);
+                i++;
+            };
+        }
+
+        private function _scalesFunc(input:ICustomDataInput):void
+        {
+            var _val:int = input.readVarShort();
+            this.scales.push(_val);
+        }
+
+        private function _subentitiestreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._subentitiestree.addChild(this._subentitiesFunc);
+                i++;
+            };
+        }
+
+        private function _subentitiesFunc(input:ICustomDataInput):void
+        {
+            var _item:SubEntity = new SubEntity();
+            _item.deserialize(input);
+            this.subentities.push(_item);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.types.game.look
+} com.ankamagames.dofus.network.types.game.look
 

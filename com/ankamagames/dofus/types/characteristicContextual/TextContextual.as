@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.types.characteristicContextual
+package com.ankamagames.dofus.types.characteristicContextual
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
@@ -55,5 +55,5 @@
 
 
     }
-}//package com.ankamagames.dofus.types.characteristicContextual
+} com.ankamagames.dofus.types.characteristicContextual
 

@@ -1,31 +1,27 @@
-﻿package com.ankamagames.dofus.uiApi
+package com.ankamagames.dofus.uiApi
 {
     import com.ankamagames.berilia.interfaces.IApi;
     import com.ankamagames.jerakine.logger.Logger;
-    import com.ankamagames.berilia.types.data.UiModule;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
+    import com.ankamagames.berilia.types.data.UiModule;
     import com.ankamagames.dofus.kernel.sound.SoundManager;
     import com.ankamagames.jerakine.managers.OptionManager;
-    import com.ankamagames.dofus.kernel.sound.manager.RegConnectionManager;
     import com.ankamagames.dofus.kernel.Kernel;
     import com.ankamagames.dofus.logic.common.frames.LoadingModuleFrame;
+    import com.ankamagames.dofus.kernel.sound.manager.ISoundManager;
     import com.ankamagames.dofus.kernel.sound.enum.UISoundEnum;
     import com.ankamagames.dofus.kernel.sound.enum.SoundTypeEnum;
     import com.ankamagames.dofus.kernel.sound.enum.LookTypeSoundEnum;
+    import com.ankamagames.dofus.kernel.sound.manager.RegConnectionManager;
 
     [InstanciedApi]
     public class SoundApi implements IApi 
     {
 
-        protected var _log:Logger;
+        protected var _log:Logger = Log.getLogger(getQualifiedClassName(SoundApi));
         private var _module:UiModule;
 
-        public function SoundApi()
-        {
-            this._log = Log.getLogger(getQualifiedClassName(SoundApi));
-            super();
-        }
 
         [ApiData(name="module")]
         public function set module(value:UiModule):void
@@ -33,13 +29,11 @@
             this._module = value;
         }
 
-        [Trusted]
         public function destroy():void
         {
             this._module = null;
         }
 
-        [Untrusted]
         public function activateSounds(pActivate:Boolean):void
         {
             if (pActivate)
@@ -54,258 +48,262 @@
             };
         }
 
-        [Untrusted]
         public function soundsAreActivated():Boolean
         {
-            return (!(OptionManager.getOptionManager("tubul")["tubulIsDesactivated"]));
+            return (!(OptionManager.getOptionManager("tubul").getOption("tubulIsDesactivated")));
         }
 
-        [Untrusted]
-        public function updaterAvailable():Boolean
-        {
-            return (RegConnectionManager.getInstance().socketAvailable);
-        }
-
-        [Untrusted]
         public function setBusVolume(pAudioBusId:uint, pVolume:uint):void
         {
         }
 
-        [Untrusted]
         public function playSoundById(pSoundId:String):void
         {
             var loadingFrame:LoadingModuleFrame = (Kernel.getWorker().getFrame(LoadingModuleFrame) as LoadingModuleFrame);
-            if (!(loadingFrame))
+            if (!loadingFrame)
             {
                 SoundManager.getInstance().manager.playUISound(pSoundId);
             };
         }
 
-        [Untrusted]
-        public function fadeBusVolume(pBusId:uint, pFade:Number, pFadeTime:uint):void
+        public function playStopablesoundById(pSoundId:String):void
         {
+            SoundManager.getInstance().manager.playStopableSound(pSoundId);
         }
 
-        [Untrusted]
+        public function stopStopablesoundById(pSoundId:String):void
+        {
+            var loadingFrame:LoadingModuleFrame = (Kernel.getWorker().getFrame(LoadingModuleFrame) as LoadingModuleFrame);
+            if (!loadingFrame)
+            {
+                SoundManager.getInstance().manager.stopStopableSound(pSoundId);
+            };
+        }
+
+        public function fadeBusVolume(pBusId:uint, pFade:Number, pFadeTime:uint):void
+        {
+            var soundManager:ISoundManager = SoundManager.getInstance().manager;
+            soundManager.fadeBusVolume(pBusId, pFade, pFadeTime);
+        }
+
         public function playSound(pSound:uint):void
         {
-            var _local_2:Array;
-            var _local_3:String;
-            var _local_4:Array;
-            var _local_5:String;
-            var _local_6:Array;
-            var _local_7:String;
-            var _local_8:Array;
-            var _local_9:String;
+            var possibleClothIds:Array;
+            var randomClothId:String;
+            var possibleBagIds:Array;
+            var randomBagId:String;
+            var possibleDropIds:Array;
+            var randomDropId:String;
+            var possibleTurnIds:Array;
+            var randomTurnId:String;
             switch (pSound)
             {
                 case SoundTypeEnum.OK_BUTTON:
                     this.playSoundById(UISoundEnum.OK_BUTTON);
-                    return;
+                    break;
                 case SoundTypeEnum.PLAY_BUTTON:
                     this.playSoundById(UISoundEnum.PLAY_BUTTON);
-                    return;
+                    break;
                 case SoundTypeEnum.GEN_BUTTON:
                     this.playSoundById(UISoundEnum.GEN_BUTTON);
-                    return;
+                    break;
                 case SoundTypeEnum.SPEC_BUTTON:
                     this.playSoundById(UISoundEnum.SPEC_BUTTON);
-                    return;
+                    break;
                 case SoundTypeEnum.CHECK_BUTTON_CHECKED:
                     this.playSoundById(UISoundEnum.CHECKBOX_CHECKED);
-                    return;
+                    break;
                 case SoundTypeEnum.CHECK_BUTTON_UNCHECKED:
                     this.playSoundById(UISoundEnum.CHECKBOX_UNCHECKED);
-                    return;
+                    break;
                 case SoundTypeEnum.DROP_START:
                     this.playSoundById(UISoundEnum.DRAG_START);
-                    return;
+                    break;
                 case SoundTypeEnum.DROP_END:
                     this.playSoundById(UISoundEnum.DRAG_END);
-                    return;
+                    break;
                 case SoundTypeEnum.TAB_BUTTON:
                     this.playSoundById(UISoundEnum.TAB);
-                    return;
+                    break;
                 case SoundTypeEnum.ROLLOVER:
                     this.playSoundById(UISoundEnum.ROLLOVER);
-                    return;
+                    break;
                 case SoundTypeEnum.POPUP_INFO:
                     this.playSoundById(UISoundEnum.POPUP_INFO);
-                    return;
+                    break;
                 case SoundTypeEnum.OPEN_WINDOW:
                     this.playSoundById(UISoundEnum.WINDOW_OPEN);
-                    return;
+                    break;
                 case SoundTypeEnum.CLOSE_WINDOW:
                     this.playSoundById(UISoundEnum.WINDOW_CLOSE);
-                    return;
+                    break;
                 case SoundTypeEnum.SCROLL_UP:
                     this.playSoundById(UISoundEnum.SCROLL_UP);
-                    return;
+                    break;
                 case SoundTypeEnum.SCROLL_DOWN:
                     this.playSoundById(UISoundEnum.SCROLL_DOWN);
-                    return;
+                    break;
                 case SoundTypeEnum.MAP_OPEN:
                     this.playSoundById(UISoundEnum.MAP_OPEN);
-                    return;
+                    break;
                 case SoundTypeEnum.MAP_CLOSE:
                     this.playSoundById(UISoundEnum.MAP_CLOSE);
-                    return;
+                    break;
                 case SoundTypeEnum.OPTIONS_OPEN:
                     this.playSoundById(UISoundEnum.OPTIONS_OPEN);
-                    return;
+                    break;
                 case SoundTypeEnum.OPTIONS_CLOSE:
                     this.playSoundById(UISoundEnum.OPTIONS_CLOSE);
-                    return;
+                    break;
                 case SoundTypeEnum.SOUND_SET:
                     this.playSoundById(UISoundEnum.SOUND_SET);
-                    return;
+                    break;
                 case SoundTypeEnum.INVENTORY_OPEN:
                     this.playSoundById(UISoundEnum.OPEN_INVENTORY);
-                    return;
+                    break;
                 case SoundTypeEnum.INVENTORY_CLOSE:
                     this.playSoundById(UISoundEnum.CLOSE_INVENTORY);
-                    return;
+                    break;
                 case SoundTypeEnum.EQUIPMENT_BOOT:
                     this.playSoundById(UISoundEnum.EQUIP_BOOTS);
-                    return;
+                    break;
                 case SoundTypeEnum.EQUIPMENT_CIRCLE:
                     this.playSoundById(UISoundEnum.EQUIP_WRISTBAND);
-                    return;
+                    break;
                 case SoundTypeEnum.EQUIPMENT_CLOTHES:
-                    _local_2 = new Array(UISoundEnum.EQUIP_CLOTH_1, UISoundEnum.EQUIP_CLOTH_2, UISoundEnum.EQUIP_CLOTH_3, UISoundEnum.EQUIP_CLOTH_4, UISoundEnum.EQUIP_CLOTH_5);
-                    _local_3 = _local_2[Math.round((Math.random() * (_local_2.length - 1)))];
-                    this.playSoundById(_local_3);
-                    return;
+                    possibleClothIds = new Array(UISoundEnum.EQUIP_CLOTH_1, UISoundEnum.EQUIP_CLOTH_2, UISoundEnum.EQUIP_CLOTH_3, UISoundEnum.EQUIP_CLOTH_4, UISoundEnum.EQUIP_CLOTH_5);
+                    randomClothId = possibleClothIds[Math.round((Math.random() * (possibleClothIds.length - 1)))];
+                    this.playSoundById(randomClothId);
+                    break;
                 case SoundTypeEnum.EQUIPMENT_NECKLACE:
                     this.playSoundById(UISoundEnum.EQUIP_NECKLACE);
-                    return;
+                    break;
                 case SoundTypeEnum.EQUIPMENT_ACCESSORIES:
                     this.playSoundById(UISoundEnum.EQUIP_ACCESORIES);
-                    return;
+                    break;
                 case SoundTypeEnum.EQUIPMENT_WEAPON:
                     this.playSoundById(UISoundEnum.EQUIP_WEAPON);
-                    return;
+                    break;
                 case SoundTypeEnum.EQUIPMENT_BUCKLER:
                     this.playSoundById(UISoundEnum.EQUIP_HAND);
-                    return;
+                    break;
                 case SoundTypeEnum.MOVE_ITEM_TO_BAG:
-                    _local_4 = new Array(UISoundEnum.ITEM_IN_INVENTORY_1, UISoundEnum.ITEM_IN_INVENTORY_2, UISoundEnum.ITEM_IN_INVENTORY_3);
-                    _local_5 = _local_4[Math.round((Math.random() * (_local_4.length - 1)))];
-                    this.playSoundById(_local_5);
-                    return;
+                    possibleBagIds = new Array(UISoundEnum.ITEM_IN_INVENTORY_1, UISoundEnum.ITEM_IN_INVENTORY_2, UISoundEnum.ITEM_IN_INVENTORY_3);
+                    randomBagId = possibleBagIds[Math.round((Math.random() * (possibleBagIds.length - 1)))];
+                    this.playSoundById(randomBagId);
+                    break;
                 case SoundTypeEnum.DROP_ITEM:
-                    _local_6 = new Array(UISoundEnum.DROP_ITEM_1, UISoundEnum.DROP_ITEM_2);
-                    _local_7 = _local_6[Math.round((Math.random() * (_local_6.length - 1)))];
-                    this.playSoundById(_local_7);
-                    return;
+                    possibleDropIds = new Array(UISoundEnum.DROP_ITEM_1, UISoundEnum.DROP_ITEM_2);
+                    randomDropId = possibleDropIds[Math.round((Math.random() * (possibleDropIds.length - 1)))];
+                    this.playSoundById(randomDropId);
+                    break;
                 case SoundTypeEnum.GRIMOIRE_OPEN:
                     this.playSoundById(UISoundEnum.OPEN_GRIMOIRE);
-                    return;
+                    break;
                 case SoundTypeEnum.GRIMOIRE_CLOSE:
                     this.playSoundById(UISoundEnum.CLOSE_GRIMOIRE);
-                    return;
+                    break;
                 case SoundTypeEnum.CHARACTER_SHEET_OPEN:
                     this.playSoundById(UISoundEnum.CHARACTER_SHEET_OPEN);
-                    return;
+                    break;
                 case SoundTypeEnum.CHARACTER_SHEET_CLOSE:
                     this.playSoundById(UISoundEnum.CHARACTER_SHEET_CLOSE);
-                    return;
+                    break;
                 case SoundTypeEnum.LEVEL_UP:
                     this.playSoundById(UISoundEnum.LEVEL_UP);
-                    return;
+                    break;
                 case SoundTypeEnum.FIGHT_INTRO:
                     this.playSoundById(UISoundEnum.INTRO_FIGHT);
-                    return;
+                    break;
                 case SoundTypeEnum.FIGHT_OUTRO:
                     this.playSoundById(UISoundEnum.OUTRO_FIGHT);
-                    return;
+                    break;
                 case SoundTypeEnum.END_TURN:
                     this.playSoundById(UISoundEnum.END_TURN);
-                    return;
+                    break;
                 case SoundTypeEnum.READY_TO_FIGHT:
                     this.playSoundById(UISoundEnum.READY_TO_FIGHT);
-                    return;
+                    break;
                 case SoundTypeEnum.FIGHT_POSITION_SQUARE:
                     this.playSoundById(UISoundEnum.FIGHT_POSITION);
-                    return;
+                    break;
                 case SoundTypeEnum.CHARACTER_TURN:
                     this.playSoundById(UISoundEnum.PLAYER_TURN);
-                    return;
+                    break;
                 case SoundTypeEnum.NPC_TURN:
                     this.playSoundById(UISoundEnum.NPC_TURN);
-                    return;
+                    break;
                 case SoundTypeEnum.CHALLENGE_CHECKPOINT:
                     this.playSoundById(UISoundEnum.CHALLENGE_CHECKPOINT);
-                    return;
+                    break;
                 case SoundTypeEnum.LITTLE_OBJECTIVE:
                     this.playSoundById(UISoundEnum.LITTLE_OBJECTIVE);
-                    return;
+                    break;
                 case SoundTypeEnum.IMPORTANT_OBJECTIVE:
                     this.playSoundById(UISoundEnum.IMPORTANT_OBJECTIVE);
-                    return;
+                    break;
                 case SoundTypeEnum.EQUIPMENT_PET:
                     this.playSoundById(UISoundEnum.EQUIP_PET);
-                    return;
+                    break;
                 case SoundTypeEnum.EQUIPMENT_DOFUS:
                     this.playSoundById(UISoundEnum.EQUIP_DOFUS);
-                    return;
+                    break;
                 case SoundTypeEnum.SOCIAL_OPEN:
                     this.playSoundById(UISoundEnum.FRIENDS);
-                    return;
+                    break;
                 case SoundTypeEnum.MERCHANT_TRANSFERT_OPEN:
                     this.playSoundById(UISoundEnum.OPEN_TRANSACTION_WINDOW);
-                    return;
+                    break;
                 case SoundTypeEnum.MERCHANT_TRANSFERT_CLOSE:
                     this.playSoundById(UISoundEnum.CLOSE_TRANSACTION_WINDOW);
-                    return;
+                    break;
                 case SoundTypeEnum.SWITCH_RIGHT_TO_LEFT:
                     this.playSoundById(UISoundEnum.RIGHT_TO_LEFT_SWITCH);
-                    return;
+                    break;
                 case SoundTypeEnum.SWITCH_LEFT_TO_RIGHT:
                     this.playSoundById(UISoundEnum.LEFT_TO_RIGHT_SWITCH);
-                    return;
+                    break;
                 case SoundTypeEnum.DOCUMENT_OPEN:
                     this.playSoundById(UISoundEnum.OPEN_DOCUMENT);
-                    return;
+                    break;
                 case SoundTypeEnum.DOCUMENT_CLOSE:
                     this.playSoundById(UISoundEnum.CLOSE_DOCUMENT);
-                    return;
+                    break;
                 case SoundTypeEnum.DOCUMENT_TURN_PAGE:
-                    _local_8 = new Array(UISoundEnum.TURN_PAGE_DOCUMENT_1, UISoundEnum.TURN_PAGE_DOCUMENT_2, UISoundEnum.TURN_PAGE_DOCUMENT_3, UISoundEnum.TURN_PAGE_DOCUMENT_4);
-                    _local_9 = _local_8[Math.round((Math.random() * (_local_8.length - 1)))];
-                    this.playSoundById(_local_9);
-                    return;
+                    possibleTurnIds = new Array(UISoundEnum.TURN_PAGE_DOCUMENT_1, UISoundEnum.TURN_PAGE_DOCUMENT_2, UISoundEnum.TURN_PAGE_DOCUMENT_3, UISoundEnum.TURN_PAGE_DOCUMENT_4);
+                    randomTurnId = possibleTurnIds[Math.round((Math.random() * (possibleTurnIds.length - 1)))];
+                    this.playSoundById(randomTurnId);
+                    break;
                 case SoundTypeEnum.DOCUMENT_BACK_FIRST_PAGE:
                     this.playSoundById(UISoundEnum.BACK_TO_BEGINNING_DOCUMENT);
-                    return;
+                    break;
                 case SoundTypeEnum.CHAT_GUILD_MESSAGE:
                     this.playSoundById(UISoundEnum.GUILD_CHAT_MESSAGE);
-                    return;
+                    break;
                 case SoundTypeEnum.OPEN_MOUNT_UI:
                     this.playSoundById(UISoundEnum.OPEN_MOUNT_UI);
-                    return;
+                    break;
                 case SoundTypeEnum.FIGHT_WIN:
                     this.playSoundById(UISoundEnum.FIGHT_WIN);
-                    return;
+                    break;
                 case SoundTypeEnum.FIGHT_LOSE:
                     this.playSoundById(UISoundEnum.FIGHT_LOSE);
-                    return;
+                    break;
                 case SoundTypeEnum.RECIPE_MATCH:
                     this.playSoundById(UISoundEnum.RECIPE_MATCH);
-                    return;
+                    break;
                 case SoundTypeEnum.NEW_TIPS:
                     this.playSoundById(UISoundEnum.NEW_TIPS);
-                    return;
+                    break;
                 case SoundTypeEnum.OPEN_CONTEXT_MENU:
                     this.playSoundById(UISoundEnum.CONTEXT_MENU);
-                    return;
+                    break;
                 case SoundTypeEnum.DELETE_CHARACTER:
                     this.playSoundById(UISoundEnum.DELETE_CHARACTER);
-                    return;
+                    break;
             };
         }
 
-        [Untrusted]
         public function playLookSound(pLook:String, pSoundType:uint):void
         {
             var look:String;
@@ -383,37 +381,37 @@
             this.playSoundById(soundId);
         }
 
-        [Trusted]
         public function playIntroMusic():void
         {
             SoundManager.getInstance().manager.playIntroMusic();
         }
 
-        [Trusted]
         public function switchIntroMusic(pFirstHarmonic:Boolean=true):void
         {
             SoundManager.getInstance().manager.switchIntroMusic(pFirstHarmonic);
         }
 
-        [Trusted]
         public function stopIntroMusic():void
         {
             SoundManager.getInstance().manager.stopIntroMusic();
         }
 
-        [Untrusted]
         public function playSoundAtTurnStart():Boolean
         {
-            return (OptionManager.getOptionManager("tubul")["playSoundAtTurnStart"]);
+            return (OptionManager.getOptionManager("tubul").getOption("playSoundAtTurnStart"));
         }
 
-        [Untrusted]
         public function playSoundForGuildMessage():Boolean
         {
-            return (OptionManager.getOptionManager("tubul")["playSoundForGuildMessage"]);
+            return (OptionManager.getOptionManager("tubul").getOption("playSoundForGuildMessage"));
+        }
+
+        public function isSoundMainClient():Boolean
+        {
+            return (RegConnectionManager.getInstance().isMain);
         }
 
 
     }
-}//package com.ankamagames.dofus.uiApi
+} com.ankamagames.dofus.uiApi
 

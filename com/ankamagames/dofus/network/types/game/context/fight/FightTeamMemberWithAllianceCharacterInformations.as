@@ -1,7 +1,8 @@
-﻿package com.ankamagames.dofus.network.types.game.context.fight
+package com.ankamagames.dofus.network.types.game.context.fight
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.dofus.network.types.game.context.roleplay.BasicAllianceInformations;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
 
@@ -10,20 +11,16 @@
 
         public static const protocolId:uint = 426;
 
-        public var allianceInfos:BasicAllianceInformations;
+        public var allianceInfos:BasicAllianceInformations = new BasicAllianceInformations();
+        private var _allianceInfostree:FuncTree;
 
-        public function FightTeamMemberWithAllianceCharacterInformations()
-        {
-            this.allianceInfos = new BasicAllianceInformations();
-            super();
-        }
 
         override public function getTypeId():uint
         {
             return (426);
         }
 
-        public function initFightTeamMemberWithAllianceCharacterInformations(id:int=0, name:String="", level:uint=0, allianceInfos:BasicAllianceInformations=null):FightTeamMemberWithAllianceCharacterInformations
+        public function initFightTeamMemberWithAllianceCharacterInformations(id:Number=0, name:String="", level:uint=0, allianceInfos:BasicAllianceInformations=null):FightTeamMemberWithAllianceCharacterInformations
         {
             super.initFightTeamMemberCharacterInformations(id, name, level);
             this.allianceInfos = allianceInfos;
@@ -59,7 +56,24 @@
             this.allianceInfos.deserialize(input);
         }
 
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_FightTeamMemberWithAllianceCharacterInformations(tree);
+        }
+
+        public function deserializeAsyncAs_FightTeamMemberWithAllianceCharacterInformations(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            this._allianceInfostree = tree.addChild(this._allianceInfostreeFunc);
+        }
+
+        private function _allianceInfostreeFunc(input:ICustomDataInput):void
+        {
+            this.allianceInfos = new BasicAllianceInformations();
+            this.allianceInfos.deserializeAsync(this._allianceInfostree);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.types.game.context.fight
+} com.ankamagames.dofus.network.types.game.context.fight
 

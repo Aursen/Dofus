@@ -1,4 +1,4 @@
-﻿package com.ankamagames.atouin.managers
+package com.ankamagames.atouin.managers
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
@@ -28,12 +28,10 @@
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(EntitiesDisplayManager));
         private static var _self:EntitiesDisplayManager;
 
-        public var _dStrataRef:Dictionary;
+        public var _dStrataRef:Dictionary = new Dictionary(true);
 
         public function EntitiesDisplayManager()
         {
-            this._dStrataRef = new Dictionary(true);
-            super();
             if (_self)
             {
                 throw (new SingletonError("Warning : MobilesManager is a singleton class and shoulnd't be instancied directly!"));
@@ -42,7 +40,7 @@
 
         public static function getInstance():EntitiesDisplayManager
         {
-            if (!(_self))
+            if (!_self)
             {
                 _self = new (EntitiesDisplayManager)();
             };
@@ -50,7 +48,7 @@
         }
 
 
-        public function displayEntity(oEntity:IDisplayable, cellCoords:MapPoint, strata:uint=0):void
+        public function displayEntity(oEntity:IDisplayable, cellCoords:MapPoint, strata:uint=0, useStrataCache:Boolean=true, customOrderFunction:Function=null):void
         {
             var displayObject:DisplayObject;
             try
@@ -61,7 +59,7 @@
             {
                 throw (new AtouinError("Entities implementing IDisplayable should extends DisplayObject."));
             };
-            if (this._dStrataRef[oEntity] != null)
+            if (((!(this._dStrataRef[oEntity] == null)) && (useStrataCache)))
             {
                 strata = this._dStrataRef[oEntity];
             }
@@ -69,20 +67,24 @@
             {
                 this._dStrataRef[oEntity] = strata;
             };
-            if (!(cellCoords))
+            if (!cellCoords)
             {
                 return;
             };
             var cellSprite:Sprite = InteractiveCellManager.getInstance().getCell(cellCoords.cellId);
+            if (!cellSprite)
+            {
+                return;
+            };
             displayObject.x = (cellSprite.x + (cellSprite.width / 2));
             displayObject.y = (cellSprite.y + (cellSprite.height / 2));
             if (strata == PlacementStrataEnums.STRATA_NO_Z_ORDER)
             {
-                if (Atouin.getInstance().options.transparentOverlayMode)
+                if (Atouin.getInstance().options.getOption("transparentOverlayMode"))
                 {
-                    if ((((displayObject is ITransparency)) && (ITransparency(displayObject).getIsTransparencyAllowed())))
+                    if (((displayObject is ITransparency) && (ITransparency(displayObject).getIsTransparencyAllowed())))
                     {
-                        displayObject.alpha = ((!((displayObject.alpha == 1))) ? displayObject.alpha : AtouinConstants.OVERLAY_MODE_ALPHA);
+                        displayObject.alpha = ((displayObject.alpha != 1) ? displayObject.alpha : AtouinConstants.OVERLAY_MODE_ALPHA);
                     }
                     else
                     {
@@ -98,13 +100,27 @@
             }
             else
             {
-                if (strata == PlacementStrataEnums.STRATA_FOREGROUND)
+                if (strata == PlacementStrataEnums.STRATA_HIGHEST_OF_DOOM)
                 {
-                    Atouin.getInstance().gfxContainer.addChild(displayObject);
+                    Atouin.getInstance().overlayContainer.addChild(displayObject);
                 }
                 else
                 {
-                    this.orderEntity(displayObject, cellSprite);
+                    if (strata == PlacementStrataEnums.STRATA_FOREGROUND)
+                    {
+                        Atouin.getInstance().gfxContainer.addChild(displayObject);
+                    }
+                    else
+                    {
+                        if (customOrderFunction == null)
+                        {
+                            this.orderEntity(displayObject, cellSprite);
+                        }
+                        else
+                        {
+                            (customOrderFunction(displayObject, cellSprite));
+                        };
+                    };
                 };
             };
         }
@@ -134,12 +150,8 @@
 
         public function removeEntity(oEntity:IDisplayable):void
         {
-            var displayObject:DisplayObject;
-            try
-            {
-                displayObject = (oEntity as DisplayObject);
-            }
-            catch(te:TypeError)
+            var displayObject:DisplayObject = (oEntity as DisplayObject);
+            if (!displayObject)
             {
                 throw (new AtouinError("Entities implementing IDisplayable should extends DisplayObject."));
             };
@@ -160,16 +172,16 @@
             {
                 skipZOrder = true;
             };
-            if (((((Atouin.getInstance().options.transparentOverlayMode) && ((entity is ITransparency)))) && (ITransparency(entity).getIsTransparencyAllowed())))
+            if ((((Atouin.getInstance().options.getOption("transparentOverlayMode")) && (entity is ITransparency)) && (ITransparency(entity).getIsTransparencyAllowed())))
             {
-                entity.alpha = ((!((entity.alpha == 1))) ? entity.alpha : AtouinConstants.OVERLAY_MODE_ALPHA);
+                entity.alpha = ((entity.alpha != 1) ? entity.alpha : AtouinConstants.OVERLAY_MODE_ALPHA);
                 if (skipZOrder)
                 {
                     return;
                 };
                 container = Atouin.getInstance().overlayContainer;
                 num = container.numChildren;
-                var i:uint;
+                var i:uint = 0;
                 while (i < num)
                 {
                     currentElem = container.getChildAt(i);
@@ -179,7 +191,7 @@
                     };
                     i++;
                 };
-                if (((container.contains(entity)) && ((i > 0))))
+                if (((container.contains(entity)) && (i > 0)))
                 {
                     container.addChildAt(entity, (i - 1));
                 }
@@ -203,7 +215,6 @@
             };
             var depth:uint = cellSprite.parent.getChildIndex(cellSprite);
             var nb:int = cellSprite.parent.numChildren;
-            var firstLoop:Boolean = true;
             i = (depth + 1);
             while (i < nb)
             {
@@ -212,12 +223,14 @@
                 {
                     break;
                 };
-                if (this._dStrataRef[entity] < this._dStrataRef[currentElem]) break;
-                if (((!((currentElem === cellSprite))) && (!((currentElem == entity)))))
+                if (this._dStrataRef[entity] < this._dStrataRef[currentElem])
+                {
+                    break;
+                };
+                if (((!(currentElem === cellSprite)) && (!(currentElem == entity))))
                 {
                     depth++;
                 };
-                firstLoop = false;
                 i++;
             };
             cellSprite.parent.addChildAt(entity, (depth + 1));
@@ -237,5 +250,5 @@
 
 
     }
-}//package com.ankamagames.atouin.managers
+} com.ankamagames.atouin.managers
 

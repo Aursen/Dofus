@@ -1,15 +1,16 @@
-﻿package com.ankamagames.dofus.network.types.game.context
+package com.ankamagames.dofus.network.types.game.context
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
     public class IdentifiedEntityDispositionInformations extends EntityDispositionInformations implements INetworkType 
     {
 
         public static const protocolId:uint = 107;
 
-        public var id:int = 0;
+        public var id:Number = 0;
 
 
         override public function getTypeId():uint
@@ -17,7 +18,7 @@
             return (107);
         }
 
-        public function initIdentifiedEntityDispositionInformations(cellId:int=0, direction:uint=1, id:int=0):IdentifiedEntityDispositionInformations
+        public function initIdentifiedEntityDispositionInformations(cellId:int=0, direction:uint=1, id:Number=0):IdentifiedEntityDispositionInformations
         {
             super.initEntityDispositionInformations(cellId, direction);
             this.id = id;
@@ -38,7 +39,11 @@
         public function serializeAs_IdentifiedEntityDispositionInformations(output:ICustomDataOutput):void
         {
             super.serializeAs_EntityDispositionInformations(output);
-            output.writeInt(this.id);
+            if (((this.id < -9007199254740992) || (this.id > 9007199254740992)))
+            {
+                throw (new Error((("Forbidden value (" + this.id) + ") on element id.")));
+            };
+            output.writeDouble(this.id);
         }
 
         override public function deserialize(input:ICustomDataInput):void
@@ -49,10 +54,30 @@
         public function deserializeAs_IdentifiedEntityDispositionInformations(input:ICustomDataInput):void
         {
             super.deserialize(input);
-            this.id = input.readInt();
+            this._idFunc(input);
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_IdentifiedEntityDispositionInformations(tree);
+        }
+
+        public function deserializeAsyncAs_IdentifiedEntityDispositionInformations(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._idFunc);
+        }
+
+        private function _idFunc(input:ICustomDataInput):void
+        {
+            this.id = input.readDouble();
+            if (((this.id < -9007199254740992) || (this.id > 9007199254740992)))
+            {
+                throw (new Error((("Forbidden value (" + this.id) + ") on element of IdentifiedEntityDispositionInformations.id.")));
+            };
         }
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.context
+} com.ankamagames.dofus.network.types.game.context
 

@@ -1,11 +1,12 @@
-﻿package com.ankamagames.dofus.logic.game.fight.steps
+package com.ankamagames.dofus.logic.game.fight.steps
 {
     import com.ankamagames.jerakine.sequencer.AbstractSequencable;
     import com.ankamagames.dofus.logic.game.fight.managers.MarkedCellsManager;
     import com.ankamagames.dofus.logic.game.fight.types.MarkInstance;
     import com.ankamagames.dofus.logic.game.fight.types.FightEventEnum;
-    import com.ankamagames.dofus.network.enums.GameActionMarkTypeEnum;
+    import tools.enumeration.GameActionMarkTypeEnum;
     import com.ankamagames.dofus.logic.game.fight.fightEvents.FightEventsHelper;
+    import __AS3__.vec.Vector;
 
     public class FightUnmarkCellsStep extends AbstractSequencable implements IFightStep 
     {
@@ -25,7 +26,7 @@
         override public function start():void
         {
             var mi:MarkInstance = MarkedCellsManager.getInstance().getMarkDatas(this._markId);
-            if (!(mi))
+            if (!mi)
             {
                 _log.error((("Trying to remove an unknown mark (" + this._markId) + "). Aborting."));
                 executeCallbacks();
@@ -44,6 +45,8 @@
                 case GameActionMarkTypeEnum.PORTAL:
                     evt = FightEventEnum.PORTAL_DISAPPEARED;
                     break;
+                case GameActionMarkTypeEnum.WALL:
+                    break;
                 default:
                     _log.warn((("Unknown mark type (" + mi.markType) + ")."));
             };
@@ -52,7 +55,12 @@
             executeCallbacks();
         }
 
+        public function get targets():Vector.<Number>
+        {
+            return (new <Number>[(this._markId as Number)]);
+        }
+
 
     }
-}//package com.ankamagames.dofus.logic.game.fight.steps
+} com.ankamagames.dofus.logic.game.fight.steps
 

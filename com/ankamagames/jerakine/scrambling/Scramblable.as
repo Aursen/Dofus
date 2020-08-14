@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.scrambling
+package com.ankamagames.jerakine.scrambling
 {
     import flash.utils.ByteArray;
 
@@ -9,5 +9,5 @@
         function unscramble(_arg_1:ByteArray):void;
 
     }
-}//package com.ankamagames.jerakine.scrambling
+} com.ankamagames.jerakine.scrambling
 

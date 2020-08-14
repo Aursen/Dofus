@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.handshake
+package com.ankamagames.dofus.network.messages.handshake
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class ProtocolRequired extends NetworkMessage implements INetworkMessage 
     {
 
@@ -55,6 +55,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_ProtocolRequired(output);
@@ -81,11 +89,32 @@
 
         public function deserializeAs_ProtocolRequired(input:ICustomDataInput):void
         {
+            this._requiredVersionFunc(input);
+            this._currentVersionFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_ProtocolRequired(tree);
+        }
+
+        public function deserializeAsyncAs_ProtocolRequired(tree:FuncTree):void
+        {
+            tree.addChild(this._requiredVersionFunc);
+            tree.addChild(this._currentVersionFunc);
+        }
+
+        private function _requiredVersionFunc(input:ICustomDataInput):void
+        {
             this.requiredVersion = input.readInt();
             if (this.requiredVersion < 0)
             {
                 throw (new Error((("Forbidden value (" + this.requiredVersion) + ") on element of ProtocolRequired.requiredVersion.")));
             };
+        }
+
+        private function _currentVersionFunc(input:ICustomDataInput):void
+        {
             this.currentVersion = input.readInt();
             if (this.currentVersion < 0)
             {
@@ -95,5 +124,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.handshake
+} com.ankamagames.dofus.network.messages.handshake
 

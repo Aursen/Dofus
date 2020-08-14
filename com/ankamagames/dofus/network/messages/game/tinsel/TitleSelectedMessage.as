@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.tinsel
+package com.ankamagames.dofus.network.messages.game.tinsel
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class TitleSelectedMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -52,6 +52,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_TitleSelectedMessage(output);
@@ -73,6 +81,21 @@
 
         public function deserializeAs_TitleSelectedMessage(input:ICustomDataInput):void
         {
+            this._titleIdFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_TitleSelectedMessage(tree);
+        }
+
+        public function deserializeAsyncAs_TitleSelectedMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._titleIdFunc);
+        }
+
+        private function _titleIdFunc(input:ICustomDataInput):void
+        {
             this.titleId = input.readVarUhShort();
             if (this.titleId < 0)
             {
@@ -82,5 +105,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.tinsel
+} com.ankamagames.dofus.network.messages.game.tinsel
 

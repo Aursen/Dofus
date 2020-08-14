@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.network.utils.types
+package com.ankamagames.jerakine.network.utils.types
 {
     public final class UInt64 extends Binary64 
     {
@@ -10,7 +10,7 @@
 
         public static function fromNumber(n:Number):UInt64
         {
-            return (new (UInt64)(n, Math.floor((n / 4294967296))));
+            return (new UInt64(n, Math.floor((n / 4294967296))));
         }
 
         public static function parseUInt64(str:String, radix:uint=0):UInt64
@@ -29,7 +29,7 @@
                     radix = 10;
                 };
             };
-            if ((((radix < 2)) || ((radix > 36))))
+            if (((radix < 2) || (radix > 36)))
             {
                 throw (new ArgumentError());
             };
@@ -38,13 +38,13 @@
             while (i < str.length)
             {
                 digit = str.charCodeAt(i);
-                if ((((digit >= CHAR_CODE_0)) && ((digit <= CHAR_CODE_9))))
+                if (((digit >= CHAR_CODE_0) && (digit <= CHAR_CODE_9)))
                 {
                     digit = (digit - CHAR_CODE_0);
                 }
                 else
                 {
-                    if ((((digit >= CHAR_CODE_A)) && ((digit <= CHAR_CODE_Z))))
+                    if (((digit >= CHAR_CODE_A) && (digit <= CHAR_CODE_Z)))
                     {
                         digit = (digit - CHAR_CODE_A);
                         digit = (digit + 10);
@@ -78,13 +78,13 @@
 
         final public function toNumber():Number
         {
-            return (((this.high * 4294967296) + low));
+            return ((this.high * 4294967296) + low);
         }
 
         final public function toString(radix:uint=10):String
         {
-            var _local_4:uint;
-            if ((((radix < 2)) || ((radix > 36))))
+            var digit:uint;
+            if (((radix < 2) || (radix > 36)))
             {
                 throw (new ArgumentError());
             };
@@ -96,20 +96,20 @@
             var copyOfThis:UInt64 = new UInt64(low, this.high);
             do 
             {
-                _local_4 = copyOfThis.div(radix);
-                if (_local_4 < 10)
+                digit = copyOfThis.div(radix);
+                if (digit < 10)
                 {
-                    digitChars.push((_local_4 + CHAR_CODE_0));
+                    digitChars.push((digit + CHAR_CODE_0));
                 }
                 else
                 {
-                    digitChars.push(((_local_4 - 10) + CHAR_CODE_A));
+                    digitChars.push(((digit - 10) + CHAR_CODE_A));
                 };
             } while (copyOfThis.high != 0);
-            return ((copyOfThis.low.toString(radix) + String.fromCharCode.apply(String, digitChars.reverse())));
+            return (copyOfThis.low.toString(radix) + String.fromCharCode.apply(String, digitChars.reverse()));
         }
 
 
     }
-}//package com.ankamagames.jerakine.network.utils.types
+} com.ankamagames.jerakine.network.utils.types
 

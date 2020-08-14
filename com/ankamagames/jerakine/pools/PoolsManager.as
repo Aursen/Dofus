@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.pools
+package com.ankamagames.jerakine.pools
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
@@ -17,6 +17,9 @@
         private var _rectanglePool:Pool;
         private var _pointPool:Pool;
         private var _soundPool:Pool;
+        private var _linkedListNodePool:Pool;
+        private var _jsonEncoderPool:Pool;
+        private var _jsonDecoderPool:Pool;
 
         public function PoolsManager()
         {
@@ -81,7 +84,34 @@
             return (this._soundPool);
         }
 
+        public function getLinkedListNodePool():Pool
+        {
+            if (this._linkedListNodePool == null)
+            {
+                this._linkedListNodePool = new Pool(PoolableLinkedListNode, JerakineConstants.LINKED_LIST_NODE_POOL_INITIAL_SIZE, JerakineConstants.LINKED_LIST_NODE_POOL_GROW_SIZE, JerakineConstants.LINKED_LIST_NODE_POOL_WARN_LIMIT);
+            };
+            return (this._linkedListNodePool);
+        }
+
+        public function getJSONEncoderPool():Pool
+        {
+            if (this._jsonEncoderPool == null)
+            {
+                this._jsonEncoderPool = new Pool(PoolableJSONEncoder, JerakineConstants.JSON_ENCODER_POOL_INITIAL_SIZE, JerakineConstants.JSON_ENCODER_POOL_GROW_SIZE, JerakineConstants.JSON_ENCODER_POOL_WARN_LIMIT);
+            };
+            return (this._jsonEncoderPool);
+        }
+
+        public function getJSONDecoderPool():Pool
+        {
+            if (this._jsonDecoderPool == null)
+            {
+                this._jsonDecoderPool = new Pool(PoolableJSONDecoder, JerakineConstants.JSON_DECODER_POOL_INITIAL_SIZE, JerakineConstants.JSON_DECODER_POOL_GROW_SIZE, JerakineConstants.JSON_DECODER_POOL_WARN_LIMIT);
+            };
+            return (this._jsonDecoderPool);
+        }
+
 
     }
-}//package com.ankamagames.jerakine.pools
+} com.ankamagames.jerakine.pools
 

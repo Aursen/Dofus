@@ -1,24 +1,27 @@
-﻿package com.ankamagames.dofus.uiApi
+package com.ankamagames.dofus.uiApi
 {
     import com.ankamagames.berilia.interfaces.IApi;
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
+    import flash.utils.Dictionary;
+    import com.ankamagames.dofus.internalDatacenter.DataEnum;
     import com.ankamagames.dofus.internalDatacenter.items.ItemWrapper;
     import __AS3__.vec.Vector;
     import com.ankamagames.dofus.logic.game.common.managers.InventoryManager;
-    import com.ankamagames.dofus.datacenter.livingObjects.Pet;
     import com.ankamagames.dofus.datacenter.mounts.RideFood;
     import com.ankamagames.dofus.datacenter.items.Item;
     import com.ankamagames.dofus.logic.game.common.misc.IInventoryView;
     import com.ankamagames.dofus.network.enums.ShortcutBarEnum;
     import com.ankamagames.dofus.logic.game.common.managers.PlayedCharacterManager;
     import com.ankamagames.dofus.internalDatacenter.items.MountWrapper;
+    import com.ankamagames.jerakine.types.Uri;
+    import com.ankamagames.jerakine.data.XmlConfig;
+    import com.ankamagames.dofus.internalDatacenter.items.SimpleTextureWrapper;
     import com.ankamagames.dofus.datacenter.items.ItemType;
     import com.ankamagames.dofus.kernel.Kernel;
     import com.ankamagames.dofus.logic.game.common.frames.MountFrame;
     import com.ankamagames.dofus.logic.game.common.managers.StorageOptionManager;
-    import flash.utils.Dictionary;
     import com.ankamagames.jerakine.utils.misc.StringUtils;
     import com.ankamagames.dofus.datacenter.jobs.Skill;
     import __AS3__.vec.*;
@@ -27,18 +30,59 @@
     {
 
         private static const _log:Logger = Log.getLogger(getQualifiedClassName(StorageApi));
-        private static var _lastItemPosition:Array = new Array();
-        public static const ITEM_TYPE_TO_SERVER_POSITION:Array = [[], [0], [1], [2, 4], [3], [5], [], [15], [1], [], [6], [7], [8], [9, 10, 11, 12, 13, 14], [], [20], [21], [22, 23], [24, 25], [26], [27], [16], [], [28]];
+        private static var _lastItemPosition:Array = [];
+        public static const ITEM_TYPE_TO_SERVER_POSITION:Array = [[], [0], [1], [2, 4], [3], [5], [], [15], [1], [], [6], [7], [8], [9, 10, 11, 12, 13, 14], [], [20], [21], [22, 23], [24, 25], [26], [27], [16], [], [28], [8, 16], [30]];
+        public static const ITEM_REAL_TYPE_TO_SERVER_POSITION:Dictionary = new Dictionary();
+
+        {
+            ITEM_REAL_TYPE_TO_SERVER_POSITION[DataEnum.ITEM_TYPE_PRYSMARADITE] = [9];
+        }
 
 
-        [Untrusted]
-        public static function itemSuperTypeToServerPosition(superTypeId:uint):Array
+        public function itemSuperTypeToServerPosition(superTypeId:uint):Array
         {
             return (ITEM_TYPE_TO_SERVER_POSITION[superTypeId]);
         }
 
-        [Untrusted]
-        public static function getLivingObjectFood(itemType:int):Vector.<ItemWrapper>
+        public function itemTypeToServerPosition(typeId:uint):Array
+        {
+            return (ITEM_REAL_TYPE_TO_SERVER_POSITION[typeId]);
+        }
+
+        public function serverPositionsToItemSuperType(position:int):Array
+        {
+            var superTypes:Array = [];
+            var i:int;
+            var typesCount:int = ITEM_TYPE_TO_SERVER_POSITION.length;
+            while (i < typesCount)
+            {
+                if (((ITEM_TYPE_TO_SERVER_POSITION[i].length) && (!(ITEM_TYPE_TO_SERVER_POSITION[i].indexOf(position) == -1))))
+                {
+                    superTypes.push(i);
+                };
+                i++;
+            };
+            return (superTypes);
+        }
+
+        public function getInventoryItemsForSuperType(id:int):Vector.<ItemWrapper>
+        {
+            var itemList:Vector.<ItemWrapper> = new Vector.<ItemWrapper>();
+            var inventory:Vector.<ItemWrapper> = InventoryManager.getInstance().inventory.getView("storage").content;
+            var itemsCount:int = inventory.length;
+            var i:int;
+            while (i < itemsCount)
+            {
+                if ((inventory[i] as ItemWrapper).type.superTypeId == id)
+                {
+                    itemList.push(inventory[i]);
+                };
+                i++;
+            };
+            return (itemList);
+        }
+
+        public function getLivingObjectFood(itemType:int):Vector.<ItemWrapper>
         {
             var item:ItemWrapper;
             var itemList:Vector.<ItemWrapper> = new Vector.<ItemWrapper>();
@@ -48,7 +92,7 @@
             while (i < nb)
             {
                 item = inventory[i];
-                if (((!(item.isLivingObject)) && ((item.type.id == itemType))))
+                if (((!(item.isLivingObject)) && (item.type.id == itemType)))
                 {
                     itemList.push(item);
                 };
@@ -57,63 +101,37 @@
             return (itemList);
         }
 
-        [Untrusted]
-        public static function getPetFood(id:int):Vector.<ItemWrapper>
-        {
-            var inventory:Vector.<ItemWrapper>;
-            var foodItems:Vector.<int>;
-            var foodTypeItems:Vector.<int>;
-            var nb:int;
-            var i:int;
-            var item:ItemWrapper;
-            var itemList:Vector.<ItemWrapper> = new Vector.<ItemWrapper>();
-            var pet:Pet = Pet.getPetById(id);
-            if (pet)
-            {
-                inventory = InventoryManager.getInstance().inventory.getView("storage").content;
-                foodItems = Pet.getPetById(id).foodItems;
-                foodTypeItems = Pet.getPetById(id).foodTypes;
-                nb = inventory.length;
-                i = 0;
-                while (i < nb)
-                {
-                    item = inventory[i];
-                    if ((((foodItems.indexOf(item.objectGID) > -1)) || ((foodTypeItems.indexOf(item.typeId) > -1))))
-                    {
-                        itemList.push(item);
-                    };
-                    i++;
-                };
-            };
-            return (itemList);
-        }
-
-        [Untrusted]
-        public static function getRideFoods():Array
+        public function getRideFoodsFor(familyId:int):Array
         {
             var rideFood:RideFood;
             var item:ItemWrapper;
             var it:Item;
-            var itemList:Array = new Array();
+            var itemList:Array = [];
             var inventory:Vector.<ItemWrapper> = InventoryManager.getInstance().inventory.getView("storage").content;
             var rideFoods:Array = RideFood.getRideFoods();
-            var gids:Array = new Array();
-            var typeIds:Array = new Array();
+            var gids:Array = [];
+            var typeIds:Array = [];
             for each (rideFood in rideFoods)
             {
-                if (rideFood.gid != 0)
+                if (rideFood.familyId != familyId)
                 {
-                    gids.push(rideFood.gid);
-                };
-                if (rideFood.typeId != 0)
+                }
+                else
                 {
-                    typeIds.push(rideFood.typeId);
+                    if (rideFood.gid != 0)
+                    {
+                        gids.push(rideFood.gid);
+                    };
+                    if (rideFood.typeId != 0)
+                    {
+                        typeIds.push(rideFood.typeId);
+                    };
                 };
             };
             for each (item in inventory)
             {
                 it = Item.getItemById(item.objectGID);
-                if (((!((gids.indexOf(item.objectGID) == -1))) || (!((typeIds.indexOf(it.typeId) == -1)))))
+                if (((!(gids.indexOf(item.objectGID) == -1)) || (!(typeIds.indexOf(it.typeId) == -1))))
                 {
                     itemList.push(item);
                 };
@@ -121,8 +139,7 @@
             return (itemList);
         }
 
-        [Untrusted]
-        public static function getViewContent(name:String):Vector.<ItemWrapper>
+        public function getViewContent(name:String):Vector.<ItemWrapper>
         {
             var view:IInventoryView = InventoryManager.getInstance().inventory.getView(name);
             if (view)
@@ -132,8 +149,7 @@
             return (null);
         }
 
-        [Untrusted]
-        public static function getShortcutBarContent(barType:uint):Array
+        public function getShortcutBarContent(barType:uint):Array
         {
             if (barType == ShortcutBarEnum.GENERAL_SHORTCUT_BAR)
             {
@@ -143,11 +159,10 @@
             {
                 return (InventoryManager.getInstance().shortcutBarSpells);
             };
-            return (new Array());
+            return ([]);
         }
 
-        [Untrusted]
-        public static function getFakeItemMount():MountWrapper
+        public function getFakeItemMount():MountWrapper
         {
             if (PlayedCharacterManager.getInstance().mount)
             {
@@ -156,18 +171,27 @@
             return (null);
         }
 
-        [Untrusted]
-        public static function getBestEquipablePosition(item:Object):int
+        public function getFakeItemMountOrRedCross():Object
+        {
+            if (PlayedCharacterManager.getInstance().mount)
+            {
+                return (MountWrapper.create());
+            };
+            var emptyUri:Uri = new Uri((XmlConfig.getInstance().getEntry("config.ui.skin") + "bitmap/failureSlot.png"));
+            var emptyWrapper:SimpleTextureWrapper = SimpleTextureWrapper.create(emptyUri);
+            return (emptyWrapper);
+        }
+
+        public function getBestEquipablePosition(item:Object):int
         {
             var cat:int;
-            var type:ItemType;
+            var itemType:ItemType;
             var equipement:Object;
             var freeSlot:int;
             var pos:int;
-            var typeId:int;
             var lastIndex:int;
             var superTypeId:int = item.type.superTypeId;
-            if (((item) && (((item.isLivingObject) || (item.isWrapperObject)))))
+            if (((item) && ((item.isLivingObject) || (item.isWrapperObject))))
             {
                 cat = 0;
                 if (item.isLivingObject)
@@ -178,21 +202,24 @@
                 {
                     cat = item.wrapperObjectCategory;
                 };
-                type = ItemType.getItemTypeById(cat);
-                if (type)
+                itemType = ItemType.getItemTypeById(cat);
+                if (itemType)
                 {
-                    superTypeId = type.superTypeId;
+                    superTypeId = itemType.superTypeId;
                 };
             };
-            var possiblePosition:Object = itemSuperTypeToServerPosition(superTypeId);
+            var possiblePosition:Object = this.itemTypeToServerPosition(item.typeId);
+            if (possiblePosition == null)
+            {
+                possiblePosition = this.itemSuperTypeToServerPosition(superTypeId);
+            };
             if (((possiblePosition) && (possiblePosition.length)))
             {
-                equipement = getViewContent("equipment");
+                equipement = this.getViewContent("equipment");
                 freeSlot = -1;
                 for each (pos in possiblePosition)
                 {
-                    typeId = item.typeId;
-                    if (((((equipement[pos]) && ((equipement[pos].objectGID == item.objectGID)))) && (((!((item.typeId == 9))) || (item.belongsToSet)))))
+                    if ((((equipement[pos]) && (equipement[pos].objectGID == item.objectGID)) && ((!(item.typeId == 9)) || (item.belongsToSet))))
                     {
                         freeSlot = pos;
                         break;
@@ -202,7 +229,7 @@
                 {
                     for each (pos in possiblePosition)
                     {
-                        if (!(equipement[pos]))
+                        if (!equipement[pos])
                         {
                             freeSlot = pos;
                             break;
@@ -211,15 +238,11 @@
                 };
                 if (freeSlot == -1)
                 {
-                    if (!(_lastItemPosition[item.type.superTypeId]))
+                    if (!_lastItemPosition[item.type.superTypeId])
                     {
                         _lastItemPosition[item.type.superTypeId] = 0;
                     };
-                    var _local_11 = _lastItemPosition;
-                    var _local_12 = item.type.superTypeId;
-                    var _local_13 = (_local_11[_local_12] + 1);
-                    _local_11[_local_12] = _local_13;
-                    lastIndex = _local_13;
+                    lastIndex = ++_lastItemPosition[item.type.superTypeId];
                     if (lastIndex >= possiblePosition.length)
                     {
                         lastIndex = 0;
@@ -231,57 +254,49 @@
             return (freeSlot);
         }
 
-        [Untrusted]
-        public static function addItemMask(itemUID:int, name:String, quantity:int):void
+        public function addItemMask(itemUID:int, name:String, quantity:int):void
         {
             InventoryManager.getInstance().inventory.addItemMask(itemUID, name, quantity);
         }
 
-        [Untrusted]
-        public static function removeItemMask(itemUID:int, name:String):void
+        public function removeItemMask(itemUID:int, name:String):void
         {
             InventoryManager.getInstance().inventory.removeItemMask(itemUID, name);
         }
 
-        [Untrusted]
-        public static function removeAllItemMasks(name:String):void
+        public function removeAllItemMasks(name:String):void
         {
             InventoryManager.getInstance().inventory.removeAllItemMasks(name);
         }
 
-        [Untrusted]
-        public static function releaseHooks():void
+        public function releaseHooks():void
         {
             InventoryManager.getInstance().inventory.releaseHooks();
         }
 
-        [Untrusted]
-        public static function releaseBankHooks():void
+        public function releaseBankHooks():void
         {
             InventoryManager.getInstance().bankInventory.releaseHooks();
         }
 
-        [Untrusted]
-        public static function dracoTurkyInventoryWeight():uint
+        public function dracoTurkyInventoryWeight():uint
         {
             var mf:MountFrame = (Kernel.getWorker().getFrame(MountFrame) as MountFrame);
             return (mf.inventoryWeight);
         }
 
-        [Untrusted]
-        public static function dracoTurkyMaxInventoryWeight():uint
+        public function dracoTurkyMaxInventoryWeight():uint
         {
             var mf:MountFrame = (Kernel.getWorker().getFrame(MountFrame) as MountFrame);
             return (mf.inventoryMaxWeight);
         }
 
-        [Untrusted]
-        public static function getStorageTypes(category:int):Array
+        public function getStorageTypes(category:int):Array
         {
             var entry:Object;
-            var array:Array = new Array();
+            var array:Array = [];
             var dict:Dictionary = StorageOptionManager.getInstance().getCategoryTypes(category);
-            if (!(dict))
+            if (!dict)
             {
                 return (null);
             };
@@ -289,22 +304,21 @@
             {
                 array.push(entry);
             };
-            array.sort(sortStorageTypes);
+            array.sort(this.sortStorageTypes);
             return (array);
         }
 
-        private static function sortStorageTypes(a:Object, b:Object):int
+        private function sortStorageTypes(a:Object, b:Object):int
         {
             return (-(StringUtils.noAccent(b.name).localeCompare(StringUtils.noAccent(a.name))));
         }
 
-        [Untrusted]
-        public static function getBankStorageTypes(category:int):Array
+        public function getBankStorageTypes(category:int):Array
         {
             var entry:Object;
-            var array:Array = new Array();
+            var array:Array = [];
             var dict:Dictionary = StorageOptionManager.getInstance().getBankCategoryTypes(category);
-            if (!(dict))
+            if (!dict)
             {
                 return (null);
             };
@@ -312,122 +326,103 @@
             {
                 array.push(entry);
             };
-            array.sortOn("name");
+            array.sort(this.sortStorageTypes);
             return (array);
         }
 
-        [Untrusted]
-        public static function setDisplayedCategory(category:int):void
+        public function setDisplayedCategory(category:int):void
         {
             StorageOptionManager.getInstance().category = category;
         }
 
-        [Untrusted]
-        public static function setDisplayedBankCategory(category:int):void
+        public function setDisplayedBankCategory(category:int):void
         {
             StorageOptionManager.getInstance().bankCategory = category;
         }
 
-        [Untrusted]
-        public static function getDisplayedCategory():int
+        public function getDisplayedCategory():int
         {
             return (StorageOptionManager.getInstance().category);
         }
 
-        [Untrusted]
-        public static function getDisplayedBankCategory():int
+        public function getDisplayedBankCategory():int
         {
             return (StorageOptionManager.getInstance().bankCategory);
         }
 
-        [Untrusted]
-        public static function setStorageFilter(typeId:int):void
+        public function setStorageFilter(typeId:int):void
         {
             StorageOptionManager.getInstance().filter = typeId;
         }
 
-        [Untrusted]
-        public static function setBankStorageFilter(typeId:int):void
+        public function setBankStorageFilter(typeId:int):void
         {
             StorageOptionManager.getInstance().bankFilter = typeId;
         }
 
-        [Untrusted]
-        public static function getStorageFilter():int
+        public function getStorageFilter():int
         {
             return (StorageOptionManager.getInstance().filter);
         }
 
-        [Untrusted]
-        public static function getBankStorageFilter():int
+        public function getBankStorageFilter():int
         {
             return (StorageOptionManager.getInstance().bankFilter);
         }
 
-        [Untrusted]
-        public static function updateStorageView():void
+        public function updateStorageView():void
         {
             StorageOptionManager.getInstance().updateStorageView();
         }
 
-        [Untrusted]
-        public static function updateBankStorageView():void
+        public function updateBankStorageView():void
         {
             StorageOptionManager.getInstance().updateBankStorageView();
         }
 
-        [Untrusted]
-        public static function sort(sortField:int, revert:Boolean):void
+        public function sort(sortField:int, revert:Boolean):void
         {
             StorageOptionManager.getInstance().sortRevert = revert;
             StorageOptionManager.getInstance().sortField = sortField;
         }
 
-        [Untrusted]
-        public static function resetSort():void
+        public function resetSort():void
         {
             StorageOptionManager.getInstance().resetSort();
         }
 
-        [Untrusted]
-        public static function sortBank(sortField:int, revert:Boolean):void
+        public function sortBank(sortField:int, revert:Boolean):void
         {
             StorageOptionManager.getInstance().sortBankRevert = revert;
             StorageOptionManager.getInstance().sortBankField = sortField;
         }
 
-        [Untrusted]
-        public static function resetBankSort():void
+        public function resetBankSort():void
         {
             StorageOptionManager.getInstance().resetBankSort();
         }
 
-        [Untrusted]
-        public static function getSortFields():Array
+        public function getSortFields():Array
         {
             return (StorageOptionManager.getInstance().sortFields);
         }
 
-        [Untrusted]
-        public static function getSortBankFields():Array
+        public function getSortBankFields():Array
         {
             return (StorageOptionManager.getInstance().sortBankFields);
         }
 
-        [Untrusted]
-        public static function unsort():void
+        public function unsort():void
         {
             StorageOptionManager.getInstance().sortField = StorageOptionManager.SORT_FIELD_NONE;
         }
 
-        [Untrusted]
-        public static function unsortBank():void
+        public function unsortBank():void
         {
             StorageOptionManager.getInstance().sortBankField = StorageOptionManager.SORT_FIELD_NONE;
         }
 
-        [Untrusted]
-        public static function enableBidHouseFilter(allowedTypes:Object, maxItemLevel:uint):void
+        public function enableBidHouseFilter(allowedTypes:Object, maxItemLevel:uint):void
         {
             var entry:uint;
             var vtypes:Vector.<uint> = new Vector.<uint>();
@@ -438,55 +433,68 @@
             StorageOptionManager.getInstance().enableBidHouseFilter(vtypes, maxItemLevel);
         }
 
-        [Untrusted]
-        public static function disableBidHouseFilter():void
+        public function disableBidHouseFilter():void
         {
             StorageOptionManager.getInstance().disableBidHouseFilter();
         }
 
-        [Untrusted]
-        public static function getIsBidHouseFilterEnabled():Boolean
+        public function getIsBidHouseFilterEnabled():Boolean
         {
             return (StorageOptionManager.getInstance().getIsBidHouseFilterEnabled());
         }
 
-        [Untrusted]
-        public static function enableSmithMagicFilter(skill:Object):void
+        public function enableSmithMagicFilter(skill:Object):void
         {
             StorageOptionManager.getInstance().enableSmithMagicFilter((skill as Skill));
         }
 
-        [Untrusted]
-        public static function disableSmithMagicFilter():void
+        public function disableSmithMagicFilter():void
         {
             StorageOptionManager.getInstance().disableSmithMagicFilter();
         }
 
-        [Untrusted]
-        public static function enableCraftFilter(skill:Object, slotCount:int):void
+        public function getIsCraftFilterEnabled():Boolean
         {
-            StorageOptionManager.getInstance().enableCraftFilter((skill as Skill), slotCount);
+            return (StorageOptionManager.getInstance().getIsCraftFilterEnabled());
         }
 
-        [Untrusted]
-        public static function disableCraftFilter():void
+        public function enableCraftFilter(skill:Object, jobLevel:int):void
+        {
+            StorageOptionManager.getInstance().enableCraftFilter((skill as Skill), jobLevel);
+        }
+
+        public function disableCraftFilter():void
         {
             StorageOptionManager.getInstance().disableCraftFilter();
         }
 
-        [Untrusted]
-        public static function getIsSmithMagicFilterEnabled():Boolean
+        public function getIsSmithMagicFilterEnabled():Boolean
         {
             return (StorageOptionManager.getInstance().getIsSmithMagicFilterEnabled());
         }
 
-        [Untrusted]
-        public static function getItemMaskCount(objectUID:int, mask:String):int
+        public function getItemMaskCount(objectUID:int, mask:String):int
         {
             return (InventoryManager.getInstance().inventory.getItemMaskCount(objectUID, mask));
         }
 
+        public function enableTemporisSpellsFilter(allowedTypes:Object, isHideLearnedSpells:Boolean):void
+        {
+            var entry:uint;
+            var vtypes:Vector.<uint> = new Vector.<uint>();
+            for each (entry in allowedTypes)
+            {
+                vtypes.push(entry);
+            };
+            StorageOptionManager.getInstance().enableTemporisSpellsFilter(vtypes, isHideLearnedSpells);
+        }
+
+        public function disableTemporisSpellsFilter():void
+        {
+            StorageOptionManager.getInstance().disableTemporisSpellsFilter();
+        }
+
 
     }
-}//package com.ankamagames.dofus.uiApi
+} com.ankamagames.dofus.uiApi
 

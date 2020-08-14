@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.datacenter.items.criterion
+package com.ankamagames.dofus.datacenter.items.criterion
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
 
@@ -23,7 +23,20 @@
             return (this._operator);
         }
 
-        public function compare(pLeftMember:int, pRightMember:int):Boolean
+        public function get htmlText():String
+        {
+            if (this._operator == SUPERIOR)
+            {
+                return ("&gt;");
+            };
+            if (this._operator == INFERIOR)
+            {
+                return ("&lt;");
+            };
+            return (this._operator);
+        }
+
+        public function compare(pLeftMember:Number, pRightMember:Number):Boolean
         {
             switch (this._operator)
             {
@@ -57,5 +70,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.items.criterion
+} com.ankamagames.dofus.datacenter.items.criterion
 

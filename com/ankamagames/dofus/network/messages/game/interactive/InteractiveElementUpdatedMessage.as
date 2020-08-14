@@ -1,27 +1,23 @@
-﻿package com.ankamagames.dofus.network.messages.game.interactive
+package com.ankamagames.dofus.network.messages.game.interactive
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
     import com.ankamagames.dofus.network.types.game.interactive.InteractiveElement;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
 
-    [Trusted]
     public class InteractiveElementUpdatedMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 5708;
 
         private var _isInitialized:Boolean = false;
-        public var interactiveElement:InteractiveElement;
+        public var interactiveElement:InteractiveElement = new InteractiveElement();
+        private var _interactiveElementtree:FuncTree;
 
-        public function InteractiveElementUpdatedMessage()
-        {
-            this.interactiveElement = new InteractiveElement();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
@@ -58,6 +54,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_InteractiveElementUpdatedMessage(output);
@@ -79,7 +83,23 @@
             this.interactiveElement.deserialize(input);
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_InteractiveElementUpdatedMessage(tree);
+        }
+
+        public function deserializeAsyncAs_InteractiveElementUpdatedMessage(tree:FuncTree):void
+        {
+            this._interactiveElementtree = tree.addChild(this._interactiveElementtreeFunc);
+        }
+
+        private function _interactiveElementtreeFunc(input:ICustomDataInput):void
+        {
+            this.interactiveElement = new InteractiveElement();
+            this.interactiveElement.deserializeAsync(this._interactiveElementtree);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.interactive
+} com.ankamagames.dofus.network.messages.game.interactive
 

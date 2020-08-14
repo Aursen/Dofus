@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.utils.parser
+package com.ankamagames.jerakine.utils.parser
 {
     import com.ankamagames.jerakine.types.SoundEventParamWrapper;
     import __AS3__.vec.Vector;
@@ -18,6 +18,7 @@
         private static var PARAM_BERCEAU_FADE_IN:String = "berceauFadeIn";
         private static var PARAM_BERCEAU_FADE_OUT:String = "berceauFadeOut";
         private static var PARAM_NO_CUT_SILENCE:String = "noCutSilence";
+        private static var PARAM_IS_LOCALIZED:String = "isLocalized";
 
 
         public static function parseSoundLabel(pParams:String):Array
@@ -40,6 +41,7 @@
             var aIds:Vector.<String> = new Vector.<String>();
             var aVols:Vector.<uint> = new Vector.<uint>();
             var noCutSilence:Boolean;
+            var isLocalized:int = -1;
             var i:uint;
             while (i < tabLength)
             {
@@ -88,13 +90,16 @@
                             noCutSilence = true;
                         };
                         break;
+                    case PARAM_IS_LOCALIZED.toUpperCase():
+                        isLocalized = valueParams[0];
+                        break;
                 };
                 i++;
             };
             var size:uint = aIds.length;
             if (aIds.length != aVols.length)
             {
-                throw (new Error("The number of sound id and volume are differents"));
+                throw (new Error(((("The number of sound id and volume are differents. Nom : " + paramName) + " id des sons : ") + aIds)));
             };
             var compt:uint;
             while (compt < size)
@@ -105,6 +110,7 @@
                 sepw.berceauFadeIn = berceauFadeIn;
                 sepw.berceauFadeOut = berceauFadeOut;
                 sepw.noCutSilence = noCutSilence;
+                sepw.isLocalized = isLocalized;
                 returnSEPW.push(sepw);
                 compt++;
             };
@@ -117,7 +123,7 @@
             var label:String;
             var aIds:Vector.<String> = new Vector.<String>();
             var aVols:Vector.<uint> = new Vector.<uint>();
-            if (((!(soundEvents)) || ((soundEvents.length == 0))))
+            if (((!(soundEvents)) || (soundEvents.length == 0)))
             {
                 return (null);
             };
@@ -132,5 +138,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.utils.parser
+} com.ankamagames.jerakine.utils.parser
 

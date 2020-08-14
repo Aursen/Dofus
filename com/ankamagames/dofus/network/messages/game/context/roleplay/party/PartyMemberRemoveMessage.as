@@ -1,24 +1,24 @@
-﻿package com.ankamagames.dofus.network.messages.game.context.roleplay.party
+package com.ankamagames.dofus.network.messages.game.context.roleplay.party
 {
     import com.ankamagames.jerakine.network.INetworkMessage;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class PartyMemberRemoveMessage extends AbstractPartyEventMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 5579;
 
         private var _isInitialized:Boolean = false;
-        public var leavingPlayerId:uint = 0;
+        public var leavingPlayerId:Number = 0;
 
 
         override public function get isInitialized():Boolean
         {
-            return (((super.isInitialized) && (this._isInitialized)));
+            return ((super.isInitialized) && (this._isInitialized));
         }
 
         override public function getMessageId():uint
@@ -26,7 +26,7 @@
             return (5579);
         }
 
-        public function initPartyMemberRemoveMessage(partyId:uint=0, leavingPlayerId:uint=0):PartyMemberRemoveMessage
+        public function initPartyMemberRemoveMessage(partyId:uint=0, leavingPlayerId:Number=0):PartyMemberRemoveMessage
         {
             super.initAbstractPartyEventMessage(partyId);
             this.leavingPlayerId = leavingPlayerId;
@@ -53,6 +53,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         override public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_PartyMemberRemoveMessage(output);
@@ -61,11 +69,11 @@
         public function serializeAs_PartyMemberRemoveMessage(output:ICustomDataOutput):void
         {
             super.serializeAs_AbstractPartyEventMessage(output);
-            if (this.leavingPlayerId < 0)
+            if (((this.leavingPlayerId < 0) || (this.leavingPlayerId > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.leavingPlayerId) + ") on element leavingPlayerId.")));
             };
-            output.writeVarInt(this.leavingPlayerId);
+            output.writeVarLong(this.leavingPlayerId);
         }
 
         override public function deserialize(input:ICustomDataInput):void
@@ -76,8 +84,24 @@
         public function deserializeAs_PartyMemberRemoveMessage(input:ICustomDataInput):void
         {
             super.deserialize(input);
-            this.leavingPlayerId = input.readVarUhInt();
-            if (this.leavingPlayerId < 0)
+            this._leavingPlayerIdFunc(input);
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_PartyMemberRemoveMessage(tree);
+        }
+
+        public function deserializeAsyncAs_PartyMemberRemoveMessage(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._leavingPlayerIdFunc);
+        }
+
+        private function _leavingPlayerIdFunc(input:ICustomDataInput):void
+        {
+            this.leavingPlayerId = input.readVarUhLong();
+            if (((this.leavingPlayerId < 0) || (this.leavingPlayerId > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.leavingPlayerId) + ") on element of PartyMemberRemoveMessage.leavingPlayerId.")));
             };
@@ -85,5 +109,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.context.roleplay.party
+} com.ankamagames.dofus.network.messages.game.context.roleplay.party
 

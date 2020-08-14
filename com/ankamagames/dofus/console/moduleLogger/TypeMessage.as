@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.console.moduleLogger
+package com.ankamagames.dofus.console.moduleLogger
 {
     import com.ankamagames.berilia.types.data.Hook;
     import com.ankamagames.jerakine.handlers.messages.Action;
@@ -7,7 +7,8 @@
     import flash.utils.getQualifiedClassName;
     import flash.display.DisplayObject;
     import com.ankamagames.jerakine.logger.LogLevel;
-    import flash.utils.describeType;
+    import com.ankamagames.jerakine.utils.misc.DescribeTypeCache;
+    import __AS3__.vec.Vector;
 
     public final class TypeMessage 
     {
@@ -25,27 +26,24 @@
         public var textInfo:String;
         public var type:int = -1;
         public var logType:int = -1;
-        private var search1:RegExp;
-        private var search2:RegExp;
-        private var vectorExp:RegExp;
+        private var search1:RegExp = new RegExp("<", "g");
+        private var search2:RegExp = new RegExp(">", "g");
+        private var vectorExp:RegExp = new RegExp("Vector.<(.*)::(.*)>", "g");
 
         public function TypeMessage(... args)
         {
             var object:Object;
-            this.search1 = new RegExp("<", "g");
-            this.search2 = new RegExp(">", "g");
-            this.vectorExp = new RegExp("Vector.<(.*)::(.*)>", "g");
             super();
             try
             {
                 object = args[0];
-                if ((((object is String)) && ((args.length == 2))))
+                if (((object is String) && (args.length == 2)))
                 {
                     this.displayLog((object as String), args[1]);
                 }
                 else
                 {
-                    if ((((object is String)) && ((args[1] == LOG_CHAT))))
+                    if (((object is String) && (args[1] == LOG_CHAT)))
                     {
                         this.type = LOG_CHAT;
                         this.textInfo = (((((("<span class='" + args[2]) + "'>[") + this.getDate()) + "] ") + String(object)) + "</span>");
@@ -88,7 +86,7 @@
             }
             catch(e:Error)
             {
-                if (!((object is String)))
+                if (!(object is String))
                 {
                     name = "trace";
                     textInfo = (("<span class='red'>" + e.getStackTrace()) + "</span>");
@@ -116,7 +114,7 @@
                 className = className.split("::")[1];
             };
             this.name = className;
-            var text:String = (((((((((((("<span class='gray'>[" + this.getDate()) + "]</span>") + "<span class='green'> UI     : <a href='event:@") + this.name) + "'>") + this.name) + "</a></span>") + "\n<span class='gray+'>") + TAB) + "target : ") + ui.name) + "</span><span class='gray'>");
+            var text:* = (((((((((((("<span class='gray'>[" + this.getDate()) + "]</span>") + "<span class='green'> UI     : <a href='event:@") + this.name) + "'>") + this.name) + "</a></span>") + "\n<span class='gray+'>") + TAB) + "target : ") + ui.name) + "</span><span class='gray'>");
             var baseName:String = String(msg);
             if (baseName.indexOf("@") != -1)
             {
@@ -227,26 +225,26 @@
 
         private function displayActionInformations(action:Action):void
         {
-            var variable:XML;
-            var name:String;
-            var typel:String;
+            var varName:String;
             var value:String;
             this.type = TYPE_ACTION;
             var actionName:String = getQualifiedClassName(action).split("::")[1];
             this.name = actionName;
             var text:String = (((((((("<span class='gray'>[" + this.getDate()) + "]</span>") + "<span class='pink'> ACTION : <a href='event:@") + this.name) + "'>") + this.name) + "</a></span>") + "<span class='gray'>");
-            var infos:XML = describeType(action);
-            var variables:XMLList = infos.elements("variable");
-            for each (variable in variables)
+            var variables:Vector.<String> = DescribeTypeCache.getVariables(action, false, true, false, true);
+            for each (varName in variables)
             {
-                name = variable.attribute("name");
-                typel = variable.attribute("type");
-                typel = typel.replace(this.search1, "&lt;");
-                typel = typel.replace(this.search2, "&gt;");
-                value = String(action[name]);
+                value = String(action[varName]);
                 value = value.replace(this.search1, "&lt;");
                 value = value.replace(this.search2, "&gt;");
-                text = (text + (((((("\n" + TAB) + name) + ":") + typel) + " = ") + value));
+                if ((action[varName] is String))
+                {
+                    text = (text + (((((("\n" + TAB) + varName) + " = ") + '"') + value) + '"'));
+                }
+                else
+                {
+                    text = (text + (((("\n" + TAB) + varName) + " = ") + value));
+                };
             };
             text = (text + "</span>\n");
             this.textInfo = text;
@@ -258,10 +256,10 @@
             var hours:int = date.hours;
             var minutes:int = date.minutes;
             var seconds:int = date.seconds;
-            return ((((((((hours < 10)) ? ("0" + hours) : hours) + ":") + (((minutes < 10)) ? ("0" + minutes) : minutes)) + ":") + (((seconds < 10)) ? ("0" + seconds) : seconds)));
+            return ((((((hours < 10) ? ("0" + hours) : hours) + ":") + ((minutes < 10) ? ("0" + minutes) : minutes)) + ":") + ((seconds < 10) ? ("0" + seconds) : seconds));
         }
 
 
     }
-}//package com.ankamagames.dofus.console.moduleLogger
+} com.ankamagames.dofus.console.moduleLogger
 

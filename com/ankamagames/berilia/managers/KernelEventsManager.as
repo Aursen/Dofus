@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.managers
+package com.ankamagames.berilia.managers
 {
     import flash.events.EventDispatcher;
     import com.ankamagames.jerakine.utils.errors.SingletonError;
@@ -50,57 +50,50 @@
 
         public function isRegisteredEvent(name:String):Boolean
         {
-            return (!((_aEvent[name] == null)));
+            return (!(_aEvent[name] == null));
         }
 
-        [APALogInfo(customInfo="'Hook: ' + hook.name")]
         public function processCallback(hook:Hook, ... args):void
         {
             var s:String;
             var e:GenericListener;
             FpsManager.getInstance().startTracking("hook", 7108545);
-            if (!(UiModuleManager.getInstance().ready))
+            if (!UiModuleManager.getInstance().ready)
             {
                 _log.warn((("Hook " + hook.name) + " discarded"));
                 return;
             };
-            var boxedParam:Array = SecureCenter.secureContent(args);
             var num:int;
             var loadingUi:Array = Berilia.getInstance().loadingUi;
             for (s in loadingUi)
             {
                 num++;
-                if (!!(Berilia.getInstance().loadingUi[s]))
+                if (Berilia.getInstance().loadingUi[s])
                 {
                     if (this._aLoadingUi[s] == null)
                     {
                         this._aLoadingUi[s] = new Array();
                     };
-                    this._aLoadingUi[s].push(new OldMessage(hook, boxedParam));
+                    this._aLoadingUi[s].push(new OldMessage(hook, args));
                 };
             };
             _log.logDirectly(new HookLogEvent(hook.name, []));
-            if (!(_aEvent[hook.name]))
+            ModuleLogger.log(hook, args);
+            if (!_aEvent[hook.name])
             {
                 return;
             };
-            ModuleLogger.log(hook, args);
-            var tmpListner:Array = [];
             for each (e in _aEvent[hook.name])
             {
-                tmpListner.push(e);
-            };
-            for each (e in tmpListner)
-            {
-                if (!!(e))
+                if (e)
                 {
-                    if ((((e.listenerType == GenericListener.LISTENER_TYPE_UI)) && (!(Berilia.getInstance().getUi(e.listener)))))
+                    if (((e.listenerType == GenericListener.LISTENER_TYPE_UI) && (!(Berilia.getInstance().getUi(e.listener)))))
                     {
                         _log.info(((("L'UI " + e.listener) + " n'existe plus pour recevoir le hook ") + e.event));
                     }
                     else
                     {
-                        ErrorManager.tryFunction(e.callback, boxedParam, ("Une erreur est survenue lors du traitement du hook " + hook.name));
+                        ErrorManager.tryFunction(e.callback, args, ("Une erreur est survenue lors du traitement du hook " + hook.name));
                     };
                 };
             };
@@ -117,7 +110,7 @@
             var args:Array;
             var s:String;
             var eGl:GenericListener;
-            if (!(this._aLoadingUi[e.uiTarget.name]))
+            if (!this._aLoadingUi[e.uiTarget.name])
             {
                 return;
             };
@@ -150,5 +143,5 @@
 
 
     }
-}//package com.ankamagames.berilia.managers
+} com.ankamagames.berilia.managers
 

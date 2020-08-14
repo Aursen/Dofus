@@ -1,10 +1,10 @@
-﻿package com.ankamagames.dofus.network.types.game.context.roleplay
+package com.ankamagames.dofus.network.types.game.context.roleplay
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class ObjectItemInRolePlay implements INetworkType 
     {
 
@@ -39,7 +39,7 @@
 
         public function serializeAs_ObjectItemInRolePlay(output:ICustomDataOutput):void
         {
-            if ((((this.cellId < 0)) || ((this.cellId > 559))))
+            if (((this.cellId < 0) || (this.cellId > 559)))
             {
                 throw (new Error((("Forbidden value (" + this.cellId) + ") on element cellId.")));
             };
@@ -58,11 +58,32 @@
 
         public function deserializeAs_ObjectItemInRolePlay(input:ICustomDataInput):void
         {
+            this._cellIdFunc(input);
+            this._objectGIDFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_ObjectItemInRolePlay(tree);
+        }
+
+        public function deserializeAsyncAs_ObjectItemInRolePlay(tree:FuncTree):void
+        {
+            tree.addChild(this._cellIdFunc);
+            tree.addChild(this._objectGIDFunc);
+        }
+
+        private function _cellIdFunc(input:ICustomDataInput):void
+        {
             this.cellId = input.readVarUhShort();
-            if ((((this.cellId < 0)) || ((this.cellId > 559))))
+            if (((this.cellId < 0) || (this.cellId > 559)))
             {
                 throw (new Error((("Forbidden value (" + this.cellId) + ") on element of ObjectItemInRolePlay.cellId.")));
             };
+        }
+
+        private function _objectGIDFunc(input:ICustomDataInput):void
+        {
             this.objectGID = input.readVarUhShort();
             if (this.objectGID < 0)
             {
@@ -72,5 +93,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.context.roleplay
+} com.ankamagames.dofus.network.types.game.context.roleplay
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.common.actions
+package com.ankamagames.dofus.logic.common.actions
 {
     import com.ankamagames.jerakine.handlers.messages.Action;
 
@@ -9,16 +9,16 @@
 
         public function AddBehaviorToStackAction(data:Array=null)
         {
-            this.behavior = ((!((data == null))) ? data : new Array());
+            this.behavior = ((data != null) ? data : new Array());
         }
 
         public static function create():AddBehaviorToStackAction
         {
-            var s:AddBehaviorToStackAction = new (AddBehaviorToStackAction)(new Array());
+            var s:AddBehaviorToStackAction = new AddBehaviorToStackAction(new Array());
             return (s);
         }
 
 
     }
-}//package com.ankamagames.dofus.logic.common.actions
+} com.ankamagames.dofus.logic.common.actions
 

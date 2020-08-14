@@ -1,12 +1,12 @@
-﻿package com.ankamagames.dofus.network.types.game.data.items
+package com.ankamagames.dofus.network.types.game.data.items
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import __AS3__.vec.Vector;
     import com.ankamagames.dofus.network.types.game.data.items.effects.ObjectEffect;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class ObjectItemInformationWithQuantity extends ObjectItemMinimalInformation implements INetworkType 
     {
 
@@ -56,6 +56,22 @@
         public function deserializeAs_ObjectItemInformationWithQuantity(input:ICustomDataInput):void
         {
             super.deserialize(input);
+            this._quantityFunc(input);
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_ObjectItemInformationWithQuantity(tree);
+        }
+
+        public function deserializeAsyncAs_ObjectItemInformationWithQuantity(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._quantityFunc);
+        }
+
+        private function _quantityFunc(input:ICustomDataInput):void
+        {
             this.quantity = input.readVarUhInt();
             if (this.quantity < 0)
             {
@@ -65,5 +81,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.data.items
+} com.ankamagames.dofus.network.types.game.data.items
 

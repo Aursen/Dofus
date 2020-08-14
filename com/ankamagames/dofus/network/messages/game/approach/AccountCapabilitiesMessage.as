@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.approach
+package com.ankamagames.dofus.network.messages.game.approach
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,9 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
+    import com.ankamagames.jerakine.network.utils.BooleanByteWrapper;
 
-    [Trusted]
     public class AccountCapabilitiesMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -19,6 +20,7 @@
         public var breedsVisible:uint = 0;
         public var breedsAvailable:uint = 0;
         public var status:int = -1;
+        public var canCreateNewCharacter:Boolean = false;
 
 
         override public function get isInitialized():Boolean
@@ -31,13 +33,14 @@
             return (6216);
         }
 
-        public function initAccountCapabilitiesMessage(accountId:uint=0, tutorialAvailable:Boolean=false, breedsVisible:uint=0, breedsAvailable:uint=0, status:int=-1):AccountCapabilitiesMessage
+        public function initAccountCapabilitiesMessage(accountId:uint=0, tutorialAvailable:Boolean=false, breedsVisible:uint=0, breedsAvailable:uint=0, status:int=-1, canCreateNewCharacter:Boolean=false):AccountCapabilitiesMessage
         {
             this.accountId = accountId;
             this.tutorialAvailable = tutorialAvailable;
             this.breedsVisible = breedsVisible;
             this.breedsAvailable = breedsAvailable;
             this.status = status;
+            this.canCreateNewCharacter = canCreateNewCharacter;
             this._isInitialized = true;
             return (this);
         }
@@ -49,6 +52,7 @@
             this.breedsVisible = 0;
             this.breedsAvailable = 0;
             this.status = -1;
+            this.canCreateNewCharacter = false;
             this._isInitialized = false;
         }
 
@@ -64,6 +68,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_AccountCapabilitiesMessage(output);
@@ -71,22 +83,25 @@
 
         public function serializeAs_AccountCapabilitiesMessage(output:ICustomDataOutput):void
         {
+            var _box0:uint;
+            _box0 = BooleanByteWrapper.setFlag(_box0, 0, this.tutorialAvailable);
+            _box0 = BooleanByteWrapper.setFlag(_box0, 1, this.canCreateNewCharacter);
+            output.writeByte(_box0);
             if (this.accountId < 0)
             {
                 throw (new Error((("Forbidden value (" + this.accountId) + ") on element accountId.")));
             };
             output.writeInt(this.accountId);
-            output.writeBoolean(this.tutorialAvailable);
-            if ((((this.breedsVisible < 0)) || ((this.breedsVisible > 0xFFFF))))
+            if (this.breedsVisible < 0)
             {
                 throw (new Error((("Forbidden value (" + this.breedsVisible) + ") on element breedsVisible.")));
             };
-            output.writeShort(this.breedsVisible);
-            if ((((this.breedsAvailable < 0)) || ((this.breedsAvailable > 0xFFFF))))
+            output.writeVarInt(this.breedsVisible);
+            if (this.breedsAvailable < 0)
             {
                 throw (new Error((("Forbidden value (" + this.breedsAvailable) + ") on element breedsAvailable.")));
             };
-            output.writeShort(this.breedsAvailable);
+            output.writeVarInt(this.breedsAvailable);
             output.writeByte(this.status);
         }
 
@@ -97,26 +112,67 @@
 
         public function deserializeAs_AccountCapabilitiesMessage(input:ICustomDataInput):void
         {
+            this.deserializeByteBoxes(input);
+            this._accountIdFunc(input);
+            this._breedsVisibleFunc(input);
+            this._breedsAvailableFunc(input);
+            this._statusFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_AccountCapabilitiesMessage(tree);
+        }
+
+        public function deserializeAsyncAs_AccountCapabilitiesMessage(tree:FuncTree):void
+        {
+            tree.addChild(this.deserializeByteBoxes);
+            tree.addChild(this._accountIdFunc);
+            tree.addChild(this._breedsVisibleFunc);
+            tree.addChild(this._breedsAvailableFunc);
+            tree.addChild(this._statusFunc);
+        }
+
+        private function deserializeByteBoxes(input:ICustomDataInput):void
+        {
+            var _box0:uint = input.readByte();
+            this.tutorialAvailable = BooleanByteWrapper.getFlag(_box0, 0);
+            this.canCreateNewCharacter = BooleanByteWrapper.getFlag(_box0, 1);
+        }
+
+        private function _accountIdFunc(input:ICustomDataInput):void
+        {
             this.accountId = input.readInt();
             if (this.accountId < 0)
             {
                 throw (new Error((("Forbidden value (" + this.accountId) + ") on element of AccountCapabilitiesMessage.accountId.")));
             };
-            this.tutorialAvailable = input.readBoolean();
-            this.breedsVisible = input.readUnsignedShort();
-            if ((((this.breedsVisible < 0)) || ((this.breedsVisible > 0xFFFF))))
+        }
+
+        private function _breedsVisibleFunc(input:ICustomDataInput):void
+        {
+            this.breedsVisible = input.readVarUhInt();
+            if (this.breedsVisible < 0)
             {
                 throw (new Error((("Forbidden value (" + this.breedsVisible) + ") on element of AccountCapabilitiesMessage.breedsVisible.")));
             };
-            this.breedsAvailable = input.readUnsignedShort();
-            if ((((this.breedsAvailable < 0)) || ((this.breedsAvailable > 0xFFFF))))
+        }
+
+        private function _breedsAvailableFunc(input:ICustomDataInput):void
+        {
+            this.breedsAvailable = input.readVarUhInt();
+            if (this.breedsAvailable < 0)
             {
                 throw (new Error((("Forbidden value (" + this.breedsAvailable) + ") on element of AccountCapabilitiesMessage.breedsAvailable.")));
             };
+        }
+
+        private function _statusFunc(input:ICustomDataInput):void
+        {
             this.status = input.readByte();
         }
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.approach
+} com.ankamagames.dofus.network.messages.game.approach
 

@@ -1,16 +1,16 @@
-﻿package com.ankamagames.dofus.network.messages.game.guild
+package com.ankamagames.dofus.network.messages.game.guild
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
     import __AS3__.vec.Vector;
     import com.ankamagames.dofus.network.types.game.paddock.PaddockContentInformations;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
     import __AS3__.vec.*;
 
-    [Trusted]
     public class GuildInformationsPaddocksMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -18,13 +18,9 @@
 
         private var _isInitialized:Boolean = false;
         public var nbPaddockMax:uint = 0;
-        public var paddocksInformations:Vector.<PaddockContentInformations>;
+        public var paddocksInformations:Vector.<PaddockContentInformations> = new Vector.<PaddockContentInformations>();
+        private var _paddocksInformationstree:FuncTree;
 
-        public function GuildInformationsPaddocksMessage()
-        {
-            this.paddocksInformations = new Vector.<PaddockContentInformations>();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
@@ -63,6 +59,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_GuildInformationsPaddocksMessage(output);
@@ -92,11 +96,7 @@
         public function deserializeAs_GuildInformationsPaddocksMessage(input:ICustomDataInput):void
         {
             var _item2:PaddockContentInformations;
-            this.nbPaddockMax = input.readByte();
-            if (this.nbPaddockMax < 0)
-            {
-                throw (new Error((("Forbidden value (" + this.nbPaddockMax) + ") on element of GuildInformationsPaddocksMessage.nbPaddockMax.")));
-            };
+            this._nbPaddockMaxFunc(input);
             var _paddocksInformationsLen:uint = input.readUnsignedShort();
             var _i2:uint;
             while (_i2 < _paddocksInformationsLen)
@@ -108,7 +108,45 @@
             };
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GuildInformationsPaddocksMessage(tree);
+        }
+
+        public function deserializeAsyncAs_GuildInformationsPaddocksMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._nbPaddockMaxFunc);
+            this._paddocksInformationstree = tree.addChild(this._paddocksInformationstreeFunc);
+        }
+
+        private function _nbPaddockMaxFunc(input:ICustomDataInput):void
+        {
+            this.nbPaddockMax = input.readByte();
+            if (this.nbPaddockMax < 0)
+            {
+                throw (new Error((("Forbidden value (" + this.nbPaddockMax) + ") on element of GuildInformationsPaddocksMessage.nbPaddockMax.")));
+            };
+        }
+
+        private function _paddocksInformationstreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._paddocksInformationstree.addChild(this._paddocksInformationsFunc);
+                i++;
+            };
+        }
+
+        private function _paddocksInformationsFunc(input:ICustomDataInput):void
+        {
+            var _item:PaddockContentInformations = new PaddockContentInformations();
+            _item.deserialize(input);
+            this.paddocksInformations.push(_item);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.guild
+} com.ankamagames.dofus.network.messages.game.guild
 

@@ -1,12 +1,10 @@
-﻿package com.ankamagames.dofus.misc.utils.errormanager
+package com.ankamagames.dofus.misc.utils.errormanager
 {
-    import com.ankamagames.jerakine.logger.targets.TemporaryBufferTarget;
     import com.ankamagames.dofus.logic.game.fight.frames.FightContextFrame;
     import flash.display.BitmapData;
     import by.blooddy.crypto.Base64;
     import by.blooddy.crypto.image.JPEGEncoder;
     import flash.filesystem.File;
-    import com.ankamagames.jerakine.utils.system.AirScanner;
     import flash.events.Event;
     import flash.filesystem.FileStream;
     import com.ankamagames.jerakine.utils.system.SystemPopupUI;
@@ -27,13 +25,11 @@
         private static var ONLINE_REPORT_SERVICE:String = (ONLINE_REPORT_PLATEFORM + "makeReport.php");
 
         private var _reportData:Object;
-        private var _logBuffer:TemporaryBufferTarget;
         private var _htmlReport:String = "";
         private var _fightFrame:FightContextFrame;
 
-        public function ErrorReport(reportInfo:Object, logBuffer:TemporaryBufferTarget)
+        public function ErrorReport(reportInfo:Object)
         {
-            this._logBuffer = logBuffer;
             this._reportData = reportInfo;
         }
 
@@ -44,11 +40,11 @@
             if (this._htmlReport == "")
             {
                 template = new _htmlTemplate();
-                if (((this._reportData.screenshot) && ((this._reportData.screenshot is BitmapData))))
+                if (((this._reportData.screenshot) && (this._reportData.screenshot is BitmapData)))
                 {
                     this._reportData.screenshot = Base64.encode(JPEGEncoder.encode(this._reportData.screenshot, 80));
                 };
-                if (((this._reportData.stacktrace) && ((this._reportData.stacktrace is String))))
+                if (((this._reportData.stacktrace) && (this._reportData.stacktrace is String)))
                 {
                     this._reportData.stacktrace = String(this._reportData.stacktrace).replace(/</g, "&lt;").replace(/>/g, "&gt;");
                 };
@@ -64,17 +60,10 @@
         public function saveReport():void
         {
             var date:Date = new Date();
-            var fileName:String = (((((((((((("dofus_bug_report_" + date.date) + "-") + (date.month + 1)) + "-") + date.fullYear) + "_") + date.hours) + "h") + date.minutes) + "m") + date.seconds) + "s.html");
+            var fileName:* = (((((((((((("dofus_bug_report_" + date.date) + "-") + (date.month + 1)) + "-") + date.fullYear) + "_") + date.hours) + "h") + date.minutes) + "m") + date.seconds) + "s.html");
             var file:File = File.desktopDirectory.resolvePath(fileName);
-            if (!(AirScanner.hasAir()))
-            {
-                file.save(this.makeHtmlReport(), fileName);
-            }
-            else
-            {
-                file.addEventListener(Event.SELECT, this.onFileSelected);
-                file.browseForSave("Save report");
-            };
+            file.addEventListener(Event.SELECT, this.onFileSelected);
+            file.browseForSave("Save report");
         }
 
         private function onFileSelected(e:Event):void
@@ -112,7 +101,7 @@
 
         private function sendReportComplete(e:Event):void
         {
-            var _local_3:SystemPopupUI;
+            var popup2:SystemPopupUI;
             var response:String = e.currentTarget.data;
             if (response.charAt(0) == "0")
             {
@@ -120,21 +109,16 @@
             }
             else
             {
-                _local_3 = new SystemPopupUI(("exception" + Math.random()));
-                _local_3.width = 300;
-                _local_3.centerContent = false;
-                _local_3.title = "Error";
-                _local_3.content = response.substr(2);
-                _local_3.buttons = [{
+                popup2 = new SystemPopupUI(("exception" + Math.random()));
+                popup2.width = 300;
+                popup2.centerContent = false;
+                popup2.title = "Error";
+                popup2.content = response.substr(2);
+                popup2.buttons = [{
                     "label":"OK",
                     "callback":trace
                 }];
-                _local_3.show();
-                if (!(AirScanner.hasAir()))
-                {
-                    _local_3.scaleX = (800 / 0x0500);
-                    _local_3.scaleY = (600 / 0x0400);
-                };
+                popup2.show();
             };
             (e.currentTarget as URLLoader).removeEventListener(Event.COMPLETE, this.sendReportComplete);
         }
@@ -150,5 +134,5 @@
 
 
     }
-}//package com.ankamagames.dofus.misc.utils.errormanager
+} com.ankamagames.dofus.misc.utils.errormanager
 

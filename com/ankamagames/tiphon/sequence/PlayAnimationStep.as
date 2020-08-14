@@ -1,4 +1,4 @@
-﻿package com.ankamagames.tiphon.sequence
+package com.ankamagames.tiphon.sequence
 {
     import com.ankamagames.jerakine.sequencer.AbstractSequencable;
     import com.ankamagames.jerakine.logger.Logger;
@@ -65,7 +65,7 @@
         override public function start():void
         {
             var s:String;
-            if (!(this._target))
+            if (!this._target)
             {
                 this._callbackExecuted = true;
                 executeCallbacks();
@@ -73,6 +73,7 @@
                 return;
             };
             this._target.addEventListener(Event.REMOVED_FROM_STAGE, this.onRemoveFromStage);
+            this._target.addEventListener(TiphonEvent.ADDED_IN_POOL, this.onAddedInPool);
             if (this._target.isShowingOnlyBackground())
             {
                 this._callbackExecuted = true;
@@ -88,7 +89,7 @@
             this._target.addEventListener(TiphonEvent.SPRITE_INIT_FAILED, this.onAnimationFail);
             this._target.overrideNextAnimation = true;
             var directions:Array = this._target.getAvaibleDirection(this._animationName, true);
-            if (!(directions[this._target.getDirection()]))
+            if (!directions[this._target.getDirection()])
             {
                 for (s in directions)
                 {
@@ -101,7 +102,7 @@
             };
             this._target.setAnimation(this._animationName, this._startFrame);
             this._lastSpriteAnimation = this._target.getAnimation();
-            if (!(this._waitEvent))
+            if (!this._waitEvent)
             {
                 this._callbackExecuted = true;
                 executeCallbacks();
@@ -129,7 +130,7 @@
             var subEntity:TiphonSprite;
             var playingAnim:Boolean = this._target.isPlayingAnimation();
             var subEntities:Array = this._target.getSubEntitiesList();
-            if (((!(playingAnim)) && ((subEntities.length > 0))))
+            if ((((!(playingAnim)) && (subEntities)) && (subEntities.length > 0)))
             {
                 for each (subEntity in subEntities)
                 {
@@ -140,7 +141,29 @@
                     };
                 };
             };
-            if (!(playingAnim))
+            if (!playingAnim)
+            {
+                setTimeout(this.onAnimationEnd, 1, e);
+            };
+        }
+
+        private function onAddedInPool(e:TiphonEvent):void
+        {
+            var subEntity:TiphonSprite;
+            var playingAnim:Boolean = this._target.isPlayingAnimation();
+            var subEntities:Array = this._target.getSubEntitiesList();
+            if ((((!(playingAnim)) && (subEntities)) && (subEntities.length > 0)))
+            {
+                for each (subEntity in subEntities)
+                {
+                    if (subEntity.isPlayingAnimation())
+                    {
+                        playingAnim = true;
+                        break;
+                    };
+                };
+            };
+            if (!playingAnim)
             {
                 setTimeout(this.onAnimationEnd, 1, e);
             };
@@ -155,7 +178,7 @@
                 {
                     this._loop--;
                 };
-                if ((((this._loop > 0)) || ((this._loop == -1))))
+                if (((this._loop > 0) || (this._loop == -1)))
                 {
                     this._target.setAnimation(this._animationName);
                     return;
@@ -168,10 +191,11 @@
                 this._target.removeEventListener(TiphonEvent.RENDER_FAILED, this.onAnimationEnd);
                 this._target.removeEventListener(TiphonEvent.SPRITE_INIT_FAILED, this.onAnimationFail);
                 this._target.removeEventListener(Event.REMOVED_FROM_STAGE, this.onRemoveFromStage);
+                this._target.removeEventListener(TiphonEvent.ADDED_IN_POOL, this.onAddedInPool);
                 currentSpriteAnimation = this._target.getAnimation();
                 if (this._backToLastAnimationAtEnd)
                 {
-                    if (((((currentSpriteAnimation) && (this._lastSpriteAnimation))) && (!((this._lastSpriteAnimation.indexOf(currentSpriteAnimation) == -1)))))
+                    if ((((currentSpriteAnimation) && (this._lastSpriteAnimation)) && (!(this._lastSpriteAnimation.indexOf(currentSpriteAnimation) == -1))))
                     {
                         if (this._endAnimationName)
                         {
@@ -179,12 +203,15 @@
                         }
                         else
                         {
-                            this._target.setAnimation("AnimStatique");
+                            if (this._target.hasAnimation("AnimStatique"))
+                            {
+                                this._target.setAnimation("AnimStatique");
+                            };
                         };
                     };
                 };
             };
-            if (!(this._callbackExecuted))
+            if (!this._callbackExecuted)
             {
                 executeCallbacks();
             };
@@ -192,7 +219,7 @@
 
         override public function toString():String
         {
-            return (((("play " + this._animationName) + " on ") + ((this._target) ? this._target.name : this._target)));
+            return ((("play " + this._animationName) + " on ") + ((this._target) ? this._target.name : this._target));
         }
 
         override protected function onTimeOut(e:TimerEvent):void
@@ -204,5 +231,5 @@
 
 
     }
-}//package com.ankamagames.tiphon.sequence
+} com.ankamagames.tiphon.sequence
 

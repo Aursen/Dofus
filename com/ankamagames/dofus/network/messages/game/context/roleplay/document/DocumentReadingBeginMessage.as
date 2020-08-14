@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.context.roleplay.document
+package com.ankamagames.dofus.network.messages.game.context.roleplay.document
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class DocumentReadingBeginMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -52,6 +52,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_DocumentReadingBeginMessage(output);
@@ -73,6 +81,21 @@
 
         public function deserializeAs_DocumentReadingBeginMessage(input:ICustomDataInput):void
         {
+            this._documentIdFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_DocumentReadingBeginMessage(tree);
+        }
+
+        public function deserializeAsyncAs_DocumentReadingBeginMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._documentIdFunc);
+        }
+
+        private function _documentIdFunc(input:ICustomDataInput):void
+        {
             this.documentId = input.readVarUhShort();
             if (this.documentId < 0)
             {
@@ -82,5 +105,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.context.roleplay.document
+} com.ankamagames.dofus.network.messages.game.context.roleplay.document
 

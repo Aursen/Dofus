@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.components
+package com.ankamagames.berilia.components
 {
     import com.ankamagames.berilia.UIComponent;
     import __AS3__.vec.Vector;
@@ -6,13 +6,12 @@
     import flash.utils.getQualifiedClassName;
     import com.ankamagames.berilia.components.gridRenderer.TreeGridRenderer;
     import flash.errors.IllegalOperationError;
-    import com.ankamagames.berilia.managers.SecureCenter;
     import __AS3__.vec.*;
 
     public class Tree extends Grid implements UIComponent 
     {
 
-        protected var _realDataProvider;
+        protected var _realDataProvider:*;
         protected var _treeDataProvider:Vector.<TreeData>;
 
         public function Tree()
@@ -32,7 +31,7 @@
             super.dataProvider = this.makeDataProvider(this._treeDataProvider);
         }
 
-        override public function get dataProvider()
+        override public function get dataProvider():*
         {
             return (this._realDataProvider);
         }
@@ -56,13 +55,13 @@
         {
             var item:Object;
             var treeData:TreeData;
-            if (!(pItems))
+            if (!pItems)
             {
                 return;
             };
             for each (item in pItems)
             {
-                treeData = (SecureCenter.unsecure(item) as TreeData);
+                treeData = (item as TreeData);
                 if (treeData.children.length > 0)
                 {
                     treeData.expend = true;
@@ -74,7 +73,7 @@
         private function makeDataProvider(v:Vector.<TreeData>, result:Vector.<TreeData>=null):Vector.<TreeData>
         {
             var node:TreeData;
-            if (!(result))
+            if (!result)
             {
                 result = new Vector.<TreeData>();
             };
@@ -91,5 +90,5 @@
 
 
     }
-}//package com.ankamagames.berilia.components
+} com.ankamagames.berilia.components
 

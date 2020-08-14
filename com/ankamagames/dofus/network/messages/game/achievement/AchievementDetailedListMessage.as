@@ -1,31 +1,27 @@
-﻿package com.ankamagames.dofus.network.messages.game.achievement
+package com.ankamagames.dofus.network.messages.game.achievement
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
     import __AS3__.vec.Vector;
     import com.ankamagames.dofus.network.types.game.achievement.Achievement;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
     import __AS3__.vec.*;
 
-    [Trusted]
     public class AchievementDetailedListMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 6358;
 
         private var _isInitialized:Boolean = false;
-        public var startedAchievements:Vector.<Achievement>;
-        public var finishedAchievements:Vector.<Achievement>;
+        public var startedAchievements:Vector.<Achievement> = new Vector.<Achievement>();
+        public var finishedAchievements:Vector.<Achievement> = new Vector.<Achievement>();
+        private var _startedAchievementstree:FuncTree;
+        private var _finishedAchievementstree:FuncTree;
 
-        public function AchievementDetailedListMessage()
-        {
-            this.startedAchievements = new Vector.<Achievement>();
-            this.finishedAchievements = new Vector.<Achievement>();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
@@ -62,6 +58,14 @@
         override public function unpack(input:ICustomDataInput, length:uint):void
         {
             this.deserialize(input);
+        }
+
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
         }
 
         public function serialize(output:ICustomDataOutput):void
@@ -116,7 +120,54 @@
             };
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_AchievementDetailedListMessage(tree);
+        }
+
+        public function deserializeAsyncAs_AchievementDetailedListMessage(tree:FuncTree):void
+        {
+            this._startedAchievementstree = tree.addChild(this._startedAchievementstreeFunc);
+            this._finishedAchievementstree = tree.addChild(this._finishedAchievementstreeFunc);
+        }
+
+        private function _startedAchievementstreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._startedAchievementstree.addChild(this._startedAchievementsFunc);
+                i++;
+            };
+        }
+
+        private function _startedAchievementsFunc(input:ICustomDataInput):void
+        {
+            var _item:Achievement = new Achievement();
+            _item.deserialize(input);
+            this.startedAchievements.push(_item);
+        }
+
+        private function _finishedAchievementstreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._finishedAchievementstree.addChild(this._finishedAchievementsFunc);
+                i++;
+            };
+        }
+
+        private function _finishedAchievementsFunc(input:ICustomDataInput):void
+        {
+            var _item:Achievement = new Achievement();
+            _item.deserialize(input);
+            this.finishedAchievements.push(_item);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.achievement
+} com.ankamagames.dofus.network.messages.game.achievement
 

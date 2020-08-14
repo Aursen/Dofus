@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.console
+package com.ankamagames.jerakine.console
 {
     import com.ankamagames.jerakine.messages.Message;
 
@@ -9,11 +9,11 @@
         private var _text:String;
         private var _type:uint;
 
-        public function ConsoleOutputMessage(consoleId:String, text:String, type:uint)
+        public function ConsoleOutputMessage(consoleId:String, text:String, _arg_3:uint)
         {
             this._consoleId = consoleId;
             this._text = text;
-            this._type = type;
+            this._type = _arg_3;
         }
 
         public function get consoleId():String
@@ -33,5 +33,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.console
+} com.ankamagames.jerakine.console
 

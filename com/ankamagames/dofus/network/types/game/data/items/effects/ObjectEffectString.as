@@ -1,10 +1,10 @@
-﻿package com.ankamagames.dofus.network.types.game.data.items.effects
+package com.ankamagames.dofus.network.types.game.data.items.effects
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class ObjectEffectString extends ObjectEffect implements INetworkType 
     {
 
@@ -50,10 +50,26 @@
         public function deserializeAs_ObjectEffectString(input:ICustomDataInput):void
         {
             super.deserialize(input);
+            this._valueFunc(input);
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_ObjectEffectString(tree);
+        }
+
+        public function deserializeAsyncAs_ObjectEffectString(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._valueFunc);
+        }
+
+        private function _valueFunc(input:ICustomDataInput):void
+        {
             this.value = input.readUTF();
         }
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.data.items.effects
+} com.ankamagames.dofus.network.types.game.data.items.effects
 

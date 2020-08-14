@@ -1,9 +1,10 @@
-﻿package com.ankamagames.dofus.datacenter.externalnotifications
+package com.ankamagames.dofus.datacenter.externalnotifications
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
+    import com.ankamagames.dofus.types.IdAccessors;
     import com.ankamagames.jerakine.data.GameData;
     import com.ankamagames.jerakine.data.I18n;
 
@@ -12,6 +13,7 @@
 
         public static const MODULE:String = "ExternalNotifications";
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(ExternalNotification));
+        public static var idAccessors:IdAccessors = new IdAccessors(getExternalNotificationById, getExternalNotifications);
 
         public var id:int;
         public var categoryId:int;
@@ -30,7 +32,7 @@
 
         public static function getExternalNotificationById(pId:int):ExternalNotification
         {
-            return ((GameData.getObject(MODULE, pId) as ExternalNotification));
+            return (GameData.getObject(MODULE, pId) as ExternalNotification);
         }
 
         public static function getExternalNotifications():Array
@@ -41,7 +43,7 @@
 
         public function get description():String
         {
-            if (!(this._description))
+            if (!this._description)
             {
                 this._description = I18n.getText(this.descriptionId);
             };
@@ -50,7 +52,7 @@
 
         public function get message():String
         {
-            if (!(this._message))
+            if (!this._message)
             {
                 this._message = I18n.getText(this.messageId);
             };
@@ -59,5 +61,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.externalnotifications
+} com.ankamagames.dofus.datacenter.externalnotifications
 

@@ -1,18 +1,22 @@
-﻿package com.ankamagames.atouin.types
+package com.ankamagames.atouin.types
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
     import flash.display.Sprite;
     import com.ankamagames.atouin.data.map.Map;
+    import flash.utils.Dictionary;
     import com.ankamagames.atouin.Atouin;
     import com.ankamagames.jerakine.types.events.PropertyChangeEvent;
+    import com.ankamagames.jerakine.interfaces.IDestroyable;
+    import com.ankamagames.atouin.pools.WorldEntityPool;
     import com.ankamagames.jerakine.types.positions.WorldPoint;
     import com.ankamagames.atouin.utils.VisibleCellDetection;
     import com.ankamagames.atouin.managers.MapDisplayManager;
     import com.ankamagames.atouin.data.elements.subtypes.EntityGraphicalElementData;
     import flash.display.DisplayObject;
     import com.ankamagames.atouin.managers.AnimatedElementManager;
+    import com.ankamagames.atouin.managers.AlwaysAnimatedElementManager;
     import com.ankamagames.tiphon.events.TiphonEvent;
 
     public class DataMapContainer 
@@ -28,13 +32,15 @@
         private var _animatedElement:Array;
         private var _allowAnimatedGfx:Boolean;
         private var _temporaryEnable:Boolean = true;
+        private var _alwaysAnimatedElement:Dictionary;
+        private var _useWorldEntityPool:Boolean;
         public var layerDepth:Array;
-        public var id:int;
+        public var id:Number;
         public var rendered:Boolean = false;
 
         public function DataMapContainer(mapData:Map)
         {
-            if (!(this._spMap))
+            if (!this._spMap)
             {
                 this._spMap = new Sprite();
                 this._aLayers = new Array();
@@ -46,7 +52,9 @@
             this._aCell = new Array();
             this._map = mapData;
             this._animatedElement = new Array();
-            this._allowAnimatedGfx = Atouin.getInstance().options.allowAnimatedGfx;
+            this._alwaysAnimatedElement = new Dictionary(true);
+            this._allowAnimatedGfx = Atouin.getInstance().options.getOption("allowAnimatedGfx");
+            this._useWorldEntityPool = Atouin.getInstance().options.getOption("useWorldEntityPool");
         }
 
         public static function get interactiveCell():Array
@@ -61,16 +69,32 @@
             var parentSprite:Sprite;
             var cellReference:CellReference;
             var i:uint;
+            var animatedElement:Object;
             var k:uint;
+            for each (animatedElement in this._animatedElement)
+            {
+                if ((animatedElement.element is IDestroyable))
+                {
+                    if (this._useWorldEntityPool)
+                    {
+                        WorldEntityPool.checkIn(animatedElement.element);
+                    }
+                    else
+                    {
+                        (animatedElement.element as IDestroyable).destroy();
+                    };
+                };
+            };
+            k = 0;
             while (k < this._aCell.length)
             {
                 cellReference = this._aCell[k];
-                if (!!(cellReference))
+                if (cellReference)
                 {
                     i = 0;
                     while (i < cellReference.listSprites.length)
                     {
-                        if (!!((cellReference.listSprites[i] is Sprite)))
+                        if ((cellReference.listSprites[i] is Sprite))
                         {
                             sprite = cellReference.listSprites[i];
                             if (sprite)
@@ -81,7 +105,7 @@
                                 {
                                     parentSprite.removeChild(sprite);
                                     delete cellReference.listSprites[i];
-                                    if (!(parentSprite.numChildren))
+                                    if (!parentSprite.numChildren)
                                     {
                                         parentSprite.parent.removeChild(parentSprite);
                                     };
@@ -99,7 +123,7 @@
 
         public function getCellReference(nId:uint):CellReference
         {
-            if (!(this._aCell[nId]))
+            if (!this._aCell[nId])
             {
                 this._aCell[nId] = new CellReference(nId);
             };
@@ -108,7 +132,7 @@
 
         public function isRegisteredCell(nId:uint):Boolean
         {
-            return (!((this._aCell[nId] == null)));
+            return (!(this._aCell[nId] == null));
         }
 
         public function getCell():Array
@@ -118,7 +142,7 @@
 
         public function getLayer(nId:int):LayerContainer
         {
-            if (!(this._aLayers[nId]))
+            if (!this._aLayers[nId])
             {
                 this._aLayers[nId] = new LayerContainer(nId);
             };
@@ -134,9 +158,9 @@
             var provider:Array;
             var k:String;
             var p:WorldPoint;
-            if (!(bForceCleaning))
+            if (!bForceCleaning)
             {
-                provider = VisibleCellDetection.detectCell(false, this._map, WorldPoint.fromMapId(this.id), Atouin.getInstance().options.frustum, MapDisplayManager.getInstance().currentMapPoint).cell;
+                provider = VisibleCellDetection.detectCell(false, this._map, WorldPoint.fromMapId(this.id), Atouin.getInstance().options.getOption("frustum"), MapDisplayManager.getInstance().currentMapPoint).cell;
             }
             else
             {
@@ -151,7 +175,7 @@
             for (k in provider)
             {
                 cellReference = this._aCell[k];
-                if (!!(cellReference))
+                if (cellReference)
                 {
                     i = 0;
                     while (i < cellReference.listSprites.length)
@@ -163,7 +187,7 @@
                             parentSprite = Sprite(sprite.parent);
                             parentSprite.removeChild(sprite);
                             delete cellReference.listSprites[i];
-                            if (!(parentSprite.numChildren))
+                            if (!parentSprite.numChildren)
                             {
                                 parentSprite.parent.removeChild(parentSprite);
                             };
@@ -176,7 +200,7 @@
             p = WorldPoint.fromMapId(this._map.id);
             p.x = (p.x - MapDisplayManager.getInstance().currentMapPoint.x);
             p.y = (p.y - MapDisplayManager.getInstance().currentMapPoint.y);
-            return ((((Math.abs(p.x) > 1)) || ((Math.abs(p.y) > 1))));
+            return ((Math.abs(p.x) > 1) || (Math.abs(p.y) > 1));
         }
 
         public function get mapContainer():Sprite
@@ -276,18 +300,44 @@
 
         public function removeChild(item:DisplayObject):DisplayObject
         {
-            if (((item.parent) && ((item.parent == this._spMap))))
+            if (((item.parent) && (item.parent == this._spMap)))
             {
                 return (this._spMap.removeChild(item));
             };
             return (null);
         }
 
+        public function addAlwayAnimatedElement(id:int):void
+        {
+            var o:Object;
+            for each (o in this._animatedElement)
+            {
+                if (o.element.identifier == id)
+                {
+                    this._alwaysAnimatedElement[o] = true;
+                    this.updateAnimatedElement(o);
+                };
+            };
+        }
+
+        public function removeAlwayAnimatedElement(id:int):void
+        {
+            var o:Object;
+            for each (o in this._animatedElement)
+            {
+                if (o.element.identifier == id)
+                {
+                    delete this._alwaysAnimatedElement[o];
+                    this.updateAnimatedElement(o);
+                };
+            };
+        }
+
         private function updateAnimatedElement(target:Object):void
         {
             var ts:WorldEntitySprite = target.element;
             var eed:EntityGraphicalElementData = target.data;
-            var allowAnimatedGfx:Boolean = ((this._temporaryEnable) && (this._allowAnimatedGfx));
+            var allowAnimatedGfx:Boolean = ((this._temporaryEnable) && ((this._allowAnimatedGfx) || (this._alwaysAnimatedElement[target])));
             if (((allowAnimatedGfx) && (eed.playAnimation)))
             {
                 if (eed.maxDelay > 0)
@@ -301,28 +351,76 @@
                 }
                 else
                 {
-                    if (ts.getAnimation() != "AnimStart")
+                    if (this._alwaysAnimatedElement[target])
                     {
-                        ts.setAnimation("AnimStart");
+                        AlwaysAnimatedElementManager.removeAnimatedElement(ts);
+                        AlwaysAnimatedElementManager.addAnimatedElement(ts);
                     }
                     else
                     {
-                        ts.restartAnimation();
+                        if ((((eed.entityLook == "{5247}") || (eed.entityLook == "{5249}")) || (eed.entityLook == "{5250}")))
+                        {
+                            if (ts.getAnimation() != ("AnimState" + ts.getDirection()))
+                            {
+                                ts.setAnimationAndDirection(("AnimState" + ts.getDirection()), 0);
+                            }
+                            else
+                            {
+                                ts.restartAnimation();
+                            };
+                        }
+                        else
+                        {
+                            if (ts.getAnimation() != "AnimStart")
+                            {
+                                ts.setAnimation("AnimStart");
+                            }
+                            else
+                            {
+                                ts.restartAnimation();
+                            };
+                        };
                     };
                 };
             }
             else
             {
                 AnimatedElementManager.removeAnimatedElement(ts);
+                AlwaysAnimatedElementManager.removeAnimatedElement(ts);
                 if (eed.playAnimation)
                 {
-                    if (ts.hasAnimation("AnimStatique"))
+                    if ((((eed.entityLook == "{5247}") || (eed.entityLook == "{5249}")) || (eed.entityLook == "{5250}")))
                     {
-                        ts.setAnimation("AnimStatique");
+                        if (((ts.getAnimation() == "AnimState0") && (ts.hasAnimation("AnimStatique"))))
+                        {
+                            ts.setAnimationAndDirection("AnimStatique", 0);
+                        }
+                        else
+                        {
+                            if (((ts.getAnimation() == "AnimState1") && (ts.hasAnimation("AnimStatique"))))
+                            {
+                                ts.setAnimationAndDirection("AnimStatique", 1);
+                            }
+                            else
+                            {
+                                if (ts.hasAnimation("AnimStatique"))
+                                {
+                                    ts.setAnimation("AnimStatique");
+                                };
+                            };
+                        };
                     }
                     else
                     {
-                        ts.stopAnimation();
+                        if (ts.hasAnimation("AnimStatique"))
+                        {
+                            ts.setAnimation("AnimStatique");
+                        }
+                        else
+                        {
+                            ts.setAnimation("AnimStatique");
+                            ts.stopAnimation();
+                        };
                     };
                 }
                 else
@@ -362,5 +460,5 @@
 
 
     }
-}//package com.ankamagames.atouin.types
+} com.ankamagames.atouin.types
 

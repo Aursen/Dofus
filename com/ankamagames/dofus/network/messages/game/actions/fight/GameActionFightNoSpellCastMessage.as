@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.actions.fight
+package com.ankamagames.dofus.network.messages.game.actions.fight
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class GameActionFightNoSpellCastMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -52,6 +52,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_GameActionFightNoSpellCastMessage(output);
@@ -73,6 +81,21 @@
 
         public function deserializeAs_GameActionFightNoSpellCastMessage(input:ICustomDataInput):void
         {
+            this._spellLevelIdFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GameActionFightNoSpellCastMessage(tree);
+        }
+
+        public function deserializeAsyncAs_GameActionFightNoSpellCastMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._spellLevelIdFunc);
+        }
+
+        private function _spellLevelIdFunc(input:ICustomDataInput):void
+        {
             this.spellLevelId = input.readVarUhInt();
             if (this.spellLevelId < 0)
             {
@@ -82,5 +105,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.actions.fight
+} com.ankamagames.dofus.network.messages.game.actions.fight
 

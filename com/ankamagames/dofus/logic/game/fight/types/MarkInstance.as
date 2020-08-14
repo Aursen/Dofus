@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.fight.types
+package com.ankamagames.dofus.logic.game.fight.types
 {
     import com.ankamagames.dofus.datacenter.spells.Spell;
     import com.ankamagames.dofus.datacenter.spells.SpellLevel;
@@ -8,6 +8,7 @@
     public class MarkInstance 
     {
 
+        public var markCasterId:Number;
         public var markId:int;
         public var markType:int;
         public var associatedSpell:Spell;
@@ -16,8 +17,9 @@
         public var cells:Vector.<uint>;
         public var teamId:int;
         public var active:Boolean;
+        public var markImpactCellId:int;
 
 
     }
-}//package com.ankamagames.dofus.logic.game.fight.types
+} com.ankamagames.dofus.logic.game.fight.types
 

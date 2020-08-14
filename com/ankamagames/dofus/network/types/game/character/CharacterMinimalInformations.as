@@ -1,16 +1,16 @@
-﻿package com.ankamagames.dofus.network.types.game.character
+package com.ankamagames.dofus.network.types.game.character
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    public class CharacterMinimalInformations extends AbstractCharacterInformation implements INetworkType 
+    public class CharacterMinimalInformations extends CharacterBasicMinimalInformations implements INetworkType 
     {
 
         public static const protocolId:uint = 110;
 
         public var level:uint = 0;
-        public var name:String = "";
 
 
         override public function getTypeId():uint
@@ -18,11 +18,10 @@
             return (110);
         }
 
-        public function initCharacterMinimalInformations(id:uint=0, level:uint=0, name:String=""):CharacterMinimalInformations
+        public function initCharacterMinimalInformations(id:Number=0, name:String="", level:uint=0):CharacterMinimalInformations
         {
-            super.initAbstractCharacterInformation(id);
+            super.initCharacterBasicMinimalInformations(id, name);
             this.level = level;
-            this.name = name;
             return (this);
         }
 
@@ -30,7 +29,6 @@
         {
             super.reset();
             this.level = 0;
-            this.name = "";
         }
 
         override public function serialize(output:ICustomDataOutput):void
@@ -40,13 +38,12 @@
 
         public function serializeAs_CharacterMinimalInformations(output:ICustomDataOutput):void
         {
-            super.serializeAs_AbstractCharacterInformation(output);
-            if ((((this.level < 1)) || ((this.level > 200))))
+            super.serializeAs_CharacterBasicMinimalInformations(output);
+            if (this.level < 0)
             {
                 throw (new Error((("Forbidden value (" + this.level) + ") on element level.")));
             };
-            output.writeByte(this.level);
-            output.writeUTF(this.name);
+            output.writeVarShort(this.level);
         }
 
         override public function deserialize(input:ICustomDataInput):void
@@ -57,15 +54,30 @@
         public function deserializeAs_CharacterMinimalInformations(input:ICustomDataInput):void
         {
             super.deserialize(input);
-            this.level = input.readUnsignedByte();
-            if ((((this.level < 1)) || ((this.level > 200))))
+            this._levelFunc(input);
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_CharacterMinimalInformations(tree);
+        }
+
+        public function deserializeAsyncAs_CharacterMinimalInformations(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._levelFunc);
+        }
+
+        private function _levelFunc(input:ICustomDataInput):void
+        {
+            this.level = input.readVarUhShort();
+            if (this.level < 0)
             {
                 throw (new Error((("Forbidden value (" + this.level) + ") on element of CharacterMinimalInformations.level.")));
             };
-            this.name = input.readUTF();
         }
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.character
+} com.ankamagames.dofus.network.types.game.character
 

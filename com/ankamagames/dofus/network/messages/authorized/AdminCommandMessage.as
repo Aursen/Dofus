@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.authorized
+package com.ankamagames.dofus.network.messages.authorized
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class AdminCommandMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -52,6 +52,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_AdminCommandMessage(output);
@@ -69,10 +77,25 @@
 
         public function deserializeAs_AdminCommandMessage(input:ICustomDataInput):void
         {
+            this._contentFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_AdminCommandMessage(tree);
+        }
+
+        public function deserializeAsyncAs_AdminCommandMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._contentFunc);
+        }
+
+        private function _contentFunc(input:ICustomDataInput):void
+        {
             this.content = input.readUTF();
         }
 
 
     }
-}//package com.ankamagames.dofus.network.messages.authorized
+} com.ankamagames.dofus.network.messages.authorized
 

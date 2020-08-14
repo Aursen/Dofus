@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.enum
+package com.ankamagames.jerakine.enum
 {
     public class OperatingSystem 
     {
@@ -9,5 +9,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.enum
+} com.ankamagames.jerakine.enum
 

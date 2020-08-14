@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.newCache.garbage
+package com.ankamagames.jerakine.newCache.garbage
 {
     import com.ankamagames.jerakine.newCache.ICacheGarbageCollector;
     import com.ankamagames.jerakine.pools.Pool;
@@ -13,14 +13,12 @@
 
         private static var _pool:Pool;
 
-        protected var _usageCount:Dictionary;
+        protected var _usageCount:Dictionary = new Dictionary(true);
         private var _cache:ICache;
 
         public function LruGarbageCollector():void
         {
-            this._usageCount = new Dictionary(true);
-            super();
-            if (!(_pool))
+            if (!_pool)
             {
                 _pool = new Pool(UsageCountHelper, 500, 50);
             };
@@ -35,10 +33,7 @@
         {
             if (this._usageCount[ref])
             {
-                var _local_2 = this._usageCount;
-                var _local_3 = ref;
-                var _local_4 = (_local_2[_local_3] + 1);
-                _local_2[_local_3] = _local_4;
+                this._usageCount[ref]++;
             }
             else
             {
@@ -62,7 +57,7 @@
                 el.free();
                 _pool.checkIn(el);
             };
-            while ((((this._cache.size > bounds)) && (elements.length)))
+            while (((this._cache.size > bounds) && (elements.length)))
             {
                 poke = this._cache.extract(elements.pop().ref);
                 if ((poke is IDestroyable))
@@ -82,7 +77,7 @@
 
 
     }
-}//package com.ankamagames.jerakine.newCache.garbage
+} com.ankamagames.jerakine.newCache.garbage
 
 import com.ankamagames.jerakine.pools.Poolable;
 
@@ -108,4 +103,5 @@ class UsageCountHelper implements Poolable
 
 
 }
+
 

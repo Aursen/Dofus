@@ -1,4 +1,4 @@
-﻿package com.somerandomdude.colortoolkit.spaces
+package com.somerandomdude.colortoolkit.spaces
 {
     import com.somerandomdude.colortoolkit.CoreColor;
 
@@ -133,10 +133,10 @@
             var r:Number = ((100 - cyan) * (0xFF / 100));
             var g:Number = ((100 - magenta) * (0xFF / 100));
             var b:Number = ((100 - yellow) * (0xFF / 100));
-            return ((((r << 16) ^ (g << 8)) ^ b));
+            return (((r << 16) ^ (g << 8)) ^ b);
         }
 
 
     }
-}//package com.somerandomdude.colortoolkit.spaces
+} com.somerandomdude.colortoolkit.spaces
 

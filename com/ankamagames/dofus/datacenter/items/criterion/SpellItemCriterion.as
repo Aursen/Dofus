@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.datacenter.items.criterion
+package com.ankamagames.dofus.datacenter.items.criterion
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.dofus.internalDatacenter.spells.SpellWrapper;
@@ -15,13 +15,9 @@
         {
             super(pCriterion);
             var arrayParams:Array = String(_criterionValueText).split(",");
-            if (((arrayParams) && ((arrayParams.length > 0))))
+            if (((arrayParams) && (arrayParams.length > 0)))
             {
-                if (arrayParams.length > 1)
-                {
-                    trace((("Les paramètres pour le sort sont mauvais ! (" + _serverCriterionForm) + ")"));
-                }
-                else
+                if (arrayParams.length <= 1)
                 {
                     this._spellId = uint(arrayParams[0]);
                 };
@@ -58,7 +54,7 @@
             var readableCriterionRef:String = "";
             var readableCriterion:String = "";
             var spell:Spell = Spell.getSpellById(this._spellId);
-            if (!(spell))
+            if (!spell)
             {
                 return (readableCriterion);
             };
@@ -83,5 +79,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.items.criterion
+} com.ankamagames.dofus.datacenter.items.criterion
 

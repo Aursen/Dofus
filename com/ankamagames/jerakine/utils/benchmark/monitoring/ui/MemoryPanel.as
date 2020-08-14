@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.utils.benchmark.monitoring.ui
+package com.ankamagames.jerakine.utils.benchmark.monitoring.ui
 {
     import flash.display.Sprite;
     import com.ankamagames.jerakine.logger.Logger;
@@ -49,17 +49,18 @@
 
         private function init():void
         {
+            var tf:TextFormat;
             this._memoryGraph = new Vector.<Number>();
             this._memoryLimits = new Vector.<Number>();
             this._otherData = new Dictionary();
-            var tf:TextFormat = new TextFormat("Verdana", 13);
+            tf = new TextFormat("Verdana", 13);
             tf.color = 0xFFFFFF;
             this._infosTf = new TextField();
             this._infosTf.y = (FpsManagerConst.BOX_HEIGHT - 20);
             this._infosTf.x = 4;
             this._infosTf.defaultTextFormat = tf;
             this._infosTf.selectable = false;
-            this._infosTf.addEventListener(MouseEvent.MOUSE_UP, this.forceGC);
+            addEventListener(MouseEvent.CLICK, this.forceGC);
             addChild(this._infosTf);
         }
 
@@ -99,7 +100,7 @@
             this._memGraph.bitmapData.fillRect(new Rectangle((FpsManagerConst.BOX_WIDTH - 1), 1, 1, FpsManagerConst.BOX_HEIGHT), 0xFF0000);
             for each (mo in this._otherData)
             {
-                if (((!((mo == null))) && (mo.selected)))
+                if (((!(mo == null)) && (mo.selected)))
                 {
                     this.drawGraphValue(mo.data, mo.limits, FpsManagerUtils.addAlphaToColor(mo.color, 0xFFFFFFFF));
                 };
@@ -113,11 +114,11 @@
             var py:int;
             var previousLimit:Number;
             var px:int = (FpsManagerConst.BOX_WIDTH - 1);
-            var currentLimit:Number = (((pLimits)==null) ? MAX_THEO_VALUE : pLimits[(pData.length - 1)]);
+            var currentLimit:Number = ((pLimits == null) ? MAX_THEO_VALUE : pLimits[(pData.length - 1)]);
             py = this.getGraphValue(pData, (pData.length - 1), currentLimit);
             if (pData.length >= 2)
             {
-                previousLimit = (((pLimits)==null) ? MAX_THEO_VALUE : pLimits[(pData.length - 2)]);
+                previousLimit = ((pLimits == null) ? MAX_THEO_VALUE : pLimits[(pData.length - 2)]);
                 this.linkGraphValues(px, py, this.getGraphValue(pData, (pData.length - 2), previousLimit), pColor);
             };
             this._memGraph.bitmapData.setPixel32(px, py, pColor);
@@ -170,12 +171,12 @@
             it = 0;
             while (it < len)
             {
-                px = (((len)<FpsManagerConst.BOX_WIDTH) ? ((FpsManagerConst.BOX_WIDTH - len) + it) : it);
-                currentLimit = (((pLimits)==null) ? MAX_THEO_VALUE : pLimits[it]);
+                px = ((len < FpsManagerConst.BOX_WIDTH) ? ((FpsManagerConst.BOX_WIDTH - len) + it) : it);
+                currentLimit = ((pLimits == null) ? MAX_THEO_VALUE : pLimits[it]);
                 py = this.getGraphValue(pData, it, currentLimit);
                 if (it != 0)
                 {
-                    previousLimit = (((pLimits)==null) ? MAX_THEO_VALUE : pLimits[(it - 1)]);
+                    previousLimit = ((pLimits == null) ? MAX_THEO_VALUE : pLimits[(it - 1)]);
                     this.linkGraphValues(px, py, this.getGraphValue(pData, (it - 1), previousLimit), pColor);
                 };
                 this._memGraph.bitmapData.setPixel32(px, py, pColor);
@@ -196,7 +197,7 @@
         {
             if (pLimit == -1)
             {
-                pLimit = FpsManagerUtils.getVectorMaxValue(pData);
+                pLimit = (pLimit = FpsManagerUtils.getVectorMaxValue(pData));
             };
             var value:int = Math.floor(((((pData[ind] / pLimit) * FpsManagerConst.BOX_HEIGHT) * -1) + FpsManagerConst.BOX_HEIGHT));
             var bottom:int = (FpsManagerConst.BOX_HEIGHT - 1);
@@ -218,11 +219,11 @@
         {
             if (Math.abs((py1 - py2)) > 1)
             {
-                this._memGraph.bitmapData.fillRect(new Rectangle((px - 1), ((((py1 > py2)) ? py2 : py1) + 1), 1, (Math.abs((py1 - py2)) - 1)), pColor);
+                this._memGraph.bitmapData.fillRect(new Rectangle((px - 1), (((py1 > py2) ? py2 : py1) + 1), 1, (Math.abs((py1 - py2)) - 1)), pColor);
             };
         }
 
 
     }
-}//package com.ankamagames.jerakine.utils.benchmark.monitoring.ui
+} com.ankamagames.jerakine.utils.benchmark.monitoring.ui
 

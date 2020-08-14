@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.basic
+package com.ankamagames.dofus.network.messages.game.basic
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class BasicTimeMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -55,6 +55,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_BasicTimeMessage(output);
@@ -62,7 +70,7 @@
 
         public function serializeAs_BasicTimeMessage(output:ICustomDataOutput):void
         {
-            if ((((this.timestamp < 0)) || ((this.timestamp > 9007199254740992))))
+            if (((this.timestamp < 0) || (this.timestamp > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.timestamp) + ") on element timestamp.")));
             };
@@ -77,15 +85,36 @@
 
         public function deserializeAs_BasicTimeMessage(input:ICustomDataInput):void
         {
+            this._timestampFunc(input);
+            this._timezoneOffsetFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_BasicTimeMessage(tree);
+        }
+
+        public function deserializeAsyncAs_BasicTimeMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._timestampFunc);
+            tree.addChild(this._timezoneOffsetFunc);
+        }
+
+        private function _timestampFunc(input:ICustomDataInput):void
+        {
             this.timestamp = input.readDouble();
-            if ((((this.timestamp < 0)) || ((this.timestamp > 9007199254740992))))
+            if (((this.timestamp < 0) || (this.timestamp > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.timestamp) + ") on element of BasicTimeMessage.timestamp.")));
             };
+        }
+
+        private function _timezoneOffsetFunc(input:ICustomDataInput):void
+        {
             this.timezoneOffset = input.readShort();
         }
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.basic
+} com.ankamagames.dofus.network.messages.game.basic
 

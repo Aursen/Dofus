@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.resources.events
+package com.ankamagames.jerakine.resources.events
 {
     import com.ankamagames.jerakine.types.Uri;
     import flash.events.Event;
@@ -8,13 +8,13 @@
 
         public static const LOADED:String = "loaded";
 
-        public var resource;
+        public var resource:*;
         public var resourceType:uint = 0xFF;
         public var uri:Uri;
 
-        public function ResourceLoadedEvent(type:String, bubbles:Boolean=false, cancelable:Boolean=false)
+        public function ResourceLoadedEvent(_arg_1:String, bubbles:Boolean=false, cancelable:Boolean=false)
         {
-            super(type, bubbles, cancelable);
+            super(_arg_1, bubbles, cancelable);
         }
 
         override public function clone():Event
@@ -28,5 +28,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.resources.events
+} com.ankamagames.jerakine.resources.events
 

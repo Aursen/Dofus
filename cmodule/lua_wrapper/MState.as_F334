@@ -1,0 +1,76 @@
+﻿// Decompiled by AS3 Sorcerer 6.30
+// www.as3sorcerer.com
+
+//cmodule.lua_wrapper.MState
+
+package cmodule.lua_wrapper
+{
+    import flash.utils.ByteArray;
+    import __AS3__.vec.Vector;
+    import flash.utils.*;
+    import flash.display.*;
+    import flash.events.*;
+    import __AS3__.vec.*;
+    import flash.net.*;
+    import flash.system.*;
+    import flash.text.*;
+
+    public class MState extends MemUser 
+    {
+
+        public var esp:int;
+        public var eax:int;
+        public var cf:uint;
+        public var gworker:Machine;
+        public var st0:Number;
+        public var ebp:int;
+        public var edx:int;
+
+        public const ds:ByteArray = (((gstate == null) || (gstate.ds == null)) ? GLEByteArrayProvider.get() : gstate.ds);
+        public const syms:Object = ((gstate == null) ? {} : gstate.syms);
+        public var system:CSystem = ((gstate == null) ? null : gstate.system);
+        public var funcs:Vector.<Object> = ((gstate == null) ? new Vector.<Object>(1) : gstate.funcs);
+
+        public function MState(_arg_1:Machine)
+        {
+            if (_arg_1)
+            {
+                this.gworker = _arg_1;
+                this.gworker.mstate = this;
+            };
+            if (gstate == null)
+            {
+                this.ds.length = (this.ds.length + gstackSize);
+                this.esp = this.ds.length;
+            };
+        }
+
+        public function copyTo(_arg_1:MState):void
+        {
+            _arg_1.esp = this.esp;
+            _arg_1.ebp = this.ebp;
+            _arg_1.eax = this.eax;
+            _arg_1.edx = this.edx;
+            _arg_1.st0 = this.st0;
+            _arg_1.cf = this.cf;
+            _arg_1.gworker = this.gworker;
+        }
+
+        public function pop():int
+        {
+            var _local_1:int;
+            _local_1 = _mr32(this.esp);
+            this.esp = (this.esp + 4);
+            return (_local_1);
+        }
+
+        public function push(_arg_1:int):void
+        {
+            this.esp = (this.esp - 4);
+            _mw32(this.esp, _arg_1);
+        }
+
+
+    }
+}//package cmodule.lua_wrapper
+

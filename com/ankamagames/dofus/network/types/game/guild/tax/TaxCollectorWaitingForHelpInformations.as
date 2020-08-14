@@ -1,7 +1,8 @@
-﻿package com.ankamagames.dofus.network.types.game.guild.tax
+package com.ankamagames.dofus.network.types.game.guild.tax
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.dofus.network.types.game.fight.ProtectedEntityWaitingForHelpInfo;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
 
@@ -10,13 +11,9 @@
 
         public static const protocolId:uint = 447;
 
-        public var waitingForHelpInfo:ProtectedEntityWaitingForHelpInfo;
+        public var waitingForHelpInfo:ProtectedEntityWaitingForHelpInfo = new ProtectedEntityWaitingForHelpInfo();
+        private var _waitingForHelpInfotree:FuncTree;
 
-        public function TaxCollectorWaitingForHelpInformations()
-        {
-            this.waitingForHelpInfo = new ProtectedEntityWaitingForHelpInfo();
-            super();
-        }
 
         override public function getTypeId():uint
         {
@@ -57,7 +54,24 @@
             this.waitingForHelpInfo.deserialize(input);
         }
 
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_TaxCollectorWaitingForHelpInformations(tree);
+        }
+
+        public function deserializeAsyncAs_TaxCollectorWaitingForHelpInformations(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            this._waitingForHelpInfotree = tree.addChild(this._waitingForHelpInfotreeFunc);
+        }
+
+        private function _waitingForHelpInfotreeFunc(input:ICustomDataInput):void
+        {
+            this.waitingForHelpInfo = new ProtectedEntityWaitingForHelpInfo();
+            this.waitingForHelpInfo.deserializeAsync(this._waitingForHelpInfotree);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.types.game.guild.tax
+} com.ankamagames.dofus.network.types.game.guild.tax
 

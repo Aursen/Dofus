@@ -1,17 +1,17 @@
-﻿package com.ankamagames.dofus.logic.game.common.actions.guild
+package com.ankamagames.dofus.logic.game.common.actions.guild
 {
     import com.ankamagames.jerakine.handlers.messages.Action;
 
     public class GuildChangeMemberParametersAction implements Action 
     {
 
-        public var memberId:uint;
+        public var memberId:Number;
         public var rank:uint;
         public var experienceGivenPercent:uint;
         public var rights:Array;
 
 
-        public static function create(pMemberId:uint, pRank:uint, pExperienceGivenPercent:uint, pRights:Array):GuildChangeMemberParametersAction
+        public static function create(pMemberId:Number, pRank:uint, pExperienceGivenPercent:uint, pRights:Array):GuildChangeMemberParametersAction
         {
             var action:GuildChangeMemberParametersAction = new (GuildChangeMemberParametersAction)();
             action.memberId = pMemberId;
@@ -23,5 +23,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.actions.guild
+} com.ankamagames.dofus.logic.game.common.actions.guild
 

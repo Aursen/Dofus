@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.resources.protocols
+package com.ankamagames.jerakine.resources.protocols
 {
     import flash.utils.Dictionary;
     import com.ankamagames.jerakine.resources.IResourceObserver;
@@ -26,7 +26,6 @@
             this.release();
             this._observer = null;
             this._adapter = null;
-            trace((("Protocol " + this) + " freed."));
         }
 
         public function cancel():void
@@ -64,5 +63,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.resources.protocols
+} com.ankamagames.jerakine.resources.protocols
 

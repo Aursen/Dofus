@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.network
+package com.ankamagames.jerakine.network
 {
     import flash.utils.IDataOutput;
 
@@ -10,5 +10,5 @@
         function writeVarLong(_arg_1:Number):void;
 
     }
-}//package com.ankamagames.jerakine.network
+} com.ankamagames.jerakine.network
 

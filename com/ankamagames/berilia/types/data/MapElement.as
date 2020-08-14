@@ -1,87 +1,32 @@
-﻿package com.ankamagames.berilia.types.data
+package com.ankamagames.berilia.types.data
 {
-    import com.ankamagames.jerakine.interfaces.Secure;
-    import flash.utils.Dictionary;
+    import com.ankamagames.jerakine.logger.Logger;
+    import com.ankamagames.jerakine.logger.Log;
+    import flash.utils.getQualifiedClassName;
     import com.ankamagames.jerakine.utils.memory.WeakReference;
-    import com.ankamagames.berilia.managers.SecureCenter;
-    import flash.errors.IllegalOperationError;
+    import com.ankamagames.berilia.types.graphic.MapGroupElement;
+    import com.ankamagames.berilia.managers.MapElementManager;
 
-    public class MapElement implements Secure 
+    public class MapElement 
     {
 
-        public static var _elementRef:Dictionary = new Dictionary(true);
+        protected static const _log:Logger = Log.getLogger(getQualifiedClassName(MapElement));
 
         private var _id:String;
         private var _owner:WeakReference;
         public var x:int;
         public var y:int;
         public var layer:String;
+        public var group:MapGroupElement;
 
         public function MapElement(id:String, x:int, y:int, layer:String, owner:*)
         {
             this.x = x;
             this.y = y;
             this.layer = layer;
-            if (!(_elementRef[owner]))
-            {
-                _elementRef[owner] = new Dictionary();
-            };
             this._owner = new WeakReference(owner);
-            _elementRef[owner][id] = this;
+            MapElementManager.getInstance().addElementById(id, this, owner);
             this._id = id;
-        }
-
-        public static function getElementById(id:String, owner:*):MapElement
-        {
-            return (((_elementRef[owner]) ? _elementRef[owner][id] : null));
-        }
-
-        public static function removeElementById(id:String, owner:*):void
-        {
-            if (_elementRef[owner][id])
-            {
-                _elementRef[owner][id].remove();
-            };
-            delete _elementRef[owner][id];
-        }
-
-        public static function removeAllElements(owner:*):void
-        {
-            var currentOwner:*;
-            var me:MapElement;
-            for (currentOwner in _elementRef)
-            {
-                if (((!(owner)) || ((currentOwner == owner))))
-                {
-                    for each (me in _elementRef[currentOwner])
-                    {
-                        me.remove();
-                    };
-                };
-            };
-            if (!(owner))
-            {
-                _elementRef = new Dictionary(true);
-            }
-            else
-            {
-                _elementRef[owner] = new Dictionary(true);
-            };
-        }
-
-        public static function getOwnerElements(owner:*):Dictionary
-        {
-            return (_elementRef[owner]);
-        }
-
-
-        public function getObject(accessKey:Object)
-        {
-            if (accessKey != SecureCenter.ACCESS_KEY)
-            {
-                throw (new IllegalOperationError());
-            };
-            return (this);
         }
 
         public function get id():String
@@ -89,15 +34,20 @@
             return (this._id);
         }
 
+        public function get classType():String
+        {
+            return ("MapElement");
+        }
+
         public function remove():void
         {
-            if (((this._owner.object) && (_elementRef[this._owner.object])))
+            if (this._owner.object)
             {
-                delete _elementRef[this._owner.object][this._id];
+                MapElementManager.getInstance().removeElementById(this._id, this._owner.object);
             };
         }
 
 
     }
-}//package com.ankamagames.berilia.types.data
+} com.ankamagames.berilia.types.data
 

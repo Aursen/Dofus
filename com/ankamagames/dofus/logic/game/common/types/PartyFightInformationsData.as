@@ -1,19 +1,19 @@
-﻿package com.ankamagames.dofus.logic.game.common.types
+package com.ankamagames.dofus.logic.game.common.types
 {
     import flash.utils.Timer;
 
     public class PartyFightInformationsData 
     {
 
-        private var _fightMapId:int;
+        private var _fightMapId:Number;
         private var _fightId:int;
         private var _timeUntilFightbegin:Timer;
         private var _memberName:String;
-        private var _memberId:int;
+        private var _memberId:Number;
         private var _timeBeforeStart:uint;
         private var _fightStartDate:Number;
 
-        public function PartyFightInformationsData(fightMapId:int, fightId:int, memberName:String, memberId:int, timeBeforeStart:uint)
+        public function PartyFightInformationsData(fightMapId:Number, fightId:int, memberName:String, memberId:Number, timeBeforeStart:uint)
         {
             this._fightMapId = fightMapId;
             this._fightId = fightId;
@@ -25,12 +25,12 @@
             this._fightStartDate = ((currentDate.getTime() + this._timeBeforeStart) as Number);
         }
 
-        public function get fightMapId():int
+        public function get fightMapId():Number
         {
             return (this._fightMapId);
         }
 
-        public function set fightMapId(value:int):void
+        public function set fightMapId(value:Number):void
         {
             this._fightMapId = value;
         }
@@ -80,12 +80,12 @@
             return (this._fightStartDate);
         }
 
-        public function get memberId():int
+        public function get memberId():Number
         {
             return (this._memberId);
         }
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.types
+} com.ankamagames.dofus.logic.game.common.types
 

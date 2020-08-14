@@ -1,15 +1,16 @@
-﻿package com.ankamagames.dofus.logic.game.common.frames
+package com.ankamagames.dofus.logic.game.common.frames
 {
     import com.ankamagames.jerakine.messages.Frame;
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
+    import flash.utils.Dictionary;
     import flash.utils.Timer;
     import com.ankamagames.jerakine.types.enums.Priority;
     import flash.events.TimerEvent;
+    import com.ankamagames.dofus.network.messages.game.basic.SequenceNumberRequestMessage;
     import com.ankamagames.dofus.network.messages.game.basic.SequenceNumberMessage;
     import com.ankamagames.dofus.kernel.net.ConnectionsHandler;
-    import com.ankamagames.dofus.network.messages.game.basic.SequenceNumberRequestMessage;
     import com.ankamagames.jerakine.messages.Message;
     import flash.utils.getTimer;
     import com.ankamagames.dofus.BuildInfos;
@@ -24,7 +25,7 @@
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(SynchronisationFrame));
         private static const STEP_TIME:uint = 2000;
 
-        private var _synchroStep:uint = 0;
+        private var _synchroStepByServer:Dictionary;
         private var _creationTimeFlash:uint;
         private var _creationTimeOs:uint;
         private var _timerSpeedHack:Timer;
@@ -38,7 +39,7 @@
 
         public function pushed():Boolean
         {
-            this._synchroStep = 0;
+            this._synchroStepByServer = new Dictionary();
             this._timeToTest = new Timer(30000, 1);
             this._timeToTest.addEventListener(TimerEvent.TIMER_COMPLETE, this.checkSpeedHack);
             this._timeToTest.start();
@@ -47,16 +48,27 @@
             return (true);
         }
 
+        public function resetSynchroStepByServer(connexionId:String):void
+        {
+            this._synchroStepByServer[connexionId] = 0;
+        }
+
         public function process(msg:Message):Boolean
         {
-            var _local_2:SequenceNumberMessage;
+            var snrMsg:SequenceNumberRequestMessage;
+            var snMsg:SequenceNumberMessage;
             switch (true)
             {
                 case (msg is SequenceNumberRequestMessage):
-                    _local_2 = new SequenceNumberMessage();
-                    this._synchroStep = (this._synchroStep + 1);
-                    _local_2.initSequenceNumberMessage(this._synchroStep);
-                    ConnectionsHandler.getConnection().send(_local_2);
+                    snrMsg = (msg as SequenceNumberRequestMessage);
+                    if (!this._synchroStepByServer[snrMsg.sourceConnection])
+                    {
+                        this._synchroStepByServer[snrMsg.sourceConnection] = 0;
+                    };
+                    this._synchroStepByServer[snrMsg.sourceConnection] = (this._synchroStepByServer[snrMsg.sourceConnection] + 1);
+                    snMsg = new SequenceNumberMessage();
+                    snMsg.initSequenceNumberMessage(this._synchroStepByServer[snrMsg.sourceConnection]);
+                    ConnectionsHandler.getConnection().send(snMsg, snrMsg.sourceConnection);
                     return (true);
             };
             return (false);
@@ -103,5 +115,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.frames
+} com.ankamagames.dofus.logic.game.common.frames
 

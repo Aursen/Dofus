@@ -1,9 +1,10 @@
-﻿package com.ankamagames.dofus.network.types.game.context.roleplay
+package com.ankamagames.dofus.network.types.game.context.roleplay
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.dofus.network.types.game.character.alignment.ActorAlignmentInformations;
-    import com.ankamagames.dofus.network.types.game.look.EntityLook;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import com.ankamagames.dofus.network.types.game.context.EntityDispositionInformations;
+    import com.ankamagames.dofus.network.types.game.look.EntityLook;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
 
@@ -12,22 +13,18 @@
 
         public static const protocolId:uint = 36;
 
-        public var alignmentInfos:ActorAlignmentInformations;
+        public var alignmentInfos:ActorAlignmentInformations = new ActorAlignmentInformations();
+        private var _alignmentInfostree:FuncTree;
 
-        public function GameRolePlayCharacterInformations()
-        {
-            this.alignmentInfos = new ActorAlignmentInformations();
-            super();
-        }
 
         override public function getTypeId():uint
         {
             return (36);
         }
 
-        public function initGameRolePlayCharacterInformations(contextualId:int=0, look:EntityLook=null, disposition:EntityDispositionInformations=null, name:String="", humanoidInfo:HumanInformations=null, accountId:uint=0, alignmentInfos:ActorAlignmentInformations=null):GameRolePlayCharacterInformations
+        public function initGameRolePlayCharacterInformations(contextualId:Number=0, disposition:EntityDispositionInformations=null, look:EntityLook=null, name:String="", humanoidInfo:HumanInformations=null, accountId:uint=0, alignmentInfos:ActorAlignmentInformations=null):GameRolePlayCharacterInformations
         {
-            super.initGameRolePlayHumanoidInformations(contextualId, look, disposition, name, humanoidInfo, accountId);
+            super.initGameRolePlayHumanoidInformations(contextualId, disposition, look, name, humanoidInfo, accountId);
             this.alignmentInfos = alignmentInfos;
             return (this);
         }
@@ -61,7 +58,24 @@
             this.alignmentInfos.deserialize(input);
         }
 
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GameRolePlayCharacterInformations(tree);
+        }
+
+        public function deserializeAsyncAs_GameRolePlayCharacterInformations(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            this._alignmentInfostree = tree.addChild(this._alignmentInfostreeFunc);
+        }
+
+        private function _alignmentInfostreeFunc(input:ICustomDataInput):void
+        {
+            this.alignmentInfos = new ActorAlignmentInformations();
+            this.alignmentInfos.deserializeAsync(this._alignmentInfostree);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.types.game.context.roleplay
+} com.ankamagames.dofus.network.types.game.context.roleplay
 

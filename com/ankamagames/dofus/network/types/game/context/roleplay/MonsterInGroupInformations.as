@@ -1,7 +1,8 @@
-﻿package com.ankamagames.dofus.network.types.game.context.roleplay
+package com.ankamagames.dofus.network.types.game.context.roleplay
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.dofus.network.types.game.look.EntityLook;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
 
@@ -10,22 +11,18 @@
 
         public static const protocolId:uint = 144;
 
-        public var look:EntityLook;
+        public var look:EntityLook = new EntityLook();
+        private var _looktree:FuncTree;
 
-        public function MonsterInGroupInformations()
-        {
-            this.look = new EntityLook();
-            super();
-        }
 
         override public function getTypeId():uint
         {
             return (144);
         }
 
-        public function initMonsterInGroupInformations(creatureGenericId:int=0, grade:uint=0, look:EntityLook=null):MonsterInGroupInformations
+        public function initMonsterInGroupInformations(genericId:int=0, grade:uint=0, level:uint=0, look:EntityLook=null):MonsterInGroupInformations
         {
-            super.initMonsterInGroupLightInformations(creatureGenericId, grade);
+            super.initMonsterInGroupLightInformations(genericId, grade, level);
             this.look = look;
             return (this);
         }
@@ -59,7 +56,24 @@
             this.look.deserialize(input);
         }
 
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_MonsterInGroupInformations(tree);
+        }
+
+        public function deserializeAsyncAs_MonsterInGroupInformations(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            this._looktree = tree.addChild(this._looktreeFunc);
+        }
+
+        private function _looktreeFunc(input:ICustomDataInput):void
+        {
+            this.look = new EntityLook();
+            this.look.deserializeAsync(this._looktree);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.types.game.context.roleplay
+} com.ankamagames.dofus.network.types.game.context.roleplay
 

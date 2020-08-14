@@ -1,32 +1,35 @@
-﻿package com.ankamagames.berilia.components
+package com.ankamagames.berilia.components
 {
     import com.ankamagames.berilia.types.graphic.GraphicContainer;
     import com.ankamagames.berilia.FinalizableUIComponent;
     import flash.utils.Dictionary;
     import com.ankamagames.berilia.types.graphic.ButtonContainer;
     import flash.display.DisplayObject;
-    import flash.utils.Timer;
     import flash.events.Event;
-    import flash.events.TimerEvent;
+    import com.ankamagames.jerakine.utils.display.StageShareManager;
     import com.ankamagames.jerakine.types.Uri;
-    import com.ankamagames.berilia.types.graphic.UiRootContainer;
+    import com.ankamagames.berilia.types.event.TextureLoadFailedEvent;
+    import com.ankamagames.berilia.components.gridRenderer.LabelGridRenderer;
     import com.ankamagames.berilia.managers.SecureCenter;
     import flash.errors.IllegalOperationError;
     import com.ankamagames.berilia.types.graphic.InternalComponentAccess;
+    import com.ankamagames.berilia.types.graphic.UiRootContainer;
     import com.ankamagames.berilia.types.graphic.GraphicElement;
     import com.ankamagames.berilia.enums.StatesEnum;
-    import flash.display.InteractiveObject;
+    import flash.text.TextField;
+    import com.ankamagames.jerakine.handlers.messages.keyboard.KeyboardKeyDownMessage;
+    import com.ankamagames.jerakine.handlers.messages.keyboard.KeyboardKeyUpMessage;
+    import com.ankamagames.jerakine.handlers.messages.keyboard.KeyboardMessage;
     import com.ankamagames.jerakine.handlers.messages.mouse.MouseReleaseOutsideMessage;
     import com.ankamagames.berilia.components.messages.SelectItemMessage;
     import com.ankamagames.berilia.enums.SelectMethodEnum;
     import com.ankamagames.jerakine.handlers.messages.mouse.MouseDownMessage;
     import com.ankamagames.jerakine.handlers.messages.mouse.MouseWheelMessage;
     import com.ankamagames.jerakine.handlers.FocusHandler;
-    import com.ankamagames.jerakine.handlers.messages.keyboard.KeyboardMessage;
     import flash.ui.Keyboard;
-    import com.ankamagames.jerakine.handlers.messages.keyboard.KeyboardKeyUpMessage;
+    import flash.text.TextFieldType;
+    import flash.utils.getTimer;
     import com.ankamagames.jerakine.messages.Message;
-    import com.ankamagames.jerakine.utils.display.StageShareManager;
     import flash.events.MouseEvent;
     import com.ankamagames.jerakine.interfaces.IInterfaceListener;
     import com.ankamagames.berilia.Berilia;
@@ -36,61 +39,127 @@
     {
 
         public static var MEMORY_LOG:Dictionary = new Dictionary(true);
-        protected static const SEARCH_DELAY:int = 1000;
+        protected static const SEARCH_DELAY:int = 400;
 
         protected var _list:ComboBoxGrid;
         protected var _button:ButtonContainer;
         protected var _mainContainer:DisplayObject;
-        protected var _bgTexture:Texture;
+        protected var _bgTexture:TextureBase;
         protected var _listTexture:Texture;
-        protected var _finalized:Boolean;
+        protected var _isIcon:Boolean = false;
+        protected var _labelCssPath:String = null;
         protected var _useKeyboard:Boolean = true;
         protected var _closeOnClick:Boolean = true;
         protected var _maxListSize:uint = 300;
         protected var _slotWidth:uint;
         protected var _slotHeight:uint;
-        private var _previousState:Boolean = false;
+        protected var _previousState:Boolean = false;
         protected var _dataNameField:String = "label";
+        protected var _dpString:String;
+        protected var _separator:String = ";";
+        protected var _lastKeyCode:uint;
+        protected var _lastSearchTime:int;
         protected var _searchString:String;
-        private var _lastSearchIndex:int = 0;
-        private var _searchStopped:Boolean = false;
-        private var _searchTimer:Timer;
-        public var listSizeOffset:uint;
+        protected var _searchStringIndex:int;
+        protected var _listWidth:Number;
         public var autoCenter:Boolean = true;
+        public var mainContainerHeight:Number = 0;
 
         public function ComboBox()
         {
-            this._searchTimer = new Timer(SEARCH_DELAY, 1);
-            super();
             this._button = new ButtonContainer();
             this._button.soundId = "0";
-            this._bgTexture = new Texture();
             this._listTexture = new Texture();
             this._list = new ComboBoxGrid();
             this.showList(false);
             addEventListener(Event.ADDED_TO_STAGE, this.onAddedToStage);
-            this._searchTimer.addEventListener(TimerEvent.TIMER_COMPLETE, this.onSearchTimerComplete);
+            StageShareManager.stage.nativeWindow.addEventListener(Event.DEACTIVATE, this.onWindowDeactivate);
             MEMORY_LOG[this] = 1;
         }
 
-        public function set buttonTexture(uri:Uri):void
+        public function set buttonTexture(tx:String):void
         {
-            this._bgTexture.uri = uri;
+            if (tx.toLowerCase().indexOf(".swf") != -1)
+            {
+                if (!this._bgTexture)
+                {
+                    this._bgTexture = new Texture();
+                };
+                (this._bgTexture as Texture).uri = new Uri(tx);
+            }
+            else
+            {
+                if ((tx is String))
+                {
+                    if (!this._bgTexture)
+                    {
+                        this._bgTexture = new TextureBitmap();
+                        (this._bgTexture as TextureBitmap).smooth = true;
+                    };
+                    (this._bgTexture as TextureBitmap).themeDataId = (tx + "_normal");
+                    if ((this._bgTexture as TextureBitmap).themeDataId == null)
+                    {
+                        (this._bgTexture as TextureBitmap).finalize();
+                        (this._bgTexture as TextureBitmap).drawErrorTexture();
+                        if (_finalized)
+                        {
+                            this.finalize();
+                        };
+                        return;
+                    };
+                    if (!this._bgTexture.finalized)
+                    {
+                        this._bgTexture.addEventListener(Event.COMPLETE, this.onLoaded);
+                        this._bgTexture.addEventListener(TextureLoadFailedEvent.EVENT_TEXTURE_LOAD_FAILED, this.onLoaded);
+                    }
+                    else
+                    {
+                        if (_finalized)
+                        {
+                            this.finalize();
+                        };
+                    };
+                };
+            };
         }
 
-        public function get buttonTexture():Uri
+        private function onLoaded(event:Event):void
         {
-            return (this._bgTexture.uri);
+            this._bgTexture.removeEventListener(Event.COMPLETE, this.onLoaded);
+            this._bgTexture.removeEventListener(TextureLoadFailedEvent.EVENT_TEXTURE_LOAD_FAILED, this.onLoaded);
+            this.finalize();
         }
 
+        public function get buttonTexture():*
+        {
+            if ((this._bgTexture is Texture))
+            {
+                return ((this._bgTexture as Texture).uri);
+            };
+            var themeDataId:String = (this._bgTexture as TextureBitmap).themeDataId;
+            return (themeDataId.substring(0, themeDataId.lastIndexOf("_")));
+        }
+
+        [Uri]
         public function set listTexture(uri:Uri):void
         {
             this._listTexture.uri = uri;
         }
 
+        [Uri]
         public function get listTexture():Uri
         {
             return (this._listTexture.uri);
+        }
+
+        public function set listWidth(v:Number):void
+        {
+            this._listWidth = v;
+        }
+
+        public function get listWidth():Number
+        {
+            return (this._listWidth);
         }
 
         public function get maxHeight():uint
@@ -111,7 +180,7 @@
         public function set slotWidth(value:uint):void
         {
             this._slotWidth = value;
-            if (this.finalized)
+            if (finalized)
             {
                 this.finalize();
             };
@@ -125,7 +194,7 @@
         public function set slotHeight(value:uint):void
         {
             this._slotHeight = value;
-            if (this.finalized)
+            if (finalized)
             {
                 this.finalize();
             };
@@ -133,53 +202,56 @@
 
         public function set dataProvider(data:*):void
         {
-            var nbSlot:uint = (this._maxListSize / this._list.slotHeight);
+            var nbSlot:uint = uint((this._maxListSize / this._list.slotHeight));
+            this._list.finalized = false;
+            if (((isNaN(this._listWidth)) || (this._listWidth <= 0)))
+            {
+                this._listWidth = width;
+            };
             if (data)
             {
                 if (data.length > nbSlot)
                 {
-                    this._list.width = (width - 6);
+                    this._list.width = this._listWidth;
                     this._list.height = this._maxListSize;
-                    this._list.slotWidth = ((this.slotWidth) ? this.slotWidth : (this._list.width - 16));
+                    this._list.slotWidth = ((this.slotWidth) ? (this.slotWidth - this._list.scrollBarSize) : (this._list.width - this._list.scrollBarSize));
                 }
                 else
                 {
-                    this._list.width = (width - this.listSizeOffset);
+                    this._list.width = this._listWidth;
                     this._list.height = (this._list.slotHeight * data.length);
                     this._list.slotWidth = ((this.slotWidth) ? this.slotWidth : this._list.width);
                 };
             }
             else
             {
-                this._list.width = (width - this.listSizeOffset);
+                this._list.width = this._listWidth;
                 this._list.height = this._list.slotHeight;
                 this._list.slotWidth = ((this.slotWidth) ? this.slotWidth : this._list.width);
             };
-            this._listTexture.height = (this._list.height + 8);
-            this._listTexture.width = (this._list.width + 3);
+            this._listTexture.height = this._list.height;
+            this._listTexture.width = this._list.width;
             this._list.dataProvider = data;
+            if ((this._list.renderer is LabelGridRenderer))
+            {
+                (this._list.renderer as LabelGridRenderer).isIcon = this._isIcon;
+                this.setButtonLabel();
+            };
+            this._dpString = this.getDpString();
         }
 
-        public function get dataProvider()
+        public function get dataProvider():*
         {
             return (this._list.dataProvider);
         }
 
-        public function get finalized():Boolean
-        {
-            return (this._finalized);
-        }
-
-        public function set finalized(b:Boolean):void
-        {
-            this._finalized = b;
-        }
-
+        [Uri]
         public function set scrollBarCss(uri:Uri):void
         {
             this._list.verticalScrollbarCss = uri;
         }
 
+        [Uri]
         public function get scrollBarCss():Uri
         {
             return (this._list.verticalScrollbarCss);
@@ -205,7 +277,7 @@
             return (this._list.rendererArgs);
         }
 
-        public function get value()
+        public function get value():*
         {
             return (this._list.selectedItem);
         }
@@ -233,6 +305,20 @@
         public function get autoSelectMode():int
         {
             return (this._list.autoSelectMode);
+        }
+
+        public function set isIcon(b:Boolean):void
+        {
+            this._isIcon = b;
+            if ((this._list.renderer is LabelGridRenderer))
+            {
+                (this._list.renderer as LabelGridRenderer).isIcon = this._isIcon;
+            };
+        }
+
+        public function set labelCss(labelCssPath:String):void
+        {
+            this._labelCssPath = labelCssPath;
         }
 
         public function set useKeyboard(b:Boolean):void
@@ -275,22 +361,15 @@
             this._list.selectedIndex = v;
         }
 
-        public function get container()
+        public function get container():*
         {
-            if (!(this._mainContainer))
-            {
-                return (null);
-            };
-            if ((this._mainContainer is UiRootContainer))
-            {
-                return (SecureCenter.secure((this._mainContainer as UiRootContainer), getUi().uiModule.trusted));
-            };
-            return (SecureCenter.secure(this._mainContainer, getUi().uiModule.trusted));
+            return (this._mainContainer);
         }
 
         public function set dataNameField(value:String):void
         {
             this._dataNameField = value;
+            this._dpString = this.getDpString();
         }
 
         public function renderModificator(childs:Array, accessKey:Object):Array
@@ -299,78 +378,145 @@
             {
                 throw (new IllegalOperationError());
             };
-            this.listSizeOffset = height;
             this._list.rendererName = ((this._list.rendererName) ? this._list.rendererName : "LabelGridRenderer");
             this._list.rendererArgs = ((this._list.rendererArgs) ? this._list.rendererArgs : ",0xFFFFFF,0xEEEEFF,0xC0E272,0x99D321");
-            this._list.width = (width - this.listSizeOffset);
+            this._list.width = width;
             this._list.slotWidth = ((this.slotWidth) ? this.slotWidth : this._list.width);
             this._list.slotHeight = ((this.slotHeight) ? this.slotHeight : (height - 4));
             InternalComponentAccess.setProperty(this._list, "_uiRootContainer", InternalComponentAccess.getProperty(this, "_uiRootContainer"));
             return (this._list.renderModificator(childs, accessKey));
         }
 
-        public function finalize():void
+        override public function finalize():void
         {
-            this._button.width = width;
-            this._button.height = height;
-            this._bgTexture.width = width;
-            this._bgTexture.height = height;
-            this._bgTexture.autoGrid = true;
-            this._bgTexture.finalize();
-            this._button.addChild(this._bgTexture);
-            getUi().registerId(this._bgTexture.name, new GraphicElement(this._bgTexture, new Array(), this._bgTexture.name));
-            var stateChangingProperties:Array = new Array();
-            stateChangingProperties[StatesEnum.STATE_OVER] = new Array();
-            stateChangingProperties[StatesEnum.STATE_OVER][this._bgTexture.name] = new Array();
-            stateChangingProperties[StatesEnum.STATE_OVER][this._bgTexture.name]["gotoAndStop"] = StatesEnum.STATE_OVER_STRING.toLocaleLowerCase();
-            stateChangingProperties[StatesEnum.STATE_CLICKED] = new Array();
-            stateChangingProperties[StatesEnum.STATE_CLICKED][this._bgTexture.name] = new Array();
-            stateChangingProperties[StatesEnum.STATE_CLICKED][this._bgTexture.name]["gotoAndStop"] = StatesEnum.STATE_CLICKED_STRING.toLocaleLowerCase();
-            this._button.changingStateData = stateChangingProperties;
-            this._button.finalize();
-            this._list.name = ("grid_" + name);
-            this._list.width = (width - this.listSizeOffset);
-            this._list.slotWidth = ((this.slotWidth) ? this.slotWidth : this._list.width);
-            this._list.slotHeight = ((this.slotHeight) ? this.slotHeight : (height - 4));
-            this._list.x = 2;
-            this._list.y = (height + 2);
-            this._list.finalize();
-            this._listTexture.width = (this._list.width + 4);
-            this._listTexture.autoGrid = true;
-            this._listTexture.y = (height - 1);
-            this._listTexture.x = 2;
-            this._listTexture.finalize();
-            addChild(this._button);
-            addChild(this._listTexture);
-            addChild(this._list);
-            this._listTexture.mouseEnabled = false;
-            this._list.mouseEnabled = false;
+            if (((this._bgTexture is TextureBitmap) && (!(this._bgTexture.finalized))))
+            {
+                return;
+            };
+            this.finalizeBaseComponents();
+            if ((this._list.renderer is LabelGridRenderer))
+            {
+                (this._list.renderer as LabelGridRenderer).buttonWidth = this._bgTexture.width;
+                (this._list.renderer as LabelGridRenderer).isIcon = this._isIcon;
+            };
             this._mainContainer = this._list.renderer.render(null, 0, false);
-            this._mainContainer.height = this._list.slotHeight;
+            this._mainContainer.height = ((this.mainContainerHeight) ? this.mainContainerHeight : this._list.slotHeight);
             this._mainContainer.x = this._list.x;
             if (this.autoCenter)
             {
                 this._mainContainer.y = ((height - this._mainContainer.height) / 2);
             };
             this._button.addChild(this._mainContainer);
-            this._finalized = true;
-            this._searchString = "";
+            this.setButtonLabel();
+            super.finalize();
+            _finalized = true;
             getUi().iAmFinalized(this);
         }
 
-        [HideInFakeClass]
+        protected function finalizeBaseComponents():void
+        {
+            var ui:UiRootContainer = getUi();
+            if (!ui.getElementById(this._bgTexture.name))
+            {
+                ui.registerId(this._bgTexture.name, new GraphicElement(this._bgTexture, null, this._bgTexture.name));
+            };
+            this._button.width = width;
+            this._button.height = height;
+            this._bgTexture.finalized = false;
+            if ((this._bgTexture is TextureBitmap))
+            {
+                this._bgTexture.x = (width - this._bgTexture.width);
+                this._bgTexture.y = ((height - this._bgTexture.height) / 2);
+            }
+            else
+            {
+                if ((this._bgTexture is Texture))
+                {
+                    this._bgTexture.width = width;
+                    this._bgTexture.height = height;
+                    (this._bgTexture as Texture).autoGrid = true;
+                };
+            };
+            this._bgTexture.finalize();
+            this._button.addChildAt(this._bgTexture, 0);
+            var stateChangingProperties:Array = new Array();
+            stateChangingProperties[StatesEnum.STATE_OVER] = new Array();
+            stateChangingProperties[StatesEnum.STATE_OVER][this._bgTexture.name] = new Array();
+            if ((this._bgTexture is TextureBitmap))
+            {
+                if (this._bgTexture.themeDataId)
+                {
+                    stateChangingProperties[StatesEnum.STATE_OVER][this._bgTexture.name]["themeDataId"] = this._bgTexture.themeDataId.replace("_normal", ("_" + StatesEnum.STATE_OVER_STRING.toLocaleLowerCase()));
+                };
+            }
+            else
+            {
+                stateChangingProperties[StatesEnum.STATE_OVER][this._bgTexture.name]["gotoAndStop"] = StatesEnum.STATE_OVER_STRING.toLocaleLowerCase();
+            };
+            stateChangingProperties[StatesEnum.STATE_CLICKED] = new Array();
+            stateChangingProperties[StatesEnum.STATE_CLICKED][this._bgTexture.name] = new Array();
+            if ((this._bgTexture is TextureBitmap))
+            {
+                if (this._bgTexture.themeDataId)
+                {
+                    stateChangingProperties[StatesEnum.STATE_CLICKED][this._bgTexture.name]["themeDataId"] = this._bgTexture.themeDataId.replace("_normal", ("_" + StatesEnum.STATE_CLICKED_STRING.toLocaleLowerCase()));
+                };
+            }
+            else
+            {
+                stateChangingProperties[StatesEnum.STATE_CLICKED][this._bgTexture.name]["gotoAndStop"] = StatesEnum.STATE_CLICKED_STRING.toLocaleLowerCase();
+            };
+            stateChangingProperties[StatesEnum.STATE_SELECTED] = new Array();
+            stateChangingProperties[StatesEnum.STATE_SELECTED][this._bgTexture.name] = new Array();
+            stateChangingProperties[StatesEnum.STATE_SELECTED][this._bgTexture.name]["scaleY"] = -1;
+            stateChangingProperties[StatesEnum.STATE_SELECTED][this._bgTexture.name]["y"] = (this._bgTexture.y + this._bgTexture.height);
+            if ((this._bgTexture is TextureBitmap))
+            {
+                if (this._bgTexture.themeDataId)
+                {
+                    stateChangingProperties[StatesEnum.STATE_SELECTED][this._bgTexture.name]["themeDataId"] = this._bgTexture.themeDataId.replace("_normal", ("_" + StatesEnum.STATE_CLICKED_STRING.toLocaleLowerCase()));
+                };
+            }
+            else
+            {
+                stateChangingProperties[StatesEnum.STATE_SELECTED][this._bgTexture.name]["gotoAndStop"] = StatesEnum.STATE_CLICKED_STRING.toLocaleLowerCase();
+            };
+            this._button.lockedProperties = "x,width,height,selected,greyedOut";
+            this._button.changingStateData = stateChangingProperties;
+            this._button.name = ("btn_" + name);
+            this._button.finalize();
+            this._list.name = ("grid_" + name);
+            this._list.width = width;
+            this._list.slotWidth = ((this.slotWidth) ? this.slotWidth : this._list.width);
+            this._list.slotHeight = ((this.slotHeight) ? this.slotHeight : (height - 4));
+            this._list.y = (height + 2);
+            this._list.finalize();
+            this._listTexture.width = this._list.width;
+            this._listTexture.autoGrid = true;
+            this._listTexture.y = (height + 2);
+            this._listTexture.finalize();
+            addChild(this._button);
+            addChild(this._listTexture);
+            addChild(this._list);
+            this._listTexture.mouseEnabled = true;
+            this._list.mouseEnabled = false;
+        }
+
         override public function process(msg:Message):Boolean
         {
-            var _local_2:InteractiveObject;
-            var keyCode:uint;
+            var input:TextField;
+            var kkdmsg:KeyboardKeyDownMessage;
+            var kkumsg:KeyboardKeyUpMessage;
+            var kbmsg:KeyboardMessage;
+            var _local_6:String;
+            var timeElapsed:int;
             switch (true)
             {
                 case (msg is MouseReleaseOutsideMessage):
                     this.showList(false);
-                    this._searchString = "";
                     break;
                 case (msg is SelectItemMessage):
-                    this._list.renderer.update(this._list.selectedItem, 0, this._mainContainer, false);
+                    this._list.renderer.update(this._list.selectedItem, 0, this._mainContainer, true);
                     switch (SelectItemMessage(msg).selectMethod)
                     {
                         case SelectMethodEnum.UP_ARROW:
@@ -380,15 +526,17 @@
                         case SelectMethodEnum.SEARCH:
                         case SelectMethodEnum.AUTO:
                         case SelectMethodEnum.MANUAL:
+                        case SelectMethodEnum.FIRST_ITEM:
+                        case SelectMethodEnum.LAST_ITEM:
                             break;
                         default:
                             this.showList(false);
                     };
                     break;
                 case (msg is MouseDownMessage):
-                    if (!(this._list.visible))
+                    if (!this._list.visible)
                     {
-                        if (((((this._list.dataProvider) && ((this._list.dataProvider.length > 0)))) || ((MouseDownMessage(msg).target == this._button))))
+                        if ((((this._list.dataProvider) && (this._list.dataProvider.length > 0)) || (MouseDownMessage(msg).target == this._button)))
                         {
                             this.showList(true);
                             this._list.moveTo(this._list.selectedIndex);
@@ -401,7 +549,6 @@
                             this.showList(false);
                         };
                     };
-                    this._searchString = "";
                     break;
                 case (msg is MouseWheelMessage):
                     if (this._list.visible)
@@ -413,41 +560,68 @@
                         this._list.setSelectedIndex((this._list.selectedIndex + ((MouseWheelMessage(msg).mouseEvent.delta / Math.abs(MouseWheelMessage(msg).mouseEvent.delta)) * -1)), SelectMethodEnum.WHEEL);
                     };
                     return (true);
-                case (msg is KeyboardKeyUpMessage):
-                    _local_2 = FocusHandler.getInstance().getFocus();
-                    if (!((_local_2 is Input)))
+                case (msg is KeyboardKeyDownMessage):
+                    input = (FocusHandler.getInstance().getFocus() as TextField);
+                    kkdmsg = (msg as KeyboardKeyDownMessage);
+                    if (kkdmsg.keyboardEvent.keyCode == Keyboard.ESCAPE)
                     {
-                        keyCode = KeyboardMessage(msg).keyboardEvent.keyCode;
-                        if (((((((((!((keyCode == Keyboard.DOWN))) && (!((keyCode == Keyboard.UP))))) && (!((keyCode == Keyboard.LEFT))))) && (!((keyCode == Keyboard.RIGHT))))) && (!((keyCode == Keyboard.ENTER)))))
+                        this.focusLost();
+                        getParent().focus();
+                        return (true);
+                    };
+                    if ((((this._list.visible) && ((!(input)) || (!(input.type == TextFieldType.INPUT)))) && (this.handleKey(kkdmsg.keyboardEvent.keyCode))))
+                    {
+                        _local_6 = String.fromCharCode(kkdmsg.keyboardEvent.charCode).toLowerCase();
+                        timeElapsed = ((this._lastSearchTime) ? (getTimer() - this._lastSearchTime) : 0);
+                        if ((((!(this._lastKeyCode)) || (this._searchStringIndex == -1)) || ((!(kkdmsg.keyboardEvent.keyCode == this._lastKeyCode)) && (timeElapsed > SEARCH_DELAY))))
                         {
-                            if (this._searchStopped)
+                            this._searchString = _local_6;
+                            this.search(this._searchString);
+                        }
+                        else
+                        {
+                            if (((this._searchString.length == 1) && (kkdmsg.keyboardEvent.keyCode == this._lastKeyCode)))
                             {
-                                this._searchStopped = false;
-                                if ((((this._searchString.length == 1)) && ((String.fromCharCode(KeyboardMessage(msg).keyboardEvent.charCode) == this._searchString))))
+                                this.search((this._separator + _local_6), (this._searchStringIndex + 1));
+                                if (this._searchStringIndex == -1)
                                 {
-                                    this.searchStringInCB(this._searchString, (this._lastSearchIndex + 1));
-                                    return (true);
+                                    this.search(this._searchString);
                                 };
-                                this._searchString = "";
+                            }
+                            else
+                            {
+                                this._searchString = (this._searchString + _local_6);
+                                this.search(this._searchString);
                             };
-                            this._searchString = (this._searchString + String.fromCharCode(KeyboardMessage(msg).keyboardEvent.charCode));
-                            this.searchStringInCB(this._searchString);
-                            return (true);
                         };
+                        this._lastKeyCode = kkdmsg.keyboardEvent.keyCode;
+                        this._lastSearchTime = getTimer();
+                        return (true);
                     };
-                    if ((((KeyboardMessage(msg).keyboardEvent.keyCode == Keyboard.ENTER)) && (this._list.visible)))
+                case (msg is KeyboardKeyUpMessage):
+                    kkumsg = (msg as KeyboardKeyUpMessage);
+                    if (((kkumsg) && (this.handleKey(kkumsg.keyboardEvent.keyCode))))
                     {
-                        if (this._useKeyboard)
-                        {
-                            this.showList(false);
-                            return (true);
-                        };
+                        return (true);
                     };
-                    break;
                 case (msg is KeyboardMessage):
+                    kbmsg = (msg as KeyboardMessage);
                     if (this._useKeyboard)
                     {
-                        this._list.process(msg);
+                        switch (kbmsg.keyboardEvent.keyCode)
+                        {
+                            case Keyboard.PAGE_UP:
+                            case Keyboard.HOME:
+                                this._list.setSelectedIndex(0, SelectMethodEnum.FIRST_ITEM);
+                                this._list.moveTo(this._list.selectedIndex);
+                                return (true);
+                            case Keyboard.PAGE_DOWN:
+                            case Keyboard.END:
+                                this._list.setSelectedIndex((this._list.dataProvider.length - 1), SelectMethodEnum.LAST_ITEM);
+                                this._list.moveTo(this._list.selectedIndex);
+                                return (true);
+                        };
+                        return (this._list.process(msg));
                     };
                     break;
             };
@@ -456,7 +630,8 @@
 
         override public function remove():void
         {
-            if (!(__removed))
+            StageShareManager.stage.nativeWindow.removeEventListener(Event.DEACTIVATE, this.onWindowDeactivate);
+            if (!__removed)
             {
                 removeEventListener(Event.ADDED_TO_STAGE, this.onAddedToStage);
                 StageShareManager.stage.removeEventListener(MouseEvent.CLICK, this.onClick);
@@ -466,7 +641,14 @@
                 this._list.renderer.remove(this._mainContainer);
                 SecureCenter.destroy(this._mainContainer);
                 SecureCenter.destroy(this._list);
-                this._bgTexture.remove();
+                if (this._bgTexture)
+                {
+                    if (this._bgTexture.hasEventListener(Event.COMPLETE))
+                    {
+                        this._bgTexture.removeEventListener(Event.COMPLETE, this.onLoaded);
+                    };
+                    this._bgTexture.remove();
+                };
                 this._bgTexture = null;
                 this._list = null;
                 this._button = null;
@@ -476,10 +658,70 @@
             super.remove();
         }
 
+        private function search(pSearchStr:String, pStartIndex:int=0):void
+        {
+            this._searchStringIndex = this._dpString.indexOf(pSearchStr, pStartIndex);
+            if (((pSearchStr.indexOf(this._separator) == -1) && (!(this._searchStringIndex == 0))))
+            {
+                this._searchStringIndex = this._dpString.indexOf((this._separator + this._searchString));
+            };
+            if (this._searchStringIndex != -1)
+            {
+                this._list.setSelectedIndex(this.getItemIndex(((this._searchStringIndex == 0) ? this._searchStringIndex : (this._searchStringIndex + 1))), SelectMethodEnum.SEARCH);
+            };
+        }
+
+        private function getItemIndex(pDpStringIndex:int):int
+        {
+            var itemIndex:int;
+            var tmpIndex:int;
+            var startIndex:int;
+            var tmpStr:String = this._dpString.substring(0, pDpStringIndex);
+            var strLen:int = tmpStr.length;
+            var i:int;
+            i = 0;
+            while (i < strLen)
+            {
+                startIndex = ((tmpIndex == 0) ? 0 : (tmpIndex + 1));
+                if (((startIndex == strLen) || (tmpIndex == -1)))
+                {
+                    break;
+                };
+                tmpIndex = tmpStr.indexOf(this._separator, startIndex);
+                if (tmpIndex != -1)
+                {
+                    itemIndex++;
+                };
+                i++;
+            };
+            return (itemIndex);
+        }
+
+        private function getDpString():String
+        {
+            var i:int;
+            var itemValue:String;
+            var dpString:String = "";
+            var len:int = this._list.dataProvider.length;
+            i = 0;
+            while (i < len)
+            {
+                itemValue = ((((this._dataNameField) && (this._dataNameField.length > 0)) && (this._list.dataProvider[i].hasOwnProperty(this._dataNameField))) ? this._list.dataProvider[i][this._dataNameField] : this._list.dataProvider[i]);
+                dpString = (dpString + (((i > 0) ? this._separator : "") + this.cleanString(itemValue.toLowerCase())));
+                i++;
+            };
+            return (dpString);
+        }
+
+        protected function handleKey(pKeyCode:uint):Boolean
+        {
+            return (((((((((!(pKeyCode == Keyboard.DOWN)) && (!(pKeyCode == Keyboard.UP))) && (!(pKeyCode == Keyboard.LEFT))) && (!(pKeyCode == Keyboard.RIGHT))) && (!(pKeyCode == Keyboard.ENTER))) && (!(pKeyCode == Keyboard.PAGE_UP))) && (!(pKeyCode == Keyboard.PAGE_DOWN))) && (!(pKeyCode == Keyboard.HOME))) && (!(pKeyCode == Keyboard.END)));
+        }
+
         protected function showList(show:Boolean):void
         {
             var listener:IInterfaceListener;
-            var _local_3:IInterfaceListener;
+            var listener2:IInterfaceListener;
             if (this._previousState != show)
             {
                 if (show)
@@ -491,44 +733,50 @@
                 }
                 else
                 {
-                    for each (_local_3 in Berilia.getInstance().UISoundListeners)
+                    for each (listener2 in Berilia.getInstance().UISoundListeners)
                     {
-                        _local_3.playUISound("16013");
+                        listener2.playUISound("16013");
                     };
                 };
             };
+            this._button.selected = show;
             this._listTexture.visible = show;
             this._list.visible = show;
             this._previousState = show;
         }
 
-        protected function searchStringInCB(searchPhrase:String, startIndex:int=0):void
+        private function setButtonLabel():void
         {
-            var i:int;
-            this._searchTimer.reset();
-            this._searchTimer.start();
-            var comparRegexp:RegExp = new RegExp((searchPhrase + "?"), "gi");
-            var indexOfString:int = -1;
-            var compareString:String = "";
-            i = startIndex;
-            while (i < this.dataProvider.length)
+            var container:GraphicContainer;
+            var buttonLabel:Label;
+            var buttonIcon:Texture;
+            if ((((this._list.renderer is LabelGridRenderer) && (!(this._button === null))) && (this._button.numChildren > 0)))
             {
-                if ((((this._dataNameField == "")) || ((this.dataProvider[i] is String))))
+                container = (this._button.getChildAt((this._button.numChildren - 1)) as GraphicContainer);
+                if (((!(container === null)) && (container.numChildren > 0)))
                 {
-                    compareString = this.cleanString(this.dataProvider[i].toLowerCase());
-                }
-                else
-                {
-                    compareString = this.cleanString(this.dataProvider[i][this._dataNameField].toLowerCase());
+                    buttonLabel = (container.getChildAt(0) as Label);
+                    if (((((this._list.renderer as LabelGridRenderer).isIcon) && (!(buttonLabel === null))) && (container.numChildren > 1)))
+                    {
+                        buttonIcon = (container.getChildAt(1) as Texture);
+                        container.y = 0;
+                        if (buttonIcon !== null)
+                        {
+                            buttonLabel.x = LabelGridRenderer.getLabelOffset(buttonIcon, this._list.dataProvider[this._list.selectedIndex]);
+                        };
+                    }
+                    else
+                    {
+                        if (buttonLabel !== null)
+                        {
+                            buttonLabel.y = -2;
+                        };
+                    };
+                    if (((!(buttonLabel === null)) && (this._labelCssPath)))
+                    {
+                        buttonLabel.css = new Uri(this._labelCssPath);
+                    };
                 };
-                indexOfString = compareString.indexOf(this.cleanString(searchPhrase));
-                if (indexOfString != -1)
-                {
-                    this._list.setSelectedIndex(i, SelectMethodEnum.SEARCH);
-                    this._lastSearchIndex = i;
-                    return;
-                };
-                i++;
             };
         }
 
@@ -542,6 +790,16 @@
             return (StringUtils.noAccent(tempString));
         }
 
+        private function focusLost():void
+        {
+            this.showList(false);
+        }
+
+        private function onWindowDeactivate(pEvent:Event):void
+        {
+            this.focusLost();
+        }
+
         private function onClick(e:MouseEvent):void
         {
             var p:DisplayObject = DisplayObject(e.target);
@@ -553,7 +811,7 @@
                 };
                 p = p.parent;
             };
-            this.showList(false);
+            this.focusLost();
         }
 
         private function onAddedToStage(e:Event):void
@@ -562,12 +820,7 @@
             StageShareManager.stage.addEventListener(MouseEvent.CLICK, this.onClick);
         }
 
-        private function onSearchTimerComplete(e:TimerEvent):void
-        {
-            this._searchStopped = true;
-        }
-
 
     }
-}//package com.ankamagames.berilia.components
+} com.ankamagames.berilia.components
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.tubul.types.bus
+package com.ankamagames.tubul.types.bus
 {
     import com.ankamagames.tubul.interfaces.IAudioBus;
     import com.ankamagames.jerakine.logger.Logger;
@@ -146,7 +146,7 @@
 
         public function get effectiveVolume():Number
         {
-            return ((Math.round((((this._volume * this._volumeMax) * this._fadeVolume) * 1000)) / 1000));
+            return (Math.round((((this._volume * this._volumeMax) * this._fadeVolume) * 1000)) / 1000);
         }
 
         public function clear(pFade:VolumeFadeEffect=null):void
@@ -170,11 +170,11 @@
                     break;
                 };
             };
-            if (!(existingSound))
+            if (!existingSound)
             {
                 this.addISound(newSound);
             };
-            if (!(newSound.isPlaying))
+            if (!newSound.isPlaying)
             {
                 newSound.play(pLoop, pLoops);
             };
@@ -205,17 +205,17 @@
                     this._log.warn((("Registered sounds in bus " + bus.name) + " :"));
                     freedSpace = this.cleanBus(bus.soundList);
                 };
-                if (!(freedSpace))
+                if (!freedSpace)
                 {
                     return;
                 };
             };
-            if ((((this._numberSoundsLimitation >= 0)) && ((this.soundList.length >= this._numberSoundsLimitation))))
+            if (((this._numberSoundsLimitation >= 0) && (this.soundList.length >= this._numberSoundsLimitation)))
             {
                 this._log.warn((((("We have reached the maximum number of sounds for this bus (" + this._id) + " / ") + this._name) + ")"));
                 this._log.warn((("Registered sounds in bus " + this._name) + " :"));
                 freedSpace2 = this.cleanBus(this.soundList);
-                if (!(freedSpace2))
+                if (!freedSpace2)
                 {
                     return;
                 };
@@ -256,7 +256,7 @@
             for each (sound in sList)
             {
                 freedSpace = false;
-                if (!(sound.isPlaying))
+                if (!sound.isPlaying)
                 {
                     this.removeSound(sound);
                     freedSpace = true;
@@ -343,6 +343,7 @@
 
         public function clearCache():void
         {
+            this._cache.destroy();
             this._cache = Cache.create(TubulConstants.MAXIMUM_BOUNDS_CACHE, new LruGarbageCollector(), getQualifiedClassName(this));
         }
 
@@ -361,7 +362,7 @@
         protected function removeSound(pISound:ISound, pFade:VolumeFadeEffect=null):uint
         {
             var sound3:ISound;
-            if (!(this._soundVector))
+            if (!this._soundVector)
             {
                 return (0);
             };
@@ -468,5 +469,5 @@
 
 
     }
-}//package com.ankamagames.tubul.types.bus
+} com.ankamagames.tubul.types.bus
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.kernel.sound.utils
+package com.ankamagames.dofus.kernel.sound.utils
 {
     import com.ankamagames.dofus.kernel.sound.TubulSoundConfiguration;
     import com.ankamagames.jerakine.managers.LangManager;
@@ -70,5 +70,5 @@
 
 
     }
-}//package com.ankamagames.dofus.kernel.sound.utils
+} com.ankamagames.dofus.kernel.sound.utils
 

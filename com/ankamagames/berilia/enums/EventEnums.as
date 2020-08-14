@@ -1,6 +1,5 @@
-﻿package com.ankamagames.berilia.enums
+package com.ankamagames.berilia.enums
 {
-    [Trusted]
     public class EventEnums 
     {
 
@@ -33,9 +32,11 @@
         public static const EVENT_ONMAPELEMENTRIGHTCLICK:String = "onMapElementRightClick";
         public static const EVENT_ONMAPMOVE:String = "onMapMove";
         public static const EVENT_ONMAPROLLOVER:String = "onMapRollOver";
+        public static const EVENT_ONMAPROLLOUT:String = "onMapRollOut";
         public static const EVENT_ONCOMPONENTREADY:String = "onComponentReadyMessage";
         public static const EVENT_ONBROWSER_SESSION_TIMEOUT:String = "onBrowserSessionTimeout";
         public static const EVENT_ONBROWSER_DOM_READY:String = "onBrowserDomReady";
+        public static const EVENT_ONBROWSER_DOM_CHANGE:String = "onBrowserDomChange";
         public static const EVENT_ONTEXTCLICK:String = "onTextClick";
         public static const EVENT_ONVIDEOCONNECTFAILED:String = "onVideoConnectFailed";
         public static const EVENT_ONVIDEOCONNECTSUCCESS:String = "onVideoConnectSuccess";
@@ -73,8 +74,10 @@
         public static const EVENT_ONCOMPONENTREADY_MSG:String = (EVENT_UI_MSG + "ComponentReadyMessage");
         public static const EVENT_ONMAPMOVE_MSG:String = (EVENT_UI_MSG + "MapMoveMessage");
         public static const EVENT_ONMAPROLLOVER_MSG:String = (EVENT_UI_MSG + "MapRollOverMessage");
+        public static const EVENT_ONMAPROLLOUT_MSG:String = (EVENT_UI_MSG + "MapRollOutMessage");
         public static const EVENT_ONBROWSER_SESSION_TIMEOUT_MSG:String = (EVENT_UI_MSG + "BrowserSessionTimeout");
         public static const EVENT_ONBROWSER_DOM_READY_MSG:String = (EVENT_UI_MSG + "BrowserDomReady");
+        public static const EVENT_ONBROWSER_DOM_CHANGE_MSG:String = (EVENT_UI_MSG + "BrowserDomChange");
         public static const EVENT_ONVIDEOCONNECTFAILED_MSG:String = (EVENT_UI_MSG + "VideoConnectFailedMessage");
         public static const EVENT_ONVIDEOCONNECTSUCCESS_MSG:String = (EVENT_UI_MSG + "VideoConnectSuccessMessage");
         public static const EVENT_ONVIDEOBUFFERCHANGE_MSG:String = (EVENT_UI_MSG + "VideoBufferChangeMessage");
@@ -140,6 +143,8 @@
                     return (EVENT_ONMAPELEMENTRIGHTCLICK);
                 case EVENT_ONMAPROLLOVER_MSG:
                     return (EVENT_ONMAPROLLOVER);
+                case EVENT_ONMAPROLLOUT_MSG:
+                    return (EVENT_ONMAPROLLOUT);
                 case EVENT_ONVIDEOCONNECTFAILED_MSG:
                     return (EVENT_ONVIDEOCONNECTFAILED);
                 case EVENT_ONVIDEOCONNECTSUCCESS_MSG:
@@ -152,6 +157,8 @@
                     return (EVENT_ONBROWSER_SESSION_TIMEOUT);
                 case EVENT_ONBROWSER_DOM_READY_MSG:
                     return (EVENT_ONBROWSER_DOM_READY);
+                case EVENT_ONBROWSER_DOM_CHANGE_MSG:
+                    return (EVENT_ONBROWSER_DOM_CHANGE);
                 case EVENT_ONTEXTCLICK_MSG:
                     return (EVENT_ONTEXTCLICK);
                 case EVENT_MIDDLECLICK_MSG:
@@ -162,5 +169,5 @@
 
 
     }
-}//package com.ankamagames.berilia.enums
+} com.ankamagames.berilia.enums
 

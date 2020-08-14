@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.inventory.exchanges
+package com.ankamagames.dofus.network.messages.game.inventory.exchanges
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class ExchangeReadyMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -47,12 +47,24 @@
         {
             var data:ByteArray = new ByteArray();
             this.serialize(new CustomDataWrapper(data));
+            if (HASH_FUNCTION != null)
+            {
+                HASH_FUNCTION(data);
+            };
             writePacket(output, this.getMessageId(), data);
         }
 
         override public function unpack(input:ICustomDataInput, length:uint):void
         {
             this.deserialize(input);
+        }
+
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
         }
 
         public function serialize(output:ICustomDataOutput):void
@@ -77,7 +89,28 @@
 
         public function deserializeAs_ExchangeReadyMessage(input:ICustomDataInput):void
         {
+            this._readyFunc(input);
+            this._stepFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_ExchangeReadyMessage(tree);
+        }
+
+        public function deserializeAsyncAs_ExchangeReadyMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._readyFunc);
+            tree.addChild(this._stepFunc);
+        }
+
+        private function _readyFunc(input:ICustomDataInput):void
+        {
             this.ready = input.readBoolean();
+        }
+
+        private function _stepFunc(input:ICustomDataInput):void
+        {
             this.step = input.readVarUhShort();
             if (this.step < 0)
             {
@@ -87,5 +120,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.inventory.exchanges
+} com.ankamagames.dofus.network.messages.game.inventory.exchanges
 

@@ -1,24 +1,19 @@
-﻿package com.ankamagames.dofus.kernel.sound.manager
+package com.ankamagames.dofus.kernel.sound.manager
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
     import __AS3__.vec.Vector;
     import com.ankamagames.dofus.datacenter.ambientSounds.AmbientSound;
+    import com.ankamagames.dofus.datacenter.ambientSounds.PlaylistSound;
     import com.ankamagames.jerakine.BalanceManager.BalanceManager;
-    import com.ankamagames.tubul.interfaces.ISound;
+    import com.ankamagames.dofus.datacenter.playlists.Playlist;
+    import com.ankamagames.jerakine.protocolAudio.ProtocolEnum;
     import com.ankamagames.dofus.kernel.sound.SoundManager;
     import com.ankamagames.dofus.kernel.sound.TubulSoundConfiguration;
-    import com.ankamagames.dofus.network.types.game.context.GameContextActorInformations;
-    import com.ankamagames.dofus.network.types.game.context.fight.GameFightMonsterInformations;
-    import com.ankamagames.dofus.datacenter.monsters.Monster;
-    import com.ankamagames.dofus.kernel.Kernel;
-    import com.ankamagames.dofus.logic.game.fight.frames.FightEntitiesFrame;
+    import com.ankamagames.tubul.interfaces.ISound;
     import com.ankamagames.jerakine.types.Uri;
-    import com.ankamagames.tubul.types.VolumeFadeEffect;
     import com.ankamagames.dofus.kernel.sound.utils.SoundUtil;
-    import com.ankamagames.tubul.factory.SoundFactory;
-    import com.ankamagames.tubul.enum.EnumSoundType;
     import com.ankamagames.dofus.kernel.sound.type.SoundDofus;
 
     public class FightMusicManager 
@@ -28,130 +23,100 @@
 
         private var _fightMusics:Vector.<AmbientSound>;
         private var _bossMusics:Vector.<AmbientSound>;
-        private var _fightMusic:AmbientSound;
-        private var _bossMusic:AmbientSound;
+        private var _fightMusic:PlaylistSound;
+        private var _bossMusic:PlaylistSound;
         private var _hasBoss:Boolean;
         private var _fightMusicsId:Array;
         private var _fightMusicBalanceManager:BalanceManager;
-        private var _actualFightMusic:ISound;
-        private var _actualFightMusicId:String;
+        private var _fightMusicPlaylist:Playlist;
+        private var _bossMusicPlaylist:Playlist;
 
         public function FightMusicManager()
         {
             this.init();
         }
 
+        public function set hasBoss(boss:Boolean):void
+        {
+            this._hasBoss = boss;
+        }
+
         public function prepareFightMusic():void
         {
-            SoundManager.getInstance().manager.fadeBusVolume(TubulSoundConfiguration.BUS_AMBIENT_2D_ID, 0, TubulSoundConfiguration.TIME_FADE_OUT_MUSIC);
-            SoundManager.getInstance().manager.fadeBusVolume(TubulSoundConfiguration.BUS_MUSIC_ID, 0, TubulSoundConfiguration.TIME_FADE_OUT_MUSIC);
-        }
-
-        public function startFight():void
-        {
-            var entity:GameContextActorInformations;
-            var monster:GameFightMonsterInformations;
-            var monsterData:Monster;
-            this._hasBoss = false;
-            var entitiesFrame:FightEntitiesFrame = (Kernel.getWorker().getFrame(FightEntitiesFrame) as FightEntitiesFrame);
-            if (entitiesFrame)
-            {
-                for each (entity in entitiesFrame.getEntitiesDictionnary())
-                {
-                    if ((entity is GameFightMonsterInformations))
-                    {
-                        monster = (entity as GameFightMonsterInformations);
-                        monsterData = Monster.getMonsterById(monster.creatureGenericId);
-                        if (monsterData.isBoss)
-                        {
-                            this._hasBoss = true;
-                        };
-                    };
-                };
-            };
-        }
-
-        public function playFightMusic():void
-        {
-            var sound:AmbientSound;
-            var busId:uint;
-            var soundPath:String;
-            var soundUri:Uri;
-            var fadeCurrentMusic:VolumeFadeEffect;
-            if (!(SoundManager.getInstance().manager.soundIsActivate))
+            if (!RegConnectionManager.getInstance().isMain)
             {
                 return;
             };
-            if ((((SoundManager.getInstance().manager is RegSoundManager)) && (!(RegConnectionManager.getInstance().isMain))))
+            RegConnectionManager.getInstance().send(ProtocolEnum.PREPARE_FIGHT_MUSIC);
+        }
+
+        public function startFightPlaylist(fadeStartVolume:Number=-1, fadeEndVolume:Number=1):void
+        {
+            if (!SoundManager.getInstance().manager.soundIsActivate)
             {
                 return;
             };
-            if (((this._hasBoss) && (this._bossMusic)))
+            if (!RegConnectionManager.getInstance().isMain)
             {
-                sound = this._bossMusic;
+                return;
+            };
+            var fightSongs:Array = new Array();
+            var playlist:Playlist;
+            if (((this._hasBoss) && (this._bossMusicPlaylist)))
+            {
+                fightSongs = this.createPlaylistSounds(this._bossMusicPlaylist);
+                playlist = this._bossMusicPlaylist;
             }
             else
             {
-                sound = this._fightMusic;
+                if (this._fightMusicPlaylist)
+                {
+                    fightSongs = this.createPlaylistSounds(this._fightMusicPlaylist);
+                    playlist = this._fightMusicPlaylist;
+                };
             };
-            if (sound)
+            if (fightSongs.length > 0)
             {
-                busId = SoundUtil.getBusIdBySoundId(String(sound.id));
-                soundPath = SoundUtil.getConfigEntryByBusId(busId);
-                soundUri = new Uri(((soundPath + sound.id) + ".mp3"));
-                if ((SoundManager.getInstance().manager is ClassicSoundManager))
-                {
-                    this._actualFightMusic = SoundFactory.getSound(EnumSoundType.UNLOCALIZED_SOUND, soundUri);
-                };
-                if ((SoundManager.getInstance().manager is RegSoundManager))
-                {
-                    this._actualFightMusic = new SoundDofus(String(sound.id));
-                };
-                this._actualFightMusic.busId = busId;
-                this._actualFightMusic.volume = 1;
-                this._actualFightMusic.currentFadeVolume = 0;
-                fadeCurrentMusic = new VolumeFadeEffect(-1, 1, TubulSoundConfiguration.TIME_FADE_IN_MUSIC);
-                this._actualFightMusic.play(true, 0, fadeCurrentMusic);
+                RegConnectionManager.getInstance().send(ProtocolEnum.ADD_SOUNDS_PLAYLIST, playlist.crossfadeDuration, playlist.startRandom, playlist.startRandomOnce, playlist.random, fightSongs);
             };
         }
 
         public function stopFightMusic():void
         {
-            if (((!(SoundManager.getInstance().manager.soundIsActivate)) || ((this._actualFightMusic == null))))
+            if (!SoundManager.getInstance().manager.soundIsActivate)
             {
                 return;
             };
-            if ((((SoundManager.getInstance().manager is RegSoundManager)) && (!(RegConnectionManager.getInstance().isMain))))
+            if (!RegConnectionManager.getInstance().isMain)
             {
                 return;
             };
-            var stopFadeMusic:VolumeFadeEffect = new VolumeFadeEffect(-1, 0, TubulSoundConfiguration.TIME_FADE_OUT_MUSIC);
-            this._actualFightMusic.stop(stopFadeMusic);
-            SoundManager.getInstance().manager.fadeBusVolume(TubulSoundConfiguration.BUS_AMBIENT_2D_ID, SoundManager.getInstance().options["volumeAmbientSound"], (TubulSoundConfiguration.TIME_FADE_IN_MUSIC * 2));
-            SoundManager.getInstance().manager.fadeBusVolume(TubulSoundConfiguration.BUS_MUSIC_ID, SoundManager.getInstance().options["volumeMusic"], (TubulSoundConfiguration.TIME_FADE_IN_MUSIC * 2));
+            RegConnectionManager.getInstance().send(ProtocolEnum.STOP_FIGHT_MUSIC);
         }
 
-        public function setFightSounds(pFightMusic:Vector.<AmbientSound>, pBossMusic:Vector.<AmbientSound>):void
+        public function setFightSounds(pFightMusic:Vector.<AmbientSound>, pBossMusic:Vector.<AmbientSound>, combatPlaylist:Playlist, bossFightPlaylist:Playlist):void
         {
-            var _local_4:AmbientSound;
+            var asound:AmbientSound;
             this._fightMusics = pFightMusic;
             this._bossMusics = pBossMusic;
+            this._fightMusicPlaylist = combatPlaylist;
+            this._bossMusicPlaylist = bossFightPlaylist;
             var logText:String = "";
-            if ((((this._fightMusics.length == 0)) && ((this._bossMusics.length == 0))))
+            if (((((this._fightMusics.length == 0) && (this._bossMusics.length == 0)) && ((!(this._fightMusicPlaylist)) || (this._fightMusicPlaylist.sounds.length == 0))) && ((!(this._bossMusicPlaylist)) || (this._bossMusicPlaylist.sounds.length == 0))))
             {
                 logText = "Ni musique de combat, ni musique de boss ???";
             }
             else
             {
                 logText = "Cette map contient les musiques de combat : ";
-                for each (_local_4 in this._fightMusics)
+                for each (asound in this._fightMusics)
                 {
-                    logText = (logText + (_local_4.id + ", "));
+                    logText = (logText + (asound.id + ", "));
                 };
                 logText = " et les musiques de boss d'id : ";
-                for each (_local_4 in this._bossMusics)
+                for each (asound in this._bossMusics)
                 {
-                    logText = (logText + (_local_4.id + ", "));
+                    logText = (logText + (asound.id + ", "));
                 };
             };
             _log.info(logText);
@@ -159,37 +124,71 @@
 
         public function selectValidSounds():void
         {
-            var ambientSound:AmbientSound;
             var rnd:int;
+            var playlistSound:PlaylistSound;
+            var ambientSound:AmbientSound;
             var count:int;
-            for each (ambientSound in this._fightMusics)
+            if (((this._fightMusicPlaylist) && (this._fightMusicPlaylist.sounds.length > 0)))
             {
-                count++;
-            };
-            rnd = int((Math.random() * count));
-            for each (ambientSound in this._fightMusics)
-            {
-                if (rnd == 0)
+                count = this._fightMusicPlaylist.sounds.length;
+                rnd = int(int((Math.random() * count)));
+                for each (playlistSound in this._fightMusicPlaylist.sounds)
                 {
-                    this._fightMusic = ambientSound;
-                    break;
+                    if (rnd == 0)
+                    {
+                        this._fightMusic = playlistSound;
+                        break;
+                    };
+                    rnd--;
                 };
-                rnd--;
-            };
-            count = 0;
-            for each (ambientSound in this._bossMusics)
+            }
+            else
             {
-                count++;
-            };
-            rnd = int((Math.random() * count));
-            for each (ambientSound in this._bossMusics)
-            {
-                if (rnd == 0)
+                for each (ambientSound in this._fightMusics)
                 {
-                    this._bossMusic = ambientSound;
-                    break;
+                    count++;
                 };
-                rnd--;
+                rnd = int(int((Math.random() * count)));
+                for each (ambientSound in this._fightMusics)
+                {
+                    if (rnd == 0)
+                    {
+                        this._fightMusic = ambientSound;
+                        break;
+                    };
+                    rnd--;
+                };
+            };
+            if (((this._bossMusicPlaylist) && (this._bossMusicPlaylist.sounds.length > 0)))
+            {
+                count = this._bossMusicPlaylist.sounds.length;
+                rnd = int(int((Math.random() * count)));
+                for each (playlistSound in this._bossMusicPlaylist.sounds)
+                {
+                    if (rnd == 0)
+                    {
+                        this._bossMusic = playlistSound;
+                        break;
+                    };
+                    rnd--;
+                };
+            }
+            else
+            {
+                for each (ambientSound in this._bossMusics)
+                {
+                    count++;
+                };
+                rnd = int(int((Math.random() * count)));
+                for each (ambientSound in this._bossMusics)
+                {
+                    if (rnd == 0)
+                    {
+                        this._bossMusic = ambientSound;
+                        break;
+                    };
+                    rnd--;
+                };
             };
         }
 
@@ -199,7 +198,33 @@
             this._fightMusicBalanceManager = new BalanceManager(this._fightMusicsId);
         }
 
+        private function createPlaylistSounds(playlist:Playlist):Array
+        {
+            var playlistSound:PlaylistSound;
+            var music:ISound;
+            var soundUriM:Uri;
+            var soundPathM:String;
+            var iteration:int;
+            var songsContainer:Array = new Array();
+            for each (playlistSound in playlist.sounds)
+            {
+                soundPathM = SoundUtil.getConfigEntryByBusId(playlistSound.channel);
+                soundUriM = new Uri(((soundPathM + playlistSound.id) + ".mp3"));
+                music = new SoundDofus(String(playlistSound.id));
+                iteration = playlist.iteration;
+                if (iteration <= 0)
+                {
+                    iteration = 1;
+                };
+                music.setLoops(iteration);
+                music.volume = (playlistSound.volume / 100);
+                music.currentFadeVolume = 0;
+                songsContainer.push(music.id);
+            };
+            return (songsContainer);
+        }
+
 
     }
-}//package com.ankamagames.dofus.kernel.sound.manager
+} com.ankamagames.dofus.kernel.sound.manager
 

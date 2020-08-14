@@ -1,6 +1,7 @@
-﻿package com.ankamagames.dofus.datacenter.world
+package com.ankamagames.dofus.datacenter.world
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
+    import com.ankamagames.dofus.types.IdAccessors;
     import com.ankamagames.jerakine.data.GameData;
     import com.ankamagames.jerakine.data.I18n;
 
@@ -9,6 +10,7 @@
 
         public static const MODULE:String = "SuperAreas";
         private static var _allSuperAreas:Array;
+        public static var idAccessors:IdAccessors = new IdAccessors(getSuperAreaById, getAllSuperArea);
 
         public var id:int;
         public var nameId:uint;
@@ -21,7 +23,7 @@
         public static function getSuperAreaById(id:int):SuperArea
         {
             var superArea:SuperArea = (GameData.getObject(MODULE, id) as SuperArea);
-            if (!(superArea))
+            if (!superArea)
             {
                 return (null);
             };
@@ -41,7 +43,7 @@
 
         public function get name():String
         {
-            if (!(this._name))
+            if (!this._name)
             {
                 this._name = I18n.getText(this.nameId);
             };
@@ -50,9 +52,9 @@
 
         public function get worldmap():WorldMap
         {
-            if (!(this._worldmap))
+            if (!this._worldmap)
             {
-                if (!(this.hasWorldMap))
+                if (!this.hasWorldMap)
                 {
                     this.worldmapId = 1;
                 };
@@ -63,5 +65,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.world
+} com.ankamagames.dofus.datacenter.world
 

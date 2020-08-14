@@ -1,7 +1,8 @@
-﻿package com.ankamagames.dofus.network.types.game.paddock
+package com.ankamagames.dofus.network.types.game.paddock
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import __AS3__.vec.Vector;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
     import __AS3__.vec.*;
@@ -11,26 +12,22 @@
 
         public static const protocolId:uint = 183;
 
-        public var paddockId:int = 0;
+        public var paddockId:Number = 0;
         public var worldX:int = 0;
         public var worldY:int = 0;
-        public var mapId:int = 0;
+        public var mapId:Number = 0;
         public var subAreaId:uint = 0;
         public var abandonned:Boolean = false;
-        public var mountsInformations:Vector.<MountInformationsForPaddock>;
+        public var mountsInformations:Vector.<MountInformationsForPaddock> = new Vector.<MountInformationsForPaddock>();
+        private var _mountsInformationstree:FuncTree;
 
-        public function PaddockContentInformations()
-        {
-            this.mountsInformations = new Vector.<MountInformationsForPaddock>();
-            super();
-        }
 
         override public function getTypeId():uint
         {
             return (183);
         }
 
-        public function initPaddockContentInformations(maxOutdoorMount:uint=0, maxItems:uint=0, paddockId:int=0, worldX:int=0, worldY:int=0, mapId:int=0, subAreaId:uint=0, abandonned:Boolean=false, mountsInformations:Vector.<MountInformationsForPaddock>=null):PaddockContentInformations
+        public function initPaddockContentInformations(maxOutdoorMount:uint=0, maxItems:uint=0, paddockId:Number=0, worldX:int=0, worldY:int=0, mapId:Number=0, subAreaId:uint=0, abandonned:Boolean=false, mountsInformations:Vector.<MountInformationsForPaddock>=null):PaddockContentInformations
         {
             super.initPaddockInformations(maxOutdoorMount, maxItems);
             this.paddockId = paddockId;
@@ -63,18 +60,26 @@
         public function serializeAs_PaddockContentInformations(output:ICustomDataOutput):void
         {
             super.serializeAs_PaddockInformations(output);
-            output.writeInt(this.paddockId);
-            if ((((this.worldX < -255)) || ((this.worldX > 0xFF))))
+            if (((this.paddockId < 0) || (this.paddockId > 9007199254740992)))
+            {
+                throw (new Error((("Forbidden value (" + this.paddockId) + ") on element paddockId.")));
+            };
+            output.writeDouble(this.paddockId);
+            if (((this.worldX < -255) || (this.worldX > 0xFF)))
             {
                 throw (new Error((("Forbidden value (" + this.worldX) + ") on element worldX.")));
             };
             output.writeShort(this.worldX);
-            if ((((this.worldY < -255)) || ((this.worldY > 0xFF))))
+            if (((this.worldY < -255) || (this.worldY > 0xFF)))
             {
                 throw (new Error((("Forbidden value (" + this.worldY) + ") on element worldY.")));
             };
             output.writeShort(this.worldY);
-            output.writeInt(this.mapId);
+            if (((this.mapId < 0) || (this.mapId > 9007199254740992)))
+            {
+                throw (new Error((("Forbidden value (" + this.mapId) + ") on element mapId.")));
+            };
+            output.writeDouble(this.mapId);
             if (this.subAreaId < 0)
             {
                 throw (new Error((("Forbidden value (" + this.subAreaId) + ") on element subAreaId.")));
@@ -99,24 +104,12 @@
         {
             var _item7:MountInformationsForPaddock;
             super.deserialize(input);
-            this.paddockId = input.readInt();
-            this.worldX = input.readShort();
-            if ((((this.worldX < -255)) || ((this.worldX > 0xFF))))
-            {
-                throw (new Error((("Forbidden value (" + this.worldX) + ") on element of PaddockContentInformations.worldX.")));
-            };
-            this.worldY = input.readShort();
-            if ((((this.worldY < -255)) || ((this.worldY > 0xFF))))
-            {
-                throw (new Error((("Forbidden value (" + this.worldY) + ") on element of PaddockContentInformations.worldY.")));
-            };
-            this.mapId = input.readInt();
-            this.subAreaId = input.readVarUhShort();
-            if (this.subAreaId < 0)
-            {
-                throw (new Error((("Forbidden value (" + this.subAreaId) + ") on element of PaddockContentInformations.subAreaId.")));
-            };
-            this.abandonned = input.readBoolean();
+            this._paddockIdFunc(input);
+            this._worldXFunc(input);
+            this._worldYFunc(input);
+            this._mapIdFunc(input);
+            this._subAreaIdFunc(input);
+            this._abandonnedFunc(input);
             var _mountsInformationsLen:uint = input.readUnsignedShort();
             var _i7:uint;
             while (_i7 < _mountsInformationsLen)
@@ -128,7 +121,92 @@
             };
         }
 
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_PaddockContentInformations(tree);
+        }
+
+        public function deserializeAsyncAs_PaddockContentInformations(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._paddockIdFunc);
+            tree.addChild(this._worldXFunc);
+            tree.addChild(this._worldYFunc);
+            tree.addChild(this._mapIdFunc);
+            tree.addChild(this._subAreaIdFunc);
+            tree.addChild(this._abandonnedFunc);
+            this._mountsInformationstree = tree.addChild(this._mountsInformationstreeFunc);
+        }
+
+        private function _paddockIdFunc(input:ICustomDataInput):void
+        {
+            this.paddockId = input.readDouble();
+            if (((this.paddockId < 0) || (this.paddockId > 9007199254740992)))
+            {
+                throw (new Error((("Forbidden value (" + this.paddockId) + ") on element of PaddockContentInformations.paddockId.")));
+            };
+        }
+
+        private function _worldXFunc(input:ICustomDataInput):void
+        {
+            this.worldX = input.readShort();
+            if (((this.worldX < -255) || (this.worldX > 0xFF)))
+            {
+                throw (new Error((("Forbidden value (" + this.worldX) + ") on element of PaddockContentInformations.worldX.")));
+            };
+        }
+
+        private function _worldYFunc(input:ICustomDataInput):void
+        {
+            this.worldY = input.readShort();
+            if (((this.worldY < -255) || (this.worldY > 0xFF)))
+            {
+                throw (new Error((("Forbidden value (" + this.worldY) + ") on element of PaddockContentInformations.worldY.")));
+            };
+        }
+
+        private function _mapIdFunc(input:ICustomDataInput):void
+        {
+            this.mapId = input.readDouble();
+            if (((this.mapId < 0) || (this.mapId > 9007199254740992)))
+            {
+                throw (new Error((("Forbidden value (" + this.mapId) + ") on element of PaddockContentInformations.mapId.")));
+            };
+        }
+
+        private function _subAreaIdFunc(input:ICustomDataInput):void
+        {
+            this.subAreaId = input.readVarUhShort();
+            if (this.subAreaId < 0)
+            {
+                throw (new Error((("Forbidden value (" + this.subAreaId) + ") on element of PaddockContentInformations.subAreaId.")));
+            };
+        }
+
+        private function _abandonnedFunc(input:ICustomDataInput):void
+        {
+            this.abandonned = input.readBoolean();
+        }
+
+        private function _mountsInformationstreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._mountsInformationstree.addChild(this._mountsInformationsFunc);
+                i++;
+            };
+        }
+
+        private function _mountsInformationsFunc(input:ICustomDataInput):void
+        {
+            var _item:MountInformationsForPaddock = new MountInformationsForPaddock();
+            _item.deserialize(input);
+            this.mountsInformations.push(_item);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.types.game.paddock
+} com.ankamagames.dofus.network.types.game.paddock
 

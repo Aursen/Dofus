@@ -1,18 +1,24 @@
-﻿package com.ankamagames.atouin.types
+package com.ankamagames.atouin.types
 {
     import flash.display.Sprite;
     import com.ankamagames.jerakine.entities.interfaces.IDisplayable;
     import com.ankamagames.jerakine.interfaces.ITransparency;
+    import com.ankamagames.jerakine.logger.Logger;
+    import com.ankamagames.jerakine.logger.Log;
+    import flash.utils.getQualifiedClassName;
     import com.ankamagames.jerakine.resources.loaders.IResourceLoader;
     import com.ankamagames.jerakine.types.Uri;
     import flash.display.BitmapData;
     import com.ankamagames.jerakine.entities.behaviours.IDisplayBehavior;
     import flash.geom.Point;
+    import flash.geom.ColorTransform;
     import com.ankamagames.jerakine.resources.loaders.ResourceLoaderFactory;
     import com.ankamagames.jerakine.resources.loaders.ResourceLoaderType;
     import com.ankamagames.jerakine.resources.events.ResourceLoadedEvent;
     import com.ankamagames.jerakine.resources.adapters.impl.AdvancedSwfAdapter;
     import flash.system.ApplicationDomain;
+    import flash.display.DisplayObjectContainer;
+    import flash.display.DisplayObject;
     import com.ankamagames.atouin.AtouinConstants;
     import com.ankamagames.atouin.enums.PlacementStrataEnums;
     import com.ankamagames.atouin.managers.EntitiesDisplayManager;
@@ -26,6 +32,7 @@
     public class ZoneClipTile extends Sprite implements IDisplayable, ITransparency 
     {
 
+        protected static const _log:Logger = Log.getLogger(getQualifiedClassName(ZoneClipTile));
         private static var clips:Array = new Array();
         private static var loader:IResourceLoader;
         private static var no_z_render_strata:Sprite = new Sprite();
@@ -34,7 +41,7 @@
         private var _uri:Uri;
         private var _clipName:String;
         private var _needBorders:Boolean;
-        private var _borderSprites:Array;
+        private var _borderSprites:Array = new Array();
         private var _borderBitmapData:BitmapData;
         private var _displayMe:Boolean = false;
         private var _currentRessource:LoadedTile;
@@ -43,12 +50,13 @@
         private var _currentCell:Point;
         private var _cellId:uint;
         public var strata:uint = 0;
+        public var useStrataOrderHack:Boolean = true;
         protected var _cellInstance:Sprite;
+        private var _colorTransform:ColorTransform;
 
-        public function ZoneClipTile(pUri:Uri, pClipName:String="Bloc", pNeedBorders:Boolean=false)
+        public function ZoneClipTile(pUri:Uri, pClipName:String="Bloc", pNeedBorders:Boolean=false, color:ColorTransform=null)
         {
             var o:LoadedTile;
-            this._borderSprites = new Array();
             super();
             mouseEnabled = false;
             mouseChildren = false;
@@ -56,7 +64,8 @@
             this._uri = pUri;
             this._clipName = pClipName;
             this._currentRessource = getRessource(pUri.fileName);
-            if ((((this._currentRessource == null)) || ((((loader == null)) && ((this._currentRessource == null))))))
+            this._colorTransform = color;
+            if (((this._currentRessource == null) || ((loader == null) && (this._currentRessource == null))))
             {
                 o = new LoadedTile(this._uri.fileName);
                 o.addClip(this._clipName);
@@ -68,9 +77,9 @@
             }
             else
             {
-                if ((((this._currentRessource.getClip(this._clipName) == null)) || ((this._currentRessource.getClip(this._clipName).clip == null))))
+                if (((this._currentRessource.getClip(this._clipName) == null) || (this._currentRessource.getClip(this._clipName).clip == null)))
                 {
-                    if (!(this._currentRessource.appDomain))
+                    if (!this._currentRessource.appDomain)
                     {
                         loader.addEventListener(ResourceLoadedEvent.LOADED, this.onClipLoaded);
                     }
@@ -96,7 +105,7 @@
             {
                 if (clips[i].fileName == pFileName)
                 {
-                    return ((clips[i] as LoadedTile));
+                    return (clips[i] as LoadedTile);
                 };
                 i = (i + 1);
             };
@@ -123,12 +132,12 @@
             }
             else
             {
-                if ((((o.getClip(this._clipName) == null)) || ((o.getClip(this._clipName).clip == null))))
+                if (((o.getClip(this._clipName) == null) || (o.getClip(this._clipName).clip == null)))
                 {
                     o.addClip(this._clipName, appDomain.getDefinition(this._clipName));
                 };
             };
-            if (!(o.appDomain))
+            if (!o.appDomain)
             {
                 o.appDomain = appDomain;
             };
@@ -142,24 +151,32 @@
 
         public function display(wishedStrata:uint=0):void
         {
-            var _local_2:Object;
+            var r:Object;
             var spr:Sprite;
             var isLeftCol:Boolean;
             var isRightCol:Boolean;
             var isEvenRow:Boolean;
             var spr2:Sprite;
             var spr3:Sprite;
-            var _local_9:Sprite;
-            if ((((((this._currentRessource == null)) || ((this._currentRessource.getClip(this._clipName) == null)))) || ((this._currentRessource.getClip(this._clipName).clip == null))))
+            var cellSprite:Sprite;
+            var selectionCtr:DisplayObjectContainer;
+            if ((((this._currentRessource == null) || (this._currentRessource.getClip(this._clipName) == null)) || (this._currentRessource.getClip(this._clipName).clip == null)))
             {
                 this._displayMe = true;
             }
             else
             {
-                _local_2 = this._currentRessource.getClip(this._clipName);
-                if (_local_2.clip != null)
+                r = this._currentRessource.getClip(this._clipName);
+                if (r.clip != null)
                 {
-                    this._cellInstance = new (_local_2.clip)();
+                    this._cellInstance = new (r.clip)();
+                    if (((this._cellInstance) && (this._colorTransform)))
+                    {
+                        if ((this is DisplayObject))
+                        {
+                            DisplayObject(this._cellInstance).transform.colorTransform = this._colorTransform;
+                        };
+                    };
                     addChild(this._cellInstance);
                 };
                 if (this._needBorders)
@@ -226,19 +243,20 @@
                         };
                     };
                 };
-                if (this.strata != PlacementStrataEnums.STRATA_NO_Z_ORDER)
+                if (((!(this.strata == PlacementStrataEnums.STRATA_NO_Z_ORDER)) || (!(this.useStrataOrderHack))))
                 {
-                    EntitiesDisplayManager.getInstance().displayEntity(this, MapPoint.fromCellId(this.cellId), this.strata);
+                    EntitiesDisplayManager.getInstance().displayEntity(this, MapPoint.fromCellId(this.cellId), this.strata, false);
                 }
                 else
                 {
-                    _local_9 = InteractiveCellManager.getInstance().getCell(MapPoint.fromCellId(this.cellId).cellId);
-                    this.x = (_local_9.x + (_local_9.width / 2));
-                    this.y = (_local_9.y + (_local_9.height / 2));
+                    cellSprite = InteractiveCellManager.getInstance().getCell(MapPoint.fromCellId(this.cellId).cellId);
+                    this.x = (cellSprite.x + (cellSprite.width / 2));
+                    this.y = (cellSprite.y + (cellSprite.height / 2));
                     no_z_render_strata.addChild(this);
-                    if (((!((Atouin.getInstance().selectionContainer == null))) && (!(Atouin.getInstance().selectionContainer.contains(no_z_render_strata)))))
+                    selectionCtr = Atouin.getInstance().selectionContainer;
+                    if (((!(selectionCtr == null)) && (!(selectionCtr.contains(no_z_render_strata)))))
                     {
-                        Atouin.getInstance().selectionContainer.addChildAt(no_z_render_strata, 0);
+                        selectionCtr.addChildAt(no_z_render_strata, 0);
                     };
                 };
                 this._displayed = true;
@@ -300,7 +318,7 @@
             {
                 removeChild(this._cellInstance);
             };
-            if (this.strata != PlacementStrataEnums.STRATA_NO_Z_ORDER)
+            if (((!(this.strata == PlacementStrataEnums.STRATA_NO_Z_ORDER)) || (!(this.useStrataOrderHack))))
             {
                 EntitiesDisplayManager.getInstance().removeEntity(this);
             }
@@ -310,7 +328,7 @@
                 {
                     no_z_render_strata.removeChild(this);
                 };
-                if ((((((no_z_render_strata.numChildren <= 0)) && (Atouin.getInstance().selectionContainer))) && (Atouin.getInstance().selectionContainer.contains(no_z_render_strata))))
+                if ((((no_z_render_strata.numChildren <= 0) && (Atouin.getInstance().selectionContainer)) && (Atouin.getInstance().selectionContainer.contains(no_z_render_strata))))
                 {
                     Atouin.getInstance().selectionContainer.removeChild(no_z_render_strata);
                 };
@@ -319,7 +337,7 @@
 
         public function getIsTransparencyAllowed():Boolean
         {
-            return (true);
+            return (this.useStrataOrderHack);
         }
 
         public function get uri():Uri
@@ -357,12 +375,17 @@
 
 
     }
-}//package com.ankamagames.atouin.types
+} com.ankamagames.atouin.types
 
+import com.ankamagames.jerakine.logger.Logger;
+import com.ankamagames.jerakine.logger.Log;
+import flash.utils.getQualifiedClassName;
 import flash.system.ApplicationDomain;
 
 class LoadedTile 
 {
+
+    protected static const _log:Logger = Log.getLogger(getQualifiedClassName(LoadedTile));
 
     public var fileName:String;
     public var appDomain:ApplicationDomain;
@@ -405,4 +428,5 @@ class LoadedTile
 
 
 }
+
 

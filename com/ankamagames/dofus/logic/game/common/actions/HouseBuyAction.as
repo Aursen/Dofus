@@ -1,14 +1,14 @@
-﻿package com.ankamagames.dofus.logic.game.common.actions
+package com.ankamagames.dofus.logic.game.common.actions
 {
     import com.ankamagames.jerakine.handlers.messages.Action;
 
     public class HouseBuyAction implements Action 
     {
 
-        public var proposedPrice:uint;
+        public var proposedPrice:Number = 0;
 
 
-        public static function create(proposedPrice:uint):HouseBuyAction
+        public static function create(proposedPrice:Number):HouseBuyAction
         {
             var action:HouseBuyAction = new (HouseBuyAction)();
             action.proposedPrice = proposedPrice;
@@ -17,5 +17,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.actions
+} com.ankamagames.dofus.logic.game.common.actions
 

@@ -1,4 +1,4 @@
-﻿package com.hurlant.util.der
+package com.hurlant.util.der
 {
     import flash.utils.ByteArray;
 
@@ -8,9 +8,9 @@
         protected var type:uint;
         protected var len:uint;
 
-        public function Sequence(type:uint=48, length:uint=0)
+        public function Sequence(_arg_1:uint=48, length:uint=0)
         {
-            this.type = type;
+            this.type = _arg_1;
             this.len = length;
         }
 
@@ -61,14 +61,14 @@
                     found = false;
                     for (key in this)
                     {
-                        if (((!((i.toString() == key))) && ((this[i] == this[key]))))
+                        if (((!(i.toString() == key)) && (this[i] == this[key])))
                         {
                             t = (t + (((key + ": ") + this[i]) + "\n"));
                             found = true;
                             break;
                         };
                     };
-                    if (!(found))
+                    if (!found)
                     {
                         t = (t + (this[i] + "\n"));
                     };
@@ -76,20 +76,20 @@
                 i++;
             };
             DER.indent = s;
-            return ((((((((((DER.indent + "Sequence[") + this.type) + "][") + this.len) + "][\n") + t) + "\n") + s) + "]"));
+            return (((((((((DER.indent + "Sequence[") + this.type) + "][") + this.len) + "][\n") + t) + "\n") + s) + "]");
         }
 
         public function findAttributeValue(oid:String):IAsn1Type
         {
-            var set:*;
+            var _local_2:*;
             var child:*;
             var tmp:*;
             var id:ObjectIdentifier;
-            for each (set in this)
+            for each (_local_2 in this)
             {
-                if ((set is Set))
+                if ((_local_2 is Set))
                 {
-                    child = set[0];
+                    child = _local_2[0];
                     if ((child is Sequence))
                     {
                         tmp = child[0];
@@ -98,7 +98,7 @@
                             id = (tmp as ObjectIdentifier);
                             if (id.toString() == oid)
                             {
-                                return ((child[1] as IAsn1Type));
+                                return (child[1] as IAsn1Type);
                             };
                         };
                     };
@@ -109,5 +109,5 @@
 
 
     }
-}//package com.hurlant.util.der
+} com.hurlant.util.der
 

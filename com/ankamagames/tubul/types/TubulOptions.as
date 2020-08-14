@@ -1,8 +1,8 @@
-﻿package com.ankamagames.tubul.types
+package com.ankamagames.tubul.types
 {
     import com.ankamagames.jerakine.managers.OptionManager;
 
-    public dynamic class TubulOptions extends OptionManager 
+    public class TubulOptions extends OptionManager 
     {
 
         public function TubulOptions():void
@@ -13,14 +13,14 @@
             add("muteMusic", false);
             add("muteSound", false);
             add("muteAmbientSound", false);
+            add("globalVolume", 1);
             add("volumeMusic", 0.6);
             add("volumeSound", 0.6);
             add("volumeAmbientSound", 0.6);
             add("playSoundForGuildMessage", true);
             add("playSoundAtTurnStart", true);
-            add("infiniteLoopMusics", false);
         }
 
     }
-}//package com.ankamagames.tubul.types
+} com.ankamagames.tubul.types
 

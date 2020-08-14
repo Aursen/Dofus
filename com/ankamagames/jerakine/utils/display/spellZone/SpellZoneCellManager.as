@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.utils.display.spellZone
+package com.ankamagames.jerakine.utils.display.spellZone
 {
     import flash.display.Sprite;
     import __AS3__.vec.Vector;
@@ -6,7 +6,7 @@
     import com.ankamagames.jerakine.map.IDataMapProvider;
     import com.ankamagames.jerakine.types.zones.Cross;
     import com.ankamagames.jerakine.types.zones.Lozenge;
-    import com.ankamagames.jerakine.types.positions.MapPoint;
+    import mapTools.MapTools;
     import com.ankamagames.jerakine.types.zones.Line;
     import com.ankamagames.jerakine.types.zones.Square;
     import com.ankamagames.jerakine.types.zones.Cone;
@@ -28,8 +28,6 @@
         private var _rollOverCell:SpellZoneCell;
         private var _width:Number;
         private var _height:Number;
-        private var _paddingTop:uint;
-        private var _paddingLeft:uint;
         private var _zoneDisplay:Sprite;
 
         public function SpellZoneCellManager()
@@ -143,17 +141,17 @@
                 nbVerCell = 40;
                 nbHorCell = 14;
                 changementId = 0;
-                cellWidth = (this._width / (nbHorCell + 0.5));
-                cellHeight = (this._height / ((nbVerCell / 2) + 0.5));
+                cellWidth = uint((this._width / (nbHorCell + 0.5)));
+                cellHeight = uint((this._height / ((nbVerCell / 2) + 0.5)));
                 i = 0;
                 while (i < nbVerCell)
                 {
-                    posX = Math.ceil((i / 2));
-                    posY = -(Math.floor((i / 2)));
+                    posX = int(Math.ceil((i / 2)));
+                    posY = int(-(Math.floor((i / 2))));
                     j = 0;
                     while (j < nbHorCell)
                     {
-                        graphicCell = new SpellZoneCell(cellWidth, cellHeight, MapPoint.fromCoords(posX, posY).cellId);
+                        graphicCell = new SpellZoneCell(cellWidth, cellHeight, MapTools.getCellIdByCoord(posX, posY));
                         if (graphicCell.cellId == (SpellZoneConstant.CENTER_CELL_ID + changementId))
                         {
                             this._centerCell = graphicCell;
@@ -167,7 +165,7 @@
                         this.cells.push(graphicCell);
                         graphicCell.posX = posX;
                         graphicCell.posY = posY;
-                        if ((((i == 0)) || (((i % 2) == 0))))
+                        if (((i == 0) || ((i % 2) == 0)))
                         {
                             graphicCell.x = (j * cellWidth);
                         }
@@ -295,17 +293,18 @@
             var dataMapProvider:IDataMapProvider;
             var i:IZoneShape;
             var shape:IZone;
-            var _local_6:Line;
-            var _local_7:Cross;
-            var _local_8:Square;
-            var _local_9:Cross;
+            var line:Line;
+            var shapeT:Cross;
+            var shapeSquare:Square;
+            var shapeCross:Cross;
             var diffPosX:int;
             var diffPosY:int;
             var shapeCode:uint = 88;
             ray = 0;
+            dataMapProvider = null;
             for each (i in this._spellLevel.spellZoneEffects)
             {
-                if (((((!((i.zoneShape == 0))) && ((i.zoneSize < 63)))) && ((((i.zoneSize > ray)) || ((((i.zoneSize == ray)) && ((shapeCode == SpellShapeEnum.P))))))))
+                if ((((!(i.zoneShape == 0)) && (i.zoneSize < 63)) && ((i.zoneSize > ray) || ((i.zoneSize == ray) && (shapeCode == SpellShapeEnum.P)))))
                 {
                     ray = i.zoneSize;
                     shapeCode = i.zoneShape;
@@ -317,13 +316,13 @@
                     shape = new Cross(0, ray, dataMapProvider);
                     break;
                 case SpellShapeEnum.L:
-                    _local_6 = new Line(ray, dataMapProvider);
-                    shape = _local_6;
+                    line = new Line(ray, dataMapProvider);
+                    shape = line;
                     break;
                 case SpellShapeEnum.T:
-                    _local_7 = new Cross(0, ray, dataMapProvider);
-                    _local_7.onlyPerpendicular = true;
-                    shape = _local_7;
+                    shapeT = new Cross(0, ray, dataMapProvider);
+                    shapeT.onlyPerpendicular = true;
+                    shape = shapeT;
                     break;
                 case SpellShapeEnum.D:
                     shape = new Cross(0, ray, dataMapProvider);
@@ -347,33 +346,33 @@
                     shape = new Cone(0, ray, dataMapProvider);
                     break;
                 case SpellShapeEnum.W:
-                    _local_8 = new Square(0, ray, dataMapProvider);
-                    _local_8.diagonalFree = true;
-                    shape = _local_8;
+                    shapeSquare = new Square(0, ray, dataMapProvider);
+                    shapeSquare.diagonalFree = true;
+                    shape = shapeSquare;
                     break;
                 case SpellShapeEnum.plus:
-                    _local_9 = new Cross(0, ray, dataMapProvider);
-                    _local_9.diagonal = true;
-                    shape = _local_9;
+                    shapeCross = new Cross(0, ray, dataMapProvider);
+                    shapeCross.diagonal = true;
+                    shape = shapeCross;
                     break;
                 case SpellShapeEnum.sharp:
-                    _local_9 = new Cross(1, ray, dataMapProvider);
-                    _local_9.diagonal = true;
-                    shape = _local_9;
+                    shapeCross = new Cross(1, ray, dataMapProvider);
+                    shapeCross.diagonal = true;
+                    shape = shapeCross;
                     break;
                 case SpellShapeEnum.star:
-                    _local_9 = new Cross(0, ray, dataMapProvider);
-                    _local_9.allDirections = true;
-                    shape = _local_9;
+                    shapeCross = new Cross(0, ray, dataMapProvider);
+                    shapeCross.allDirections = true;
+                    shape = shapeCross;
                     break;
                 case SpellShapeEnum.slash:
                     shape = new Line(ray, dataMapProvider);
                     break;
                 case SpellShapeEnum.minus:
-                    _local_9 = new Cross(0, ray, dataMapProvider);
-                    _local_9.onlyPerpendicular = true;
-                    _local_9.diagonal = true;
-                    shape = _local_9;
+                    shapeCross = new Cross(0, ray, dataMapProvider);
+                    shapeCross.onlyPerpendicular = true;
+                    shapeCross.diagonal = true;
+                    shape = shapeCross;
                     break;
                 case SpellShapeEnum.U:
                     shape = new HalfLozenge(0, ray, dataMapProvider);
@@ -391,15 +390,15 @@
                 diffPosX = (this._centerCell.posX - this._rollOverCell.posX);
                 diffPosY = (this._centerCell.posY - this._rollOverCell.posY);
                 shape.direction = DirectionsEnum.DOWN_RIGHT;
-                if ((((diffPosX == 0)) && ((diffPosY > 0))))
+                if (((diffPosX == 0) && (diffPosY > 0)))
                 {
                     shape.direction = DirectionsEnum.DOWN_LEFT;
                 };
-                if ((((diffPosX == 0)) && ((diffPosY < 0))))
+                if (((diffPosX == 0) && (diffPosY < 0)))
                 {
                     shape.direction = DirectionsEnum.UP_RIGHT;
                 };
-                if ((((diffPosX > 0)) && ((diffPosY == 0))))
+                if (((diffPosX > 0) && (diffPosY == 0)))
                 {
                     shape.direction = DirectionsEnum.UP_LEFT;
                 };
@@ -409,5 +408,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.utils.display.spellZone
+} com.ankamagames.jerakine.utils.display.spellZone
 

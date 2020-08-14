@@ -1,10 +1,11 @@
-﻿package com.ankamagames.dofus.network.types.game.context.roleplay
+package com.ankamagames.dofus.network.types.game.context.roleplay
 {
     import com.ankamagames.jerakine.network.INetworkType;
-    import com.ankamagames.dofus.network.types.game.look.EntityLook;
     import com.ankamagames.dofus.network.types.game.context.EntityDispositionInformations;
+    import com.ankamagames.dofus.network.types.game.look.EntityLook;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
     public class GameRolePlayNpcInformations extends GameRolePlayActorInformations implements INetworkType 
     {
@@ -21,9 +22,9 @@
             return (156);
         }
 
-        public function initGameRolePlayNpcInformations(contextualId:int=0, look:EntityLook=null, disposition:EntityDispositionInformations=null, npcId:uint=0, sex:Boolean=false, specialArtworkId:uint=0):GameRolePlayNpcInformations
+        public function initGameRolePlayNpcInformations(contextualId:Number=0, disposition:EntityDispositionInformations=null, look:EntityLook=null, npcId:uint=0, sex:Boolean=false, specialArtworkId:uint=0):GameRolePlayNpcInformations
         {
-            super.initGameRolePlayActorInformations(contextualId, look, disposition);
+            super.initGameRolePlayActorInformations(contextualId, disposition, look);
             this.npcId = npcId;
             this.sex = sex;
             this.specialArtworkId = specialArtworkId;
@@ -67,12 +68,40 @@
         public function deserializeAs_GameRolePlayNpcInformations(input:ICustomDataInput):void
         {
             super.deserialize(input);
+            this._npcIdFunc(input);
+            this._sexFunc(input);
+            this._specialArtworkIdFunc(input);
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GameRolePlayNpcInformations(tree);
+        }
+
+        public function deserializeAsyncAs_GameRolePlayNpcInformations(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._npcIdFunc);
+            tree.addChild(this._sexFunc);
+            tree.addChild(this._specialArtworkIdFunc);
+        }
+
+        private function _npcIdFunc(input:ICustomDataInput):void
+        {
             this.npcId = input.readVarUhShort();
             if (this.npcId < 0)
             {
                 throw (new Error((("Forbidden value (" + this.npcId) + ") on element of GameRolePlayNpcInformations.npcId.")));
             };
+        }
+
+        private function _sexFunc(input:ICustomDataInput):void
+        {
             this.sex = input.readBoolean();
+        }
+
+        private function _specialArtworkIdFunc(input:ICustomDataInput):void
+        {
             this.specialArtworkId = input.readVarUhShort();
             if (this.specialArtworkId < 0)
             {
@@ -82,5 +111,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.context.roleplay
+} com.ankamagames.dofus.network.types.game.context.roleplay
 

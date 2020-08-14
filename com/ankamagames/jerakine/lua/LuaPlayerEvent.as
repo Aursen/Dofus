@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.lua
+package com.ankamagames.jerakine.lua
 {
     import flash.events.Event;
 
@@ -17,5 +17,5 @@
         }
 
     }
-}//package com.ankamagames.jerakine.lua
+} com.ankamagames.jerakine.lua
 

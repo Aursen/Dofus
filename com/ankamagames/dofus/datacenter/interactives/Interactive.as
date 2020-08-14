@@ -1,6 +1,7 @@
-﻿package com.ankamagames.dofus.datacenter.interactives
+package com.ankamagames.dofus.datacenter.interactives
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
+    import com.ankamagames.dofus.types.IdAccessors;
     import com.ankamagames.jerakine.data.GameData;
     import com.ankamagames.jerakine.data.I18n;
 
@@ -8,6 +9,7 @@
     {
 
         public static const MODULE:String = "Interactives";
+        public static var idAccessors:IdAccessors = new IdAccessors(getInteractiveById, getInteractives);
 
         public var id:int;
         public var nameId:uint;
@@ -18,7 +20,7 @@
 
         public static function getInteractiveById(id:int):Interactive
         {
-            return ((GameData.getObject(MODULE, id) as Interactive));
+            return (GameData.getObject(MODULE, id) as Interactive);
         }
 
         public static function getInteractives():Array
@@ -29,7 +31,7 @@
 
         public function get name():String
         {
-            if (!(this._name))
+            if (!this._name)
             {
                 this._name = I18n.getText(this.nameId);
             };
@@ -38,5 +40,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.interactives
+} com.ankamagames.dofus.datacenter.interactives
 

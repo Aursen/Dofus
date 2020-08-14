@@ -1,7 +1,6 @@
-﻿package com.ankamagames.jerakine.utils.benchmark.monitoring
+package com.ankamagames.jerakine.utils.benchmark.monitoring
 {
     import flash.display.Sprite;
-    import flash.net.LocalConnection;
     import flash.geom.Point;
     import com.ankamagames.jerakine.utils.benchmark.monitoring.ui.StateButton;
     import com.ankamagames.jerakine.utils.benchmark.monitoring.ui.RedrawRegionButton;
@@ -9,9 +8,7 @@
     import com.ankamagames.jerakine.utils.benchmark.monitoring.ui.ExtensionPanel;
     import flash.utils.getTimer;
     import flash.events.MouseEvent;
-    import com.ankamagames.jerakine.utils.system.AirScanner;
     import flash.system.System;
-    import flash.events.StatusEvent;
     import com.ankamagames.jerakine.utils.display.StageShareManager;
     import flash.events.Event;
     import flash.profiler.showRedrawRegions;
@@ -21,8 +18,6 @@
 
         private static var _instance:FpsManager;
 
-        private var conn:LocalConnection;
-        private var isExternal:Boolean;
         private var _decal:Point;
         private var _btnStateSpr:StateButton;
         private var _btnRetrace:RedrawRegionButton;
@@ -30,12 +25,10 @@
         private var _extensionPanel:ExtensionPanel;
         private var _redrawRegionsVisible:Boolean = false;
         private var _ticks:uint = 0;
-        private var _last:uint;
+        private var _last:uint = getTimer();
 
         public function FpsManager()
         {
-            this._last = getTimer();
-            super();
             this._btnRetrace = new RedrawRegionButton((FpsManagerConst.BOX_WIDTH + 30), 0);
             this._btnRetrace.addEventListener(MouseEvent.CLICK, this.redrawRegionHandler);
             addChild(this._btnRetrace);
@@ -43,16 +36,13 @@
             addChild(this._graphPanel);
             this._extensionPanel = new ExtensionPanel(this);
             this._btnStateSpr = new StateButton((FpsManagerConst.BOX_WIDTH + 5), 0);
-            this._btnStateSpr.addEventListener(MouseEvent.CLICK, this.changeStateHandler);
+            this._btnStateSpr.addEventListener(MouseEvent.CLICK, this.changeState);
             addChild(this._btnStateSpr);
             FpsManagerConst.PLAYER_VERSION = FpsManagerUtils.getVersion();
             x = (y = 50);
             if (FpsManagerConst.PLAYER_VERSION >= 10)
             {
-                if (AirScanner.hasAir())
-                {
-                    this._graphPanel.previousFreeMem = FpsManagerUtils.calculateMB(System["freeMemory"]);
-                };
+                this._graphPanel.previousFreeMem = FpsManagerUtils.calculateMB(System["freeMemory"]);
                 this._extensionPanel.lastGc = getTimer();
             };
             this.startTracking(FpsManagerConst.SPECIAL_GRAPH[1].name, FpsManagerConst.SPECIAL_GRAPH[1].color);
@@ -68,18 +58,16 @@
         }
 
 
-        public function display(pExternal:Boolean=false):void
+        public function dumpData():String
+        {
+            return (this._extensionPanel.dumpData());
+        }
+
+        public function display():void
         {
             if (_instance == null)
             {
                 throw (new Error("FpsManager is not initialized"));
-            };
-            this.isExternal = pExternal;
-            if (pExternal)
-            {
-                this.conn = new LocalConnection();
-                this.conn.addEventListener(StatusEvent.STATUS, this.onStatus);
-                this.conn.send("app#DofusDebugger:DofusDebugConnection", "updateStatus", true);
             };
             StageShareManager.stage.addChild(_instance);
             this._graphPanel.addEventListener(MouseEvent.MOUSE_DOWN, this.onMouseDown);
@@ -92,18 +80,8 @@
             {
                 throw (new Error("FpsManager is not initialized"));
             };
-            if (this.isExternal)
-            {
-                this.conn.send("app#DofusDebugger:DofusDebugConnection", "updateStatus", false);
-                this.conn.removeEventListener(StatusEvent.STATUS, this.onStatus);
-                this.conn.close();
-                this.conn = null;
-            }
-            else
-            {
-                StageShareManager.stage.removeChild(_instance);
-                this._graphPanel.removeEventListener(MouseEvent.MOUSE_DOWN, this.onMouseDown);
-            };
+            StageShareManager.stage.removeChild(_instance);
+            this._graphPanel.removeEventListener(MouseEvent.MOUSE_DOWN, this.onMouseDown);
             StageShareManager.stage.removeEventListener(Event.ENTER_FRAME, this.loop);
         }
 
@@ -128,27 +106,13 @@
             pEvt.updateAfterEvent();
         }
 
-        private function onStatus(event:StatusEvent):void
-        {
-            switch (event.level)
-            {
-                case "status":
-                    return;
-                case "error":
-                    trace("LocalConnection.send() failed");
-                    this.conn.removeEventListener(StatusEvent.STATUS, this.onStatus);
-                    this.conn = null;
-                    return;
-            };
-        }
-
         private function redrawRegionHandler(pEvt:MouseEvent):void
         {
-            this._redrawRegionsVisible = !(this._redrawRegionsVisible);
+            this._redrawRegionsVisible = (!(this._redrawRegionsVisible));
             showRedrawRegions(this._redrawRegionsVisible, 17595);
         }
 
-        private function changeStateHandler(pEvt:MouseEvent):void
+        public function changeState(pEvt:MouseEvent=null):void
         {
             this._extensionPanel.changeState();
         }
@@ -156,8 +120,6 @@
         private function loop(pEvt:Event):void
         {
             var fpsValue:Number;
-            var graphList:Array;
-            var o:Object;
             this.stopTracking(FpsManagerConst.SPECIAL_GRAPH[0].name);
             this.startTracking(FpsManagerConst.SPECIAL_GRAPH[0].name, FpsManagerConst.SPECIAL_GRAPH[0].color);
             this._graphPanel.update();
@@ -168,17 +130,6 @@
             if (delta >= 500)
             {
                 fpsValue = ((this._ticks / delta) * 1000);
-                if (((this.isExternal) && (!((this.conn == null)))))
-                {
-                    this.conn.send("app#DofusDebugger:DofusDebugConnection", "updateValues", fpsValue, this._graphPanel.memory, FpsManagerUtils.getTimeFromNow(this._extensionPanel.lastGc));
-                    graphList = this._graphPanel.getExternalGraphs();
-                    for each (o in graphList)
-                    {
-                        if (this.conn == null) break;
-                        this.conn.send("app#DofusDebugger:DofusDebugConnection", "updateGraphValues", o.name, o.color, o.points);
-                    };
-                    this.conn.send("app#DofusDebugger:DofusDebugConnection", "updateGraphes");
-                };
                 this._graphPanel.updateFpsValue(fpsValue);
                 this._extensionPanel.update();
                 this._ticks = 0;
@@ -190,21 +141,18 @@
         {
             var currentFreeMem:Number;
             var max_memory:Number;
-            this._graphPanel.memory = FpsManagerUtils.calculateMB(System.totalMemory).toPrecision(3);
-            if (AirScanner.hasAir())
+            this._graphPanel.memory = FpsManagerUtils.calculateMB(System.totalMemory).toPrecision(4);
+            if (FpsManagerConst.PLAYER_VERSION >= 10)
             {
-                if (FpsManagerConst.PLAYER_VERSION >= 10)
+                currentFreeMem = FpsManagerUtils.calculateMB(System["freeMemory"]);
+                if ((currentFreeMem - this._graphPanel.previousFreeMem) > 1)
                 {
-                    currentFreeMem = FpsManagerUtils.calculateMB(System["freeMemory"]);
-                    if ((currentFreeMem - this._graphPanel.previousFreeMem) > 1)
-                    {
-                        this._extensionPanel.lastGc = getTimer();
-                    };
-                    max_memory = FpsManagerUtils.calculateMB(System["privateMemory"]);
-                    this._graphPanel.memory = (this._graphPanel.memory + ("/" + max_memory.toPrecision(3)));
-                    this._graphPanel.previousFreeMem = currentFreeMem;
-                    this._extensionPanel.updateGc(max_memory);
+                    this._extensionPanel.lastGc = getTimer();
                 };
+                max_memory = FpsManagerUtils.calculateMB(System["privateMemory"]);
+                this._graphPanel.memory = (this._graphPanel.memory + ("/" + max_memory.toPrecision(4)));
+                this._graphPanel.previousFreeMem = currentFreeMem;
+                this._extensionPanel.updateGc(max_memory);
             };
             this._graphPanel.memory = (this._graphPanel.memory + " MB");
         }
@@ -219,12 +167,12 @@
             this._graphPanel.stopTracking(pIndice);
         }
 
-        public function watchObject(o:Object, incrementParents:Boolean=false):void
+        public function watchObject(o:Object, incrementParents:Boolean=false, objectClassName:String=null):void
         {
-            this._extensionPanel.watchObject(o, FpsManagerUtils.getBrightRandomColor(), incrementParents);
+            this._extensionPanel.watchObject(o, FpsManagerUtils.getBrightRandomColor(), incrementParents, objectClassName);
         }
 
 
     }
-}//package com.ankamagames.jerakine.utils.benchmark.monitoring
+} com.ankamagames.jerakine.utils.benchmark.monitoring
 

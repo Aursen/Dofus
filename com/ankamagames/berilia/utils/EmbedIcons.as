@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.utils
+package com.ankamagames.berilia.utils
 {
     import flash.display.BitmapData;
 
@@ -9,5 +9,5 @@
 
 
     }
-}//package com.ankamagames.berilia.utils
+} com.ankamagames.berilia.utils
 

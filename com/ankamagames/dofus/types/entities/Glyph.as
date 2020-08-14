@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.types.entities
+package com.ankamagames.dofus.types.entities
 {
     import com.ankamagames.jerakine.interfaces.IObstacle;
     import flash.filters.GlowFilter;
@@ -6,7 +6,7 @@
     import com.ankamagames.berilia.components.Label;
     import com.ankamagames.tiphon.types.look.TiphonEntityLook;
     import com.ankamagames.dofus.types.enums.PortalAnimationEnum;
-    import com.ankamagames.dofus.network.enums.GameActionMarkTypeEnum;
+    import tools.enumeration.GameActionMarkTypeEnum;
     import flash.display.Sprite;
     import com.ankamagames.jerakine.data.XmlConfig;
     import com.ankamagames.jerakine.types.Color;
@@ -34,7 +34,7 @@
         public function canWalkThrough():Boolean
         {
             var v:Boolean = true;
-            if ((((this.glyphType == GameActionMarkTypeEnum.PORTAL)) && (!((getAnimation() == PortalAnimationEnum.STATE_DISABLED)))))
+            if (((this.glyphType == GameActionMarkTypeEnum.TRAP) || ((this.glyphType == GameActionMarkTypeEnum.PORTAL) && (!(getAnimation() == PortalAnimationEnum.STATE_DISABLED)))))
             {
                 v = false;
             };
@@ -49,13 +49,13 @@
         public function addNumber(num:int, color:Color=null):void
         {
             var number:Sprite;
-            if (((!(this.lbl_number)) || ((this.lbl_number == null))))
+            if (((!(this.lbl_number)) || (this.lbl_number == null)))
             {
-                if (!(CSS_URI))
+                if (!CSS_URI)
                 {
                     CSS_URI = new Uri((XmlConfig.getInstance().getEntry("config.ui.skin") + "css/normal.css"));
                 };
-                if (((!(GLOW_FILTER)) || (((!((GLOW_FILTER.color == color.color))) && (!((color == null)))))))
+                if (((!(GLOW_FILTER)) || ((!(GLOW_FILTER.color == color.color)) && (!(color == null)))))
                 {
                     if (color == null)
                     {
@@ -86,7 +86,12 @@
             };
         }
 
+        override public function getIsTransparencyAllowed():Boolean
+        {
+            return (true);
+        }
+
 
     }
-}//package com.ankamagames.dofus.types.entities
+} com.ankamagames.dofus.types.entities
 

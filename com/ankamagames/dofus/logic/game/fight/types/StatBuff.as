@@ -1,11 +1,12 @@
-﻿package com.ankamagames.dofus.logic.game.fight.types
+package com.ankamagames.dofus.logic.game.fight.types
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
-    import com.ankamagames.dofus.logic.game.fight.miscs.ActionIdConverter;
+    import tools.ActionIdHelper;
     import com.ankamagames.dofus.network.types.game.actions.fight.FightTemporaryBoostEffect;
     import com.ankamagames.dofus.datacenter.effects.instances.EffectInstanceDice;
+    import com.ankamagames.dofus.misc.utils.GameDebugManager;
     import com.ankamagames.dofus.logic.game.fight.managers.CurrentPlayedFighterManager;
     import com.ankamagames.dofus.network.types.game.character.characteristic.CharacterCharacteristicsInformations;
     import com.ankamagames.dofus.network.types.game.character.characteristic.CharacterBaseCharacteristic;
@@ -13,7 +14,6 @@
     import com.ankamagames.dofus.logic.game.fight.frames.FightSpellCastFrame;
     import com.ankamagames.dofus.logic.game.fight.frames.FightEntitiesFrame;
     import com.ankamagames.dofus.network.types.game.context.fight.GameFightFighterInformations;
-    import com.ankamagames.dofus.network.enums.GameActionFightInvisibilityStateEnum;
     import com.ankamagames.dofus.datacenter.effects.Effect;
 
     public class StatBuff extends BasicBuff 
@@ -24,14 +24,16 @@
         private var _statName:String;
         private var _isABoost:Boolean;
         private var _zeroDiff:int;
+        public var isRecent:Boolean;
 
-        public function StatBuff(effect:FightTemporaryBoostEffect=null, castingSpell:CastingSpell=null, actionId:int=0)
+        public function StatBuff(effect:FightTemporaryBoostEffect=null, castingSpell:CastingSpell=null, actionId:int=0, isRecent:Boolean=false)
         {
             if (effect)
             {
                 super(effect, castingSpell, actionId, effect.delta, null, null);
-                this._statName = ActionIdConverter.getActionStatName(actionId);
-                this._isABoost = ActionIdConverter.getIsABoost(actionId);
+                this._statName = ActionIdHelper.getActionIdStatName(actionId);
+                this._isABoost = ActionIdHelper.isPositiveBoost(actionId);
+                this.isRecent = isRecent;
             };
         }
 
@@ -49,7 +51,7 @@
         {
             if ((_effect is EffectInstanceDice))
             {
-                return (((this._isABoost) ? EffectInstanceDice(_effect).diceNum : -(EffectInstanceDice(_effect).diceNum)));
+                return ((this._isABoost) ? EffectInstanceDice(_effect).diceNum : -(EffectInstanceDice(_effect).diceNum));
             };
             return (0);
         }
@@ -59,20 +61,37 @@
             return (this._zeroDiff);
         }
 
-        override public function onApplyed():void
+        override public function onApplied():void
         {
             var tempValue:int;
-            var _local_4:int;
+            var statsCount:int;
+            var i:int;
+            if (!this._statName)
+            {
+                return;
+            };
+            if (GameDebugManager.getInstance().buffsDebugActivated)
+            {
+                _log.debug((((((("[BUFFS DEBUG] Buff " + this.uid) + " en cours d'application sur la stat ") + this._statName) + " (delta ") + this.delta) + ")"));
+            };
+            var statNamesForLog:Array = [];
+            var oldValuesForLog:Array = [];
+            var newValuesForLog:Array = [];
             var targetCaracs:CharacterCharacteristicsInformations = CurrentPlayedFighterManager.getInstance().getCharacteristicsInformations(targetId);
             if (targetCaracs)
             {
                 if (targetCaracs.hasOwnProperty(this._statName))
                 {
+                    statNamesForLog.push((this._statName + ".contextModif"));
+                    oldValuesForLog.push(CharacterBaseCharacteristic(targetCaracs[this._statName]).contextModif);
                     CharacterBaseCharacteristic(targetCaracs[this._statName]).contextModif = (CharacterBaseCharacteristic(targetCaracs[this._statName]).contextModif + this.delta);
+                    newValuesForLog.push(CharacterBaseCharacteristic(targetCaracs[this._statName]).contextModif);
                 };
-                switch (this.statName)
+                switch (this._statName)
                 {
                     case "vitality":
+                        statNamesForLog.push("maxLifePoints");
+                        oldValuesForLog.push(targetCaracs.maxLifePoints);
                         tempValue = targetCaracs.maxLifePoints;
                         if ((tempValue + this.delta) < 0)
                         {
@@ -82,6 +101,9 @@
                         {
                             targetCaracs.maxLifePoints = (targetCaracs.maxLifePoints + this.delta);
                         };
+                        newValuesForLog.push(targetCaracs.maxLifePoints);
+                        statNamesForLog.push("lifePoints");
+                        oldValuesForLog.push(targetCaracs.lifePoints);
                         tempValue = targetCaracs.lifePoints;
                         if ((tempValue + this.delta) < 0)
                         {
@@ -91,9 +113,12 @@
                         {
                             targetCaracs.lifePoints = (targetCaracs.lifePoints + this.delta);
                         };
+                        newValuesForLog.push(targetCaracs.lifePoints);
                         break;
                     case "lifePoints":
                     case "lifePointsMalus":
+                        statNamesForLog.push("lifePoints");
+                        oldValuesForLog.push(targetCaracs.lifePoints);
                         tempValue = targetCaracs.lifePoints;
                         if ((tempValue + this.delta) < 0)
                         {
@@ -103,12 +128,19 @@
                         {
                             targetCaracs.lifePoints = (targetCaracs.lifePoints + this.delta);
                         };
+                        newValuesForLog.push(targetCaracs.lifePoints);
                         break;
                     case "movementPoints":
+                        statNamesForLog.push("movementPointsCurrent");
+                        oldValuesForLog.push(targetCaracs.movementPointsCurrent);
                         targetCaracs.movementPointsCurrent = (targetCaracs.movementPointsCurrent + this.delta);
+                        newValuesForLog.push(targetCaracs.movementPointsCurrent);
                         break;
                     case "actionPoints":
+                        statNamesForLog.push("actionPointsCurrent");
+                        oldValuesForLog.push(targetCaracs.actionPointsCurrent);
                         targetCaracs.actionPointsCurrent = (targetCaracs.actionPointsCurrent + this.delta);
+                        newValuesForLog.push(targetCaracs.actionPointsCurrent);
                         break;
                     case "summonableCreaturesBoost":
                         SpellWrapper.refreshAllPlayerSpellHolder(targetId);
@@ -116,22 +148,40 @@
                     case "range":
                         FightSpellCastFrame.updateRangeAndTarget();
                         break;
+                    case "globalResistPercentBonus":
+                    case "globalResistPercentMalus":
+                        targetCaracs.neutralElementResistPercent.contextModif = (targetCaracs.neutralElementResistPercent.contextModif + this.delta);
+                        targetCaracs.airElementResistPercent.contextModif = (targetCaracs.airElementResistPercent.contextModif + this.delta);
+                        targetCaracs.waterElementResistPercent.contextModif = (targetCaracs.waterElementResistPercent.contextModif + this.delta);
+                        targetCaracs.earthElementResistPercent.contextModif = (targetCaracs.earthElementResistPercent.contextModif + this.delta);
+                        targetCaracs.fireElementResistPercent.contextModif = (targetCaracs.fireElementResistPercent.contextModif + this.delta);
+                        break;
                 };
             };
             var infos:GameFightFighterInformations = (FightEntitiesFrame.getCurrentInstance().getEntityInfos(targetId) as GameFightFighterInformations);
-            switch (this.statName)
+            switch (this._statName)
             {
                 case "vitality":
+                    statNamesForLog.push("lifePoints");
+                    statNamesForLog.push("maxLifePoints");
+                    oldValuesForLog.push(infos.stats["lifePoints"]);
+                    oldValuesForLog.push(infos.stats["maxLifePoints"]);
                     infos.stats["lifePoints"] = (infos.stats["lifePoints"] + this.delta);
                     infos.stats["maxLifePoints"] = (infos.stats["maxLifePoints"] + this.delta);
+                    newValuesForLog.push(infos.stats["lifePoints"]);
+                    newValuesForLog.push(infos.stats["maxLifePoints"]);
                     break;
                 case "lifePointsMalus":
+                    statNamesForLog.push("lifePoints");
+                    oldValuesForLog.push(infos.stats["lifePoints"]);
                     infos.stats["lifePoints"] = (infos.stats["lifePoints"] + this.delta);
+                    newValuesForLog.push(infos.stats["lifePoints"]);
                     break;
                 case "lifePoints":
-                case "shieldPoints":
                 case "dodgePALostProbability":
                 case "dodgePMLostProbability":
+                    statNamesForLog.push(this._statName);
+                    oldValuesForLog.push(infos.stats[this._statName]);
                     tempValue = infos.stats[this._statName];
                     if ((tempValue + this.delta) < 0)
                     {
@@ -141,30 +191,65 @@
                     {
                         infos.stats[this._statName] = (infos.stats[this._statName] + this.delta);
                     };
+                    newValuesForLog.push(infos.stats[this._statName]);
                     break;
                 case "agility":
+                    statNamesForLog.push("tackleEvade");
+                    statNamesForLog.push("tackleBlock");
+                    oldValuesForLog.push(infos.stats["tackleEvade"]);
+                    oldValuesForLog.push(infos.stats["tackleBlock"]);
                     infos.stats["tackleEvade"] = (infos.stats["tackleEvade"] + (this.delta / 10));
                     infos.stats["tackleBlock"] = (infos.stats["tackleBlock"] + (this.delta / 10));
+                    newValuesForLog.push(infos.stats["tackleEvade"]);
+                    newValuesForLog.push(infos.stats["tackleBlock"]);
                     break;
                 case "globalResistPercentBonus":
                 case "globalResistPercentMalus":
-                    _local_4 = (((this.statName == "globalResistPercentMalus")) ? -1 : 1);
-                    infos.stats["neutralElementResistPercent"] = (infos.stats["neutralElementResistPercent"] + (this.delta * _local_4));
-                    infos.stats["airElementResistPercent"] = (infos.stats["airElementResistPercent"] + (this.delta * _local_4));
-                    infos.stats["waterElementResistPercent"] = (infos.stats["waterElementResistPercent"] + (this.delta * _local_4));
-                    infos.stats["earthElementResistPercent"] = (infos.stats["earthElementResistPercent"] + (this.delta * _local_4));
-                    infos.stats["fireElementResistPercent"] = (infos.stats["fireElementResistPercent"] + (this.delta * _local_4));
+                    statNamesForLog.push("neutralElementResistPercent");
+                    statNamesForLog.push("airElementResistPercent");
+                    statNamesForLog.push("waterElementResistPercent");
+                    statNamesForLog.push("earthElementResistPercent");
+                    statNamesForLog.push("fireElementResistPercent");
+                    oldValuesForLog.push(infos.stats["neutralElementResistPercent"]);
+                    oldValuesForLog.push(infos.stats["airElementResistPercent"]);
+                    oldValuesForLog.push(infos.stats["waterElementResistPercent"]);
+                    oldValuesForLog.push(infos.stats["earthElementResistPercent"]);
+                    oldValuesForLog.push(infos.stats["fireElementResistPercent"]);
+                    infos.stats["neutralElementResistPercent"] = (infos.stats["neutralElementResistPercent"] + this.delta);
+                    infos.stats["airElementResistPercent"] = (infos.stats["airElementResistPercent"] + this.delta);
+                    infos.stats["waterElementResistPercent"] = (infos.stats["waterElementResistPercent"] + this.delta);
+                    infos.stats["earthElementResistPercent"] = (infos.stats["earthElementResistPercent"] + this.delta);
+                    infos.stats["fireElementResistPercent"] = (infos.stats["fireElementResistPercent"] + this.delta);
+                    newValuesForLog.push(infos.stats["neutralElementResistPercent"]);
+                    newValuesForLog.push(infos.stats["airElementResistPercent"]);
+                    newValuesForLog.push(infos.stats["waterElementResistPercent"]);
+                    newValuesForLog.push(infos.stats["earthElementResistPercent"]);
+                    newValuesForLog.push(infos.stats["fireElementResistPercent"]);
                     break;
                 case "actionPoints":
+                    statNamesForLog.push("actionPoints");
+                    statNamesForLog.push("maxActionPoints");
+                    oldValuesForLog.push(infos.stats["actionPoints"]);
+                    oldValuesForLog.push(infos.stats["maxActionPoints"]);
                     infos.stats["actionPoints"] = (infos.stats["actionPoints"] + this.delta);
                     infos.stats["maxActionPoints"] = (infos.stats["maxActionPoints"] + this.delta);
+                    newValuesForLog.push(infos.stats["actionPoints"]);
+                    newValuesForLog.push(infos.stats["maxActionPoints"]);
                     break;
                 case "movementPoints":
+                    statNamesForLog.push("movementPoints");
+                    statNamesForLog.push("maxMovementPoints");
+                    oldValuesForLog.push(infos.stats["movementPoints"]);
+                    oldValuesForLog.push(infos.stats["maxMovementPoints"]);
                     infos.stats["movementPoints"] = (infos.stats["movementPoints"] + this.delta);
                     infos.stats["maxMovementPoints"] = (infos.stats["maxMovementPoints"] + this.delta);
+                    newValuesForLog.push(infos.stats["movementPoints"]);
+                    newValuesForLog.push(infos.stats["maxMovementPoints"]);
                     break;
                 case "tackleBlock":
                 case "tackleEvade":
+                    statNamesForLog.push(this._statName);
+                    oldValuesForLog.push(infos.stats[this._statName]);
                     if ((infos.stats[this._statName] + this.delta) < 0)
                     {
                         this._zeroDiff = (infos.stats[this._statName] + this.delta);
@@ -174,16 +259,19 @@
                     {
                         infos.stats[this._statName] = (infos.stats[this._statName] + this.delta);
                     };
+                    newValuesForLog.push(infos.stats[this._statName]);
                     break;
                 case "invisibilityState":
-                    infos.stats["invisibilityState"] = GameActionFightInvisibilityStateEnum.INVISIBLE;
                     break;
                 default:
                     if (infos)
                     {
                         if (infos.stats.hasOwnProperty(this._statName))
                         {
+                            statNamesForLog.push(this._statName);
+                            oldValuesForLog.push(infos.stats[this._statName]);
                             infos.stats[this._statName] = (infos.stats[this._statName] + this.delta);
+                            newValuesForLog.push(infos.stats[this._statName]);
                         };
                     }
                     else
@@ -191,16 +279,30 @@
                         _log.fatal(("ATTENTION, le serveur essaye de buffer une entité qui n'existe plus ! id=" + targetId));
                     };
             };
-            super.onApplyed();
+            if (GameDebugManager.getInstance().buffsDebugActivated)
+            {
+                statsCount = statNamesForLog.length;
+                i = 0;
+                while (i < statsCount)
+                {
+                    _log.debug(((((((("[BUFFS DEBUG]   - Stat " + statNamesForLog[i]) + " de ") + targetId) + " modifiée de ") + oldValuesForLog[i]) + " à ") + newValuesForLog[i]));
+                    i++;
+                };
+            };
+            super.onApplied();
         }
 
         override public function onRemoved():void
         {
             var effect:Effect;
-            if (!(_removed))
+            if (!_removed)
             {
                 effect = Effect.getEffectById(actionId);
-                if (!(effect.active))
+                if (GameDebugManager.getInstance().buffsDebugActivated)
+                {
+                    _log.debug(((("[BUFFS DEBUG] Buff " + this.uid) + " en cours de retrait,  decrementation de la stat associée ? ") + (!(effect.active))));
+                };
+                if (!effect.active)
                 {
                     this.decrementStats();
                 };
@@ -211,9 +313,13 @@
         override public function onDisabled():void
         {
             var effect:Effect;
-            if (!(_disabled))
+            if (!_disabled)
             {
                 effect = Effect.getEffectById(actionId);
+                if (GameDebugManager.getInstance().buffsDebugActivated)
+                {
+                    _log.debug(((("[BUFFS DEBUG] Buff " + this.uid) + " en cours de desactivation,  decrementation de la stat associée ? ") + effect.active));
+                };
                 if (effect.active)
                 {
                     this.decrementStats();
@@ -222,32 +328,49 @@
             super.onDisabled();
         }
 
+        override public function onReenable():void
+        {
+            super.onReenable();
+            this.onApplied();
+        }
+
         private function decrementStats():void
         {
-            var tempValue:int;
-            var targetCaracs:CharacterCharacteristicsInformations;
-            var _local_4:CharacterCharacteristicsInformations;
-            var _local_5:int;
-            var zeroDiff:int;
             var i:int;
+            var tempValue:int;
+            var zeroDiff:int;
             var stackLen:int;
-            targetCaracs = CurrentPlayedFighterManager.getInstance().getCharacteristicsInformations(targetId);
+            var statsCount:int;
+            if (!this._statName)
+            {
+                return;
+            };
+            if (GameDebugManager.getInstance().buffsDebugActivated)
+            {
+                _log.debug((((("[BUFFS DEBUG]   Décrementation de la stat " + this._statName) + " (delta ") + this.delta) + ")"));
+            };
+            var statNamesForLog:Array = [];
+            var oldValuesForLog:Array = [];
+            var newValuesForLog:Array = [];
+            var targetCaracs:CharacterCharacteristicsInformations = CurrentPlayedFighterManager.getInstance().getCharacteristicsInformations(targetId);
             if (targetCaracs)
             {
                 if (targetCaracs.hasOwnProperty(this._statName))
                 {
+                    statNamesForLog.push((this._statName + ".contextModif"));
+                    oldValuesForLog.push(CharacterBaseCharacteristic(targetCaracs[this._statName]).contextModif);
                     CharacterBaseCharacteristic(targetCaracs[this._statName]).contextModif = (CharacterBaseCharacteristic(targetCaracs[this._statName]).contextModif - this.delta);
+                    newValuesForLog.push(CharacterBaseCharacteristic(targetCaracs[this._statName]).contextModif);
                 };
                 switch (this._statName)
                 {
-                    case "movementPoints":
-                        targetCaracs.movementPointsCurrent = (targetCaracs.movementPointsCurrent - this.delta);
-                        break;
-                    case "actionPoints":
-                        targetCaracs.actionPointsCurrent = (targetCaracs.actionPointsCurrent - this.delta);
-                        break;
                     case "vitality":
+                        statNamesForLog.push("maxLifePoints");
+                        oldValuesForLog.push(targetCaracs.maxLifePoints);
                         targetCaracs.maxLifePoints = (targetCaracs.maxLifePoints - this.delta);
+                        newValuesForLog.push(targetCaracs.maxLifePoints);
+                        statNamesForLog.push("lifePoints");
+                        oldValuesForLog.push(targetCaracs.lifePoints);
                         if (targetCaracs.lifePoints > this.delta)
                         {
                             targetCaracs.lifePoints = (targetCaracs.lifePoints - this.delta);
@@ -256,50 +379,86 @@
                         {
                             targetCaracs.lifePoints = 0;
                         };
+                        newValuesForLog.push(targetCaracs.lifePoints);
                         break;
                     case "lifePoints":
                     case "lifePointsMalus":
-                        _local_4 = targetCaracs;
-                        if (_local_4.lifePoints > this.delta)
+                        statNamesForLog.push("lifePoints");
+                        oldValuesForLog.push(targetCaracs.lifePoints);
+                        if (targetCaracs.lifePoints > this.delta)
                         {
-                            if (_local_4.maxLifePoints >= (_local_4.lifePoints - this.delta))
+                            if (targetCaracs.maxLifePoints >= (targetCaracs.lifePoints - this.delta))
                             {
-                                _local_4.lifePoints = (_local_4.lifePoints - this.delta);
+                                targetCaracs.lifePoints = (targetCaracs.lifePoints - this.delta);
                             }
                             else
                             {
-                                _local_4.lifePoints = _local_4.maxLifePoints;
+                                targetCaracs.lifePoints = targetCaracs.maxLifePoints;
                             };
                         }
                         else
                         {
-                            _local_4.lifePoints = 0;
+                            targetCaracs.lifePoints = 0;
                         };
+                        newValuesForLog.push(targetCaracs.lifePoints);
                         break;
-                    case "summonableCreaturesBoost":
+                    case "movementPoints":
+                        statNamesForLog.push("movementPointsCurrent");
+                        oldValuesForLog.push(targetCaracs.movementPointsCurrent);
+                        targetCaracs.movementPointsCurrent = (targetCaracs.movementPointsCurrent - this.delta);
+                        newValuesForLog.push(targetCaracs.movementPointsCurrent);
                         break;
-                    case "range":
+                    case "actionPoints":
+                        statNamesForLog.push("actionPointsCurrent");
+                        oldValuesForLog.push(targetCaracs.actionPointsCurrent);
+                        targetCaracs.actionPointsCurrent = (targetCaracs.actionPointsCurrent - this.delta);
+                        newValuesForLog.push(targetCaracs.actionPointsCurrent);
+                        break;
+                    case "globalResistPercentBonus":
+                    case "globalResistPercentMalus":
+                        targetCaracs.neutralElementResistPercent.contextModif = (targetCaracs.neutralElementResistPercent.contextModif - this.delta);
+                        targetCaracs.airElementResistPercent.contextModif = (targetCaracs.airElementResistPercent.contextModif - this.delta);
+                        targetCaracs.waterElementResistPercent.contextModif = (targetCaracs.waterElementResistPercent.contextModif - this.delta);
+                        targetCaracs.earthElementResistPercent.contextModif = (targetCaracs.earthElementResistPercent.contextModif - this.delta);
+                        targetCaracs.fireElementResistPercent.contextModif = (targetCaracs.fireElementResistPercent.contextModif - this.delta);
                         break;
                 };
             };
             var infos:GameFightFighterInformations = (FightEntitiesFrame.getCurrentInstance().getEntityInfos(targetId) as GameFightFighterInformations);
-            switch (this.statName)
+            switch (this._statName)
             {
                 case "vitality":
+                    statNamesForLog.push("lifePoints");
+                    statNamesForLog.push("maxLifePoints");
+                    oldValuesForLog.push(infos.stats["lifePoints"]);
+                    oldValuesForLog.push(infos.stats["maxLifePoints"]);
                     infos.stats["lifePoints"] = (infos.stats["lifePoints"] - this.delta);
                     infos.stats["maxLifePoints"] = (infos.stats["maxLifePoints"] - this.delta);
-                    return;
+                    newValuesForLog.push(infos.stats["lifePoints"]);
+                    newValuesForLog.push(infos.stats["maxLifePoints"]);
+                    break;
                 case "lifePointsMalus":
+                    statNamesForLog.push("lifePoints");
+                    oldValuesForLog.push(infos.stats["lifePoints"]);
                     infos.stats["lifePoints"] = (infos.stats["lifePoints"] - this.delta);
                     if (infos.stats["lifePoints"] > infos.stats["maxLifePoints"])
                     {
                         infos.stats["lifePoints"] = infos.stats["maxLifePoints"];
                     };
-                    return;
-                case "lifePoints":
+                    newValuesForLog.push(infos.stats["lifePoints"]);
+                    break;
                 case "shieldPoints":
+                    statNamesForLog.push(this._statName);
+                    oldValuesForLog.push(infos.stats[this._statName]);
+                    tempValue = infos.stats[this._statName];
+                    infos.stats[this._statName] = (infos.stats[this._statName] - this.delta);
+                    newValuesForLog.push(infos.stats[this._statName]);
+                    break;
+                case "lifePoints":
                 case "dodgePALostProbability":
                 case "dodgePMLostProbability":
+                    statNamesForLog.push(this._statName);
+                    oldValuesForLog.push(infos.stats[this._statName]);
                     tempValue = infos.stats[this._statName];
                     if ((tempValue - this.delta) < 0)
                     {
@@ -309,30 +468,65 @@
                     {
                         infos.stats[this._statName] = (infos.stats[this._statName] - this.delta);
                     };
-                    return;
-                case "globalResistPercentBonus":
-                case "globalResistPercentMalus":
-                    _local_5 = (((this.statName == "globalResistPercentMalus")) ? -1 : 1);
-                    infos.stats["neutralElementResistPercent"] = (infos.stats["neutralElementResistPercent"] - (this.delta * _local_5));
-                    infos.stats["airElementResistPercent"] = (infos.stats["airElementResistPercent"] - (this.delta * _local_5));
-                    infos.stats["waterElementResistPercent"] = (infos.stats["waterElementResistPercent"] - (this.delta * _local_5));
-                    infos.stats["earthElementResistPercent"] = (infos.stats["earthElementResistPercent"] - (this.delta * _local_5));
-                    infos.stats["fireElementResistPercent"] = (infos.stats["fireElementResistPercent"] - (this.delta * _local_5));
-                    return;
+                    newValuesForLog.push(infos.stats[this._statName]);
+                    break;
                 case "agility":
+                    statNamesForLog.push("tackleEvade");
+                    statNamesForLog.push("tackleBlock");
+                    oldValuesForLog.push(infos.stats["tackleEvade"]);
+                    oldValuesForLog.push(infos.stats["tackleBlock"]);
                     infos.stats["tackleEvade"] = (infos.stats["tackleEvade"] - (this.delta / 10));
                     infos.stats["tackleBlock"] = (infos.stats["tackleBlock"] - (this.delta / 10));
-                    return;
+                    newValuesForLog.push(infos.stats["tackleEvade"]);
+                    newValuesForLog.push(infos.stats["tackleBlock"]);
+                    break;
+                case "globalResistPercentBonus":
+                case "globalResistPercentMalus":
+                    statNamesForLog.push("neutralElementResistPercent");
+                    statNamesForLog.push("airElementResistPercent");
+                    statNamesForLog.push("waterElementResistPercent");
+                    statNamesForLog.push("earthElementResistPercent");
+                    statNamesForLog.push("fireElementResistPercent");
+                    oldValuesForLog.push(infos.stats["neutralElementResistPercent"]);
+                    oldValuesForLog.push(infos.stats["airElementResistPercent"]);
+                    oldValuesForLog.push(infos.stats["waterElementResistPercent"]);
+                    oldValuesForLog.push(infos.stats["earthElementResistPercent"]);
+                    oldValuesForLog.push(infos.stats["fireElementResistPercent"]);
+                    infos.stats["neutralElementResistPercent"] = (infos.stats["neutralElementResistPercent"] - this.delta);
+                    infos.stats["airElementResistPercent"] = (infos.stats["airElementResistPercent"] - this.delta);
+                    infos.stats["waterElementResistPercent"] = (infos.stats["waterElementResistPercent"] - this.delta);
+                    infos.stats["earthElementResistPercent"] = (infos.stats["earthElementResistPercent"] - this.delta);
+                    infos.stats["fireElementResistPercent"] = (infos.stats["fireElementResistPercent"] - this.delta);
+                    newValuesForLog.push(infos.stats["neutralElementResistPercent"]);
+                    newValuesForLog.push(infos.stats["airElementResistPercent"]);
+                    newValuesForLog.push(infos.stats["waterElementResistPercent"]);
+                    newValuesForLog.push(infos.stats["earthElementResistPercent"]);
+                    newValuesForLog.push(infos.stats["fireElementResistPercent"]);
+                    break;
                 case "actionPoints":
+                    statNamesForLog.push("actionPoints");
+                    statNamesForLog.push("maxActionPoints");
+                    oldValuesForLog.push(infos.stats["actionPoints"]);
+                    oldValuesForLog.push(infos.stats["maxActionPoints"]);
                     infos.stats["actionPoints"] = (infos.stats["actionPoints"] - this.delta);
                     infos.stats["maxActionPoints"] = (infos.stats["maxActionPoints"] - this.delta);
-                    return;
+                    newValuesForLog.push(infos.stats["actionPoints"]);
+                    newValuesForLog.push(infos.stats["maxActionPoints"]);
+                    break;
                 case "movementPoints":
+                    statNamesForLog.push("movementPoints");
+                    statNamesForLog.push("maxMovementPoints");
+                    oldValuesForLog.push(infos.stats["movementPoints"]);
+                    oldValuesForLog.push(infos.stats["maxMovementPoints"]);
                     infos.stats["movementPoints"] = (infos.stats["movementPoints"] - this.delta);
                     infos.stats["maxMovementPoints"] = (infos.stats["maxMovementPoints"] - this.delta);
-                    return;
+                    newValuesForLog.push(infos.stats["movementPoints"]);
+                    newValuesForLog.push(infos.stats["maxMovementPoints"]);
+                    break;
                 case "tackleBlock":
                 case "tackleEvade":
+                    statNamesForLog.push(this._statName);
+                    oldValuesForLog.push(infos.stats[this._statName]);
                     if (infos.stats[this._statName] == 0)
                     {
                         zeroDiff = this._zeroDiff;
@@ -352,26 +546,39 @@
                     {
                         infos.stats[this._statName] = (infos.stats[this._statName] - this.delta);
                     };
-                    return;
+                    newValuesForLog.push(infos.stats[this._statName]);
+                    break;
                 case "invisibilityState":
-                    infos.stats["invisibilityState"] = GameActionFightInvisibilityStateEnum.VISIBLE;
-                    return;
+                    break;
                 default:
                     if (infos)
                     {
                         if (infos.stats.hasOwnProperty(this._statName))
                         {
+                            statNamesForLog.push(this._statName);
+                            oldValuesForLog.push(infos.stats[this._statName]);
                             infos.stats[this._statName] = (infos.stats[this._statName] - this.delta);
+                            newValuesForLog.push(infos.stats[this._statName]);
                         }
                         else
                         {
-                            _log.fatal(("On essaye de supprimer une stat non prise en compte : " + this.statName));
+                            _log.fatal(("On essaye de supprimer une stat non prise en compte : " + this._statName));
                         };
                     }
                     else
                     {
                         _log.fatal(("ATTENTION, Le serveur essaye de buffer une entité qui n'existe plus ! id=" + targetId));
                     };
+            };
+            if (GameDebugManager.getInstance().buffsDebugActivated)
+            {
+                statsCount = statNamesForLog.length;
+                i = 0;
+                while (i < statsCount)
+                {
+                    _log.debug(((((((("[BUFFS DEBUG]   - Stat " + statNamesForLog[i]) + " de ") + targetId) + " modifiée de ") + oldValuesForLog[i]) + " à ") + newValuesForLog[i]));
+                    i++;
+                };
             };
         }
 
@@ -382,6 +589,7 @@
             sb._isABoost = this._isABoost;
             sb.id = uid;
             sb.uid = uid;
+            sb.dataUid = dataUid;
             sb.actionId = actionId;
             sb.targetId = targetId;
             sb.castingSpell = castingSpell;
@@ -389,6 +597,7 @@
             sb.dispelable = dispelable;
             sb.source = source;
             sb.aliveSource = aliveSource;
+            sb.sourceJustReaffected = sourceJustReaffected;
             sb.parentBoostUid = parentBoostUid;
             sb.initParam(param1, param2, param3);
             return (sb);
@@ -396,5 +605,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.fight.types
+} com.ankamagames.dofus.logic.game.fight.types
 

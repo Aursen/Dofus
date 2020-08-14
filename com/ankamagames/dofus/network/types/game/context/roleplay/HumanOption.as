@@ -1,10 +1,10 @@
-﻿package com.ankamagames.dofus.network.types.game.context.roleplay
+package com.ankamagames.dofus.network.types.game.context.roleplay
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class HumanOption implements INetworkType 
     {
 
@@ -41,7 +41,15 @@
         {
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+        }
+
+        public function deserializeAsyncAs_HumanOption(tree:FuncTree):void
+        {
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.types.game.context.roleplay
+} com.ankamagames.dofus.network.types.game.context.roleplay
 

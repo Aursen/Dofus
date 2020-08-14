@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.datacenter.items.criterion
+package com.ankamagames.dofus.datacenter.items.criterion
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.dofus.logic.game.common.managers.PlayedCharacterManager;
@@ -12,7 +12,7 @@
     public class MapCharactersItemCriterion extends ItemCriterion implements IDataCenter 
     {
 
-        private var _mapId:int;
+        private var _mapId:Number;
         private var _nbCharacters:uint;
 
         public function MapCharactersItemCriterion(pCriterion:String)
@@ -28,7 +28,7 @@
             {
                 if (params.length == 2)
                 {
-                    this._mapId = int(params[0]);
+                    this._mapId = Number(params[0]);
                     this._nbCharacters = uint(params[1]);
                 };
             };
@@ -37,7 +37,7 @@
         override public function get text():String
         {
             var readableCriterionRef:String = I18n.getUiText("ui.criterion.MK", [this._mapId]);
-            return (((((readableCriterionRef + " ") + _operator.text) + " ") + this._nbCharacters));
+            return ((((readableCriterionRef + " ") + _operator.text) + " ") + this._nbCharacters);
         }
 
         override public function clone():IItemCriterion
@@ -68,5 +68,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.items.criterion
+} com.ankamagames.dofus.datacenter.items.criterion
 

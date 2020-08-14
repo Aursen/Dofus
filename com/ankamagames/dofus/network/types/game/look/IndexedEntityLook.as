@@ -1,23 +1,19 @@
-﻿package com.ankamagames.dofus.network.types.game.look
+package com.ankamagames.dofus.network.types.game.look
 {
     import com.ankamagames.jerakine.network.INetworkType;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
 
-    [Trusted]
     public class IndexedEntityLook implements INetworkType 
     {
 
         public static const protocolId:uint = 405;
 
-        public var look:EntityLook;
+        public var look:EntityLook = new EntityLook();
         public var index:uint = 0;
+        private var _looktree:FuncTree;
 
-        public function IndexedEntityLook()
-        {
-            this.look = new EntityLook();
-            super();
-        }
 
         public function getTypeId():uint
         {
@@ -60,6 +56,28 @@
         {
             this.look = new EntityLook();
             this.look.deserialize(input);
+            this._indexFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_IndexedEntityLook(tree);
+        }
+
+        public function deserializeAsyncAs_IndexedEntityLook(tree:FuncTree):void
+        {
+            this._looktree = tree.addChild(this._looktreeFunc);
+            tree.addChild(this._indexFunc);
+        }
+
+        private function _looktreeFunc(input:ICustomDataInput):void
+        {
+            this.look = new EntityLook();
+            this.look.deserializeAsync(this._looktree);
+        }
+
+        private function _indexFunc(input:ICustomDataInput):void
+        {
             this.index = input.readByte();
             if (this.index < 0)
             {
@@ -69,5 +87,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.look
+} com.ankamagames.dofus.network.types.game.look
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.datacenter.items.criterion
+package com.ankamagames.dofus.datacenter.items.criterion
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.dofus.logic.game.common.managers.PlayedCharacterManager;
@@ -21,8 +21,6 @@
                 case ItemCriterionOperator.EQUAL:
                 case ItemCriterionOperator.DIFFERENT:
                     return (super.isRespected);
-                default:
-                    trace(("Opérateur non conforme : " + _serverCriterionForm));
             };
             return (false);
         }
@@ -31,7 +29,7 @@
         {
             var readableCriterion:String;
             var subArea:SubArea = SubArea.getSubAreaById(_criterionValue);
-            if (!(subArea))
+            if (!subArea)
             {
                 return ("error on subareaItemCriterion");
             };
@@ -44,8 +42,6 @@
                 case ItemCriterionOperator.DIFFERENT:
                     readableCriterion = I18n.getUiText("ui.tooltip.dontBeInSubarea", [zoneName]);
                     break;
-                default:
-                    trace(("Opérateur non conforme : " + _serverCriterionForm));
             };
             return (readableCriterion);
         }
@@ -63,5 +59,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.items.criterion
+} com.ankamagames.dofus.datacenter.items.criterion
 

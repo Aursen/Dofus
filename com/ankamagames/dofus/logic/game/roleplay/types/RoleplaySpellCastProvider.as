@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.roleplay.types
+package com.ankamagames.dofus.logic.game.roleplay.types
 {
     import com.ankamagames.dofus.logic.game.common.misc.ISpellCastProvider;
     import __AS3__.vec.Vector;
@@ -30,5 +30,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.roleplay.types
+} com.ankamagames.dofus.logic.game.roleplay.types
 

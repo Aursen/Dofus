@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.context.roleplay.stats
+package com.ankamagames.dofus.network.messages.game.context.roleplay.stats
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class StatsUpgradeRequestMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -58,6 +58,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_StatsUpgradeRequestMessage(output);
@@ -81,12 +89,39 @@
 
         public function deserializeAs_StatsUpgradeRequestMessage(input:ICustomDataInput):void
         {
+            this._useAdditionnalFunc(input);
+            this._statIdFunc(input);
+            this._boostPointFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_StatsUpgradeRequestMessage(tree);
+        }
+
+        public function deserializeAsyncAs_StatsUpgradeRequestMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._useAdditionnalFunc);
+            tree.addChild(this._statIdFunc);
+            tree.addChild(this._boostPointFunc);
+        }
+
+        private function _useAdditionnalFunc(input:ICustomDataInput):void
+        {
             this.useAdditionnal = input.readBoolean();
+        }
+
+        private function _statIdFunc(input:ICustomDataInput):void
+        {
             this.statId = input.readByte();
             if (this.statId < 0)
             {
                 throw (new Error((("Forbidden value (" + this.statId) + ") on element of StatsUpgradeRequestMessage.statId.")));
             };
+        }
+
+        private function _boostPointFunc(input:ICustomDataInput):void
+        {
             this.boostPoint = input.readVarUhShort();
             if (this.boostPoint < 0)
             {
@@ -96,5 +131,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.context.roleplay.stats
+} com.ankamagames.dofus.network.messages.game.context.roleplay.stats
 

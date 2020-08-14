@@ -1,14 +1,14 @@
-﻿package com.ankamagames.dofus.network.messages.game.alliance
+package com.ankamagames.dofus.network.messages.game.alliance
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
     import com.ankamagames.dofus.network.types.game.guild.GuildEmblem;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
 
-    [Trusted]
     public class AllianceCreationValidMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -17,13 +17,9 @@
         private var _isInitialized:Boolean = false;
         public var allianceName:String = "";
         public var allianceTag:String = "";
-        public var allianceEmblem:GuildEmblem;
+        public var allianceEmblem:GuildEmblem = new GuildEmblem();
+        private var _allianceEmblemtree:FuncTree;
 
-        public function AllianceCreationValidMessage()
-        {
-            this.allianceEmblem = new GuildEmblem();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
@@ -64,6 +60,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_AllianceCreationValidMessage(output);
@@ -83,13 +87,41 @@
 
         public function deserializeAs_AllianceCreationValidMessage(input:ICustomDataInput):void
         {
-            this.allianceName = input.readUTF();
-            this.allianceTag = input.readUTF();
+            this._allianceNameFunc(input);
+            this._allianceTagFunc(input);
             this.allianceEmblem = new GuildEmblem();
             this.allianceEmblem.deserialize(input);
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_AllianceCreationValidMessage(tree);
+        }
+
+        public function deserializeAsyncAs_AllianceCreationValidMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._allianceNameFunc);
+            tree.addChild(this._allianceTagFunc);
+            this._allianceEmblemtree = tree.addChild(this._allianceEmblemtreeFunc);
+        }
+
+        private function _allianceNameFunc(input:ICustomDataInput):void
+        {
+            this.allianceName = input.readUTF();
+        }
+
+        private function _allianceTagFunc(input:ICustomDataInput):void
+        {
+            this.allianceTag = input.readUTF();
+        }
+
+        private function _allianceEmblemtreeFunc(input:ICustomDataInput):void
+        {
+            this.allianceEmblem = new GuildEmblem();
+            this.allianceEmblem.deserializeAsync(this._allianceEmblemtree);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.alliance
+} com.ankamagames.dofus.network.messages.game.alliance
 

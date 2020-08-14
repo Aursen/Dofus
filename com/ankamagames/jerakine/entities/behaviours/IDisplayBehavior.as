@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.entities.behaviours
+package com.ankamagames.jerakine.entities.behaviours
 {
     import com.ankamagames.jerakine.entities.interfaces.IDisplayable;
     import com.ankamagames.jerakine.interfaces.IRectangle;
@@ -11,5 +11,5 @@
         function remove(_arg_1:IDisplayable):void;
 
     }
-}//package com.ankamagames.jerakine.entities.behaviours
+} com.ankamagames.jerakine.entities.behaviours
 

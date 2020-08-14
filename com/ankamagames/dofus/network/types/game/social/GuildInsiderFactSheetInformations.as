@@ -1,11 +1,11 @@
-﻿package com.ankamagames.dofus.network.types.game.social
+package com.ankamagames.dofus.network.types.game.social
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.dofus.network.types.game.guild.GuildEmblem;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class GuildInsiderFactSheetInformations extends GuildFactSheetInformations implements INetworkType 
     {
 
@@ -15,7 +15,6 @@
         public var nbConnectedMembers:uint = 0;
         public var nbTaxCollectors:uint = 0;
         public var lastActivity:uint = 0;
-        public var enabled:Boolean = false;
 
 
         override public function getTypeId():uint
@@ -23,14 +22,13 @@
             return (423);
         }
 
-        public function initGuildInsiderFactSheetInformations(guildId:uint=0, guildName:String="", guildEmblem:GuildEmblem=null, leaderId:uint=0, guildLevel:uint=0, nbMembers:uint=0, leaderName:String="", nbConnectedMembers:uint=0, nbTaxCollectors:uint=0, lastActivity:uint=0, enabled:Boolean=false):GuildInsiderFactSheetInformations
+        public function initGuildInsiderFactSheetInformations(guildId:uint=0, guildName:String="", guildLevel:uint=0, guildEmblem:GuildEmblem=null, leaderId:Number=0, nbMembers:uint=0, leaderName:String="", nbConnectedMembers:uint=0, nbTaxCollectors:uint=0, lastActivity:uint=0):GuildInsiderFactSheetInformations
         {
-            super.initGuildFactSheetInformations(guildId, guildName, guildEmblem, leaderId, guildLevel, nbMembers);
+            super.initGuildFactSheetInformations(guildId, guildName, guildLevel, guildEmblem, leaderId, nbMembers);
             this.leaderName = leaderName;
             this.nbConnectedMembers = nbConnectedMembers;
             this.nbTaxCollectors = nbTaxCollectors;
             this.lastActivity = lastActivity;
-            this.enabled = enabled;
             return (this);
         }
 
@@ -41,7 +39,6 @@
             this.nbConnectedMembers = 0;
             this.nbTaxCollectors = 0;
             this.lastActivity = 0;
-            this.enabled = false;
         }
 
         override public function serialize(output:ICustomDataOutput):void
@@ -68,7 +65,6 @@
                 throw (new Error((("Forbidden value (" + this.lastActivity) + ") on element lastActivity.")));
             };
             output.writeInt(this.lastActivity);
-            output.writeBoolean(this.enabled);
         }
 
         override public function deserialize(input:ICustomDataInput):void
@@ -79,26 +75,59 @@
         public function deserializeAs_GuildInsiderFactSheetInformations(input:ICustomDataInput):void
         {
             super.deserialize(input);
+            this._leaderNameFunc(input);
+            this._nbConnectedMembersFunc(input);
+            this._nbTaxCollectorsFunc(input);
+            this._lastActivityFunc(input);
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GuildInsiderFactSheetInformations(tree);
+        }
+
+        public function deserializeAsyncAs_GuildInsiderFactSheetInformations(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._leaderNameFunc);
+            tree.addChild(this._nbConnectedMembersFunc);
+            tree.addChild(this._nbTaxCollectorsFunc);
+            tree.addChild(this._lastActivityFunc);
+        }
+
+        private function _leaderNameFunc(input:ICustomDataInput):void
+        {
             this.leaderName = input.readUTF();
+        }
+
+        private function _nbConnectedMembersFunc(input:ICustomDataInput):void
+        {
             this.nbConnectedMembers = input.readVarUhShort();
             if (this.nbConnectedMembers < 0)
             {
                 throw (new Error((("Forbidden value (" + this.nbConnectedMembers) + ") on element of GuildInsiderFactSheetInformations.nbConnectedMembers.")));
             };
+        }
+
+        private function _nbTaxCollectorsFunc(input:ICustomDataInput):void
+        {
             this.nbTaxCollectors = input.readByte();
             if (this.nbTaxCollectors < 0)
             {
                 throw (new Error((("Forbidden value (" + this.nbTaxCollectors) + ") on element of GuildInsiderFactSheetInformations.nbTaxCollectors.")));
             };
+        }
+
+        private function _lastActivityFunc(input:ICustomDataInput):void
+        {
             this.lastActivity = input.readInt();
             if (this.lastActivity < 0)
             {
                 throw (new Error((("Forbidden value (" + this.lastActivity) + ") on element of GuildInsiderFactSheetInformations.lastActivity.")));
             };
-            this.enabled = input.readBoolean();
         }
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.social
+} com.ankamagames.dofus.network.types.game.social
 

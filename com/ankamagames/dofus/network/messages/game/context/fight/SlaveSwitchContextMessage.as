@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.context.fight
+package com.ankamagames.dofus.network.messages.game.context.fight
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,6 +6,7 @@
     import com.ankamagames.dofus.network.types.game.data.items.SpellItem;
     import com.ankamagames.dofus.network.types.game.character.characteristic.CharacterCharacteristicsInformations;
     import com.ankamagames.dofus.network.types.game.shortcut.Shortcut;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
@@ -13,26 +14,21 @@
     import com.ankamagames.dofus.network.ProtocolTypeManager;
     import __AS3__.vec.*;
 
-    [Trusted]
     public class SlaveSwitchContextMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 6214;
 
         private var _isInitialized:Boolean = false;
-        public var masterId:int = 0;
-        public var slaveId:int = 0;
-        public var slaveSpells:Vector.<SpellItem>;
-        public var slaveStats:CharacterCharacteristicsInformations;
-        public var shortcuts:Vector.<Shortcut>;
+        public var masterId:Number = 0;
+        public var slaveId:Number = 0;
+        public var slaveSpells:Vector.<SpellItem> = new Vector.<SpellItem>();
+        public var slaveStats:CharacterCharacteristicsInformations = new CharacterCharacteristicsInformations();
+        public var shortcuts:Vector.<Shortcut> = new Vector.<Shortcut>();
+        private var _slaveSpellstree:FuncTree;
+        private var _slaveStatstree:FuncTree;
+        private var _shortcutstree:FuncTree;
 
-        public function SlaveSwitchContextMessage()
-        {
-            this.slaveSpells = new Vector.<SpellItem>();
-            this.slaveStats = new CharacterCharacteristicsInformations();
-            this.shortcuts = new Vector.<Shortcut>();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
@@ -44,7 +40,7 @@
             return (6214);
         }
 
-        public function initSlaveSwitchContextMessage(masterId:int=0, slaveId:int=0, slaveSpells:Vector.<SpellItem>=null, slaveStats:CharacterCharacteristicsInformations=null, shortcuts:Vector.<Shortcut>=null):SlaveSwitchContextMessage
+        public function initSlaveSwitchContextMessage(masterId:Number=0, slaveId:Number=0, slaveSpells:Vector.<SpellItem>=null, slaveStats:CharacterCharacteristicsInformations=null, shortcuts:Vector.<Shortcut>=null):SlaveSwitchContextMessage
         {
             this.masterId = masterId;
             this.slaveId = slaveId;
@@ -76,6 +72,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_SlaveSwitchContextMessage(output);
@@ -83,8 +87,16 @@
 
         public function serializeAs_SlaveSwitchContextMessage(output:ICustomDataOutput):void
         {
-            output.writeInt(this.masterId);
-            output.writeInt(this.slaveId);
+            if (((this.masterId < -9007199254740992) || (this.masterId > 9007199254740992)))
+            {
+                throw (new Error((("Forbidden value (" + this.masterId) + ") on element masterId.")));
+            };
+            output.writeDouble(this.masterId);
+            if (((this.slaveId < -9007199254740992) || (this.slaveId > 9007199254740992)))
+            {
+                throw (new Error((("Forbidden value (" + this.slaveId) + ") on element slaveId.")));
+            };
+            output.writeDouble(this.slaveId);
             output.writeShort(this.slaveSpells.length);
             var _i3:uint;
             while (_i3 < this.slaveSpells.length)
@@ -113,8 +125,8 @@
             var _item3:SpellItem;
             var _id5:uint;
             var _item5:Shortcut;
-            this.masterId = input.readInt();
-            this.slaveId = input.readInt();
+            this._masterIdFunc(input);
+            this._slaveIdFunc(input);
             var _slaveSpellsLen:uint = input.readUnsignedShort();
             var _i3:uint;
             while (_i3 < _slaveSpellsLen)
@@ -138,7 +150,82 @@
             };
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_SlaveSwitchContextMessage(tree);
+        }
+
+        public function deserializeAsyncAs_SlaveSwitchContextMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._masterIdFunc);
+            tree.addChild(this._slaveIdFunc);
+            this._slaveSpellstree = tree.addChild(this._slaveSpellstreeFunc);
+            this._slaveStatstree = tree.addChild(this._slaveStatstreeFunc);
+            this._shortcutstree = tree.addChild(this._shortcutstreeFunc);
+        }
+
+        private function _masterIdFunc(input:ICustomDataInput):void
+        {
+            this.masterId = input.readDouble();
+            if (((this.masterId < -9007199254740992) || (this.masterId > 9007199254740992)))
+            {
+                throw (new Error((("Forbidden value (" + this.masterId) + ") on element of SlaveSwitchContextMessage.masterId.")));
+            };
+        }
+
+        private function _slaveIdFunc(input:ICustomDataInput):void
+        {
+            this.slaveId = input.readDouble();
+            if (((this.slaveId < -9007199254740992) || (this.slaveId > 9007199254740992)))
+            {
+                throw (new Error((("Forbidden value (" + this.slaveId) + ") on element of SlaveSwitchContextMessage.slaveId.")));
+            };
+        }
+
+        private function _slaveSpellstreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._slaveSpellstree.addChild(this._slaveSpellsFunc);
+                i++;
+            };
+        }
+
+        private function _slaveSpellsFunc(input:ICustomDataInput):void
+        {
+            var _item:SpellItem = new SpellItem();
+            _item.deserialize(input);
+            this.slaveSpells.push(_item);
+        }
+
+        private function _slaveStatstreeFunc(input:ICustomDataInput):void
+        {
+            this.slaveStats = new CharacterCharacteristicsInformations();
+            this.slaveStats.deserializeAsync(this._slaveStatstree);
+        }
+
+        private function _shortcutstreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._shortcutstree.addChild(this._shortcutsFunc);
+                i++;
+            };
+        }
+
+        private function _shortcutsFunc(input:ICustomDataInput):void
+        {
+            var _id:uint = input.readUnsignedShort();
+            var _item:Shortcut = ProtocolTypeManager.getInstance(Shortcut, _id);
+            _item.deserialize(input);
+            this.shortcuts.push(_item);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.context.fight
+} com.ankamagames.dofus.network.messages.game.context.fight
 

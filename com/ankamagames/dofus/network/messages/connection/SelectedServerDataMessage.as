@@ -1,14 +1,15 @@
-﻿package com.ankamagames.dofus.network.messages.connection
+package com.ankamagames.dofus.network.messages.connection
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
+    import __AS3__.vec.Vector;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
-    import com.ankamagames.jerakine.network.utils.BooleanByteWrapper;
+    import __AS3__.vec.*;
 
-    [Trusted]
     public class SelectedServerDataMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -17,10 +18,11 @@
         private var _isInitialized:Boolean = false;
         public var serverId:uint = 0;
         public var address:String = "";
-        public var port:uint = 0;
-        public var ssl:Boolean = false;
+        public var ports:Vector.<uint> = new Vector.<uint>();
         public var canCreateNewCharacter:Boolean = false;
-        public var ticket:String = "";
+        public var ticket:Vector.<int> = new Vector.<int>();
+        private var _portstree:FuncTree;
+        private var _tickettree:FuncTree;
 
 
         override public function get isInitialized():Boolean
@@ -33,12 +35,11 @@
             return (42);
         }
 
-        public function initSelectedServerDataMessage(serverId:uint=0, address:String="", port:uint=0, ssl:Boolean=false, canCreateNewCharacter:Boolean=false, ticket:String=""):SelectedServerDataMessage
+        public function initSelectedServerDataMessage(serverId:uint=0, address:String="", ports:Vector.<uint>=null, canCreateNewCharacter:Boolean=false, ticket:Vector.<int>=null):SelectedServerDataMessage
         {
             this.serverId = serverId;
             this.address = address;
-            this.port = port;
-            this.ssl = ssl;
+            this.ports = ports;
             this.canCreateNewCharacter = canCreateNewCharacter;
             this.ticket = ticket;
             this._isInitialized = true;
@@ -49,10 +50,9 @@
         {
             this.serverId = 0;
             this.address = "";
-            this.port = 0;
-            this.ssl = false;
+            this.ports = new Vector.<uint>();
             this.canCreateNewCharacter = false;
-            this.ticket = "";
+            this.ticket = new Vector.<int>();
             this._isInitialized = false;
         }
 
@@ -68,6 +68,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_SelectedServerDataMessage(output);
@@ -75,22 +83,31 @@
 
         public function serializeAs_SelectedServerDataMessage(output:ICustomDataOutput):void
         {
-            var _box0:uint;
-            _box0 = BooleanByteWrapper.setFlag(_box0, 0, this.ssl);
-            _box0 = BooleanByteWrapper.setFlag(_box0, 1, this.canCreateNewCharacter);
-            output.writeByte(_box0);
             if (this.serverId < 0)
             {
                 throw (new Error((("Forbidden value (" + this.serverId) + ") on element serverId.")));
             };
             output.writeVarShort(this.serverId);
             output.writeUTF(this.address);
-            if ((((this.port < 0)) || ((this.port > 0xFFFF))))
+            output.writeShort(this.ports.length);
+            var _i3:uint;
+            while (_i3 < this.ports.length)
             {
-                throw (new Error((("Forbidden value (" + this.port) + ") on element port.")));
+                if (this.ports[_i3] < 0)
+                {
+                    throw (new Error((("Forbidden value (" + this.ports[_i3]) + ") on element 3 (starting at 1) of ports.")));
+                };
+                output.writeVarShort(this.ports[_i3]);
+                _i3++;
             };
-            output.writeShort(this.port);
-            output.writeUTF(this.ticket);
+            output.writeBoolean(this.canCreateNewCharacter);
+            output.writeVarInt(this.ticket.length);
+            var _i5:uint;
+            while (_i5 < this.ticket.length)
+            {
+                output.writeByte(this.ticket[_i5]);
+                _i5++;
+            };
         }
 
         public function deserialize(input:ICustomDataInput):void
@@ -100,24 +117,105 @@
 
         public function deserializeAs_SelectedServerDataMessage(input:ICustomDataInput):void
         {
-            var _box0:uint = input.readByte();
-            this.ssl = BooleanByteWrapper.getFlag(_box0, 0);
-            this.canCreateNewCharacter = BooleanByteWrapper.getFlag(_box0, 1);
+            var _val3:uint;
+            var _val5:int;
+            this._serverIdFunc(input);
+            this._addressFunc(input);
+            var _portsLen:uint = input.readUnsignedShort();
+            var _i3:uint;
+            while (_i3 < _portsLen)
+            {
+                _val3 = input.readVarUhShort();
+                if (_val3 < 0)
+                {
+                    throw (new Error((("Forbidden value (" + _val3) + ") on elements of ports.")));
+                };
+                this.ports.push(_val3);
+                _i3++;
+            };
+            this._canCreateNewCharacterFunc(input);
+            var _ticketLen:uint = input.readVarInt();
+            var _i5:uint;
+            while (_i5 < _ticketLen)
+            {
+                _val5 = input.readByte();
+                this.ticket.push(_val5);
+                _i5++;
+            };
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_SelectedServerDataMessage(tree);
+        }
+
+        public function deserializeAsyncAs_SelectedServerDataMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._serverIdFunc);
+            tree.addChild(this._addressFunc);
+            this._portstree = tree.addChild(this._portstreeFunc);
+            tree.addChild(this._canCreateNewCharacterFunc);
+            this._tickettree = tree.addChild(this._tickettreeFunc);
+        }
+
+        private function _serverIdFunc(input:ICustomDataInput):void
+        {
             this.serverId = input.readVarUhShort();
             if (this.serverId < 0)
             {
                 throw (new Error((("Forbidden value (" + this.serverId) + ") on element of SelectedServerDataMessage.serverId.")));
             };
+        }
+
+        private function _addressFunc(input:ICustomDataInput):void
+        {
             this.address = input.readUTF();
-            this.port = input.readUnsignedShort();
-            if ((((this.port < 0)) || ((this.port > 0xFFFF))))
+        }
+
+        private function _portstreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
             {
-                throw (new Error((("Forbidden value (" + this.port) + ") on element of SelectedServerDataMessage.port.")));
+                this._portstree.addChild(this._portsFunc);
+                i++;
             };
-            this.ticket = input.readUTF();
+        }
+
+        private function _portsFunc(input:ICustomDataInput):void
+        {
+            var _val:uint = input.readVarUhShort();
+            if (_val < 0)
+            {
+                throw (new Error((("Forbidden value (" + _val) + ") on elements of ports.")));
+            };
+            this.ports.push(_val);
+        }
+
+        private function _canCreateNewCharacterFunc(input:ICustomDataInput):void
+        {
+            this.canCreateNewCharacter = input.readBoolean();
+        }
+
+        private function _tickettreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readVarInt();
+            var i:uint;
+            while (i < length)
+            {
+                this._tickettree.addChild(this._ticketFunc);
+                i++;
+            };
+        }
+
+        private function _ticketFunc(input:ICustomDataInput):void
+        {
+            var _val:int = input.readByte();
+            this.ticket.push(_val);
         }
 
 
     }
-}//package com.ankamagames.dofus.network.messages.connection
+} com.ankamagames.dofus.network.messages.connection
 

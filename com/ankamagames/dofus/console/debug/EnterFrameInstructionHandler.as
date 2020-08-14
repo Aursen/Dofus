@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.console.debug
+package com.ankamagames.dofus.console.debug
 {
     import com.ankamagames.jerakine.console.ConsoleInstructionHandler;
     import flash.utils.Dictionary;
@@ -11,8 +11,8 @@
 
         public function handle(console:ConsoleHandler, cmd:String, args:Array):void
         {
-            var _local_4:Dictionary;
-            var _local_5:Dictionary;
+            var ctrlDic:Dictionary;
+            var rtDic:Dictionary;
             var cefl:*;
             var cname:String;
             var refl:*;
@@ -22,20 +22,20 @@
                 case "enterframecount":
                     console.output(("ENTER_FRAME listeners count : " + EnterFrameDispatcher.enterFrameListenerCount));
                     console.output("Controled listeners :");
-                    _local_4 = EnterFrameDispatcher.controledEnterFrameListeners;
-                    for (cefl in _local_4)
+                    ctrlDic = EnterFrameDispatcher.controledEnterFrameListeners;
+                    for (cefl in ctrlDic)
                     {
-                        cname = _local_4[cefl]["name"];
+                        cname = ctrlDic[cefl]["name"];
                         console.output(("  - " + cname));
                     };
                     console.output("Real time listeners :");
-                    _local_5 = EnterFrameDispatcher.realTimeEnterFrameListeners;
-                    for (refl in _local_5)
+                    rtDic = EnterFrameDispatcher.realTimeEnterFrameListeners;
+                    for (refl in rtDic)
                     {
-                        rname = _local_5[refl];
+                        rname = rtDic[refl];
                         console.output(("  - " + rname));
                     };
-                    return;
+                    break;
             };
         }
 
@@ -56,5 +56,5 @@
 
 
     }
-}//package com.ankamagames.dofus.console.debug
+} com.ankamagames.dofus.console.debug
 

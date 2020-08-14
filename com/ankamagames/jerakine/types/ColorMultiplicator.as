@@ -1,6 +1,7 @@
-﻿package com.ankamagames.jerakine.types
+package com.ankamagames.jerakine.types
 {
     import flash.utils.Dictionary;
+    import com.ankamagames.jerakine.utils.benchmark.monitoring.FpsManager;
 
     public class ColorMultiplicator 
     {
@@ -15,10 +16,11 @@
         public function ColorMultiplicator(redComponent:int, greenComponent:int, blueComponent:int, forceCalculation:Boolean=false)
         {
             MEMORY_LOG[this] = 1;
+            FpsManager.getInstance().watchObject(this);
             this.red = redComponent;
             this.green = greenComponent;
             this.blue = blueComponent;
-            if (((!(forceCalculation)) && ((((redComponent + greenComponent) + blueComponent) == 0))))
+            if (((!(forceCalculation)) && (((redComponent + greenComponent) + blueComponent) == 0)))
             {
                 this._isOne = true;
             };
@@ -66,10 +68,10 @@
 
         public function toString():String
         {
-            return ((((((("[r: " + this.red) + ", g: ") + this.green) + ", b: ") + this.blue) + "]"));
+            return (((((("[r: " + this.red) + ", g: ") + this.green) + ", b: ") + this.blue) + "]");
         }
 
 
     }
-}//package com.ankamagames.jerakine.types
+} com.ankamagames.jerakine.types
 

@@ -1,27 +1,23 @@
-﻿package com.ankamagames.dofus.network.messages.game.context.mount
+package com.ankamagames.dofus.network.messages.game.context.mount
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
     import com.ankamagames.dofus.network.types.game.mount.MountClientData;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
 
-    [Trusted]
     public class MountSetMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 5968;
 
         private var _isInitialized:Boolean = false;
-        public var mountData:MountClientData;
+        public var mountData:MountClientData = new MountClientData();
+        private var _mountDatatree:FuncTree;
 
-        public function MountSetMessage()
-        {
-            this.mountData = new MountClientData();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
@@ -58,6 +54,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_MountSetMessage(output);
@@ -79,7 +83,23 @@
             this.mountData.deserialize(input);
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_MountSetMessage(tree);
+        }
+
+        public function deserializeAsyncAs_MountSetMessage(tree:FuncTree):void
+        {
+            this._mountDatatree = tree.addChild(this._mountDatatreeFunc);
+        }
+
+        private function _mountDatatreeFunc(input:ICustomDataInput):void
+        {
+            this.mountData = new MountClientData();
+            this.mountData.deserializeAsync(this._mountDatatree);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.context.mount
+} com.ankamagames.dofus.network.messages.game.context.mount
 

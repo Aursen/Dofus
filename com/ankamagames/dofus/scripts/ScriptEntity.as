@@ -1,9 +1,9 @@
-﻿package com.ankamagames.dofus.scripts
+package com.ankamagames.dofus.scripts
 {
     import com.ankamagames.jerakine.lua.LuaPackage;
     import com.ankamagames.tiphon.display.TiphonSprite;
     import com.ankamagames.dofus.types.entities.AnimatedCharacter;
-    import com.ankamagames.jerakine.types.positions.MapPoint;
+    import mapTools.MapTools;
     import com.ankamagames.tiphon.types.look.EntityLookParser;
     import com.ankamagames.jerakine.sequencer.ISequencable;
     import com.ankamagames.dofus.logic.game.common.steps.MoveStep;
@@ -29,16 +29,14 @@
     public class ScriptEntity implements LuaPackage 
     {
 
-        private var _id:int;
+        private var _id:Number;
         private var _look:String;
         private var _entity:TiphonSprite;
         private var _direction:int = 1;
         private var _x:int;
         private var _y:int;
-        private var _scaleX:Number;
-        private var _scaleY:Number;
 
-        public function ScriptEntity(pId:int, pLook:String, pEntity:TiphonSprite=null)
+        public function ScriptEntity(pId:Number, pLook:String, pEntity:TiphonSprite=null)
         {
             this._id = pId;
             this._look = pLook;
@@ -83,7 +81,7 @@
 
         public function get cellId():uint
         {
-            return (MapPoint.fromCoords(this._x, this._y).cellId);
+            return (MapTools.getCellIdByCoord(this._x, this._y));
         }
 
         public function set cellId(pCellId:uint):void
@@ -94,7 +92,7 @@
             };
         }
 
-        public function get id():int
+        public function get id():Number
         {
             return (this._id);
         }
@@ -129,7 +127,7 @@
 
         public function get scaleX():Number
         {
-            return (((this.getEntitySprite()) ? this._entity.scaleX : NaN));
+            return ((this.getEntitySprite()) ? this._entity.scaleX : NaN);
         }
 
         public function set scaleX(pScaleX:Number):void
@@ -142,7 +140,7 @@
 
         public function get scaleY():Number
         {
-            return (((this.getEntitySprite()) ? this._entity.scaleY : NaN));
+            return ((this.getEntitySprite()) ? this._entity.scaleY : NaN);
         }
 
         public function set scaleY(pScaleY:Number):void
@@ -300,7 +298,7 @@
 
         public function display():ISequencable
         {
-            return (new DisplayEntityStep(this._id, this._look, MapPoint.fromCoords(this._x, this._y).cellId, this._direction));
+            return (new DisplayEntityStep(this._id, this._look, MapTools.getCellIdByCoord(this._x, this._y), this._direction));
         }
 
         public function remove():ISequencable
@@ -314,7 +312,7 @@
 
         private function getEntitySprite():TiphonSprite
         {
-            if (!(this._entity))
+            if (!this._entity)
             {
                 this._entity = (DofusEntities.getEntity(this._id) as TiphonSprite);
             };
@@ -323,5 +321,5 @@
 
 
     }
-}//package com.ankamagames.dofus.scripts
+} com.ankamagames.dofus.scripts
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.network
+package com.ankamagames.jerakine.network
 {
     public interface ILagometer 
     {
@@ -8,5 +8,5 @@
         function stop():void;
 
     }
-}//package com.ankamagames.jerakine.network
+} com.ankamagames.jerakine.network
 

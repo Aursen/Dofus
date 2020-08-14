@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.sequencer
+package com.ankamagames.jerakine.sequencer
 {
     public class StartSequenceStep extends AbstractSequencable 
     {
@@ -21,5 +21,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.sequencer
+} com.ankamagames.jerakine.sequencer
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.fight.steps
+package com.ankamagames.dofus.logic.game.fight.steps
 {
     import com.ankamagames.dofus.logic.game.common.misc.DofusEntities;
     import com.ankamagames.tiphon.display.TiphonSprite;
@@ -6,9 +6,9 @@
     public class FightRemoveCarriedEntityStep extends FightRemoveSubEntityStep 
     {
 
-        private var _carriedId:int;
+        private var _carriedId:Number;
 
-        public function FightRemoveCarriedEntityStep(fighterId:int, carriedId:int, category:uint, slot:uint)
+        public function FightRemoveCarriedEntityStep(fighterId:Number, carriedId:Number, category:uint, slot:uint)
         {
             this._carriedId = carriedId;
             super(fighterId, category, slot);
@@ -32,5 +32,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.fight.steps
+} com.ankamagames.dofus.logic.game.fight.steps
 

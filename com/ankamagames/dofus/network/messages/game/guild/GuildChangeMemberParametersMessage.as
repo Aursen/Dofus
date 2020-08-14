@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.guild
+package com.ankamagames.dofus.network.messages.game.guild
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,15 +6,15 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class GuildChangeMemberParametersMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 5549;
 
         private var _isInitialized:Boolean = false;
-        public var memberId:uint = 0;
+        public var memberId:Number = 0;
         public var rank:uint = 0;
         public var experienceGivenPercent:uint = 0;
         public var rights:uint = 0;
@@ -30,7 +30,7 @@
             return (5549);
         }
 
-        public function initGuildChangeMemberParametersMessage(memberId:uint=0, rank:uint=0, experienceGivenPercent:uint=0, rights:uint=0):GuildChangeMemberParametersMessage
+        public function initGuildChangeMemberParametersMessage(memberId:Number=0, rank:uint=0, experienceGivenPercent:uint=0, rights:uint=0):GuildChangeMemberParametersMessage
         {
             this.memberId = memberId;
             this.rank = rank;
@@ -61,6 +61,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_GuildChangeMemberParametersMessage(output);
@@ -68,17 +76,17 @@
 
         public function serializeAs_GuildChangeMemberParametersMessage(output:ICustomDataOutput):void
         {
-            if (this.memberId < 0)
+            if (((this.memberId < 0) || (this.memberId > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.memberId) + ") on element memberId.")));
             };
-            output.writeVarInt(this.memberId);
+            output.writeVarLong(this.memberId);
             if (this.rank < 0)
             {
                 throw (new Error((("Forbidden value (" + this.rank) + ") on element rank.")));
             };
             output.writeVarShort(this.rank);
-            if ((((this.experienceGivenPercent < 0)) || ((this.experienceGivenPercent > 100))))
+            if (((this.experienceGivenPercent < 0) || (this.experienceGivenPercent > 100)))
             {
                 throw (new Error((("Forbidden value (" + this.experienceGivenPercent) + ") on element experienceGivenPercent.")));
             };
@@ -97,21 +105,54 @@
 
         public function deserializeAs_GuildChangeMemberParametersMessage(input:ICustomDataInput):void
         {
-            this.memberId = input.readVarUhInt();
-            if (this.memberId < 0)
+            this._memberIdFunc(input);
+            this._rankFunc(input);
+            this._experienceGivenPercentFunc(input);
+            this._rightsFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GuildChangeMemberParametersMessage(tree);
+        }
+
+        public function deserializeAsyncAs_GuildChangeMemberParametersMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._memberIdFunc);
+            tree.addChild(this._rankFunc);
+            tree.addChild(this._experienceGivenPercentFunc);
+            tree.addChild(this._rightsFunc);
+        }
+
+        private function _memberIdFunc(input:ICustomDataInput):void
+        {
+            this.memberId = input.readVarUhLong();
+            if (((this.memberId < 0) || (this.memberId > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.memberId) + ") on element of GuildChangeMemberParametersMessage.memberId.")));
             };
+        }
+
+        private function _rankFunc(input:ICustomDataInput):void
+        {
             this.rank = input.readVarUhShort();
             if (this.rank < 0)
             {
                 throw (new Error((("Forbidden value (" + this.rank) + ") on element of GuildChangeMemberParametersMessage.rank.")));
             };
+        }
+
+        private function _experienceGivenPercentFunc(input:ICustomDataInput):void
+        {
             this.experienceGivenPercent = input.readByte();
-            if ((((this.experienceGivenPercent < 0)) || ((this.experienceGivenPercent > 100))))
+            if (((this.experienceGivenPercent < 0) || (this.experienceGivenPercent > 100)))
             {
                 throw (new Error((("Forbidden value (" + this.experienceGivenPercent) + ") on element of GuildChangeMemberParametersMessage.experienceGivenPercent.")));
             };
+        }
+
+        private function _rightsFunc(input:ICustomDataInput):void
+        {
             this.rights = input.readVarUhInt();
             if (this.rights < 0)
             {
@@ -121,5 +162,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.guild
+} com.ankamagames.dofus.network.messages.game.guild
 

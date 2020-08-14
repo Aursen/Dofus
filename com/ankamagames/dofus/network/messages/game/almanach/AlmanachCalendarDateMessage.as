@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.almanach
+package com.ankamagames.dofus.network.messages.game.almanach
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class AlmanachCalendarDateMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -52,6 +52,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_AlmanachCalendarDateMessage(output);
@@ -69,10 +77,25 @@
 
         public function deserializeAs_AlmanachCalendarDateMessage(input:ICustomDataInput):void
         {
+            this._dateFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_AlmanachCalendarDateMessage(tree);
+        }
+
+        public function deserializeAsyncAs_AlmanachCalendarDateMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._dateFunc);
+        }
+
+        private function _dateFunc(input:ICustomDataInput):void
+        {
             this.date = input.readInt();
         }
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.almanach
+} com.ankamagames.dofus.network.messages.game.almanach
 

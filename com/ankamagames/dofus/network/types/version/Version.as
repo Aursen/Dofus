@@ -1,8 +1,9 @@
-﻿package com.ankamagames.dofus.network.types.version
+package com.ankamagames.dofus.network.types.version
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
     public class Version implements INetworkType 
     {
@@ -11,9 +12,8 @@
 
         public var major:uint = 0;
         public var minor:uint = 0;
-        public var release:uint = 0;
-        public var revision:uint = 0;
-        public var patch:uint = 0;
+        public var code:uint = 0;
+        public var build:uint = 0;
         public var buildType:uint = 0;
 
 
@@ -22,13 +22,12 @@
             return (11);
         }
 
-        public function initVersion(major:uint=0, minor:uint=0, release:uint=0, revision:uint=0, patch:uint=0, buildType:uint=0):Version
+        public function initVersion(major:uint=0, minor:uint=0, code:uint=0, build:uint=0, buildType:uint=0):Version
         {
             this.major = major;
             this.minor = minor;
-            this.release = release;
-            this.revision = revision;
-            this.patch = patch;
+            this.code = code;
+            this.build = build;
             this.buildType = buildType;
             return (this);
         }
@@ -37,9 +36,8 @@
         {
             this.major = 0;
             this.minor = 0;
-            this.release = 0;
-            this.revision = 0;
-            this.patch = 0;
+            this.code = 0;
+            this.build = 0;
             this.buildType = 0;
         }
 
@@ -60,21 +58,16 @@
                 throw (new Error((("Forbidden value (" + this.minor) + ") on element minor.")));
             };
             output.writeByte(this.minor);
-            if (this.release < 0)
+            if (this.code < 0)
             {
-                throw (new Error((("Forbidden value (" + this.release) + ") on element release.")));
+                throw (new Error((("Forbidden value (" + this.code) + ") on element code.")));
             };
-            output.writeByte(this.release);
-            if (this.revision < 0)
+            output.writeByte(this.code);
+            if (this.build < 0)
             {
-                throw (new Error((("Forbidden value (" + this.revision) + ") on element revision.")));
+                throw (new Error((("Forbidden value (" + this.build) + ") on element build.")));
             };
-            output.writeInt(this.revision);
-            if (this.patch < 0)
-            {
-                throw (new Error((("Forbidden value (" + this.patch) + ") on element patch.")));
-            };
-            output.writeByte(this.patch);
+            output.writeInt(this.build);
             output.writeByte(this.buildType);
         }
 
@@ -85,31 +78,65 @@
 
         public function deserializeAs_Version(input:ICustomDataInput):void
         {
+            this._majorFunc(input);
+            this._minorFunc(input);
+            this._codeFunc(input);
+            this._buildFunc(input);
+            this._buildTypeFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_Version(tree);
+        }
+
+        public function deserializeAsyncAs_Version(tree:FuncTree):void
+        {
+            tree.addChild(this._majorFunc);
+            tree.addChild(this._minorFunc);
+            tree.addChild(this._codeFunc);
+            tree.addChild(this._buildFunc);
+            tree.addChild(this._buildTypeFunc);
+        }
+
+        private function _majorFunc(input:ICustomDataInput):void
+        {
             this.major = input.readByte();
             if (this.major < 0)
             {
                 throw (new Error((("Forbidden value (" + this.major) + ") on element of Version.major.")));
             };
+        }
+
+        private function _minorFunc(input:ICustomDataInput):void
+        {
             this.minor = input.readByte();
             if (this.minor < 0)
             {
                 throw (new Error((("Forbidden value (" + this.minor) + ") on element of Version.minor.")));
             };
-            this.release = input.readByte();
-            if (this.release < 0)
+        }
+
+        private function _codeFunc(input:ICustomDataInput):void
+        {
+            this.code = input.readByte();
+            if (this.code < 0)
             {
-                throw (new Error((("Forbidden value (" + this.release) + ") on element of Version.release.")));
+                throw (new Error((("Forbidden value (" + this.code) + ") on element of Version.code.")));
             };
-            this.revision = input.readInt();
-            if (this.revision < 0)
+        }
+
+        private function _buildFunc(input:ICustomDataInput):void
+        {
+            this.build = input.readInt();
+            if (this.build < 0)
             {
-                throw (new Error((("Forbidden value (" + this.revision) + ") on element of Version.revision.")));
+                throw (new Error((("Forbidden value (" + this.build) + ") on element of Version.build.")));
             };
-            this.patch = input.readByte();
-            if (this.patch < 0)
-            {
-                throw (new Error((("Forbidden value (" + this.patch) + ") on element of Version.patch.")));
-            };
+        }
+
+        private function _buildTypeFunc(input:ICustomDataInput):void
+        {
             this.buildType = input.readByte();
             if (this.buildType < 0)
             {
@@ -119,5 +146,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.types.version
+} com.ankamagames.dofus.network.types.version
 

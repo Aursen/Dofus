@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.datacenter.items.criterion
+package com.ankamagames.dofus.datacenter.items.criterion
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.dofus.logic.common.managers.PlayerManager;
@@ -18,9 +18,9 @@
             switch (_operator.text)
             {
                 case ItemCriterionOperator.EQUAL:
-                    return ((serverCommunity == criterionValue));
+                    return (serverCommunity == criterionValue);
                 case ItemCriterionOperator.DIFFERENT:
-                    return (!((serverCommunity == criterionValue)));
+                    return (!(serverCommunity == criterionValue));
             };
             return (false);
         }
@@ -49,5 +49,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.items.criterion
+} com.ankamagames.dofus.datacenter.items.criterion
 

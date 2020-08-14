@@ -1,4 +1,4 @@
-﻿package com.ankamagames.tubul.types.sounds
+package com.ankamagames.tubul.types.sounds
 {
     import com.ankamagames.tubul.interfaces.IUnlocalizedSound;
     import com.ankamagames.jerakine.types.Uri;
@@ -12,5 +12,5 @@
         }
 
     }
-}//package com.ankamagames.tubul.types.sounds
+} com.ankamagames.tubul.types.sounds
 

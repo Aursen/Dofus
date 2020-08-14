@@ -1,34 +1,30 @@
-﻿package com.ankamagames.dofus.network.types.game.context.fight
+package com.ankamagames.dofus.network.types.game.context.fight
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import __AS3__.vec.Vector;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
     import __AS3__.vec.*;
 
-    [Trusted]
     public class GameFightResumeSlaveInfo implements INetworkType 
     {
 
         public static const protocolId:uint = 364;
 
-        public var slaveId:int = 0;
-        public var spellCooldowns:Vector.<GameFightSpellCooldown>;
+        public var slaveId:Number = 0;
+        public var spellCooldowns:Vector.<GameFightSpellCooldown> = new Vector.<GameFightSpellCooldown>();
         public var summonCount:uint = 0;
         public var bombCount:uint = 0;
+        private var _spellCooldownstree:FuncTree;
 
-        public function GameFightResumeSlaveInfo()
-        {
-            this.spellCooldowns = new Vector.<GameFightSpellCooldown>();
-            super();
-        }
 
         public function getTypeId():uint
         {
             return (364);
         }
 
-        public function initGameFightResumeSlaveInfo(slaveId:int=0, spellCooldowns:Vector.<GameFightSpellCooldown>=null, summonCount:uint=0, bombCount:uint=0):GameFightResumeSlaveInfo
+        public function initGameFightResumeSlaveInfo(slaveId:Number=0, spellCooldowns:Vector.<GameFightSpellCooldown>=null, summonCount:uint=0, bombCount:uint=0):GameFightResumeSlaveInfo
         {
             this.slaveId = slaveId;
             this.spellCooldowns = spellCooldowns;
@@ -52,7 +48,11 @@
 
         public function serializeAs_GameFightResumeSlaveInfo(output:ICustomDataOutput):void
         {
-            output.writeInt(this.slaveId);
+            if (((this.slaveId < -9007199254740992) || (this.slaveId > 9007199254740992)))
+            {
+                throw (new Error((("Forbidden value (" + this.slaveId) + ") on element slaveId.")));
+            };
+            output.writeDouble(this.slaveId);
             output.writeShort(this.spellCooldowns.length);
             var _i2:uint;
             while (_i2 < this.spellCooldowns.length)
@@ -80,7 +80,7 @@
         public function deserializeAs_GameFightResumeSlaveInfo(input:ICustomDataInput):void
         {
             var _item2:GameFightSpellCooldown;
-            this.slaveId = input.readInt();
+            this._slaveIdFunc(input);
             var _spellCooldownsLen:uint = input.readUnsignedShort();
             var _i2:uint;
             while (_i2 < _spellCooldownsLen)
@@ -90,11 +90,61 @@
                 this.spellCooldowns.push(_item2);
                 _i2++;
             };
+            this._summonCountFunc(input);
+            this._bombCountFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GameFightResumeSlaveInfo(tree);
+        }
+
+        public function deserializeAsyncAs_GameFightResumeSlaveInfo(tree:FuncTree):void
+        {
+            tree.addChild(this._slaveIdFunc);
+            this._spellCooldownstree = tree.addChild(this._spellCooldownstreeFunc);
+            tree.addChild(this._summonCountFunc);
+            tree.addChild(this._bombCountFunc);
+        }
+
+        private function _slaveIdFunc(input:ICustomDataInput):void
+        {
+            this.slaveId = input.readDouble();
+            if (((this.slaveId < -9007199254740992) || (this.slaveId > 9007199254740992)))
+            {
+                throw (new Error((("Forbidden value (" + this.slaveId) + ") on element of GameFightResumeSlaveInfo.slaveId.")));
+            };
+        }
+
+        private function _spellCooldownstreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._spellCooldownstree.addChild(this._spellCooldownsFunc);
+                i++;
+            };
+        }
+
+        private function _spellCooldownsFunc(input:ICustomDataInput):void
+        {
+            var _item:GameFightSpellCooldown = new GameFightSpellCooldown();
+            _item.deserialize(input);
+            this.spellCooldowns.push(_item);
+        }
+
+        private function _summonCountFunc(input:ICustomDataInput):void
+        {
             this.summonCount = input.readByte();
             if (this.summonCount < 0)
             {
                 throw (new Error((("Forbidden value (" + this.summonCount) + ") on element of GameFightResumeSlaveInfo.summonCount.")));
             };
+        }
+
+        private function _bombCountFunc(input:ICustomDataInput):void
+        {
             this.bombCount = input.readByte();
             if (this.bombCount < 0)
             {
@@ -104,5 +154,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.context.fight
+} com.ankamagames.dofus.network.types.game.context.fight
 

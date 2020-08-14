@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.types.graphic
+package com.ankamagames.berilia.types.graphic
 {
     import com.ankamagames.berilia.interfaces.IRadioItem;
     import com.ankamagames.berilia.FinalizableUIComponent;
@@ -14,6 +14,10 @@
     import com.ankamagames.berilia.Berilia;
     import com.ankamagames.jerakine.handlers.messages.mouse.MouseDoubleClickMessage;
     import com.ankamagames.jerakine.handlers.messages.mouse.MouseClickMessage;
+    import com.ankamagames.berilia.managers.TooltipManager;
+    import com.ankamagames.berilia.types.data.TextTooltipInfo;
+    import com.ankamagames.berilia.managers.UiModuleManager;
+    import com.ankamagames.berilia.types.LocationEnum;
     import com.ankamagames.jerakine.handlers.messages.mouse.MouseOverMessage;
     import com.ankamagames.jerakine.handlers.messages.mouse.MouseReleaseOutsideMessage;
     import com.ankamagames.jerakine.handlers.messages.mouse.MouseOutMessage;
@@ -28,7 +32,7 @@
         protected var _mousePressed:Boolean = false;
         protected var _disabled:Boolean = false;
         private var _radioGroup:String;
-        private var _value;
+        private var _value:*;
         private var _lastClickFameId:uint = 0xFFFFFFFF;
         private var _checkbox:Boolean = false;
         private var _radioMode:Boolean = false;
@@ -36,7 +40,7 @@
         protected var _soundId:String = "0";
         protected var _playRollOverSound:Boolean = true;
         protected var _isMute:Boolean = false;
-        protected var _finalized:Boolean;
+        private var _tooltipContent:String;
 
         public function ButtonContainer()
         {
@@ -44,6 +48,16 @@
             useHandCursor = true;
             mouseEnabled = true;
             mouseChildren = false;
+        }
+
+        public function get tooltipContent():String
+        {
+            return (this._tooltipContent);
+        }
+
+        public function set tooltipContent(content:String):void
+        {
+            this._tooltipContent = content;
         }
 
         public function set checkBox(b:Boolean):void
@@ -106,7 +120,7 @@
             this._selected = b;
             if (changingStateData)
             {
-                if (!(changingStateData[((b) ? StatesEnum.STATE_SELECTED : StatesEnum.STATE_NORMAL)]))
+                if (!changingStateData[((b) ? StatesEnum.STATE_SELECTED : StatesEnum.STATE_NORMAL)])
                 {
                     this.state = ((this._selected) ? StatesEnum.STATE_SELECTED : StatesEnum.STATE_NORMAL);
                 }
@@ -115,7 +129,7 @@
                     this.state = ((b) ? StatesEnum.STATE_SELECTED : StatesEnum.STATE_NORMAL);
                 };
             };
-            if (((this._radioGroup) && (getUi())))
+            if ((((this._selected) && (this._radioGroup)) && (getUi())))
             {
                 rg = getUi().getRadioGroup(this._radioGroup);
                 if (rg)
@@ -139,9 +153,8 @@
             switch (newState)
             {
                 case StatesEnum.STATE_NORMAL:
-                    _state = newState;
-                    restoreSnapshot(StatesEnum.STATE_NORMAL);
-                    return;
+                    changeState(newState);
+                    break;
                 case StatesEnum.STATE_DISABLED:
                     this._disabled = true;
                 case StatesEnum.STATE_SELECTED:
@@ -149,12 +162,11 @@
                 case StatesEnum.STATE_OVER:
                 case StatesEnum.STATE_SELECTED_CLICKED:
                 case StatesEnum.STATE_SELECTED_OVER:
-                    if (!(softDisabled))
+                    if (!softDisabled)
                     {
                         changeState(newState);
-                        _state = newState;
                     };
-                    return;
+                    break;
             };
         }
 
@@ -163,7 +175,7 @@
             return (name);
         }
 
-        public function get value()
+        public function get value():*
         {
             return (this._value);
         }
@@ -173,13 +185,12 @@
             this._value = v;
         }
 
-        public function finalize():void
+        override public function finalize():void
         {
-            var ui:UiRootContainer;
             var rg:RadioGroup;
+            var ui:UiRootContainer = getUi();
             if (this._radioGroup)
             {
-                ui = getUi();
                 rg = ui.addRadioGroup(this._radioGroup);
                 rg.addItem(this);
             };
@@ -187,21 +198,12 @@
             {
                 this.selected = this._selected;
             };
-            if (getUi())
+            super.finalize();
+            if (ui)
             {
-                getUi().iAmFinalized(this);
+                ui.iAmFinalized(this);
             };
-            this._finalized = true;
-        }
-
-        public function get finalized():Boolean
-        {
-            return (this._finalized);
-        }
-
-        public function set finalized(b:Boolean):void
-        {
-            this._finalized = b;
+            _finalized = true;
         }
 
         public function get soundId():String
@@ -269,7 +271,6 @@
             };
         }
 
-        [HideInFakeClass]
         override public function process(msg:Message):Boolean
         {
             var listener:IInterfaceListener;
@@ -278,11 +279,11 @@
             var rg:RadioGroup;
             var elem:GraphicContainer;
             var tmpState:uint = 9999;
-            if (!(super.canProcessMessage(msg)))
+            if (!canProcessMessage(msg))
             {
                 return (true);
             };
-            if (!(this._disabled))
+            if (!this._disabled)
             {
                 switch (true)
                 {
@@ -300,7 +301,7 @@
                         this._lastClickFameId = FrameIdManager.frameId;
                         if (this._checkbox)
                         {
-                            this._selected = !(this._selected);
+                            this._selected = (!(this._selected));
                         }
                         else
                         {
@@ -310,11 +311,11 @@
                             };
                         };
                         tmpState = ((this._selected) ? StatesEnum.STATE_SELECTED_OVER : StatesEnum.STATE_OVER);
-                        if (!(changingStateData[tmpState]))
+                        if (!changingStateData[tmpState])
                         {
                             tmpState = ((this._selected) ? StatesEnum.STATE_SELECTED : StatesEnum.STATE_NORMAL);
                         };
-                        if (!(this.isMute))
+                        if (!this.isMute)
                         {
                             for each (listener in Berilia.getInstance().UISoundListeners)
                             {
@@ -346,11 +347,19 @@
                                 tmpState = ((this._selected) ? StatesEnum.STATE_SELECTED : StatesEnum.STATE_NORMAL);
                             };
                         };
+                        if (this._tooltipContent)
+                        {
+                            TooltipManager.show(new TextTooltipInfo(this._tooltipContent), TooltipManager.getTargetRect(this), UiModuleManager.getInstance().getModule("Ankama_Tooltips"), false, "standard", LocationEnum.POINT_BOTTOM, LocationEnum.POINT_TOP);
+                        };
                         break;
                     case (msg is MouseReleaseOutsideMessage):
                         this._mousePressed = false;
                     case (msg is MouseOutMessage):
                         tmpState = ((this._selected) ? StatesEnum.STATE_SELECTED : StatesEnum.STATE_NORMAL);
+                        if (this._tooltipContent)
+                        {
+                            TooltipManager.hide();
+                        };
                         break;
                 };
             };
@@ -379,5 +388,5 @@
 
 
     }
-}//package com.ankamagames.berilia.types.graphic
+} com.ankamagames.berilia.types.graphic
 

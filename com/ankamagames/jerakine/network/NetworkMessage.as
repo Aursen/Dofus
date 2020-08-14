@@ -1,8 +1,9 @@
-﻿package com.ankamagames.jerakine.network
+package com.ankamagames.jerakine.network
 {
     import com.ankamagames.jerakine.scrambling.ScramblableElement;
-    import flash.utils.ByteArray;
     import com.ankamagames.jerakine.utils.errors.AbstractMethodCallError;
+    import flash.utils.ByteArray;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.IDataInput;
     import flash.utils.IDataOutput;
     import flash.utils.getQualifiedClassName;
@@ -17,37 +18,13 @@
 
         private var _instance_id:uint;
         public var receptionTime:int;
+        public var sourceConnection:String;
+        public var _unpacked:Boolean = false;
 
         public function NetworkMessage()
         {
             this._instance_id = ++GLOBAL_INSTANCE_ID;
             super();
-        }
-
-        public static function writePacket(output:ICustomDataOutput, id:int, data:ByteArray):void
-        {
-            var _local_5:uint;
-            var _local_6:uint;
-            var typeLen:uint = computeTypeLen(data.length);
-            output.writeShort(subComputeStaticHeader(id, typeLen));
-            switch (typeLen)
-            {
-                case 0:
-                    return;
-                case 1:
-                    output.writeByte(data.length);
-                    break;
-                case 2:
-                    output.writeShort(data.length);
-                    break;
-                case 3:
-                    _local_5 = ((data.length >> 16) & 0xFF);
-                    _local_6 = (data.length & 0xFFFF);
-                    output.writeByte(_local_5);
-                    output.writeShort(_local_6);
-                    break;
-            };
-            output.writeBytes(data, 0, data.length);
         }
 
         private static function computeTypeLen(len:uint):uint
@@ -69,13 +46,50 @@
 
         private static function subComputeStaticHeader(msgId:uint, typeLen:uint):uint
         {
-            return (((msgId << BIT_RIGHT_SHIFT_LEN_PACKET_ID) | typeLen));
+            return ((msgId << BIT_RIGHT_SHIFT_LEN_PACKET_ID) | typeLen);
         }
 
 
         public function get isInitialized():Boolean
         {
             throw (new AbstractMethodCallError());
+        }
+
+        public function get unpacked():Boolean
+        {
+            return (this._unpacked);
+        }
+
+        public function set unpacked(value:Boolean):void
+        {
+            this._unpacked = value;
+        }
+
+        public function writePacket(output:ICustomDataOutput, id:int, data:ByteArray):void
+        {
+            var high:uint;
+            var low:uint;
+            var typeLen:uint = computeTypeLen(data.length);
+            output.writeShort(subComputeStaticHeader(id, typeLen));
+            output.writeUnsignedInt(this._instance_id);
+            switch (typeLen)
+            {
+                case 0:
+                    return;
+                case 1:
+                    output.writeByte(data.length);
+                    break;
+                case 2:
+                    output.writeShort(data.length);
+                    break;
+                case 3:
+                    high = ((data.length >> 16) & 0xFF);
+                    low = (data.length & 0xFFFF);
+                    output.writeByte(high);
+                    output.writeShort(low);
+                    break;
+            };
+            output.writeBytes(data, 0, data.length);
         }
 
         public function getMessageId():uint
@@ -98,6 +112,11 @@
             throw (new AbstractMethodCallError());
         }
 
+        public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            throw (new AbstractMethodCallError());
+        }
+
         public function readExternal(input:IDataInput):void
         {
             throw (new AbstractMethodCallError());
@@ -110,10 +129,11 @@
 
         public function toString():String
         {
-            return (((getQualifiedClassName(this).split("::")[1] + " @") + this._instance_id));
+            var className:String = getQualifiedClassName(this);
+            return ((className.substring((className.indexOf("::") + 2)) + " @") + this._instance_id);
         }
 
 
     }
-}//package com.ankamagames.jerakine.network
+} com.ankamagames.jerakine.network
 

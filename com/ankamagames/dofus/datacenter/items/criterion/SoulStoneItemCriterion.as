@@ -1,6 +1,7 @@
-﻿package com.ankamagames.dofus.datacenter.items.criterion
+package com.ankamagames.dofus.datacenter.items.criterion
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
+    import com.ankamagames.dofus.internalDatacenter.DataEnum;
     import com.ankamagames.dofus.datacenter.monsters.Monster;
     import com.ankamagames.dofus.internalDatacenter.items.ItemWrapper;
     import com.ankamagames.dofus.logic.game.common.managers.InventoryManager;
@@ -9,7 +10,7 @@
     public class SoulStoneItemCriterion extends ItemCriterion implements IDataCenter 
     {
 
-        private static const ID_SOUL_STONE:Array = [7010, 10417, 10418];
+        private static const ID_SOUL_STONE:Array = [DataEnum.ITEM_GID_SOULSTONE, DataEnum.ITEM_GID_SOULSTONE_MINIBOSS, DataEnum.ITEM_GID_SOULSTONE_BOSS];
 
         private var _quantityMonster:uint = 1;
         private var _monsterId:uint;
@@ -19,13 +20,9 @@
         {
             super(pCriterion);
             var arrayParams:Array = String(_criterionValueText).split(",");
-            if (((arrayParams) && ((arrayParams.length > 0))))
+            if (((arrayParams) && (arrayParams.length > 0)))
             {
-                if (arrayParams.length > 2)
-                {
-                    trace((("Les paramètres pour le critère de pierre d'ame sont mauvais ! (" + _serverCriterionForm) + ")"));
-                }
-                else
+                if (arrayParams.length <= 2)
                 {
                     this._monsterId = uint(arrayParams[0]);
                     this._quantityMonster = int(arrayParams[1]);
@@ -69,5 +66,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.items.criterion
+} com.ankamagames.dofus.datacenter.items.criterion
 

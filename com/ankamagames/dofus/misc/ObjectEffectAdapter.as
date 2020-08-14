@@ -1,16 +1,18 @@
-﻿package com.ankamagames.dofus.misc
+package com.ankamagames.dofus.misc
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
     import com.ankamagames.dofus.datacenter.effects.EffectInstance;
     import com.ankamagames.dofus.datacenter.items.IncarnationLevel;
+    import com.ankamagames.dofus.network.types.game.data.items.effects.ObjectEffectInteger;
+    import __AS3__.vec.Vector;
+    import com.ankamagames.dofus.datacenter.effects.instances.EffectInstanceInteger;
+    import com.ankama.dofus.enums.ActionIds;
     import com.ankamagames.dofus.network.types.game.data.items.effects.ObjectEffectDice;
     import com.ankamagames.dofus.datacenter.effects.instances.EffectInstanceDate;
     import com.ankamagames.dofus.datacenter.effects.instances.EffectInstanceString;
     import com.ankamagames.dofus.network.types.game.data.items.effects.ObjectEffectString;
-    import com.ankamagames.dofus.datacenter.effects.instances.EffectInstanceInteger;
-    import com.ankamagames.dofus.network.types.game.data.items.effects.ObjectEffectInteger;
     import com.ankamagames.dofus.datacenter.effects.instances.EffectInstanceMinMax;
     import com.ankamagames.dofus.network.types.game.data.items.effects.ObjectEffectMinMax;
     import com.ankamagames.dofus.datacenter.effects.instances.EffectInstanceDice;
@@ -24,6 +26,7 @@
     import com.ankamagames.dofus.datacenter.effects.instances.EffectInstanceMount;
     import com.ankamagames.dofus.network.types.game.data.items.effects.ObjectEffectMount;
     import com.ankamagames.dofus.network.types.game.data.items.effects.ObjectEffect;
+    import __AS3__.vec.*;
 
     public class ObjectEffectAdapter 
     {
@@ -37,9 +40,12 @@
             var level:int;
             var floor:int;
             var nextFloor:int;
-            var _local_6:IncarnationLevel;
-            var _local_7:IncarnationLevel;
-            if ((((oe is ObjectEffectDice)) && ((oe.actionId == 669))))
+            var incLevel:IncarnationLevel;
+            var incLevelPlusOne:IncarnationLevel;
+            var serverEffect:ObjectEffectInteger;
+            var clientEffects:Vector.<EffectInstanceInteger>;
+            var intEffect:EffectInstanceInteger;
+            if (((oe is ObjectEffectDice) && (oe.actionId == ActionIds.ACTION_INCARNATION)))
             {
                 effect = new EffectInstanceDate();
                 EffectInstanceDate(effect).year = ObjectEffectDice(oe).diceNum;
@@ -47,19 +53,19 @@
                 level = 1;
                 do 
                 {
-                    _local_6 = IncarnationLevel.getIncarnationLevelByIdAndLevel(ObjectEffectDice(oe).diceNum, level);
-                    if (_local_6)
+                    incLevel = IncarnationLevel.getIncarnationLevelByIdAndLevel(ObjectEffectDice(oe).diceNum, level);
+                    if (incLevel)
                     {
-                        floor = _local_6.requiredXp;
+                        floor = incLevel.requiredXp;
                     };
                     level++;
-                    _local_7 = IncarnationLevel.getIncarnationLevelByIdAndLevel(ObjectEffectDice(oe).diceNum, level);
-                    if (_local_7)
+                    incLevelPlusOne = IncarnationLevel.getIncarnationLevelByIdAndLevel(ObjectEffectDice(oe).diceNum, level);
+                    if (incLevelPlusOne)
                     {
-                        nextFloor = _local_7.requiredXp;
+                        nextFloor = incLevelPlusOne.requiredXp;
                     };
-                } while ((((nextFloor < EffectInstanceDate(effect).month)) && ((level < 51))));
-                level = (level - 1);
+                } while (((nextFloor < EffectInstanceDate(effect).month) && (level < 51)));
+                level--;
                 EffectInstanceDate(effect).day = level;
                 EffectInstanceDate(effect).hour = 0;
                 EffectInstanceDate(effect).minute = 0;
@@ -112,9 +118,29 @@
                         break;
                     case (oe is ObjectEffectMount):
                         effect = new EffectInstanceMount();
-                        EffectInstanceMount(effect).date = ObjectEffectMount(oe).date;
-                        EffectInstanceMount(effect).modelId = ObjectEffectMount(oe).modelId;
-                        EffectInstanceMount(effect).mountId = ObjectEffectMount(oe).mountId;
+                        EffectInstanceMount(effect).id = (oe as ObjectEffectMount).id;
+                        EffectInstanceMount(effect).expirationDate = (oe as ObjectEffectMount).expirationDate;
+                        EffectInstanceMount(effect).model = (oe as ObjectEffectMount).model;
+                        EffectInstanceMount(effect).owner = (oe as ObjectEffectMount).owner;
+                        EffectInstanceMount(effect).name = (oe as ObjectEffectMount).name;
+                        EffectInstanceMount(effect).level = (oe as ObjectEffectMount).level;
+                        EffectInstanceMount(effect).sex = (oe as ObjectEffectMount).sex;
+                        EffectInstanceMount(effect).isRideable = (oe as ObjectEffectMount).isRideable;
+                        EffectInstanceMount(effect).isFecondationReady = (oe as ObjectEffectMount).isFecondationReady;
+                        EffectInstanceMount(effect).isFeconded = (oe as ObjectEffectMount).isFeconded;
+                        EffectInstanceMount(effect).reproductionCount = (oe as ObjectEffectMount).reproductionCount;
+                        EffectInstanceMount(effect).reproductionCountMax = (oe as ObjectEffectMount).reproductionCountMax;
+                        clientEffects = new Vector.<EffectInstanceInteger>();
+                        for each (serverEffect in (oe as ObjectEffectMount).effects)
+                        {
+                            intEffect = new EffectInstanceInteger();
+                            intEffect.value = serverEffect.value;
+                            intEffect.effectId = serverEffect.actionId;
+                            intEffect.duration = 0;
+                            clientEffects.push(intEffect);
+                        };
+                        EffectInstanceMount(effect).effects = clientEffects;
+                        EffectInstanceMount(effect).capacities = (oe as ObjectEffectMount).capacities;
                         break;
                     default:
                         effect = new EffectInstance();
@@ -127,5 +153,5 @@
 
 
     }
-}//package com.ankamagames.dofus.misc
+} com.ankamagames.dofus.misc
 

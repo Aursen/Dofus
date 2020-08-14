@@ -1,4 +1,4 @@
-﻿package com.ankamagames.tiphon.types
+package com.ankamagames.tiphon.types
 {
     import com.ankamagames.tiphon.display.TiphonSprite;
 
@@ -33,7 +33,7 @@
 
         public function set animation(v:String):void
         {
-            if (!(this.lock))
+            if (!this.lock)
             {
                 this._animation = v;
             };
@@ -56,5 +56,5 @@
 
 
     }
-}//package com.ankamagames.tiphon.types
+} com.ankamagames.tiphon.types
 

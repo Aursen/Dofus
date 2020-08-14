@@ -1,6 +1,7 @@
-﻿package com.ankamagames.dofus.network.types.game.context.roleplay.job
+package com.ankamagames.dofus.network.types.game.context.roleplay.job
 {
     import com.ankamagames.jerakine.network.INetworkType;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
 
@@ -9,15 +10,11 @@
 
         public static const protocolId:uint = 196;
 
-        public var playerInfo:JobCrafterDirectoryEntryPlayerInfo;
-        public var jobInfo:JobCrafterDirectoryEntryJobInfo;
+        public var playerInfo:JobCrafterDirectoryEntryPlayerInfo = new JobCrafterDirectoryEntryPlayerInfo();
+        public var jobInfo:JobCrafterDirectoryEntryJobInfo = new JobCrafterDirectoryEntryJobInfo();
+        private var _playerInfotree:FuncTree;
+        private var _jobInfotree:FuncTree;
 
-        public function JobCrafterDirectoryListEntry()
-        {
-            this.playerInfo = new JobCrafterDirectoryEntryPlayerInfo();
-            this.jobInfo = new JobCrafterDirectoryEntryJobInfo();
-            super();
-        }
 
         public function getTypeId():uint
         {
@@ -60,7 +57,30 @@
             this.jobInfo.deserialize(input);
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_JobCrafterDirectoryListEntry(tree);
+        }
+
+        public function deserializeAsyncAs_JobCrafterDirectoryListEntry(tree:FuncTree):void
+        {
+            this._playerInfotree = tree.addChild(this._playerInfotreeFunc);
+            this._jobInfotree = tree.addChild(this._jobInfotreeFunc);
+        }
+
+        private function _playerInfotreeFunc(input:ICustomDataInput):void
+        {
+            this.playerInfo = new JobCrafterDirectoryEntryPlayerInfo();
+            this.playerInfo.deserializeAsync(this._playerInfotree);
+        }
+
+        private function _jobInfotreeFunc(input:ICustomDataInput):void
+        {
+            this.jobInfo = new JobCrafterDirectoryEntryJobInfo();
+            this.jobInfo.deserializeAsync(this._jobInfotree);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.types.game.context.roleplay.job
+} com.ankamagames.dofus.network.types.game.context.roleplay.job
 

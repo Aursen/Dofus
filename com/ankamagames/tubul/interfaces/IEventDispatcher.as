@@ -1,4 +1,4 @@
-﻿package com.ankamagames.tubul.interfaces
+package com.ankamagames.tubul.interfaces
 {
     import flash.events.EventDispatcher;
 
@@ -8,5 +8,5 @@
         function get eventDispatcher():EventDispatcher;
 
     }
-}//package com.ankamagames.tubul.interfaces
+} com.ankamagames.tubul.interfaces
 

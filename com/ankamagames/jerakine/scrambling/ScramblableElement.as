@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.scrambling
+package com.ankamagames.jerakine.scrambling
 {
     import flash.utils.ByteArray;
 
@@ -16,5 +16,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.scrambling
+} com.ankamagames.jerakine.scrambling
 

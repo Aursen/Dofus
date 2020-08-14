@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.components
+package com.ankamagames.berilia.components
 {
     import com.ankamagames.berilia.FinalizableUIComponent;
     import com.ankamagames.jerakine.logger.Logger;
@@ -6,12 +6,15 @@
     import flash.utils.getQualifiedClassName;
     import flash.events.Event;
     import flash.events.MouseEvent;
-    import com.ankamagames.jerakine.utils.system.AirScanner;
     import com.ankamagames.jerakine.utils.display.StageShareManager;
     import flash.events.NativeWindowBoundsEvent;
     import com.ankamagames.jerakine.types.Uri;
     import com.ankamagames.jerakine.handlers.messages.mouse.MouseWheelMessage;
     import com.ankamagames.jerakine.messages.Message;
+    import com.ankamagames.berilia.types.graphic.UiRootContainer;
+    import com.ankamagames.berilia.Berilia;
+    import com.ankamagames.berilia.components.messages.ChangeMessage;
+    import com.ankamagames.berilia.types.graphic.GraphicElement;
 
     public class TextArea extends Label implements FinalizableUIComponent 
     {
@@ -24,6 +27,13 @@
         private var _bHideScroll:Boolean = false;
         private var _scrollTopMargin:int = 0;
         private var _scrollBottomMargin:int = 0;
+        private var _scrollXOffset:int = 10;
+        private var _skipScrollUpdate:Boolean = false;
+        private var _bResetScroll:Boolean = false;
+        private var _dropValidator:Function;
+        private var _unboxedDropValidator:Function;
+        private var _processDrop:Function;
+        private var _unboxedProcessDrop:Function;
         protected var ___width:uint;
 
         public function TextArea()
@@ -40,10 +50,47 @@
             _tText.multiline = true;
             _tText.mouseEnabled = true;
             _tText.mouseWheelEnabled = false;
-            if (AirScanner.hasAir())
-            {
-                StageShareManager.stage.nativeWindow.addEventListener(NativeWindowBoundsEvent.RESIZE, this.onWindowResize);
-            };
+            StageShareManager.stage.nativeWindow.addEventListener(NativeWindowBoundsEvent.RESIZE, this.onWindowResize);
+        }
+
+        public function get resetScroll():Boolean
+        {
+            return (this._bResetScroll);
+        }
+
+        public function set resetScroll(b:Boolean):void
+        {
+            this._bResetScroll = b;
+        }
+
+        public function get scrollBarValue():int
+        {
+            return (this._sbScrollBar.value);
+        }
+
+        public function set scrollBarValue(v:int):void
+        {
+            this._sbScrollBar.value = v;
+        }
+
+        public function get scrollBarY():int
+        {
+            return (this._sbScrollBar.y);
+        }
+
+        public function set scrollBarY(pY:int):void
+        {
+            this._sbScrollBar.y = pY;
+        }
+
+        public function get scrollBarX():int
+        {
+            return (this._sbScrollBar.x);
+        }
+
+        public function set scrollBarX(pX:int):void
+        {
+            this._sbScrollBar.x = pX;
         }
 
         public function get scrollBottomMargin():int
@@ -69,11 +116,13 @@
             this._sbScrollBar.height = ((height - this._scrollTopMargin) - this._scrollBottomMargin);
         }
 
+        [Uri]
         public function set scrollCss(sUrl:Uri):void
         {
             this._sbScrollBar.css = sUrl;
         }
 
+        [Uri]
         public function get scrollCss():Uri
         {
             return (this._sbScrollBar.css);
@@ -81,10 +130,25 @@
 
         override public function set width(nW:Number):void
         {
+            if (!nW)
+            {
+                return;
+            };
+            var currentScroll:uint = _tText.maxScrollV;
+            _nWidth = nW;
+            __width = nW;
             this.___width = nW;
-            super.width = nW;
-            this.updateScrollBarPos();
+            if (((this._bFinalized) && (_autoResize)))
+            {
+                resizeText();
+            };
             _tText.textWidth;
+            if (this._bFinalized)
+            {
+                this.updateScrollBarPos();
+                _tText.scrollV = currentScroll;
+                this._sbScrollBar.value = currentScroll;
+            };
         }
 
         override public function get width():Number
@@ -94,9 +158,14 @@
 
         override public function set height(nH:Number):void
         {
-            if (((!((nH == super.height))) || (!((nH == ((this._sbScrollBar.height - this._scrollTopMargin) - this._scrollBottomMargin))))))
+            if (!nH)
+            {
+                return;
+            };
+            if (((!(nH == super.height)) || (!(nH == ((this._sbScrollBar.height - this._scrollTopMargin) - this._scrollBottomMargin)))))
             {
                 super.height = nH;
+                _tText.textWidth;
                 this._sbScrollBar.height = ((nH - this._scrollTopMargin) - this._scrollBottomMargin);
                 if (this._bFinalized)
                 {
@@ -110,7 +179,8 @@
             super.text = sValue;
             if (this._bFinalized)
             {
-                this.updateScrollBar(true);
+                this._skipScrollUpdate = true;
+                this.updateScrollBar(this._bResetScroll);
             };
         }
 
@@ -119,7 +189,7 @@
             this._nScrollPos = nValue;
         }
 
-        [ForceReplaceInFakeClass]
+        [Uri]
         override public function set css(sValue:Uri):void
         {
             super.css = sValue;
@@ -141,7 +211,7 @@
 
         override public function get finalized():Boolean
         {
-            return (((this._bFinalized) && (super.finalized)));
+            return ((this._bFinalized) && (super.finalized));
         }
 
         override public function set finalized(b:Boolean):void
@@ -169,8 +239,47 @@
             super.htmlText = pHtmlText;
             if (this._bFinalized)
             {
+                this._skipScrollUpdate = true;
                 this.updateScrollBar();
             };
+        }
+
+        override public function set dropValidator(dv:Function):void
+        {
+            this._dropValidator = dv;
+            this._unboxedDropValidator = null;
+        }
+
+        override public function get dropValidator():Function
+        {
+            if (this._dropValidator == null)
+            {
+                return (super.dropValidator);
+            };
+            if (this._unboxedDropValidator == null)
+            {
+                this._unboxedDropValidator = this._dropValidator;
+            };
+            return (this._unboxedDropValidator);
+        }
+
+        override public function set processDrop(pd:Function):void
+        {
+            this._processDrop = pd;
+            this._unboxedProcessDrop = null;
+        }
+
+        override public function get processDrop():Function
+        {
+            if (this._processDrop == null)
+            {
+                return (super.processDrop);
+            };
+            if (this._unboxedProcessDrop == null)
+            {
+                this._unboxedProcessDrop = this._processDrop;
+            };
+            return (this._unboxedProcessDrop);
         }
 
         override public function appendText(sTxt:String, style:String=null):void
@@ -178,6 +287,7 @@
             super.appendText(sTxt, style);
             if (this._bFinalized)
             {
+                this._skipScrollUpdate = true;
                 this.updateScrollBar();
             };
         }
@@ -213,17 +323,12 @@
             };
             this._sbScrollBar = null;
             _tText.removeEventListener(MouseEvent.MOUSE_WHEEL, this.onTextWheel);
-            if (AirScanner.hasAir())
-            {
-                StageShareManager.stage.removeEventListener(Event.FRAME_CONSTRUCTED, this.onFrameConstructed);
-                StageShareManager.stage.nativeWindow.removeEventListener(NativeWindowBoundsEvent.RESIZE, this.onWindowResize);
-            };
             super.remove();
         }
 
         override public function process(msg:Message):Boolean
         {
-            if ((((msg is MouseWheelMessage)) && (((this._sbScrollBar) && (this._sbScrollBar.visible)))))
+            if (((msg is MouseWheelMessage) && ((this._sbScrollBar) && (this._sbScrollBar.visible))))
             {
                 return (true);
             };
@@ -235,54 +340,89 @@
             this._sbScrollBar.visible = false;
         }
 
-        private function updateScrollBar(reset:Boolean=false):void
+        protected function updateScrollBar(reset:Boolean=false, resetToTop:Boolean=true):void
         {
-            if ((((_tText.scrollV == 1)) && ((_tText.bottomScrollV == _tText.numLines))))
+            _tText.getCharBoundaries(0);
+            var finalizedVal:Boolean = this._sbScrollBar.finalized;
+            if (((_tText.scrollV == 1) && (_tText.bottomScrollV == _tText.numLines)))
             {
-                _tText.scrollV = 0;
                 this._sbScrollBar.disabled = true;
                 if (this._bHideScroll)
                 {
                     this._sbScrollBar.visible = false;
+                }
+                else
+                {
+                    this._sbScrollBar.finalized = false;
+                    this._sbScrollBar.total = _tText.numLines;
+                    this._sbScrollBar.finalized = finalizedVal;
+                    this._sbScrollBar.max = _tText.maxScrollV;
+                    this._sbScrollBar.value = 0;
                 };
             }
             else
             {
                 this._sbScrollBar.visible = true;
                 this._sbScrollBar.disabled = false;
-                this._sbScrollBar.total = _tText.numLines;
-                this._sbScrollBar.max = _tText.maxScrollV;
-                if (reset)
+                if (_tText.height)
                 {
-                    _tText.scrollV = 0;
-                    this._sbScrollBar.value = 0;
-                }
-                else
-                {
-                    this._sbScrollBar.value = _tText.scrollV;
+                    this._sbScrollBar.finalized = false;
+                    this._sbScrollBar.total = _tText.numLines;
+                    this._sbScrollBar.finalized = finalizedVal;
+                    this._sbScrollBar.max = _tText.maxScrollV;
+                    if (reset)
+                    {
+                        if (resetToTop)
+                        {
+                            _tText.scrollV = 0;
+                            this._sbScrollBar.value = 0;
+                        }
+                        else
+                        {
+                            _tText.scrollV = _tText.maxScrollV;
+                            this._sbScrollBar.value = _tText.maxScrollV;
+                        };
+                    }
+                    else
+                    {
+                        if (!this._skipScrollUpdate)
+                        {
+                            _tText.scrollV = _tText.maxScrollV;
+                            this._sbScrollBar.value = _tText.maxScrollV;
+                        }
+                        else
+                        {
+                            this._sbScrollBar.value = _tText.scrollV;
+                        };
+                    };
                 };
+            };
+            this._skipScrollUpdate = false;
+            var ui:UiRootContainer = getUi();
+            if (((((ui) && (ui.ready)) && (ui.uiClass)) && (ui.uiClass.hasOwnProperty("scrollBarUpdate"))))
+            {
+                ui.uiClass.scrollBarUpdate();
             };
         }
 
-        private function updateScrollBarPos():void
+        protected function updateScrollBarPos():void
         {
+            _tText.width = ((this.width - this._sbScrollBar.width) - this._scrollXOffset);
             if (this._nScrollPos >= 0)
             {
                 this._sbScrollBar.x = (this.width - this._sbScrollBar.width);
-                _tText.width = ((this.width - this._sbScrollBar.width) - this._nScrollPos);
                 _tText.x = 0;
             }
             else
             {
                 this._sbScrollBar.x = 0;
-                _tText.width = ((this.width - this._sbScrollBar.width) + this._nScrollPos);
-                _tText.x = (this._sbScrollBar.width - this._nScrollPos);
+                _tText.x = (this._sbScrollBar.width + this._scrollXOffset);
             };
         }
 
         override protected function updateAlign():void
         {
-            if (this._sbScrollBar.disabled)
+            if (((!(this._sbScrollBar)) || (this._sbScrollBar.disabled)))
             {
                 super.updateAlign();
             };
@@ -297,23 +437,24 @@
         private function onScroll(e:Event):void
         {
             _tText.scrollV = ((this._sbScrollBar.value / this._sbScrollBar.max) * _tText.maxScrollV);
+            Berilia.getInstance().handler.process(new ChangeMessage(this));
         }
 
         private function onWindowResize(pEvent:NativeWindowBoundsEvent):void
         {
-            StageShareManager.stage.addEventListener(Event.FRAME_CONSTRUCTED, this.onFrameConstructed);
-        }
-
-        private function onFrameConstructed(pEvent:Event):void
-        {
-            StageShareManager.stage.removeEventListener(Event.FRAME_CONSTRUCTED, this.onFrameConstructed);
-            if (((this._bFinalized) && (this._sbScrollBar)))
+            var ge:GraphicElement;
+            var ui:UiRootContainer = getUi();
+            if (ui)
             {
-                this.updateScrollBar();
+                ge = ui.getElementById(name);
+                if ((((ge) && (ge.locations)) && (ge.locations.length > 1)))
+                {
+                    return;
+                };
             };
         }
 
 
     }
-}//package com.ankamagames.berilia.components
+} com.ankamagames.berilia.components
 

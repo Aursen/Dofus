@@ -1,28 +1,24 @@
-﻿package com.ankamagames.dofus.network.messages.game.context.roleplay.quest
+package com.ankamagames.dofus.network.messages.game.context.roleplay.quest
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
     import com.ankamagames.dofus.network.types.game.context.roleplay.quest.QuestActiveInformations;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
     import com.ankamagames.dofus.network.ProtocolTypeManager;
 
-    [Trusted]
     public class QuestStepInfoMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 5625;
 
         private var _isInitialized:Boolean = false;
-        public var infos:QuestActiveInformations;
+        public var infos:QuestActiveInformations = new QuestActiveInformations();
+        private var _infostree:FuncTree;
 
-        public function QuestStepInfoMessage()
-        {
-            this.infos = new QuestActiveInformations();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
@@ -59,6 +55,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_QuestStepInfoMessage(output);
@@ -82,7 +86,24 @@
             this.infos.deserialize(input);
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_QuestStepInfoMessage(tree);
+        }
+
+        public function deserializeAsyncAs_QuestStepInfoMessage(tree:FuncTree):void
+        {
+            this._infostree = tree.addChild(this._infostreeFunc);
+        }
+
+        private function _infostreeFunc(input:ICustomDataInput):void
+        {
+            var _id:uint = input.readUnsignedShort();
+            this.infos = ProtocolTypeManager.getInstance(QuestActiveInformations, _id);
+            this.infos.deserializeAsync(this._infostree);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.context.roleplay.quest
+} com.ankamagames.dofus.network.messages.game.context.roleplay.quest
 

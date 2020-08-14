@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.kernel.sound
+package com.ankamagames.dofus.kernel.sound
 {
     import com.ankamagames.jerakine.types.Uri;
     import com.ankamagames.jerakine.managers.LangManager;
@@ -64,5 +64,5 @@
 
 
     }
-}//package com.ankamagames.dofus.kernel.sound
+} com.ankamagames.dofus.kernel.sound
 

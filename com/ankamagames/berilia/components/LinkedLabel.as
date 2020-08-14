@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.components
+package com.ankamagames.berilia.components
 {
     import com.ankamagames.jerakine.handlers.messages.mouse.MouseClickMessage;
     import flash.net.navigateToURL;
@@ -37,13 +37,12 @@
             this._sTarget = value;
         }
 
-        [HideInFakeClass]
         override public function process(msg:Message):Boolean
         {
             switch (true)
             {
                 case (msg is MouseClickMessage):
-                    if (((((((msg as MouseClickMessage).target == this)) && (getUi()))) && (getUi().uiModule.trusted)))
+                    if ((((msg as MouseClickMessage).target == this) && (getUi())))
                     {
                         navigateToURL(new URLRequest(this.url), this.target);
                         return (true);
@@ -54,5 +53,5 @@
 
 
     }
-}//package com.ankamagames.berilia.components
+} com.ankamagames.berilia.components
 

@@ -1,29 +1,25 @@
-﻿package com.ankamagames.dofus.network.messages.game.guild
+package com.ankamagames.dofus.network.messages.game.guild
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
     import __AS3__.vec.Vector;
     import com.ankamagames.dofus.network.types.game.guild.GuildMember;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
     import __AS3__.vec.*;
 
-    [Trusted]
     public class GuildInformationsMembersMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 5558;
 
         private var _isInitialized:Boolean = false;
-        public var members:Vector.<GuildMember>;
+        public var members:Vector.<GuildMember> = new Vector.<GuildMember>();
+        private var _memberstree:FuncTree;
 
-        public function GuildInformationsMembersMessage()
-        {
-            this.members = new Vector.<GuildMember>();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
@@ -58,6 +54,14 @@
         override public function unpack(input:ICustomDataInput, length:uint):void
         {
             this.deserialize(input);
+        }
+
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
         }
 
         public function serialize(output:ICustomDataOutput):void
@@ -95,7 +99,35 @@
             };
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GuildInformationsMembersMessage(tree);
+        }
+
+        public function deserializeAsyncAs_GuildInformationsMembersMessage(tree:FuncTree):void
+        {
+            this._memberstree = tree.addChild(this._memberstreeFunc);
+        }
+
+        private function _memberstreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._memberstree.addChild(this._membersFunc);
+                i++;
+            };
+        }
+
+        private function _membersFunc(input:ICustomDataInput):void
+        {
+            var _item:GuildMember = new GuildMember();
+            _item.deserialize(input);
+            this.members.push(_item);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.guild
+} com.ankamagames.dofus.network.messages.game.guild
 

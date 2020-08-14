@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.scripts
+package com.ankamagames.dofus.scripts
 {
     import com.ankamagames.jerakine.script.runners.IRunner;
     import com.ankamagames.jerakine.logger.Logger;
@@ -37,7 +37,7 @@
 
         override public function run(spellScriptClass:Class):uint
         {
-            var script:SpellScriptBase = new (spellScriptClass)(this);
+            var script:SpellScriptBase = new spellScriptClass(this);
             if (script)
             {
                 return (ScriptErrorEnum.OK);
@@ -47,5 +47,5 @@
 
 
     }
-}//package com.ankamagames.dofus.scripts
+} com.ankamagames.dofus.scripts
 

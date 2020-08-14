@@ -1,6 +1,7 @@
-﻿package com.ankamagames.dofus.network.types.game.character.characteristic
+package com.ankamagames.dofus.network.types.game.character.characteristic
 {
     import com.ankamagames.jerakine.network.INetworkType;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
 
@@ -11,13 +12,9 @@
 
         public var modificationType:uint = 0;
         public var spellId:uint = 0;
-        public var value:CharacterBaseCharacteristic;
+        public var value:CharacterBaseCharacteristic = new CharacterBaseCharacteristic();
+        private var _valuetree:FuncTree;
 
-        public function CharacterSpellModification()
-        {
-            this.value = new CharacterBaseCharacteristic();
-            super();
-        }
 
         public function getTypeId():uint
         {
@@ -62,21 +59,49 @@
 
         public function deserializeAs_CharacterSpellModification(input:ICustomDataInput):void
         {
+            this._modificationTypeFunc(input);
+            this._spellIdFunc(input);
+            this.value = new CharacterBaseCharacteristic();
+            this.value.deserialize(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_CharacterSpellModification(tree);
+        }
+
+        public function deserializeAsyncAs_CharacterSpellModification(tree:FuncTree):void
+        {
+            tree.addChild(this._modificationTypeFunc);
+            tree.addChild(this._spellIdFunc);
+            this._valuetree = tree.addChild(this._valuetreeFunc);
+        }
+
+        private function _modificationTypeFunc(input:ICustomDataInput):void
+        {
             this.modificationType = input.readByte();
             if (this.modificationType < 0)
             {
                 throw (new Error((("Forbidden value (" + this.modificationType) + ") on element of CharacterSpellModification.modificationType.")));
             };
+        }
+
+        private function _spellIdFunc(input:ICustomDataInput):void
+        {
             this.spellId = input.readVarUhShort();
             if (this.spellId < 0)
             {
                 throw (new Error((("Forbidden value (" + this.spellId) + ") on element of CharacterSpellModification.spellId.")));
             };
+        }
+
+        private function _valuetreeFunc(input:ICustomDataInput):void
+        {
             this.value = new CharacterBaseCharacteristic();
-            this.value.deserialize(input);
+            this.value.deserializeAsync(this._valuetree);
         }
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.character.characteristic
+} com.ankamagames.dofus.network.types.game.character.characteristic
 

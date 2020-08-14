@@ -1,9 +1,10 @@
-﻿package com.ankamagames.dofus.datacenter.livingObjects
+package com.ankamagames.dofus.datacenter.livingObjects
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
+    import com.ankamagames.dofus.types.IdAccessors;
     import __AS3__.vec.Vector;
     import com.ankamagames.jerakine.data.GameData;
     import __AS3__.vec.*;
@@ -13,6 +14,7 @@
 
         public static const MODULE:String = "LivingObjectSkinJntMood";
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(SpeakingItemText));
+        public static var idAccessors:IdAccessors = new IdAccessors(getLivingObjectSkin, getLivingObjectSkins);
 
         public var skinId:int;
         public var moods:Vector.<Vector.<int>>;
@@ -26,7 +28,11 @@
                 return (0);
             };
             var ve:Vector.<int> = (losjm.moods[moodId] as Vector.<int>);
-            return (ve[Math.max(0, (skinId - 1))]);
+            if (skinId <= ve.length)
+            {
+                return (ve[Math.max(0, (skinId - 1))]);
+            };
+            return (-1);
         }
 
         public static function getLivingObjectSkins():Array
@@ -36,5 +42,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.livingObjects
+} com.ankamagames.dofus.datacenter.livingObjects
 

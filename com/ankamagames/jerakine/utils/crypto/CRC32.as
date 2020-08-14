@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.utils.crypto
+package com.ankamagames.jerakine.utils.crypto
 {
     import flash.utils.ByteArray;
 
@@ -22,7 +22,7 @@
                 j = 0;
                 while (j < 8)
                 {
-                    crc = (((crc & 1)) ? ((crc >>> 1) ^ 3988292384) : (crc >>> 1));
+                    crc = ((crc & 0x01) ? ((crc >>> 1) ^ 3988292384) : (crc >>> 1));
                     j++;
                 };
                 crcTable[i] = crc;
@@ -34,20 +34,20 @@
 
         public function update(buffer:ByteArray, offset:int=0, length:int=0):void
         {
-            length = (((length == 0)) ? buffer.length : length);
-            var crc:uint = ~(this._crc32);
+            length = ((length == 0) ? buffer.length : length);
+            var crc:uint = (~(this._crc32));
             var i:int = offset;
             while (i < length)
             {
                 crc = (CRCTable[((crc ^ buffer[i]) & 0xFF)] ^ (crc >>> 8));
                 i++;
             };
-            this._crc32 = ~(crc);
+            this._crc32 = (~(crc));
         }
 
         public function getValue():uint
         {
-            return ((this._crc32 & 0xFFFFFFFF));
+            return (this._crc32 & 0xFFFFFFFF);
         }
 
         public function reset():void
@@ -57,5 +57,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.utils.crypto
+} com.ankamagames.jerakine.utils.crypto
 

@@ -1,32 +1,28 @@
-﻿package com.ankamagames.dofus.network.messages.game.tinsel
+package com.ankamagames.dofus.network.messages.game.tinsel
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
     import __AS3__.vec.Vector;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
     import __AS3__.vec.*;
 
-    [Trusted]
     public class TitlesAndOrnamentsListMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 6367;
 
         private var _isInitialized:Boolean = false;
-        public var titles:Vector.<uint>;
-        public var ornaments:Vector.<uint>;
+        public var titles:Vector.<uint> = new Vector.<uint>();
+        public var ornaments:Vector.<uint> = new Vector.<uint>();
         public var activeTitle:uint = 0;
         public var activeOrnament:uint = 0;
+        private var _titlestree:FuncTree;
+        private var _ornamentstree:FuncTree;
 
-        public function TitlesAndOrnamentsListMessage()
-        {
-            this.titles = new Vector.<uint>();
-            this.ornaments = new Vector.<uint>();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
@@ -67,6 +63,14 @@
         override public function unpack(input:ICustomDataInput, length:uint):void
         {
             this.deserialize(input);
+        }
+
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
         }
 
         public function serialize(output:ICustomDataOutput):void
@@ -143,11 +147,76 @@
                 this.ornaments.push(_val2);
                 _i2++;
             };
+            this._activeTitleFunc(input);
+            this._activeOrnamentFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_TitlesAndOrnamentsListMessage(tree);
+        }
+
+        public function deserializeAsyncAs_TitlesAndOrnamentsListMessage(tree:FuncTree):void
+        {
+            this._titlestree = tree.addChild(this._titlestreeFunc);
+            this._ornamentstree = tree.addChild(this._ornamentstreeFunc);
+            tree.addChild(this._activeTitleFunc);
+            tree.addChild(this._activeOrnamentFunc);
+        }
+
+        private function _titlestreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._titlestree.addChild(this._titlesFunc);
+                i++;
+            };
+        }
+
+        private function _titlesFunc(input:ICustomDataInput):void
+        {
+            var _val:uint = input.readVarUhShort();
+            if (_val < 0)
+            {
+                throw (new Error((("Forbidden value (" + _val) + ") on elements of titles.")));
+            };
+            this.titles.push(_val);
+        }
+
+        private function _ornamentstreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._ornamentstree.addChild(this._ornamentsFunc);
+                i++;
+            };
+        }
+
+        private function _ornamentsFunc(input:ICustomDataInput):void
+        {
+            var _val:uint = input.readVarUhShort();
+            if (_val < 0)
+            {
+                throw (new Error((("Forbidden value (" + _val) + ") on elements of ornaments.")));
+            };
+            this.ornaments.push(_val);
+        }
+
+        private function _activeTitleFunc(input:ICustomDataInput):void
+        {
             this.activeTitle = input.readVarUhShort();
             if (this.activeTitle < 0)
             {
                 throw (new Error((("Forbidden value (" + this.activeTitle) + ") on element of TitlesAndOrnamentsListMessage.activeTitle.")));
             };
+        }
+
+        private function _activeOrnamentFunc(input:ICustomDataInput):void
+        {
             this.activeOrnament = input.readVarUhShort();
             if (this.activeOrnament < 0)
             {
@@ -157,5 +226,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.tinsel
+} com.ankamagames.dofus.network.messages.game.tinsel
 

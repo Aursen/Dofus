@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.pools
+package com.ankamagames.jerakine.pools
 {
     import flash.media.Sound;
 
@@ -17,5 +17,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.pools
+} com.ankamagames.jerakine.pools
 

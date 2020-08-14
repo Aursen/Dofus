@@ -1,4 +1,4 @@
-﻿package com.hurlant.crypto.prng
+package com.hurlant.crypto.prng
 {
     import com.hurlant.crypto.symmetric.IStreamCipher;
     import flash.utils.ByteArray;
@@ -73,7 +73,7 @@
             var i:uint;
             while (i < block.length)
             {
-                var _local_3 = i++;
+                var _local_3:* = i++;
                 block[_local_3] = (block[_local_3] ^ this.next());
             };
         }
@@ -109,5 +109,5 @@
 
 
     }
-}//package com.hurlant.crypto.prng
+} com.hurlant.crypto.prng
 

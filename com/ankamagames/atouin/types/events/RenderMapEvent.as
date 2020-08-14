@@ -1,4 +1,4 @@
-﻿package com.ankamagames.atouin.types.events
+package com.ankamagames.atouin.types.events
 {
     import flash.events.Event;
 
@@ -10,17 +10,17 @@
         public static const MAP_RENDER_START:String = "MAP_RENDER_START";
         public static const MAP_RENDER_END:String = "MAP_RENDER_END";
 
-        private var _mapId:uint;
+        private var _mapId:Number;
         private var _renderId:uint;
 
-        public function RenderMapEvent(type:String, bubbles:Boolean=false, cancelable:Boolean=false, mapId:uint=0, renderId:uint=0)
+        public function RenderMapEvent(_arg_1:String, bubbles:Boolean=false, cancelable:Boolean=false, mapId:Number=0, renderId:uint=0)
         {
-            super(type, bubbles, cancelable);
+            super(_arg_1, bubbles, cancelable);
             this._mapId = mapId;
             this._renderId = renderId;
         }
 
-        public function get mapId():uint
+        public function get mapId():Number
         {
             return (this._mapId);
         }
@@ -32,5 +32,5 @@
 
 
     }
-}//package com.ankamagames.atouin.types.events
+} com.ankamagames.atouin.types.events
 

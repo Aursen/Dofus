@@ -1,16 +1,16 @@
-﻿package com.ankamagames.berilia.types.graphic
+package com.ankamagames.berilia.types.graphic
 {
-    import com.ankamagames.berilia.types.data.MapElement;
-    import com.ankamagames.berilia.components.Texture;
     import flash.geom.ColorTransform;
+    import com.ankamagames.berilia.components.Texture;
     import com.ankamagames.jerakine.utils.display.EnterFrameDispatcher;
     import flash.utils.getTimer;
     import flash.events.Event;
 
-    public class MapAreaShape extends MapElement 
+    public class MapAreaShape extends MapDisplayableElement 
     {
 
-        public var shape:Texture;
+        private static const DEFAULT_COLOR_TRANSFORM:ColorTransform = new ColorTransform(1, 1, 1, 0);
+
         private var _lineColor:uint;
         private var _fillColor:uint;
         private var _duration:int;
@@ -32,13 +32,12 @@
         private var _lastBlueOffset:Number;
         private var _lastAlphaOffset:Number;
 
-        public function MapAreaShape(id:String, layer:String, shape:Texture, x:int, y:int, lineColor:uint, fillColor:uint, owner:*)
+        public function MapAreaShape(id:String, layer:String, texture:Texture, x:int, y:int, lineColor:uint, fillColor:uint, owner:*)
         {
             this._lineColor = lineColor;
             this._fillColor = fillColor;
-            super(id, x, y, layer, owner);
-            this.shape = shape;
-            shape.transform.colorTransform = new ColorTransform(1, 1, 1, 0);
+            super(id, x, y, layer, owner, texture);
+            _texture.transform.colorTransform = DEFAULT_COLOR_TRANSFORM;
         }
 
         public function get lineColor():uint
@@ -49,6 +48,11 @@
         public function get fillColor():uint
         {
             return (this._fillColor);
+        }
+
+        override public function get classType():String
+        {
+            return ("MapAreaShape");
         }
 
         public function colorTransform(duration:int, rM:Number=1, gM:Number=1, bM:Number=1, aM:Number=1, rO:Number=0, gO:Number=0, bO:Number=0, aO:Number=0):void
@@ -78,8 +82,8 @@
             {
                 if (this._duration == 0)
                 {
-                    this.shape.transform.colorTransform = new ColorTransform(rM, gM, bM, aM, rO, gO, bO, aO);
-                    this.shape.visible = true;
+                    _texture.transform.colorTransform = new ColorTransform(rM, gM, bM, aM, rO, gO, bO, aO);
+                    _texture.visible = true;
                 }
                 else
                 {
@@ -89,45 +93,36 @@
             }
             else
             {
-                this.shape.visible = false;
+                _texture.visible = false;
             };
         }
 
         override public function remove():void
         {
-            this.shape.removeEventListener("enterFrame", this.onEnterFrame);
-            if (this.shape.parent)
+            if (EnterFrameDispatcher.hasEventListener(this.onEnterFrame))
             {
-                this.shape.parent.removeChild(this.shape);
+                EnterFrameDispatcher.removeEventListener(this.onEnterFrame);
             };
-            this.shape = null;
             super.remove();
         }
 
         private function onEnterFrame(e:Event):void
         {
             var percent:Number = ((getTimer() - this._t0) / this._duration);
-            if (this.shape)
+            if (_texture)
             {
                 if (percent >= 1)
                 {
                     EnterFrameDispatcher.removeEventListener(this.onEnterFrame);
-                    if (this._alphaMultiplier == 0)
-                    {
-                        this.shape.visible = false;
-                    }
-                    else
-                    {
-                        this.shape.visible = true;
-                    };
-                    this.shape.transform.colorTransform = new ColorTransform(this._redMultiplier, this._greenMultiplier, this._blueMultiplier, this._alphaMultiplier, this._redOffset, this._greenOffset, this._blueOffset, this._alphaOffset);
+                    _texture.visible = (!(this._alphaMultiplier == 0));
+                    _texture.transform.colorTransform = new ColorTransform(this._redMultiplier, this._greenMultiplier, this._blueMultiplier, this._alphaMultiplier, this._redOffset, this._greenOffset, this._blueOffset, this._alphaOffset);
                 }
                 else
                 {
-                    this.shape.transform.colorTransform = new ColorTransform((this._lastRedMultiplier + ((this._redMultiplier - this._lastRedMultiplier) * percent)), (this._lastGreenMultiplier + ((this._greenMultiplier - this._lastGreenMultiplier) * percent)), (this._lastBlueMultiplier + ((this._blueMultiplier - this._lastBlueMultiplier) * percent)), (this._lastAlphaMultiplier + ((this._alphaMultiplier - this._lastAlphaMultiplier) * percent)), (this._lastRedOffset + ((this._redOffset - this._lastRedOffset) * percent)), (this._lastGreenOffset + ((this._greenOffset - this._lastGreenOffset) * percent)), (this._lastBlueOffset + ((this._blueOffset - this._lastBlueOffset) * percent)), (this._lastAlphaOffset + ((this._alphaOffset - this._lastAlphaOffset) * percent)));
-                    if (((!((this._alphaMultiplier == 0))) && (!(this.shape.visible))))
+                    _texture.transform.colorTransform = new ColorTransform((this._lastRedMultiplier + ((this._redMultiplier - this._lastRedMultiplier) * percent)), (this._lastGreenMultiplier + ((this._greenMultiplier - this._lastGreenMultiplier) * percent)), (this._lastBlueMultiplier + ((this._blueMultiplier - this._lastBlueMultiplier) * percent)), (this._lastAlphaMultiplier + ((this._alphaMultiplier - this._lastAlphaMultiplier) * percent)), (this._lastRedOffset + ((this._redOffset - this._lastRedOffset) * percent)), (this._lastGreenOffset + ((this._greenOffset - this._lastGreenOffset) * percent)), (this._lastBlueOffset + ((this._blueOffset - this._lastBlueOffset) * percent)), (this._lastAlphaOffset + ((this._alphaOffset - this._lastAlphaOffset) * percent)));
+                    if (((!(this._alphaMultiplier == 0)) && (!(_texture.visible))))
                     {
-                        this.shape.visible = true;
+                        _texture.visible = true;
                     };
                 };
             };
@@ -135,5 +130,5 @@
 
 
     }
-}//package com.ankamagames.berilia.types.graphic
+} com.ankamagames.berilia.types.graphic
 

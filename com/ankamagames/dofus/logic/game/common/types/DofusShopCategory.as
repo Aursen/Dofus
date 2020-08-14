@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.common.types
+package com.ankamagames.dofus.logic.game.common.types
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
 
@@ -21,9 +21,9 @@
             super.init(data);
             this._displaymode = data.displaymode;
             this._key = data.key;
-            if (data.image)
+            if (data.url)
             {
-                this._image = data.image;
+                this._image = data.url;
             };
             if (data.child)
             {
@@ -68,5 +68,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.types
+} com.ankamagames.dofus.logic.game.common.types
 

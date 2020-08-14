@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.fight.types
+package com.ankamagames.dofus.logic.game.fight.types
 {
     public class FightEventEnum 
     {
@@ -21,7 +21,6 @@
         public static const FIGHTER_MP_LOSS_DODGED:String = "fighterDodgedMPLoss";
         public static const FIGHTERS_POSITION_EXCHANGE:String = "fightersExchangedPositions";
         public static const FIGHTER_VISIBILITY_CHANGED:String = "fighterVisibilityChanged";
-        public static const FIGHTER_INVISIBLE_OBSTACLE:String = "fighterInvisibleObstacle";
         public static const FIGHTER_GOT_KILLED:String = "fighterGotKilled";
         public static const FIGHTER_TEMPORARY_BOOSTED:String = "fighterTemporaryBoosted";
         public static const FIGHTER_AP_USED:String = "fighterUsedAP";
@@ -60,5 +59,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.fight.types
+} com.ankamagames.dofus.logic.game.fight.types
 

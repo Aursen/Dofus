@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.common.managers
+package com.ankamagames.dofus.logic.common.managers
 {
     import flash.display.DisplayObject;
     import com.ankamagames.dofus.kernel.Kernel;
@@ -16,7 +16,7 @@
     {
 
 
-        public static function showEntity(entityId:int):void
+        public static function showEntity(entityId:Number):void
         {
             var entity:DisplayObject;
             var fightEntitiesFrame:FightEntitiesFrame = (Kernel.getWorker().getFrame(FightEntitiesFrame) as FightEntitiesFrame);
@@ -30,7 +30,7 @@
             };
         }
 
-        public static function rollOver(pX:int, pY:int, entityId:int):void
+        public static function rollOver(pX:int, pY:int, entityId:Number):void
         {
             var target:Rectangle = new Rectangle(pX, pY, 10, 10);
             var info:TextTooltipInfo = new TextTooltipInfo(I18n.getUiText("ui.tooltip.chat.whereAreYou"));
@@ -39,5 +39,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.common.managers
+} com.ankamagames.dofus.logic.common.managers
 

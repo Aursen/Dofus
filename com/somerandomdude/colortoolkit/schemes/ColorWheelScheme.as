@@ -1,4 +1,4 @@
-﻿package com.somerandomdude.colortoolkit.schemes
+package com.somerandomdude.colortoolkit.schemes
 {
     public class ColorWheelScheme extends ColorScheme 
     {
@@ -25,7 +25,7 @@
 
         public function set primaryColor(value:int):void
         {
-            if (!(_colors))
+            if (!_colors)
             {
                 _colors = new ColorList();
             };
@@ -56,5 +56,5 @@
 
 
     }
-}//package com.somerandomdude.colortoolkit.schemes
+} com.somerandomdude.colortoolkit.schemes
 

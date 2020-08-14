@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.components
+package com.ankamagames.berilia.components
 {
     import com.ankamagames.berilia.types.graphic.GraphicContainer;
     import com.ankamagames.berilia.UIComponent;
@@ -54,7 +54,6 @@
     import flash.display.BitmapData;
     import flash.display.Bitmap;
     import flash.display.Loader;
-    import flashx.textLayout.compose.IFlowComposer;
     import flash.utils.ByteArray;
     import flash.text.engine.TextBaseline;
     import flash.filesystem.FileStream;
@@ -75,7 +74,6 @@
         private static var IMAGE_SIZE:int = 20;
         public static var LINE_HEIGHT:int = 20;
 
-        private var _finalized:Boolean = false;
         private var _controller:ContainerController;
         private var _textFlow:TextFlow;
         private var _textContainer:Sprite;
@@ -95,12 +93,10 @@
         private var _isDamaged:Boolean = false;
         private var _currentSelection:String = "";
         private var _magicbool:Boolean = true;
-        private var _bmpdtList:Dictionary;
+        private var _bmpdtList:Dictionary = new Dictionary();
 
         public function ChatComponent()
         {
-            this._bmpdtList = new Dictionary();
-            super();
             this._sbScrollBar = new ScrollBar();
             this._sbScrollBar.min = 1;
             this._sbScrollBar.max = 1;
@@ -121,7 +117,7 @@
 
         public static function isValidSmiley(sTxt:String, indexOfSmiley:int, triggerTxt:String):Boolean
         {
-            if ((((((((((indexOfSmiley == 0)) && ((sTxt.length == triggerTxt.length)))) || ((((((indexOfSmiley > 0)) && ((sTxt.length == (indexOfSmiley + triggerTxt.length))))) && ((sTxt.charAt((indexOfSmiley - 1)) == " ")))))) || ((((((indexOfSmiley == 0)) && ((sTxt.length > triggerTxt.length)))) && ((sTxt.charAt((indexOfSmiley + triggerTxt.length)) == " ")))))) || ((((((((indexOfSmiley > 0)) && (((indexOfSmiley + triggerTxt.length) < sTxt.length)))) && ((sTxt.charAt((indexOfSmiley - 1)) == " ")))) && ((sTxt.charAt((indexOfSmiley + triggerTxt.length)) == " "))))))
+            if ((((((indexOfSmiley == 0) && (sTxt.length == triggerTxt.length)) || (((indexOfSmiley > 0) && (sTxt.length == (indexOfSmiley + triggerTxt.length))) && (sTxt.charAt((indexOfSmiley - 1)) == " "))) || (((indexOfSmiley == 0) && (sTxt.length > triggerTxt.length)) && (sTxt.charAt((indexOfSmiley + triggerTxt.length)) == " "))) || ((((indexOfSmiley > 0) && ((indexOfSmiley + triggerTxt.length) < sTxt.length)) && (sTxt.charAt((indexOfSmiley - 1)) == " ")) && (sTxt.charAt((indexOfSmiley + triggerTxt.length)) == " "))))
             {
                 return (true);
             };
@@ -145,7 +141,7 @@
             this._smilies = new Vector.<Smiley>();
             for each (t in data)
             {
-                if (((!((t.triggers == null))) && ((t.triggers.length > 0))))
+                if (((!(t.triggers == null)) && (t.triggers.length > 0)))
                 {
                     smiley = new Smiley(t.gfxId);
                     smiley.triggers = new Vector.<String>(t.triggers.length);
@@ -212,7 +208,7 @@
             super.width = val;
             this._controller.setCompositionSize(val, this._controller.compositionHeight);
             this._isDamaged = true;
-            if (this._finalized)
+            if (_finalized)
             {
                 this.updateScrollBarPos();
             };
@@ -220,14 +216,14 @@
 
         override public function set height(val:Number):void
         {
-            if (((!((val == super.height))) || (!((val == ((this._sbScrollBar.height - this._scrollTopMargin) - this._scrollBottomMargin))))))
+            if (((!(val == super.height)) || (!(val == ((this._sbScrollBar.height - this._scrollTopMargin) - this._scrollBottomMargin)))))
             {
                 val = (val + 2);
                 super.height = val;
                 this._sbScrollBar.height = ((val - this._scrollTopMargin) - this._scrollBottomMargin);
                 this._controller.setCompositionSize(this._controller.compositionWidth, val);
                 this._isDamaged = true;
-                if (this._finalized)
+                if (_finalized)
                 {
                     this.updateScrollBar();
                 };
@@ -275,7 +271,7 @@
             {
                 this._textFlow.addChild(p);
                 this._isDamaged = true;
-                if (this._finalized)
+                if (_finalized)
                 {
                     this.updateScrollBar();
                 };
@@ -284,6 +280,7 @@
             return (p);
         }
 
+        [Uri]
         public function set css(sFile:Uri):void
         {
             this._cssApplied = false;
@@ -305,7 +302,7 @@
 
         public function set cssClass(c:String):void
         {
-            this._sCssClass = (((c == "")) ? "p" : c);
+            this._sCssClass = ((c == "") ? "p" : c);
             this.bindCss();
         }
 
@@ -317,11 +314,11 @@
             this._ssSheet = CssManager.getInstance().getCss(this._sCssUrl.uri);
             for each (sProperty in this._ssSheet.styleNames)
             {
-                if (((((!(styleToDisplay)) || ((sProperty == this._sCssClass)))) || (((!((this._sCssClass == styleToDisplay))) && ((sProperty == "p"))))))
+                if ((((!(styleToDisplay)) || (sProperty == this._sCssClass)) || ((!(this._sCssClass == styleToDisplay)) && (sProperty == "p"))))
                 {
                     styleToDisplay = sProperty;
                 };
-                if (((!((this._ssSheet == oldCss))) || (!(this._aStyleObj[sProperty]))))
+                if (((!(this._ssSheet == oldCss)) || (!(this._aStyleObj[sProperty]))))
                 {
                     this._aStyleObj[sProperty] = this._ssSheet.getStyle(sProperty);
                 };
@@ -341,16 +338,16 @@
 
         private function changeCssClassSize(size:uint, lineHeight:uint, style:String=null):void
         {
-            var _local_4:*;
+            var i:*;
             if (style)
             {
                 this._aStyleObj[style].fontSize = (size + "px");
             }
             else
             {
-                for each (_local_4 in this._aStyleObj)
+                for each (i in this._aStyleObj)
                 {
-                    _local_4.fontSize = (size + "px");
+                    i.fontSize = (size + "px");
                 };
             };
             this.bindCss();
@@ -359,7 +356,7 @@
 
         private function changeCssClassColor(color:String, style:String=null):void
         {
-            var _local_3:*;
+            var i:*;
             if (style)
             {
                 if (this._aStyleObj[style] == null)
@@ -371,9 +368,9 @@
             }
             else
             {
-                for each (_local_3 in this._aStyleObj)
+                for each (i in this._aStyleObj)
                 {
-                    _local_3.color = color;
+                    i.color = color;
                 };
             };
         }
@@ -423,11 +420,13 @@
             return (height);
         }
 
+        [Uri]
         public function set scrollCss(sUrl:Uri):void
         {
             this._sbScrollBar.css = sUrl;
         }
 
+        [Uri]
         public function get scrollCss():Uri
         {
             return (this._sbScrollBar.css);
@@ -484,28 +483,27 @@
             var leaf:FlowLeafElement = range.firstLeaf;
             do 
             {
-                if (((!((prevPara == null))) && (!((prevPara == leaf.getParagraph())))))
+                if (((!(prevPara == null)) && (!(prevPara == leaf.getParagraph()))))
                 {
                     this._currentSelection = (this._currentSelection + "\n");
                     prevPara = leaf.getParagraph();
                 };
                 this._currentSelection = (this._currentSelection + leaf.text);
-                leaf = leaf.getNextLeaf();
-            } while (leaf);
+            } while ((leaf = leaf.getNextLeaf()));
         }
 
         private function onMouseOverLink(pEvt:FlowElementMouseEvent):void
         {
             var link:LinkElement;
             var params:Array;
-            var type:String;
+            var _local_4:String;
             var data:String;
             if ((pEvt.flowElement is LinkElement))
             {
                 link = (pEvt.flowElement as LinkElement);
                 params = link.href.replace("event:", "").split(",");
-                type = params.shift();
-                data = ((((((type + ",") + Math.round(pEvt.originalEvent.stageX)) + ",") + Math.round(pEvt.originalEvent.stageY)) + ",") + params.join(","));
+                _local_4 = params.shift();
+                data = ((((((_local_4 + ",") + Math.round(pEvt.originalEvent.stageX)) + ",") + Math.round(pEvt.originalEvent.stageY)) + ",") + params.join(","));
                 dispatchEvent(new LinkInteractionEvent(LinkInteractionEvent.ROLL_OVER, data));
             };
         }
@@ -579,24 +577,15 @@
             };
         }
 
-        public function get finalized():Boolean
-        {
-            return (this._finalized);
-        }
-
-        public function set finalized(b:Boolean):void
-        {
-            this._finalized = b;
-        }
-
-        public function finalize():void
+        override public function finalize():void
         {
             this._sbScrollBar.finalize();
             this.updateScrollBarPos();
             this.updateScrollBar();
             HyperlinkFactory.createTextClickHandler(this);
             HyperlinkFactory.createRollOverHandler(this);
-            this._finalized = true;
+            _finalized = true;
+            super.finalize();
             var uiRoot:UiRootContainer = getUi();
             if (uiRoot != null)
             {
@@ -693,8 +682,8 @@
             while (sText.length > 0)
             {
                 smiley = ((this._smiliesActivated) ? this.getSmileyFromText(sText) : null);
-                textToShow = sText.substring(0, ((!((smiley == null))) ? smiley.position : sText.length));
-                if ((((textToShow.length > 0)) || ((smiley == null))))
+                textToShow = sText.substring(0, ((smiley != null) ? smiley.position : sText.length));
+                if (((textToShow.length > 0) || (smiley == null)))
                 {
                     if (this._smiliesActivated)
                     {
@@ -707,7 +696,7 @@
                             if (sub != "")
                             {
                                 intValue = StringUtil.trim(data[1]);
-                                if ((((((intValue.indexOf(".") == -1)) && ((intValue.indexOf(",") == -1)))) && ((intValue.indexOf(" ") == -1))))
+                                if ((((intValue.indexOf(".") == -1) && (intValue.indexOf(",") == -1)) && (intValue.indexOf(" ") == -1)))
                                 {
                                     intValue = StringUtils.formateIntToString(parseInt(intValue));
                                 };
@@ -718,7 +707,7 @@
                             kamaIndex = textToShow.search(KAMA_PATTERN);
                         };
                     };
-                    if (!(handleHtmlTags))
+                    if (!handleHtmlTags)
                     {
                         p.addChild(this.createSpanElement(textToShow, pStyle));
                     }
@@ -728,7 +717,7 @@
                     };
                     if (smiley == null)
                     {
-                        return;
+                        break;
                     };
                 };
                 if (smiley.position != -1)
@@ -754,8 +743,8 @@
         private function createSpanElementsFromHtmlTags(p:ParagraphElement, pText:String, pStyle:String):void
         {
             var result:Object;
-            var _local_5:String;
-            var _local_6:Array;
+            var style:String;
+            var attributes:Array;
             var att:String;
             result = new RegExp(TAGS_PATTERN).exec(pText);
             while (result != null)
@@ -768,15 +757,15 @@
                 {
                     case "p":
                     case "span":
-                        _local_6 = result[3].split(" ");
-                        for each (att in _local_6)
+                        attributes = result[3].split(" ");
+                        for each (att in attributes)
                         {
                             if (att.search("style") != -1)
                             {
-                                _local_5 = this.getAttributeValue(att);
+                                style = this.getAttributeValue(att);
                             };
                         };
-                        this.createSpan(p, result[5], true, (((_local_5 == "")) ? pStyle : _local_5));
+                        this.createSpan(p, result[5], true, ((style == "") ? pStyle : style));
                         break;
                     case "a":
                         this.createLinkElement(p, result);
@@ -790,8 +779,6 @@
                     case "u":
                         this.createSpanElementsFromHtmlTags(p, result[0].replace(UNDERLINE_PATTERN, ""), HtmlManager.addValueToInlineStyle(pStyle, "text-decoration", "underline"));
                         break;
-                    default:
-                        trace(((("On fait rien: " + result[1]) + " ") + result[0]));
                 };
                 pText = pText.substring((result.index + result[0].length));
                 result = new RegExp(TAGS_PATTERN).exec(pText);
@@ -809,10 +796,9 @@
             var bmpdt:BitmapData;
             var bmp:Bitmap;
             var loader:Loader;
-            var flcomposer:IFlowComposer;
             var list:Dictionary;
             var ba:ByteArray;
-            inlineGraphic = new InlineGraphicElement(pTrigger);
+            inlineGraphic = new InlineGraphicElement();
             inlineGraphic.alignmentBaseline = TextBaseline.DESCENT;
             if ((pUri is Uri))
             {
@@ -834,7 +820,6 @@
                     else
                     {
                         loader = new Loader();
-                        flcomposer = this._textFlow.flowComposer;
                         list = this._bmpdtList;
                         loader.contentLoaderInfo.addEventListener(Event.COMPLETE, function (pEvt:Event):void
                         {
@@ -873,7 +858,7 @@
 
         public function getLastParagrapheElement():ParagraphElement
         {
-            return ((this._textFlow.getChildAt((this._textFlow.numChildren - 1)) as ParagraphElement));
+            return (this._textFlow.getChildAt((this._textFlow.numChildren - 1)) as ParagraphElement);
         }
 
         public function insertParagraphes(data:Array):void
@@ -906,7 +891,7 @@
                         {
                             if (isValidSmiley(sTxt, indexOfSmiley, trigger))
                             {
-                                if ((((currentSmiley == null)) || (((!((currentSmiley == null))) && ((currentSmiley.position > indexOfSmiley))))))
+                                if (((currentSmiley == null) || ((!(currentSmiley == null)) && (currentSmiley.position > indexOfSmiley))))
                                 {
                                     smiley.position = indexOfSmiley;
                                     smiley.currentTrigger = trigger;
@@ -922,7 +907,7 @@
 
 
     }
-}//package com.ankamagames.berilia.components
+} com.ankamagames.berilia.components
 
 import __AS3__.vec.Vector;
 
@@ -941,4 +926,5 @@ class Smiley
     }
 
 }
+
 

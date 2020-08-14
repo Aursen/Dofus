@@ -1,12 +1,15 @@
-﻿package com.ankamagames.dofus.types.characteristicContextual
+package com.ankamagames.dofus.types.characteristicContextual
 {
     import mx.core.SpriteAsset;
+    import flash.display.DisplayObject;
 
     [ExcludeClass]
     public class StyledTextContextual_STYLE_3_NUMBER_1 extends SpriteAsset 
     {
 
+        public var origine:DisplayObject;
+
 
     }
-}//package com.ankamagames.dofus.types.characteristicContextual
+} com.ankamagames.dofus.types.characteristicContextual
 

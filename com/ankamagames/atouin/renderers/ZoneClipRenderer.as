@@ -1,52 +1,66 @@
-﻿package com.ankamagames.atouin.renderers
+package com.ankamagames.atouin.renderers
 {
-    import com.ankamagames.atouin.utils.IZoneRenderer;
+    import com.ankamagames.atouin.utils.IFightZoneRenderer;
+    import com.ankamagames.jerakine.logger.Logger;
+    import com.ankamagames.jerakine.logger.Log;
+    import flash.utils.getQualifiedClassName;
     import com.ankamagames.jerakine.types.Uri;
     import __AS3__.vec.Vector;
     import com.ankamagames.atouin.Atouin;
     import com.ankamagames.jerakine.types.events.PropertyChangeEvent;
     import com.ankamagames.atouin.types.ZoneClipTile;
-    import com.ankamagames.jerakine.utils.prng.ParkMillerCarta;
+    import flash.geom.ColorTransform;
     import com.ankamagames.jerakine.utils.prng.PRNG;
+    import com.ankamagames.jerakine.utils.prng.ParkMillerCarta;
     import com.ankamagames.jerakine.types.Color;
     import com.ankamagames.atouin.types.DataMapContainer;
 
-    public class ZoneClipRenderer implements IZoneRenderer 
+    public class ZoneClipRenderer implements IFightZoneRenderer 
     {
 
+        protected static const _log:Logger = Log.getLogger(getQualifiedClassName(ZoneClipRenderer));
         private static var zoneTile:Array = new Array();
 
         private var _uri:Uri;
-        private var _clipName:Array;
-        private var _currentMapId:int;
+        private var _clipNames:Array;
+        private var _clipColors:Array;
+        private var _currentMapId:Number;
         private var _needBorders:Boolean;
         protected var _aZoneTile:Array;
         protected var _aCellTile:Array;
-        public var strata:uint = 0;
+        private var _currentStrata:uint = 0;
+        private var _showFarmCell:Boolean = true;
+        private var _useStrataOrderHack:Boolean = true;
         protected var _cells:Vector.<uint>;
 
-        public function ZoneClipRenderer(nStrata:uint, pClipUri:String, pClipName:Array, pCurrentMap:int=-1, pNeedBorders:Boolean=false)
+        public function ZoneClipRenderer(nStrata:uint, pClipUri:String, pClipNames:Array, pCurrentMap:Number=-1, pNeedBorders:Boolean=false, pUseStrataOrderHack:Boolean=true, pClipColors:Array=null)
         {
             this._aZoneTile = new Array();
             this._aCellTile = new Array();
-            this.strata = nStrata;
+            this._clipColors = new Array();
+            this.currentStrata = nStrata;
             this._currentMapId = pCurrentMap;
             this._needBorders = pNeedBorders;
+            this._useStrataOrderHack = pUseStrataOrderHack;
             this._uri = new Uri(pClipUri);
-            this._clipName = pClipName;
+            this._clipNames = pClipNames;
+            if (pClipColors)
+            {
+                this._clipColors = pClipColors;
+            };
             Atouin.getInstance().options.addEventListener(PropertyChangeEvent.PROPERTY_CHANGED, this.onPropertyChanged);
         }
 
-        private static function getZoneTile(pUri:Uri, pClipName:String, pNeedBorders:Boolean):ZoneClipTile
+        private static function getZoneTile(pUri:Uri, pClipName:String, pNeedBorders:Boolean, color:ColorTransform):ZoneClipTile
         {
-            var _local_5:ZoneClipTile;
+            var zct:ZoneClipTile;
             var ct:CachedTile = getData(pUri.fileName, pClipName);
             if (ct.length)
             {
                 return (ct.shift());
             };
-            _local_5 = new ZoneClipTile(pUri, pClipName, pNeedBorders);
-            return (_local_5);
+            zct = new ZoneClipTile(pUri, pClipName, pNeedBorders, color);
+            return (zct);
         }
 
         private static function destroyZoneTile(zt:ZoneClipTile):void
@@ -63,9 +77,9 @@
             i = 0;
             while (i < len)
             {
-                if ((((zoneTile[i].uriName == uri)) && ((zoneTile[i].clipName == clip))))
+                if (((zoneTile[i].uriName == uri) && (zoneTile[i].clipName == clip)))
                 {
-                    return ((zoneTile[i] as CachedTile));
+                    return (zoneTile[i] as CachedTile);
                 };
                 i = (i + 1);
             };
@@ -75,30 +89,170 @@
         }
 
 
+        public function get clipNames():Array
+        {
+            return (this._clipNames);
+        }
+
+        public function set clipNames(value:Array):void
+        {
+            this._clipNames = value;
+        }
+
+        public function get currentStrata():uint
+        {
+            return (this._currentStrata);
+        }
+
+        public function set currentStrata(value:uint):void
+        {
+            this._currentStrata = value;
+        }
+
+        public function get showFarmCell():Boolean
+        {
+            return (this._showFarmCell);
+        }
+
+        public function set showFarmCell(value:Boolean):void
+        {
+            this._showFarmCell = value;
+        }
+
         public function render(cells:Vector.<uint>, oColor:Color, mapContainer:DataMapContainer, bAlpha:Boolean=false, updateStrata:Boolean=false):void
         {
-            var rndNum:int;
             var j:int;
             var zt:ZoneClipTile;
+            var color:ColorTransform;
+            var clipName:String;
+            var line:int;
+            var rnd:PRNG;
+            var rndNum:int;
             this._cells = cells;
-            var rnd:PRNG = new ParkMillerCarta();
-            rnd.seed((this._currentMapId + 5435));
             var num:int = cells.length;
-            j = 0;
-            while (j < num)
+            var index:int;
+            if (this._currentMapId > -1)
             {
-                zt = this._aZoneTile[j];
-                if (!(zt))
+                rnd = new ParkMillerCarta();
+                rnd.seed((this._currentMapId + 5435));
+                j = 0;
+                while (j < num)
                 {
-                    rndNum = rnd.nextIntR(0, (this._clipName.length * 8));
-                    zt = getZoneTile(this._uri, this._clipName[(((((rndNum < 0)) || ((rndNum > (this._clipName.length - 1))))) ? 0 : rndNum)], this._needBorders);
-                    this._aZoneTile[j] = zt;
-                    zt.strata = this.strata;
+                    if (((!(this.showFarmCell)) && (mapContainer.dataMap.cells[cells[j]].farmCell)))
+                    {
+                    }
+                    else
+                    {
+                        zt = this._aZoneTile[j];
+                        if (!zt)
+                        {
+                            rndNum = rnd.nextIntR(0, (this._clipNames.length * 8));
+                            if (((rndNum < 0) || (rndNum > (this._clipNames.length - 1))))
+                            {
+                                rndNum = 0;
+                            };
+                            clipName = this._clipNames[rndNum];
+                            if (((this._clipColors) && (this._clipColors.length)))
+                            {
+                                color = this._clipColors[rndNum];
+                            };
+                            zt = getZoneTile(this._uri, clipName, this._needBorders, color);
+                            this._aZoneTile[j] = zt;
+                            zt.strata = this.currentStrata;
+                        };
+                        this._aCellTile[j] = cells[j];
+                        zt.cellId = cells[j];
+                        if (updateStrata)
+                        {
+                            zt.strata = this.currentStrata;
+                        };
+                        zt.useStrataOrderHack = this._useStrataOrderHack;
+                        zt.display();
+                    };
+                    j++;
                 };
-                this._aCellTile[j] = cells[j];
-                zt.cellId = cells[j];
-                zt.display();
-                j++;
+            }
+            else
+            {
+                if (this._currentMapId == -2)
+                {
+                    j = 0;
+                    while (j < num)
+                    {
+                        if (((!(this.showFarmCell)) && (mapContainer.dataMap.cells[cells[j]].farmCell)))
+                        {
+                        }
+                        else
+                        {
+                            index = 0;
+                            while (index < this._clipNames.length)
+                            {
+                                clipName = this._clipNames[index];
+                                if (((this._clipColors) && (this._clipColors.length)))
+                                {
+                                    color = this._clipColors[index];
+                                };
+                                zt = getZoneTile(this._uri, clipName, this._needBorders, color);
+                                if (!this._aZoneTile[j])
+                                {
+                                    this._aZoneTile[j] = new Array();
+                                };
+                                this._aZoneTile[j].push(zt);
+                                zt.strata = this.currentStrata;
+                                zt.cellId = cells[j];
+                                if (updateStrata)
+                                {
+                                    zt.strata = this.currentStrata;
+                                };
+                                zt.useStrataOrderHack = this._useStrataOrderHack;
+                                zt.display();
+                                index++;
+                            };
+                            this._aCellTile[j] = cells[j];
+                        };
+                        j++;
+                    };
+                }
+                else
+                {
+                    j = 0;
+                    while (j < num)
+                    {
+                        if (((!(this.showFarmCell)) && (mapContainer.dataMap.cells[cells[j]].farmCell)))
+                        {
+                        }
+                        else
+                        {
+                            zt = this._aZoneTile[j];
+                            if (!zt)
+                            {
+                                index = 0;
+                                if (((this._clipNames) && (this._clipNames.length > 1)))
+                                {
+                                    line = int(Math.floor((cells[j] / 14)));
+                                    index = (line % 2);
+                                };
+                                clipName = this._clipNames[index];
+                                if (((this._clipColors) && (this._clipColors.length)))
+                                {
+                                    color = this._clipColors[index];
+                                };
+                                zt = getZoneTile(this._uri, clipName, this._needBorders, color);
+                                this._aZoneTile[j] = zt;
+                                zt.strata = this.currentStrata;
+                            };
+                            this._aCellTile[j] = cells[j];
+                            zt.cellId = cells[j];
+                            if (updateStrata)
+                            {
+                                zt.strata = this.currentStrata;
+                            };
+                            zt.useStrataOrderHack = this._useStrataOrderHack;
+                            zt.display();
+                        };
+                        j++;
+                    };
+                };
             };
             while (j < num)
             {
@@ -115,7 +269,7 @@
         {
             var j:int;
             var zt:ZoneClipTile;
-            if (!(cells))
+            if (!cells)
             {
                 return;
             };
@@ -135,10 +289,23 @@
                 if (mapping[this._aCellTile[i]])
                 {
                     count++;
-                    zt = this._aZoneTile[i];
-                    if (zt)
+                    if ((this._aZoneTile[i] is Array))
                     {
-                        destroyZoneTile(zt);
+                        for each (zt in this._aZoneTile[i])
+                        {
+                            if (zt)
+                            {
+                                destroyZoneTile(zt);
+                            };
+                        };
+                    }
+                    else
+                    {
+                        zt = this._aZoneTile[i];
+                        if (zt)
+                        {
+                            destroyZoneTile(zt);
+                        };
                     };
                     this._aCellTile.splice(i, 1);
                     this._aZoneTile.splice(i, 1);
@@ -151,16 +318,30 @@
 
         private function onPropertyChanged(e:PropertyChangeEvent):void
         {
-            var j:int;
             var zt:ZoneClipTile;
+            var j:int;
             if (e.propertyName == "transparentOverlayMode")
             {
                 j = 0;
                 while (j < this._aZoneTile.length)
                 {
-                    zt = this._aZoneTile[j];
-                    zt.remove();
-                    zt.display();
+                    if ((this._aZoneTile[j] is Array))
+                    {
+                        for each (zt in this._aZoneTile[j])
+                        {
+                            if (zt)
+                            {
+                                zt.remove();
+                                zt.display();
+                            };
+                        };
+                    }
+                    else
+                    {
+                        zt = this._aZoneTile[j];
+                        zt.remove();
+                        zt.display();
+                    };
                     j++;
                 };
             };
@@ -168,14 +349,19 @@
 
 
     }
-}//package com.ankamagames.atouin.renderers
+} com.ankamagames.atouin.renderers
 
+import com.ankamagames.jerakine.logger.Logger;
+import com.ankamagames.jerakine.logger.Log;
+import flash.utils.getQualifiedClassName;
 import __AS3__.vec.Vector;
 import com.ankamagames.atouin.types.ZoneClipTile;
 import __AS3__.vec.*;
 
 class CachedTile 
 {
+
+    protected static const _log:Logger = Log.getLogger(getQualifiedClassName(CachedTile));
 
     public var uriName:String;
     public var clipName:String;
@@ -205,4 +391,5 @@ class CachedTile
 
 
 }
+
 

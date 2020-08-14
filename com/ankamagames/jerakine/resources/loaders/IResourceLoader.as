@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.resources.loaders
+package com.ankamagames.jerakine.resources.loaders
 {
     import flash.events.IEventDispatcher;
     import com.ankamagames.jerakine.newCache.ICache;
@@ -12,5 +12,5 @@
         function isInCache(_arg_1:Uri):Boolean;
 
     }
-}//package com.ankamagames.jerakine.resources.loaders
+} com.ankamagames.jerakine.resources.loaders
 

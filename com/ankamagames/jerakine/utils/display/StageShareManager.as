@@ -1,9 +1,9 @@
-﻿package com.ankamagames.jerakine.utils.display
+package com.ankamagames.jerakine.utils.display
 {
     import flash.display.Stage;
     import flash.display.DisplayObjectContainer;
     import flash.geom.Point;
-    import com.ankamagames.jerakine.utils.system.AirScanner;
+    import flash.geom.Rectangle;
     import flash.events.NativeWindowDisplayStateEvent;
     import flash.events.Event;
     import flash.events.MouseEvent;
@@ -26,12 +26,10 @@
         private static var _chrome:Point = new Point();
         private static var _mouseOnStage:Boolean;
         private static var _isActive:Boolean;
-        public static var nativeWindowStartWidth:uint;
-        public static var nativeWindowStartHeight:uint;
-        public static var chromeWidth:uint;
-        public static var chromeHeight:uint;
-        public static var justExitFullScreen:Boolean = false;
         public static var shortcutUsedToExitFullScreen:Boolean = false;
+        public static var stageLogicalBounds:Rectangle;
+        private static const _stageVisibleBoundCache:Rectangle = new Rectangle();
+        public static var isGoingFullScreen:Boolean = false;
 
 
         public static function set rootContainer(d:DisplayObjectContainer):void
@@ -53,15 +51,56 @@
         {
             var stageWidth:Number;
             var stageHeight:Number;
-            var scale:Number;
-            if (AirScanner.hasAir())
+            var chromeX:Number;
+            var chromeY:Number;
+            var fullscreen:Boolean = isFullscreen;
+            if (!stage.nativeWindow.closed)
             {
-                stageWidth = ((stage.nativeWindow.width - chrome.x) / startWidth);
-                stageHeight = ((stage.nativeWindow.height - chrome.y) / startHeight);
-                scale = Math.min(stageWidth, stageHeight);
-                return (scale);
+                chromeX = ((fullscreen) ? 0 : chrome.x);
+                chromeY = ((fullscreen) ? 0 : chrome.y);
+                stageWidth = ((stage.nativeWindow.width - chromeX) / startWidth);
+                stageHeight = ((stage.nativeWindow.height - chromeY) / startHeight);
             };
-            return (Math.min((stage.stageWidth / startWidth), (stage.stageHeight / startHeight)));
+            var scale:Number = Math.min(stageWidth, stageHeight);
+            return (scale);
+        }
+
+        public static function get stageVisibleBounds():Rectangle
+        {
+            var windowWidth:Number;
+            var windowHeight:Number;
+            var fullscreen:Boolean = isFullscreen;
+            if (!stage.nativeWindow.closed)
+            {
+                windowWidth = (stage.nativeWindow.width - ((fullscreen) ? 0 : chrome.x));
+                windowHeight = (stage.nativeWindow.height - ((fullscreen) ? 0 : chrome.y));
+            };
+            var stageWidthScale:Number = (windowWidth / startWidth);
+            var stageHeightScale:Number = (windowHeight / startHeight);
+            if (stageWidthScale > stageHeightScale)
+            {
+                _stageVisibleBoundCache.width = Math.max((windowWidth / stageHeightScale), startWidth);
+                _stageVisibleBoundCache.height = startHeight;
+                _stageVisibleBoundCache.x = ((startWidth - _stageVisibleBoundCache.width) / 2);
+                _stageVisibleBoundCache.y = 0;
+            }
+            else
+            {
+                _stageVisibleBoundCache.width = startWidth;
+                _stageVisibleBoundCache.height = Math.max((windowHeight * stageWidthScale), startHeight);
+                _stageVisibleBoundCache.x = 0;
+                _stageVisibleBoundCache.y = ((startHeight - _stageVisibleBoundCache.height) / 2);
+            };
+            if (_stageVisibleBoundCache.width > stageLogicalBounds.width)
+            {
+                _stageVisibleBoundCache.width = stageLogicalBounds.width;
+            };
+            var rightMargin:Number = (-(stageLogicalBounds.width - _startWidth) / 2);
+            if (_stageVisibleBoundCache.x < rightMargin)
+            {
+                _stageVisibleBoundCache.x = rightMargin;
+            };
+            return (_stageVisibleBoundCache);
         }
 
         public static function set stage(value:Stage):void
@@ -69,10 +108,12 @@
             _stage = value;
             _startWidth = 0x0500;
             _startHeight = 0x0400;
-            if (AirScanner.hasAir())
+            stageLogicalBounds = new Rectangle(0, 0, _startWidth, _startHeight);
+            if (!_stage.nativeWindow)
             {
-                _stage["nativeWindow"].addEventListener(NativeWindowDisplayStateEvent.DISPLAY_STATE_CHANGE, displayStateChangeHandler);
+                return;
             };
+            _stage.nativeWindow.addEventListener(NativeWindowDisplayStateEvent.DISPLAY_STATE_CHANGE, displayStateChangeHandler);
             _stage.addEventListener(Event.MOUSE_LEAVE, onStageMouseLeave);
             _stage.addEventListener(MouseEvent.MOUSE_MOVE, onStageMouseMove);
             _stage.addEventListener(Event.ACTIVATE, onActivate);
@@ -89,41 +130,29 @@
 
         public static function setFullScreen(enabled:Boolean, onlyMaximize:Boolean=false):void
         {
-            if (AirScanner.hasAir())
+            isGoingFullScreen = ((enabled) && (!(onlyMaximize)));
+            if (enabled)
             {
-                if (enabled)
+                if (!onlyMaximize)
                 {
-                    if (!(onlyMaximize))
-                    {
-                        StageShareManager.stage.displayState = StageDisplayState["FULL_SCREEN_INTERACTIVE"];
-                    }
-                    else
-                    {
-                        StageShareManager.stage["nativeWindow"].maximize();
-                    };
+                    StageShareManager.stage.displayState = StageDisplayState.FULL_SCREEN_INTERACTIVE;
                 }
                 else
                 {
-                    if (!(onlyMaximize))
+                    StageShareManager.stage.nativeWindow.maximize();
+                };
+            }
+            else
+            {
+                if (isFullscreen)
+                {
+                    if (!onlyMaximize)
                     {
                         StageShareManager.stage.displayState = StageDisplayState.NORMAL;
                     }
                     else
                     {
-                        StageShareManager.stage["nativeWindow"].minimize();
-                    };
-                };
-            }
-            else
-            {
-                if (AirScanner.isStreamingVersion())
-                {
-                    try
-                    {
-                        StageShareManager.stage.displayState = ((enabled) ? StageDisplayState.FULL_SCREEN_INTERACTIVE : StageDisplayState.NORMAL);
-                    }
-                    catch(error:Error)
-                    {
+                        StageShareManager.stage.nativeWindow.minimize();
                     };
                 };
             };
@@ -212,18 +241,24 @@
             return (_isActive);
         }
 
+        public static function get isFullscreen():Boolean
+        {
+            return (_stage.displayState.toLowerCase().indexOf("fullscreen") == 0);
+        }
+
         private static function displayStateChangeHandler(event:NativeWindowDisplayStateEvent):void
         {
             var nativeWindow:NativeWindow;
             if (event.beforeDisplayState == NativeWindowDisplayState.MINIMIZED)
             {
-                if (AirScanner.hasAir())
+                nativeWindow = _stage.nativeWindow;
+                if (((event.afterDisplayState == NativeWindowDisplayState.NORMAL) || (event.afterDisplayState == NativeWindowDisplayState.MAXIMIZED)))
                 {
-                    nativeWindow = _stage["nativeWindow"];
-                    if (event.afterDisplayState == NativeWindowDisplayState.NORMAL)
+                    nativeWindow.width--;
+                    nativeWindow.width = (nativeWindow.width + 1);
+                    if (event.afterDisplayState == NativeWindowDisplayState.MAXIMIZED)
                     {
-                        nativeWindow.width = (nativeWindow.width - 1);
-                        nativeWindow.width = (nativeWindow.width + 1);
+                        nativeWindow.maximize();
                     };
                 };
             };
@@ -251,5 +286,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.utils.display
+} com.ankamagames.jerakine.utils.display
 

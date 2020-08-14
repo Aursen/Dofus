@@ -1,10 +1,10 @@
-﻿package com.ankamagames.dofus.internalDatacenter.world
+package com.ankamagames.dofus.internalDatacenter.world
 {
     import com.ankamagames.jerakine.types.positions.WorldPoint;
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
-    import avmplus.getQualifiedClassName;
+    import flash.utils.getQualifiedClassName;
     import com.ankamagames.dofus.datacenter.world.MapPosition;
     import com.ankamagames.atouin.managers.MapDisplayManager;
     import com.ankamagames.atouin.types.DataMapContainer;
@@ -15,41 +15,41 @@
 
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(WorldPointWrapper));
 
-        public var outdoorMapId:uint;
+        public var outdoorMapId:Number;
         private var _outdoorX:int;
         private var _outdoorY:int;
-        private var _topNeighbourId:int = -1;
-        private var _bottomNeighbourId:int = -1;
-        private var _leftNeighbourId:int = -1;
-        private var _rightNeighbourId:int = -1;
+        private var _topNeighbourId:Number = -1;
+        private var _bottomNeighbourId:Number = -1;
+        private var _leftNeighbourId:Number = -1;
+        private var _rightNeighbourId:Number = -1;
 
-        public function WorldPointWrapper(mapid:uint, fixedOutdoor:Boolean=false, outx:int=0, outy:int=0)
+        public function WorldPointWrapper(mapid:Number, fixedOutdoor:Boolean=false, outdoorX:int=0, outdoorY:int=0)
         {
-            var _local_7:Object;
+            var mapInfo:MapPosition;
             super();
             mapId = mapid;
             setFromMapId();
             if (fixedOutdoor)
             {
-                this._outdoorX = outx;
-                this._outdoorY = outy;
+                this._outdoorX = outdoorX;
+                this._outdoorY = outdoorY;
             }
             else
             {
-                _local_7 = MapPosition.getMapPositionById(mapid);
-                if (!(_local_7))
+                mapInfo = MapPosition.getMapPositionById(mapid);
+                if (mapInfo)
                 {
-                    this._outdoorX = x;
-                    this._outdoorY = y;
+                    this._outdoorX = mapInfo.posX;
+                    this._outdoorY = mapInfo.posY;
                 }
                 else
                 {
-                    this._outdoorX = _local_7.posX;
-                    this._outdoorY = _local_7.posY;
+                    this._outdoorX = x;
+                    this._outdoorY = y;
                 };
             };
             var dmc:DataMapContainer = MapDisplayManager.getInstance().getDataMapContainer();
-            if (((((dmc) && (dmc.dataMap))) && ((dmc.dataMap.id == mapid))))
+            if ((((dmc) && (dmc.dataMap)) && (dmc.dataMap.id == mapid)))
             {
                 this._topNeighbourId = dmc.dataMap.topNeighbourId;
                 this._bottomNeighbourId = dmc.dataMap.bottomNeighbourId;
@@ -88,22 +88,22 @@
             return (this._outdoorY);
         }
 
-        public function get topNeighbourId():int
+        public function get topNeighbourId():Number
         {
             return (this._topNeighbourId);
         }
 
-        public function get bottomNeighbourId():int
+        public function get bottomNeighbourId():Number
         {
             return (this._bottomNeighbourId);
         }
 
-        public function get leftNeighbourId():int
+        public function get leftNeighbourId():Number
         {
             return (this._leftNeighbourId);
         }
 
-        public function get rightNeighbourId():int
+        public function get rightNeighbourId():Number
         {
             return (this._rightNeighbourId);
         }
@@ -116,5 +116,5 @@
 
 
     }
-}//package com.ankamagames.dofus.internalDatacenter.world
+} com.ankamagames.dofus.internalDatacenter.world
 

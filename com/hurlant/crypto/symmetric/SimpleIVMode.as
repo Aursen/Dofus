@@ -1,4 +1,4 @@
-﻿package com.hurlant.crypto.symmetric
+package com.hurlant.crypto.symmetric
 {
     import com.hurlant.util.Memory;
     import flash.utils.ByteArray;
@@ -52,10 +52,10 @@
 
         public function toString():String
         {
-            return (("simple-" + this.cipher.toString()));
+            return ("simple-" + this.cipher.toString());
         }
 
 
     }
-}//package com.hurlant.crypto.symmetric
+} com.hurlant.crypto.symmetric
 

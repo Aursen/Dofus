@@ -1,7 +1,8 @@
-﻿package com.ankamagames.dofus.network.types.game.character
+package com.ankamagames.dofus.network.types.game.character
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.dofus.network.types.game.context.roleplay.BasicGuildInformations;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import com.ankamagames.dofus.network.types.game.look.EntityLook;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
@@ -11,22 +12,18 @@
 
         public static const protocolId:uint = 445;
 
-        public var guild:BasicGuildInformations;
+        public var guild:BasicGuildInformations = new BasicGuildInformations();
+        private var _guildtree:FuncTree;
 
-        public function CharacterMinimalGuildInformations()
-        {
-            this.guild = new BasicGuildInformations();
-            super();
-        }
 
         override public function getTypeId():uint
         {
             return (445);
         }
 
-        public function initCharacterMinimalGuildInformations(id:uint=0, level:uint=0, name:String="", entityLook:EntityLook=null, guild:BasicGuildInformations=null):CharacterMinimalGuildInformations
+        public function initCharacterMinimalGuildInformations(id:Number=0, name:String="", level:uint=0, entityLook:EntityLook=null, breed:int=0, guild:BasicGuildInformations=null):CharacterMinimalGuildInformations
         {
-            super.initCharacterMinimalPlusLookInformations(id, level, name, entityLook);
+            super.initCharacterMinimalPlusLookInformations(id, name, level, entityLook, breed);
             this.guild = guild;
             return (this);
         }
@@ -60,7 +57,24 @@
             this.guild.deserialize(input);
         }
 
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_CharacterMinimalGuildInformations(tree);
+        }
+
+        public function deserializeAsyncAs_CharacterMinimalGuildInformations(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            this._guildtree = tree.addChild(this._guildtreeFunc);
+        }
+
+        private function _guildtreeFunc(input:ICustomDataInput):void
+        {
+            this.guild = new BasicGuildInformations();
+            this.guild.deserializeAsync(this._guildtree);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.types.game.character
+} com.ankamagames.dofus.network.types.game.character
 

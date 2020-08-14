@@ -1,4 +1,4 @@
-﻿package com.somerandomdude.colortoolkit.spaces
+package com.somerandomdude.colortoolkit.spaces
 {
     public interface IColorSpace 
     {
@@ -13,5 +13,5 @@
         function clone():IColorSpace;
 
     }
-}//package com.somerandomdude.colortoolkit.spaces
+} com.somerandomdude.colortoolkit.spaces
 

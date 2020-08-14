@@ -1,8 +1,9 @@
-﻿package com.ankamagames.dofus.network.types.game.shortcut
+package com.ankamagames.dofus.network.types.game.shortcut
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
     public class ShortcutEmote extends Shortcut implements INetworkType 
     {
@@ -38,7 +39,7 @@
         public function serializeAs_ShortcutEmote(output:ICustomDataOutput):void
         {
             super.serializeAs_Shortcut(output);
-            if ((((this.emoteId < 0)) || ((this.emoteId > 0xFF))))
+            if (((this.emoteId < 0) || (this.emoteId > 0xFF)))
             {
                 throw (new Error((("Forbidden value (" + this.emoteId) + ") on element emoteId.")));
             };
@@ -53,8 +54,24 @@
         public function deserializeAs_ShortcutEmote(input:ICustomDataInput):void
         {
             super.deserialize(input);
+            this._emoteIdFunc(input);
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_ShortcutEmote(tree);
+        }
+
+        public function deserializeAsyncAs_ShortcutEmote(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._emoteIdFunc);
+        }
+
+        private function _emoteIdFunc(input:ICustomDataInput):void
+        {
             this.emoteId = input.readUnsignedByte();
-            if ((((this.emoteId < 0)) || ((this.emoteId > 0xFF))))
+            if (((this.emoteId < 0) || (this.emoteId > 0xFF)))
             {
                 throw (new Error((("Forbidden value (" + this.emoteId) + ") on element of ShortcutEmote.emoteId.")));
             };
@@ -62,5 +79,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.shortcut
+} com.ankamagames.dofus.network.types.game.shortcut
 

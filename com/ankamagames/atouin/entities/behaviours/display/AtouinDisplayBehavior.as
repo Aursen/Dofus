@@ -1,4 +1,4 @@
-﻿package com.ankamagames.atouin.entities.behaviours.display
+package com.ankamagames.atouin.entities.behaviours.display
 {
     import com.ankamagames.jerakine.entities.behaviours.IDisplayBehavior;
     import com.ankamagames.jerakine.logger.Logger;
@@ -53,5 +53,5 @@
 
 
     }
-}//package com.ankamagames.atouin.entities.behaviours.display
+} com.ankamagames.atouin.entities.behaviours.display
 

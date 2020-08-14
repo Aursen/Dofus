@@ -1,4 +1,4 @@
-﻿package com.ankamagames.tiphon.events
+package com.ankamagames.tiphon.events
 {
     import flash.events.Event;
 
@@ -9,9 +9,9 @@
 
         private var _url:String;
 
-        public function SwlEvent(type:String, pUrl:String, bubbles:Boolean=false, cancelable:Boolean=false)
+        public function SwlEvent(_arg_1:String, pUrl:String, bubbles:Boolean=false, cancelable:Boolean=false)
         {
-            super(type, bubbles, cancelable);
+            super(_arg_1, bubbles, cancelable);
             this._url = pUrl;
         }
 
@@ -27,5 +27,5 @@
 
 
     }
-}//package com.ankamagames.tiphon.events
+} com.ankamagames.tiphon.events
 

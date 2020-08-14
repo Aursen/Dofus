@@ -1,9 +1,10 @@
-﻿package com.ankamagames.dofus.network.messages.game.context.roleplay
+package com.ankamagames.dofus.network.messages.game.context.roleplay
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
     import __AS3__.vec.Vector;
     import com.ankamagames.dofus.network.types.game.context.fight.GameFightFighterLightInformations;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
@@ -11,7 +12,6 @@
     import com.ankamagames.dofus.network.ProtocolTypeManager;
     import __AS3__.vec.*;
 
-    [Trusted]
     public class MapRunningFightDetailsMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -19,15 +19,11 @@
 
         private var _isInitialized:Boolean = false;
         public var fightId:uint = 0;
-        public var attackers:Vector.<GameFightFighterLightInformations>;
-        public var defenders:Vector.<GameFightFighterLightInformations>;
+        public var attackers:Vector.<GameFightFighterLightInformations> = new Vector.<GameFightFighterLightInformations>();
+        public var defenders:Vector.<GameFightFighterLightInformations> = new Vector.<GameFightFighterLightInformations>();
+        private var _attackerstree:FuncTree;
+        private var _defenderstree:FuncTree;
 
-        public function MapRunningFightDetailsMessage()
-        {
-            this.attackers = new Vector.<GameFightFighterLightInformations>();
-            this.defenders = new Vector.<GameFightFighterLightInformations>();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
@@ -68,6 +64,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_MapRunningFightDetailsMessage(output);
@@ -79,7 +83,7 @@
             {
                 throw (new Error((("Forbidden value (" + this.fightId) + ") on element fightId.")));
             };
-            output.writeInt(this.fightId);
+            output.writeVarShort(this.fightId);
             output.writeShort(this.attackers.length);
             var _i2:uint;
             while (_i2 < this.attackers.length)
@@ -109,11 +113,7 @@
             var _item2:GameFightFighterLightInformations;
             var _id3:uint;
             var _item3:GameFightFighterLightInformations;
-            this.fightId = input.readInt();
-            if (this.fightId < 0)
-            {
-                throw (new Error((("Forbidden value (" + this.fightId) + ") on element of MapRunningFightDetailsMessage.fightId.")));
-            };
+            this._fightIdFunc(input);
             var _attackersLen:uint = input.readUnsignedShort();
             var _i2:uint;
             while (_i2 < _attackersLen)
@@ -136,7 +136,66 @@
             };
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_MapRunningFightDetailsMessage(tree);
+        }
+
+        public function deserializeAsyncAs_MapRunningFightDetailsMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._fightIdFunc);
+            this._attackerstree = tree.addChild(this._attackerstreeFunc);
+            this._defenderstree = tree.addChild(this._defenderstreeFunc);
+        }
+
+        private function _fightIdFunc(input:ICustomDataInput):void
+        {
+            this.fightId = input.readVarUhShort();
+            if (this.fightId < 0)
+            {
+                throw (new Error((("Forbidden value (" + this.fightId) + ") on element of MapRunningFightDetailsMessage.fightId.")));
+            };
+        }
+
+        private function _attackerstreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._attackerstree.addChild(this._attackersFunc);
+                i++;
+            };
+        }
+
+        private function _attackersFunc(input:ICustomDataInput):void
+        {
+            var _id:uint = input.readUnsignedShort();
+            var _item:GameFightFighterLightInformations = ProtocolTypeManager.getInstance(GameFightFighterLightInformations, _id);
+            _item.deserialize(input);
+            this.attackers.push(_item);
+        }
+
+        private function _defenderstreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._defenderstree.addChild(this._defendersFunc);
+                i++;
+            };
+        }
+
+        private function _defendersFunc(input:ICustomDataInput):void
+        {
+            var _id:uint = input.readUnsignedShort();
+            var _item:GameFightFighterLightInformations = ProtocolTypeManager.getInstance(GameFightFighterLightInformations, _id);
+            _item.deserialize(input);
+            this.defenders.push(_item);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.context.roleplay
+} com.ankamagames.dofus.network.messages.game.context.roleplay
 

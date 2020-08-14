@@ -1,4 +1,4 @@
-﻿package com.hurlant.util
+package com.hurlant.util
 {
     import flash.utils.ByteArray;
 
@@ -33,15 +33,15 @@
             {
                 dataBuffer = new Array();
                 i = 0;
-                while ((((i < 3)) && ((data.bytesAvailable > 0))))
+                while (((i < 3) && (data.bytesAvailable > 0)))
                 {
                     dataBuffer[i] = data.readUnsignedByte();
                     i++;
                 };
-                outputBuffer[0] = ((dataBuffer[0] & 252) >> 2);
-                outputBuffer[1] = (((dataBuffer[0] & 3) << 4) | (dataBuffer[1] >> 4));
-                outputBuffer[2] = (((dataBuffer[1] & 15) << 2) | (dataBuffer[2] >> 6));
-                outputBuffer[3] = (dataBuffer[2] & 63);
+                outputBuffer[0] = ((dataBuffer[0] & 0xFC) >> 2);
+                outputBuffer[1] = (((dataBuffer[0] & 0x03) << 4) | (dataBuffer[1] >> 4));
+                outputBuffer[2] = (((dataBuffer[1] & 0x0F) << 2) | (dataBuffer[2] >> 6));
+                outputBuffer[3] = (dataBuffer[2] & 0x3F);
                 j = dataBuffer.length;
                 while (j < 3)
                 {
@@ -75,14 +75,14 @@
             while (i < data.length)
             {
                 j = 0;
-                while ((((j < 4)) && (((i + j) < data.length))))
+                while (((j < 4) && ((i + j) < data.length)))
                 {
                     dataBuffer[j] = BASE64_CHARS.indexOf(data.charAt((i + j)));
                     j++;
                 };
-                outputBuffer[0] = ((dataBuffer[0] << 2) + ((dataBuffer[1] & 48) >> 4));
-                outputBuffer[1] = (((dataBuffer[1] & 15) << 4) + ((dataBuffer[2] & 60) >> 2));
-                outputBuffer[2] = (((dataBuffer[2] & 3) << 6) + dataBuffer[3]);
+                outputBuffer[0] = ((dataBuffer[0] << 2) + ((dataBuffer[1] & 0x30) >> 4));
+                outputBuffer[1] = (((dataBuffer[1] & 0x0F) << 4) + ((dataBuffer[2] & 0x3C) >> 2));
+                outputBuffer[2] = (((dataBuffer[2] & 0x03) << 6) + dataBuffer[3]);
                 k = 0;
                 while (k < outputBuffer.length)
                 {
@@ -107,19 +107,19 @@
             while (i < data.length)
             {
                 j = 0;
-                while ((((j < 4)) && (((i + j) < data.length))))
+                while (((j < 4) && ((i + j) < data.length)))
                 {
                     dataBuffer[j] = BASE64_CHARS.indexOf(data.charAt((i + j)));
-                    while ((((dataBuffer[j] < 0)) && ((i < data.length))))
+                    while (((dataBuffer[j] < 0) && (i < data.length)))
                     {
                         i++;
                         dataBuffer[j] = BASE64_CHARS.indexOf(data.charAt((i + j)));
                     };
                     j++;
                 };
-                outputBuffer[0] = ((dataBuffer[0] << 2) + ((dataBuffer[1] & 48) >> 4));
-                outputBuffer[1] = (((dataBuffer[1] & 15) << 4) + ((dataBuffer[2] & 60) >> 2));
-                outputBuffer[2] = (((dataBuffer[2] & 3) << 6) + dataBuffer[3]);
+                outputBuffer[0] = ((dataBuffer[0] << 2) + ((dataBuffer[1] & 0x30) >> 4));
+                outputBuffer[1] = (((dataBuffer[1] & 0x0F) << 4) + ((dataBuffer[2] & 0x3C) >> 2));
+                outputBuffer[2] = (((dataBuffer[2] & 0x03) << 6) + dataBuffer[3]);
                 k = 0;
                 while (k < outputBuffer.length)
                 {
@@ -135,5 +135,5 @@
 
 
     }
-}//package com.hurlant.util
+} com.hurlant.util
 

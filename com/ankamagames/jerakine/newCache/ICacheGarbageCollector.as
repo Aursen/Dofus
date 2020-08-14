@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.newCache
+package com.ankamagames.jerakine.newCache
 {
     public interface ICacheGarbageCollector 
     {
@@ -8,5 +8,5 @@
         function purge(_arg_1:uint):void;
 
     }
-}//package com.ankamagames.jerakine.newCache
+} com.ankamagames.jerakine.newCache
 

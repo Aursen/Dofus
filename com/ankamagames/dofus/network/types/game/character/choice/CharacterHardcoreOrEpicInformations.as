@@ -1,11 +1,11 @@
-﻿package com.ankamagames.dofus.network.types.game.character.choice
+package com.ankamagames.dofus.network.types.game.character.choice
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.dofus.network.types.game.look.EntityLook;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class CharacterHardcoreOrEpicInformations extends CharacterBaseInformations implements INetworkType 
     {
 
@@ -21,9 +21,9 @@
             return (474);
         }
 
-        public function initCharacterHardcoreOrEpicInformations(id:uint=0, level:uint=0, name:String="", entityLook:EntityLook=null, breed:int=0, sex:Boolean=false, deathState:uint=0, deathCount:uint=0, deathMaxLevel:uint=0):CharacterHardcoreOrEpicInformations
+        public function initCharacterHardcoreOrEpicInformations(id:Number=0, name:String="", level:uint=0, entityLook:EntityLook=null, breed:int=0, sex:Boolean=false, deathState:uint=0, deathCount:uint=0, deathMaxLevel:uint=0):CharacterHardcoreOrEpicInformations
         {
-            super.initCharacterBaseInformations(id, level, name, entityLook, breed, sex);
+            super.initCharacterBaseInformations(id, name, level, entityLook, breed, sex);
             this.deathState = deathState;
             this.deathCount = deathCount;
             this.deathMaxLevel = deathMaxLevel;
@@ -52,11 +52,11 @@
                 throw (new Error((("Forbidden value (" + this.deathCount) + ") on element deathCount.")));
             };
             output.writeVarShort(this.deathCount);
-            if ((((this.deathMaxLevel < 1)) || ((this.deathMaxLevel > 200))))
+            if (this.deathMaxLevel < 0)
             {
                 throw (new Error((("Forbidden value (" + this.deathMaxLevel) + ") on element deathMaxLevel.")));
             };
-            output.writeByte(this.deathMaxLevel);
+            output.writeVarShort(this.deathMaxLevel);
         }
 
         override public function deserialize(input:ICustomDataInput):void
@@ -67,18 +67,46 @@
         public function deserializeAs_CharacterHardcoreOrEpicInformations(input:ICustomDataInput):void
         {
             super.deserialize(input);
+            this._deathStateFunc(input);
+            this._deathCountFunc(input);
+            this._deathMaxLevelFunc(input);
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_CharacterHardcoreOrEpicInformations(tree);
+        }
+
+        public function deserializeAsyncAs_CharacterHardcoreOrEpicInformations(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._deathStateFunc);
+            tree.addChild(this._deathCountFunc);
+            tree.addChild(this._deathMaxLevelFunc);
+        }
+
+        private function _deathStateFunc(input:ICustomDataInput):void
+        {
             this.deathState = input.readByte();
             if (this.deathState < 0)
             {
                 throw (new Error((("Forbidden value (" + this.deathState) + ") on element of CharacterHardcoreOrEpicInformations.deathState.")));
             };
+        }
+
+        private function _deathCountFunc(input:ICustomDataInput):void
+        {
             this.deathCount = input.readVarUhShort();
             if (this.deathCount < 0)
             {
                 throw (new Error((("Forbidden value (" + this.deathCount) + ") on element of CharacterHardcoreOrEpicInformations.deathCount.")));
             };
-            this.deathMaxLevel = input.readUnsignedByte();
-            if ((((this.deathMaxLevel < 1)) || ((this.deathMaxLevel > 200))))
+        }
+
+        private function _deathMaxLevelFunc(input:ICustomDataInput):void
+        {
+            this.deathMaxLevel = input.readVarUhShort();
+            if (this.deathMaxLevel < 0)
             {
                 throw (new Error((("Forbidden value (" + this.deathMaxLevel) + ") on element of CharacterHardcoreOrEpicInformations.deathMaxLevel.")));
             };
@@ -86,5 +114,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.character.choice
+} com.ankamagames.dofus.network.types.game.character.choice
 

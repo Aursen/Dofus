@@ -1,4 +1,4 @@
-﻿package com.hurlant.crypto.hash
+package com.hurlant.crypto.hash
 {
     public class SHA1 extends SHABase implements IHash 
     {
@@ -67,29 +67,29 @@
 
         private function rol(num:uint, cnt:uint):uint
         {
-            return (((num << cnt) | (num >>> (32 - cnt))));
+            return ((num << cnt) | (num >>> (32 - cnt)));
         }
 
         private function ft(t:uint, b:uint, c:uint, d:uint):uint
         {
             if (t < 20)
             {
-                return (((b & c) | (~(b) & d)));
+                return ((b & c) | ((~(b)) & d));
             };
             if (t < 40)
             {
-                return (((b ^ c) ^ d));
+                return ((b ^ c) ^ d);
             };
             if (t < 60)
             {
-                return ((((b & c) | (b & d)) | (c & d)));
+                return (((b & c) | (b & d)) | (c & d));
             };
-            return (((b ^ c) ^ d));
+            return ((b ^ c) ^ d);
         }
 
         private function kt(t:uint):uint
         {
-            return ((((t)<20) ? 1518500249 : (((t)<40) ? 1859775393 : (((t)<60) ? 2400959708 : 3395469782))));
+            return ((t < 20) ? 1518500249 : ((t < 40) ? 1859775393 : (((t < 60) ? 2400959708 : 3395469782))));
         }
 
         override public function toString():String
@@ -99,5 +99,5 @@
 
 
     }
-}//package com.hurlant.crypto.hash
+} com.hurlant.crypto.hash
 

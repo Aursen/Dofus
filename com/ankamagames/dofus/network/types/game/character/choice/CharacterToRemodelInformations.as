@@ -1,11 +1,11 @@
-﻿package com.ankamagames.dofus.network.types.game.character.choice
+package com.ankamagames.dofus.network.types.game.character.choice
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import __AS3__.vec.Vector;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class CharacterToRemodelInformations extends CharacterRemodelingInformation implements INetworkType 
     {
 
@@ -20,7 +20,7 @@
             return (477);
         }
 
-        public function initCharacterToRemodelInformations(id:uint=0, name:String="", breed:int=0, sex:Boolean=false, cosmeticId:uint=0, colors:Vector.<int>=null, possibleChangeMask:uint=0, mandatoryChangeMask:uint=0):CharacterToRemodelInformations
+        public function initCharacterToRemodelInformations(id:Number=0, name:String="", breed:int=0, sex:Boolean=false, cosmeticId:uint=0, colors:Vector.<int>=null, possibleChangeMask:uint=0, mandatoryChangeMask:uint=0):CharacterToRemodelInformations
         {
             super.initCharacterRemodelingInformation(id, name, breed, sex, cosmeticId, colors);
             this.possibleChangeMask = possibleChangeMask;
@@ -63,11 +63,33 @@
         public function deserializeAs_CharacterToRemodelInformations(input:ICustomDataInput):void
         {
             super.deserialize(input);
+            this._possibleChangeMaskFunc(input);
+            this._mandatoryChangeMaskFunc(input);
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_CharacterToRemodelInformations(tree);
+        }
+
+        public function deserializeAsyncAs_CharacterToRemodelInformations(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._possibleChangeMaskFunc);
+            tree.addChild(this._mandatoryChangeMaskFunc);
+        }
+
+        private function _possibleChangeMaskFunc(input:ICustomDataInput):void
+        {
             this.possibleChangeMask = input.readByte();
             if (this.possibleChangeMask < 0)
             {
                 throw (new Error((("Forbidden value (" + this.possibleChangeMask) + ") on element of CharacterToRemodelInformations.possibleChangeMask.")));
             };
+        }
+
+        private function _mandatoryChangeMaskFunc(input:ICustomDataInput):void
+        {
             this.mandatoryChangeMask = input.readByte();
             if (this.mandatoryChangeMask < 0)
             {
@@ -77,5 +99,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.character.choice
+} com.ankamagames.dofus.network.types.game.character.choice
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.tubul.interfaces
+package com.ankamagames.tubul.interfaces
 {
     import com.ankamagames.tubul.types.SoundSilence;
     import com.ankamagames.jerakine.types.Uri;
@@ -26,12 +26,12 @@
         function set noCutSilence(_arg_1:Boolean):void;
         function get isPlaying():Boolean;
         function play(_arg_1:Boolean=false, _arg_2:int=0, _arg_3:VolumeFadeEffect=null, _arg_4:VolumeFadeEffect=null):void;
-        function stop(_arg_1:VolumeFadeEffect=null):void;
+        function stop(_arg_1:VolumeFadeEffect=null, _arg_2:Boolean=false):void;
         function loadSound(_arg_1:ICache):void;
         function setLoops(_arg_1:int):void;
         function setCurrentLoop(_arg_1:uint):void;
         function clone():ISound;
 
     }
-}//package com.ankamagames.tubul.interfaces
+} com.ankamagames.tubul.interfaces
 

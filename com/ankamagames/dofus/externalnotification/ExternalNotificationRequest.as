@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.externalnotification
+package com.ankamagames.dofus.externalnotification
 {
     import com.ankamagames.jerakine.json.JSON;
 
@@ -36,8 +36,8 @@
 
         public static function createFromJSONString(pJSONStr:String):ExternalNotificationRequest
         {
-            var obj:Object = JSON.decode(pJSONStr);
-            var req:ExternalNotificationRequest = new (ExternalNotificationRequest)(obj.notificationType, obj.clientId, obj.otherClientsIds, obj.id, obj.showMode, obj.uiName, obj.displayData, obj.soundId, obj.playSound, obj.notify, obj.hookName, obj.hookParams);
+            var obj:Object = com.ankamagames.jerakine.json.JSON.decode(pJSONStr);
+            var req:ExternalNotificationRequest = new ExternalNotificationRequest(obj.notificationType, obj.clientId, obj.otherClientsIds, obj.id, obj.showMode, obj.uiName, obj.displayData, obj.soundId, obj.playSound, obj.notify, obj.hookName, obj.hookParams);
             return (req);
         }
 
@@ -49,7 +49,7 @@
 
         public function get instanceId():String
         {
-            return (((this._clientId + "#") + this._id));
+            return ((this._clientId + "#") + this._id);
         }
 
         public function get clientId():String
@@ -109,5 +109,5 @@
 
 
     }
-}//package com.ankamagames.dofus.externalnotification
+} com.ankamagames.dofus.externalnotification
 

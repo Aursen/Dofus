@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.common.frames
+package com.ankamagames.dofus.logic.game.common.frames
 {
     import com.ankamagames.jerakine.messages.Frame;
     import com.ankamagames.jerakine.logger.Logger;
@@ -8,7 +8,9 @@
     import com.ankamagames.dofus.logic.game.common.actions.livingObject.LivingObjectDissociateAction;
     import com.ankamagames.dofus.network.messages.game.inventory.items.LivingObjectDissociateMessage;
     import com.ankamagames.dofus.logic.game.common.actions.livingObject.LivingObjectFeedAction;
-    import com.ankamagames.dofus.network.messages.game.inventory.items.ObjectFeedMessage;
+    import __AS3__.vec.Vector;
+    import com.ankamagames.dofus.network.types.game.data.items.ObjectItemQuantity;
+    import com.ankamagames.dofus.network.messages.game.feed.ObjectFeedMessage;
     import com.ankamagames.dofus.logic.game.common.actions.livingObject.LivingObjectChangeSkinRequestAction;
     import com.ankamagames.dofus.network.messages.game.inventory.items.LivingObjectChangeSkinRequestMessage;
     import com.ankamagames.dofus.network.messages.game.inventory.items.ObjectModifiedMessage;
@@ -34,6 +36,7 @@
     import com.ankamagames.dofus.logic.game.common.managers.TimeManager;
     import com.ankamagames.dofus.logic.game.common.managers.InventoryManager;
     import com.ankamagames.jerakine.messages.Message;
+    import __AS3__.vec.*;
 
     public class LivingObjectFrame implements Frame 
     {
@@ -59,112 +62,123 @@
 
         public function process(msg:Message):Boolean
         {
-            var _local_2:LivingObjectDissociateAction;
-            var _local_3:LivingObjectDissociateMessage;
-            var _local_4:LivingObjectFeedAction;
-            var _local_5:ObjectFeedMessage;
-            var _local_6:LivingObjectChangeSkinRequestAction;
-            var _local_7:LivingObjectChangeSkinRequestMessage;
-            var _local_8:ObjectModifiedMessage;
-            var _local_9:ItemWrapper;
-            var _local_10:MimicryObjectFeedAndAssociateRequestAction;
-            var _local_11:MimicryObjectFeedAndAssociateRequestMessage;
-            var _local_12:MimicryObjectPreviewMessage;
-            var _local_13:ItemWrapper;
-            var _local_14:MimicryObjectErrorMessage;
-            var _local_15:MimicryObjectAssociatedMessage;
-            var _local_16:ItemWrapper;
-            var _local_17:MimicryObjectEraseRequestAction;
-            var _local_18:MimicryObjectEraseRequestMessage;
-            var _local_19:WrapperObjectErrorMessage;
-            var _local_20:WrapperObjectAssociatedMessage;
-            var _local_21:ItemWrapper;
-            var _local_22:WrapperObjectDissociateRequestAction;
-            var _local_23:WrapperObjectDissociateRequestMessage;
+            var loda:LivingObjectDissociateAction;
+            var lodmsg:LivingObjectDissociateMessage;
+            var lofa:LivingObjectFeedAction;
+            var oiqVector:Vector.<ObjectItemQuantity>;
+            var oiq:ObjectItemQuantity;
+            var ofmsg:ObjectFeedMessage;
+            var locsra:LivingObjectChangeSkinRequestAction;
+            var locsrmsg:LivingObjectChangeSkinRequestMessage;
+            var omdmsg:ObjectModifiedMessage;
+            var itemModified:ItemWrapper;
+            var mofaara:MimicryObjectFeedAndAssociateRequestAction;
+            var mofaarmsg:MimicryObjectFeedAndAssociateRequestMessage;
+            var mopmsg:MimicryObjectPreviewMessage;
+            var mimicryObject:ItemWrapper;
+            var moemsg:MimicryObjectErrorMessage;
+            var moamsg:MimicryObjectAssociatedMessage;
+            var itwm:ItemWrapper;
+            var moera:MimicryObjectEraseRequestAction;
+            var moermsg:MimicryObjectEraseRequestMessage;
+            var woemsg:WrapperObjectErrorMessage;
+            var woamsg:WrapperObjectAssociatedMessage;
+            var itww:ItemWrapper;
+            var wodra:WrapperObjectDissociateRequestAction;
+            var wodrmsg:WrapperObjectDissociateRequestMessage;
+            var mealItem:Object;
             var mimicryErrorText:String;
             var wrapperErrorText:String;
             switch (true)
             {
                 case (msg is LivingObjectDissociateAction):
-                    _local_2 = (msg as LivingObjectDissociateAction);
-                    _local_3 = new LivingObjectDissociateMessage();
-                    _local_3.initLivingObjectDissociateMessage(_local_2.livingUID, _local_2.livingPosition);
-                    this.livingObjectUID = _local_2.livingUID;
+                    loda = (msg as LivingObjectDissociateAction);
+                    lodmsg = new LivingObjectDissociateMessage();
+                    lodmsg.initLivingObjectDissociateMessage(loda.livingUID, loda.livingPosition);
+                    this.livingObjectUID = loda.livingUID;
                     this.action = ACTION_TODISSOCIATE;
-                    ConnectionsHandler.getConnection().send(_local_3);
+                    ConnectionsHandler.getConnection().send(lodmsg);
                     return (true);
                 case (msg is LivingObjectFeedAction):
-                    _local_4 = (msg as LivingObjectFeedAction);
-                    _local_5 = new ObjectFeedMessage();
-                    _local_5.initObjectFeedMessage(_local_4.objectUID, _local_4.foodUID, _local_4.foodQuantity);
-                    this.livingObjectUID = _local_4.objectUID;
+                    lofa = (msg as LivingObjectFeedAction);
+                    oiqVector = new Vector.<ObjectItemQuantity>();
+                    oiq = new ObjectItemQuantity();
+                    for each (mealItem in lofa.meal)
+                    {
+                        oiq = new ObjectItemQuantity();
+                        oiq.initObjectItemQuantity(mealItem.objectUID, mealItem.quantity);
+                        oiqVector.push(oiq);
+                    };
+                    ofmsg = new ObjectFeedMessage();
+                    ofmsg.initObjectFeedMessage(lofa.objectUID, oiqVector);
+                    this.livingObjectUID = lofa.objectUID;
                     this.action = ACTION_TOFEED;
-                    ConnectionsHandler.getConnection().send(_local_5);
+                    ConnectionsHandler.getConnection().send(ofmsg);
                     return (true);
                 case (msg is LivingObjectChangeSkinRequestAction):
-                    _local_6 = (msg as LivingObjectChangeSkinRequestAction);
-                    _local_7 = new LivingObjectChangeSkinRequestMessage();
-                    _local_7.initLivingObjectChangeSkinRequestMessage(_local_6.livingUID, _local_6.livingPosition, _local_6.skinId);
-                    this.livingObjectUID = _local_6.livingUID;
+                    locsra = (msg as LivingObjectChangeSkinRequestAction);
+                    locsrmsg = new LivingObjectChangeSkinRequestMessage();
+                    locsrmsg.initLivingObjectChangeSkinRequestMessage(locsra.livingUID, locsra.livingPosition, locsra.skinId);
+                    this.livingObjectUID = locsra.livingUID;
                     this.action = ACTION_TOSKIN;
-                    ConnectionsHandler.getConnection().send(_local_7);
+                    ConnectionsHandler.getConnection().send(locsrmsg);
                     return (true);
                 case (msg is ObjectModifiedMessage):
-                    _local_8 = (msg as ObjectModifiedMessage);
-                    _local_9 = ItemWrapper.create(_local_8.object.position, _local_8.object.objectUID, _local_8.object.objectGID, _local_8.object.quantity, _local_8.object.effects, false);
-                    if (!(_local_9))
+                    omdmsg = (msg as ObjectModifiedMessage);
+                    itemModified = ItemWrapper.create(omdmsg.object.position, omdmsg.object.objectUID, omdmsg.object.objectGID, omdmsg.object.quantity, omdmsg.object.effects, false);
+                    if (!itemModified)
                     {
                         return (false);
                     };
-                    if (_local_9.isObjectWrapped)
+                    if (itemModified.isObjectWrapped)
                     {
-                        _local_9.update(_local_8.object.position, _local_8.object.objectUID, _local_8.object.objectGID, _local_8.object.quantity, _local_8.object.effects);
+                        itemModified.update(omdmsg.object.position, omdmsg.object.objectUID, omdmsg.object.objectGID, omdmsg.object.quantity, omdmsg.object.effects);
                     };
-                    if (this.livingObjectUID == _local_8.object.objectUID)
+                    if (this.livingObjectUID == omdmsg.object.objectUID)
                     {
-                        _local_9.update(_local_8.object.position, _local_8.object.objectUID, _local_8.object.objectGID, _local_8.object.quantity, _local_8.object.effects);
+                        itemModified.update(omdmsg.object.position, omdmsg.object.objectUID, omdmsg.object.objectGID, omdmsg.object.quantity, omdmsg.object.effects);
                         switch (this.action)
                         {
                             case ACTION_TOFEED:
-                                KernelEventsManager.getInstance().processCallback(LivingObjectHookList.LivingObjectFeed, _local_9);
+                                KernelEventsManager.getInstance().processCallback(LivingObjectHookList.LivingObjectFeed, itemModified);
                                 break;
                             case ACTION_TODISSOCIATE:
-                                KernelEventsManager.getInstance().processCallback(LivingObjectHookList.LivingObjectDissociate, _local_9);
+                                KernelEventsManager.getInstance().processCallback(LivingObjectHookList.LivingObjectDissociate, itemModified);
                                 break;
                             case ACTION_TOSKIN:
                             default:
-                                KernelEventsManager.getInstance().processCallback(LivingObjectHookList.LivingObjectUpdate, _local_9);
+                                KernelEventsManager.getInstance().processCallback(LivingObjectHookList.LivingObjectUpdate, itemModified);
                         };
                     }
                     else
                     {
-                        if (_local_9.livingObjectId != 0)
+                        if (itemModified.livingObjectId != 0)
                         {
-                            KernelEventsManager.getInstance().processCallback(LivingObjectHookList.LivingObjectAssociate, _local_9);
+                            KernelEventsManager.getInstance().processCallback(LivingObjectHookList.LivingObjectAssociate, itemModified);
                         };
                     };
                     this.livingObjectUID = 0;
                     return (false);
                 case (msg is MimicryObjectFeedAndAssociateRequestAction):
-                    _local_10 = (msg as MimicryObjectFeedAndAssociateRequestAction);
-                    _local_11 = new MimicryObjectFeedAndAssociateRequestMessage();
-                    _local_11.initMimicryObjectFeedAndAssociateRequestMessage(_local_10.mimicryUID, _local_10.symbiotePos, _local_10.hostUID, _local_10.hostPos, _local_10.foodUID, _local_10.foodPos, _local_10.preview);
-                    ConnectionsHandler.getConnection().send(_local_11);
+                    mofaara = (msg as MimicryObjectFeedAndAssociateRequestAction);
+                    mofaarmsg = new MimicryObjectFeedAndAssociateRequestMessage();
+                    mofaarmsg.initMimicryObjectFeedAndAssociateRequestMessage(mofaara.mimicryUID, mofaara.symbiotePos, mofaara.hostUID, mofaara.hostPos, mofaara.foodUID, mofaara.foodPos, mofaara.preview);
+                    ConnectionsHandler.getConnection().send(mofaarmsg);
                     return (true);
                 case (msg is MimicryObjectPreviewMessage):
-                    _local_12 = (msg as MimicryObjectPreviewMessage);
-                    _local_13 = ItemWrapper.create(_local_12.result.position, _local_12.result.objectUID, _local_12.result.objectGID, _local_12.result.quantity, _local_12.result.effects, false);
-                    if (!(_local_13))
+                    mopmsg = (msg as MimicryObjectPreviewMessage);
+                    mimicryObject = ItemWrapper.create(mopmsg.result.position, mopmsg.result.objectUID, mopmsg.result.objectGID, mopmsg.result.quantity, mopmsg.result.effects, false);
+                    if (!mimicryObject)
                     {
                         return (false);
                     };
-                    KernelEventsManager.getInstance().processCallback(LivingObjectHookList.MimicryObjectPreview, _local_13, "");
+                    KernelEventsManager.getInstance().processCallback(LivingObjectHookList.MimicryObjectPreview, mimicryObject, "");
                     return (true);
                 case (msg is MimicryObjectErrorMessage):
-                    _local_14 = (msg as MimicryObjectErrorMessage);
-                    if (_local_14.reason == ObjectErrorEnum.SYMBIOTIC_OBJECT_ERROR)
+                    moemsg = (msg as MimicryObjectErrorMessage);
+                    if (moemsg.reason == ObjectErrorEnum.SYMBIOTIC_OBJECT_ERROR)
                     {
-                        switch (_local_14.errorCode)
+                        switch (moemsg.errorCode)
                         {
                             case -1:
                                 mimicryErrorText = I18n.getUiText("ui.error.state");
@@ -206,7 +220,7 @@
                             default:
                                 mimicryErrorText = I18n.getUiText("ui.common.unknownFail");
                         };
-                        if (_local_14.preview)
+                        if (moemsg.preview)
                         {
                             KernelEventsManager.getInstance().processCallback(LivingObjectHookList.MimicryObjectPreview, null, mimicryErrorText);
                         }
@@ -217,22 +231,22 @@
                     };
                     return (true);
                 case (msg is MimicryObjectAssociatedMessage):
-                    _local_15 = (msg as MimicryObjectAssociatedMessage);
-                    _local_16 = InventoryManager.getInstance().inventory.getItem(_local_15.hostUID);
-                    KernelEventsManager.getInstance().processCallback(ChatHookList.TextInformation, I18n.getUiText("ui.mimicry.success", [_local_16.name]), ChatActivableChannelsEnum.PSEUDO_CHANNEL_INFO, TimeManager.getInstance().getTimestamp());
-                    KernelEventsManager.getInstance().processCallback(LivingObjectHookList.MimicryObjectAssociated, _local_16);
+                    moamsg = (msg as MimicryObjectAssociatedMessage);
+                    itwm = InventoryManager.getInstance().inventory.getItem(moamsg.hostUID);
+                    KernelEventsManager.getInstance().processCallback(ChatHookList.TextInformation, I18n.getUiText("ui.mimicry.success", [itwm.name]), ChatActivableChannelsEnum.PSEUDO_CHANNEL_INFO, TimeManager.getInstance().getTimestamp());
+                    KernelEventsManager.getInstance().processCallback(LivingObjectHookList.MimicryObjectAssociated, itwm);
                     return (true);
                 case (msg is MimicryObjectEraseRequestAction):
-                    _local_17 = (msg as MimicryObjectEraseRequestAction);
-                    _local_18 = new MimicryObjectEraseRequestMessage();
-                    _local_18.initMimicryObjectEraseRequestMessage(_local_17.hostUID, _local_17.hostPos);
-                    ConnectionsHandler.getConnection().send(_local_18);
+                    moera = (msg as MimicryObjectEraseRequestAction);
+                    moermsg = new MimicryObjectEraseRequestMessage();
+                    moermsg.initMimicryObjectEraseRequestMessage(moera.hostUID, moera.hostPos);
+                    ConnectionsHandler.getConnection().send(moermsg);
                     return (true);
                 case (msg is WrapperObjectErrorMessage):
-                    _local_19 = (msg as WrapperObjectErrorMessage);
-                    if (_local_19.reason == ObjectErrorEnum.SYMBIOTIC_OBJECT_ERROR)
+                    woemsg = (msg as WrapperObjectErrorMessage);
+                    if (woemsg.reason == ObjectErrorEnum.SYMBIOTIC_OBJECT_ERROR)
                     {
-                        switch (_local_19.errorCode)
+                        switch (woemsg.errorCode)
                         {
                             case -1:
                                 wrapperErrorText = I18n.getUiText("ui.error.state");
@@ -258,6 +272,9 @@
                             case -19:
                                 wrapperErrorText = I18n.getUiText("ui.mimicry.error.alreadyWrapped");
                                 break;
+                            case -20:
+                                wrapperErrorText = I18n.getUiText("ui.mimicry.error.invalidCriterion");
+                                break;
                             case -3:
                             case -4:
                             case -6:
@@ -273,15 +290,15 @@
                     };
                     return (true);
                 case (msg is WrapperObjectAssociatedMessage):
-                    _local_20 = (msg as WrapperObjectAssociatedMessage);
-                    _local_21 = InventoryManager.getInstance().inventory.getItem(_local_20.hostUID);
-                    KernelEventsManager.getInstance().processCallback(ChatHookList.TextInformation, I18n.getUiText("ui.mimicry.success", [_local_21.name]), ChatActivableChannelsEnum.PSEUDO_CHANNEL_INFO, TimeManager.getInstance().getTimestamp());
+                    woamsg = (msg as WrapperObjectAssociatedMessage);
+                    itww = InventoryManager.getInstance().inventory.getItem(woamsg.hostUID);
+                    KernelEventsManager.getInstance().processCallback(ChatHookList.TextInformation, I18n.getUiText("ui.mimicry.success", [itww.name]), ChatActivableChannelsEnum.PSEUDO_CHANNEL_INFO, TimeManager.getInstance().getTimestamp());
                     return (true);
                 case (msg is WrapperObjectDissociateRequestAction):
-                    _local_22 = (msg as WrapperObjectDissociateRequestAction);
-                    _local_23 = new WrapperObjectDissociateRequestMessage();
-                    _local_23.initWrapperObjectDissociateRequestMessage(_local_22.hostUID, _local_22.hostPosition);
-                    ConnectionsHandler.getConnection().send(_local_23);
+                    wodra = (msg as WrapperObjectDissociateRequestAction);
+                    wodrmsg = new WrapperObjectDissociateRequestMessage();
+                    wodrmsg.initWrapperObjectDissociateRequestMessage(wodra.hostUID, wodra.hostPosition);
+                    ConnectionsHandler.getConnection().send(wodrmsg);
                     return (true);
             };
             return (false);
@@ -294,5 +311,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.frames
+} com.ankamagames.dofus.logic.game.common.frames
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.tiphon.types
+package com.ankamagames.tiphon.types
 {
     import com.ankamagames.tiphon.engine.BoneIndexManager;
     import com.ankamagames.jerakine.types.Swl;
@@ -28,5 +28,5 @@
 
 
     }
-}//package com.ankamagames.tiphon.types
+} com.ankamagames.tiphon.types
 

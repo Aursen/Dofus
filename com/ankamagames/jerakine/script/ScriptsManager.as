@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.script
+package com.ankamagames.jerakine.script
 {
     import flash.utils.Dictionary;
     import com.ankamagames.jerakine.interfaces.IScriptsPlayer;
@@ -9,19 +9,13 @@
         private static var _self:ScriptsManager;
         public static const LUA_PLAYER:String = "LUA_PLAYER";
 
-        private var _players:Dictionary;
-        private var _apis:Dictionary;
+        private var _players:Dictionary = new Dictionary();
+        private var _apis:Dictionary = new Dictionary();
 
-        public function ScriptsManager()
-        {
-            this._players = new Dictionary();
-            this._apis = new Dictionary();
-            super();
-        }
 
         public static function getInstance():ScriptsManager
         {
-            if (!(_self))
+            if (!_self)
             {
                 _self = new (ScriptsManager)();
             };
@@ -41,7 +35,7 @@
 
         public function addPlayerApi(pPlayer:IScriptsPlayer, pApiId:String, pApi:*):void
         {
-            if (!(this._apis[pPlayer]))
+            if (!this._apis[pPlayer])
             {
                 this._apis[pPlayer] = new Dictionary();
             };
@@ -49,7 +43,7 @@
             pPlayer.addApi(pApiId, pApi);
         }
 
-        public function getPlayerApi(pPlayer:IScriptsPlayer, pApiId:String)
+        public function getPlayerApi(pPlayer:IScriptsPlayer, pApiId:String):*
         {
             var api:*;
             if (this._apis[pPlayer])
@@ -71,5 +65,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.script
+} com.ankamagames.jerakine.script
 

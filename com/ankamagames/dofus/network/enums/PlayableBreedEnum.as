@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.enums
+package com.ankamagames.dofus.network.enums
 {
     public class PlayableBreedEnum 
     {
@@ -19,9 +19,11 @@
         public static const Roublard:int = 13;
         public static const Zobal:int = 14;
         public static const Steamer:int = 15;
-        public static const Eliatrope:int = 16;
+        public static const Eliotrope:int = 16;
+        public static const Huppermage:int = 17;
+        public static const Ouginak:int = 18;
 
 
     }
-}//package com.ankamagames.dofus.network.enums
+} com.ankamagames.dofus.network.enums
 

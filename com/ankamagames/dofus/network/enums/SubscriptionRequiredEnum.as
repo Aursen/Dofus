@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.enums
+package com.ankamagames.dofus.network.enums
 {
     public class SubscriptionRequiredEnum 
     {
@@ -9,8 +9,9 @@
         public static const LIMIT_ON_MAP:uint = 3;
         public static const LIMIT_ON_ITEM:uint = 4;
         public static const LIMIT_ON_VENDOR:uint = 5;
+        public static const LIMIT_ON_HAVENBAG:uint = 6;
 
 
     }
-}//package com.ankamagames.dofus.network.enums
+} com.ankamagames.dofus.network.enums
 

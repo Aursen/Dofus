@@ -1,19 +1,18 @@
-﻿package com.ankamagames.berilia.types.data
+package com.ankamagames.berilia.types.data
 {
     import flash.text.StyleSheet;
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
-    import com.ankamagames.jerakine.managers.LangManager;
-    import com.ankamagames.berilia.managers.CssManager;
-    import com.ankamagames.jerakine.types.Callback;
-    import com.ankamagames.berilia.types.event.CssEvent;
-    import flashx.textLayout.formats.TextLayoutFormat;
     import com.ankamagames.jerakine.managers.FontManager;
+    import flash.text.TextFormat;
+    import flashx.textLayout.formats.TextLayoutFormat;
     import flash.text.AntiAliasType;
     import flash.text.engine.RenderingMode;
     import flash.text.engine.FontLookup;
     import flash.text.engine.CFFHinting;
+    import flash.utils.Dictionary;
+    import com.ankamagames.berilia.types.event.CssEvent;
 
     public class ExtendedStyleSheet extends StyleSheet 
     {
@@ -22,14 +21,14 @@
         private static const CSS_INHERITANCE_KEYWORD:String = "extends";
         private static const CSS_FILES_KEYWORD:String = "files";
 
-        private var _inherit:Array;
-        private var _inherited:uint;
+        private var _inherit:Array = new Array();
+        private var _inherited:uint = 0;
         private var _url:String;
+        private var _content:String;
+        private var _fontStyle:String;
 
         public function ExtendedStyleSheet(url:String)
         {
-            this._inherit = new Array();
-            this._inherited = 0;
             this._url = url;
             super();
         }
@@ -41,7 +40,7 @@
 
         public function get ready():Boolean
         {
-            return ((this._inherited == this._inherit.length));
+            return (this._inherited == this._inherit.length);
         }
 
         public function get url():String
@@ -51,43 +50,19 @@
 
         override public function parseCSS(content:String):void
         {
-            var inheritance:Object;
-            var regFile:RegExp;
-            var match:Array;
-            var file:String;
-            var i:uint;
+            this._fontStyle = FontManager.getInstance().activeType.toLowerCase();
+            this._content = content;
             super.parseCSS(content);
-            var find:int = styleNames.indexOf(CSS_INHERITANCE_KEYWORD);
-            if (find != -1)
+            this.update();
+        }
+
+        override public function transform(formatObject:Object):TextFormat
+        {
+            if (this._fontStyle != FontManager.getInstance().activeType.toLowerCase())
             {
-                inheritance = getStyle(styleNames[find]);
-                if (inheritance[CSS_FILES_KEYWORD])
-                {
-                    regFile = /url\('?([^']*)'\)?/g;
-                    match = String(inheritance[CSS_FILES_KEYWORD]).match(regFile);
-                    i = 0;
-                    while (i < match.length)
-                    {
-                        file = String(match[i]).replace(regFile, "$1");
-                        if (-1 == this._inherit.indexOf(file))
-                        {
-                            file = LangManager.getInstance().replaceKey(file);
-                            CssManager.getInstance().askCss(file, new Callback(this.makeMerge, file));
-                            this._inherit.push(file);
-                        };
-                        i++;
-                    };
-                }
-                else
-                {
-                    _log.warn((("property '" + CSS_FILES_KEYWORD) + "' wasn't found (flash css doesn't support space between property name and colon, propertyName:value)"));
-                    dispatchEvent(new CssEvent(CssEvent.CSS_PARSED, false, false, this));
-                };
-            }
-            else
-            {
-                dispatchEvent(new CssEvent(CssEvent.CSS_PARSED, false, false, this));
+                this.parseCSS(this._content);
             };
+            return (super.transform(formatObject));
         }
 
         public function merge(stylesheet:ExtendedStyleSheet, replace:Boolean=false):void
@@ -106,7 +81,7 @@
                     {
                         for (property in newDef)
                         {
-                            if ((((localDef[property] == null)) || (replace)))
+                            if (((localDef[property] == null) || (replace)))
                             {
                                 localDef[property] = newDef[property];
                             };
@@ -146,7 +121,7 @@
             if (formatObject["fontFamily"])
             {
                 cssFont = formatObject["fontFamily"];
-                if (FontManager.getInstance().getFontClassRenderingMode(cssFont) == AntiAliasType.ADVANCED)
+                if (FontManager.getInstance().getFontInfo(cssFont).antialiasingType == AntiAliasType.ADVANCED)
                 {
                     format.renderingMode = RenderingMode.CFF;
                     format.fontLookup = FontLookup.EMBEDDED_CFF;
@@ -185,17 +160,88 @@
             return (format);
         }
 
-        private function makeMerge(sUrl:String):void
+        private function update():void
         {
-            this.merge(CssManager.getInstance().getCss(sUrl));
-            this._inherited++;
-            if (this.ready)
+            var finalName:String;
+            var name:String;
+            var names:Array;
+            var fontTypeOverried:Boolean;
+            var computedStyle:Object;
+            var done:Boolean;
+            var subStyleName:String;
+            var subStyle:Object;
+            var propertyName:String;
+            var proceedStyle:Dictionary = new Dictionary();
+            var blocked:Boolean;
+            var oneMoreTime:Boolean = true;
+            while (((!(blocked)) && (oneMoreTime)))
             {
-                dispatchEvent(new CssEvent(CssEvent.CSS_PARSED, false, false, this));
+                blocked = true;
+                oneMoreTime = false;
+                for each (name in styleNames)
+                {
+                    names = name.split("_");
+                    finalName = names[0];
+                    if (!proceedStyle[finalName])
+                    {
+                        fontTypeOverried = (getStyle(((finalName + "-") + this._fontStyle)) == null);
+                        if (((names.length > 1) || (fontTypeOverried)))
+                        {
+                            names.shift();
+                            names.reverse();
+                            names.push(name);
+                            if (fontTypeOverried)
+                            {
+                                names.push(((finalName + "-") + this._fontStyle));
+                            };
+                            computedStyle = {};
+                            done = true;
+                            for each (subStyleName in names)
+                            {
+                                if (((!(subStyleName == name)) && (proceedStyle[subStyleName] == null)))
+                                {
+                                    done = false;
+                                    break;
+                                };
+                                subStyle = ((proceedStyle[subStyleName]) ? proceedStyle[subStyleName] : getStyle(subStyleName));
+                                if (subStyle != null)
+                                {
+                                    for (propertyName in subStyle)
+                                    {
+                                        if (subStyle[propertyName] != null)
+                                        {
+                                            computedStyle[propertyName] = subStyle[propertyName];
+                                        };
+                                    };
+                                };
+                            };
+                            if (done)
+                            {
+                                proceedStyle[finalName] = computedStyle;
+                                blocked = false;
+                            }
+                            else
+                            {
+                                oneMoreTime = true;
+                            };
+                        }
+                        else
+                        {
+                            blocked = false;
+                            proceedStyle[finalName] = getStyle(finalName);
+                        };
+                    };
+                };
             };
+            clear();
+            for (name in proceedStyle)
+            {
+                setStyle(name, proceedStyle[name]);
+            };
+            dispatchEvent(new CssEvent(CssEvent.CSS_PARSED, false, false, this));
         }
 
 
     }
-}//package com.ankamagames.berilia.types.data
+} com.ankamagames.berilia.types.data
 

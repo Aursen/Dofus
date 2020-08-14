@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.internalDatacenter.people
+package com.ankamagames.dofus.internalDatacenter.people
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.dofus.network.types.game.friend.FriendSpouseInformations;
@@ -12,17 +12,18 @@
 
         private var _item:FriendSpouseInformations;
         public var name:String;
-        public var id:uint;
+        public var id:Number;
         public var entityLook:TiphonEntityLook;
         public var level:int;
         public var breed:uint;
         public var sex:int;
         public var online:Boolean = false;
-        public var mapId:uint;
+        public var mapId:Number;
         public var subareaId:uint;
         public var inFight:Boolean;
         public var followSpouse:Boolean;
         public var guildName:String;
+        public var guildId:uint;
         public var alignmentSide:int;
 
         public function SpouseWrapper(o:FriendSpouseInformations)
@@ -34,6 +35,7 @@
             this.level = o.spouseLevel;
             this.breed = o.breed;
             this.sex = o.sex;
+            this.guildId = o.guildInfo.guildId;
             if (o.guildInfo.guildName == "#NONAME#")
             {
                 this.guildName = I18n.getUiText("ui.guild.noName");
@@ -54,5 +56,5 @@
         }
 
     }
-}//package com.ankamagames.dofus.internalDatacenter.people
+} com.ankamagames.dofus.internalDatacenter.people
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.shield
+package com.ankamagames.dofus.logic.shield
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
@@ -12,17 +12,22 @@
     import com.ankamagames.berilia.managers.KernelEventsManager;
     import com.ankamagames.dofus.misc.lists.HookList;
     import com.ankamagames.dofus.network.types.secure.TrustCertificate;
-    import com.ankamagames.dofus.logic.connection.managers.AuthentificationManager;
+    import com.ankamagames.dofus.misc.utils.HaapiKeyManager;
+    import com.ankamagames.dofus.misc.utils.GameID;
     import com.ankamagames.dofus.BuildInfos;
     import com.ankamagames.dofus.network.enums.BuildTypeEnum;
     import com.ankamagames.dofus.types.events.RpcEvent;
+    import com.ankamagames.dofus.logic.connection.managers.AuthentificationManager;
     import com.ankamagames.jerakine.data.I18n;
     import flash.filesystem.File;
+    import com.ankamagames.jerakine.utils.system.SystemManager;
+    import com.ankamagames.jerakine.enum.OperatingSystem;
     import com.ankamagames.jerakine.types.CustomSharedObject;
     import flash.filesystem.FileStream;
     import by.blooddy.crypto.MD5;
     import flash.filesystem.FileMode;
     import com.ankamagames.jerakine.managers.ErrorManager;
+    import flash.system.Capabilities;
 
     public class SecureModeManager 
     {
@@ -41,20 +46,16 @@
         private static const RPC_METHOD_MIGRATE:String = "Migrate";
         private static var _self:SecureModeManager;
 
-        private var _timeout:Timer;
+        private var _timeout:Timer = new Timer(30000);
         private var _active:Boolean;
         private var _computerName:String;
-        private var _methodsCallback:Dictionary;
+        private var _methodsCallback:Dictionary = new Dictionary();
         private var _hasV1Certif:Boolean;
         private var _rpcManager:RpcServiceManager;
-        public var shieldLevel:uint;
+        public var shieldLevel:uint = StoreDataManager.getInstance().getSetData(Constants.DATASTORE_COMPUTER_OPTIONS, "shieldLevel", ShieldSecureLevel.MEDIUM);
 
         public function SecureModeManager()
         {
-            this._timeout = new Timer(30000);
-            this._methodsCallback = new Dictionary();
-            this.shieldLevel = StoreDataManager.getInstance().getSetData(Constants.DATASTORE_COMPUTER_OPTIONS, "shieldLevel", ShieldSecureLevel.MEDIUM);
-            super();
             if (_self)
             {
                 throw (new SingletonError());
@@ -64,7 +65,7 @@
 
         public static function getInstance():SecureModeManager
         {
-            if (!(_self))
+            if (!_self)
             {
                 _self = new (SecureModeManager)();
             };
@@ -79,6 +80,7 @@
 
         public function set active(b:Boolean):void
         {
+            _log.debug(("SECURE MODE IS ACTIVE : " + b));
             this._active = b;
             KernelEventsManager.getInstance().processCallback(HookList.SecureModeChange, b);
         }
@@ -100,45 +102,47 @@
 
         public function askCode(callback:Function):void
         {
-            this._methodsCallback[RPC_METHOD_SECURITY_CODE] = callback;
-            this._rpcManager.callMethod(RPC_METHOD_SECURITY_CODE, [this.getUsername(), AuthentificationManager.getInstance().ankamaPortalKey, 1]);
+            _log.debug("ASK CODE");
+            HaapiKeyManager.getInstance().callWithApiKey(function (apiKey:String):void
+            {
+                _log.debug("ASK CODE CALLBACK");
+                _methodsCallback[RPC_METHOD_SECURITY_CODE] = callback;
+                _rpcManager.callMethod(RPC_METHOD_SECURITY_CODE, [getUsername(), apiKey, GameID.current]);
+            });
         }
 
         public function sendCode(code:String, callback:Function):void
         {
-            var fooCertif:ShieldCertifcate = new ShieldCertifcate();
-            fooCertif.secureLevel = this.shieldLevel;
-            this._methodsCallback[RPC_METHOD_VALIDATE_CODE] = callback;
-            this._rpcManager.callMethod(RPC_METHOD_VALIDATE_CODE, [this.getUsername(), AuthentificationManager.getInstance().ankamaPortalKey, 1, code.toUpperCase(), fooCertif.hash, fooCertif.reverseHash, ((this._computerName) ? true : (false)), ((this._computerName) ? this._computerName : "")]);
+            _log.debug(("SEND CODE " + code));
+            HaapiKeyManager.getInstance().callWithApiKey(function (apiKey:String):void
+            {
+                _methodsCallback[RPC_METHOD_VALIDATE_CODE] = callback;
+                var fooCertif:ShieldCertifcate = new ShieldCertifcate();
+                fooCertif.secureLevel = shieldLevel;
+                _rpcManager.callMethod(RPC_METHOD_VALIDATE_CODE, [getUsername(), apiKey, GameID.current, code.toUpperCase(), fooCertif.hash, fooCertif.reverseHash, ((_computerName) ? true : false), ((_computerName) ? _computerName : "")]);
+            });
         }
 
         private function initRPC():void
         {
-            if ((((((BuildInfos.BUILD_TYPE == BuildTypeEnum.DEBUG)) || ((BuildInfos.BUILD_TYPE == BuildTypeEnum.INTERNAL)))) || ((BuildInfos.BUILD_TYPE == BuildTypeEnum.TESTING))))
+            if (((BuildInfos.BUILD_TYPE == BuildTypeEnum.DEBUG) || (BuildInfos.BUILD_TYPE == BuildTypeEnum.INTERNAL)))
             {
-                RPC_URL = "http://api.ankama.lan/ankama/shield.json";
+                RPC_URL = "https://api.ankama.tst/ankama/shield.json";
             }
             else
             {
-                RPC_URL = "https://api.ankama.com/ankama/shield.json";
-                goto _label_2;
-                while (this._rpcManager.addEventListener(RpcEvent.EVENT_ERROR, this.onRpcData), true)
+                if (BuildInfos.BUILD_TYPE == BuildTypeEnum.TESTING)
                 {
-                    return;
-                    
-                _label_1: 
-                    this._rpcManager.addEventListener(RpcEvent.EVENT_DATA, this.onRpcData);
-                    continue;
-                    var _local_1 = _local_1;
+                    RPC_URL = "https://api.ankama.lan/ankama/shield.json";
+                }
+                else
+                {
+                    RPC_URL = "https://api.ankama.com/ankama/shield.json";
                 };
-                var _local_0 = this;
             };
-            
-        _label_2: 
             this._rpcManager = new RpcServiceManager(RPC_URL, "json");
-            goto _label_1;
-            var _local_2 = _local_2;
-            return;
+            this._rpcManager.addEventListener(RpcEvent.EVENT_DATA, this.onRpcData);
+            this._rpcManager.addEventListener(RpcEvent.EVENT_ERROR, this.onRpcData);
         }
 
         private function getUsername():String
@@ -149,308 +153,110 @@
         private function parseRpcValidateResponse(response:Object, method:String):Object
         {
             var success:Boolean;
-            while (true)
-            {
-                goto _label_1;
-            };
-            var _local_7 = _local_7;
-            
-        _label_1: 
             var result:Object = new Object();
-            for (;;)
-            {
-                result.fatal = false;
-                while (true)
-                {
-                    result.retry = false;
-                    //unresolved jump
-                };
-                result.error = response.error;
-                continue;
-                
-            _label_2: 
-                result.text = "";
-                goto _label_3;
-            };
-            
-        _label_3: 
+            result.error = response.error;
+            result.fatal = false;
+            result.retry = false;
+            result.text = "";
             switch (response.error)
             {
                 case VALIDATECODE_CODEEXPIRE:
-                    goto _label_6;
-                    
-                _label_4: 
-                    result.fatal = true;
-                    goto _label_7;
-                    
-                _label_5: 
-                    goto _label_4;
-                    
-                _label_6: 
                     result.text = I18n.getUiText("ui.secureMode.error.checkCode.expire");
-                    goto _label_5;
-                    
-                _label_7: 
-                    goto _label_26;
+                    result.fatal = true;
+                    break;
                 case VALIDATECODE_CODEBADCODE:
-                    goto _label_10;
-                    
-                _label_8: 
-                    result.retry = true;
-                    goto _label_11;
-                    
-                _label_9: 
                     result.text = I18n.getUiText("ui.secureMode.error.checkCode.403");
-                    goto _label_8;
-                    var _local_6 = _local_6;
-                    
-                _label_10: 
-                    goto _label_9;
-                    
-                _label_11: 
-                    goto _label_26;
+                    result.retry = true;
+                    break;
                 case VALIDATECODE_CODENOTFOUND:
                     result.text = (I18n.getUiText("ui.secureMode.error.checkCode.404") + " (1)");
-                    while (true)
-                    {
-                        result.fatal = true;
-                        goto _label_12;
-                    };
-                    
-                _label_12: 
-                    goto _label_26;
+                    result.fatal = true;
+                    break;
                 case VALIDATECODE_SECURITY:
-                    while (true)
-                    {
-                        result.text = I18n.getUiText("ui.secureMode.error.checkCode.security");
-                        while (true)
-                        {
-                            result.fatal = true;
-                            goto _label_13;
-                        };
-                    };
-                    var _local_0 = this;
-                    
-                _label_13: 
-                    goto _label_26;
+                    result.text = I18n.getUiText("ui.secureMode.error.checkCode.security");
+                    result.fatal = true;
+                    break;
                 case VALIDATECODE_TOOMANYCERTIFICATE:
-                    goto _label_16;
-                    
-                _label_14: 
-                    result.fatal = true;
-                    goto _label_17;
-                    
-                _label_15: 
-                    goto _label_14;
-                    
-                _label_16: 
                     result.text = I18n.getUiText("ui.secureMode.error.checkCode.413");
-                    goto _label_15;
-                    _local_0 = this;
-                    
-                _label_17: 
-                    goto _label_26;
+                    result.fatal = true;
+                    break;
                 case VALIDATECODE_NOTAVAILABLE:
-                    goto _label_20;
-                    
-                _label_18: 
-                    goto _label_21;
-                    
-                _label_19: 
-                    result.fatal = true;
-                    goto _label_18;
-                    _local_0 = this;
-                    
-                _label_20: 
                     result.text = I18n.getUiText("ui.secureMode.error.checkCode.202");
-                    goto _label_19;
-                    
-                _label_21: 
-                    goto _label_26;
-                case ACCOUNT_AUTHENTIFICATION_FAILED:
-                    while (true)
-                    {
-                        result.text = (I18n.getUiText("ui.secureMode.error.checkCode.404") + " (2)");
-                        goto _label_24;
-                    };
-                    
-                _label_22: 
-                    goto _label_25;
-                    
-                _label_23: 
                     result.fatal = true;
-                    goto _label_22;
-                    
-                _label_24: 
-                    goto _label_23;
-                    
-                _label_25: 
-                    goto _label_26;
+                    break;
+                case ACCOUNT_AUTHENTIFICATION_FAILED:
+                    result.text = (I18n.getUiText("ui.secureMode.error.checkCode.404") + " (2)");
+                    result.fatal = true;
+                    break;
                 default:
                     result.text = ((response.error) ? response.error : I18n.getUiText("ui.secureMode.error.default"));
                     result.fatal = true;
             };
-            
-        _label_26: 
             if (((response.certificate) && (response.id)))
             {
-                while ((success = this.addCertificate(response.id, response.certificate, this.shieldLevel)), true)
-                {
-                    goto _label_27;
-                };
-                var _local_5 = _local_5;
-                
-            _label_27: 
-                if (!(success))
+                success = this.addCertificate(response.id, response.certificate);
+                if (!success)
                 {
                     result.text = I18n.getUiText("ui.secureMode.error.checkCode.202.fatal");
-                    while ((result.fatal = true), true)
-                    {
-                        goto _label_28;
-                    };
+                    result.fatal = true;
                 };
             };
-            
-        _label_28: 
             return (result);
         }
 
         private function parseRpcASkCodeResponse(response:Object, method:String):Object
         {
-            while (true)
-            {
-                goto _label_1;
-            };
-            var _local_5 = _local_5;
-            
-        _label_1: 
+            _log.debug("PARSE RPC ASK CODE RESPONSE");
             var result:Object = new Object();
-            for (;;)
+            result.error = (!(result.error));
+            result.fatal = false;
+            result.retry = false;
+            result.text = "";
+            if (!response.error)
             {
-                result.retry = false;
-                goto _label_6;
-                
-            _label_2: 
-                goto _label_7;
-                
-            _label_3: 
-                result.fatal = false;
-                continue;
-                
-            _label_4: 
-                result.text = "";
-                goto _label_2;
-                var _local_6 = _local_6;
-                
-            _label_5: 
-                goto _label_3;
-                var _local_0 = this;
-                result.error = !(result.error);
-                goto _label_5;
-                
-            _label_6: 
-                goto _label_4;
-            };
-            
-        _label_7: 
-            if (!(response.error))
-            {
-                while ((result.domain = response.domain), true)
-                {
-                    goto _label_8;
-                };
-                
-            _label_8: 
+                _log.debug("PARSE RPC ASK CODE RESPONSE :: SUCCESS");
+                result.domain = response.domain;
                 result.error = false;
             }
             else
             {
+                _log.debug(("PARSE RPC ASK CODE RESPONSE :: ERROR : " + response.error));
                 switch (response.error)
                 {
                     case ACCOUNT_AUTHENTIFICATION_FAILED:
-                        _loop_1:
-                        for (;;)
-                        {
-                            result.fatal = true;
-                            while (goto _label_10, true)
-                            {
-                                
-                            _label_9: 
-                                result.text = (I18n.getUiText("ui.secureMode.error.checkCode.404") + " (3)");
-                                continue _loop_1;
-                            };
-                        };
-                        _local_0 = this;
-                        
-                    _label_10: 
+                        result.text = (I18n.getUiText("ui.secureMode.error.checkCode.404") + " (3)");
+                        result.fatal = true;
                         break;
                     case VALIDATECODE_CODEEXPIRE:
-                        while ((result.text = I18n.getUiText("ui.secureMode.error.checkCode.expire")), (result.fatal = true), true)
-                        {
-                            goto _label_11;
-                        };
-                        _local_0 = this;
-                        
-                    _label_11: 
+                        result.text = I18n.getUiText("ui.secureMode.error.checkCode.expire");
+                        result.fatal = true;
                         break;
                     default:
-                        for (;;continue, (method = method))
-                        {
-                            result.text = I18n.getUiText("ui.secureMode.error.default");
-                            continue;
-                            
-                        _label_12: 
-                            //unresolved jump
-                            result.fatal = true;
-                            goto _label_12;
-                        };
-                        var _local_4 = _local_4;
+                        result.text = I18n.getUiText("ui.secureMode.error.default");
+                        result.fatal = true;
                 };
             };
             return (result);
         }
 
-        private function getCertifFolder(version:uint, useCustomSharedObjectFolder:Boolean=false):File
+        private function getCertifFolder(version:uint, useCustomSharedObjectFolder:Boolean=false, useMacApplicationDirectory:Boolean=false):File
         {
             var f:File;
-            var tmp:Array;
             var parentDir:String;
-            while (true)
+            var tmp:Array;
+            if (!useCustomSharedObjectFolder)
             {
-                goto _label_1;
-            };
-            var _local_7 = _local_7;
-            
-        _label_1: 
-            if (!(useCustomSharedObjectFolder))
-            {
-                goto _label_5;
-                
-            _label_2: 
-                goto _label_6;
-                
-            _label_3: 
-                tmp.pop();
-                goto _label_2;
-                var _local_6 = _local_6;
-                while (tmp.pop(), true)
+                if (((SystemManager.getSingleton().os == OperatingSystem.MAC_OS) && (useMacApplicationDirectory)))
                 {
-                    goto _label_3;
-                    
-                _label_4: 
+                    parentDir = File.userDirectory.resolvePath("Library/Preferences").nativePath;
+                }
+                else
+                {
                     tmp = File.applicationStorageDirectory.nativePath.split(File.separator);
-                    continue;
+                    tmp.pop();
+                    tmp.pop();
+                    parentDir = tmp.join(File.separator);
                 };
-                
-            _label_5: 
-                goto _label_7;
-                
-            _label_6: 
-                parentDir = tmp.join(File.separator);
-                //unresolved jump
-                
-            _label_7: 
-                goto _label_4;
             }
             else
             {
@@ -458,144 +264,62 @@
             };
             if (version == 1)
             {
-                while ((f = new File(((parentDir + File.separator) + "AnkamaCertificates/"))), true)
-                {
-                    goto _label_8;
-                };
+                f = new File(((parentDir + File.separator) + "AnkamaCertificates/"));
             };
-            
-        _label_8: 
             if (version == 2)
             {
                 f = new File(((parentDir + File.separator) + "AnkamaCertificates/v2-RELEASE"));
-                goto _label_10;
-                
-            _label_9: 
-                goto _label_11;
             };
-            
-        _label_10: 
             f.createDirectory();
-            goto _label_9;
-            
-        _label_11: 
             return (f);
         }
 
-        private function addCertificate(id:uint, content:String, secureLevel:uint=2):Boolean
+        private function addCertificate(id:uint, content:String):Boolean
         {
-            //unresolved jump
-            
-        _label_1: 
-            cert.version = 3;
-            for (;;goto _label_1, (content = content), goto _label_3, (var _local_5 = _local_5), goto _label_10, var cert:ShieldCertifcate, continue, (var _local_7 = _local_7))
-            {
-                cert.content = content;
-                goto _label_4;
-                
-            _label_2: 
-                secureLevel = secureLevel;
-                goto _label_11;
-                
-            _label_3: 
-                content = content;
-                goto _label_2;
-                var addCertificate$0 = addCertificate$0;
-                
-            _label_4: 
-                goto _label_12;
-                
-            _label_5: 
-                cert.id = id;
-                continue;
-                
-            _label_6: 
-                goto _label_13;
-                
-            _label_7: 
-                goto _label_5;
-                
-            _label_8: 
-                cert = new ShieldCertifcate();
-                goto _label_7;
-                var f:File;
-                goto _label_9;
-            };
-            var _local_0 = this;
-            
-        _label_9: 
+            var cert:ShieldCertifcate;
+            var f:File;
             var fs:FileStream;
-            //unresolved jump
-            
-        _label_10: 
-            goto _label_8;
-            var _local_6 = _local_6;
-            
-        _label_11: 
-            //unresolved jump
-            
-        _label_12: 
-            cert.secureLevel = secureLevel;
-            goto _label_6;
-            
-        _label_13: 
-            f = _local_0.getCertifFolder(2);
-            while ((f = f.resolvePath(MD5.hash(_local_0.getUsername()))), goto _label_15, goto _label_16, fs.close(), //unresolved jump
-, (id = id), (fs = new FileStream()), true)
+            _log.debug("ADD CERTIFICATE");
+            cert = new ShieldCertifcate();
+            cert.id = id;
+            cert.content = content;
+            cert.secureLevel = ShieldSecureLevel.MEDIUM;
+            try
             {
-                goto _label_14;
-            };
-            while (fs.writeBytes(cert.serialize()), true)
-            {
-                //unresolved jump
-                
-            _label_14: 
+                _log.debug("ADD CERTIFICATE :: TRY");
+                f = this.getCertifFolder(2);
+                f = f.resolvePath(MD5.hash(this.getUsername()));
+                fs = new FileStream();
                 fs.open(f, FileMode.WRITE);
-                continue;
-            };
-            
-        _label_15: 
-            //unresolved jump
-            
-        _label_16: 
-            return (true);
-            e = e;
-            f = getCertifFolder(2, true);
-            //unresolved jump
-            
-        _label_17: 
-            goto _label_23;
-            
-        _label_18: 
-            fs.close();
-            goto _label_17;
-            
-        _label_19: 
-            fs = new FileStream();
-            goto _label_22;
-            
-        _label_20: 
-            goto _label_18;
-            
-        _label_21: 
-            while (fs.writeBytes(cert.serialize()), goto _label_20, (secureLevel = secureLevel), fs.open(f, FileMode.WRITE), goto _label_21, (var _local_8 = _local_8), (f = f.resolvePath(MD5.hash(getUsername()))), true)
+                fs.writeBytes(cert.serialize());
+                fs.close();
+                return (true);
+            }
+            catch(e:Error)
             {
-                goto _label_19;
+                try
+                {
+                    _log.debug("ADD CERTIFICATE :: FALLBACK");
+                    f = getCertifFolder(2, true);
+                    f = f.resolvePath(MD5.hash(getUsername()));
+                    fs = new FileStream();
+                    fs.open(f, FileMode.WRITE);
+                    fs.writeBytes(cert.serialize());
+                    fs.close();
+                    return (true);
+                }
+                catch(e:Error)
+                {
+                    _log.debug("ADD CERTIFICATE :: ERROR");
+                    ErrorManager.addError(("Error writing certificate file at " + f.nativePath), e);
+                };
             };
-            
-        _label_22: 
-            //unresolved jump
-            
-        _label_23: 
-            return (true);
-            e = e;
-            ErrorManager.addError(("Error writing certificate file at " + f.nativePath), id);
             return (false);
         }
 
         public function checkMigrate():void
         {
-            if (!(this._hasV1Certif))
+            if (!this._hasV1Certif)
             {
                 return;
             };
@@ -605,42 +329,82 @@
 
         private function getCertificateFile():File
         {
-            while (var userName:String, var f:File, true)
-            {
-                goto _label_1;
-            };
-            var _local_2 = _local_2;
+            var found:Boolean;
+            var userName:String;
+            var fileName:String;
+            var f:File;
             try
             {
-                
-            _label_1: 
+                found = false;
                 userName = this.getUsername();
-                while ((f = this.getCertifFolder(2).resolvePath(MD5.hash(userName))), true)
+                fileName = MD5.hash(userName);
+                f = this.getCertifFolder(2).resolvePath(fileName);
+                if (!f.exists)
                 {
-                    goto _label_2;
+                    f = this.getCertifFolder(2, false, true).resolvePath(fileName);
+                }
+                else
+                {
+                    found = true;
+                    _log.debug(("CERTIF FOUND IN V2-RELEASE : " + f.nativePath));
                 };
-                
-            _label_2: 
-                if (!(f.exists))
+                if (!found)
                 {
-                    while ((f = this.getCertifFolder(1).resolvePath(MD5.hash(userName))), true)
+                    if (!f.exists)
                     {
-                        goto _label_3;
-                    };
-                    var _local_0 = this;
-                };
-                
-            _label_3: 
-                if (!(f.exists))
-                {
-                    while ((f = this.getCertifFolder(2, true).resolvePath(MD5.hash(userName))), true)
+                        f = this.getCertifFolder(1).resolvePath(fileName);
+                    }
+                    else
                     {
-                        goto _label_4;
+                        found = true;
+                        _log.debug(("CERTIF FOUND IN MAC APPLICATION DIRECTORY" + f.nativePath));
                     };
-                    var _local_4 = _local_4;
                 };
-                
-            _label_4: 
+                if (!found)
+                {
+                    if (!f.exists)
+                    {
+                        f = this.getCertifFolder(1, false, true).resolvePath(fileName);
+                    }
+                    else
+                    {
+                        found = true;
+                        _log.debug(("CERTIF FOUND IN V1" + f.nativePath));
+                    };
+                };
+                if (!found)
+                {
+                    if (!f.exists)
+                    {
+                        f = this.getCertifFolder(2, true).resolvePath(fileName);
+                    }
+                    else
+                    {
+                        found = true;
+                        _log.debug(("CERTIF FOUND IN V1 ON MAC" + f.nativePath));
+                    };
+                };
+                if (!found)
+                {
+                    if (!f.exists)
+                    {
+                        f = this.getCertifFolder(1, true).resolvePath(fileName);
+                    }
+                    else
+                    {
+                        found = true;
+                        _log.debug(("CERTIF FOUND IN CUSTOM SHARED OBJECTS V2" + f.nativePath));
+                    };
+                };
+                if (((!(found)) && (f.exists)))
+                {
+                    found = true;
+                    _log.debug(("CERTIF FOUND IN CUSTOM SHARED OBJECTS V1" + f.nativePath));
+                };
+                if (!found)
+                {
+                    _log.debug("CERTIF NOT FOUND");
+                };
                 if (f.exists)
                 {
                     return (f);
@@ -658,6 +422,7 @@
             var f:File;
             var fs:FileStream;
             var certif:ShieldCertifcate;
+            _log.debug("TRY TO RETREIVE CERTIFICATE");
             try
             {
                 this._hasV1Certif = false;
@@ -668,11 +433,22 @@
                     fs.open(f, FileMode.READ);
                     certif = ShieldCertifcate.fromRaw(fs);
                     fs.close();
+                    if (certif.id == 0)
+                    {
+                        _log.error("Certificat invalide (id=0)");
+                        return (null);
+                    };
+                    if (((certif.version < 4) && ((Capabilities.os == "Windows 10") || (!(Capabilities.os.indexOf("Mac OS") == -1)))))
+                    {
+                        this._hasV1Certif = true;
+                    };
+                    _log.debug("RETREIVE CERTIFICATE :: RETRIEVED");
                     return (certif.toNetwork());
                 };
             }
             catch(e:Error)
             {
+                _log.debug(("RETREIVE CERTIFICATE :: ERROR " + e));
                 ErrorManager.addError("Impossible de lire le fichier de certificat.", e);
             };
             return (null);
@@ -680,9 +456,11 @@
 
         private function onRpcData(e:RpcEvent):void
         {
-            if ((((e.type == RpcEvent.EVENT_ERROR)) && (!(e.result))))
+            _log.debug("ON RPC DATA");
+            if (((e.type == RpcEvent.EVENT_ERROR) && (!(e.result))))
             {
-                var _local_2 = this._methodsCallback;
+                _log.debug("ON RPC DATA :: EVENT_ERROR");
+                var _local_2:* = this._methodsCallback;
                 (_local_2[e.method]({
                     "error":true,
                     "fatal":true,
@@ -690,6 +468,7 @@
                 }));
                 return;
             };
+            _log.debug(("ON RPC DATA :: METHOD : " + e.method));
             if (e.method == RPC_METHOD_SECURITY_CODE)
             {
                 _local_2 = this._methodsCallback;
@@ -711,53 +490,26 @@
                     _log.error(("Impossible de migrer le certificat : " + e.result.error));
                 };
             };
-            return;
         }
 
         private function migrate(iCertificateId:uint, oldCertif:String):void
         {
-            while (true)
+            HaapiKeyManager.getInstance().callWithApiKey(function (apiKey:String):void
             {
-                goto _label_1;
-            };
-            var fooCertif = fooCertif;
-            
-        _label_1: 
-            fooCertif = new ShieldCertifcate();
-            goto _label_4;
-            
-        _label_2: 
-            return;
-            
-        _label_3: 
-            this._rpcManager.callMethod(RPC_METHOD_MIGRATE, [this.getUsername(), AuthentificationManager.getInstance().ankamaPortalKey, 1, 2, iCertificateId, oldCertif, fooCertif.hash, fooCertif.reverseHash]);
-            goto _label_2;
-            var _local_4 = _local_4;
-            
-        _label_4: 
-            fooCertif.secureLevel = this.shieldLevel;
-            goto _label_3;
-            return;
+                var fooCertif:ShieldCertifcate = new ShieldCertifcate();
+                fooCertif.secureLevel = shieldLevel;
+                _rpcManager.callMethod(RPC_METHOD_MIGRATE, [getUsername(), apiKey, GameID.current, 4, iCertificateId, oldCertif, fooCertif.hash, fooCertif.reverseHash]);
+            });
         }
 
         private function migrationSuccess(result:Object):void
         {
+            _log.debug("MIGRATION SUCCESS");
             var f:File = this.getCertificateFile();
-            if (f.exists)
-            {
-                goto _label_2;
-                
-            _label_1: 
-                return;
-            };
-            
-        _label_2: 
             this.addCertificate(result.id, result.certificate);
-            goto _label_1;
-            return;
         }
 
 
     }
-}//package com.ankamagames.dofus.logic.shield
+} com.ankamagames.dofus.logic.shield
 

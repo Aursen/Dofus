@@ -1,10 +1,10 @@
-﻿package com.ankamagames.dofus.logic.game.roleplay.types
+package com.ankamagames.dofus.logic.game.roleplay.types
 {
     import flash.utils.Dictionary;
     import __AS3__.vec.Vector;
     import com.ankamagames.dofus.network.types.game.context.fight.FightTeamMemberInformations;
     import com.ankamagames.dofus.datacenter.monsters.Monster;
-    import com.ankamagames.dofus.network.types.game.context.fight.FightTeamMemberCompanionInformations;
+    import com.ankamagames.dofus.network.types.game.context.fight.FightTeamMemberEntityInformation;
     import com.ankamagames.dofus.network.types.game.context.fight.FightTeamMemberWithAllianceCharacterInformations;
     import com.ankamagames.dofus.network.types.game.context.fight.FightTeamMemberCharacterInformations;
     import com.ankamagames.dofus.network.types.game.context.fight.FightTeamMemberMonsterInformations;
@@ -27,15 +27,15 @@
             var fightMemberInfo:FightTeamMemberInformations;
             var i:int;
             var fighter:Fighter;
-            var _local_6:String;
-            var _local_7:Monster;
-            var _local_8:uint;
-            var _local_9:String;
-            var _local_10:uint;
-            var _local_11:String;
-            var _local_12:String;
-            var _local_13:String;
-            var _local_14:FightTeamMemberCompanionInformations;
+            var allianceTag:String;
+            var monster:Monster;
+            var monsterLevel:uint;
+            var monsterName:String;
+            var taxCollectorLevel:uint;
+            var firstName:String;
+            var lastName:String;
+            var taxCollectorName:String;
+            var companionInfo:FightTeamMemberEntityInformation;
             super();
             this.nbWaves = pFightTeam.teamInfos.nbWaves;
             this.fighters = new Vector.<Fighter>();
@@ -48,40 +48,41 @@
                 switch (true)
                 {
                     case (fightMemberInfo is FightTeamMemberCharacterInformations):
+                        allianceTag = "";
                         if ((fightMemberInfo is FightTeamMemberWithAllianceCharacterInformations))
                         {
-                            _local_6 = (fightMemberInfo as FightTeamMemberWithAllianceCharacterInformations).allianceInfos.allianceTag;
+                            allianceTag = (fightMemberInfo as FightTeamMemberWithAllianceCharacterInformations).allianceInfos.allianceTag;
                         };
-                        fighter = new Fighter(fightMemberInfo.id, (fightMemberInfo as FightTeamMemberCharacterInformations).name, (fightMemberInfo as FightTeamMemberCharacterInformations).level, _local_6);
+                        fighter = new Fighter(fightMemberInfo.id, (fightMemberInfo as FightTeamMemberCharacterInformations).name, (fightMemberInfo as FightTeamMemberCharacterInformations).level, allianceTag);
                         break;
                     case (fightMemberInfo is FightTeamMemberMonsterInformations):
-                        _local_7 = Monster.getMonsterById((fightMemberInfo as FightTeamMemberMonsterInformations).monsterId);
-                        _local_8 = _local_7.getMonsterGrade((fightMemberInfo as FightTeamMemberMonsterInformations).grade).level;
-                        _local_9 = _local_7.name;
-                        fighter = new Fighter(fightMemberInfo.id, _local_9, _local_8);
+                        monster = Monster.getMonsterById((fightMemberInfo as FightTeamMemberMonsterInformations).monsterId);
+                        monsterLevel = monster.getMonsterGrade((fightMemberInfo as FightTeamMemberMonsterInformations).grade).level;
+                        monsterName = monster.name;
+                        fighter = new Fighter(fightMemberInfo.id, monsterName, monsterLevel);
                         break;
                     case (fightMemberInfo is FightTeamMemberTaxCollectorInformations):
-                        _local_10 = (fightMemberInfo as FightTeamMemberTaxCollectorInformations).level;
-                        _local_11 = TaxCollectorFirstname.getTaxCollectorFirstnameById((fightMemberInfo as FightTeamMemberTaxCollectorInformations).firstNameId).firstname;
-                        _local_12 = TaxCollectorName.getTaxCollectorNameById((fightMemberInfo as FightTeamMemberTaxCollectorInformations).lastNameId).name;
-                        _local_13 = ((_local_11 + " ") + _local_12);
-                        fighter = new Fighter(fightMemberInfo.id, _local_13, _local_10);
+                        taxCollectorLevel = (fightMemberInfo as FightTeamMemberTaxCollectorInformations).level;
+                        firstName = TaxCollectorFirstname.getTaxCollectorFirstnameById((fightMemberInfo as FightTeamMemberTaxCollectorInformations).firstNameId).firstname;
+                        lastName = TaxCollectorName.getTaxCollectorNameById((fightMemberInfo as FightTeamMemberTaxCollectorInformations).lastNameId).name;
+                        taxCollectorName = ((firstName + " ") + lastName);
+                        fighter = new Fighter(fightMemberInfo.id, taxCollectorName, taxCollectorLevel);
                         break;
-                    case (fightMemberInfo is FightTeamMemberCompanionInformations):
-                        _local_14 = (fightMemberInfo as FightTeamMemberCompanionInformations);
-                        if ((((((this.fighters.length > 0)) && ((i > 0)))) && ((this.fighters[(i - 1)].id == _local_14.masterId))))
+                    case (fightMemberInfo is FightTeamMemberEntityInformation):
+                        companionInfo = (fightMemberInfo as FightTeamMemberEntityInformation);
+                        if ((((this.fighters.length > 0) && (i > 0)) && (this.fighters[(i - 1)].id == companionInfo.masterId)))
                         {
-                            fighter = this.getCompanionFighter(this.fighters[(i - 1)], _local_14.id, _local_14.companionId);
+                            fighter = this.getCompanionFighter(this.fighters[(i - 1)], companionInfo.id, companionInfo.entityModelId);
                         }
                         else
                         {
-                            if (!(this._waitingCompanions))
+                            if (!this._waitingCompanions)
                             {
                                 this._waitingCompanions = new Dictionary();
                             };
-                            this._waitingCompanions[_local_14.masterId] = {
-                                "id":_local_14.id,
-                                "genericId":_local_14.companionId
+                            this._waitingCompanions[companionInfo.masterId] = {
+                                "id":companionInfo.id,
+                                "genericId":companionInfo.entityModelId
                             };
                         };
                         break;
@@ -106,17 +107,17 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.roleplay.types
+} com.ankamagames.dofus.logic.game.roleplay.types
 
 class Fighter 
 {
 
-    /*private*/ var _id:int;
+    /*private*/ var _id:Number;
     public var allianceTagName:String;
     public var name:String;
     public var level:uint;
 
-    public function Fighter(pId:int, pName:String, pLevel:uint, pAllianceTagName:String=null)
+    public function Fighter(pId:Number, pName:String, pLevel:uint, pAllianceTagName:String=null)
     {
         this._id = pId;
         this.name = pName;
@@ -126,14 +127,15 @@ class Fighter
 
     public function get allianceTag():String
     {
-        return (((this.allianceTagName) ? (("[" + this.allianceTagName) + "]") : null));
+        return ((this.allianceTagName) ? (("[" + this.allianceTagName) + "]") : null);
     }
 
-    public function get id():int
+    public function get id():Number
     {
         return (this._id);
     }
 
 
 }
+
 

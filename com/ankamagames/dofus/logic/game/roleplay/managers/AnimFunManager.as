@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.roleplay.managers
+package com.ankamagames.dofus.logic.game.roleplay.managers
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
@@ -26,13 +26,16 @@
     import flash.utils.getTimer;
     import com.ankamagames.dofus.types.entities.AnimatedCharacter;
     import com.ankamagames.atouin.data.map.CellData;
+    import com.ankamagames.dofus.network.types.game.context.roleplay.GameRolePlayNpcInformations;
     import com.ankamagames.atouin.managers.MapDisplayManager;
     import com.ankamagames.atouin.Atouin;
     import com.ankamagames.tiphon.sequence.PlayAnimationStep;
+    import com.ankamagames.dofus.scripts.api.SequenceApi;
+    import com.ankamagames.jerakine.sequencer.ISequencable;
     import com.ankamagames.dofus.network.types.game.context.roleplay.GameRolePlayGroupMonsterInformations;
     import com.ankamagames.dofus.datacenter.monsters.Monster;
-    import com.ankamagames.dofus.network.types.game.context.roleplay.GameRolePlayNpcInformations;
     import com.ankamagames.dofus.datacenter.npcs.Npc;
+    import com.ankamagames.dofus.types.data.AnimFunData;
     import com.ankamagames.jerakine.types.Callback;
     import com.ankamagames.tiphon.display.TiphonAnimation;
     import com.ankamagames.jerakine.types.Swl;
@@ -53,17 +56,16 @@
 
         private var _animFunNpcData:AnimFunNpcData;
         private var _animFunMonsterData:AnimFunMonsterData;
-        private var _anims:Vector.<AnimFun>;
-        private var _nbAnims:int;
+        private var _anims:Vector.<AnimFun> = new Vector.<AnimFun>(0);
         private var _nbFastAnims:int;
         private var _nbNormalAnims:int;
-        private var _mapId:int = -1;
-        private var _entitiesList:Array;
+        private var _mapId:Number = -1;
+        private var _entitiesList:Array = new Array();
         private var _running:Boolean;
         private var _animFunPlaying:Boolean;
-        private var _animFunEntityId:int;
-        private var _animSeq:SerialSequencer;
-        private var _synchedAnimFuns:Dictionary;
+        private var _animFunEntityId:Number;
+        private var _animSeq:SerialSequencer = new SerialSequencer();
+        private var _synchedAnimFuns:Dictionary = new Dictionary();
         private var _fastTimer:SynchroTimer;
         private var _normalTimer:SynchroTimer;
         private var _lastFastAnimTime:int;
@@ -75,13 +77,10 @@
         private var _lastAnimNormal:AnimFun;
         private var _cancelledAnim:AnimFun;
         private var _firstAnim:Boolean;
+        private var _specialAnimFunMaxAnimDuration:int = 0;
 
         public function AnimFunManager()
         {
-            this._anims = new Vector.<AnimFun>(0);
-            this._animSeq = new SerialSequencer();
-            this._synchedAnimFuns = new Dictionary();
-            super();
             if (_self)
             {
                 throw (new SingletonError());
@@ -90,7 +89,7 @@
 
         public static function getInstance():AnimFunManager
         {
-            if (!(_self))
+            if (!_self)
             {
                 _self = new (AnimFunManager)();
             };
@@ -98,24 +97,26 @@
         }
 
 
-        public function get mapId():int
+        public function get mapId():Number
         {
             return (this._mapId);
         }
 
-        public function initializeByMap(mapId:uint):void
+        public function initializeByMap(mapId:Number):void
         {
             var entity:GameContextActorInformations;
             var i:uint;
             var isFastAnim:Boolean;
-            var actorId:int;
+            var actorId:Number;
             var animdelayTime:uint;
+            var animFun:AnimFun;
             this._mapId = mapId;
             var rnd:PRNG = new ParkMillerCarta();
             rnd.seed((mapId + 5435));
             var entitiesFrame:RoleplayEntitiesFrame = (Kernel.getWorker().getFrame(RoleplayEntitiesFrame) as RoleplayEntitiesFrame);
             var entities:Dictionary = entitiesFrame.getEntitiesDictionnary();
-            this._entitiesList = new Array();
+            this._specialAnimFunMaxAnimDuration = 0;
+            this._entitiesList.length = 0;
             for each (entity in entities)
             {
                 if (this.hasAnimsFun(entity.contextualId))
@@ -123,9 +124,14 @@
                     this._entitiesList.push(entity);
                 };
             };
-            this._entitiesList.sortOn("contextualId", Array.NUMERIC);
+            this._anims.length = 0;
             this._nbNormalAnims = (this._nbFastAnims = 0);
             this._normalTimer = (this._fastTimer = null);
+            if (!this._entitiesList.length)
+            {
+                return;
+            };
+            this._entitiesList.sortOn("contextualId", Array.NUMERIC);
             i = 0;
             while (i < ANIM_DELAY_SIZE)
             {
@@ -133,7 +139,7 @@
                 if (this.hasAnimsFun(actorId))
                 {
                     isFastAnim = this.hasFastAnims(actorId);
-                    if (!(isFastAnim))
+                    if (!isFastAnim)
                     {
                         animdelayTime = rnd.nextIntR(ANIM_FUN_TIMER_MIN, ANIM_FUN_TIMER_MAX);
                         this._nbNormalAnims++;
@@ -143,11 +149,11 @@
                         animdelayTime = rnd.nextIntR(FAST_ANIM_FUN_TIMER_MIN, FAST_ANIM_FUN_TIMER_MAX);
                         this._nbFastAnims++;
                     };
-                    this._anims.push(new AnimFun(actorId, this.randomAnim(actorId, rnd.nextInt()), animdelayTime, isFastAnim));
+                    animFun = new AnimFun(actorId, this.randomAnim(actorId, rnd.nextInt()), animdelayTime, isFastAnim);
+                    this._anims.push(animFun);
                 };
                 i++;
             };
-            this._nbAnims = this._anims.length;
             if (this._anims.length > 0)
             {
                 this.start();
@@ -166,7 +172,7 @@
             var af:AnimFun;
             for each (af in this._anims)
             {
-                if (!(af.fastAnim))
+                if (!af.fastAnim)
                 {
                     totalTimeNormalAnim = (totalTimeNormalAnim + af.delayTime);
                 }
@@ -197,6 +203,7 @@
             this._animFunEntityId = 0;
             this._lastAnimFast = (this._lastAnimNormal = (this._lastAnim = null));
             this._anims.length = 0;
+            this._entitiesList.length = 0;
             this._animSeq.clear();
             this._animSeq.removeEventListener(SequencerEvent.SEQUENCE_END, this.onAnimFunEnd);
             if (this._fastTimer)
@@ -215,10 +222,10 @@
             this.initializeByMap(this._mapId);
         }
 
-        public function cancelAnim(pEntityId:int):void
+        public function cancelAnim(pEntityId:Number):void
         {
             var entitySpr:TiphonSprite;
-            if (((this._animFunPlaying) && ((this._animFunEntityId == pEntityId))))
+            if (((this._animFunPlaying) && (this._animFunEntityId == pEntityId)))
             {
                 this._cancelledAnim = this._lastAnim;
                 entitySpr = (DofusEntities.getEntity(this._animFunEntityId) as TiphonSprite);
@@ -232,7 +239,7 @@
 
         private function getTimerValue():int
         {
-            return ((getTimer() % int.MAX_VALUE));
+            return (getTimer() % int.MAX_VALUE);
         }
 
         private function checkAvailableAnim(pTimer:SynchroTimer):void
@@ -241,20 +248,23 @@
             var i:int;
             var sum:int;
             var elapsedTime:int;
+            var nbAnims:int;
             var entity:AnimatedCharacter;
             var roleplayEntitiesFrame:RoleplayEntitiesFrame;
+            var actorInfos:GameContextActorInformations;
             var cellData:CellData;
-            var fastAnimTimer:Boolean = (pTimer == this._fastTimer);
-            if (!(this._animFunPlaying))
+            var fastAnimTimer:* = (pTimer == this._fastTimer);
+            if (!this._animFunPlaying)
             {
                 sum = 0;
                 elapsedTime = 0;
+                nbAnims = this._anims.length;
                 if (fastAnimTimer)
                 {
                     if ((this.getTimerValue() - this._lastFastAnimTime) > this._nextFastAnimDelay)
                     {
                         i = 0;
-                        while (i < this._nbAnims)
+                        while (i < nbAnims)
                         {
                             if (this._anims[i].fastAnim)
                             {
@@ -262,7 +272,7 @@
                                 if (sum >= pTimer.value)
                                 {
                                     elapsedTime = (pTimer.value - (sum - this._anims[i].delayTime));
-                                    animFun = (((i > 0)) ? this._anims[(i - 1)] : this._anims[0]);
+                                    animFun = ((i > 0) ? this._anims[(i - 1)] : this._anims[0]);
                                     this._lastFastAnimTime = this.getTimerValue();
                                     this._nextFastAnimDelay = this._anims[i].delayTime;
                                     break;
@@ -277,15 +287,15 @@
                     if ((this.getTimerValue() - this._lastNormalAnimTime) > this._nextNormalAnimDelay)
                     {
                         i = 0;
-                        while (i < this._nbAnims)
+                        while (i < nbAnims)
                         {
-                            if (!(this._anims[i].fastAnim))
+                            if (!this._anims[i].fastAnim)
                             {
                                 sum = (sum + this._anims[i].delayTime);
                                 if (sum >= pTimer.value)
                                 {
                                     elapsedTime = (pTimer.value - (sum - this._anims[i].delayTime));
-                                    animFun = (((i > 0)) ? this._anims[(i - 1)] : this._anims[0]);
+                                    animFun = ((i > 0) ? this._anims[(i - 1)] : this._anims[0]);
                                     this._lastNormalAnimTime = this.getTimerValue();
                                     this._nextNormalAnimDelay = this._anims[i].delayTime;
                                     break;
@@ -296,11 +306,11 @@
                     };
                 };
             };
-            if (!(animFun))
+            if (!animFun)
             {
                 return;
             };
-            if (((((!(this._firstAnim)) || (((this._firstAnim) && (!(this._lastAnim)))))) && (((!((this._lastAnim == animFun))) && (((((animFun.fastAnim) && (!((animFun == this._lastAnimFast))))) || (((!(animFun.fastAnim)) && (!((animFun == this._lastAnimNormal)))))))))))
+            if ((((!(this._firstAnim)) || ((this._firstAnim) && (!(this._lastAnim)))) && ((!(this._lastAnim == animFun)) && (((animFun.fastAnim) && (!(animFun == this._lastAnimFast))) || ((!(animFun.fastAnim)) && (!(animFun == this._lastAnimNormal)))))))
             {
                 if (animFun.fastAnim)
                 {
@@ -321,19 +331,23 @@
                 if (this.getIsMapStatic())
                 {
                     entity = (DofusEntities.getEntity(animFun.actorId) as AnimatedCharacter);
-                    if (!(entity))
+                    if (!entity)
                     {
                         return;
                     };
                     roleplayEntitiesFrame = (Kernel.getWorker().getFrame(RoleplayEntitiesFrame) as RoleplayEntitiesFrame);
-                    if (!(roleplayEntitiesFrame))
+                    if (!roleplayEntitiesFrame)
                     {
                         return;
                     };
-                    cellData = MapDisplayManager.getInstance().getDataMapContainer().dataMap.cells[entity.position.cellId];
-                    if (((!(Atouin.getInstance().options.transparentOverlayMode)) && (!(cellData.visible))))
+                    actorInfos = roleplayEntitiesFrame.getEntityInfos(animFun.actorId);
+                    if (!(actorInfos is GameRolePlayNpcInformations))
                     {
-                        return;
+                        cellData = MapDisplayManager.getInstance().getDataMapContainer().dataMap.cells[entity.position.cellId];
+                        if (((!(Atouin.getInstance().options.getOption("transparentOverlayMode"))) && (!(cellData.visible))))
+                        {
+                            return;
+                        };
                     };
                     if (roleplayEntitiesFrame.hasIcon(animFun.actorId))
                     {
@@ -348,19 +362,75 @@
         {
             var entity:TiphonSprite = (DofusEntities.getEntity(pAnimFun.actorId) as TiphonSprite);
             var playAnimStep:PlayAnimationStep = new PlayAnimationStep(entity, pAnimFun.animName);
-            playAnimStep.timeout = ANIM_FUN_MAX_ANIM_DURATION;
+            var sequencer:SerialSequencer = new SerialSequencer();
+            this._specialAnimFunMaxAnimDuration = ((this.getAnimClipInfo(pAnimFun).duration > ANIM_FUN_MAX_ANIM_DURATION) ? (this.getAnimClipInfo(pAnimFun).duration + 1000) : ANIM_FUN_MAX_ANIM_DURATION);
+            playAnimStep.timeout = this._specialAnimFunMaxAnimDuration;
             playAnimStep.startFrame = pStartFrame;
+            sequencer.addStep(playAnimStep);
             this._animFunPlaying = true;
             this._animFunEntityId = pAnimFun.actorId;
-            this._animSeq.addStep(playAnimStep);
+            var subAnimSequencer:Array = this.playSubAnimFun(pAnimFun, pStartFrame);
+            subAnimSequencer.push(sequencer);
+            var parallelSequencer:ISequencable = SequenceApi.CreateParallelStartSequenceStep(subAnimSequencer);
+            parallelSequencer.timeout = this._specialAnimFunMaxAnimDuration;
+            this._animSeq.addStep(parallelSequencer);
             this._animSeq.start();
             this._firstAnim = false;
+        }
+
+        private function playSubAnimFun(pAnimFun:AnimFun, pStartFrame:int=-1):Array
+        {
+            var entity:GameContextActorInformations;
+            var animFun:AnimFun;
+            var animFunNpcData:AnimFunNpcData;
+            var entitySprite:TiphonSprite;
+            var playAnimStep:PlayAnimationStep;
+            var sequencer:SerialSequencer;
+            var subAnimSequencer:Array = [];
+            if ((pAnimFun.data is AnimFunNpcData))
+            {
+                for each (animFunNpcData in AnimFunNpcData(pAnimFun.data).subAnimFunData)
+                {
+                    entity = this.getEntityByGenericId(animFunNpcData.entityId);
+                    if (entity)
+                    {
+                        animFun = new AnimFun(entity.contextualId, animFunNpcData, pAnimFun.delayTime, pAnimFun.fastAnim);
+                        entitySprite = (DofusEntities.getEntity(entity.contextualId) as TiphonSprite);
+                        playAnimStep = new PlayAnimationStep(entitySprite, animFun.animName);
+                        sequencer = new SerialSequencer();
+                        playAnimStep.timeout = this._specialAnimFunMaxAnimDuration;
+                        playAnimStep.startFrame = pStartFrame;
+                        sequencer.addStep(playAnimStep);
+                        subAnimSequencer.push(sequencer);
+                    };
+                };
+            };
+            return (subAnimSequencer);
         }
 
         private function onAnimFunEnd(pEvent:SequencerEvent):void
         {
             this._animFunPlaying = false;
             this._animFunEntityId = 0;
+            this._specialAnimFunMaxAnimDuration = 0;
+        }
+
+        private function getEntityByGenericId(id:int):GameContextActorInformations
+        {
+            var entity:GameContextActorInformations;
+            var entitiesFrame:RoleplayEntitiesFrame = (Kernel.getWorker().getFrame(RoleplayEntitiesFrame) as RoleplayEntitiesFrame);
+            var entities:Dictionary = entitiesFrame.getEntitiesDictionnary();
+            for each (entity in entities)
+            {
+                if ((entity is GameRolePlayNpcInformations))
+                {
+                    if ((entity as GameRolePlayNpcInformations).npcId == id)
+                    {
+                        return (entity);
+                    };
+                };
+            };
+            return (null);
         }
 
         private function randomActor(monsterSeed:int):int
@@ -374,7 +444,7 @@
             return (0);
         }
 
-        private function randomAnim(actorId:int, animSeed:int):String
+        private function randomAnim(actorId:Number, animSeed:int):AnimFunData
         {
             var list:Object;
             var groupMonsterInfo:GameRolePlayGroupMonsterInformations;
@@ -382,7 +452,7 @@
             var npcInfo:GameRolePlayNpcInformations;
             var npc:Npc;
             var roleplayEntitiesFrame:RoleplayEntitiesFrame = (Kernel.getWorker().getFrame(RoleplayEntitiesFrame) as RoleplayEntitiesFrame);
-            if (!(roleplayEntitiesFrame))
+            if (!roleplayEntitiesFrame)
             {
                 return (null);
             };
@@ -390,8 +460,8 @@
             if ((entity is GameRolePlayGroupMonsterInformations))
             {
                 groupMonsterInfo = (entity as GameRolePlayGroupMonsterInformations);
-                monster = Monster.getMonsterById(groupMonsterInfo.staticInfos.mainCreatureLightInfos.creatureGenericId);
-                if (!(monster))
+                monster = Monster.getMonsterById(groupMonsterInfo.staticInfos.mainCreatureLightInfos.genericId);
+                if (!monster)
                 {
                     return (null);
                 };
@@ -403,7 +473,7 @@
                 {
                     npcInfo = (entity as GameRolePlayNpcInformations);
                     npc = Npc.getNpcById(npcInfo.npcId);
-                    if (!(npc))
+                    if (!npc)
                     {
                         return (null);
                     };
@@ -431,7 +501,7 @@
                 max = (max + list[i].animWeight);
                 if (max > rand)
                 {
-                    return (list[i].animName);
+                    return (list[i]);
                 };
                 i++;
             };
@@ -469,14 +539,14 @@
             i = (nbAnims - 1);
             while (i >= 0)
             {
-                if ((((this._anims[i].fastAnim == pNextAnimFun.fastAnim)) && ((i < nextAnimIndex))))
+                if (((this._anims[i].fastAnim == pNextAnimFun.fastAnim) && (i < nextAnimIndex)))
                 {
                     previousAf = this._anims[i];
                     break;
                 };
                 i--;
             };
-            if (((!(this._firstAnim)) || ((previousAf == this._cancelledAnim))))
+            if (((!(this._firstAnim)) || (previousAf == this._cancelledAnim)))
             {
                 previousAf = null;
             };
@@ -486,8 +556,8 @@
             {
                 entitySpr = (DofusEntities.getEntity(af.actorId) as TiphonSprite);
                 Tiphon.skullLibrary.removeEventListener(SwlEvent.SWL_LOADED, this.onSwlLoaded);
-                swlLoaded = !((Tiphon.skullLibrary.getResourceById(entitySpr.look.getBone(), af.animName, true) == null));
-                if (((swlLoaded) && (((!(previousAf)) || (!((Tiphon.skullLibrary.getResourceById((DofusEntities.getEntity(previousAf.actorId) as TiphonSprite).look.getBone(), previousAf.animName, true) == null)))))))
+                swlLoaded = (!(Tiphon.skullLibrary.getResourceById(entitySpr.look.getBone(), af.animName, true) == null));
+                if (((swlLoaded) && ((!(previousAf)) || (!(Tiphon.skullLibrary.getResourceById((DofusEntities.getEntity(previousAf.actorId) as TiphonSprite).look.getBone(), previousAf.animName, true) == null)))))
                 {
                     this.playSynchAnim(new AnimFunInfo(af, previousAf, pElapsedTime));
                 }
@@ -508,7 +578,7 @@
             {
                 Tiphon.skullLibrary.removeEventListener(SwlEvent.SWL_LOADED, this.onSwlLoaded);
                 animFunInfo = (this._synchedAnimFuns[entitySpr] as AnimFunInfo);
-                if (((!(animFunInfo.previousAnimFun)) || (!((Tiphon.skullLibrary.getResourceById((DofusEntities.getEntity(animFunInfo.previousAnimFun.actorId) as TiphonSprite).look.getBone(), animFunInfo.previousAnimFun.animName, true) == null)))))
+                if (((!(animFunInfo.previousAnimFun)) || (!(Tiphon.skullLibrary.getResourceById((DofusEntities.getEntity(animFunInfo.previousAnimFun.actorId) as TiphonSprite).look.getBone(), animFunInfo.previousAnimFun.animName, true) == null))))
                 {
                     if (animFunInfo.previousAnimLoadTime > 0)
                     {
@@ -532,8 +602,9 @@
         {
             var i:int;
             var sum:int;
+            var nbAnims:int = this._anims.length;
             i = 0;
-            while (i < this._nbAnims)
+            while (i < nbAnims)
             {
                 sum = (sum + this._anims[i].delayTime);
                 if (this._anims[i] == pAnimFun)
@@ -550,8 +621,7 @@
             var animClipInfo:AnimFunClipInfo;
             var previousSum:int;
             var currentSum:int;
-            var ratio:Number;
-            var delay:int = (pAnimFunInfo.elapsedTime + (((pAnimFunInfo.loadTime > 0)) ? (this.getTimerValue() - pAnimFunInfo.loadTime) : 0));
+            var delay:int = (pAnimFunInfo.elapsedTime + ((pAnimFunInfo.loadTime > 0) ? (this.getTimerValue() - pAnimFunInfo.loadTime) : 0));
             var previousAnimInfo:AnimFunClipInfo = ((pAnimFunInfo.previousAnimFun) ? this.getAnimClipInfo(pAnimFunInfo.previousAnimFun) : null);
             var animFun:AnimFun = pAnimFunInfo.animFun;
             if (previousAnimInfo)
@@ -576,17 +646,9 @@
             };
             if (animClipInfo)
             {
-                if (((!(this._firstAnim)) || (((this._firstAnim) && ((delay < animClipInfo.duration))))))
+                if (((!(this._firstAnim)) || ((this._firstAnim) && (delay < animClipInfo.duration))))
                 {
-                    if (this._firstAnim)
-                    {
-                        ratio = (delay / animClipInfo.duration);
-                        this.playAnimFun(animFun, (ratio * animClipInfo.totalFrames));
-                    }
-                    else
-                    {
-                        this.playAnimFun(animFun, 0);
-                    };
+                    this.playAnimFun(animFun, 0);
                 }
                 else
                 {
@@ -612,7 +674,7 @@
             var swl:Swl = Tiphon.skullLibrary.getResourceById(entitySpr.look.getBone(), pAnimFun.animName);
             var directions:Array = entitySpr.getAvaibleDirection(pAnimFun.animName, true);
             var finalDirection:uint = entitySpr.getDirection();
-            if (!(directions[finalDirection]))
+            if (!directions[finalDirection])
             {
                 for (s in directions)
                 {
@@ -639,19 +701,20 @@
             if (animClass)
             {
                 clip = (new (animClass)() as TiphonAnimation);
+                clip.stop();
                 return (new AnimFunClipInfo(((clip.totalFrames / swl.frameRate) * 1000), clip.totalFrames));
             };
             return (null);
         }
 
-        private function hasFastAnims(pActorId:int):Boolean
+        private function hasFastAnims(pActorId:Number):Boolean
         {
             var monster:Monster;
             var npc:Npc;
             var actorInfos:GameContextActorInformations = (Kernel.getWorker().getFrame(RoleplayEntitiesFrame) as RoleplayEntitiesFrame).getEntityInfos(pActorId);
             if ((actorInfos is GameRolePlayGroupMonsterInformations))
             {
-                monster = Monster.getMonsterById((actorInfos as GameRolePlayGroupMonsterInformations).staticInfos.mainCreatureLightInfos.creatureGenericId);
+                monster = Monster.getMonsterById((actorInfos as GameRolePlayGroupMonsterInformations).staticInfos.mainCreatureLightInfos.genericId);
                 return (monster.fastAnimsFun);
             };
             if ((actorInfos is GameRolePlayNpcInformations))
@@ -662,27 +725,27 @@
             return (false);
         }
 
-        private function hasAnimsFun(pActorId:int):Boolean
+        private function hasAnimsFun(pActorId:Number):Boolean
         {
             var monster:Monster;
             var npc:Npc;
             var actorInfos:GameContextActorInformations = (Kernel.getWorker().getFrame(RoleplayEntitiesFrame) as RoleplayEntitiesFrame).getEntityInfos(pActorId);
             if ((actorInfos is GameRolePlayGroupMonsterInformations))
             {
-                monster = Monster.getMonsterById((actorInfos as GameRolePlayGroupMonsterInformations).staticInfos.mainCreatureLightInfos.creatureGenericId);
-                return (((monster) && (!((monster.animFunList.length == 0)))));
+                monster = Monster.getMonsterById((actorInfos as GameRolePlayGroupMonsterInformations).staticInfos.mainCreatureLightInfos.genericId);
+                return ((monster) && (!(monster.animFunList.length == 0)));
             };
             if ((actorInfos is GameRolePlayNpcInformations))
             {
                 npc = Npc.getNpcById((actorInfos as GameRolePlayNpcInformations).npcId);
-                return (((npc) && (!((npc.animFunList.length == 0)))));
+                return ((npc) && (!(npc.animFunList.length == 0)));
             };
             return (false);
         }
 
 
     }
-}//package com.ankamagames.dofus.logic.game.roleplay.managers
+} com.ankamagames.dofus.logic.game.roleplay.managers
 
 import com.ankamagames.dofus.logic.game.roleplay.types.AnimFun;
 
@@ -704,6 +767,7 @@ class AnimFunInfo
     }
 
 }
+
 class AnimFunClipInfo 
 {
 
@@ -717,4 +781,5 @@ class AnimFunClipInfo
     }
 
 }
+
 

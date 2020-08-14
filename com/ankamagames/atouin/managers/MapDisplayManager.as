@@ -1,4 +1,4 @@
-﻿package com.ankamagames.atouin.managers
+package com.ankamagames.atouin.managers
 {
     import flash.utils.Dictionary;
     import com.ankamagames.jerakine.logger.Logger;
@@ -7,13 +7,10 @@
     import com.ankamagames.jerakine.types.positions.WorldPoint;
     import com.ankamagames.jerakine.resources.loaders.IResourceLoader;
     import com.ankamagames.atouin.types.DataMapContainer;
-    import com.ankamagames.jerakine.newCache.ICache;
     import com.ankamagames.atouin.renderers.MapRenderer;
     import flash.display.Bitmap;
     import flash.display.BitmapData;
     import flash.geom.Matrix;
-    import com.ankamagames.jerakine.newCache.impl.Cache;
-    import com.ankamagames.jerakine.newCache.garbage.LruGarbageCollector;
     import com.ankamagames.jerakine.utils.errors.SingletonError;
     import com.ankamagames.atouin.Atouin;
     import com.ankamagames.jerakine.resources.events.ResourceLoadedEvent;
@@ -21,8 +18,6 @@
     import flash.utils.ByteArray;
     import flash.display.DisplayObjectContainer;
     import com.ankamagames.jerakine.utils.display.StageShareManager;
-    import com.ankamagames.jerakine.utils.system.AirScanner;
-    import flash.filters.BlurFilter;
     import com.ankamagames.tiphon.display.TiphonSprite;
     import flash.display.InteractiveObject;
     import com.ankamagames.jerakine.types.positions.MapPoint;
@@ -58,10 +53,10 @@
         private var _currentMap:WorldPoint;
         private var _currentRenderId:uint;
         private var _isDefaultMap:Boolean;
+        private var _mapInstanceId:Number = 0;
         private var _lastMap:WorldPoint;
         private var _loader:IResourceLoader;
         private var _currentDataMap:DataMapContainer;
-        private var _mapFileCache:ICache;
         private var _currentMapRendered:Boolean = true;
         private var _forceReloadWithoutCache:Boolean;
         private var _renderRequestStack:Array;
@@ -74,13 +69,10 @@
         private var _nGfxLoadEnd:uint;
         private var _nRenderMapStart:uint;
         private var _nRenderMapEnd:uint;
-        private var matrix:Matrix;
+        private var matrix:Matrix = new Matrix();
 
         public function MapDisplayManager()
         {
-            this._mapFileCache = new Cache(20, new LruGarbageCollector());
-            this.matrix = new Matrix();
-            super();
             if (_self)
             {
                 throw (new SingletonError());
@@ -90,7 +82,7 @@
 
         public static function getInstance():MapDisplayManager
         {
-            if (!(_self))
+            if (!_self)
             {
                 _self = new (MapDisplayManager)();
             };
@@ -121,19 +113,19 @@
             this._currentRenderId = request.renderId;
             Atouin.getInstance().showWorld(true);
             this._renderer.initRenderContainer(Atouin.getInstance().worldContainer);
-            Atouin.getInstance().options.groundCacheMode = 0;
+            Atouin.getInstance().options.setOption("groundCacheMode", 0);
             var rle:ResourceLoadedEvent = new ResourceLoadedEvent(ResourceLoadedEvent.LOADED);
             rle.resource = map;
             this.onMapLoaded(rle);
             return (this._currentRenderId);
         }
 
-        public function display(pMap:WorldPoint, forceReloadWithoutCache:Boolean=false, decryptionKey:ByteArray=null, renderFixture:Boolean=true):uint
+        public function display(pMap:WorldPoint, forceReloadWithoutCache:Boolean=false, decryptionKey:ByteArray=null, renderFixture:Boolean=true, displayWorld:Boolean=true):uint
         {
-            var request:RenderRequest = new RenderRequest(pMap, forceReloadWithoutCache, decryptionKey, renderFixture);
+            var request:RenderRequest = new RenderRequest(pMap, forceReloadWithoutCache, decryptionKey, renderFixture, displayWorld);
             _log.debug(((("Ask render map " + pMap.mapId) + ", renderRequestID: ") + request.renderId));
             this._renderRequestStack.push(request);
-            this.checkForRender();
+            this.checkForRender(displayWorld);
             return (request.renderId);
         }
 
@@ -173,6 +165,17 @@
             return (this._currentDataMap);
         }
 
+        public function get mapInstanceId():Number
+        {
+            return (this._mapInstanceId);
+        }
+
+        public function set mapInstanceId(mapId:Number):void
+        {
+            _log.debug(("mapInstanceId " + mapId));
+            this._mapInstanceId = mapId;
+        }
+
         public function activeIdentifiedElements(active:Boolean):void
         {
             var ie:Object;
@@ -191,7 +194,7 @@
         public function capture():void
         {
             var ctr:DisplayObjectContainer;
-            if (((Atouin.getInstance().options.tweentInterMap) || (Atouin.getInstance().options.hideInterMap)))
+            if (((Atouin.getInstance().options.getOption("tweentInterMap")) || (Atouin.getInstance().options.getOption("hideInterMap"))))
             {
                 if (this._screenshotData == null)
                 {
@@ -204,21 +207,17 @@
                 this.matrix.scale(ctr.scaleX, ctr.scaleY);
                 this.matrix.translate(ctr.x, ctr.y);
                 this._screenshotData.draw(ctr, this.matrix, null, null, null, true);
-                if (AirScanner.isStreamingVersion())
-                {
-                    this._screenshot.filters = [new BlurFilter()];
-                };
                 ctr.addChild(this._screenshot);
             };
         }
 
         public function getIdentifiedEntityElement(id:uint):TiphonSprite
         {
-            if (((((this._renderer) && (this._renderer.identifiedElements))) && (this._renderer.identifiedElements[id])))
+            if ((((this._renderer) && (this._renderer.identifiedElements)) && (this._renderer.identifiedElements[id])))
             {
                 if ((this._renderer.identifiedElements[id].sprite is TiphonSprite))
                 {
-                    return ((this._renderer.identifiedElements[id].sprite as TiphonSprite));
+                    return (this._renderer.identifiedElements[id].sprite as TiphonSprite);
                 };
             };
             return (null);
@@ -226,7 +225,7 @@
 
         public function getIdentifiedElement(id:uint):InteractiveObject
         {
-            if (((((this._renderer) && (this._renderer.identifiedElements))) && (this._renderer.identifiedElements[id])))
+            if ((((this._renderer) && (this._renderer.identifiedElements)) && (this._renderer.identifiedElements[id])))
             {
                 return (this._renderer.identifiedElements[id].sprite);
             };
@@ -235,7 +234,7 @@
 
         public function getIdentifiedElementPosition(id:uint):MapPoint
         {
-            if (((((this._renderer) && (this._renderer.identifiedElements))) && (this._renderer.identifiedElements[id])))
+            if ((((this._renderer) && (this._renderer.identifiedElements)) && (this._renderer.identifiedElements[id])))
             {
                 return (this._renderer.identifiedElements[id].position);
             };
@@ -246,14 +245,16 @@
         {
             this.unloadMap();
             this._currentMap = null;
+            _log.debug("mapInstanceId reset 0");
+            this._mapInstanceId = 0;
             this._currentMapRendered = true;
             this._lastMap = null;
             this._renderRequestStack = [];
         }
 
-        public function hideBackgroundForTacticMode(yes:Boolean):void
+        public function hideBackgroundForTacticMode(yes:Boolean, backgroundColor:uint=0):void
         {
-            this._renderer.modeTactic(yes);
+            this._renderer.modeTactic(yes, backgroundColor);
         }
 
         private function init():void
@@ -282,7 +283,7 @@
             this.checkForRender();
         }
 
-        private function checkForRender():void
+        private function checkForRender(displayWorld:Boolean=true):void
         {
             var dataMap:Map;
             var msg:MapsLoadingCompleteMessage;
@@ -298,9 +299,9 @@
             var request:RenderRequest = RenderRequest(this._renderRequestStack[0]);
             var pMap:WorldPoint = request.map;
             var forceReloadWithoutCache:Boolean = request.forceReloadWithoutCache;
-            Atouin.getInstance().showWorld(true);
+            Atouin.getInstance().showWorld(displayWorld);
             this._renderer.initRenderContainer(Atouin.getInstance().worldContainer);
-            if (((((((!(forceReloadWithoutCache)) && (this._currentMap))) && ((this._currentMap.mapId == pMap.mapId)))) && (!(Atouin.getInstance().options.reloadLoadedMap))))
+            if (((((!(forceReloadWithoutCache)) && (this._currentMap)) && (this._currentMap.mapId == pMap.mapId)) && (!(Atouin.getInstance().options.getOption("reloadLoadedMap")))))
             {
                 this._renderRequestStack.shift();
                 _log.debug(((("Map " + pMap.mapId) + " is the same, renderRequestID: ") + request.renderId));
@@ -309,14 +310,7 @@
                 atouin = Atouin.getInstance();
                 atouin.handler.process(msg);
                 msg.renderRequestId = request.renderId;
-                if (((!((dataMap.zoomScale == 1))) && (atouin.options.useInsideAutoZoom)))
-                {
-                    atouin.rootContainer.scaleX = dataMap.zoomScale;
-                    atouin.rootContainer.scaleY = dataMap.zoomScale;
-                    atouin.rootContainer.x = dataMap.zoomOffsetX;
-                    atouin.rootContainer.y = dataMap.zoomOffsetY;
-                    atouin.currentZoom = dataMap.zoomScale;
-                };
+                atouin.applyMapZoomScale(dataMap);
                 this.checkForRender();
                 return;
             };
@@ -326,6 +320,7 @@
             this._currentRenderId = request.renderId;
             this._forceReloadWithoutCache = forceReloadWithoutCache;
             var msg2:MapsLoadingStartedMessage = new MapsLoadingStartedMessage();
+            msg2.id = this._currentMap.mapId;
             Atouin.getInstance().handler.process(msg2);
             this._nMapLoadStart = getTimer();
             this._loader.cancel();
@@ -347,9 +342,9 @@
                 {
                     map.fromRaw(e.resource, request.decryptionKey);
                 }
-                catch(e:Error)
+                catch(err:Error)
                 {
-                    _log.fatal(("Exception sur le parsing du fichier de map :\n" + e.getStackTrace()));
+                    _log.fatal(("Exception sur le parsing du fichier de map :\n" + err.getStackTrace()));
                     map = new DefaultMap();
                 };
             };
@@ -357,13 +352,13 @@
             this.unloadMap();
             DataMapProvider.getInstance().resetUpdatedCell();
             DataMapProvider.getInstance().resetSpecialEffects();
-            if (!(request))
+            if (!request)
             {
                 return;
             };
             this._currentDataMap = new DataMapContainer(map);
             MEMORY_LOG[DataMapContainer] = 1;
-            this._renderer.render(this._currentDataMap, this._forceReloadWithoutCache, request.renderId, request.renderFixture);
+            this._renderer.render(this._currentDataMap, this._forceReloadWithoutCache, request.renderId, request.renderFixture, request.displayWorld);
             FrustumManager.getInstance().updateMap();
         }
 
@@ -401,7 +396,7 @@
 
         private function mapRenderProgress(e:ProgressEvent):void
         {
-            if (!(this._currentMap))
+            if (!this._currentMap)
             {
                 this._currentMapRendered = true;
                 this.unloadMap();
@@ -417,7 +412,7 @@
         private function signalMapLoadingFailure(errorReasonId:uint):void
         {
             var msg:MapLoadingFailedMessage = new MapLoadingFailedMessage();
-            if (!(this._currentMap))
+            if (!this._currentMap)
             {
                 msg.id = 0;
             }
@@ -451,10 +446,10 @@
                 msg.gfxLoadingTime = tgl;
                 msg.renderingTime = (this._nRenderMapEnd - this._nRenderMapStart);
                 msg.globalRenderingTime = tt;
-                _log.info(((((((((((((((((((("map rendered [total : " + tt) + "ms, ") + (((tt < 100)) ? (" " + (((tt < 10)) ? " " : "")) : "")) + "map load : ") + tml) + "ms, ") + (((tml < 100)) ? (" " + (((tml < 10)) ? " " : "")) : "")) + "gfx load : ") + tgl) + "ms, ") + (((tgl < 100)) ? (" " + (((tgl < 10)) ? " " : "")) : "")) + "render : ") + (this._nRenderMapEnd - this._nRenderMapStart)) + "ms] file : ") + ((this._currentMap) ? this._currentMap.mapId.toString() : "???")) + ".dlm") + ((this._isDefaultMap) ? " (/!\\ DEFAULT MAP) " : "")) + " / renderRequestID #") + this._currentRenderId));
+                _log.info(((((((((((((((((((("map rendered [total : " + tt) + "ms, ") + ((tt < 100) ? (" " + ((tt < 10) ? " " : "")) : "")) + "map load : ") + tml) + "ms, ") + ((tml < 100) ? (" " + ((tml < 10) ? " " : "")) : "")) + "gfx load : ") + tgl) + "ms, ") + ((tgl < 100) ? (" " + ((tgl < 10) ? " " : "")) : "")) + "render : ") + (this._nRenderMapEnd - this._nRenderMapStart)) + "ms] file : ") + ((this._currentMap) ? this._currentMap.mapId.toString() : "???")) + ".dlm") + ((this._isDefaultMap) ? " (/!\\ DEFAULT MAP) " : "")) + " / renderRequestID #") + this._currentRenderId));
                 if (((this._screenshot) && (this._screenshot.parent)))
                 {
-                    if (Atouin.getInstance().options.tweentInterMap)
+                    if (Atouin.getInstance().options.getOption("tweentInterMap"))
                     {
                         Atouin.getInstance().worldContainer.cacheAsBitmap = true;
                         EnterFrameDispatcher.addEventListener(this.tweenInterMap, "tweentInterMap");
@@ -477,7 +472,7 @@
 
 
     }
-}//package com.ankamagames.atouin.managers
+} com.ankamagames.atouin.managers
 
 import com.ankamagames.jerakine.types.positions.WorldPoint;
 import flash.utils.ByteArray;
@@ -492,15 +487,18 @@ class RenderRequest
     public var forceReloadWithoutCache:Boolean;
     public var decryptionKey:ByteArray;
     public var renderFixture:Boolean;
+    public var displayWorld:Boolean;
 
-    public function RenderRequest(map:WorldPoint, forceReloadWithoutCache:Boolean, decryptionKey:ByteArray, renderFixture:Boolean=true)
+    public function RenderRequest(map:WorldPoint, forceReloadWithoutCache:Boolean, decryptionKey:ByteArray, renderFixture:Boolean=true, displayWorld:Boolean=true)
     {
         this.renderId = RENDER_ID++;
         this.map = map;
         this.forceReloadWithoutCache = forceReloadWithoutCache;
         this.decryptionKey = decryptionKey;
         this.renderFixture = renderFixture;
+        this.displayWorld = displayWorld;
     }
 
 }
+
 

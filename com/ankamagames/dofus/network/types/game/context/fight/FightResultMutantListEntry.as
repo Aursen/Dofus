@@ -1,8 +1,9 @@
-﻿package com.ankamagames.dofus.network.types.game.context.fight
+package com.ankamagames.dofus.network.types.game.context.fight
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
     public class FightResultMutantListEntry extends FightResultFighterListEntry implements INetworkType 
     {
@@ -17,7 +18,7 @@
             return (216);
         }
 
-        public function initFightResultMutantListEntry(outcome:uint=0, wave:uint=0, rewards:FightLoot=null, id:int=0, alive:Boolean=false, level:uint=0):FightResultMutantListEntry
+        public function initFightResultMutantListEntry(outcome:uint=0, wave:uint=0, rewards:FightLoot=null, id:Number=0, alive:Boolean=false, level:uint=0):FightResultMutantListEntry
         {
             super.initFightResultFighterListEntry(outcome, wave, rewards, id, alive);
             this.level = level;
@@ -53,6 +54,22 @@
         public function deserializeAs_FightResultMutantListEntry(input:ICustomDataInput):void
         {
             super.deserialize(input);
+            this._levelFunc(input);
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_FightResultMutantListEntry(tree);
+        }
+
+        public function deserializeAsyncAs_FightResultMutantListEntry(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._levelFunc);
+        }
+
+        private function _levelFunc(input:ICustomDataInput):void
+        {
             this.level = input.readVarUhShort();
             if (this.level < 0)
             {
@@ -62,5 +79,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.context.fight
+} com.ankamagames.dofus.network.types.game.context.fight
 

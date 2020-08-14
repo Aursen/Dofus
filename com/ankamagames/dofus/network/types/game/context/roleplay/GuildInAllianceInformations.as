@@ -1,18 +1,18 @@
-﻿package com.ankamagames.dofus.network.types.game.context.roleplay
+package com.ankamagames.dofus.network.types.game.context.roleplay
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.dofus.network.types.game.guild.GuildEmblem;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
     public class GuildInAllianceInformations extends GuildInformations implements INetworkType 
     {
 
         public static const protocolId:uint = 420;
 
-        public var guildLevel:uint = 0;
         public var nbMembers:uint = 0;
-        public var enabled:Boolean = false;
+        public var joinDate:uint = 0;
 
 
         override public function getTypeId():uint
@@ -20,21 +20,19 @@
             return (420);
         }
 
-        public function initGuildInAllianceInformations(guildId:uint=0, guildName:String="", guildEmblem:GuildEmblem=null, guildLevel:uint=0, nbMembers:uint=0, enabled:Boolean=false):GuildInAllianceInformations
+        public function initGuildInAllianceInformations(guildId:uint=0, guildName:String="", guildLevel:uint=0, guildEmblem:GuildEmblem=null, nbMembers:uint=0, joinDate:uint=0):GuildInAllianceInformations
         {
-            super.initGuildInformations(guildId, guildName, guildEmblem);
-            this.guildLevel = guildLevel;
+            super.initGuildInformations(guildId, guildName, guildLevel, guildEmblem);
             this.nbMembers = nbMembers;
-            this.enabled = enabled;
+            this.joinDate = joinDate;
             return (this);
         }
 
         override public function reset():void
         {
             super.reset();
-            this.guildLevel = 0;
             this.nbMembers = 0;
-            this.enabled = false;
+            this.joinDate = 0;
         }
 
         override public function serialize(output:ICustomDataOutput):void
@@ -45,17 +43,16 @@
         public function serializeAs_GuildInAllianceInformations(output:ICustomDataOutput):void
         {
             super.serializeAs_GuildInformations(output);
-            if ((((this.guildLevel < 1)) || ((this.guildLevel > 200))))
-            {
-                throw (new Error((("Forbidden value (" + this.guildLevel) + ") on element guildLevel.")));
-            };
-            output.writeByte(this.guildLevel);
-            if ((((this.nbMembers < 1)) || ((this.nbMembers > 240))))
+            if (((this.nbMembers < 1) || (this.nbMembers > 240)))
             {
                 throw (new Error((("Forbidden value (" + this.nbMembers) + ") on element nbMembers.")));
             };
             output.writeByte(this.nbMembers);
-            output.writeBoolean(this.enabled);
+            if (this.joinDate < 0)
+            {
+                throw (new Error((("Forbidden value (" + this.joinDate) + ") on element joinDate.")));
+            };
+            output.writeInt(this.joinDate);
         }
 
         override public function deserialize(input:ICustomDataInput):void
@@ -66,20 +63,41 @@
         public function deserializeAs_GuildInAllianceInformations(input:ICustomDataInput):void
         {
             super.deserialize(input);
-            this.guildLevel = input.readUnsignedByte();
-            if ((((this.guildLevel < 1)) || ((this.guildLevel > 200))))
-            {
-                throw (new Error((("Forbidden value (" + this.guildLevel) + ") on element of GuildInAllianceInformations.guildLevel.")));
-            };
+            this._nbMembersFunc(input);
+            this._joinDateFunc(input);
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GuildInAllianceInformations(tree);
+        }
+
+        public function deserializeAsyncAs_GuildInAllianceInformations(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._nbMembersFunc);
+            tree.addChild(this._joinDateFunc);
+        }
+
+        private function _nbMembersFunc(input:ICustomDataInput):void
+        {
             this.nbMembers = input.readUnsignedByte();
-            if ((((this.nbMembers < 1)) || ((this.nbMembers > 240))))
+            if (((this.nbMembers < 1) || (this.nbMembers > 240)))
             {
                 throw (new Error((("Forbidden value (" + this.nbMembers) + ") on element of GuildInAllianceInformations.nbMembers.")));
             };
-            this.enabled = input.readBoolean();
+        }
+
+        private function _joinDateFunc(input:ICustomDataInput):void
+        {
+            this.joinDate = input.readInt();
+            if (this.joinDate < 0)
+            {
+                throw (new Error((("Forbidden value (" + this.joinDate) + ") on element of GuildInAllianceInformations.joinDate.")));
+            };
         }
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.context.roleplay
+} com.ankamagames.dofus.network.types.game.context.roleplay
 

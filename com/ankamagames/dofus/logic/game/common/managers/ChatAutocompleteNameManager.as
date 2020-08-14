@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.common.managers
+package com.ankamagames.dofus.logic.game.common.managers
 {
     import com.ankamagames.dofus.uiApi.PlayedCharacterApi;
     import flash.utils.Dictionary;
@@ -10,20 +10,16 @@
 
         private static var _instance:ChatAutocompleteNameManager;
 
+        [Api(name="PlayedCharacterApi")]
         public var playerApi:PlayedCharacterApi;
-        private var _dict:Dictionary;
+        private var _dict:Dictionary = new Dictionary();
         private var _cache:Vector.<String>;
         private var _subStringCache:String = "";
 
-        public function ChatAutocompleteNameManager()
-        {
-            this._dict = new Dictionary();
-            super();
-        }
 
         public static function getInstance():ChatAutocompleteNameManager
         {
-            if (!(_instance))
+            if (!_instance)
             {
                 _instance = new (ChatAutocompleteNameManager)();
             };
@@ -89,7 +85,7 @@
             {
                 name = entry.name;
                 lcName = name.toLowerCase();
-                if ((((((entry.name.length >= lcSubString.length)) && ((lcName.substr(0, lcSubString.length) == lcSubString)))) && (!((name == PlayedCharacterApi.getPlayedCharacterInfo().name)))))
+                if ((((entry.name.length >= lcSubString.length) && (lcName.substr(0, lcSubString.length) == lcSubString)) && (!(name == PlayedCharacterApi.getInstance().getPlayedCharacterInfo().name))))
                 {
                     ret.push(name);
                 };
@@ -100,7 +96,7 @@
         private function getListByName(name:String):Vector.<Object>
         {
             var key:String = name.charAt(0).toLowerCase();
-            if (!(this._dict.hasOwnProperty(key)))
+            if (!this._dict.hasOwnProperty(key))
             {
                 this._dict[key] = new Vector.<Object>();
             };
@@ -125,7 +121,7 @@
         {
             var list:Vector.<Object> = this.getListByName(entry.name);
             var i:uint;
-            while ((((i < list.length)) && ((list[i].priority > entry.priority))))
+            while (((i < list.length) && (list[i].priority > entry.priority)))
             {
                 i++;
             };
@@ -134,5 +130,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.managers
+} com.ankamagames.dofus.logic.game.common.managers
 

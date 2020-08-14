@@ -1,10 +1,10 @@
-﻿package com.ankamagames.dofus.network.types.game.approach
+package com.ankamagames.dofus.network.types.game.approach
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class ServerSessionConstantLong extends ServerSessionConstant implements INetworkType 
     {
 
@@ -39,7 +39,7 @@
         public function serializeAs_ServerSessionConstantLong(output:ICustomDataOutput):void
         {
             super.serializeAs_ServerSessionConstant(output);
-            if ((((this.value < -9007199254740992)) || ((this.value > 9007199254740992))))
+            if (((this.value < -9007199254740992) || (this.value > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.value) + ") on element value.")));
             };
@@ -54,8 +54,24 @@
         public function deserializeAs_ServerSessionConstantLong(input:ICustomDataInput):void
         {
             super.deserialize(input);
+            this._valueFunc(input);
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_ServerSessionConstantLong(tree);
+        }
+
+        public function deserializeAsyncAs_ServerSessionConstantLong(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._valueFunc);
+        }
+
+        private function _valueFunc(input:ICustomDataInput):void
+        {
             this.value = input.readDouble();
-            if ((((this.value < -9007199254740992)) || ((this.value > 9007199254740992))))
+            if (((this.value < -9007199254740992) || (this.value > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.value) + ") on element of ServerSessionConstantLong.value.")));
             };
@@ -63,5 +79,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.approach
+} com.ankamagames.dofus.network.types.game.approach
 

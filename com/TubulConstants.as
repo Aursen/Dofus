@@ -1,4 +1,4 @@
-﻿package com
+package com
 {
     public class TubulConstants 
     {
@@ -15,5 +15,5 @@
 
 
     }
-}//package com
+} com
 

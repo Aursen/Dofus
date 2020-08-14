@@ -1,9 +1,10 @@
-﻿package com.ankamagames.dofus.network.messages.game.friend
+package com.ankamagames.dofus.network.messages.game.friend
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
     import __AS3__.vec.Vector;
     import com.ankamagames.dofus.network.types.game.friend.FriendInformations;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
@@ -11,20 +12,15 @@
     import com.ankamagames.dofus.network.ProtocolTypeManager;
     import __AS3__.vec.*;
 
-    [Trusted]
     public class FriendsListMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 4002;
 
         private var _isInitialized:Boolean = false;
-        public var friendsList:Vector.<FriendInformations>;
+        public var friendsList:Vector.<FriendInformations> = new Vector.<FriendInformations>();
+        private var _friendsListtree:FuncTree;
 
-        public function FriendsListMessage()
-        {
-            this.friendsList = new Vector.<FriendInformations>();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
@@ -59,6 +55,14 @@
         override public function unpack(input:ICustomDataInput, length:uint):void
         {
             this.deserialize(input);
+        }
+
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
         }
 
         public function serialize(output:ICustomDataOutput):void
@@ -99,7 +103,36 @@
             };
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_FriendsListMessage(tree);
+        }
+
+        public function deserializeAsyncAs_FriendsListMessage(tree:FuncTree):void
+        {
+            this._friendsListtree = tree.addChild(this._friendsListtreeFunc);
+        }
+
+        private function _friendsListtreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._friendsListtree.addChild(this._friendsListFunc);
+                i++;
+            };
+        }
+
+        private function _friendsListFunc(input:ICustomDataInput):void
+        {
+            var _id:uint = input.readUnsignedShort();
+            var _item:FriendInformations = ProtocolTypeManager.getInstance(FriendInformations, _id);
+            _item.deserialize(input);
+            this.friendsList.push(_item);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.friend
+} com.ankamagames.dofus.network.messages.game.friend
 

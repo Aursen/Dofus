@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.types.uiDefinition
+package com.ankamagames.berilia.types.uiDefinition
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
@@ -21,11 +21,11 @@
         public function toGraphicSize():GraphicSize
         {
             var graphicSize:GraphicSize = new GraphicSize();
-            if (!(isNaN(this.xUnit)))
+            if (!isNaN(this.xUnit))
             {
                 graphicSize.setX(this.x, this.xUnit);
             };
-            if (!(isNaN(this.yUnit)))
+            if (!isNaN(this.yUnit))
             {
                 graphicSize.setY(this.y, this.yUnit);
             };
@@ -34,5 +34,5 @@
 
 
     }
-}//package com.ankamagames.berilia.types.uiDefinition
+} com.ankamagames.berilia.types.uiDefinition
 

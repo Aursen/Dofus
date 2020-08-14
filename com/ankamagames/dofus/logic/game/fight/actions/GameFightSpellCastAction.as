@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.fight.actions
+package com.ankamagames.dofus.logic.game.fight.actions
 {
     import com.ankamagames.jerakine.handlers.messages.Action;
 
@@ -6,16 +6,18 @@
     {
 
         public var spellId:uint;
+        public var slot:int;
 
 
-        public static function create(spellId:uint):GameFightSpellCastAction
+        public static function create(spellId:uint, slot:int):GameFightSpellCastAction
         {
             var a:GameFightSpellCastAction = new (GameFightSpellCastAction)();
             a.spellId = spellId;
+            a.slot = slot;
             return (a);
         }
 
 
     }
-}//package com.ankamagames.dofus.logic.game.fight.actions
+} com.ankamagames.dofus.logic.game.fight.actions
 

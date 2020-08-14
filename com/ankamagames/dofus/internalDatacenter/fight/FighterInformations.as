@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.internalDatacenter.fight
+package com.ankamagames.dofus.internalDatacenter.fight
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.jerakine.logger.Logger;
@@ -14,19 +14,22 @@
     import com.ankamagames.dofus.logic.game.common.misc.DofusEntities;
     import com.ankamagames.jerakine.entities.interfaces.IEntity;
     import com.ankamagames.dofus.network.enums.TeamEnum;
+    import com.ankamagames.dofus.network.types.game.context.fight.GameFightFighterNamedInformations;
 
     public class FighterInformations implements IDataCenter 
     {
 
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(FighterInformations));
 
-        private var _fighterId:int;
+        private var _fighterId:Number;
         private var _look:TiphonEntityLook;
         private var _currentCell:int;
         private var _currentOrientation:int;
         private var _isAlive:Boolean;
         private var _team:String;
         private var _wave:int;
+        private var _rank:int;
+        private var _hiddenInPrefight:Boolean;
         private var _lifePoints:int;
         private var _maxLifePoints:int;
         private var _actionPoints:int;
@@ -50,7 +53,7 @@
         private var _neutralFixedResist:int;
         private var _waterFixedResist:int;
 
-        public function FighterInformations(fighterId:int)
+        public function FighterInformations(fighterId:Number)
         {
             var fightFrame:Frame = Kernel.getWorker().getFrame(FightContextFrame);
             if (((!(fightFrame)) || (!((fightFrame as FightContextFrame).entitiesFrame))))
@@ -58,7 +61,7 @@
                 return;
             };
             var fighterInfos:GameFightFighterInformations = ((fightFrame as FightContextFrame).entitiesFrame.getEntityInfos(fighterId) as GameFightFighterInformations);
-            if (!(fighterInfos))
+            if (!fighterInfos)
             {
                 return;
             };
@@ -75,8 +78,8 @@
                 this._currentCell = fighterInfos.disposition.cellId;
             };
             this._currentOrientation = fighterInfos.disposition.direction;
-            this._isAlive = fighterInfos.alive;
-            switch (fighterInfos.teamId)
+            this._isAlive = fighterInfos.spawnInfo.alive;
+            switch (fighterInfos.spawnInfo.teamId)
             {
                 case TeamEnum.TEAM_CHALLENGER:
                     this._team = "challenger";
@@ -88,10 +91,15 @@
                     this._team = "spectator";
                     break;
                 default:
-                    _log.warn((("Unknown teamId " + fighterInfos.teamId) + " ?!"));
+                    _log.warn((("Unknown teamId " + fighterInfos.spawnInfo.teamId) + " ?!"));
                     this._team = "unknown";
             };
             this._wave = fighterInfos.wave;
+            if ((fighterInfos is GameFightFighterNamedInformations))
+            {
+                this._rank = (fighterInfos as GameFightFighterNamedInformations).leagueId;
+                this._hiddenInPrefight = (fighterInfos as GameFightFighterNamedInformations).hiddenInPrefight;
+            };
             this._lifePoints = fighterInfos.stats.lifePoints;
             this._maxLifePoints = fighterInfos.stats.maxLifePoints;
             this._actionPoints = fighterInfos.stats.actionPoints;
@@ -116,7 +124,7 @@
             this._waterFixedResist = fighterInfos.stats.waterElementReduction;
         }
 
-        public function get fighterId():int
+        public function get fighterId():Number
         {
             return (this._fighterId);
         }
@@ -149,6 +157,16 @@
         public function get wave():int
         {
             return (this._wave);
+        }
+
+        public function get rank():int
+        {
+            return (this._rank);
+        }
+
+        public function get hiddenInPrefight():Boolean
+        {
+            return (this._hiddenInPrefight);
         }
 
         public function get lifePoints():int
@@ -263,5 +281,5 @@
 
 
     }
-}//package com.ankamagames.dofus.internalDatacenter.fight
+} com.ankamagames.dofus.internalDatacenter.fight
 

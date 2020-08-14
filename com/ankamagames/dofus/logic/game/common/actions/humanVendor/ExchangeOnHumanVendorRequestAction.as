@@ -1,15 +1,15 @@
-﻿package com.ankamagames.dofus.logic.game.common.actions.humanVendor
+package com.ankamagames.dofus.logic.game.common.actions.humanVendor
 {
     import com.ankamagames.jerakine.handlers.messages.Action;
 
     public class ExchangeOnHumanVendorRequestAction implements Action 
     {
 
-        public var humanVendorId:int;
+        public var humanVendorId:Number;
         public var humanVendorCell:int;
 
 
-        public static function create(pHumanVendorId:uint, pHumanVendorCell:uint):ExchangeOnHumanVendorRequestAction
+        public static function create(pHumanVendorId:Number, pHumanVendorCell:uint):ExchangeOnHumanVendorRequestAction
         {
             var a:ExchangeOnHumanVendorRequestAction = new (ExchangeOnHumanVendorRequestAction)();
             a.humanVendorId = pHumanVendorId;
@@ -19,5 +19,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.actions.humanVendor
+} com.ankamagames.dofus.logic.game.common.actions.humanVendor
 

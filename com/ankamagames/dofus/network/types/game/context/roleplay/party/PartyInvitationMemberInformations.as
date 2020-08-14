@@ -1,9 +1,10 @@
-﻿package com.ankamagames.dofus.network.types.game.context.roleplay.party
+package com.ankamagames.dofus.network.types.game.context.roleplay.party
 {
     import com.ankamagames.dofus.network.types.game.character.choice.CharacterBaseInformations;
     import com.ankamagames.jerakine.network.INetworkType;
     import __AS3__.vec.Vector;
-    import com.ankamagames.dofus.network.types.game.context.roleplay.party.companion.PartyCompanionBaseInformations;
+    import com.ankamagames.dofus.network.types.game.context.roleplay.party.entity.PartyEntityBaseInformation;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import com.ankamagames.dofus.network.types.game.look.EntityLook;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
@@ -16,29 +17,25 @@
 
         public var worldX:int = 0;
         public var worldY:int = 0;
-        public var mapId:int = 0;
+        public var mapId:Number = 0;
         public var subAreaId:uint = 0;
-        public var companions:Vector.<PartyCompanionBaseInformations>;
+        public var entities:Vector.<PartyEntityBaseInformation> = new Vector.<PartyEntityBaseInformation>();
+        private var _entitiestree:FuncTree;
 
-        public function PartyInvitationMemberInformations()
-        {
-            this.companions = new Vector.<PartyCompanionBaseInformations>();
-            super();
-        }
 
         override public function getTypeId():uint
         {
             return (376);
         }
 
-        public function initPartyInvitationMemberInformations(id:uint=0, level:uint=0, name:String="", entityLook:EntityLook=null, breed:int=0, sex:Boolean=false, worldX:int=0, worldY:int=0, mapId:int=0, subAreaId:uint=0, companions:Vector.<PartyCompanionBaseInformations>=null):PartyInvitationMemberInformations
+        public function initPartyInvitationMemberInformations(id:Number=0, name:String="", level:uint=0, entityLook:EntityLook=null, breed:int=0, sex:Boolean=false, worldX:int=0, worldY:int=0, mapId:Number=0, subAreaId:uint=0, entities:Vector.<PartyEntityBaseInformation>=null):PartyInvitationMemberInformations
         {
-            super.initCharacterBaseInformations(id, level, name, entityLook, breed, sex);
+            super.initCharacterBaseInformations(id, name, level, entityLook, breed, sex);
             this.worldX = worldX;
             this.worldY = worldY;
             this.mapId = mapId;
             this.subAreaId = subAreaId;
-            this.companions = companions;
+            this.entities = entities;
             return (this);
         }
 
@@ -49,7 +46,7 @@
             this.worldY = 0;
             this.mapId = 0;
             this.subAreaId = 0;
-            this.companions = new Vector.<PartyCompanionBaseInformations>();
+            this.entities = new Vector.<PartyEntityBaseInformation>();
         }
 
         override public function serialize(output:ICustomDataOutput):void
@@ -60,27 +57,31 @@
         public function serializeAs_PartyInvitationMemberInformations(output:ICustomDataOutput):void
         {
             super.serializeAs_CharacterBaseInformations(output);
-            if ((((this.worldX < -255)) || ((this.worldX > 0xFF))))
+            if (((this.worldX < -255) || (this.worldX > 0xFF)))
             {
                 throw (new Error((("Forbidden value (" + this.worldX) + ") on element worldX.")));
             };
             output.writeShort(this.worldX);
-            if ((((this.worldY < -255)) || ((this.worldY > 0xFF))))
+            if (((this.worldY < -255) || (this.worldY > 0xFF)))
             {
                 throw (new Error((("Forbidden value (" + this.worldY) + ") on element worldY.")));
             };
             output.writeShort(this.worldY);
-            output.writeInt(this.mapId);
+            if (((this.mapId < 0) || (this.mapId > 9007199254740992)))
+            {
+                throw (new Error((("Forbidden value (" + this.mapId) + ") on element mapId.")));
+            };
+            output.writeDouble(this.mapId);
             if (this.subAreaId < 0)
             {
                 throw (new Error((("Forbidden value (" + this.subAreaId) + ") on element subAreaId.")));
             };
             output.writeVarShort(this.subAreaId);
-            output.writeShort(this.companions.length);
+            output.writeShort(this.entities.length);
             var _i5:uint;
-            while (_i5 < this.companions.length)
+            while (_i5 < this.entities.length)
             {
-                (this.companions[_i5] as PartyCompanionBaseInformations).serializeAs_PartyCompanionBaseInformations(output);
+                (this.entities[_i5] as PartyEntityBaseInformation).serializeAs_PartyEntityBaseInformation(output);
                 _i5++;
             };
         }
@@ -92,36 +93,93 @@
 
         public function deserializeAs_PartyInvitationMemberInformations(input:ICustomDataInput):void
         {
-            var _item5:PartyCompanionBaseInformations;
+            var _item5:PartyEntityBaseInformation;
             super.deserialize(input);
+            this._worldXFunc(input);
+            this._worldYFunc(input);
+            this._mapIdFunc(input);
+            this._subAreaIdFunc(input);
+            var _entitiesLen:uint = input.readUnsignedShort();
+            var _i5:uint;
+            while (_i5 < _entitiesLen)
+            {
+                _item5 = new PartyEntityBaseInformation();
+                _item5.deserialize(input);
+                this.entities.push(_item5);
+                _i5++;
+            };
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_PartyInvitationMemberInformations(tree);
+        }
+
+        public function deserializeAsyncAs_PartyInvitationMemberInformations(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._worldXFunc);
+            tree.addChild(this._worldYFunc);
+            tree.addChild(this._mapIdFunc);
+            tree.addChild(this._subAreaIdFunc);
+            this._entitiestree = tree.addChild(this._entitiestreeFunc);
+        }
+
+        private function _worldXFunc(input:ICustomDataInput):void
+        {
             this.worldX = input.readShort();
-            if ((((this.worldX < -255)) || ((this.worldX > 0xFF))))
+            if (((this.worldX < -255) || (this.worldX > 0xFF)))
             {
                 throw (new Error((("Forbidden value (" + this.worldX) + ") on element of PartyInvitationMemberInformations.worldX.")));
             };
+        }
+
+        private function _worldYFunc(input:ICustomDataInput):void
+        {
             this.worldY = input.readShort();
-            if ((((this.worldY < -255)) || ((this.worldY > 0xFF))))
+            if (((this.worldY < -255) || (this.worldY > 0xFF)))
             {
                 throw (new Error((("Forbidden value (" + this.worldY) + ") on element of PartyInvitationMemberInformations.worldY.")));
             };
-            this.mapId = input.readInt();
+        }
+
+        private function _mapIdFunc(input:ICustomDataInput):void
+        {
+            this.mapId = input.readDouble();
+            if (((this.mapId < 0) || (this.mapId > 9007199254740992)))
+            {
+                throw (new Error((("Forbidden value (" + this.mapId) + ") on element of PartyInvitationMemberInformations.mapId.")));
+            };
+        }
+
+        private function _subAreaIdFunc(input:ICustomDataInput):void
+        {
             this.subAreaId = input.readVarUhShort();
             if (this.subAreaId < 0)
             {
                 throw (new Error((("Forbidden value (" + this.subAreaId) + ") on element of PartyInvitationMemberInformations.subAreaId.")));
             };
-            var _companionsLen:uint = input.readUnsignedShort();
-            var _i5:uint;
-            while (_i5 < _companionsLen)
+        }
+
+        private function _entitiestreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
             {
-                _item5 = new PartyCompanionBaseInformations();
-                _item5.deserialize(input);
-                this.companions.push(_item5);
-                _i5++;
+                this._entitiestree.addChild(this._entitiesFunc);
+                i++;
             };
+        }
+
+        private function _entitiesFunc(input:ICustomDataInput):void
+        {
+            var _item:PartyEntityBaseInformation = new PartyEntityBaseInformation();
+            _item.deserialize(input);
+            this.entities.push(_item);
         }
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.context.roleplay.party
+} com.ankamagames.dofus.network.types.game.context.roleplay.party
 

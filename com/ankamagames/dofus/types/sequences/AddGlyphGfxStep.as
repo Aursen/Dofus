@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.types.sequences
+package com.ankamagames.dofus.types.sequences
 {
     import com.ankamagames.jerakine.sequencer.AbstractSequencable;
     import com.ankamagames.dofus.types.entities.Glyph;
@@ -6,7 +6,7 @@
     import com.ankamagames.tiphon.types.look.TiphonEntityLook;
     import com.ankamagames.jerakine.types.positions.MapPoint;
     import com.ankamagames.atouin.enums.PlacementStrataEnums;
-    import com.ankamagames.dofus.network.enums.GameActionMarkTypeEnum;
+    import tools.enumeration.GameActionMarkTypeEnum;
     import com.ankamagames.dofus.types.enums.PortalAnimationEnum;
     import com.ankamagames.dofus.logic.game.fight.managers.MarkedCellsManager;
 
@@ -33,12 +33,12 @@
 
         override public function start():void
         {
-            var id:int = EntitiesManager.getInstance().getFreeEntityId();
+            var id:Number = EntitiesManager.getInstance().getFreeEntityId();
             this._entity = new Glyph(id, TiphonEntityLook.fromString((("{" + this._gfxId) + "}")), true, true, this._markType);
-            this._entity.init();
+            this._entity.initDirection();
             this._entity.position = MapPoint.fromCellId(this._cellId);
-            this._entity.display(PlacementStrataEnums.STRATA_AREA);
-            if ((((this._markType == GameActionMarkTypeEnum.PORTAL)) && (!(this._markActive))))
+            this._entity.display(PlacementStrataEnums.STRATA_GLYPH_GFX);
+            if (((this._markType == GameActionMarkTypeEnum.PORTAL) && (!(this._markActive))))
             {
                 this._entity.setAnimation(PortalAnimationEnum.STATE_DISABLED);
             };
@@ -48,5 +48,5 @@
 
 
     }
-}//package com.ankamagames.dofus.types.sequences
+} com.ankamagames.dofus.types.sequences
 

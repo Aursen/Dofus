@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.datacenter.quest.objectives
+package com.ankamagames.dofus.datacenter.quest.objectives
 {
     import com.ankamagames.dofus.datacenter.quest.QuestObjective;
     import com.ankamagames.jerakine.interfaces.IDataCenter;
@@ -12,7 +12,7 @@
 
         public function get freeFormTextId():uint
         {
-            if (!(this.parameters))
+            if (!this.parameters)
             {
                 return (0);
             };
@@ -21,7 +21,7 @@
 
         public function get freeFormText():String
         {
-            if (!(this._freeFormText))
+            if (!this._freeFormText)
             {
                 this._freeFormText = I18n.getText(this.freeFormTextId);
             };
@@ -35,5 +35,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.quest.objectives
+} com.ankamagames.dofus.datacenter.quest.objectives
 

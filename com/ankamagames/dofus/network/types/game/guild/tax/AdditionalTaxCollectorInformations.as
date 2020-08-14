@@ -1,8 +1,9 @@
-﻿package com.ankamagames.dofus.network.types.game.guild.tax
+package com.ankamagames.dofus.network.types.game.guild.tax
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
     public class AdditionalTaxCollectorInformations implements INetworkType 
     {
@@ -53,7 +54,28 @@
 
         public function deserializeAs_AdditionalTaxCollectorInformations(input:ICustomDataInput):void
         {
+            this._collectorCallerNameFunc(input);
+            this._dateFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_AdditionalTaxCollectorInformations(tree);
+        }
+
+        public function deserializeAsyncAs_AdditionalTaxCollectorInformations(tree:FuncTree):void
+        {
+            tree.addChild(this._collectorCallerNameFunc);
+            tree.addChild(this._dateFunc);
+        }
+
+        private function _collectorCallerNameFunc(input:ICustomDataInput):void
+        {
             this.collectorCallerName = input.readUTF();
+        }
+
+        private function _dateFunc(input:ICustomDataInput):void
+        {
             this.date = input.readInt();
             if (this.date < 0)
             {
@@ -63,5 +85,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.guild.tax
+} com.ankamagames.dofus.network.types.game.guild.tax
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.common.managers
+package com.ankamagames.dofus.logic.common.managers
 {
     import com.ankamagames.dofus.types.data.FpsLogWrapper;
     import com.ankamagames.jerakine.utils.display.EnterFrameDispatcher;
@@ -6,11 +6,9 @@
     import flash.events.Event;
     import flash.desktop.NativeApplication;
     import flash.events.NativeWindowDisplayStateEvent;
-    import com.ankamagames.tiphon.engine.TiphonCacheManager;
     import com.ankamagames.dofus.BuildInfos;
     import com.ankamagames.dofus.network.enums.BuildTypeEnum;
     import com.ankamagames.tiphon.engine.TiphonDebugManager;
-    import com.ankamagames.jerakine.utils.system.AirScanner;
     import flash.display.NativeWindow;
     import flash.display.NativeWindowDisplayState;
     import com.ankamagames.jerakine.managers.PerformanceManager;
@@ -18,9 +16,6 @@
     import com.ankamagames.dofus.misc.interClient.InterClientManager;
     import flash.events.MouseEvent;
     import flash.utils.getTimer;
-    import com.ankamagames.jerakine.replay.LogFrame;
-    import flash.system.System;
-    import com.ankamagames.jerakine.replay.LogTypeEnum;
     import com.ankamagames.jerakine.utils.display.FpsControler;
 
     public class DofusFpsManager 
@@ -33,6 +28,7 @@
         private static var _frameNeeded:int = 0;
         private static var _focusListInfo:Array = new Array();
         public static var currentFps:Number;
+        public static var allowSkipFrame:Boolean = true;
         private static var _elapsedTime:uint;
         private static var _lastTime:uint;
         private static var _frame:uint;
@@ -46,10 +42,9 @@
             StageShareManager.stage.addEventListener(Event.ACTIVATE, onActivate);
             StageShareManager.stage.addEventListener(Event.DEACTIVATE, onDesactivate);
             NativeApplication.nativeApplication.openedWindows[0].addEventListener(NativeWindowDisplayStateEvent.DISPLAY_STATE_CHANGE, onStateChange);
-            TiphonCacheManager.init();
             _logWrapped = new FpsLogWrapper();
             _logRamWrapped = new FpsLogWrapper();
-            if ((((BuildInfos.BUILD_TYPE == BuildTypeEnum.DEBUG)) || ((BuildInfos.BUILD_TYPE == BuildTypeEnum.INTERNAL))))
+            if (((BuildInfos.BUILD_TYPE == BuildTypeEnum.DEBUG) || (BuildInfos.BUILD_TYPE == BuildTypeEnum.INTERNAL)))
             {
                 TiphonDebugManager.enable();
             };
@@ -59,16 +54,12 @@
         {
             var lastFocus:String;
             var lastTime:Number;
-            var _local_9:Number;
-            var hasAir:Boolean = AirScanner.hasAir();
+            var time:Number;
             var nativeWindow:NativeWindow = NativeApplication.nativeApplication.openedWindows[0];
-            if (hasAir)
+            if (((nativeWindow) && (nativeWindow["displayState"] == NativeWindowDisplayState.MINIMIZED)))
             {
-                if (((nativeWindow) && ((nativeWindow["displayState"] == NativeWindowDisplayState.MINIMIZED))))
-                {
-                    StageShareManager.stage.frameRate = 12;
-                    return;
-                };
+                StageShareManager.stage.frameRate = 12;
+                return;
             };
             var num:int = focusList.length;
             var i:int;
@@ -81,11 +72,11 @@
                 }
                 else
                 {
-                    _local_9 = Number(focusList[(i + 1)]);
-                    if (lastTime < _local_9)
+                    time = Number(focusList[(i + 1)]);
+                    if (lastTime < time)
                     {
                         lastFocus = focusList[i];
-                        lastTime = _local_9;
+                        lastTime = time;
                     };
                 };
                 i = (i + 2);
@@ -96,7 +87,7 @@
             }
             else
             {
-                if (!(StageShareManager.isActive))
+                if (!StageShareManager.isActive)
                 {
                     StageShareManager.stage.frameRate = 12;
                 };
@@ -107,7 +98,7 @@
         {
             StageShareManager.stage.frameRate = PerformanceManager.BASE_FRAMERATE;
             var options:DofusOptions = Dofus.getInstance().options;
-            if (((options) && (options.optimizeMultiAccount)))
+            if (((options) && (options.getOption("optimizeMultiAccount"))))
             {
                 InterClientManager.getInstance().gainFocus();
             };
@@ -128,7 +119,7 @@
         private static function onStateChange(e:NativeWindowDisplayStateEvent):void
         {
             var options:DofusOptions = Dofus.getInstance().options;
-            if (((options) && (options.optimizeMultiAccount)))
+            if (((options) && (options.getOption("optimizeMultiAccount"))))
             {
                 if (e.afterDisplayState == NativeWindowDisplayState.MINIMIZED)
                 {
@@ -144,6 +135,7 @@
 
         private static function onEnterFrame(e:Event):void
         {
+            var numFrame:int;
             var i:int;
             var time:int = getTimer();
             _elapsedTime = (_elapsedTime + (time - _lastTime));
@@ -153,31 +145,33 @@
                 currentFps = (_frame / (_elapsedTime / 1000));
                 _elapsedTime = 0;
                 _frame = 0;
-                if (LogFrame.enabled)
-                {
-                    _logWrapped.fps = currentFps;
-                    _logRamWrapped.fps = System.totalMemory;
-                    LogFrame.log(LogTypeEnum.FPS, _logWrapped);
-                    LogFrame.log(LogTypeEnum.RAM, _logRamWrapped);
-                };
             };
-            _frameNeeded = (time / _interval);
-            _totalFrame++;
-            var numFrame:int = (_frameNeeded - _framePlayed);
-            if (numFrame)
+            if (allowSkipFrame)
             {
-                _framePlayed = _frameNeeded;
-                i = 0;
-                while (i < numFrame)
+                _frameNeeded = (time / _interval);
+                _totalFrame++;
+                numFrame = (_frameNeeded - _framePlayed);
+                if (numFrame)
                 {
-                    FpsControler.nextFrame();
-                    i++;
+                    _framePlayed = _frameNeeded;
+                    i = 0;
+                    while (i < numFrame)
+                    {
+                        FpsControler.nextFrame();
+                        i++;
+                    };
                 };
+            }
+            else
+            {
+                _frameNeeded = 1;
+                _totalFrame++;
+                FpsControler.nextFrame();
             };
             _lastTime = time;
         }
 
 
     }
-}//package com.ankamagames.dofus.logic.common.managers
+} com.ankamagames.dofus.logic.common.managers
 

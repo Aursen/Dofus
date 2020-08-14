@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.datacenter.items.criterion
+package com.ankamagames.dofus.datacenter.items.criterion
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.jerakine.data.I18n;
@@ -19,11 +19,7 @@
             {
                 return (I18n.getUiText("ui.criterion.noAlliance"));
             };
-            if (_criterionValue == 1)
-            {
-                return (I18n.getUiText("ui.criterion.hasAlliance"));
-            };
-            return (I18n.getUiText("ui.criterion.hasValidAlliance"));
+            return (I18n.getUiText("ui.criterion.hasAlliance"));
         }
 
         override public function clone():IItemCriterion
@@ -37,10 +33,6 @@
             var alliance:AllianceWrapper = AllianceFrame.getInstance().alliance;
             if (alliance)
             {
-                if (alliance.enabled)
-                {
-                    return (2);
-                };
                 return (1);
             };
             return (0);
@@ -48,5 +40,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.items.criterion
+} com.ankamagames.dofus.datacenter.items.criterion
 

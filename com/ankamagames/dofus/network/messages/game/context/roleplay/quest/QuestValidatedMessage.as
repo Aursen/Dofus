@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.context.roleplay.quest
+package com.ankamagames.dofus.network.messages.game.context.roleplay.quest
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class QuestValidatedMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -52,6 +52,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_QuestValidatedMessage(output);
@@ -73,6 +81,21 @@
 
         public function deserializeAs_QuestValidatedMessage(input:ICustomDataInput):void
         {
+            this._questIdFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_QuestValidatedMessage(tree);
+        }
+
+        public function deserializeAsyncAs_QuestValidatedMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._questIdFunc);
+        }
+
+        private function _questIdFunc(input:ICustomDataInput):void
+        {
             this.questId = input.readVarUhShort();
             if (this.questId < 0)
             {
@@ -82,5 +105,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.context.roleplay.quest
+} com.ankamagames.dofus.network.messages.game.context.roleplay.quest
 

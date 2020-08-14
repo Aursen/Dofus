@@ -1,30 +1,26 @@
-﻿package com.ankamagames.dofus.network.messages.game.context.roleplay.npc
+package com.ankamagames.dofus.network.messages.game.context.roleplay.npc
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
     import __AS3__.vec.Vector;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
     import __AS3__.vec.*;
 
-    [Trusted]
     public class EntityTalkMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 6110;
 
         private var _isInitialized:Boolean = false;
-        public var entityId:int = 0;
+        public var entityId:Number = 0;
         public var textId:uint = 0;
-        public var parameters:Vector.<String>;
+        public var parameters:Vector.<String> = new Vector.<String>();
+        private var _parameterstree:FuncTree;
 
-        public function EntityTalkMessage()
-        {
-            this.parameters = new Vector.<String>();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
@@ -36,7 +32,7 @@
             return (6110);
         }
 
-        public function initEntityTalkMessage(entityId:int=0, textId:uint=0, parameters:Vector.<String>=null):EntityTalkMessage
+        public function initEntityTalkMessage(entityId:Number=0, textId:uint=0, parameters:Vector.<String>=null):EntityTalkMessage
         {
             this.entityId = entityId;
             this.textId = textId;
@@ -65,6 +61,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_EntityTalkMessage(output);
@@ -72,7 +76,11 @@
 
         public function serializeAs_EntityTalkMessage(output:ICustomDataOutput):void
         {
-            output.writeInt(this.entityId);
+            if (((this.entityId < -9007199254740992) || (this.entityId > 9007199254740992)))
+            {
+                throw (new Error((("Forbidden value (" + this.entityId) + ") on element entityId.")));
+            };
+            output.writeDouble(this.entityId);
             if (this.textId < 0)
             {
                 throw (new Error((("Forbidden value (" + this.textId) + ") on element textId.")));
@@ -95,12 +103,8 @@
         public function deserializeAs_EntityTalkMessage(input:ICustomDataInput):void
         {
             var _val3:String;
-            this.entityId = input.readInt();
-            this.textId = input.readVarUhShort();
-            if (this.textId < 0)
-            {
-                throw (new Error((("Forbidden value (" + this.textId) + ") on element of EntityTalkMessage.textId.")));
-            };
+            this._entityIdFunc(input);
+            this._textIdFunc(input);
             var _parametersLen:uint = input.readUnsignedShort();
             var _i3:uint;
             while (_i3 < _parametersLen)
@@ -111,7 +115,54 @@
             };
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_EntityTalkMessage(tree);
+        }
+
+        public function deserializeAsyncAs_EntityTalkMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._entityIdFunc);
+            tree.addChild(this._textIdFunc);
+            this._parameterstree = tree.addChild(this._parameterstreeFunc);
+        }
+
+        private function _entityIdFunc(input:ICustomDataInput):void
+        {
+            this.entityId = input.readDouble();
+            if (((this.entityId < -9007199254740992) || (this.entityId > 9007199254740992)))
+            {
+                throw (new Error((("Forbidden value (" + this.entityId) + ") on element of EntityTalkMessage.entityId.")));
+            };
+        }
+
+        private function _textIdFunc(input:ICustomDataInput):void
+        {
+            this.textId = input.readVarUhShort();
+            if (this.textId < 0)
+            {
+                throw (new Error((("Forbidden value (" + this.textId) + ") on element of EntityTalkMessage.textId.")));
+            };
+        }
+
+        private function _parameterstreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._parameterstree.addChild(this._parametersFunc);
+                i++;
+            };
+        }
+
+        private function _parametersFunc(input:ICustomDataInput):void
+        {
+            var _val:String = input.readUTF();
+            this.parameters.push(_val);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.context.roleplay.npc
+} com.ankamagames.dofus.network.messages.game.context.roleplay.npc
 

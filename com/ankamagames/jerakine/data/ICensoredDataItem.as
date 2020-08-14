@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.data
+package com.ankamagames.jerakine.data
 {
     public interface ICensoredDataItem 
     {
@@ -9,5 +9,5 @@
         function get newValue():int;
 
     }
-}//package com.ankamagames.jerakine.data
+} com.ankamagames.jerakine.data
 

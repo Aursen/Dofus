@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.common.misc.inventoryView
+package com.ankamagames.dofus.logic.game.common.misc.inventoryView
 {
     import com.ankamagames.dofus.logic.game.common.misc.IStorageView;
     import com.ankamagames.jerakine.logger.Logger;
@@ -9,7 +9,7 @@
     import com.ankamagames.dofus.logic.game.common.misc.HookLock;
     import flash.utils.Dictionary;
     import com.ankamagames.dofus.datacenter.items.Item;
-    import com.ankamagames.dofus.logic.game.common.misc.Inventory;
+    import com.ankamagames.dofus.internalDatacenter.DataEnum;
     import com.ankamagames.dofus.logic.game.common.managers.StorageOptionManager;
     import com.ankamagames.dofus.kernel.Kernel;
     import com.ankamagames.dofus.logic.game.common.frames.AveragePricesFrame;
@@ -26,21 +26,18 @@
         protected var _sorted:Boolean = false;
         private var _sortFieldsCache:Array;
         private var _sortRevertCache:Boolean;
-        protected var _typesQty:Dictionary;
-        protected var _types:Dictionary;
+        protected var _typesQty:Dictionary = new Dictionary();
+        protected var _types:Dictionary = new Dictionary();
 
         public function StorageGenericView(hookLock:HookLock)
         {
-            this._typesQty = new Dictionary();
-            this._types = new Dictionary();
-            super();
             this._hookLock = hookLock;
         }
 
         public function initialize(items:Vector.<ItemWrapper>):void
         {
             var item:ItemWrapper;
-            if (!(this._content))
+            if (!this._content)
             {
                 this._content = new Vector.<ItemWrapper>();
             }
@@ -90,12 +87,9 @@
             {
                 this._sortedContent.unshift(clone);
             };
-            if (((this._typesQty[item.typeId]) && ((this._typesQty[item.typeId] > 0))))
+            if (((this._typesQty[item.typeId]) && (this._typesQty[item.typeId] > 0)))
             {
-                var _local_5 = this._typesQty;
-                var _local_6 = item.typeId;
-                var _local_7 = (_local_5[_local_6] + 1);
-                _local_5[_local_6] = _local_7;
+                this._typesQty[item.typeId]++;
             }
             else
             {
@@ -115,12 +109,9 @@
             {
                 return;
             };
-            if (((this._typesQty[item.typeId]) && ((this._typesQty[item.typeId] > 0))))
+            if (((this._typesQty[item.typeId]) && (this._typesQty[item.typeId] > 0)))
             {
-                var _local_4 = this._typesQty;
-                var _local_5 = item.typeId;
-                var _local_6 = (_local_4[_local_5] - 1);
-                _local_4[_local_5] = _local_6;
+                this._typesQty[item.typeId]--;
                 if (this._typesQty[item.typeId] == 0)
                 {
                     delete this._types[item.typeId];
@@ -174,7 +165,7 @@
 
         public function isListening(item:ItemWrapper):Boolean
         {
-            return ((((item.position == 63)) && (!((Item.getItemById(item.objectGID).typeId == Inventory.HIDDEN_TYPE_ID)))));
+            return ((item.position == 63) && (!(Item.getItemById(item.objectGID).typeId == DataEnum.ITEM_TYPE_HIDDEN)));
         }
 
         public function getItemTypes():Dictionary
@@ -221,93 +212,93 @@
             switch (this._sortFieldsCache[sortDepth])
             {
                 case StorageOptionManager.SORT_FIELD_NAME:
-                    if (!(this._sortRevertCache))
+                    if (!this._sortRevertCache)
                     {
-                        returnValue = (((a.name)>b.name) ? 1 : (((a.name)<b.name) ? -1 : 0));
+                        returnValue = ((a.nameWithoutAccent > b.nameWithoutAccent) ? 1 : ((a.nameWithoutAccent < b.nameWithoutAccent) ? -1 : 0));
                     }
                     else
                     {
-                        returnValue = (((a.name)<b.name) ? 1 : (((a.name)>b.name) ? -1 : 0));
+                        returnValue = ((a.nameWithoutAccent < b.nameWithoutAccent) ? 1 : ((a.nameWithoutAccent > b.nameWithoutAccent) ? -1 : 0));
                     };
                     break;
                 case StorageOptionManager.SORT_FIELD_WEIGHT:
-                    if (!(this._sortRevertCache))
+                    if (!this._sortRevertCache)
                     {
-                        returnValue = (((a.weight)<b.weight) ? 1 : (((a.weight)>b.weight) ? -1 : 0));
+                        returnValue = ((a.weight < b.weight) ? 1 : ((a.weight > b.weight) ? -1 : 0));
                     }
                     else
                     {
-                        returnValue = (((a.weight)>b.weight) ? 1 : (((a.weight)<b.weight) ? -1 : 0));
+                        returnValue = ((a.weight > b.weight) ? 1 : ((a.weight < b.weight) ? -1 : 0));
                     };
                     break;
                 case StorageOptionManager.SORT_FIELD_LOT_WEIGHT:
-                    if (!(this._sortRevertCache))
+                    if (!this._sortRevertCache)
                     {
-                        returnValue = ((((a.weight * a.quantity))<(b.weight * b.quantity)) ? 1 : ((((a.weight * a.quantity))>(b.weight * b.quantity)) ? -1 : 0));
+                        returnValue = (((a.weight * a.quantity) < (b.weight * b.quantity)) ? 1 : (((a.weight * a.quantity) > (b.weight * b.quantity)) ? -1 : 0));
                     }
                     else
                     {
-                        returnValue = ((((a.weight * a.quantity))>(b.weight * b.quantity)) ? 1 : ((((a.weight * a.quantity))<(b.weight * b.quantity)) ? -1 : 0));
+                        returnValue = (((a.weight * a.quantity) > (b.weight * b.quantity)) ? 1 : (((a.weight * a.quantity) < (b.weight * b.quantity)) ? -1 : 0));
                     };
                     break;
                 case StorageOptionManager.SORT_FIELD_QUANTITY:
-                    if (!(this._sortRevertCache))
+                    if (!this._sortRevertCache)
                     {
-                        returnValue = (((a.quantity)<b.quantity) ? 1 : (((a.quantity)>b.quantity) ? -1 : 0));
+                        returnValue = ((a.quantity < b.quantity) ? 1 : ((a.quantity > b.quantity) ? -1 : 0));
                     }
                     else
                     {
-                        returnValue = (((a.quantity)>b.quantity) ? 1 : (((a.quantity)<b.quantity) ? -1 : 0));
+                        returnValue = ((a.quantity > b.quantity) ? 1 : ((a.quantity < b.quantity) ? -1 : 0));
                     };
                     break;
                 case StorageOptionManager.SORT_FIELD_DEFAULT:
-                    if (!(this._sortRevertCache))
+                    if (!this._sortRevertCache)
                     {
-                        returnValue = (((a.objectUID)<b.objectUID) ? 1 : (((a.objectUID)>b.objectUID) ? -1 : 0));
+                        returnValue = ((a.objectUID < b.objectUID) ? 1 : ((a.objectUID > b.objectUID) ? -1 : 0));
                     }
                     else
                     {
-                        returnValue = (((a.objectUID)>b.objectUID) ? 1 : (((a.objectUID)<b.objectUID) ? -1 : 0));
+                        returnValue = ((a.objectUID > b.objectUID) ? 1 : ((a.objectUID < b.objectUID) ? -1 : 0));
                     };
                     break;
                 case StorageOptionManager.SORT_FIELD_AVERAGEPRICE:
-                    if (!(this._sortRevertCache))
+                    if (!this._sortRevertCache)
                     {
-                        returnValue = (((this.getItemAveragePrice(a.objectGID))<this.getItemAveragePrice(b.objectGID)) ? 1 : (((this.getItemAveragePrice(a.objectGID))>this.getItemAveragePrice(b.objectGID)) ? -1 : 0));
+                        returnValue = ((this.getItemAveragePrice(a.objectGID) < this.getItemAveragePrice(b.objectGID)) ? 1 : (((this.getItemAveragePrice(a.objectGID) > this.getItemAveragePrice(b.objectGID)) ? -1 : 0)));
                     }
                     else
                     {
-                        returnValue = (((this.getItemAveragePrice(a.objectGID))>this.getItemAveragePrice(b.objectGID)) ? 1 : (((this.getItemAveragePrice(a.objectGID))<this.getItemAveragePrice(b.objectGID)) ? -1 : 0));
+                        returnValue = ((this.getItemAveragePrice(a.objectGID) > this.getItemAveragePrice(b.objectGID)) ? 1 : (((this.getItemAveragePrice(a.objectGID) < this.getItemAveragePrice(b.objectGID)) ? -1 : 0)));
                     };
                     break;
                 case StorageOptionManager.SORT_FIELD_LOT_AVERAGEPRICE:
-                    if (!(this._sortRevertCache))
+                    if (!this._sortRevertCache)
                     {
-                        returnValue = ((((this.getItemAveragePrice(a.objectGID) * a.quantity))<(this.getItemAveragePrice(b.objectGID) * b.quantity)) ? 1 : ((((this.getItemAveragePrice(a.objectGID) * a.quantity))>(this.getItemAveragePrice(b.objectGID) * b.quantity)) ? -1 : 0));
+                        returnValue = (((this.getItemAveragePrice(a.objectGID) * a.quantity) < (this.getItemAveragePrice(b.objectGID) * b.quantity)) ? 1 : ((((this.getItemAveragePrice(a.objectGID) * a.quantity) > (this.getItemAveragePrice(b.objectGID) * b.quantity)) ? -1 : 0)));
                     }
                     else
                     {
-                        returnValue = ((((this.getItemAveragePrice(a.objectGID) * a.quantity))>(this.getItemAveragePrice(b.objectGID) * b.quantity)) ? 1 : ((((this.getItemAveragePrice(a.objectGID) * a.quantity))<(this.getItemAveragePrice(b.objectGID) * b.quantity)) ? -1 : 0));
+                        returnValue = (((this.getItemAveragePrice(a.objectGID) * a.quantity) > (this.getItemAveragePrice(b.objectGID) * b.quantity)) ? 1 : ((((this.getItemAveragePrice(a.objectGID) * a.quantity) < (this.getItemAveragePrice(b.objectGID) * b.quantity)) ? -1 : 0)));
                     };
                     break;
                 case StorageOptionManager.SORT_FIELD_LEVEL:
-                    if (!(this._sortRevertCache))
+                    if (!this._sortRevertCache)
                     {
-                        returnValue = (((a.level)<b.level) ? 1 : (((a.level)>b.level) ? -1 : 0));
+                        returnValue = ((a.level < b.level) ? 1 : ((a.level > b.level) ? -1 : 0));
                     }
                     else
                     {
-                        returnValue = (((a.level)>b.level) ? 1 : (((a.level)<b.level) ? -1 : 0));
+                        returnValue = ((a.level > b.level) ? 1 : ((a.level < b.level) ? -1 : 0));
                     };
                     break;
                 case StorageOptionManager.SORT_FIELD_ITEM_TYPE:
-                    if (!(this._sortRevertCache))
+                    if (!this._sortRevertCache)
                     {
-                        returnValue = (((a.type.name)>b.type.name) ? 1 : (((a.type.name)<b.type.name) ? -1 : 0));
+                        returnValue = ((a.type.name > b.type.name) ? 1 : ((a.type.name < b.type.name) ? -1 : 0));
                     }
                     else
                     {
-                        returnValue = (((a.type.name)<b.type.name) ? 1 : (((a.type.name)>b.type.name) ? -1 : 0));
+                        returnValue = ((a.type.name < b.type.name) ? 1 : ((a.type.name > b.type.name) ? -1 : 0));
                     };
                     break;
                 default:
@@ -324,10 +315,10 @@
             return (this.compareFunction(a, b, ++sortDepth));
         }
 
-        private function getItemAveragePrice(pItemGID:uint):int
+        private function getItemAveragePrice(pItemGID:uint):Number
         {
             var avgPricesFrame:AveragePricesFrame = (Kernel.getWorker().getFrame(AveragePricesFrame) as AveragePricesFrame);
-            return (avgPricesFrame.pricesData.items[("item" + pItemGID)]);
+            return ((isNaN(avgPricesFrame.pricesData.items[pItemGID])) ? 0 : avgPricesFrame.pricesData.items[pItemGID]);
         }
 
         public function updateView():void
@@ -336,7 +327,7 @@
             var len:int;
             var iw:ItemWrapper;
             var sameSort:Boolean = true;
-            if (((this._sortFieldsCache) && ((this._sortFieldsCache.length == this.sortFields().length))))
+            if (((this._sortFieldsCache) && (this._sortFieldsCache.length == this.sortFields().length)))
             {
                 len = this._sortFieldsCache.length;
                 i = 0;
@@ -357,7 +348,7 @@
             this._sortFieldsCache = this.sortFields();
             if (this._sortFieldsCache[0] != StorageOptionManager.SORT_FIELD_NONE)
             {
-                if (!(sameSort))
+                if (!sameSort)
                 {
                     this._sortRevertCache = this.sortRevert();
                 }
@@ -365,10 +356,10 @@
                 {
                     if (StorageOptionManager.getInstance().newSort)
                     {
-                        this._sortRevertCache = !(this._sortRevertCache);
+                        this._sortRevertCache = (!(this._sortRevertCache));
                     };
                 };
-                if (!(this._sortedContent))
+                if (!this._sortedContent)
                 {
                     this._sortedContent = new Vector.<ItemWrapper>();
                     for each (iw in this._content)
@@ -404,5 +395,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.misc.inventoryView
+} com.ankamagames.dofus.logic.game.common.misc.inventoryView
 

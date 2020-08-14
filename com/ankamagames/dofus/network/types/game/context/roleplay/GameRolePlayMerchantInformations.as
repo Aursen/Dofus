@@ -1,9 +1,10 @@
-﻿package com.ankamagames.dofus.network.types.game.context.roleplay
+package com.ankamagames.dofus.network.types.game.context.roleplay
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import __AS3__.vec.Vector;
-    import com.ankamagames.dofus.network.types.game.look.EntityLook;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import com.ankamagames.dofus.network.types.game.context.EntityDispositionInformations;
+    import com.ankamagames.dofus.network.types.game.look.EntityLook;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
     import com.ankamagames.dofus.network.ProtocolTypeManager;
@@ -15,22 +16,18 @@
         public static const protocolId:uint = 129;
 
         public var sellType:uint = 0;
-        public var options:Vector.<HumanOption>;
+        public var options:Vector.<HumanOption> = new Vector.<HumanOption>();
+        private var _optionstree:FuncTree;
 
-        public function GameRolePlayMerchantInformations()
-        {
-            this.options = new Vector.<HumanOption>();
-            super();
-        }
 
         override public function getTypeId():uint
         {
             return (129);
         }
 
-        public function initGameRolePlayMerchantInformations(contextualId:int=0, look:EntityLook=null, disposition:EntityDispositionInformations=null, name:String="", sellType:uint=0, options:Vector.<HumanOption>=null):GameRolePlayMerchantInformations
+        public function initGameRolePlayMerchantInformations(contextualId:Number=0, disposition:EntityDispositionInformations=null, look:EntityLook=null, name:String="", sellType:uint=0, options:Vector.<HumanOption>=null):GameRolePlayMerchantInformations
         {
-            super.initGameRolePlayNamedActorInformations(contextualId, look, disposition, name);
+            super.initGameRolePlayNamedActorInformations(contextualId, disposition, look, name);
             this.sellType = sellType;
             this.options = options;
             return (this);
@@ -76,11 +73,7 @@
             var _id2:uint;
             var _item2:HumanOption;
             super.deserialize(input);
-            this.sellType = input.readByte();
-            if (this.sellType < 0)
-            {
-                throw (new Error((("Forbidden value (" + this.sellType) + ") on element of GameRolePlayMerchantInformations.sellType.")));
-            };
+            this._sellTypeFunc(input);
             var _optionsLen:uint = input.readUnsignedShort();
             var _i2:uint;
             while (_i2 < _optionsLen)
@@ -93,7 +86,47 @@
             };
         }
 
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GameRolePlayMerchantInformations(tree);
+        }
+
+        public function deserializeAsyncAs_GameRolePlayMerchantInformations(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._sellTypeFunc);
+            this._optionstree = tree.addChild(this._optionstreeFunc);
+        }
+
+        private function _sellTypeFunc(input:ICustomDataInput):void
+        {
+            this.sellType = input.readByte();
+            if (this.sellType < 0)
+            {
+                throw (new Error((("Forbidden value (" + this.sellType) + ") on element of GameRolePlayMerchantInformations.sellType.")));
+            };
+        }
+
+        private function _optionstreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._optionstree.addChild(this._optionsFunc);
+                i++;
+            };
+        }
+
+        private function _optionsFunc(input:ICustomDataInput):void
+        {
+            var _id:uint = input.readUnsignedShort();
+            var _item:HumanOption = ProtocolTypeManager.getInstance(HumanOption, _id);
+            _item.deserialize(input);
+            this.options.push(_item);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.types.game.context.roleplay
+} com.ankamagames.dofus.network.types.game.context.roleplay
 

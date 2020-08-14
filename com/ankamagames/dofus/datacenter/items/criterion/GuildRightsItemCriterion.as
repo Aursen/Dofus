@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.datacenter.items.criterion
+package com.ankamagames.dofus.datacenter.items.criterion
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.dofus.kernel.Kernel;
@@ -19,7 +19,7 @@
         {
             var hasThisRight:Boolean;
             var socialFrame:SocialFrame = (Kernel.getWorker().getFrame(SocialFrame) as SocialFrame);
-            if (!(socialFrame.hasGuild))
+            if (!socialFrame.hasGuild)
             {
                 if (_operator.text == ItemCriterionOperator.DIFFERENT)
                 {
@@ -170,5 +170,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.items.criterion
+} com.ankamagames.dofus.datacenter.items.criterion
 

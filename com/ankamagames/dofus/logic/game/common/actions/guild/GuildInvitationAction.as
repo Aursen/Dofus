@@ -1,14 +1,14 @@
-﻿package com.ankamagames.dofus.logic.game.common.actions.guild
+package com.ankamagames.dofus.logic.game.common.actions.guild
 {
     import com.ankamagames.jerakine.handlers.messages.Action;
 
     public class GuildInvitationAction implements Action 
     {
 
-        public var targetId:uint;
+        public var targetId:Number;
 
 
-        public static function create(pTargetId:uint):GuildInvitationAction
+        public static function create(pTargetId:Number):GuildInvitationAction
         {
             var action:GuildInvitationAction = new (GuildInvitationAction)();
             action.targetId = pTargetId;
@@ -17,5 +17,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.actions.guild
+} com.ankamagames.dofus.logic.game.common.actions.guild
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.resources
+package com.ankamagames.jerakine.resources
 {
     import com.ankamagames.jerakine.types.Uri;
 
@@ -42,5 +42,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.resources
+} com.ankamagames.jerakine.resources
 

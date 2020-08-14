@@ -1,39 +1,44 @@
-﻿package com.ankamagames.berilia.components.gridRenderer
+package com.ankamagames.berilia.components.gridRenderer
 {
     import com.ankamagames.berilia.interfaces.IGridRenderer;
     import com.ankamagames.jerakine.logger.Logger;
+    import com.ankamagames.jerakine.logger.Log;
+    import flash.utils.getQualifiedClassName;
     import com.ankamagames.berilia.components.Grid;
     import flash.geom.ColorTransform;
     import com.ankamagames.jerakine.types.Uri;
     import flash.utils.Dictionary;
-    import com.ankamagames.jerakine.logger.Log;
-    import flash.utils.getQualifiedClassName;
-    import com.ankamagames.berilia.components.Label;
-    import flash.events.MouseEvent;
+    import com.ankamagames.berilia.components.Texture;
     import flash.display.DisplayObject;
+    import com.ankamagames.berilia.components.Label;
+    import com.ankamagames.berilia.types.graphic.GraphicContainer;
+    import flash.events.MouseEvent;
     import com.ankamagames.jerakine.messages.Message;
     import com.ankamagames.berilia.UIComponent;
     import flash.display.Shape;
     import flash.geom.Transform;
 
-    [RendererArgs(font="String", eventLineColor="uint", oddLineColor="uint", overLineColor="uint", selectedLineColor="uint")]
     public class LabelGridRenderer implements IGridRenderer 
     {
 
-        protected var _log:Logger;
+        private static const DEFAULT_ICON_MARGIN:Number = -7;
+
+        protected var _log:Logger = Log.getLogger(getQualifiedClassName(LabelGridRenderer));
         private var _grid:Grid;
         private var _bgColor1:ColorTransform;
         private var _bgColor2:ColorTransform;
         private var _selectedColor:ColorTransform;
         private var _overColor:ColorTransform;
         private var _cssUri:Uri;
-        private var _shapeIndex:Dictionary;
+        private var _cssClass:String;
+        private var _shapeIndex:Dictionary = new Dictionary(true);
+        private var _firstEntryCssClass:String;
+        private var _buttonWidth:Number = 0;
+        public var isIcon:Boolean = false;
 
         public function LabelGridRenderer(strParams:String)
         {
             var params:Array;
-            this._log = Log.getLogger(getQualifiedClassName(LabelGridRenderer));
-            this._shapeIndex = new Dictionary(true);
             super();
             if (strParams)
             {
@@ -44,25 +49,90 @@
                 };
                 if (((params[1]) && (params[1].length)))
                 {
-                    this._bgColor1 = new ColorTransform();
-                    this._bgColor1.color = parseInt(params[1], 16);
+                    this._bgColor1 = this.getColorTransformFromARGB(params[1]);
                 };
                 if (((params[2]) && (params[2].length)))
                 {
-                    this._bgColor2 = new ColorTransform();
-                    this._bgColor2.color = parseInt(params[2], 16);
+                    this._bgColor2 = this.getColorTransformFromARGB(params[2]);
                 };
                 if (((params[3]) && (params[3].length)))
                 {
-                    this._overColor = new ColorTransform();
-                    this._overColor.color = parseInt(params[3], 16);
+                    this._overColor = this.getColorTransformFromARGB(params[3]);
                 };
                 if (((params[4]) && (params[4].length)))
                 {
-                    this._selectedColor = new ColorTransform();
-                    this._selectedColor.color = parseInt(params[4], 16);
+                    this._selectedColor = this.getColorTransformFromARGB(params[4]);
+                };
+                if (((params[5]) && (params[5].length)))
+                {
+                    this._firstEntryCssClass = params[5];
+                };
+                if (((params[6]) && (params[6].length)))
+                {
+                    this._cssClass = params[6];
                 };
             };
+        }
+
+        public static function getLabelOffset(icon:Texture, data:Object):Number
+        {
+            if (icon === null)
+            {
+                return (0);
+            };
+            var iconMargin:Number = (((!(data === null)) && (data.hasOwnProperty("margin"))) ? data.margin : DEFAULT_ICON_MARGIN);
+            return ((icon.x + icon.width) + iconMargin);
+        }
+
+        private static function getLabelAndIcon(container:GraphicContainer):Object
+        {
+            var tmpDisplayObject:DisplayObject;
+            var toReturn:Object = {
+                "label":null,
+                "icon":null
+            };
+            if (((!(container === null)) && (container.numChildren >= 1)))
+            {
+                tmpDisplayObject = container.getChildAt(0);
+                if ((tmpDisplayObject is Label))
+                {
+                    toReturn.label = (tmpDisplayObject as Label);
+                };
+                if (container.numChildren >= 2)
+                {
+                    tmpDisplayObject = container.getChildAt(1);
+                    if ((tmpDisplayObject is Texture))
+                    {
+                        toReturn.icon = (tmpDisplayObject as Texture);
+                    };
+                };
+            };
+            return (toReturn);
+        }
+
+
+        public function set buttonWidth(width:Number):void
+        {
+            this._buttonWidth = width;
+        }
+
+        public function get buttonWidth():Number
+        {
+            return (this._buttonWidth);
+        }
+
+        private function getColorTransformFromARGB(argb:String):ColorTransform
+        {
+            if (argb.length < 10)
+            {
+                argb = argb.replace("0x", "0xFF");
+            };
+            var color:uint = parseInt(argb, 16);
+            var alpha:Number = (((color >> 24) & 0xFF) / 0xFF);
+            var red:Number = (((color >> 16) & 0xFF) / 0xFF);
+            var green:Number = (((color >> 8) & 0xFF) / 0xFF);
+            var blue:Number = ((color & 0xFF) / 0xFF);
+            return (new ColorTransform(red, green, blue, alpha));
         }
 
         public function set grid(g:Grid):void
@@ -73,14 +143,26 @@
         public function render(data:*, index:uint, selected:Boolean, subIndex:uint=0):DisplayObject
         {
             var label:Label = new Label();
-            label.mouseEnabled = true;
+            label.name = ((((this._grid.getUi().name + "::") + this._grid.name) + "::item") + index);
+            if (this._cssUri)
+            {
+                label.css = this._cssUri;
+            };
+            if (this._cssClass)
+            {
+                label.cssClass = this._cssClass;
+            };
+            if (((((this._firstEntryCssClass) && (index == 0)) && (!(data))) && (!(selected))))
+            {
+                label.cssClass = this._firstEntryCssClass;
+                this._firstEntryCssClass = "";
+            };
             label.useHandCursor = true;
             label.mouseEnabled = true;
-            label.width = (this._grid.slotWidth - 6);
+            label.width = (this._grid.slotWidth - this._buttonWidth);
             label.height = this._grid.slotHeight;
-            label.verticalAlign = "CENTER";
-            label.name = ((((this._grid.getUi().name + "::") + this._grid.name) + "::item") + index);
-            if ((((data is String)) || ((data == null))))
+            label.verticalAlign = "center";
+            if (((data is String) || (data === null)))
             {
                 label.text = data;
             }
@@ -88,32 +170,59 @@
             {
                 label.text = data.label;
             };
-            if (this._cssUri)
+            var labelOffset:Number = 0;
+            var icon:Texture = new Texture();
+            icon.width = (icon.height = label.height);
+            if (((this.isIcon) && (!(data === null))))
             {
-                label.css = this._cssUri;
+                icon.uri = data.icon;
+                labelOffset = getLabelOffset(icon, data);
+                label.x = (label.x + labelOffset);
+                label.width = (label.width - labelOffset);
             };
-            this.updateBackground(label, index, selected);
+            icon.finalize();
+            this.updateBackground(label, index, selected, this.isIcon, labelOffset);
             label.finalize();
             label.addEventListener(MouseEvent.MOUSE_OVER, this.onRollOver);
             label.addEventListener(MouseEvent.MOUSE_OUT, this.onRollOut);
-            return (label);
+            var container:GraphicContainer = new GraphicContainer();
+            container.addChild(label);
+            container.addChild(icon);
+            container.finalize();
+            return (container);
         }
 
         public function update(data:*, index:uint, dispObj:DisplayObject, selected:Boolean, subIndex:uint=0):void
         {
+            var containerContent:Object;
+            var isIcon:Boolean;
             var label:Label;
-            if ((dispObj is Label))
+            var icon:Texture;
+            var labelOffset:Number;
+            if ((dispObj is GraphicContainer))
             {
-                label = (dispObj as Label);
-                if ((((data is String)) || ((data == null))))
+                containerContent = getLabelAndIcon((dispObj as GraphicContainer));
+                isIcon = (((!(data === null)) && (!(data is String))) && (data.hasOwnProperty("icon")));
+                label = (containerContent.label as Label);
+                icon = (containerContent.icon as Texture);
+                labelOffset = 0;
+                if (((data is String) || (data === null)))
                 {
                     label.text = data;
                 }
                 else
                 {
-                    label.text = data.label;
+                    if ((data is Object))
+                    {
+                        label.text = data.label;
+                        if (((isIcon) && (!(icon === null))))
+                        {
+                            icon.uri = data.icon;
+                            labelOffset = getLabelOffset(icon, data);
+                        };
+                    };
                 };
-                this.updateBackground(label, index, selected);
+                this.updateBackground(label, index, selected, isIcon, labelOffset);
             }
             else
             {
@@ -157,10 +266,10 @@
             return (functionName);
         }
 
-        private function updateBackground(label:Label, index:uint, selected:Boolean):void
+        private function updateBackground(label:Label, index:uint, selected:Boolean, isIcon:Boolean, labelOffset:Number=0):void
         {
             var shape:Shape;
-            if (!(this._shapeIndex[label]))
+            if (!this._shapeIndex[label])
             {
                 shape = new Shape();
                 shape.graphics.beginFill(0xFFFFFF);
@@ -170,14 +279,19 @@
                     "trans":new Transform(shape),
                     "shape":shape
                 };
+                shape.x = (shape.x - labelOffset);
+            }
+            else
+            {
+                this._shapeIndex[label].shape.width = this._grid.slotWidth;
             };
-            var t:ColorTransform = (((index % 2)) ? this._bgColor1 : this._bgColor2);
+            var t:ColorTransform = ((index % 2) ? this._bgColor1 : this._bgColor2);
             if (((selected) && (this._selectedColor)))
             {
                 t = this._selectedColor;
             };
             this._shapeIndex[label].currentColor = t;
-            DisplayObject(this._shapeIndex[label].shape).visible = !((t == null));
+            DisplayObject(this._shapeIndex[label].shape).visible = (!(t == null));
             if (t)
             {
                 Transform(this._shapeIndex[label].trans).colorTransform = t;
@@ -188,7 +302,7 @@
         {
             var target:Object;
             var label:Label = (e.currentTarget as Label);
-            if (((this._overColor) && ((label.text.length > 0))))
+            if (((this._overColor) && (label.text.length > 0)))
             {
                 target = this._shapeIndex[label];
                 if (target)
@@ -212,12 +326,12 @@
                     {
                         Transform(target.trans).colorTransform = target.currentColor;
                     };
-                    DisplayObject(target.shape).visible = !((target.currentColor == null));
+                    DisplayObject(target.shape).visible = (!(target.currentColor == null));
                 };
             };
         }
 
 
     }
-}//package com.ankamagames.berilia.components.gridRenderer
+} com.ankamagames.berilia.components.gridRenderer
 

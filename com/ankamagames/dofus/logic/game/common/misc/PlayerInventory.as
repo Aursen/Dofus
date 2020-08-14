@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.common.misc
+package com.ankamagames.dofus.logic.game.common.misc
 {
     import com.ankamagames.dofus.logic.game.common.managers.PlayedCharacterManager;
 
@@ -6,7 +6,7 @@
     {
 
 
-        override public function set kamas(value:int):void
+        override public function set kamas(value:Number):void
         {
             if (PlayedCharacterManager.getInstance().characteristics)
             {
@@ -17,5 +17,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.misc
+} com.ankamagames.dofus.logic.game.common.misc
 

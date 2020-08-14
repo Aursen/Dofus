@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.internalDatacenter.connection
+package com.ankamagames.dofus.internalDatacenter.connection
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import __AS3__.vec.Vector;
@@ -14,14 +14,9 @@
         public var gender:Boolean = false;
         public var breed:int = 0;
         public var cosmeticId:uint = 0;
-        public var colors:Vector.<int>;
+        public var colors:Vector.<int> = new Vector.<int>();
         public var entityLook:TiphonEntityLook;
 
-        public function CreationCharacterWrapper()
-        {
-            this.colors = new Vector.<int>();
-            super();
-        }
 
         public static function create(name:String, gender:Boolean, breed:uint, cosmeticId:int, colors:Vector.<int>, entityLook:EntityLook=null):CreationCharacterWrapper
         {
@@ -41,10 +36,10 @@
 
         public function toString():String
         {
-            return ((((((((((((("[CreationCharacterWrapper#" + this.name) + "_") + this.gender) + "_") + this.breed) + "_") + this.cosmeticId) + "_") + this.colors) + "_") + this.entityLook) + "]"));
+            return (((((((((((("[CreationCharacterWrapper#" + this.name) + "_") + this.gender) + "_") + this.breed) + "_") + this.cosmeticId) + "_") + this.colors) + "_") + this.entityLook) + "]");
         }
 
 
     }
-}//package com.ankamagames.dofus.internalDatacenter.connection
+} com.ankamagames.dofus.internalDatacenter.connection
 

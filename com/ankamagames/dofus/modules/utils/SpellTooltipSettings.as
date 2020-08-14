@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.modules.utils
+package com.ankamagames.dofus.modules.utils
 {
     import com.ankamagames.jerakine.interfaces.IModuleUtil;
 
@@ -9,6 +9,10 @@
         private var _effects:Boolean;
         private var _description:Boolean;
         private var _CC_EC:Boolean;
+        private var _footer:Boolean;
+        private var _footerText:String;
+        private var _unPinnable:Boolean = false;
+        private var _subtitle:String;
 
         public function SpellTooltipSettings()
         {
@@ -16,9 +20,9 @@
             this._effects = true;
             this._description = true;
             this._CC_EC = true;
+            this._footer = true;
         }
 
-        [Untrusted]
         public function get header():Boolean
         {
             return (this._header);
@@ -34,7 +38,6 @@
             return (this._effects);
         }
 
-        [Untrusted]
         public function set effects(value:Boolean):void
         {
             this._effects = value;
@@ -45,7 +48,6 @@
             return (this._description);
         }
 
-        [Untrusted]
         public function set description(value:Boolean):void
         {
             this._description = value;
@@ -56,13 +58,52 @@
             return (this._CC_EC);
         }
 
-        [Untrusted]
         public function set CC_EC(value:Boolean):void
         {
             this._CC_EC = value;
         }
 
+        public function get footer():Boolean
+        {
+            return (this._footer);
+        }
+
+        public function set footer(value:Boolean):void
+        {
+            this._footer = value;
+        }
+
+        public function get footerText():String
+        {
+            return (this._footerText);
+        }
+
+        public function set footerText(value:String):void
+        {
+            this._footerText = value;
+        }
+
+        public function get unPinnable():Boolean
+        {
+            return (this._unPinnable);
+        }
+
+        public function set unPinnable(value:Boolean):void
+        {
+            this._unPinnable = value;
+        }
+
+        public function get subtitle():String
+        {
+            return (this._subtitle);
+        }
+
+        public function set subtitle(value:String):void
+        {
+            this._subtitle = value;
+        }
+
 
     }
-}//package com.ankamagames.dofus.modules.utils
+} com.ankamagames.dofus.modules.utils
 

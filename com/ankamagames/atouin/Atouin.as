@@ -1,4 +1,4 @@
-﻿package com.ankamagames.atouin
+package com.ankamagames.atouin
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
@@ -12,14 +12,16 @@
     import com.ankamagames.atouin.resources.adapters.ElementsAdapter;
     import com.ankamagames.atouin.resources.adapters.MapsAdapter;
     import com.ankamagames.atouin.managers.InteractiveCellManager;
+    import com.ankamagames.jerakine.types.events.PropertyChangeEvent;
     import flash.events.MouseEvent;
     import com.ankamagames.atouin.managers.FrustumManager;
     import com.ankamagames.jerakine.utils.display.StageShareManager;
+    import flash.geom.Rectangle;
+    import com.ankamagames.atouin.types.Frustum;
     import com.ankamagames.atouin.messages.MapContainerRollOverMessage;
     import flash.events.Event;
     import com.ankamagames.atouin.messages.MapContainerRollOutMessage;
     import com.ankamagames.jerakine.utils.display.EnterFrameDispatcher;
-    import com.ankamagames.atouin.types.Frustum;
     import com.ankamagames.atouin.managers.MapDisplayManager;
     import com.ankamagames.jerakine.types.positions.WorldPoint;
     import flash.utils.ByteArray;
@@ -29,13 +31,13 @@
     import com.ankamagames.jerakine.types.positions.MapPoint;
     import com.ankamagames.jerakine.interfaces.ISoundPositionListener;
     import com.ankamagames.atouin.messages.MapZoomMessage;
-    import com.ankamagames.jerakine.resources.loaders.IResourceLoader;
-    import com.ankamagames.atouin.data.elements.Elements;
+    import com.ankamagames.atouin.data.map.Map;
     import com.ankamagames.jerakine.resources.loaders.ResourceLoaderFactory;
     import com.ankamagames.jerakine.resources.loaders.ResourceLoaderType;
+    import com.ankamagames.jerakine.resources.loaders.IResourceLoader;
     import com.ankamagames.jerakine.resources.events.ResourceErrorEvent;
     import com.ankamagames.jerakine.types.Uri;
-    import com.ankamagames.jerakine.pathfinding.Pathfinding;
+    import com.ankamagames.atouin.data.elements.Elements;
 
     public class Atouin 
     {
@@ -57,6 +59,7 @@
         private var _aSprites:Array;
         private var _aoOptions:AtouinOptions;
         private var _cursorUpdateSprite:Sprite;
+        private var _worldVisible:Boolean = true;
 
         public function Atouin()
         {
@@ -75,13 +78,18 @@
 
         public static function getInstance():Atouin
         {
-            if (!(_self))
+            if (!_self)
             {
                 _self = new (Atouin)();
             };
             return (_self);
         }
 
+
+        public function get worldVisible():Boolean
+        {
+            return (this._worldVisible);
+        }
 
         public function get movementListeners():Array
         {
@@ -105,7 +113,7 @@
             if (len > 1)
             {
                 i = 1;
-                while (((!(ctr)) && ((i < len))))
+                while (((!(ctr)) && (i < len)))
                 {
                     ctr = (this._spMapContainer.getChildAt(i) as DisplayObjectContainer);
                     i++;
@@ -129,6 +137,11 @@
             return (this._overlayContainer);
         }
 
+        public function get worldMask():DisplayObjectContainer
+        {
+            return (this._worldMask);
+        }
+
         public function get handler():MessageHandler
         {
             return (this._handler);
@@ -142,6 +155,11 @@
         public function get options():AtouinOptions
         {
             return (this._aoOptions);
+        }
+
+        public function set options(options:AtouinOptions):void
+        {
+            this._aoOptions = options;
         }
 
         public function get currentZoom():Number
@@ -176,9 +194,11 @@
 
         public function setDisplayOptions(ao:AtouinOptions):void
         {
+            var m:Sprite;
             this._aoOptions = ao;
             this._worldContainer = ao.container;
             this._handler = ao.handler;
+            this._aoOptions.addEventListener(PropertyChangeEvent.PROPERTY_CHANGED, this.onPropertyChange);
             var i:uint;
             while (i < this._worldContainer.numChildren)
             {
@@ -189,6 +209,7 @@
             this._spMapContainer = new Sprite();
             this._spChgMapContainer = new Sprite();
             this._spGfxContainer = new Sprite();
+            this._worldMask = new Sprite();
             this._worldContainer.mouseEnabled = false;
             this._spMapContainer.addEventListener(MouseEvent.ROLL_OUT, this.onRollOutMapContainer);
             this._spMapContainer.addEventListener(MouseEvent.ROLL_OVER, this.onRollOverMapContainer);
@@ -201,21 +222,124 @@
             this._spGfxContainer.mouseChildren = false;
             this._overlayContainer.tabChildren = false;
             this._overlayContainer.mouseEnabled = false;
+            this._worldMask.mouseEnabled = false;
             this._worldContainer.addChild(this._spMapContainer);
             this._worldContainer.addChild(this._spChgMapContainer);
+            this._worldContainer.addChild(this._worldMask);
             this._worldContainer.addChild(this._spGfxContainer);
             this._worldContainer.addChild(this._overlayContainer);
             FrustumManager.getInstance().init(this._spChgMapContainer);
-            this._worldMask = new Sprite();
-            this._worldMask.graphics.beginFill(0);
-            var w:int = StageShareManager.startWidth;
-            var h:int = StageShareManager.startHeight;
-            this._worldMask.graphics.drawRect(-2000, -2000, (4000 + w), (4000 + h));
-            this._worldMask.graphics.drawRect(0, 0, w, h);
-            this._worldMask.graphics.endFill();
-            DisplayObjectContainer(this._worldContainer.parent).addChild(this._worldMask);
-            this.setFrustrum(ao.frustum);
+            this._worldContainer.name = "worldContainer";
+            this._spMapContainer.name = "mapContainer";
+            this._worldMask.name = "worldMask";
+            this._spChgMapContainer.name = "chgMapContainer";
+            this._spGfxContainer.name = "gfxContainer";
+            this._overlayContainer.name = "overlayContainer";
+            this.computeWideScreenBitmapWidth(ao.getOption("frustum"));
+            this.setWorldMaskDimensions(AtouinConstants.WIDESCREEN_BITMAP_WIDTH);
+            var hideBlackBorderValue:Boolean = this._aoOptions.getOption("hideBlackBorder");
+            if (!hideBlackBorderValue)
+            {
+                this.setWorldMaskDimensions(StageShareManager.startWidth, 0, 0, 1, "blackBorder");
+                this.getWorldMask("blackBorder", false).mouseEnabled = true;
+            }
+            else
+            {
+                m = this.getWorldMask("blackBorder", false);
+                if (m)
+                {
+                    m.parent.removeChild(m);
+                };
+            };
+            this.setFrustrum(ao.getOption("frustum"));
             this.init();
+        }
+
+        protected function onPropertyChange(e:PropertyChangeEvent):void
+        {
+            var m:Sprite;
+            switch (e.propertyName)
+            {
+                case "hideBlackBorder":
+                    if (!e.propertyValue)
+                    {
+                        this.setWorldMaskDimensions(StageShareManager.startWidth, 0, 0, 1, "blackBorder");
+                        this.getWorldMask("blackBorder", false).mouseEnabled = true;
+                    }
+                    else
+                    {
+                        m = this.getWorldMask("blackBorder", false);
+                        if (m)
+                        {
+                            m.parent.removeChild(m);
+                        };
+                    };
+                    break;
+            };
+        }
+
+        private function computeWideScreenBitmapWidth(frustum:Frustum):void
+        {
+            var RIGHT_GAME_MARGIN:int = ((AtouinConstants.ADJACENT_CELL_LEFT_MARGIN - 1) * AtouinConstants.CELL_WIDTH);
+            var LEFT_GAME_MARGIN:int = ((AtouinConstants.ADJACENT_CELL_RIGHT_MARGIN - 1) * AtouinConstants.CELL_WIDTH);
+            var MAP_IMAGE_WIDTH:uint = ((AtouinConstants.CELL_WIDTH * AtouinConstants.MAP_WIDTH) + AtouinConstants.CELL_WIDTH);
+            AtouinConstants.WIDESCREEN_BITMAP_WIDTH = ((MAP_IMAGE_WIDTH + RIGHT_GAME_MARGIN) + LEFT_GAME_MARGIN);
+            StageShareManager.stageLogicalBounds = new Rectangle((-(AtouinConstants.WIDESCREEN_BITMAP_WIDTH - StageShareManager.startWidth) / 2), 0, AtouinConstants.WIDESCREEN_BITMAP_WIDTH, StageShareManager.startHeight);
+        }
+
+        public function setWorldMaskDimensions(width:uint, height:uint=0, color:uint=0, alpha:Number=1, name:String="default"):void
+        {
+            var w:int;
+            var h:int;
+            var x:int;
+            var m:Sprite = this.getWorldMask(name);
+            if (m)
+            {
+                m.graphics.clear();
+                m.graphics.beginFill(color, alpha);
+                w = width;
+                h = (StageShareManager.startHeight - height);
+                x = (StageShareManager.startWidth - w);
+                if (x)
+                {
+                    x = int((x / 2));
+                };
+                m.graphics.drawRect(-2000, -2000, (4000 + w), (4000 + h));
+                m.graphics.drawRect(x, 0, w, h);
+                m.graphics.endFill();
+            };
+        }
+
+        public function toggleWorldMask(name:String="default", visible:*=null):void
+        {
+            var m:Sprite = this.getWorldMask(name);
+            if (m)
+            {
+                m.visible = ((visible === null) ? (!(m.visible)) : visible);
+            };
+        }
+
+        public function getWorldMask(name:String, createIfNeeded:Boolean=true):Sprite
+        {
+            var i:uint;
+            while (i < this._worldMask.numChildren)
+            {
+                if (this._worldMask.getChildAt(i).name == name)
+                {
+                    return (this._worldMask.getChildAt(i) as Sprite);
+                };
+                i++;
+            };
+            if (!createIfNeeded)
+            {
+                return (null);
+            };
+            var m:Sprite = new Sprite();
+            this._worldMask.addChild(m);
+            m.name = name;
+            m.mouseEnabled = false;
+            m.mouseChildren = false;
+            return (m);
         }
 
         public function onRollOverMapContainer(event:Event):void
@@ -244,46 +368,47 @@
             this._spChgMapContainer.visible = b;
             this._spGfxContainer.visible = b;
             this._overlayContainer.visible = b;
+            this._worldVisible = b;
         }
 
         public function setFrustrum(f:Frustum):void
         {
-            if (!(this._aoOptions))
+            if (!this._aoOptions)
             {
                 _log.error("Please call setDisplayOptions once before calling setFrustrum");
                 return;
             };
-            this._aoOptions.frustum = f;
-            this.worldContainer.scaleX = this._aoOptions.frustum.scale;
-            this.worldContainer.scaleY = this._aoOptions.frustum.scale;
-            this.worldContainer.x = this._aoOptions.frustum.x;
-            this.worldContainer.y = this._aoOptions.frustum.y;
-            this.gfxContainer.scaleX = this._aoOptions.frustum.scale;
-            this.gfxContainer.scaleY = this._aoOptions.frustum.scale;
-            this.gfxContainer.x = this._aoOptions.frustum.x;
-            this.gfxContainer.y = this._aoOptions.frustum.y;
-            this.overlayContainer.x = this._aoOptions.frustum.x;
-            this.overlayContainer.y = this._aoOptions.frustum.y;
-            this.overlayContainer.scaleX = this._aoOptions.frustum.scale;
-            this.overlayContainer.scaleY = this._aoOptions.frustum.scale;
+            this._aoOptions.setOption("frustum", f);
+            this.worldContainer.scaleX = f.scale;
+            this.worldContainer.scaleY = f.scale;
+            this.worldContainer.x = f.x;
+            this.worldContainer.y = f.y;
+            this.gfxContainer.scaleX = f.scale;
+            this.gfxContainer.scaleY = f.scale;
+            this.gfxContainer.x = f.x;
+            this.gfxContainer.y = f.y;
+            this.overlayContainer.x = f.x;
+            this.overlayContainer.y = f.y;
+            this.overlayContainer.scaleX = f.scale;
+            this.overlayContainer.scaleY = f.scale;
             FrustumManager.getInstance().frustum = f;
         }
 
         public function initPreDisplay(wp:WorldPoint):void
         {
-            if (((((((wp) && (MapDisplayManager.getInstance()))) && (MapDisplayManager.getInstance().currentMapPoint))) && ((MapDisplayManager.getInstance().currentMapPoint.mapId == wp.mapId))))
+            if (((((wp) && (MapDisplayManager.getInstance())) && (MapDisplayManager.getInstance().currentMapPoint)) && (MapDisplayManager.getInstance().currentMapPoint.mapId == wp.mapId)))
             {
                 return;
             };
             MapDisplayManager.getInstance().capture();
         }
 
-        public function display(wpMap:WorldPoint, decryptionKey:ByteArray=null):uint
+        public function display(wpMap:WorldPoint, decryptionKey:ByteArray=null, displayWorld:Boolean=true):uint
         {
-            return (MapDisplayManager.getInstance().display(wpMap, false, decryptionKey));
+            return (MapDisplayManager.getInstance().display(wpMap, false, decryptionKey, true, displayWorld));
         }
 
-        public function getEntity(id:int):IEntity
+        public function getEntity(id:Number):IEntity
         {
             return (EntitiesManager.getInstance().getEntity(id));
         }
@@ -324,7 +449,11 @@
 
         public function displayGrid(b:Boolean, pIsInFight:Boolean=false):void
         {
-            InteractiveCellManager.getInstance().show(((b) || (this.options.alwaysShowGrid)), pIsInFight);
+            InteractiveCellManager.getInstance().show(b, pIsInFight);
+            if (b != this.options.getOption("alwaysShowGrid"))
+            {
+                this.options.setOption("alwaysShowGrid", b);
+            };
         }
 
         public function getIdentifiedElement(id:uint):InteractiveObject
@@ -357,7 +486,7 @@
 
         public function zoom(value:Number, posX:int=0, posY:int=0):void
         {
-            var _local_5:Number;
+            var lastZoom:Number;
             if (value == 1)
             {
                 this._worldContainer.scaleX = 1;
@@ -380,9 +509,9 @@
                         value = AtouinConstants.MAX_ZOOM;
                     };
                 };
-                _local_5 = this._currentZoom;
+                lastZoom = this._currentZoom;
                 this._currentZoom = value;
-                if (_local_5 == this._currentZoom)
+                if (lastZoom == this._currentZoom)
                 {
                     return;
                 };
@@ -445,6 +574,29 @@
             };
         }
 
+        public function applyMapZoomScale(map:Map):void
+        {
+            if (((!(map.zoomScale == 1)) && (this._aoOptions.getOption("useInsideAutoZoom"))))
+            {
+                this._currentZoom = map.zoomScale;
+                this._worldContainer.x = map.zoomOffsetX;
+                this._worldContainer.y = map.zoomOffsetY;
+                this._worldContainer.scaleX = map.zoomScale;
+                this._worldContainer.scaleY = map.zoomScale;
+            }
+            else
+            {
+                this.zoom(1);
+            };
+        }
+
+        public function loadElementsFile():void
+        {
+            var elementsLoader:IResourceLoader = ResourceLoaderFactory.getLoader(ResourceLoaderType.SINGLE_LOADER);
+            elementsLoader.addEventListener(ResourceErrorEvent.ERROR, this.onElementsError, false, 0, true);
+            elementsLoader.load(new Uri(Atouin.getInstance().options.getOption("elementsIndexPath")));
+        }
+
         private function removeUpdateCursorSprite(e:Event):void
         {
             EnterFrameDispatcher.removeEventListener(this.removeUpdateCursorSprite);
@@ -456,22 +608,19 @@
 
         private function init():void
         {
-            var elementsLoader:IResourceLoader;
             this._aSprites = new Array();
-            if (!(Elements.getInstance().parsed))
+            if (!Elements.getInstance().parsed)
             {
-                elementsLoader = ResourceLoaderFactory.getLoader(ResourceLoaderType.SINGLE_LOADER);
-                elementsLoader.addEventListener(ResourceErrorEvent.ERROR, this.onElementsError);
-                elementsLoader.load(new Uri(Atouin.getInstance().options.elementsIndexPath));
+                this.loadElementsFile();
             };
-            Pathfinding.init(AtouinConstants.PATHFINDER_MIN_X, AtouinConstants.PATHFINDER_MAX_X, AtouinConstants.PATHFINDER_MIN_Y, AtouinConstants.PATHFINDER_MAX_Y);
         }
 
-        private function onElementsError(ree:ResourceErrorEvent):void
+        private function onElementsError(e:ResourceErrorEvent):void
         {
+            _log.error((("Atouin was unable to retrieve the elements directory (" + e.errorMsg) + ")"));
         }
 
 
     }
-}//package com.ankamagames.atouin
+} com.ankamagames.atouin
 

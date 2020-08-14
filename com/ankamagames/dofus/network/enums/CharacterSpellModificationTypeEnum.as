@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.enums
+package com.ankamagames.dofus.network.enums
 {
     public class CharacterSpellModificationTypeEnum 
     {
@@ -16,9 +16,10 @@
         public static const LOS:uint = 10;
         public static const MAX_CAST_PER_TURN:uint = 11;
         public static const MAX_CAST_PER_TARGET:uint = 12;
-        public static const RANGE:uint = 13;
+        public static const RANGE_MAX:uint = 13;
+        public static const RANGE_MIN:uint = 14;
 
 
     }
-}//package com.ankamagames.dofus.network.enums
+} com.ankamagames.dofus.network.enums
 

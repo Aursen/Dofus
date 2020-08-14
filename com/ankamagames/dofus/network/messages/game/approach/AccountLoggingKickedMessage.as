@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.approach
+package com.ankamagames.dofus.network.messages.game.approach
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class AccountLoggingKickedMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -58,6 +58,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_AccountLoggingKickedMessage(output);
@@ -89,16 +97,43 @@
 
         public function deserializeAs_AccountLoggingKickedMessage(input:ICustomDataInput):void
         {
+            this._daysFunc(input);
+            this._hoursFunc(input);
+            this._minutesFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_AccountLoggingKickedMessage(tree);
+        }
+
+        public function deserializeAsyncAs_AccountLoggingKickedMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._daysFunc);
+            tree.addChild(this._hoursFunc);
+            tree.addChild(this._minutesFunc);
+        }
+
+        private function _daysFunc(input:ICustomDataInput):void
+        {
             this.days = input.readVarUhShort();
             if (this.days < 0)
             {
                 throw (new Error((("Forbidden value (" + this.days) + ") on element of AccountLoggingKickedMessage.days.")));
             };
+        }
+
+        private function _hoursFunc(input:ICustomDataInput):void
+        {
             this.hours = input.readByte();
             if (this.hours < 0)
             {
                 throw (new Error((("Forbidden value (" + this.hours) + ") on element of AccountLoggingKickedMessage.hours.")));
             };
+        }
+
+        private function _minutesFunc(input:ICustomDataInput):void
+        {
             this.minutes = input.readByte();
             if (this.minutes < 0)
             {
@@ -108,5 +143,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.approach
+} com.ankamagames.dofus.network.messages.game.approach
 

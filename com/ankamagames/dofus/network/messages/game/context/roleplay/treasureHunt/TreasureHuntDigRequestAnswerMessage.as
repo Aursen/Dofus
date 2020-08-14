@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.context.roleplay.treasureHunt
+package com.ankamagames.dofus.network.messages.game.context.roleplay.treasureHunt
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class TreasureHuntDigRequestAnswerMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -55,6 +55,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_TreasureHuntDigRequestAnswerMessage(output);
@@ -73,11 +81,32 @@
 
         public function deserializeAs_TreasureHuntDigRequestAnswerMessage(input:ICustomDataInput):void
         {
+            this._questTypeFunc(input);
+            this._resultFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_TreasureHuntDigRequestAnswerMessage(tree);
+        }
+
+        public function deserializeAsyncAs_TreasureHuntDigRequestAnswerMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._questTypeFunc);
+            tree.addChild(this._resultFunc);
+        }
+
+        private function _questTypeFunc(input:ICustomDataInput):void
+        {
             this.questType = input.readByte();
             if (this.questType < 0)
             {
                 throw (new Error((("Forbidden value (" + this.questType) + ") on element of TreasureHuntDigRequestAnswerMessage.questType.")));
             };
+        }
+
+        private function _resultFunc(input:ICustomDataInput):void
+        {
             this.result = input.readByte();
             if (this.result < 0)
             {
@@ -87,5 +116,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.context.roleplay.treasureHunt
+} com.ankamagames.dofus.network.messages.game.context.roleplay.treasureHunt
 

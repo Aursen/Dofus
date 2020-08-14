@@ -1,10 +1,10 @@
-﻿package com.ankamagames.dofus.network.types.game.context.roleplay
+package com.ankamagames.dofus.network.types.game.context.roleplay
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class HumanOptionObjectUse extends HumanOption implements INetworkType 
     {
 
@@ -44,7 +44,7 @@
         {
             super.serializeAs_HumanOption(output);
             output.writeByte(this.delayTypeId);
-            if ((((this.delayEndTime < 0)) || ((this.delayEndTime > 9007199254740992))))
+            if (((this.delayEndTime < 0) || (this.delayEndTime > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.delayEndTime) + ") on element delayEndTime.")));
             };
@@ -64,16 +64,44 @@
         public function deserializeAs_HumanOptionObjectUse(input:ICustomDataInput):void
         {
             super.deserialize(input);
+            this._delayTypeIdFunc(input);
+            this._delayEndTimeFunc(input);
+            this._objectGIDFunc(input);
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_HumanOptionObjectUse(tree);
+        }
+
+        public function deserializeAsyncAs_HumanOptionObjectUse(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._delayTypeIdFunc);
+            tree.addChild(this._delayEndTimeFunc);
+            tree.addChild(this._objectGIDFunc);
+        }
+
+        private function _delayTypeIdFunc(input:ICustomDataInput):void
+        {
             this.delayTypeId = input.readByte();
             if (this.delayTypeId < 0)
             {
                 throw (new Error((("Forbidden value (" + this.delayTypeId) + ") on element of HumanOptionObjectUse.delayTypeId.")));
             };
+        }
+
+        private function _delayEndTimeFunc(input:ICustomDataInput):void
+        {
             this.delayEndTime = input.readDouble();
-            if ((((this.delayEndTime < 0)) || ((this.delayEndTime > 9007199254740992))))
+            if (((this.delayEndTime < 0) || (this.delayEndTime > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.delayEndTime) + ") on element of HumanOptionObjectUse.delayEndTime.")));
             };
+        }
+
+        private function _objectGIDFunc(input:ICustomDataInput):void
+        {
             this.objectGID = input.readVarUhShort();
             if (this.objectGID < 0)
             {
@@ -83,5 +111,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.context.roleplay
+} com.ankamagames.dofus.network.types.game.context.roleplay
 

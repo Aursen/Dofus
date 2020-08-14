@@ -1,14 +1,14 @@
-﻿package com.ankamagames.dofus.logic.game.common.actions.exchange
+package com.ankamagames.dofus.logic.game.common.actions.exchange
 {
     import com.ankamagames.jerakine.handlers.messages.Action;
 
     public class ExchangeObjectMoveKamaAction implements Action 
     {
 
-        public var kamas:uint;
+        public var kamas:Number = 0;
 
 
-        public static function create(pKamas:uint):ExchangeObjectMoveKamaAction
+        public static function create(pKamas:Number):ExchangeObjectMoveKamaAction
         {
             var a:ExchangeObjectMoveKamaAction = new (ExchangeObjectMoveKamaAction)();
             a.kamas = pKamas;
@@ -17,5 +17,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.actions.exchange
+} com.ankamagames.dofus.logic.game.common.actions.exchange
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.datacenter.items.criterion
+package com.ankamagames.dofus.datacenter.items.criterion
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.jerakine.data.I18n;
@@ -16,7 +16,15 @@
         {
             var readableCriterionValue:String = _criterionValue.toString();
             var readableCriterionRef:String = I18n.getUiText("ui.common.level");
-            return (((((readableCriterionRef + " ") + _operator.text) + " ") + readableCriterionValue));
+            if (_operator.text === ItemCriterionOperator.SUPERIOR)
+            {
+                return (I18n.getUiText("ui.common.minimumLevelCondition", [(_criterionValue + 1).toString()]));
+            };
+            if (_operator.text === ItemCriterionOperator.INFERIOR)
+            {
+                return (I18n.getUiText("ui.common.maximumLevelCondition", [(_criterionValue - 1).toString()]));
+            };
+            return ((((readableCriterionRef + " ") + _operator.text) + " ") + readableCriterionValue);
         }
 
         override public function clone():IItemCriterion
@@ -27,10 +35,10 @@
 
         override protected function getCriterion():int
         {
-            return (PlayedCharacterManager.getInstance().infos.level);
+            return (PlayedCharacterManager.getInstance().limitedLevel);
         }
 
 
     }
-}//package com.ankamagames.dofus.datacenter.items.criterion
+} com.ankamagames.dofus.datacenter.items.criterion
 

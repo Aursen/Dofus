@@ -1,10 +1,10 @@
-﻿package com.ankamagames.dofus.network.types.game.context.roleplay
+package com.ankamagames.dofus.network.types.game.context.roleplay
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class HumanOptionTitle extends HumanOption implements INetworkType 
     {
 
@@ -56,15 +56,37 @@
         public function deserializeAs_HumanOptionTitle(input:ICustomDataInput):void
         {
             super.deserialize(input);
+            this._titleIdFunc(input);
+            this._titleParamFunc(input);
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_HumanOptionTitle(tree);
+        }
+
+        public function deserializeAsyncAs_HumanOptionTitle(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._titleIdFunc);
+            tree.addChild(this._titleParamFunc);
+        }
+
+        private function _titleIdFunc(input:ICustomDataInput):void
+        {
             this.titleId = input.readVarUhShort();
             if (this.titleId < 0)
             {
                 throw (new Error((("Forbidden value (" + this.titleId) + ") on element of HumanOptionTitle.titleId.")));
             };
+        }
+
+        private function _titleParamFunc(input:ICustomDataInput):void
+        {
             this.titleParam = input.readUTF();
         }
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.context.roleplay
+} com.ankamagames.dofus.network.types.game.context.roleplay
 

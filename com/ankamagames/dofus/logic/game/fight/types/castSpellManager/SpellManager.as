@@ -1,10 +1,11 @@
-﻿package com.ankamagames.dofus.logic.game.fight.types.castSpellManager
+package com.ankamagames.dofus.logic.game.fight.types.castSpellManager
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
     import flash.utils.Dictionary;
     import com.ankamagames.dofus.logic.game.fight.types.SpellCastInFightManager;
+    import com.ankamagames.dofus.datacenter.temporis.ForgettableSpell;
     import com.ankamagames.dofus.datacenter.spells.Spell;
     import com.ankamagames.dofus.datacenter.spells.SpellLevel;
     import com.ankamagames.dofus.network.types.game.character.characteristic.CharacterSpellModification;
@@ -26,6 +27,8 @@
         private var _castThisTurn:uint;
         private var _targetsThisTurn:Dictionary;
         private var _spellCastManager:SpellCastInFightManager;
+        private var _castIntervalModificator:int;
+        private var _castIntervalSetModificator:int;
 
         public function SpellManager(spellCastManager:SpellCastInFightManager, pSpellId:uint, pSpellLevel:uint)
         {
@@ -34,6 +37,12 @@
             this._spellLevel = pSpellLevel;
             this._targetsThisTurn = new Dictionary();
         }
+
+        public static function isForgettableSpell(spellId:int):Boolean
+        {
+            return (!(ForgettableSpell.getForgettableSpellById(spellId) === null));
+        }
+
 
         public function get lastCastTurn():int
         {
@@ -67,7 +76,8 @@
 
         public function cast(pTurn:int, pTarget:Array, pCountForCooldown:Boolean=true):void
         {
-            var target:int;
+            var target:Number;
+            this._castIntervalModificator = (this._castIntervalSetModificator = 0);
             this._lastCastTurn = pTurn;
             for each (target in pTarget)
             {
@@ -90,7 +100,7 @@
             this.updateSpellWrapper();
         }
 
-        public function getCastOnEntity(pEntityId:int):uint
+        public function getCastOnEntity(pEntityId:Number):uint
         {
             if (this._targetsThisTurn[pEntityId] == null)
             {
@@ -110,7 +120,10 @@
         {
             var spellModification:CharacterSpellModification;
             var interval:int;
+            var castIntervalModificator:int;
+            var castIntervalSetModificator:int;
             var cooldown:int;
+            var castIntervalBonus:int;
             var spell:Spell = Spell.getSpellById(this._spellId);
             var spellLevel:SpellLevel = spell.getSpellLevel(this._spellLevel);
             var spellModifs:SpellModificator = new SpellModificator();
@@ -130,20 +143,39 @@
                     };
                 };
             };
-            if (spellModifs.getTotalBonus(spellModifs.castIntervalSet))
+            castIntervalModificator = spellModifs.getTotalBonus(spellModifs.castInterval);
+            castIntervalSetModificator = spellModifs.getTotalBonus(spellModifs.castIntervalSet);
+            if (castIntervalModificator)
             {
-                interval = (-(spellModifs.getTotalBonus(spellModifs.castInterval)) + spellModifs.getTotalBonus(spellModifs.castIntervalSet));
+                this._castIntervalModificator = castIntervalModificator;
             }
             else
             {
-                interval = (spellLevel.minCastInterval - spellModifs.getTotalBonus(spellModifs.castInterval));
+                castIntervalModificator = this._castIntervalModificator;
+            };
+            if (castIntervalSetModificator)
+            {
+                this._castIntervalSetModificator = castIntervalSetModificator;
+            }
+            else
+            {
+                castIntervalSetModificator = this._castIntervalSetModificator;
+            };
+            if (castIntervalSetModificator)
+            {
+                interval = (-(castIntervalModificator) + castIntervalSetModificator);
+            }
+            else
+            {
+                castIntervalBonus = castIntervalModificator;
+                interval = (spellLevel.minCastInterval - ((castIntervalBonus < 0) ? 0 : castIntervalBonus));
             };
             if (interval == 63)
             {
                 return (63);
             };
             var initialCooldown:int = ((this._lastInitialCooldownReset + spellLevel.initialCooldown) - this._spellCastManager.currentTurn);
-            if ((((this._lastCastTurn >= (this._lastInitialCooldownReset + spellLevel.initialCooldown))) || ((spellLevel.initialCooldown == 0))))
+            if (((this._lastCastTurn >= (this._lastInitialCooldownReset + spellLevel.initialCooldown)) || (spellLevel.initialCooldown == 0)))
             {
                 cooldown = ((interval + this._lastCastTurn) - this._spellCastManager.currentTurn);
             }
@@ -160,15 +192,11 @@
 
         public function forceCooldown(cooldown:int):void
         {
-            var spellW:SpellWrapper;
             var spell:Spell = Spell.getSpellById(this._spellId);
             var spellL:SpellLevel = spell.getSpellLevel(this._spellLevel);
             this._lastCastTurn = ((cooldown + this._spellCastManager.currentTurn) - spellL.minCastInterval);
-            var spellWs:Array = SpellWrapper.getSpellWrappersById(this._spellId, this._spellCastManager.entityId);
-            for each (spellW in spellWs)
-            {
-                spellW.actualCooldown = cooldown;
-            };
+            var spellW:SpellWrapper = SpellWrapper.getSpellWrapperById(this._spellId, this._spellCastManager.entityId);
+            spellW.actualCooldown = cooldown;
         }
 
         public function forceLastCastTurn(pLastCastTurn:int, reallyForceNoKidding:Boolean=false):void
@@ -179,20 +207,16 @@
 
         private function updateSpellWrapper(forceLastCastTurn:Boolean=false):void
         {
-            var spellW:SpellWrapper;
-            var spellWs:Array = SpellWrapper.getSpellWrappersById(this._spellId, this._spellCastManager.entityId);
+            var spellW:SpellWrapper = SpellWrapper.getSpellWrapperById(this._spellId, this._spellCastManager.entityId);
             var spell:Spell = Spell.getSpellById(this._spellId);
             var spellLevel:SpellLevel = spell.getSpellLevel(this._spellLevel);
-            for each (spellW in spellWs)
+            if (((spellW) && (!(spellW.actualCooldown == 63))))
             {
-                if (spellW.actualCooldown != 63)
-                {
-                    spellW.actualCooldown = this.cooldown;
-                };
+                spellW.actualCooldown = this.cooldown;
             };
         }
 
 
     }
-}//package com.ankamagames.dofus.logic.game.fight.types.castSpellManager
+} com.ankamagames.dofus.logic.game.fight.types.castSpellManager
 

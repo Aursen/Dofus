@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.types.sequences
+package com.ankamagames.dofus.types.sequences
 {
     import com.ankamagames.jerakine.sequencer.AbstractSequencable;
     import com.ankamagames.jerakine.logger.Logger;
@@ -6,11 +6,12 @@
     import flash.utils.getQualifiedClassName;
     import com.ankamagames.dofus.types.entities.Projectile;
     import com.ankamagames.jerakine.types.positions.MapPoint;
+    import com.ankamagames.jerakine.entities.interfaces.IEntity;
+    import com.ankamagames.dofus.scripts.api.FxApi;
     import com.ankamagames.atouin.managers.EntitiesManager;
     import com.ankamagames.tiphon.types.look.TiphonEntityLook;
     import com.ankamagames.tiphon.events.TiphonEvent;
     import com.ankamagames.jerakine.enum.AddGfxModeEnum;
-    import com.ankamagames.atouin.managers.MapDisplayManager;
     import com.ankamagames.atouin.enums.PlacementStrataEnums;
     import flash.events.Event;
     import flash.events.TimerEvent;
@@ -29,9 +30,11 @@
         private var _mode:uint;
         private var _startCell:MapPoint;
         private var _endCell:MapPoint;
+        private var _startEntity:IEntity;
         private var _popUnderPlayer:Boolean;
+        private var _strataEnum:*;
 
-        public function AddGfxEntityStep(gfxId:uint, cellId:uint, angle:Number=0, yOffset:int=0, mode:uint=0, startCell:MapPoint=null, endCell:MapPoint=null, popUnderPlayer:Boolean=false)
+        public function AddGfxEntityStep(gfxId:uint, cellId:uint, angle:Number=0, yOffset:int=0, mode:uint=0, startCell:MapPoint=null, endCell:MapPoint=null, popUnderPlayer:Boolean=false, strataEnum:*=null, startEntity:IEntity=null)
         {
             this._mode = mode;
             this._gfxId = gfxId;
@@ -40,15 +43,23 @@
             this._yOffset = yOffset;
             this._startCell = startCell;
             this._endCell = endCell;
+            this._startEntity = startEntity;
             this._popUnderPlayer = popUnderPlayer;
+            this._strataEnum = strataEnum;
         }
 
         override public function start():void
         {
-            var _local_2:Array;
-            var _local_3:Array;
+            var dir:Array;
+            var ad:Array;
+            var orientedDir:uint;
             var i:uint;
-            var id:int = EntitiesManager.getInstance().getFreeEntityId();
+            if (this._startEntity)
+            {
+                this._startCell = FxApi.GetEntityCell(this._startEntity);
+                this._cellId = this._startCell.cellId;
+            };
+            var id:Number = EntitiesManager.getInstance().getFreeEntityId();
             this._entity = new Projectile(id, TiphonEntityLook.fromString((("{" + this._gfxId) + "}")), true);
             this._entity.addEventListener(TiphonEvent.ANIMATION_SHOT, this.shot);
             this._entity.addEventListener(TiphonEvent.ANIMATION_END, this.remove);
@@ -60,30 +71,31 @@
             switch (this._mode)
             {
                 case AddGfxModeEnum.NORMAL:
-                    this._entity.init();
+                    this._entity.initDirection();
                     break;
                 case AddGfxModeEnum.RANDOM:
-                    _local_2 = this._entity.getAvaibleDirection();
-                    _local_3 = new Array();
+                    dir = this._entity.getAvaibleDirection();
+                    ad = new Array();
                     i = 0;
                     while (i < 8)
                     {
-                        if (_local_2[i])
+                        if (dir[i])
                         {
-                            _local_3.push(i);
+                            ad.push(i);
                         };
                         i++;
                     };
-                    this._entity.init(_local_3[Math.floor((Math.random() * _local_3.length))]);
+                    this._entity.initDirection(ad[Math.floor((Math.random() * ad.length))]);
                     break;
                 case AddGfxModeEnum.ORIENTED:
-                    this._entity.init(this._startCell.advancedOrientationTo(this._endCell, true));
+                    orientedDir = this._startCell.advancedOrientationTo(this._endCell, true);
+                    this._entity.initDirection(orientedDir);
                     break;
             };
             this._entity.position = MapPoint.fromCellId(this._cellId);
-            if (MapDisplayManager.getInstance().renderer.isCellUnderFixture(this._cellId))
+            if (this._strataEnum != null)
             {
-                this._entity.display(PlacementStrataEnums.STRATA_FOREGROUND);
+                this._entity.display(this._strataEnum);
             }
             else
             {
@@ -106,7 +118,7 @@
             this._entity.removeEventListener(TiphonEvent.RENDER_FAILED, this.remove);
             this._entity.removeEventListener(TiphonEvent.SPRITE_INIT_FAILED, this.remove);
             this._entity.destroy();
-            if (!(this._shot))
+            if (!this._shot)
             {
                 this.shot(null);
             };
@@ -131,5 +143,5 @@
 
 
     }
-}//package com.ankamagames.dofus.types.sequences
+} com.ankamagames.dofus.types.sequences
 

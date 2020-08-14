@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.internalDatacenter.almanax
+package com.ankamagames.dofus.internalDatacenter.almanax
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
 
@@ -13,5 +13,5 @@
 
 
     }
-}//package com.ankamagames.dofus.internalDatacenter.almanax
+} com.ankamagames.dofus.internalDatacenter.almanax
 

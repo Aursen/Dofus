@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.misc.utils.mapeditor
+package com.ankamagames.dofus.misc.utils.mapeditor
 {
     import flash.events.EventDispatcher;
     import flash.net.Socket;
@@ -62,7 +62,7 @@
 
         private function checkData():void
         {
-            if (!(this._socktetInit))
+            if (!this._socktetInit)
             {
                 this.getCrossDomain();
             };
@@ -109,7 +109,6 @@
             this._waitingForLength = this.HEAD_LENGTH;
             this._parsingState = this.STEP_HEAD;
             dispatchEvent(new MapEditorDataEvent(MapEditorDataEvent.NEW_DATA, this._currentData));
-            trace((("Info " + this._currentData.type) + " ok"));
             this.checkData();
         }
 
@@ -150,5 +149,5 @@
 
 
     }
-}//package com.ankamagames.dofus.misc.utils.mapeditor
+} com.ankamagames.dofus.misc.utils.mapeditor
 

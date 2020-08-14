@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.utils.misc
+package com.ankamagames.jerakine.utils.misc
 {
     import flash.system.ApplicationDomain;
 
@@ -20,5 +20,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.utils.misc
+} com.ankamagames.jerakine.utils.misc
 

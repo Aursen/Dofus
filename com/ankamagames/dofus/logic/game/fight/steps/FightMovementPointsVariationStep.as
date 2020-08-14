@@ -1,6 +1,7 @@
-﻿package com.ankamagames.dofus.logic.game.fight.steps
+package com.ankamagames.dofus.logic.game.fight.steps
 {
     import com.ankamagames.dofus.logic.game.fight.steps.abstract.AbstractStatContextualStep;
+    import com.ankamagames.dofus.network.enums.GameContextEnum;
     import com.ankamagames.jerakine.managers.OptionManager;
     import com.ankamagames.dofus.network.types.game.character.characteristic.CharacterCharacteristicsInformations;
     import com.ankamagames.dofus.logic.game.fight.frames.FightEntitiesFrame;
@@ -20,13 +21,13 @@
         private var _updateCharacteristicManager:Boolean;
         private var _showChatmessage:Boolean;
 
-        public function FightMovementPointsVariationStep(entityId:int, value:int, voluntarlyUsed:Boolean, updateCharacteristicManager:Boolean=true, showChatMessage:Boolean=true)
+        public function FightMovementPointsVariationStep(entityId:Number, value:int, voluntarlyUsed:Boolean, updateCharacteristicManager:Boolean=true, showChatMessage:Boolean=true)
         {
-            super(COLOR, (((value > 0)) ? ("+" + value) : value.toString()), entityId, BLOCKING);
+            super(COLOR, ((value > 0) ? ("+" + value) : value.toString()), entityId, GameContextEnum.FIGHT, BLOCKING);
             this._showChatmessage = showChatMessage;
             this._intValue = value;
             this._voluntarlyUsed = voluntarlyUsed;
-            _virtual = ((this._voluntarlyUsed) && (!(OptionManager.getOptionManager("dofus").showUsedPaPm)));
+            _virtual = ((this._voluntarlyUsed) && (!(OptionManager.getOptionManager("dofus").getOption("showUsedPaPm"))));
             this._updateCharacteristicManager = updateCharacteristicManager;
         }
 
@@ -80,5 +81,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.fight.steps
+} com.ankamagames.dofus.logic.game.fight.steps
 

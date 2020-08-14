@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.managers
+package com.ankamagames.berilia.managers
 {
     import com.adobe.utils.StringUtil;
     import flashx.textLayout.elements.SpanElement;
@@ -24,7 +24,7 @@
                 case OLD_FASHION:
                 case INLINE_CSS_VERSION:
                     htmlVersion = val;
-                    return;
+                    break;
                 default:
                     htmlVersion = OLD_FASHION;
             };
@@ -36,9 +36,8 @@
             {
                 if (isTagValide(pBalise))
                 {
-                    return ((((((((("<" + pBalise) + " ") + formateStyleWithInlineCss(pStyle)) + ">") + pText) + "</") + pBalise) + ">"));
+                    return (((((((("<" + pBalise) + " ") + formateStyleWithInlineCss(pStyle)) + ">") + pText) + "</") + pBalise) + ">");
                 };
-                trace((('ERROR TAG: "' + pBalise) + '" NOT VALID !!'));
                 return (pText);
             };
             if (pStyle == null)
@@ -100,12 +99,12 @@
                 {
                     htmlText = (htmlText + "<b>");
                 };
-                if ((((pStyle["text-decoration"] == UNDERLINE)) || ((pStyle["textDecoration"] == UNDERLINE))))
+                if (((pStyle["text-decoration"] == UNDERLINE) || (pStyle["textDecoration"] == UNDERLINE)))
                 {
                     htmlText = (htmlText + "<u>");
                 };
                 htmlText = (htmlText + pText);
-                if ((((pStyle["text-decoration"] == UNDERLINE)) || ((pStyle["textDecoration"] == UNDERLINE))))
+                if (((pStyle["text-decoration"] == UNDERLINE) || (pStyle["textDecoration"] == UNDERLINE)))
                 {
                     htmlText = (htmlText + "</u>");
                 };
@@ -156,15 +155,15 @@
 
         public static function addLink(pText:String, pHref:String="", pStyle:Object=null, pForceInlineCss:Boolean=false):String
         {
-            if ((((htmlVersion == INLINE_CSS_VERSION)) || (pForceInlineCss)))
+            if (((htmlVersion == INLINE_CSS_VERSION) || (pForceInlineCss)))
             {
                 if (pStyle != null)
                 {
-                    return ((((((((((("<" + LINK) + " href='") + pHref) + "'") + formateStyleWithInlineCss(pStyle)) + ">") + pText) + "</") + LINK) + ">"));
+                    return (((((((((("<" + LINK) + " href='") + pHref) + "'") + formateStyleWithInlineCss(pStyle)) + ">") + pText) + "</") + LINK) + ">");
                 };
-                return ((((((((("<" + LINK) + " href='") + pHref) + "'>") + pText) + "</") + LINK) + ">"));
+                return (((((((("<" + LINK) + " href='") + pHref) + "'>") + pText) + "</") + LINK) + ">");
             };
-            return ((((((((("<" + LINK) + " href='") + pHref) + "'><b>") + pText) + "</b></") + LINK) + ">"));
+            return (((((((("<" + LINK) + " href='") + pHref) + "'><b>") + pText) + "</b></") + LINK) + ">");
         }
 
         public static function removeStyle(pText:String, pBalise:String, pAllOccurrences:Boolean=false):String
@@ -249,5 +248,5 @@
 
 
     }
-}//package com.ankamagames.berilia.managers
+} com.ankamagames.berilia.managers
 

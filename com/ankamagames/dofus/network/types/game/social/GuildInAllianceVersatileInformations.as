@@ -1,10 +1,10 @@
-﻿package com.ankamagames.dofus.network.types.game.social
+package com.ankamagames.dofus.network.types.game.social
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class GuildInAllianceVersatileInformations extends GuildVersatileInformations implements INetworkType 
     {
 
@@ -18,7 +18,7 @@
             return (437);
         }
 
-        public function initGuildInAllianceVersatileInformations(guildId:uint=0, leaderId:uint=0, guildLevel:uint=0, nbMembers:uint=0, allianceId:uint=0):GuildInAllianceVersatileInformations
+        public function initGuildInAllianceVersatileInformations(guildId:uint=0, leaderId:Number=0, guildLevel:uint=0, nbMembers:uint=0, allianceId:uint=0):GuildInAllianceVersatileInformations
         {
             super.initGuildVersatileInformations(guildId, leaderId, guildLevel, nbMembers);
             this.allianceId = allianceId;
@@ -54,6 +54,22 @@
         public function deserializeAs_GuildInAllianceVersatileInformations(input:ICustomDataInput):void
         {
             super.deserialize(input);
+            this._allianceIdFunc(input);
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GuildInAllianceVersatileInformations(tree);
+        }
+
+        public function deserializeAsyncAs_GuildInAllianceVersatileInformations(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._allianceIdFunc);
+        }
+
+        private function _allianceIdFunc(input:ICustomDataInput):void
+        {
             this.allianceId = input.readVarUhInt();
             if (this.allianceId < 0)
             {
@@ -63,5 +79,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.social
+} com.ankamagames.dofus.network.types.game.social
 

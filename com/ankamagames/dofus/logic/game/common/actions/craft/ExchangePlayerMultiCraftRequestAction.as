@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.common.actions.craft
+package com.ankamagames.dofus.logic.game.common.actions.craft
 {
     import com.ankamagames.jerakine.handlers.messages.Action;
 
@@ -6,11 +6,11 @@
     {
 
         public var exchangeType:int;
-        public var target:uint;
+        public var target:Number;
         public var skillId:uint;
 
 
-        public static function create(pExchangeType:int, pTarget:uint, pSkillId:uint):ExchangePlayerMultiCraftRequestAction
+        public static function create(pExchangeType:int, pTarget:Number, pSkillId:uint):ExchangePlayerMultiCraftRequestAction
         {
             var action:ExchangePlayerMultiCraftRequestAction = new (ExchangePlayerMultiCraftRequestAction)();
             action.exchangeType = pExchangeType;
@@ -21,5 +21,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.actions.craft
+} com.ankamagames.dofus.logic.game.common.actions.craft
 

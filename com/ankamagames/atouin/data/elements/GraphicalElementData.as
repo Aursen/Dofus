@@ -1,4 +1,4 @@
-﻿package com.ankamagames.atouin.data.elements
+package com.ankamagames.atouin.data.elements
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
@@ -27,5 +27,5 @@
 
 
     }
-}//package com.ankamagames.atouin.data.elements
+} com.ankamagames.atouin.data.elements
 

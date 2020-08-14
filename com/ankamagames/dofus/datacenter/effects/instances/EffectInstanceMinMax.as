@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.datacenter.effects.instances
+package com.ankamagames.dofus.datacenter.effects.instances
 {
     import com.ankamagames.dofus.datacenter.effects.EffectInstance;
     import com.ankamagames.jerakine.interfaces.IDataCenter;
@@ -33,7 +33,7 @@
 
         override public function get parameter1():Object
         {
-            return (((!((this.min == this.max))) ? this.max : null));
+            return ((this.min != this.max) ? this.max : null);
         }
 
         override public function setParameter(paramIndex:uint, value:*):void
@@ -42,14 +42,14 @@
             {
                 case 0:
                     this.min = uint(value);
-                    return;
+                    break;
                 case 1:
                     this.max = uint(value);
-                    return;
+                    break;
             };
         }
 
 
     }
-}//package com.ankamagames.dofus.datacenter.effects.instances
+} com.ankamagames.dofus.datacenter.effects.instances
 

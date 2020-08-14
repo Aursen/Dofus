@@ -1,12 +1,10 @@
-﻿package com.ankamagames.dofus.logic.common.frames
+package com.ankamagames.dofus.logic.common.frames
 {
     import com.ankamagames.jerakine.messages.Frame;
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
     import flash.utils.Dictionary;
-    import __AS3__.vec.Vector;
-    import com.ankamagames.dofus.network.types.game.house.AccountHouseInformations;
     import flash.display.Stage;
     import com.ankamagames.jerakine.utils.display.StageShareManager;
     import flash.events.Event;
@@ -18,11 +16,15 @@
     import flash.filesystem.FileStream;
     import flash.utils.ByteArray;
     import com.ankamagames.dofus.network.messages.security.CheckFileMessage;
-    import com.ankamagames.dofus.network.messages.game.approach.ServerOptionalFeaturesMessage;
     import com.ankamagames.dofus.network.messages.game.approach.ServerSettingsMessage;
     import com.ankamagames.dofus.network.messages.game.approach.ServerSessionConstantsMessage;
     import com.ankamagames.dofus.network.messages.game.basic.CurrentServerStatusUpdateMessage;
     import com.ankamagames.dofus.network.messages.game.context.roleplay.houses.AccountHouseMessage;
+    import com.ankamagames.dofus.logic.game.common.frames.HouseFrame;
+    import com.ankamagames.dofus.logic.game.common.actions.GoToUrlAction;
+    import com.ankamagames.dofus.network.messages.web.haapi.HaapiSessionMessage;
+    import com.ankamagames.dofus.network.messages.web.haapi.HaapiApiKeyMessage;
+    import com.ankamagames.dofus.network.messages.web.haapi.HaapiAuthErrorMessage;
     import com.ankamagames.jerakine.handlers.messages.mouse.MouseWheelMessage;
     import flash.filesystem.File;
     import com.ankamagames.dofus.network.types.game.approach.ServerSessionConstant;
@@ -33,9 +35,16 @@
     import flash.filesystem.FileMode;
     import com.ankamagames.dofus.kernel.net.ConnectionsHandler;
     import com.ankamagames.dofus.logic.common.managers.PlayerManager;
+    import com.ankamagames.dofus.datacenter.servers.ServerTemporisSeason;
     import com.ankamagames.dofus.network.types.game.approach.ServerSessionConstantInteger;
     import com.ankamagames.dofus.network.types.game.approach.ServerSessionConstantLong;
     import com.ankamagames.dofus.network.types.game.approach.ServerSessionConstantString;
+    import com.ankamagames.dofus.kernel.Kernel;
+    import flash.net.navigateToURL;
+    import flash.net.URLRequest;
+    import com.ankamagames.dofus.network.enums.HaapiSessionTypeEnum;
+    import com.ankamagames.dofus.misc.utils.HaapiKeyManager;
+    import com.ankamagames.dofus.network.enums.HaapiAuthTypeEnum;
     import com.ankamagames.jerakine.messages.Message;
     import com.ankamagames.jerakine.types.enums.Priority;
 
@@ -50,9 +59,7 @@
         private static const SERVER_CONST_TIME_BEFORE_WEIGH_IN_KOH:int = 5;
         private static var _instance:MiscFrame;
 
-        private var _optionalAuthorizedFeatures:Array;
         private var _serverSessionConstants:Dictionary;
-        private var _accountHouses:Vector.<AccountHouseInformations>;
         private var _stage:Stage;
         private var _mouseOnStage:Boolean = true;
         private var _serverStatus:uint;
@@ -63,20 +70,6 @@
             return (_instance);
         }
 
-
-        public function isOptionalFeatureActive(id:uint):Boolean
-        {
-            if (((this._optionalAuthorizedFeatures) && ((this._optionalAuthorizedFeatures.indexOf(id) > -1))))
-            {
-                return (true);
-            };
-            return (false);
-        }
-
-        public function get accountHouses():Vector.<AccountHouseInformations>
-        {
-            return (this._accountHouses);
-        }
 
         public function pushed():Boolean
         {
@@ -91,7 +84,7 @@
         {
             _instance = null;
             this._stage.removeEventListener(Event.MOUSE_LEAVE, this.onMouseLeave);
-            if (!(this._mouseOnStage))
+            if (!this._mouseOnStage)
             {
                 this._stage.removeEventListener(MouseEvent.MOUSE_MOVE, this.onMouseMove);
             };
@@ -114,24 +107,29 @@
             var mrcMsg:MouseRightClickMessage;
             var current:DisplayObject;
             var beriliaContainer:DisplayObjectContainer;
+            var stage:Stage;
             var cfrmsg:CheckFileRequestMessage;
             var fileStream:FileStream;
             var fileByte:ByteArray;
             var value:String;
             var filenameHash:String;
             var cfmsg:CheckFileMessage;
-            var sofmsg:ServerOptionalFeaturesMessage;
             var ssmsg:ServerSettingsMessage;
             var sscmsg:ServerSessionConstantsMessage;
             var cssum:CurrentServerStatusUpdateMessage;
             var ahm:AccountHouseMessage;
+            var houseFrame:HouseFrame;
+            var gtua:GoToUrlAction;
+            var hsm:HaapiSessionMessage;
+            var hakmsg:HaapiApiKeyMessage;
+            var logStr:String;
+            var haem:HaapiAuthErrorMessage;
             var mwMsg:MouseWheelMessage;
             var currentW:DisplayObject;
-            var stage:Stage;
+            var stageW:Stage;
             var beriliaContainerW:DisplayObjectContainer;
             var wheelUp:Boolean;
             var file:File;
-            var featureId:int;
             var constant:ServerSessionConstant;
             switch (true)
             {
@@ -139,7 +137,8 @@
                     mrcMsg = (msg as MouseRightClickMessage);
                     current = mrcMsg.target;
                     beriliaContainer = Berilia.getInstance().docMain;
-                    while (((!((current == stage))) && (current)))
+                    stage = StageShareManager.stage;
+                    while (((!(current == stage)) && (current)))
                     {
                         if (beriliaContainer == current)
                         {
@@ -154,9 +153,9 @@
                     {
                         mwMsg = (msg as MouseWheelMessage);
                         currentW = mwMsg.target;
-                        stage = StageShareManager.stage;
+                        stageW = StageShareManager.stage;
                         beriliaContainerW = Berilia.getInstance().docMain;
-                        while (((!((currentW == stage))) && (currentW)))
+                        while (((!(currentW == stageW)) && (currentW)))
                         {
                             if (beriliaContainerW == currentW)
                             {
@@ -175,6 +174,7 @@
                     return (false);
                 case (msg is CheckFileRequestMessage):
                     cfrmsg = (msg as CheckFileRequestMessage);
+                    cfrmsg.filename = cfrmsg.filename.replace(/\.\.[\/|\\]/g, "");
                     fileStream = new FileStream();
                     fileByte = new ByteArray();
                     value = "";
@@ -188,7 +188,7 @@
                         }
                         else
                         {
-                            file = file.resolvePath(("./" + cfrmsg.filename));
+                            file = file.resolvePath(((file.nativePath + File.separator) + cfrmsg.filename));
                             fileStream.open(file, FileMode.READ);
                             fileStream.readBytes(fileByte);
                             fileStream.close();
@@ -227,19 +227,15 @@
                     cfmsg.initCheckFileMessage(filenameHash, cfrmsg.type, value);
                     ConnectionsHandler.getConnection().send(cfmsg);
                     return (true);
-                case (msg is ServerOptionalFeaturesMessage):
-                    sofmsg = (msg as ServerOptionalFeaturesMessage);
-                    this._optionalAuthorizedFeatures = new Array();
-                    for each (featureId in sofmsg.features)
-                    {
-                        this._optionalAuthorizedFeatures.push(featureId);
-                    };
-                    return (true);
                 case (msg is ServerSettingsMessage):
                     ssmsg = (msg as ServerSettingsMessage);
                     PlayerManager.getInstance().serverCommunityId = ssmsg.community;
                     PlayerManager.getInstance().serverLang = ssmsg.lang;
                     PlayerManager.getInstance().serverGameType = ssmsg.gameType;
+                    PlayerManager.getInstance().serverIsMonoAccount = ssmsg.isMonoAccount;
+                    PlayerManager.getInstance().arenaLeaveBanTime = ssmsg.arenaLeaveBanTime;
+                    PlayerManager.getInstance().hasFreeAutopilot = ssmsg.hasFreeAutopilot;
+                    ServerTemporisSeason.initCurrentSeason();
                     return (true);
                 case (msg is ServerSessionConstantsMessage):
                     sscmsg = (msg as ServerSessionConstantsMessage);
@@ -277,8 +273,55 @@
                     return (true);
                 case (msg is AccountHouseMessage):
                     ahm = (msg as AccountHouseMessage);
-                    this._accountHouses = ahm.houses;
-                    KernelEventsManager.getInstance().processCallback(HookList.HouseInformations, ahm.houses);
+                    if (!Kernel.getWorker().getFrame(HouseFrame))
+                    {
+                        Kernel.getWorker().addFrame(new HouseFrame());
+                    };
+                    houseFrame = (Kernel.getWorker().getFrame(HouseFrame) as HouseFrame);
+                    if (houseFrame != null)
+                    {
+                        houseFrame.process(msg);
+                    };
+                    return (true);
+                case (msg is GoToUrlAction):
+                    gtua = (msg as GoToUrlAction);
+                    navigateToURL(new URLRequest(gtua.url));
+                    return (true);
+                case (msg is HaapiSessionMessage):
+                    hsm = HaapiSessionMessage(msg);
+                    if (hsm.type == HaapiSessionTypeEnum.HAAPI_ACCOUNT_SESSION)
+                    {
+                        HaapiKeyManager.getInstance().saveAccountSessionId(hsm.key);
+                    }
+                    else
+                    {
+                        if (hsm.type == HaapiSessionTypeEnum.HAAPI_GAME_SESSION)
+                        {
+                            HaapiKeyManager.getInstance().saveGameSessionId(hsm.key);
+                        }
+                        else
+                        {
+                            return (false);
+                        };
+                    };
+                    return (true);
+                case (msg is HaapiApiKeyMessage):
+                    hakmsg = (msg as HaapiApiKeyMessage);
+                    logStr = "RECEIVED API KEY : ";
+                    if ((((!(hakmsg == null)) && (!(hakmsg.token == null))) && (hakmsg.token.length >= 5)))
+                    {
+                        logStr = (logStr + hakmsg.token.substr(0, 5));
+                    };
+                    _log.debug(logStr);
+                    HaapiKeyManager.getInstance().saveApiKey(hakmsg.token);
+                    return (true);
+                case (msg is HaapiAuthErrorMessage):
+                    haem = (msg as HaapiAuthErrorMessage);
+                    _log.debug(((("ERROR ON ASKING API KEY type=" + haem.type) + ", id=") + haem.getMessageId()));
+                    if (haem.type == HaapiAuthTypeEnum.HAAPI_API_KEY)
+                    {
+                        _log.error("Error during ApiKey request.");
+                    };
                     return (true);
             };
             return (false);
@@ -303,5 +346,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.common.frames
+} com.ankamagames.dofus.logic.common.frames
 

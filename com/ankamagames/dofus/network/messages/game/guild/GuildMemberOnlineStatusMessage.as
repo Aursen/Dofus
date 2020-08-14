@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.guild
+package com.ankamagames.dofus.network.messages.game.guild
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,15 +6,15 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class GuildMemberOnlineStatusMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 6061;
 
         private var _isInitialized:Boolean = false;
-        public var memberId:uint = 0;
+        public var memberId:Number = 0;
         public var online:Boolean = false;
 
 
@@ -28,7 +28,7 @@
             return (6061);
         }
 
-        public function initGuildMemberOnlineStatusMessage(memberId:uint=0, online:Boolean=false):GuildMemberOnlineStatusMessage
+        public function initGuildMemberOnlineStatusMessage(memberId:Number=0, online:Boolean=false):GuildMemberOnlineStatusMessage
         {
             this.memberId = memberId;
             this.online = online;
@@ -55,6 +55,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_GuildMemberOnlineStatusMessage(output);
@@ -62,11 +70,11 @@
 
         public function serializeAs_GuildMemberOnlineStatusMessage(output:ICustomDataOutput):void
         {
-            if (this.memberId < 0)
+            if (((this.memberId < 0) || (this.memberId > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.memberId) + ") on element memberId.")));
             };
-            output.writeVarInt(this.memberId);
+            output.writeVarLong(this.memberId);
             output.writeBoolean(this.online);
         }
 
@@ -77,15 +85,36 @@
 
         public function deserializeAs_GuildMemberOnlineStatusMessage(input:ICustomDataInput):void
         {
-            this.memberId = input.readVarUhInt();
-            if (this.memberId < 0)
+            this._memberIdFunc(input);
+            this._onlineFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GuildMemberOnlineStatusMessage(tree);
+        }
+
+        public function deserializeAsyncAs_GuildMemberOnlineStatusMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._memberIdFunc);
+            tree.addChild(this._onlineFunc);
+        }
+
+        private function _memberIdFunc(input:ICustomDataInput):void
+        {
+            this.memberId = input.readVarUhLong();
+            if (((this.memberId < 0) || (this.memberId > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.memberId) + ") on element of GuildMemberOnlineStatusMessage.memberId.")));
             };
+        }
+
+        private function _onlineFunc(input:ICustomDataInput):void
+        {
             this.online = input.readBoolean();
         }
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.guild
+} com.ankamagames.dofus.network.messages.game.guild
 

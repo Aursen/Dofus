@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.internalDatacenter.mount
+package com.ankamagames.dofus.internalDatacenter.mount
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import flash.utils.Dictionary;
@@ -9,6 +9,7 @@
     import com.ankamagames.dofus.datacenter.mounts.MountBehavior;
     import com.ankamagames.dofus.misc.ObjectEffectAdapter;
     import com.ankamagames.dofus.network.types.game.mount.MountClientData;
+    import com.ankamagames.dofus.datacenter.mounts.MountFamily;
 
     public class MountData implements IDataCenter 
     {
@@ -16,14 +17,14 @@
         private static var _dictionary_cache:Dictionary = new Dictionary();
 
         public var id:Number = 0;
-        public var model:uint = 0;
+        public var modelId:uint = 0;
         public var name:String = "";
         public var description:String = "";
         public var entityLook:TiphonEntityLook;
         public var colors:Array;
         public var sex:Boolean = false;
         public var level:uint = 0;
-        public var ownerId:uint = 0;
+        public var ownerId:Number = 0;
         public var experience:Number = 0;
         public var experienceForLevel:Number = 0;
         public var experienceForNextLevel:Number = 0;
@@ -49,16 +50,14 @@
         public var reproductionCountMax:uint = 0;
         public var boostLimiter:uint = 0;
         public var boostMax:Number = 0;
-        public var effectList:Array;
+        public var harnessGID:uint = 0;
+        public var useHarnessColors:Boolean;
+        public var effectList:Array = new Array();
         public var ancestor:Object;
-        public var ability:Array;
+        public var ability:Array = new Array();
+        private var _model:Mount;
+        private var _familyHeadUri:String;
 
-        public function MountData()
-        {
-            this.effectList = new Array();
-            this.ability = new Array();
-            super();
-        }
 
         public static function makeMountData(o:MountClientData, cache:Boolean=true, xpRatio:uint=0):MountData
         {
@@ -71,7 +70,7 @@
                 mountData = getMountFromCache(o.id);
             };
             var mount:Mount = Mount.getMountById(o.model);
-            if (!(o.name))
+            if (!o.name)
             {
                 mountData.name = I18n.getUiText("ui.common.noName");
             }
@@ -80,7 +79,7 @@
                 mountData.name = o.name;
             };
             mountData.id = o.id;
-            mountData.model = o.model;
+            mountData.modelId = o.model;
             mountData.description = mount.name;
             mountData.sex = o.sex;
             mountData.ownerId = o.ownerId;
@@ -133,6 +132,8 @@
             mountData.reproductionCountMax = o.reproductionCountMax;
             mountData.boostLimiter = o.boostLimiter;
             mountData.boostMax = o.boostMax;
+            mountData.harnessGID = o.harnessGID;
+            mountData.useHarnessColors = o.useHarnessColors;
             if (((!(_dictionary_cache[o.id])) || (!(cache))))
             {
                 _dictionary_cache[mountData.id] = mountData;
@@ -154,7 +155,7 @@
                 return (null);
             };
             var mount:Mount = Mount.getMountById(ancestor[ancestorIndex]);
-            if (!(mount))
+            if (!mount)
             {
                 return (null);
             };
@@ -167,6 +168,27 @@
         }
 
 
+        public function get model():Mount
+        {
+            if (!this._model)
+            {
+                this._model = Mount.getMountById(this.modelId);
+            };
+            return (this._model);
+        }
+
+        public function get familyHeadUri():String
+        {
+            var family:MountFamily;
+            if (!this._familyHeadUri)
+            {
+                family = MountFamily.getMountFamilyById(this.model.familyId);
+                this._familyHeadUri = family.headUri;
+            };
+            return (this._familyHeadUri);
+        }
+
+
     }
-}//package com.ankamagames.dofus.internalDatacenter.mount
+} com.ankamagames.dofus.internalDatacenter.mount
 

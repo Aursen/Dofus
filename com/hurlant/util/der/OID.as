@@ -1,4 +1,4 @@
-﻿package com.hurlant.util.der
+package com.hurlant.util.der
 {
     public class OID 
     {
@@ -25,5 +25,5 @@
 
 
     }
-}//package com.hurlant.util.der
+} com.hurlant.util.der
 

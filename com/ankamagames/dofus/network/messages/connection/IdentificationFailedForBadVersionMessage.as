@@ -1,30 +1,26 @@
-﻿package com.ankamagames.dofus.network.messages.connection
+package com.ankamagames.dofus.network.messages.connection
 {
     import com.ankamagames.jerakine.network.INetworkMessage;
     import com.ankamagames.dofus.network.types.version.Version;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
 
-    [Trusted]
     public class IdentificationFailedForBadVersionMessage extends IdentificationFailedMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 21;
 
         private var _isInitialized:Boolean = false;
-        public var requiredVersion:Version;
+        public var requiredVersion:Version = new Version();
+        private var _requiredVersiontree:FuncTree;
 
-        public function IdentificationFailedForBadVersionMessage()
-        {
-            this.requiredVersion = new Version();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
-            return (((super.isInitialized) && (this._isInitialized)));
+            return ((super.isInitialized) && (this._isInitialized));
         }
 
         override public function getMessageId():uint
@@ -59,6 +55,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         override public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_IdentificationFailedForBadVersionMessage(output);
@@ -82,7 +86,24 @@
             this.requiredVersion.deserialize(input);
         }
 
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_IdentificationFailedForBadVersionMessage(tree);
+        }
+
+        public function deserializeAsyncAs_IdentificationFailedForBadVersionMessage(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            this._requiredVersiontree = tree.addChild(this._requiredVersiontreeFunc);
+        }
+
+        private function _requiredVersiontreeFunc(input:ICustomDataInput):void
+        {
+            this.requiredVersion = new Version();
+            this.requiredVersion.deserializeAsync(this._requiredVersiontree);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.connection
+} com.ankamagames.dofus.network.messages.connection
 

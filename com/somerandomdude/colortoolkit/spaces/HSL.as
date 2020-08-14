@@ -1,4 +1,4 @@
-﻿package com.somerandomdude.colortoolkit.spaces
+package com.somerandomdude.colortoolkit.spaces
 {
     import com.somerandomdude.colortoolkit.CoreColor;
 
@@ -74,7 +74,7 @@
             var h:Number;
             var s:Number;
             var l:Number;
-            var _local_10:Number;
+            var d:Number;
             var r:Number = ((color >> 16) & 0xFF);
             var g:Number = ((color >> 8) & 0xFF);
             var b:Number = (color & 0xFF);
@@ -83,28 +83,25 @@
             b = (b / 0xFF);
             var max:Number = Math.max(r, g, b);
             var min:Number = Math.min(r, g, b);
-            l = ((max + min) / 2);
-            s = l;
-            h = s;
+            h = (s = (l = ((max + min) / 2)));
             if (max == min)
             {
-                s = 0;
-                h = s;
+                h = (s = 0);
             }
             else
             {
-                _local_10 = (max - min);
-                s = (((l > 0.5)) ? (_local_10 / ((2 - max) - min)) : (_local_10 / (max + min)));
+                d = (max - min);
+                s = ((l > 0.5) ? (d / ((2 - max) - min)) : (d / (max + min)));
                 switch (max)
                 {
                     case r:
-                        h = (((g - b) / _local_10) + (((g < b)) ? 6 : 0));
+                        h = (((g - b) / d) + ((g < b) ? 6 : 0));
                         break;
                     case g:
-                        h = (((b - r) / _local_10) + 2);
+                        h = (((b - r) / d) + 2);
                         break;
                     case b:
-                        h = (((r - g) / _local_10) + 4);
+                        h = (((r - g) / d) + 4);
                         break;
                 };
                 h = (h / 6);
@@ -127,10 +124,7 @@
             lightness = (lightness / 100);
             if (saturation == 0)
             {
-                var _local_5 = lightness;
-                b = _local_5;
-                g = _local_5;
-                r = _local_5;
+                r = (g = (b = lightness));
             }
             else
             {
@@ -142,11 +136,11 @@
                     };
                     if (t > 1)
                     {
-                        t = (t - 1);
+                        t--;
                     };
                     if (t < (1 / 6))
                     {
-                        return ((p + (((q - p) * 6) * t)));
+                        return (p + (((q - p) * 6) * t));
                     };
                     if (t < (1 / 2))
                     {
@@ -154,11 +148,11 @@
                     };
                     if (t < (2 / 3))
                     {
-                        return ((p + (((q - p) * ((2 / 3) - t)) * 6)));
+                        return (p + (((q - p) * ((2 / 3) - t)) * 6));
                     };
                     return (p);
                 };
-                q = (((lightness < 0.5)) ? (lightness * (1 + saturation)) : ((lightness + saturation) - (lightness * saturation)));
+                q = ((lightness < 0.5) ? (lightness * (1 + saturation)) : ((lightness + saturation) - (lightness * saturation)));
                 p = ((2 * lightness) - q);
                 r = hue2rgb(p, q, (hue + (1 / 3)));
                 g = hue2rgb(p, q, hue);
@@ -167,10 +161,10 @@
             r = Math.floor((r * 0xFF));
             g = Math.floor((g * 0xFF));
             b = Math.floor((b * 0xFF));
-            return ((((r << 16) ^ (g << 8)) ^ b));
+            return (((r << 16) ^ (g << 8)) ^ b);
         }
 
 
     }
-}//package com.somerandomdude.colortoolkit.spaces
+} com.somerandomdude.colortoolkit.spaces
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.utils.memory
+package com.ankamagames.jerakine.utils.memory
 {
     import flash.utils.Dictionary;
 
@@ -13,7 +13,7 @@
             this.dictionary[obj] = null;
         }
 
-        public function get object()
+        public function get object():*
         {
             var n:*;
             for (n in this.dictionary)
@@ -30,5 +30,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.utils.memory
+} com.ankamagames.jerakine.utils.memory
 

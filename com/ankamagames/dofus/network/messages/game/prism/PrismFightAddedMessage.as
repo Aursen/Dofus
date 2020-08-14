@@ -1,27 +1,23 @@
-﻿package com.ankamagames.dofus.network.messages.game.prism
+package com.ankamagames.dofus.network.messages.game.prism
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
     import com.ankamagames.dofus.network.types.game.prism.PrismFightersInformation;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
 
-    [Trusted]
     public class PrismFightAddedMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 6452;
 
         private var _isInitialized:Boolean = false;
-        public var fight:PrismFightersInformation;
+        public var fight:PrismFightersInformation = new PrismFightersInformation();
+        private var _fighttree:FuncTree;
 
-        public function PrismFightAddedMessage()
-        {
-            this.fight = new PrismFightersInformation();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
@@ -58,6 +54,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_PrismFightAddedMessage(output);
@@ -79,7 +83,23 @@
             this.fight.deserialize(input);
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_PrismFightAddedMessage(tree);
+        }
+
+        public function deserializeAsyncAs_PrismFightAddedMessage(tree:FuncTree):void
+        {
+            this._fighttree = tree.addChild(this._fighttreeFunc);
+        }
+
+        private function _fighttreeFunc(input:ICustomDataInput):void
+        {
+            this.fight = new PrismFightersInformation();
+            this.fight.deserializeAsync(this._fighttree);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.prism
+} com.ankamagames.dofus.network.messages.game.prism
 

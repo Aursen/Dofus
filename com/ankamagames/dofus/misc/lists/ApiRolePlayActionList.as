@@ -1,11 +1,10 @@
-﻿package com.ankamagames.dofus.misc.lists
+package com.ankamagames.dofus.misc.lists
 {
     import com.ankamagames.dofus.misc.utils.DofusApiAction;
     import com.ankamagames.dofus.logic.game.roleplay.actions.PlayerFightRequestAction;
     import com.ankamagames.dofus.logic.game.roleplay.actions.PlayerFightFriendlyAnswerAction;
     import com.ankamagames.dofus.logic.game.roleplay.actions.EmotePlayRequestAction;
     import com.ankamagames.dofus.logic.game.roleplay.actions.DisplayContextualMenuAction;
-    import com.ankamagames.dofus.logic.game.roleplay.actions.ValidateSpellForgetAction;
     import com.ankamagames.dofus.logic.game.roleplay.actions.NpcGenericActionRequestAction;
     import com.ankamagames.dofus.logic.game.roleplay.actions.estate.HouseToSellFilterAction;
     import com.ankamagames.dofus.logic.game.roleplay.actions.estate.PaddockToSellFilterAction;
@@ -27,7 +26,6 @@
         public static const PlayerFightFriendlyAnswer:DofusApiAction = new DofusApiAction("PlayerFightFriendlyAnswer", PlayerFightFriendlyAnswerAction);
         public static const EmotePlayRequest:DofusApiAction = new DofusApiAction("EmotePlayRequest", EmotePlayRequestAction);
         public static const DisplayContextualMenu:DofusApiAction = new DofusApiAction("DisplayContextualMenu", DisplayContextualMenuAction);
-        public static const ValidateSpellForget:DofusApiAction = new DofusApiAction("ValidateSpellForget", ValidateSpellForgetAction);
         public static const NpcGenericActionRequest:DofusApiAction = new DofusApiAction("NpcGenericActionRequest", NpcGenericActionRequestAction);
         public static const HouseToSellFilter:DofusApiAction = new DofusApiAction("HouseToSellFilter", HouseToSellFilterAction);
         public static const PaddockToSellFilter:DofusApiAction = new DofusApiAction("PaddockToSellFilter", PaddockToSellFilterAction);
@@ -44,5 +42,5 @@
 
 
     }
-}//package com.ankamagames.dofus.misc.lists
+} com.ankamagames.dofus.misc.lists
 

@@ -1,6 +1,7 @@
-﻿package com.ankamagames.dofus.datacenter.misc
+package com.ankamagames.dofus.datacenter.misc
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
+    import com.ankamagames.dofus.types.IdAccessors;
     import com.ankamagames.jerakine.data.GameData;
     import com.ankamagames.jerakine.data.I18n;
 
@@ -8,6 +9,7 @@
     {
 
         public static const MODULE:String = "Tips";
+        public static var idAccessors:IdAccessors = new IdAccessors(getTipsById, getAllTips);
 
         public var id:int;
         public var descId:uint;
@@ -16,7 +18,7 @@
 
         public static function getTipsById(id:int):Tips
         {
-            return ((GameData.getObject(MODULE, id) as Tips));
+            return (GameData.getObject(MODULE, id) as Tips);
         }
 
         public static function getAllTips():Array
@@ -27,7 +29,7 @@
 
         public function get description():String
         {
-            if (!(this._description))
+            if (!this._description)
             {
                 this._description = I18n.getText(this.descId);
             };
@@ -36,5 +38,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.misc
+} com.ankamagames.dofus.datacenter.misc
 

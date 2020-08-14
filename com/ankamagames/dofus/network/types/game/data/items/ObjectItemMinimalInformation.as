@@ -1,8 +1,9 @@
-﻿package com.ankamagames.dofus.network.types.game.data.items
+package com.ankamagames.dofus.network.types.game.data.items
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import __AS3__.vec.Vector;
     import com.ankamagames.dofus.network.types.game.data.items.effects.ObjectEffect;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
     import com.ankamagames.dofus.network.ProtocolTypeManager;
@@ -14,13 +15,9 @@
         public static const protocolId:uint = 124;
 
         public var objectGID:uint = 0;
-        public var effects:Vector.<ObjectEffect>;
+        public var effects:Vector.<ObjectEffect> = new Vector.<ObjectEffect>();
+        private var _effectstree:FuncTree;
 
-        public function ObjectItemMinimalInformation()
-        {
-            this.effects = new Vector.<ObjectEffect>();
-            super();
-        }
 
         override public function getTypeId():uint
         {
@@ -73,11 +70,7 @@
             var _id2:uint;
             var _item2:ObjectEffect;
             super.deserialize(input);
-            this.objectGID = input.readVarUhShort();
-            if (this.objectGID < 0)
-            {
-                throw (new Error((("Forbidden value (" + this.objectGID) + ") on element of ObjectItemMinimalInformation.objectGID.")));
-            };
+            this._objectGIDFunc(input);
             var _effectsLen:uint = input.readUnsignedShort();
             var _i2:uint;
             while (_i2 < _effectsLen)
@@ -90,7 +83,47 @@
             };
         }
 
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_ObjectItemMinimalInformation(tree);
+        }
+
+        public function deserializeAsyncAs_ObjectItemMinimalInformation(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._objectGIDFunc);
+            this._effectstree = tree.addChild(this._effectstreeFunc);
+        }
+
+        private function _objectGIDFunc(input:ICustomDataInput):void
+        {
+            this.objectGID = input.readVarUhShort();
+            if (this.objectGID < 0)
+            {
+                throw (new Error((("Forbidden value (" + this.objectGID) + ") on element of ObjectItemMinimalInformation.objectGID.")));
+            };
+        }
+
+        private function _effectstreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._effectstree.addChild(this._effectsFunc);
+                i++;
+            };
+        }
+
+        private function _effectsFunc(input:ICustomDataInput):void
+        {
+            var _id:uint = input.readUnsignedShort();
+            var _item:ObjectEffect = ProtocolTypeManager.getInstance(ObjectEffect, _id);
+            _item.deserialize(input);
+            this.effects.push(_item);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.types.game.data.items
+} com.ankamagames.dofus.network.types.game.data.items
 

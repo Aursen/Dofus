@@ -1,9 +1,11 @@
-﻿package com.ankamagames.dofus.datacenter.almanax
+package com.ankamagames.dofus.datacenter.almanax
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
+    import com.ankamagames.dofus.types.IdAccessors;
+    import __AS3__.vec.Vector;
     import com.ankamagames.jerakine.data.GameData;
     import com.ankamagames.jerakine.data.I18n;
 
@@ -12,18 +14,20 @@
 
         public static const MODULE:String = "AlmanaxCalendars";
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(AlmanaxCalendar));
+        public static var idAccessors:IdAccessors = new IdAccessors(getAlmanaxCalendarById, getAlmanaxCalendars);
 
         public var id:int;
         public var nameId:uint;
         public var descId:uint;
         public var npcId:int;
+        public var bonusesIds:Vector.<int>;
         private var _name:String;
         private var _description:String;
 
 
         public static function getAlmanaxCalendarById(id:int):AlmanaxCalendar
         {
-            return ((GameData.getObject(MODULE, id) as AlmanaxCalendar));
+            return (GameData.getObject(MODULE, id) as AlmanaxCalendar);
         }
 
         public static function getAlmanaxCalendars():Array
@@ -34,7 +38,7 @@
 
         public function get bonusName():String
         {
-            if (!(this._name))
+            if (!this._name)
             {
                 this._name = I18n.getText(this.nameId);
             };
@@ -43,7 +47,7 @@
 
         public function get bonusDescription():String
         {
-            if (!(this._description))
+            if (!this._description)
             {
                 this._description = I18n.getText(this.descId);
             };
@@ -52,5 +56,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.almanax
+} com.ankamagames.dofus.datacenter.almanax
 

@@ -1,8 +1,9 @@
-﻿package com.ankamagames.dofus.network.types.game.context.fight
+package com.ankamagames.dofus.network.types.game.context.fight
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
     public class FightTeamMemberCharacterInformations extends FightTeamMemberInformations implements INetworkType 
     {
@@ -18,7 +19,7 @@
             return (13);
         }
 
-        public function initFightTeamMemberCharacterInformations(id:int=0, name:String="", level:uint=0):FightTeamMemberCharacterInformations
+        public function initFightTeamMemberCharacterInformations(id:Number=0, name:String="", level:uint=0):FightTeamMemberCharacterInformations
         {
             super.initFightTeamMemberInformations(id);
             this.name = name;
@@ -42,11 +43,11 @@
         {
             super.serializeAs_FightTeamMemberInformations(output);
             output.writeUTF(this.name);
-            if ((((this.level < 0)) || ((this.level > 0xFF))))
+            if (this.level < 0)
             {
                 throw (new Error((("Forbidden value (" + this.level) + ") on element level.")));
             };
-            output.writeByte(this.level);
+            output.writeVarShort(this.level);
         }
 
         override public function deserialize(input:ICustomDataInput):void
@@ -57,9 +58,31 @@
         public function deserializeAs_FightTeamMemberCharacterInformations(input:ICustomDataInput):void
         {
             super.deserialize(input);
+            this._nameFunc(input);
+            this._levelFunc(input);
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_FightTeamMemberCharacterInformations(tree);
+        }
+
+        public function deserializeAsyncAs_FightTeamMemberCharacterInformations(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._nameFunc);
+            tree.addChild(this._levelFunc);
+        }
+
+        private function _nameFunc(input:ICustomDataInput):void
+        {
             this.name = input.readUTF();
-            this.level = input.readUnsignedByte();
-            if ((((this.level < 0)) || ((this.level > 0xFF))))
+        }
+
+        private function _levelFunc(input:ICustomDataInput):void
+        {
+            this.level = input.readVarUhShort();
+            if (this.level < 0)
             {
                 throw (new Error((("Forbidden value (" + this.level) + ") on element of FightTeamMemberCharacterInformations.level.")));
             };
@@ -67,5 +90,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.context.fight
+} com.ankamagames.dofus.network.types.game.context.fight
 

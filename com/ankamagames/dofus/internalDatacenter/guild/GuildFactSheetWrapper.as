@@ -1,11 +1,11 @@
-﻿package com.ankamagames.dofus.internalDatacenter.guild
+package com.ankamagames.dofus.internalDatacenter.guild
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
-    import avmplus.getQualifiedClassName;
+    import flash.utils.getQualifiedClassName;
     import __AS3__.vec.Vector;
-    import com.ankamagames.dofus.network.types.game.character.CharacterMinimalInformations;
+    import com.ankamagames.dofus.network.types.game.character.CharacterMinimalGuildPublicInformations;
     import com.ankamagames.dofus.network.types.game.guild.GuildEmblem;
     import com.ankamagames.jerakine.data.I18n;
     import __AS3__.vec.*;
@@ -22,28 +22,22 @@
         public var guildId:uint;
         public var upEmblem:EmblemWrapper;
         public var backEmblem:EmblemWrapper;
-        public var leaderId:uint = 0;
+        public var leaderId:Number = 0;
         public var guildLevel:uint = 0;
         public var nbMembers:uint = 0;
         public var creationDate:Number = 0;
-        public var members:Vector.<CharacterMinimalInformations>;
+        public var members:Vector.<CharacterMinimalGuildPublicInformations> = new Vector.<CharacterMinimalGuildPublicInformations>();
         public var allianceId:uint = 0;
         public var allianceLeader:Boolean = false;
         public var nbConnectedMembers:uint = 0;
         public var nbTaxCollectors:uint = 0;
         public var lastActivity:Number = 0;
-        public var enabled:Boolean = true;
         public var hoursSinceLastConnection:Number;
 
-        public function GuildFactSheetWrapper()
-        {
-            this.members = new Vector.<CharacterMinimalInformations>();
-            super();
-        }
 
-        public static function create(guildId:uint, guildName:String, guildEmblem:GuildEmblem, leaderId:uint, leaderName:String, guildLevel:uint, nbMembers:uint, creationDate:Number, members:Vector.<CharacterMinimalInformations>, nbConnectedMembers:uint=0, nbTaxCollectors:uint=0, lastActivity:Number=0, enabled:Boolean=true, allianceId:uint=0, allianceName:String="", allianceTag:String="", allianceLeader:Boolean=false):GuildFactSheetWrapper
+        public static function create(guildId:uint, guildName:String, guildEmblem:GuildEmblem, leaderId:Number, leaderName:String, guildLevel:uint, nbMembers:uint, creationDate:Number, members:Vector.<CharacterMinimalGuildPublicInformations>, nbConnectedMembers:uint=0, nbTaxCollectors:uint=0, lastActivity:Number=0, allianceId:uint=0, allianceName:String="", allianceTag:String="", allianceLeader:Boolean=false):GuildFactSheetWrapper
         {
-            var _local_19:Date;
+            var nowDate:Date;
             var item:GuildFactSheetWrapper = new (GuildFactSheetWrapper)();
             item.guildId = guildId;
             item._guildName = guildName;
@@ -71,10 +65,9 @@
             }
             else
             {
-                _local_19 = new Date();
-                item.hoursSinceLastConnection = ((_local_19.time - (lastActivity * 1000)) / 3600000);
+                nowDate = new Date();
+                item.hoursSinceLastConnection = ((nowDate.time - (lastActivity * 1000)) / 3600000);
             };
-            item.enabled = enabled;
             return (item);
         }
 
@@ -113,16 +106,16 @@
 
         public function get leaderName():String
         {
-            if ((((((this._leaderName == "")) && (this.members))) && ((this.members.length > 0))))
+            if ((((this._leaderName == "") && (this.members)) && (this.members.length > 0)))
             {
                 return (this.members[0].name);
             };
             return (this._leaderName);
         }
 
-        public function update(guildId:uint, guildName:String, guildEmblem:GuildEmblem, leaderId:uint, leaderName:String, guildLevel:uint, nbMembers:uint, creationDate:Number, members:Vector.<CharacterMinimalInformations>, nbConnectedMembers:uint=0, nbTaxCollectors:uint=0, lastActivity:Number=0, enabled:Boolean=true, allianceId:uint=0, allianceName:String="", allianceTag:String="", allianceLeader:Boolean=false):void
+        public function update(guildId:uint, guildName:String, guildEmblem:GuildEmblem, leaderId:Number, leaderName:String, guildLevel:uint, nbMembers:uint, creationDate:Number, members:Vector.<CharacterMinimalGuildPublicInformations>, nbConnectedMembers:uint=0, nbTaxCollectors:uint=0, lastActivity:Number=0, allianceId:uint=0, allianceName:String="", allianceTag:String="", allianceLeader:Boolean=false):void
         {
-            var _local_18:Date;
+            var nowDate:Date;
             this.guildId = guildId;
             this._guildName = guildName;
             this.upEmblem.update(guildEmblem.symbolShape, EmblemWrapper.UP, guildEmblem.symbolColor);
@@ -146,13 +139,12 @@
             }
             else
             {
-                _local_18 = new Date();
-                this.hoursSinceLastConnection = ((_local_18.time - (lastActivity * 1000)) / 3600000);
+                nowDate = new Date();
+                this.hoursSinceLastConnection = ((nowDate.time - (lastActivity * 1000)) / 3600000);
             };
-            this.enabled = enabled;
         }
 
 
     }
-}//package com.ankamagames.dofus.internalDatacenter.guild
+} com.ankamagames.dofus.internalDatacenter.guild
 

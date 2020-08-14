@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.context.mount
+package com.ankamagames.dofus.network.messages.game.context.mount
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,15 +6,15 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class MountFeedRequestMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 6189;
 
         private var _isInitialized:Boolean = false;
-        public var mountUid:Number = 0;
+        public var mountUid:uint = 0;
         public var mountLocation:int = 0;
         public var mountFoodUid:uint = 0;
         public var quantity:uint = 0;
@@ -30,7 +30,7 @@
             return (6189);
         }
 
-        public function initMountFeedRequestMessage(mountUid:Number=0, mountLocation:int=0, mountFoodUid:uint=0, quantity:uint=0):MountFeedRequestMessage
+        public function initMountFeedRequestMessage(mountUid:uint=0, mountLocation:int=0, mountFoodUid:uint=0, quantity:uint=0):MountFeedRequestMessage
         {
             this.mountUid = mountUid;
             this.mountLocation = mountLocation;
@@ -61,6 +61,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_MountFeedRequestMessage(output);
@@ -68,11 +76,11 @@
 
         public function serializeAs_MountFeedRequestMessage(output:ICustomDataOutput):void
         {
-            if ((((this.mountUid < 0)) || ((this.mountUid > 9007199254740992))))
+            if (this.mountUid < 0)
             {
                 throw (new Error((("Forbidden value (" + this.mountUid) + ") on element mountUid.")));
             };
-            output.writeVarLong(this.mountUid);
+            output.writeVarInt(this.mountUid);
             output.writeByte(this.mountLocation);
             if (this.mountFoodUid < 0)
             {
@@ -93,17 +101,50 @@
 
         public function deserializeAs_MountFeedRequestMessage(input:ICustomDataInput):void
         {
-            this.mountUid = input.readVarUhLong();
-            if ((((this.mountUid < 0)) || ((this.mountUid > 9007199254740992))))
+            this._mountUidFunc(input);
+            this._mountLocationFunc(input);
+            this._mountFoodUidFunc(input);
+            this._quantityFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_MountFeedRequestMessage(tree);
+        }
+
+        public function deserializeAsyncAs_MountFeedRequestMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._mountUidFunc);
+            tree.addChild(this._mountLocationFunc);
+            tree.addChild(this._mountFoodUidFunc);
+            tree.addChild(this._quantityFunc);
+        }
+
+        private function _mountUidFunc(input:ICustomDataInput):void
+        {
+            this.mountUid = input.readVarUhInt();
+            if (this.mountUid < 0)
             {
                 throw (new Error((("Forbidden value (" + this.mountUid) + ") on element of MountFeedRequestMessage.mountUid.")));
             };
+        }
+
+        private function _mountLocationFunc(input:ICustomDataInput):void
+        {
             this.mountLocation = input.readByte();
+        }
+
+        private function _mountFoodUidFunc(input:ICustomDataInput):void
+        {
             this.mountFoodUid = input.readVarUhInt();
             if (this.mountFoodUid < 0)
             {
                 throw (new Error((("Forbidden value (" + this.mountFoodUid) + ") on element of MountFeedRequestMessage.mountFoodUid.")));
             };
+        }
+
+        private function _quantityFunc(input:ICustomDataInput):void
+        {
             this.quantity = input.readVarUhInt();
             if (this.quantity < 0)
             {
@@ -113,5 +154,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.context.mount
+} com.ankamagames.dofus.network.messages.game.context.mount
 

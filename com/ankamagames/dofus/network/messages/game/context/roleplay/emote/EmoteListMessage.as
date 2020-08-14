@@ -1,28 +1,24 @@
-﻿package com.ankamagames.dofus.network.messages.game.context.roleplay.emote
+package com.ankamagames.dofus.network.messages.game.context.roleplay.emote
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
     import __AS3__.vec.Vector;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
     import __AS3__.vec.*;
 
-    [Trusted]
     public class EmoteListMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 5689;
 
         private var _isInitialized:Boolean = false;
-        public var emoteIds:Vector.<uint>;
+        public var emoteIds:Vector.<uint> = new Vector.<uint>();
+        private var _emoteIdstree:FuncTree;
 
-        public function EmoteListMessage()
-        {
-            this.emoteIds = new Vector.<uint>();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
@@ -59,6 +55,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_EmoteListMessage(output);
@@ -70,7 +74,7 @@
             var _i1:uint;
             while (_i1 < this.emoteIds.length)
             {
-                if ((((this.emoteIds[_i1] < 0)) || ((this.emoteIds[_i1] > 0xFF))))
+                if (((this.emoteIds[_i1] < 0) || (this.emoteIds[_i1] > 0xFF)))
                 {
                     throw (new Error((("Forbidden value (" + this.emoteIds[_i1]) + ") on element 1 (starting at 1) of emoteIds.")));
                 };
@@ -92,7 +96,7 @@
             while (_i1 < _emoteIdsLen)
             {
                 _val1 = input.readUnsignedByte();
-                if ((((_val1 < 0)) || ((_val1 > 0xFF))))
+                if (((_val1 < 0) || (_val1 > 0xFF)))
                 {
                     throw (new Error((("Forbidden value (" + _val1) + ") on elements of emoteIds.")));
                 };
@@ -101,7 +105,38 @@
             };
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_EmoteListMessage(tree);
+        }
+
+        public function deserializeAsyncAs_EmoteListMessage(tree:FuncTree):void
+        {
+            this._emoteIdstree = tree.addChild(this._emoteIdstreeFunc);
+        }
+
+        private function _emoteIdstreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._emoteIdstree.addChild(this._emoteIdsFunc);
+                i++;
+            };
+        }
+
+        private function _emoteIdsFunc(input:ICustomDataInput):void
+        {
+            var _val:uint = input.readUnsignedByte();
+            if (((_val < 0) || (_val > 0xFF)))
+            {
+                throw (new Error((("Forbidden value (" + _val) + ") on elements of emoteIds.")));
+            };
+            this.emoteIds.push(_val);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.context.roleplay.emote
+} com.ankamagames.dofus.network.messages.game.context.roleplay.emote
 

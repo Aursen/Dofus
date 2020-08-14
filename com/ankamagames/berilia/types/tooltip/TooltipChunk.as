@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.types.tooltip
+package com.ankamagames.berilia.types.tooltip
 {
     import flash.events.EventDispatcher;
 
@@ -12,13 +12,20 @@
             this._content = content;
         }
 
-        public function processContent(params:Object):String
+        public function processContent(params:Object, secondaryParams:Object=null):String
         {
             var i:String;
             var content:String = this._content;
             for (i in params)
             {
                 content = content.split(("#" + i)).join(params[i]);
+            };
+            if (secondaryParams)
+            {
+                for (i in secondaryParams)
+                {
+                    content = content.split(("#" + i)).join(secondaryParams[i]);
+                };
             };
             return (content);
         }
@@ -30,5 +37,5 @@
 
 
     }
-}//package com.ankamagames.berilia.types.tooltip
+} com.ankamagames.berilia.types.tooltip
 

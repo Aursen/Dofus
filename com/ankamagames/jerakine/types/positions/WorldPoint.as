@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.types.positions
+package com.ankamagames.jerakine.types.positions
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import flash.geom.Point;
@@ -10,13 +10,13 @@
         private static const WORLD_ID_MAX:uint = (2 << 12);
         private static const MAP_COORDS_MAX:uint = (2 << 8);
 
-        private var _mapId:uint;
+        private var _mapId:Number;
         private var _worldId:uint;
         private var _x:int;
         private var _y:int;
 
 
-        public static function fromMapId(mapId:uint):WorldPoint
+        public static function fromMapId(mapId:Number):WorldPoint
         {
             var wp:WorldPoint = new (WorldPoint)();
             wp._mapId = mapId;
@@ -35,12 +35,12 @@
         }
 
 
-        public function get mapId():uint
+        public function get mapId():Number
         {
             return (this._mapId);
         }
 
-        public function set mapId(mapId:uint):void
+        public function set mapId(mapId:Number):void
         {
             this._mapId = mapId;
             this.setFromMapId();
@@ -89,25 +89,25 @@
         protected function setFromMapId():void
         {
             this._worldId = ((this._mapId & 0x3FFC0000) >> 18);
-            this._x = ((this._mapId >> 9) & 511);
-            this._y = (this._mapId & 511);
+            this._x = ((this._mapId >> 9) & 0x01FF);
+            this._y = (this._mapId & 0x01FF);
             if ((this._x & 0x0100) == 0x0100)
             {
-                this._x = -((this._x & 0xFF));
+                this._x = -(this._x & 0xFF);
             };
             if ((this._y & 0x0100) == 0x0100)
             {
-                this._y = -((this._y & 0xFF));
+                this._y = -(this._y & 0xFF);
             };
         }
 
         protected function setFromCoords():void
         {
-            if ((((((this._x > MAP_COORDS_MAX)) || ((this._y > MAP_COORDS_MAX)))) || ((this._worldId > WORLD_ID_MAX))))
+            if ((((this._x > MAP_COORDS_MAX) || (this._y > MAP_COORDS_MAX)) || (this._worldId > WORLD_ID_MAX)))
             {
                 throw (new JerakineError("Coordinates or world identifier out of range."));
             };
-            var worldValue:uint = (this._worldId & 4095);
+            var worldValue:uint = (this._worldId & 0x0FFF);
             var xValue:uint = (Math.abs(this._x) & 0xFF);
             if (this._x < 0)
             {
@@ -123,5 +123,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.types.positions
+} com.ankamagames.jerakine.types.positions
 

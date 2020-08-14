@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.common.actions.quest.treasureHunt
+package com.ankamagames.dofus.logic.game.common.actions.quest.treasureHunt
 {
     import com.ankamagames.jerakine.handlers.messages.Action;
 
@@ -19,5 +19,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.actions.quest.treasureHunt
+} com.ankamagames.dofus.logic.game.common.actions.quest.treasureHunt
 

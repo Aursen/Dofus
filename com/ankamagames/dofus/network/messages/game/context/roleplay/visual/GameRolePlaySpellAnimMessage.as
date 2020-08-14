@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.context.roleplay.visual
+package com.ankamagames.dofus.network.messages.game.context.roleplay.visual
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,18 +6,18 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class GameRolePlaySpellAnimMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 6114;
 
         private var _isInitialized:Boolean = false;
-        public var casterId:int = 0;
+        public var casterId:Number = 0;
         public var targetCellId:uint = 0;
         public var spellId:uint = 0;
-        public var spellLevel:uint = 0;
+        public var spellLevel:int = 0;
 
 
         override public function get isInitialized():Boolean
@@ -30,7 +30,7 @@
             return (6114);
         }
 
-        public function initGameRolePlaySpellAnimMessage(casterId:int=0, targetCellId:uint=0, spellId:uint=0, spellLevel:uint=0):GameRolePlaySpellAnimMessage
+        public function initGameRolePlaySpellAnimMessage(casterId:Number=0, targetCellId:uint=0, spellId:uint=0, spellLevel:int=0):GameRolePlaySpellAnimMessage
         {
             this.casterId = casterId;
             this.targetCellId = targetCellId;
@@ -61,6 +61,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_GameRolePlaySpellAnimMessage(output);
@@ -68,8 +76,12 @@
 
         public function serializeAs_GameRolePlaySpellAnimMessage(output:ICustomDataOutput):void
         {
-            output.writeInt(this.casterId);
-            if ((((this.targetCellId < 0)) || ((this.targetCellId > 559))))
+            if (((this.casterId < 0) || (this.casterId > 9007199254740992)))
+            {
+                throw (new Error((("Forbidden value (" + this.casterId) + ") on element casterId.")));
+            };
+            output.writeVarLong(this.casterId);
+            if (((this.targetCellId < 0) || (this.targetCellId > 559)))
             {
                 throw (new Error((("Forbidden value (" + this.targetCellId) + ") on element targetCellId.")));
             };
@@ -79,11 +91,11 @@
                 throw (new Error((("Forbidden value (" + this.spellId) + ") on element spellId.")));
             };
             output.writeVarShort(this.spellId);
-            if ((((this.spellLevel < 1)) || ((this.spellLevel > 6))))
+            if (((this.spellLevel < 1) || (this.spellLevel > 200)))
             {
                 throw (new Error((("Forbidden value (" + this.spellLevel) + ") on element spellLevel.")));
             };
-            output.writeByte(this.spellLevel);
+            output.writeShort(this.spellLevel);
         }
 
         public function deserialize(input:ICustomDataInput):void
@@ -93,19 +105,56 @@
 
         public function deserializeAs_GameRolePlaySpellAnimMessage(input:ICustomDataInput):void
         {
-            this.casterId = input.readInt();
+            this._casterIdFunc(input);
+            this._targetCellIdFunc(input);
+            this._spellIdFunc(input);
+            this._spellLevelFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GameRolePlaySpellAnimMessage(tree);
+        }
+
+        public function deserializeAsyncAs_GameRolePlaySpellAnimMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._casterIdFunc);
+            tree.addChild(this._targetCellIdFunc);
+            tree.addChild(this._spellIdFunc);
+            tree.addChild(this._spellLevelFunc);
+        }
+
+        private function _casterIdFunc(input:ICustomDataInput):void
+        {
+            this.casterId = input.readVarUhLong();
+            if (((this.casterId < 0) || (this.casterId > 9007199254740992)))
+            {
+                throw (new Error((("Forbidden value (" + this.casterId) + ") on element of GameRolePlaySpellAnimMessage.casterId.")));
+            };
+        }
+
+        private function _targetCellIdFunc(input:ICustomDataInput):void
+        {
             this.targetCellId = input.readVarUhShort();
-            if ((((this.targetCellId < 0)) || ((this.targetCellId > 559))))
+            if (((this.targetCellId < 0) || (this.targetCellId > 559)))
             {
                 throw (new Error((("Forbidden value (" + this.targetCellId) + ") on element of GameRolePlaySpellAnimMessage.targetCellId.")));
             };
+        }
+
+        private function _spellIdFunc(input:ICustomDataInput):void
+        {
             this.spellId = input.readVarUhShort();
             if (this.spellId < 0)
             {
                 throw (new Error((("Forbidden value (" + this.spellId) + ") on element of GameRolePlaySpellAnimMessage.spellId.")));
             };
-            this.spellLevel = input.readByte();
-            if ((((this.spellLevel < 1)) || ((this.spellLevel > 6))))
+        }
+
+        private function _spellLevelFunc(input:ICustomDataInput):void
+        {
+            this.spellLevel = input.readShort();
+            if (((this.spellLevel < 1) || (this.spellLevel > 200)))
             {
                 throw (new Error((("Forbidden value (" + this.spellLevel) + ") on element of GameRolePlaySpellAnimMessage.spellLevel.")));
             };
@@ -113,5 +162,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.context.roleplay.visual
+} com.ankamagames.dofus.network.messages.game.context.roleplay.visual
 

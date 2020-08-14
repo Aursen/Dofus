@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.context.fight
+package com.ankamagames.dofus.network.messages.game.context.fight
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class GameFightPlacementSwapPositionsOfferMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -15,9 +15,9 @@
 
         private var _isInitialized:Boolean = false;
         public var requestId:uint = 0;
-        public var requesterId:uint = 0;
+        public var requesterId:Number = 0;
         public var requesterCellId:uint = 0;
-        public var requestedId:uint = 0;
+        public var requestedId:Number = 0;
         public var requestedCellId:uint = 0;
 
 
@@ -31,7 +31,7 @@
             return (6542);
         }
 
-        public function initGameFightPlacementSwapPositionsOfferMessage(requestId:uint=0, requesterId:uint=0, requesterCellId:uint=0, requestedId:uint=0, requestedCellId:uint=0):GameFightPlacementSwapPositionsOfferMessage
+        public function initGameFightPlacementSwapPositionsOfferMessage(requestId:uint=0, requesterId:Number=0, requesterCellId:uint=0, requestedId:Number=0, requestedCellId:uint=0):GameFightPlacementSwapPositionsOfferMessage
         {
             this.requestId = requestId;
             this.requesterId = requesterId;
@@ -64,6 +64,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_GameFightPlacementSwapPositionsOfferMessage(output);
@@ -76,22 +84,22 @@
                 throw (new Error((("Forbidden value (" + this.requestId) + ") on element requestId.")));
             };
             output.writeInt(this.requestId);
-            if (this.requesterId < 0)
+            if (((this.requesterId < -9007199254740992) || (this.requesterId > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.requesterId) + ") on element requesterId.")));
             };
-            output.writeVarInt(this.requesterId);
-            if ((((this.requesterCellId < 0)) || ((this.requesterCellId > 559))))
+            output.writeDouble(this.requesterId);
+            if (((this.requesterCellId < 0) || (this.requesterCellId > 559)))
             {
                 throw (new Error((("Forbidden value (" + this.requesterCellId) + ") on element requesterCellId.")));
             };
             output.writeVarShort(this.requesterCellId);
-            if (this.requestedId < 0)
+            if (((this.requestedId < -9007199254740992) || (this.requestedId > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.requestedId) + ") on element requestedId.")));
             };
-            output.writeVarInt(this.requestedId);
-            if ((((this.requestedCellId < 0)) || ((this.requestedCellId > 559))))
+            output.writeDouble(this.requestedId);
+            if (((this.requestedCellId < 0) || (this.requestedCellId > 559)))
             {
                 throw (new Error((("Forbidden value (" + this.requestedCellId) + ") on element requestedCellId.")));
             };
@@ -105,28 +113,67 @@
 
         public function deserializeAs_GameFightPlacementSwapPositionsOfferMessage(input:ICustomDataInput):void
         {
+            this._requestIdFunc(input);
+            this._requesterIdFunc(input);
+            this._requesterCellIdFunc(input);
+            this._requestedIdFunc(input);
+            this._requestedCellIdFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GameFightPlacementSwapPositionsOfferMessage(tree);
+        }
+
+        public function deserializeAsyncAs_GameFightPlacementSwapPositionsOfferMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._requestIdFunc);
+            tree.addChild(this._requesterIdFunc);
+            tree.addChild(this._requesterCellIdFunc);
+            tree.addChild(this._requestedIdFunc);
+            tree.addChild(this._requestedCellIdFunc);
+        }
+
+        private function _requestIdFunc(input:ICustomDataInput):void
+        {
             this.requestId = input.readInt();
             if (this.requestId < 0)
             {
                 throw (new Error((("Forbidden value (" + this.requestId) + ") on element of GameFightPlacementSwapPositionsOfferMessage.requestId.")));
             };
-            this.requesterId = input.readVarUhInt();
-            if (this.requesterId < 0)
+        }
+
+        private function _requesterIdFunc(input:ICustomDataInput):void
+        {
+            this.requesterId = input.readDouble();
+            if (((this.requesterId < -9007199254740992) || (this.requesterId > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.requesterId) + ") on element of GameFightPlacementSwapPositionsOfferMessage.requesterId.")));
             };
+        }
+
+        private function _requesterCellIdFunc(input:ICustomDataInput):void
+        {
             this.requesterCellId = input.readVarUhShort();
-            if ((((this.requesterCellId < 0)) || ((this.requesterCellId > 559))))
+            if (((this.requesterCellId < 0) || (this.requesterCellId > 559)))
             {
                 throw (new Error((("Forbidden value (" + this.requesterCellId) + ") on element of GameFightPlacementSwapPositionsOfferMessage.requesterCellId.")));
             };
-            this.requestedId = input.readVarUhInt();
-            if (this.requestedId < 0)
+        }
+
+        private function _requestedIdFunc(input:ICustomDataInput):void
+        {
+            this.requestedId = input.readDouble();
+            if (((this.requestedId < -9007199254740992) || (this.requestedId > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.requestedId) + ") on element of GameFightPlacementSwapPositionsOfferMessage.requestedId.")));
             };
+        }
+
+        private function _requestedCellIdFunc(input:ICustomDataInput):void
+        {
             this.requestedCellId = input.readVarUhShort();
-            if ((((this.requestedCellId < 0)) || ((this.requestedCellId > 559))))
+            if (((this.requestedCellId < 0) || (this.requestedCellId > 559)))
             {
                 throw (new Error((("Forbidden value (" + this.requestedCellId) + ") on element of GameFightPlacementSwapPositionsOfferMessage.requestedCellId.")));
             };
@@ -134,5 +181,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.context.fight
+} com.ankamagames.dofus.network.messages.game.context.fight
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.resources.adapters
+package com.ankamagames.jerakine.resources.adapters
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
@@ -47,7 +47,7 @@
             this._uri = uri;
             this._dispatchProgress = dispatchProgress;
             this.prepareLoader();
-            this._ldr.load(new URLRequest(path), uri.loaderContext);
+            this._ldr.load(new URLRequest((((path.substr(0, 2) == "//") ? "file://" : "") + path)), uri.loaderContext);
         }
 
         public function loadFromData(uri:Uri, data:ByteArray, observer:IResourceObserver, dispatchProgress:Boolean):void
@@ -74,7 +74,6 @@
             }
             catch(e:SecurityError)
             {
-                trace(((("Erreur de sécurité en chargeant le fichier " + uri) + " : \n") + e.getStackTrace()));
                 throw (e);
             };
         }
@@ -86,7 +85,7 @@
             this._uri = null;
         }
 
-        protected function getResource(ldr:LoaderInfo)
+        protected function getResource(ldr:LoaderInfo):*
         {
             throw (new AbstractMethodCallError("This method should be overrided."));
         }
@@ -118,14 +117,20 @@
                 catch(e:Error)
                 {
                 };
-                this._ldr.contentLoaderInfo.removeEventListener(Event.INIT, this.onInit);
                 this._ldr.contentLoaderInfo.removeEventListener(Event.COMPLETE, this.onInit);
                 this._ldr.contentLoaderInfo.removeEventListener(IOErrorEvent.IO_ERROR, this.onError);
                 if (this._dispatchProgress)
                 {
                     this._ldr.contentLoaderInfo.removeEventListener(ProgressEvent.PROGRESS, this.onProgress);
                 };
-                PoolsManager.getInstance().getLoadersPool().checkIn(this._ldr);
+                if (this._ldr.loadCompleted)
+                {
+                    PoolsManager.getInstance().getLoadersPool().checkIn(this._ldr);
+                }
+                else
+                {
+                    this._ldr.delayedCheckIn();
+                };
             };
             this._ldr = null;
         }
@@ -139,11 +144,13 @@
 
         protected function onInit(e:Event):void
         {
+            this._ldr.loadCompleted = true;
             this.init(LoaderInfo(e.target));
         }
 
         protected function onError(ee:ErrorEvent):void
         {
+            this._ldr.loadCompleted = true;
             this.releaseLoader();
             this._observer.onFailed(this._uri, ee.text, ResourceErrorCode.RESOURCE_NOT_FOUND);
         }
@@ -155,5 +162,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.resources.adapters
+} com.ankamagames.jerakine.resources.adapters
 

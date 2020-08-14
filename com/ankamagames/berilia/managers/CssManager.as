@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.managers
+package com.ankamagames.berilia.managers
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
@@ -31,6 +31,7 @@
         private var _aMultiWaiting:Array;
         private var _loader:IResourceLoader;
         private var _aLoadingFile:Array;
+        private var _preloaded:Array;
 
         public function CssManager()
         {
@@ -42,6 +43,7 @@
             this._aWaiting = new Array();
             this._aMultiWaiting = new Array();
             this._aLoadingFile = new Array();
+            this._preloaded = new Array();
             this._loader = ResourceLoaderFactory.getLoader(ResourceLoaderType.PARALLEL_LOADER);
             this._loader.addEventListener(ResourceLoadedEvent.LOADED, this.complete);
             this._loader.addEventListener(ResourceErrorEvent.ERROR, this.error);
@@ -49,7 +51,7 @@
 
         public static function getInstance():CssManager
         {
-            if (!(_self))
+            if (!_self)
             {
                 _self = new (CssManager)();
             };
@@ -59,7 +61,7 @@
         public static function set useCache(b:Boolean):void
         {
             _useCache = b;
-            if (!(b))
+            if (!b)
             {
                 clear();
             };
@@ -70,9 +72,22 @@
             return (_useCache);
         }
 
-        public static function clear():void
+        public static function clear(clearCache:Boolean=false):void
         {
+            var url:String;
             StoreDataManager.getInstance().clear(BeriliaConstants.DATASTORE_UI_CSS);
+            if (((clearCache) && (_self)))
+            {
+                _self._aCss = new Array();
+                _self._aWaiting = new Array();
+                _self._aMultiWaiting = new Array();
+                _self._aLoadingFile = new Array();
+                _self._loader.cancel();
+                for each (url in _self._preloaded)
+                {
+                    _self.load(url);
+                };
+            };
         }
 
 
@@ -121,7 +136,7 @@
         public function exists(sUrl:String):Boolean
         {
             var uri:Uri = new Uri(sUrl);
-            return (!((this._aCss[uri.uri] == null)));
+            return (!(this._aCss[uri.uri] == null));
         }
 
         public function inQueue(sUrl:String):Boolean
@@ -131,7 +146,7 @@
 
         public function askCss(sUrl:String, callback:Callback):void
         {
-            var _local_3:Uri;
+            var uri:Uri;
             var files:Array;
             if (this.exists(sUrl))
             {
@@ -139,16 +154,16 @@
             }
             else
             {
-                _local_3 = new Uri(sUrl);
-                if (!(this._aWaiting[_local_3.uri]))
+                uri = new Uri(sUrl);
+                if (!this._aWaiting[uri.uri])
                 {
-                    this._aWaiting[_local_3.uri] = new Array();
+                    this._aWaiting[uri.uri] = new Array();
                 };
-                this._aWaiting[_local_3.uri].push(callback);
+                this._aWaiting[uri.uri].push(callback);
                 if (sUrl.indexOf(",") != -1)
                 {
                     files = sUrl.split(",");
-                    this._aMultiWaiting[_local_3.uri] = files;
+                    this._aMultiWaiting[uri.uri] = files;
                     this.load(files);
                 }
                 else
@@ -160,7 +175,11 @@
 
         public function preloadCss(sUrl:String):void
         {
-            if (!(this.exists(sUrl)))
+            if (this._preloaded.indexOf(sUrl) == -1)
+            {
+                this._preloaded.push(sUrl);
+            };
+            if (!this.exists(sUrl))
             {
                 this.load(sUrl);
             };
@@ -239,7 +258,7 @@
                         {
                             this._aMultiWaiting[url][i] = true;
                         };
-                        ok = ((ok) && ((this._aMultiWaiting[url][i] === true)));
+                        ok = ((ok) && (this._aMultiWaiting[url][i] === true));
                         i++;
                     };
                     if (ok)
@@ -305,5 +324,5 @@
 
 
     }
-}//package com.ankamagames.berilia.managers
+} com.ankamagames.berilia.managers
 

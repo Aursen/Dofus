@@ -1,4 +1,4 @@
-﻿package com.hurlant.util.der
+package com.hurlant.util.der
 {
     import com.hurlant.math.BigInteger;
     import flash.utils.ByteArray;
@@ -9,9 +9,9 @@
         private var type:uint;
         private var len:uint;
 
-        public function Integer(type:uint, length:uint, b:ByteArray)
+        public function Integer(_arg_1:uint, length:uint, b:ByteArray)
         {
-            this.type = type;
+            this.type = _arg_1;
             this.len = length;
             super(b);
         }
@@ -28,7 +28,7 @@
 
         override public function toString(radix:Number=0):String
         {
-            return ((((((((DER.indent + "Integer[") + this.type) + "][") + this.len) + "][") + super.toString(16)) + "]"));
+            return (((((((DER.indent + "Integer[") + this.type) + "][") + this.len) + "][") + super.toString(16)) + "]");
         }
 
         public function toDER():ByteArray
@@ -38,5 +38,5 @@
 
 
     }
-}//package com.hurlant.util.der
+} com.hurlant.util.der
 

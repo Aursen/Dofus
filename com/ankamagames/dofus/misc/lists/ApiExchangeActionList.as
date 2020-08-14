@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.misc.lists
+package com.ankamagames.dofus.misc.lists
 {
     import com.ankamagames.dofus.misc.utils.DofusApiAction;
     import com.ankamagames.dofus.logic.game.common.actions.exchange.ExchangeAcceptAction;
@@ -13,6 +13,7 @@
     import com.ankamagames.dofus.logic.game.common.actions.exchange.ExchangeObjectTransfertListFromInvAction;
     import com.ankamagames.dofus.logic.game.common.actions.exchange.ExchangeObjectTransfertExistingFromInvAction;
     import com.ankamagames.dofus.logic.game.common.actions.exchange.ExchangeReadyAction;
+    import com.ankamagames.dofus.logic.game.common.actions.exchange.ExchangeReadyCrushAction;
     import com.ankamagames.dofus.logic.game.common.actions.exchange.ExchangePlayerRequestAction;
     import com.ankamagames.dofus.logic.game.common.actions.humanVendor.ExchangeOnHumanVendorRequestAction;
     import com.ankamagames.dofus.logic.game.common.actions.humanVendor.ExchangeStartAsVendorRequestAction;
@@ -33,9 +34,7 @@
     import com.ankamagames.dofus.logic.game.common.actions.bid.BidHouseStringSearchAction;
     import com.ankamagames.dofus.logic.game.common.actions.bid.BidSwitchToBuyerModeAction;
     import com.ankamagames.dofus.logic.game.common.actions.bid.BidSwitchToSellerModeAction;
-    import com.ankamagames.dofus.logic.game.common.actions.craft.ExchangeItemGoldAddAsPaymentAction;
-    import com.ankamagames.dofus.logic.game.common.actions.craft.ExchangeItemObjectAddAsPaymentAction;
-    import com.ankamagames.dofus.logic.game.common.actions.craft.JobAllowMultiCraftRequestSetAction;
+    import com.ankamagames.dofus.logic.game.common.actions.craft.ExchangeCraftPaymentModificationAction;
     import com.ankamagames.dofus.logic.game.common.actions.craft.ExchangePlayerMultiCraftRequestAction;
     import com.ankamagames.dofus.logic.game.common.actions.craft.ExchangeReplayAction;
     import com.ankamagames.dofus.logic.game.common.actions.craft.ExchangeReplayStopAction;
@@ -58,6 +57,7 @@
         public static const ExchangeObjectTransfertListFromInv:DofusApiAction = new DofusApiAction("ExchangeObjectTransfertListFromInv", ExchangeObjectTransfertListFromInvAction);
         public static const ExchangeObjectTransfertExistingFromInv:DofusApiAction = new DofusApiAction("ExchangeObjectTransfertExistingFromInv", ExchangeObjectTransfertExistingFromInvAction);
         public static const ExchangeReady:DofusApiAction = new DofusApiAction("ExchangeReady", ExchangeReadyAction);
+        public static const ExchangeReadyCrush:DofusApiAction = new DofusApiAction("ExchangeReadyCrush", ExchangeReadyCrushAction);
         public static const ExchangePlayerRequest:DofusApiAction = new DofusApiAction("ExchangePlayerRequest", ExchangePlayerRequestAction);
         public static const ExchangeOnHumanVendorRequest:DofusApiAction = new DofusApiAction("ExchangeOnHumanVendorRequest", ExchangeOnHumanVendorRequestAction);
         public static const ExchangeStartAsVendorRequest:DofusApiAction = new DofusApiAction("ExchangeStartAsVendorRequest", ExchangeStartAsVendorRequestAction);
@@ -78,9 +78,7 @@
         public static const BidHouseStringSearch:DofusApiAction = new DofusApiAction("BidHouseStringSearch", BidHouseStringSearchAction);
         public static const BidSwitchToBuyerMode:DofusApiAction = new DofusApiAction("BidSwitchToBuyerMode", BidSwitchToBuyerModeAction);
         public static const BidSwitchToSellerMode:DofusApiAction = new DofusApiAction("BidSwitchToSellerMode", BidSwitchToSellerModeAction);
-        public static const ExchangeItemGoldAddAsPayment:DofusApiAction = new DofusApiAction("ExchangeItemGoldAddAsPayment", ExchangeItemGoldAddAsPaymentAction);
-        public static const ExchangeItemObjectAddAsPayment:DofusApiAction = new DofusApiAction("ExchangeItemObjectAddAsPayment", ExchangeItemObjectAddAsPaymentAction);
-        public static const JobAllowMultiCraftRequestSet:DofusApiAction = new DofusApiAction("JobAllowMultiCraftRequestSet", JobAllowMultiCraftRequestSetAction);
+        public static const ExchangeCraftPaymentModification:DofusApiAction = new DofusApiAction("ExchangeCraftPaymentModification", ExchangeCraftPaymentModificationAction);
         public static const ExchangePlayerMultiCraftRequest:DofusApiAction = new DofusApiAction("ExchangePlayerMultiCraftRequest", ExchangePlayerMultiCraftRequestAction);
         public static const ExchangeReplay:DofusApiAction = new DofusApiAction("ExchangeReplay", ExchangeReplayAction);
         public static const ExchangeReplayStop:DofusApiAction = new DofusApiAction("ExchangeReplayStop", ExchangeReplayStopAction);
@@ -90,5 +88,5 @@
 
 
     }
-}//package com.ankamagames.dofus.misc.lists
+} com.ankamagames.dofus.misc.lists
 

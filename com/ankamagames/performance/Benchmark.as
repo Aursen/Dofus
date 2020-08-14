@@ -1,4 +1,4 @@
-﻿package com.ankamagames.performance
+package com.ankamagames.performance
 {
     import __AS3__.vec.Vector;
     import com.ankamagames.performance.tests.TestBandwidth;
@@ -18,8 +18,6 @@
 
         public static const BENCHMARK_FORMAT_VERSION:uint = 1;
         public static const TESTS_DEFAULT:Vector.<Class> = new <Class>[TestBandwidth, TestWriteDisk, TestReadDisk, TestDisplayPerformance];
-        public static const TESTS_NODISK:Vector.<Class> = new <Class>[TestBandwidth, TestDisplayPerformance];
-        public static const TESTS_AIR:Vector.<Class> = new <Class>[TestWriteDisk, TestReadDisk, TestDisplayPerformance];
         public static var isDone:Boolean = false;
         private static var _ds:DataStoreType = new DataStoreType("Dofus_Benchmark", true, DataStoreEnum.LOCATION_LOCAL, DataStoreEnum.BIND_COMPUTER);
         private static var _totalTestToDo:uint;
@@ -36,8 +34,9 @@
             {
                 results = null;
                 StoreDataManager.getInstance().setData(_ds, "results", null);
+                StoreDataManager.getInstance().setData(_ds, "formatVersion", BENCHMARK_FORMAT_VERSION);
             };
-            return (!((results == null)));
+            return (!(results == null));
         }
 
         public static function run(stage:Stage, onCompleteCallback:Function, tests:Vector.<Class>=null):void
@@ -45,7 +44,7 @@
             var test:IBenchmarkTest;
             var testClass:Class;
             TestDisplayPerformance.stage = stage;
-            if (!(tests))
+            if (!tests)
             {
                 tests = TESTS_DEFAULT;
             };
@@ -104,18 +103,14 @@
             };
         }
 
-        public static function getResults(writeResultsOnDisk:Boolean=false, fromCacheIfExists:Boolean=true):String
+        public static function getResults(writeResultsOnDisk:Boolean=false):String
         {
             var test:IBenchmarkTest;
             var res:String = "";
-            if (fromCacheIfExists)
+            res = StoreDataManager.getInstance().getData(_ds, "results");
+            if (((res) && (res.length > 0)))
             {
-                res = StoreDataManager.getInstance().getData(_ds, "results");
-                if (((res) && ((res.length > 0))))
-                {
-                    return (res);
-                };
-                res = "";
+                return (res);
             };
             for each (test in _lastTests)
             {
@@ -132,5 +127,5 @@
 
 
     }
-}//package com.ankamagames.performance
+} com.ankamagames.performance
 

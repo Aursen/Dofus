@@ -1,21 +1,27 @@
-﻿package com.ankamagames.atouin.managers
+package com.ankamagames.atouin.managers
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
-    import com.ankamagames.atouin.renderers.TrapZoneRenderer;
     import com.ankamagames.atouin.Atouin;
+    import com.ankamagames.atouin.renderers.TrapZoneRenderer;
     import com.ankamagames.jerakine.utils.errors.SingletonError;
     import com.ankamagames.jerakine.types.events.PropertyChangeEvent;
     import com.ankamagames.atouin.types.GraphicCell;
     import flash.events.MouseEvent;
+    import com.ankamagames.atouin.data.map.CellData;
+    import com.ankamagames.atouin.utils.CellUtil;
     import com.ankamagames.atouin.types.CellReference;
     import flash.display.DisplayObject;
+    import com.ankamagames.atouin.types.CellContainer;
     import com.ankamagames.atouin.data.map.Layer;
     import com.ankamagames.atouin.types.LayerContainer;
-    import com.ankamagames.atouin.types.CellContainer;
     import com.ankamagames.atouin.types.DataMapContainer;
     import com.ankamagames.atouin.utils.DataMapProvider;
+    import __AS3__.vec.Vector;
+    import flash.text.TextField;
+    import flash.filters.GlowFilter;
+    import flash.text.TextFieldAutoSize;
     import com.ankamagames.atouin.AtouinConstants;
     import com.ankamagames.jerakine.entities.interfaces.IEntity;
     import com.ankamagames.atouin.messages.CellClickMessage;
@@ -24,7 +30,6 @@
     import flash.geom.Point;
     import com.ankamagames.jerakine.entities.interfaces.IMovable;
     import com.ankamagames.jerakine.types.positions.MapPoint;
-    import com.ankamagames.atouin.data.map.CellData;
     import com.ankamagames.atouin.types.Selection;
     import com.ankamagames.atouin.types.DebugToolTip;
     import com.ankamagames.jerakine.types.Color;
@@ -42,17 +47,16 @@
 
         private var _cellOverEnabled:Boolean = false;
         private var _aCells:Array;
-        private var _aCellPool:Array;
-        private var _bShowGrid:Boolean;
+        private var _aCellPool:Array = new Array();
+        private var _bShowGrid:Boolean = Atouin.getInstance().options.getOption("alwaysShowGrid");
+        private var _showEveryCellId:Boolean = Atouin.getInstance().options.getOption("showEveryCellId");
+        private var _isInFight:Boolean = false;
         private var _interaction_click:Boolean;
         private var _interaction_out:Boolean;
         private var _trapZoneRenderer:TrapZoneRenderer;
 
         public function InteractiveCellManager()
         {
-            this._aCellPool = new Array();
-            this._bShowGrid = Atouin.getInstance().options.alwaysShowGrid;
-            super();
             if (_self)
             {
                 throw (new SingletonError());
@@ -62,7 +66,7 @@
 
         public static function getInstance():InteractiveCellManager
         {
-            if (!(_self))
+            if (!_self)
             {
                 _self = new (InteractiveCellManager)();
             };
@@ -97,7 +101,7 @@
             Atouin.getInstance().options.addEventListener(PropertyChangeEvent.PROPERTY_CHANGED, this.onPropertyChanged);
         }
 
-        public function setInteraction(click:Boolean=true, over:Boolean=false, out:Boolean=false):void
+        public function setInteraction(click:Boolean=true, over:Boolean=false, out:Boolean=false, updateHavenbagCellVisibility:Boolean=false, visible:Boolean=true):void
         {
             var cell:GraphicCell;
             this._interaction_click = click;
@@ -129,12 +133,20 @@
                 {
                     cell.removeEventListener(MouseEvent.MOUSE_OUT, this.mouseOut);
                 };
-                cell.mouseEnabled = ((((click) || (over))) || (out));
+                cell.mouseEnabled = (((click) || (over)) || (out));
+                if (((updateHavenbagCellVisibility) && (CellData(MapDisplayManager.getInstance().getDataMapContainer().dataMap.cells[cell.cellId]).havenbagCell)))
+                {
+                    cell.visible = visible;
+                };
             };
         }
 
         public function getCell(cellId:uint):GraphicCell
         {
+            if (((cellId > CellUtil.MAX_CELL_ID) || (cellId < CellUtil.MIN_CELL_ID)))
+            {
+                return (null);
+            };
             this._aCells[cellId] = this._aCellPool[cellId];
             return (this._aCells[cellId]);
         }
@@ -144,31 +156,38 @@
             var cellRef:CellReference;
             var gCell:GraphicCell;
             var lastZCell:DisplayObject;
-            if (!(container))
+            var cellCtr:CellContainer;
+            if (!container)
             {
                 _log.error("Can't update interactive cell of a NULL container");
                 return;
             };
-            this.setInteraction(true, Atouin.getInstance().options.showCellIdOnOver, Atouin.getInstance().options.showCellIdOnOver);
+            this.setInteraction(true, Atouin.getInstance().options.getOption("showCellIdOnOver"), Atouin.getInstance().options.getOption("showCellIdOnOver"));
+            this.showEveryCellId(Atouin.getInstance().options.getOption("showEveryCellId"));
             var aCell:Array = container.getCell();
-            var showTransitions:Boolean = Atouin.getInstance().options.showTransitions;
-            var alpha:Number = ((((this._bShowGrid) || (Atouin.getInstance().options.alwaysShowGrid))) ? 1 : 0);
+            var showTransitions:Boolean = Atouin.getInstance().options.getOption("showTransitions");
+            var alpha:Number = (((this._bShowGrid) || (Atouin.getInstance().options.getOption("alwaysShowGrid"))) ? 1 : 0);
+            if (((this._showEveryCellId) && (alpha == 0)))
+            {
+                alpha = 0.8;
+            };
             var layer:LayerContainer = container.getLayer(Layer.LAYER_DECOR);
             var cellIndex:uint;
             var cellIndexMax:uint = this._aCells.length;
             var ind:uint;
             var currentCell:GraphicCell = this._aCells[0];
-            if (!(currentCell))
+            if (!currentCell)
             {
-                while (((!(currentCell)) && ((cellIndex < cellIndexMax))))
+                while (((!(currentCell)) && (cellIndex < cellIndexMax)))
                 {
                     currentCell = this._aCells[cellIndex++];
                 };
                 cellIndex--;
             };
-            while ((((ind < layer.numChildren)) && ((cellIndex < cellIndexMax))))
+            while (((ind < layer.numChildren) && (cellIndex < cellIndexMax)))
             {
-                if (((!((currentCell == null))) && ((currentCell.cellId <= CellContainer(layer.getChildAt(ind)).cellId))))
+                cellCtr = (layer.getChildAt(ind) as CellContainer);
+                if (((!(currentCell == null)) && ((cellCtr) && (currentCell.cellId <= cellCtr.cellId))))
                 {
                     cellRef = aCell[cellIndex];
                     gCell = this._aCells[cellIndex];
@@ -196,25 +215,108 @@
             return (true);
         }
 
+        public function updateCellElevation(cellId:uint, elevation:int):void
+        {
+            if (!this._aCells[cellId].initialElevation)
+            {
+                this._aCells[cellId].initialElevation = this._aCells[cellId].y;
+            };
+            this._aCells[cellId].y = (this._aCells[cellId].initialElevation - elevation);
+        }
+
+        public function resetHavenbagCellsVisibility():void
+        {
+            var cell:GraphicCell;
+            for each (cell in this._aCells)
+            {
+                if (((cell) && (MapDisplayManager.getInstance().getDataMapContainer().dataMap.cells[cell.cellId].havenbagCell)))
+                {
+                    cell.visible = true;
+                };
+            };
+        }
+
         public function show(b:Boolean, pIsInFight:Boolean=false):void
         {
             var cell:GraphicCell;
             this._bShowGrid = b;
-            var alpha:Number = ((((this._bShowGrid) || (Atouin.getInstance().options.alwaysShowGrid))) ? 1 : 0);
-            var cellsData:Array = MapDisplayManager.getInstance().getDataMapContainer().dataMap.cells;
+            this._isInFight = pIsInFight;
+            var alpha:Number = (((this._bShowGrid) || (Atouin.getInstance().options.getOption("alwaysShowGrid"))) ? 1 : 0);
+            var cellsData:Vector.<CellData> = MapDisplayManager.getInstance().getDataMapContainer().dataMap.cells;
             var i:uint;
             while (i < this._aCells.length)
             {
                 cell = GraphicCell(this._aCells[i]);
                 if (cell)
                 {
-                    if (((((((pIsInFight) || (this._cellOverEnabled))) && ((alpha == 1)))) && (cellsData[i].nonWalkableDuringFight)))
+                    if (pIsInFight)
+                    {
+                        cell.buttonMode = (!(cellsData[i].nonWalkableDuringFight));
+                    }
+                    else
+                    {
+                        cell.buttonMode = (!(cellsData[i].nonWalkableDuringRP));
+                    };
+                    if ((((pIsInFight) && (alpha == 1)) && (cellsData[i].nonWalkableDuringFight)))
                     {
                         cell.alpha = 0;
                     }
                     else
                     {
                         cell.alpha = alpha;
+                    };
+                    if (((cell.numChildren > 1) && (cell.alpha == 0)))
+                    {
+                        cell.alpha = 0.8;
+                    };
+                };
+                i++;
+            };
+        }
+
+        public function showEveryCellId(b:Boolean):void
+        {
+            var cell:GraphicCell;
+            var tf_id:TextField;
+            var glow:GlowFilter;
+            this._showEveryCellId = b;
+            var i:uint;
+            while (i < this._aCells.length)
+            {
+                cell = GraphicCell(this._aCells[i]);
+                if (cell)
+                {
+                    if (this._showEveryCellId)
+                    {
+                        if (cell.alpha == 0)
+                        {
+                            cell.alpha = 0.8;
+                        };
+                        while (cell.numChildren > 1)
+                        {
+                            cell.removeChildAt(1);
+                        };
+                        tf_id = new TextField();
+                        tf_id.text = ("" + i);
+                        tf_id.autoSize = TextFieldAutoSize.CENTER;
+                        tf_id.width = 30;
+                        tf_id.height = 20;
+                        tf_id.x = ((cell.width / 2) - (tf_id.width / 2));
+                        tf_id.y = (tf_id.height / 2);
+                        glow = new GlowFilter(0xFFFFFF, 0.8, 8, 8, 6, 2);
+                        tf_id.filters = [glow];
+                        cell.addChild(tf_id);
+                    }
+                    else
+                    {
+                        while (cell.numChildren > 1)
+                        {
+                            cell.removeChildAt(1);
+                        };
+                        if (((!(cell.alpha == 0)) && (!(cell.alpha == 1))))
+                        {
+                            cell.alpha = 0;
+                        };
                     };
                 };
                 i++;
@@ -229,9 +331,22 @@
                 i = 0;
                 while (i < this._aCells.length)
                 {
-                    if (!((!(this._aCells[i])) || (!(this._aCells[i].parent))))
+                    if (!this._aCells[i])
                     {
-                        this._aCells[i].parent.removeChild(this._aCells[i]);
+                    }
+                    else
+                    {
+                        while (this._aCells[i].numChildren > 1)
+                        {
+                            this._aCells[i].removeChildAt(1);
+                        };
+                        if (!this._aCells[i].parent)
+                        {
+                        }
+                        else
+                        {
+                            this._aCells[i].parent.removeChild(this._aCells[i]);
+                        };
                     };
                     i++;
                 };
@@ -276,7 +391,7 @@
             var i:uint;
             while (i < AtouinConstants.MAP_CELLS_COUNT)
             {
-                if (!!(this._aCells[i]))
+                if (this._aCells[i])
                 {
                     if (enabled)
                     {
@@ -297,39 +412,40 @@
         {
             var a:Array;
             var entity:IEntity;
-            var _local_7:CellClickMessage;
+            var msg:CellClickMessage;
             var target:Sprite = Sprite(e.target);
-            if (!(target.parent))
+            if (!target.parent)
             {
                 return;
             };
             var index:int = target.parent.getChildIndex(target);
-            var targetCell:Point = CellIdConverter.cellIdToCoord(parseInt(target.name));
-            if (!(DataMapProvider.getInstance().pointCanStop(targetCell.x, targetCell.y)))
+            var cellId:int = parseInt(target.name);
+            var cellCoordinates:Point = CellIdConverter.cellIdToCoord(cellId);
+            if (!DataMapProvider.getInstance().pointCanStop(cellCoordinates.x, cellCoordinates.y))
             {
                 _log.info("Cannot move to this cell in RP");
                 return;
             };
-            if (Atouin.getInstance().options.virtualPlayerJump)
+            if (Atouin.getInstance().options.getOption("virtualPlayerJump"))
             {
                 a = EntitiesManager.getInstance().entities;
                 for each (entity in a)
                 {
                     if ((entity is IMovable))
                     {
-                        IMovable(entity).jump(MapPoint.fromCellId(parseInt(target.name)));
+                        IMovable(entity).jump(MapPoint.fromCellId(cellId));
                         break;
                     };
                 };
             }
             else
             {
-                _local_7 = new CellClickMessage();
-                _local_7.cellContainer = target;
-                _local_7.cellDepth = index;
-                _local_7.cell = MapPoint.fromCoords(targetCell.x, targetCell.y);
-                _local_7.cellId = parseInt(target.name);
-                Atouin.getInstance().handler.process(_local_7);
+                msg = new CellClickMessage();
+                msg.cellContainer = target;
+                msg.cellDepth = index;
+                msg.cell = MapPoint.fromCoords(cellCoordinates.x, cellCoordinates.y);
+                msg.cellId = cellId;
+                Atouin.getInstance().handler.process(msg);
             };
         }
 
@@ -341,21 +457,24 @@
             var cellData:CellData;
             var sel:Selection;
             var target:Sprite = Sprite(e.target);
-            if (!(target.parent))
+            if (!target.parent)
             {
                 return;
             };
             var index:int = target.parent.getChildIndex(target);
-            var targetCell:Point = CellIdConverter.cellIdToCoord(parseInt(target.name));
-            if (Atouin.getInstance().options.showCellIdOnOver)
+            var cellId:int = parseInt(target.name);
+            var cellCoordinates:Point = CellIdConverter.cellIdToCoord(cellId);
+            if (Atouin.getInstance().options.getOption("showCellIdOnOver"))
             {
                 _cellColor = 0;
-                textInfo = (((((target.name + " (") + targetCell.x) + "/") + targetCell.y) + ")");
-                mp = MapPoint.fromCoords(targetCell.x, targetCell.y);
-                textInfo = (textInfo + ("\nLigne de vue : " + !(DataMapProvider.getInstance().pointLos(mp.x, mp.y))));
-                textInfo = (textInfo + ("\nBlocage éditeur : " + !(DataMapProvider.getInstance().pointMov(mp.x, mp.y))));
-                textInfo = (textInfo + ("\nBlocage entitée : " + !(DataMapProvider.getInstance().pointMov(mp.x, mp.y, false))));
-                cellData = CellData(MapDisplayManager.getInstance().getDataMapContainer().dataMap.cells[parseInt(target.name)]);
+                textInfo = (((((target.name + " (") + cellCoordinates.x) + "/") + cellCoordinates.y) + ")");
+                mp = MapPoint.fromCoords(cellCoordinates.x, cellCoordinates.y);
+                textInfo = (textInfo + ("\nLigne de vue : " + (!(DataMapProvider.getInstance().pointLos(mp.x, mp.y)))));
+                textInfo = (textInfo + ("\nBlocage éditeur : " + (!(DataMapProvider.getInstance().pointMov(mp.x, mp.y)))));
+                textInfo = (textInfo + ("\nBlocage entitée : " + (!(DataMapProvider.getInstance().pointMov(mp.x, mp.y, false)))));
+                textInfo = (textInfo + ("\nfarmCell : " + DataMapProvider.getInstance().farmCell(mp.x, mp.y)));
+                textInfo = (textInfo + ("\nhavenbagCell : " + DataMapProvider.getInstance().cellByCoordsIsHavenbagCell(mp.x, mp.y)));
+                cellData = CellData(MapDisplayManager.getInstance().getDataMapContainer().dataMap.cells[cellId]);
                 textInfo = (textInfo + ("\nForcage fleche bas : " + cellData.useBottomArrow));
                 textInfo = (textInfo + ("\nForcage fleche haut : " + cellData.useTopArrow));
                 textInfo = (textInfo + ("\nForcage fleche droite : " + cellData.useRightArrow));
@@ -365,37 +484,38 @@
                 textInfo = (textInfo + ("\nSpeed : " + cellData.speed));
                 DebugToolTip.getInstance().text = textInfo;
                 sel = SelectionManager.getInstance().getSelection("infoOverCell");
-                if (!(sel))
+                if (!sel)
                 {
                     sel = new Selection();
                     sel.color = new Color(_cellColor);
                     sel.renderer = new ZoneDARenderer();
                     sel.zone = new Lozenge(0, 0, DataMapProvider.getInstance());
-                    SelectionManager.getInstance().addSelection(sel, "infoOverCell", parseInt(target.name));
+                    SelectionManager.getInstance().addSelection(sel, "infoOverCell", cellId);
                 }
                 else
                 {
-                    SelectionManager.getInstance().update("infoOverCell", parseInt(target.name));
+                    SelectionManager.getInstance().update("infoOverCell", cellId);
                 };
                 StageShareManager.stage.addChild(DebugToolTip.getInstance());
             };
             var msg:CellOverMessage = new CellOverMessage();
             msg.cellContainer = target;
             msg.cellDepth = index;
-            msg.cell = MapPoint.fromCoords(targetCell.x, targetCell.y);
-            msg.cellId = parseInt(target.name);
+            msg.cell = MapPoint.fromCoords(cellCoordinates.x, cellCoordinates.y);
+            msg.cellId = cellId;
             Atouin.getInstance().handler.process(msg);
         }
 
         private function mouseOut(e:MouseEvent):void
         {
             var target:Sprite = Sprite(e.target);
-            if (!(target.parent))
+            if (!target.parent)
             {
                 return;
             };
             var index:int = target.parent.getChildIndex(target);
-            var targetCell:Point = CellIdConverter.cellIdToCoord(parseInt(target.name));
+            var cellId:int = parseInt(target.name);
+            var cellCoordinates:Point = CellIdConverter.cellIdToCoord(cellId);
             if (Atouin.getInstance().worldContainer.contains(DebugToolTip.getInstance()))
             {
                 Atouin.getInstance().worldContainer.removeChild(DebugToolTip.getInstance());
@@ -403,8 +523,8 @@
             var msg:CellOutMessage = new CellOutMessage();
             msg.cellContainer = target;
             msg.cellDepth = index;
-            msg.cell = MapPoint.fromCoords(targetCell.x, targetCell.y);
-            msg.cellId = parseInt(target.name);
+            msg.cell = MapPoint.fromCoords(cellCoordinates.x, cellCoordinates.y);
+            msg.cellId = cellId;
             Atouin.getInstance().handler.process(msg);
         }
 
@@ -412,11 +532,11 @@
         {
             if (e.propertyName == "alwaysShowGrid")
             {
-                this.show(e.propertyValue);
+                this.show(e.propertyValue, this._isInFight);
             };
         }
 
 
     }
-}//package com.ankamagames.atouin.managers
+} com.ankamagames.atouin.managers
 

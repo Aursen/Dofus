@@ -1,4 +1,4 @@
-﻿package com.ankamagames.atouin.types
+package com.ankamagames.atouin.types
 {
     import flash.display.Sprite;
     import com.ankamagames.jerakine.entities.interfaces.IDisplayable;
@@ -21,29 +21,29 @@
 
         public function display(strata:uint=0):void
         {
-            EntitiesDisplayManager.getInstance().displayEntity(this, MapPoint.fromCellId(this._cellId), strata);
+            EntitiesDisplayManager.getInstance().displayEntity(this, MapPoint.fromCellId(this._cellId), strata, false);
             this._displayed = true;
         }
 
-        public function drawStroke(t:Boolean, r:Boolean, b:Boolean, l:Boolean):void
+        public function drawStroke(t:Boolean, r:Boolean, b:Boolean, l:Boolean, bigLine:Boolean=false):void
         {
-            graphics.lineStyle(3, 0);
-            if (!(t))
+            graphics.lineStyle(((bigLine) ? 5 : 3), 0, ((bigLine) ? 0.5 : 1));
+            if (!t)
             {
                 graphics.moveTo(-(AtouinConstants.CELL_HALF_WIDTH), 0);
                 graphics.lineTo(0, AtouinConstants.CELL_HALF_HEIGHT);
             };
-            if (!(b))
+            if (!b)
             {
                 graphics.moveTo(0, -(AtouinConstants.CELL_HALF_HEIGHT));
                 graphics.lineTo(AtouinConstants.CELL_HALF_WIDTH, 0);
             };
-            if (!(r))
+            if (!r)
             {
                 graphics.moveTo(-(AtouinConstants.CELL_HALF_WIDTH), 0);
                 graphics.lineTo(0, -(AtouinConstants.CELL_HALF_HEIGHT));
             };
-            if (!(l))
+            if (!l)
             {
                 graphics.moveTo(AtouinConstants.CELL_HALF_WIDTH, 0);
                 graphics.lineTo(0, AtouinConstants.CELL_HALF_HEIGHT);
@@ -98,5 +98,5 @@
 
 
     }
-}//package com.ankamagames.atouin.types
+} com.ankamagames.atouin.types
 

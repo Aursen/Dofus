@@ -1,86 +1,197 @@
-﻿package com.ankamagames.dofus.misc.stats
+package com.ankamagames.dofus.misc.stats
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
     import flash.utils.Dictionary;
-    import __AS3__.vec.Vector;
+    import com.ankamagames.berilia.types.graphic.UiRootContainer;
+    import com.ankamagames.dofus.logic.connection.managers.AuthentificationManager;
+    import com.ankamagames.berilia.Berilia;
+    import by.blooddy.crypto.MD5;
+    import com.ankamagames.dofus.misc.utils.HaapiKeyManager;
+    import by.blooddy.crypto.serialization.JSON;
+    import mx.formatters.DateFormatter;
     import com.ankamagames.dofus.logic.game.common.managers.TimeManager;
     import flash.utils.getTimer;
-    import com.ankamagames.dofus.network.messages.common.basic.BasicStatMessage;
-    import com.ankamagames.dofus.kernel.net.ConnectionsHandler;
-    import __AS3__.vec.*;
 
     public class StatsAction 
     {
 
         private static const _log:Logger = Log.getLogger(getQualifiedClassName(StatsAction));
-        private static var _actions:Dictionary = new Dictionary();
-        private static var _pendingActions:Vector.<StatsAction> = new Vector.<StatsAction>(0);
+        private static var _usersActions:Dictionary = new Dictionary();
 
         private var _id:uint;
         private var _timestamp:Number;
         private var _persistent:Boolean;
+        private var _aggregate:Boolean;
+        private var _addTimestamp:Boolean;
         private var _startTime:uint;
         private var _started:Boolean;
-        private var _params:Dictionary;
+        private var _params:Object;
+        private var _date:Date;
+        private var _sendOnExit:Boolean;
+        private var _userId:String;
+        private var _gameSessionId:Number;
 
-        public function StatsAction(pId:uint, pPersistent:Boolean)
+        public function StatsAction(pId:uint, pPersistent:Boolean=false, pAggregate:Boolean=false, pAddTimestamp:Boolean=false, pSendOnExit:Boolean=false)
         {
             this._id = pId;
             this._persistent = pPersistent;
-            this._params = new Dictionary(true);
+            this._aggregate = pAggregate;
+            this._addTimestamp = pAddTimestamp;
+            this._sendOnExit = pSendOnExit;
+            this._params = new Object();
         }
 
-        public static function get(pStatsActionId:uint, pPersistent:Boolean=false):StatsAction
+        public static function getUserId():String
         {
-            if (!(_actions[pStatsActionId]))
+            var loginUi:UiRootContainer;
+            var login:String = AuthentificationManager.getInstance().username;
+            if (!login)
             {
-                _actions[pStatsActionId] = new (StatsAction)(pStatsActionId, pPersistent);
+                loginUi = Berilia.getInstance().getUi("login");
+                if (((loginUi) && (loginUi.uiClass)))
+                {
+                    login = loginUi.uiClass.cbx_login.input.text;
+                };
             };
-            return (_actions[pStatsActionId]);
+            if (login)
+            {
+                return ("user-" + MD5.hash(login));
+            };
+            return (null);
+        }
+
+        public static function get(pStatsActionId:uint, pPersistent:Boolean=false, pAggregate:Boolean=false, pAddTimestamp:Boolean=false, pSendOnExit:Boolean=false):StatsAction
+        {
+            var sa:StatsAction;
+            var userId:String = getUserId();
+            if (!_usersActions[pStatsActionId])
+            {
+                sa = new StatsAction(pStatsActionId, pPersistent, pAggregate, pAddTimestamp, pSendOnExit);
+                sa._userId = userId;
+                sa._gameSessionId = HaapiKeyManager.getInstance().getGameSessionId();
+                _usersActions[pStatsActionId] = sa;
+            };
+            return (_usersActions[pStatsActionId]);
+        }
+
+        public static function fromString(pString:String):StatsAction
+        {
+            var obj:Object;
+            var sa:StatsAction;
+            var param:* = undefined;
+            try
+            {
+                obj = by.blooddy.crypto.serialization.JSON.decode(pString);
+                sa = new StatsAction(obj.event_id);
+                if (obj.hasOwnProperty("user"))
+                {
+                    sa._userId = obj.user;
+                };
+                if (obj.hasOwnProperty("gameSessionId"))
+                {
+                    sa._gameSessionId = obj.gameSessionId;
+                };
+                for (param in obj.data)
+                {
+                    sa.setParam(param, obj.data[param]);
+                };
+                sa.date = DateFormatter.parseDateString(obj.date);
+                return (sa);
+            }
+            catch(e:Error)
+            {
+                _log.warn(("Invalid event data from cache : " + pString));
+            };
+            return (null);
         }
 
         public static function exists(pStatsActionId:uint):Boolean
         {
-            return (_actions[pStatsActionId]);
+            return (_usersActions[pStatsActionId]);
         }
 
-        public static function deletePendingActions():void
+        public static function reset():void
         {
-            _pendingActions.length = 0;
+            _usersActions = new Dictionary();
         }
 
-        public static function sendPendingActions():void
+
+        public function get id():uint
         {
-            var action:StatsAction;
-            for each (action in _pendingActions)
-            {
-                action.send();
-            };
-            _pendingActions.length = 0;
+            return (this._id);
         }
 
+        public function get params():Object
+        {
+            return (this._params);
+        }
+
+        public function get paramsString():String
+        {
+            return (by.blooddy.crypto.serialization.JSON.encode(this._params));
+        }
+
+        public function get date():Date
+        {
+            return (this._date);
+        }
+
+        public function set date(pDate:Date):void
+        {
+            this._date = pDate;
+        }
+
+        public function get sendOnExit():Boolean
+        {
+            return (this._sendOnExit);
+        }
+
+        public function set sendOnExit(pSendOnExit:Boolean):void
+        {
+            this._sendOnExit = pSendOnExit;
+        }
+
+        public function get user():String
+        {
+            return (this._userId);
+        }
+
+        public function set user(pUserId:String):void
+        {
+            this._userId = pUserId;
+        }
+
+        public function set gameSessionId(gameSessionId:Number):void
+        {
+            this._gameSessionId = gameSessionId;
+        }
+
+        public function get gameSessionId():Number
+        {
+            return (this._gameSessionId);
+        }
 
         public function start():void
         {
-            var _local_1:Number;
-            if (!(this._started))
+            var ts:Number;
+            if (((!(this._started)) && (this._addTimestamp)))
             {
-                if (!(this._persistent))
+                if (!this._persistent)
                 {
                     this._timestamp = TimeManager.getInstance().getTimestamp();
                     this._startTime = getTimer();
                 }
                 else
                 {
-                    _local_1 = StatisticsManager.getInstance().getActionTimestamp(this._id);
-                    if (isNaN(_local_1))
+                    ts = StatisticsManager.getInstance().getActionTimestamp(this._id);
+                    if (isNaN(ts))
                     {
-                        _local_1 = TimeManager.getInstance().getTimestamp();
-                        StatisticsManager.getInstance().saveActionTimestamp(this._id, _local_1);
+                        ts = TimeManager.getInstance().getTimestamp();
+                        StatisticsManager.getInstance().saveActionTimestamp(this._id, ts);
                     };
-                    this._timestamp = _local_1;
+                    this._timestamp = ts;
                 };
             };
             this._started = true;
@@ -94,7 +205,7 @@
 
         public function cancel():void
         {
-            delete _actions[this._id];
+            delete _usersActions[this._id];
         }
 
         public function updateTimestamp():void
@@ -106,38 +217,41 @@
             };
         }
 
-        public function addParam(pKey:String, pValue:*):void
+        public function addParam(pKey:String, pType:uint):void
         {
-            this._params[pKey] = pValue;
         }
 
         public function hasParam(pKey:String):Boolean
         {
-            return (!((this._params[pKey] == undefined)));
+            return (this._params.hasOwnProperty(pKey));
+        }
+
+        public function setParam(pKey:String, pValue:*):void
+        {
+            this._params[pKey] = pValue;
         }
 
         public function send():void
         {
-            var bsmg:BasicStatMessage;
-            this._params["Time_Spent_On_Action"] = ((!(this._persistent)) ? (getTimer() - this._startTime) : (TimeManager.getInstance().getTimestamp() - this._timestamp));
-            if (((StatisticsManager.getInstance().statsEnabled) && (StatisticsManager.getInstance().isConnected())))
+            this._date = new Date();
+            if (this._addTimestamp)
             {
-                bsmg = new BasicStatMessage();
-                bsmg.initBasicStatMessage(this._id);
-                ConnectionsHandler.getConnection().send(bsmg);
-            }
-            else
-            {
-                _pendingActions.push(this);
+                this._params["action_duration_seconds"] = int((((this._persistent) ? (TimeManager.getInstance().getTimestamp() - this._timestamp) : (getTimer() - this._startTime)) / 1000));
+                if (this._persistent)
+                {
+                    StatisticsManager.getInstance().deleteTimeStamp(this._id);
+                };
             };
-            if (this._persistent)
-            {
-                StatisticsManager.getInstance().deleteTimeStamp(this._id);
-            };
-            delete _actions[this._id];
+            StatisticsManager.getInstance().sendAction(this);
+            delete _usersActions[this._id];
+        }
+
+        public function toString(backup:Boolean=false):String
+        {
+            return ((((((("{" + ((backup) ? (((('"user":"' + this._userId) + '","gameSessionId":') + this._gameSessionId) + ",") : "")) + '"event_id":') + this.id) + ',"data":') + this.paramsString) + ((this.date) ? ((',"date":"' + StatisticsManager.getInstance().formatDate(this.date)) + '"') : "")) + "}");
         }
 
 
     }
-}//package com.ankamagames.dofus.misc.stats
+} com.ankamagames.dofus.misc.stats
 

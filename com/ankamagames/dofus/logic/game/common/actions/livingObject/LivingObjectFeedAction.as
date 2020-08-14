@@ -1,25 +1,24 @@
-﻿package com.ankamagames.dofus.logic.game.common.actions.livingObject
+package com.ankamagames.dofus.logic.game.common.actions.livingObject
 {
     import com.ankamagames.jerakine.handlers.messages.Action;
+    import __AS3__.vec.Vector;
 
     public class LivingObjectFeedAction implements Action 
     {
 
         public var objectUID:uint;
-        public var foodUID:uint;
-        public var foodQuantity:uint;
+        public var meal:Vector.<Object>;
 
 
-        public static function create(objectUID:uint, foodUID:uint, foodQuantity:uint):LivingObjectFeedAction
+        public static function create(objectUID:uint, meal:Vector.<Object>):LivingObjectFeedAction
         {
             var action:LivingObjectFeedAction = new (LivingObjectFeedAction)();
             action.objectUID = objectUID;
-            action.foodUID = foodUID;
-            action.foodQuantity = foodQuantity;
+            action.meal = meal;
             return (action);
         }
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.actions.livingObject
+} com.ankamagames.dofus.logic.game.common.actions.livingObject
 

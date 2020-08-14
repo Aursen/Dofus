@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.types.enums
+package com.ankamagames.dofus.types.enums
 {
     public class LanguageEnum 
     {
@@ -15,5 +15,5 @@
 
 
     }
-}//package com.ankamagames.dofus.types.enums
+} com.ankamagames.dofus.types.enums
 

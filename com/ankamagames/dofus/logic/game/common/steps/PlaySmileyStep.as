@@ -1,9 +1,10 @@
-﻿package com.ankamagames.dofus.logic.game.common.steps
+package com.ankamagames.dofus.logic.game.common.steps
 {
     import com.ankamagames.jerakine.sequencer.AbstractSequencable;
     import com.ankamagames.dofus.types.entities.AnimatedCharacter;
     import flash.utils.Timer;
     import com.ankamagames.dofus.internalDatacenter.communication.SmileyWrapper;
+    import com.ankamagames.dofus.network.ProtocolConstantsEnum;
     import flash.events.TimerEvent;
     import com.ankamagames.berilia.managers.TooltipManager;
     import com.ankamagames.berilia.managers.UiModuleManager;
@@ -32,12 +33,12 @@
             sw.id = this._smileyId;
             if (this._waitForEnd)
             {
-                this._timer = new Timer(2500);
+                this._timer = new Timer(ProtocolConstantsEnum.DEFAULT_TOOLTIP_DURATION);
                 this._timer.addEventListener(TimerEvent.TIMER, this.onTimer);
                 this._timer.start();
             };
             TooltipManager.show(sw, this._entity.absoluteBounds, UiModuleManager.getInstance().getModule("Ankama_Tooltips"), true, ("smiley" + this._entity.id), LocationEnum.POINT_BOTTOM, LocationEnum.POINT_TOP, 0, true, null, null, null, null, false, StrataEnum.STRATA_WORLD, Atouin.getInstance().currentZoom);
-            if (!(this._waitForEnd))
+            if (!this._waitForEnd)
             {
                 executeCallbacks();
             };
@@ -60,5 +61,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.steps
+} com.ankamagames.dofus.logic.game.common.steps
 

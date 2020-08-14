@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.data
+package com.ankamagames.jerakine.data
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
@@ -14,7 +14,7 @@
     public class AbstractDataManager 
     {
 
-        static const DATA_KEY:String = "data";
+        internal static const DATA_KEY:String = "data";
 
         protected const _log:Logger = Log.getLogger(getQualifiedClassName(AbstractDataManager));
 
@@ -27,7 +27,7 @@
         {
             var v:*;
             var foo:*;
-            var _local_7:CustomSharedObject;
+            var so:CustomSharedObject;
             var realKey:String = (this._soPrefix + key);
             if (this._cacheKey.contains(realKey))
             {
@@ -42,13 +42,13 @@
                 this._cacheKey.store(realKey, v);
                 return (v);
             };
-            _local_7 = CustomSharedObject.getLocal(soName);
-            if (((!(_local_7)) || (!(_local_7.data[DATA_KEY]))))
+            so = CustomSharedObject.getLocal(soName);
+            if (((!(so)) || (!(so.data[DATA_KEY]))))
             {
                 return (null);
             };
-            this._cacheSO.store(soName, _local_7);
-            v = _local_7.data[DATA_KEY][key];
+            this._cacheSO.store(soName, so);
+            v = so.data[DATA_KEY][key];
             this._cacheKey.store(realKey, v);
             return (v);
         }
@@ -57,9 +57,9 @@
         {
             var soName:String;
             var fileNum:uint;
-            var _local_5:CustomSharedObject;
+            var so:CustomSharedObject;
             var fileList:Array = StoreDataManager.getInstance().getData(JerakineConstants.DATASTORE_FILES_INFO, (this._soPrefix + "_filelist"));
-            if (!(fileList))
+            if (!fileList)
             {
                 return (null);
             };
@@ -73,18 +73,18 @@
                 }
                 else
                 {
-                    _local_5 = CustomSharedObject.getLocal(soName);
-                    if (!((!(_local_5)) || (!(_local_5.data[DATA_KEY]))))
+                    so = CustomSharedObject.getLocal(soName);
+                    if (!((!(so)) || (!(so.data[DATA_KEY]))))
                     {
-                        this._cacheSO.store(soName, _local_5);
-                        data = data.concat(_local_5.data[DATA_KEY]);
+                        this._cacheSO.store(soName, so);
+                        data = data.concat(so.data[DATA_KEY]);
                     };
                 };
             };
             return (data);
         }
 
-        function init(soCacheSize:uint, keyCacheSize:uint, soPrefix:String=""):void
+        internal function init(soCacheSize:uint, keyCacheSize:uint, soPrefix:String=""):void
         {
             if (keyCacheSize == uint.MAX_VALUE)
             {
@@ -100,5 +100,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.data
+} com.ankamagames.jerakine.data
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.datacenter.sounds
+package com.ankamagames.dofus.datacenter.sounds
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
 
@@ -17,10 +17,10 @@
         public function get hook():String
         {
             var h:SoundUiHook = SoundUiHook.getSoundUiHookById(this.id);
-            return (((h) ? h.name : null));
+            return ((h) ? h.name : null);
         }
 
 
     }
-}//package com.ankamagames.dofus.datacenter.sounds
+} com.ankamagames.dofus.datacenter.sounds
 

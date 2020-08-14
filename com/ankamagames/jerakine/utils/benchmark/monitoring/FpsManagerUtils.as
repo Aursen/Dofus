@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.utils.benchmark.monitoring
+package com.ankamagames.jerakine.utils.benchmark.monitoring
 {
     import flash.utils.Dictionary;
     import flash.utils.getTimer;
@@ -24,16 +24,16 @@
         public static function calculateMB(value:uint):Number
         {
             var newValue:Number = Math.round((((value / 0x0400) / 0x0400) * 100));
-            return ((newValue / 100));
+            return (newValue / 100);
         }
 
         public static function getTimeFromNow(value:int):String
         {
             var mls:int = (getTimer() - value);
-            var sec:int = (mls / 1000);
-            var min:int = (sec / 60);
+            var sec:int = int((mls / 1000));
+            var min:int = int((sec / 60));
             sec = (sec - (min * 60));
-            return ((((((min > 0)) ? (min.toString() + " min ") : "") + sec.toString()) + " sec"));
+            return ((((min > 0) ? (min.toString() + " min ") : "") + sec.toString()) + " sec");
         }
 
         public static function isSpecialGraph(pIndice:String):Boolean
@@ -98,15 +98,15 @@
 
         public static function getRandomColor():uint
         {
-            return ((Math.random() * 0xFFFFFF));
+            return (Math.random() * 0xFFFFFF);
         }
 
         public static function addAlphaToColor(rgb:uint, alpha:uint):uint
         {
-            return (((alpha << 24) + rgb));
+            return ((alpha << 24) + rgb);
         }
 
 
     }
-}//package com.ankamagames.jerakine.utils.benchmark.monitoring
+} com.ankamagames.jerakine.utils.benchmark.monitoring
 

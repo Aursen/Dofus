@@ -1,25 +1,24 @@
-﻿package com.ankamagames.dofus.network.messages.game.inventory.exchanges
+package com.ankamagames.dofus.network.messages.game.inventory.exchanges
 {
     import com.ankamagames.jerakine.network.INetworkMessage;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class ExchangeStartOkCraftWithInformationMessage extends ExchangeStartOkCraftMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 5941;
 
         private var _isInitialized:Boolean = false;
-        public var nbCase:uint = 0;
         public var skillId:uint = 0;
 
 
         override public function get isInitialized():Boolean
         {
-            return (((super.isInitialized) && (this._isInitialized)));
+            return ((super.isInitialized) && (this._isInitialized));
         }
 
         override public function getMessageId():uint
@@ -27,9 +26,8 @@
             return (5941);
         }
 
-        public function initExchangeStartOkCraftWithInformationMessage(nbCase:uint=0, skillId:uint=0):ExchangeStartOkCraftWithInformationMessage
+        public function initExchangeStartOkCraftWithInformationMessage(skillId:uint=0):ExchangeStartOkCraftWithInformationMessage
         {
-            this.nbCase = nbCase;
             this.skillId = skillId;
             this._isInitialized = true;
             return (this);
@@ -37,7 +35,6 @@
 
         override public function reset():void
         {
-            this.nbCase = 0;
             this.skillId = 0;
             this._isInitialized = false;
         }
@@ -54,6 +51,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         override public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_ExchangeStartOkCraftWithInformationMessage(output);
@@ -62,11 +67,6 @@
         public function serializeAs_ExchangeStartOkCraftWithInformationMessage(output:ICustomDataOutput):void
         {
             super.serializeAs_ExchangeStartOkCraftMessage(output);
-            if (this.nbCase < 0)
-            {
-                throw (new Error((("Forbidden value (" + this.nbCase) + ") on element nbCase.")));
-            };
-            output.writeByte(this.nbCase);
             if (this.skillId < 0)
             {
                 throw (new Error((("Forbidden value (" + this.skillId) + ") on element skillId.")));
@@ -82,11 +82,22 @@
         public function deserializeAs_ExchangeStartOkCraftWithInformationMessage(input:ICustomDataInput):void
         {
             super.deserialize(input);
-            this.nbCase = input.readByte();
-            if (this.nbCase < 0)
-            {
-                throw (new Error((("Forbidden value (" + this.nbCase) + ") on element of ExchangeStartOkCraftWithInformationMessage.nbCase.")));
-            };
+            this._skillIdFunc(input);
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_ExchangeStartOkCraftWithInformationMessage(tree);
+        }
+
+        public function deserializeAsyncAs_ExchangeStartOkCraftWithInformationMessage(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._skillIdFunc);
+        }
+
+        private function _skillIdFunc(input:ICustomDataInput):void
+        {
             this.skillId = input.readVarUhInt();
             if (this.skillId < 0)
             {
@@ -96,5 +107,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.inventory.exchanges
+} com.ankamagames.dofus.network.messages.game.inventory.exchanges
 

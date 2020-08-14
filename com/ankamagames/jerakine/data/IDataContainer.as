@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.data
+package com.ankamagames.jerakine.data
 {
     public interface IDataContainer 
     {
@@ -11,5 +11,5 @@
         function create():void;
 
     }
-}//package com.ankamagames.jerakine.data
+} com.ankamagames.jerakine.data
 

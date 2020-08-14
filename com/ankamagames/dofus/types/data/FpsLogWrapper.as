@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.types.data
+package com.ankamagames.dofus.types.data
 {
     public class FpsLogWrapper 
     {
@@ -7,5 +7,5 @@
 
 
     }
-}//package com.ankamagames.dofus.types.data
+} com.ankamagames.dofus.types.data
 

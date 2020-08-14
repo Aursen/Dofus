@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.datacenter.items.criterion
+package com.ankamagames.dofus.datacenter.items.criterion
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.jerakine.data.I18n;
@@ -20,11 +20,7 @@
             {
                 return (I18n.getUiText("ui.criterion.noguild"));
             };
-            if (_criterionValue == 1)
-            {
-                return (I18n.getUiText("ui.criterion.hasGuild"));
-            };
-            return (I18n.getUiText("ui.criterion.hasValidGuild"));
+            return (I18n.getUiText("ui.criterion.hasGuild"));
         }
 
         override public function clone():IItemCriterion
@@ -38,10 +34,6 @@
             var guild:GuildWrapper = (Kernel.getWorker().getFrame(SocialFrame) as SocialFrame).guild;
             if (guild)
             {
-                if (guild.enabled)
-                {
-                    return (2);
-                };
                 return (1);
             };
             return (0);
@@ -49,5 +41,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.items.criterion
+} com.ankamagames.dofus.datacenter.items.criterion
 

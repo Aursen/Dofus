@@ -1,4 +1,4 @@
-﻿package com.ankamagames.atouin.types
+package com.ankamagames.atouin.types
 {
     import com.ankamagames.jerakine.types.positions.MovementPath;
     import com.ankamagames.jerakine.entities.interfaces.IEntity;
@@ -20,7 +20,7 @@
         public var wasOrdered:Boolean;
         public var start:uint;
         public var velocity:Number;
-        public var orientation:uint = 1;
+        public var orientation:int = -1;
         public var currentCellSprite:Sprite;
         public var nextCellSprite:Sprite;
         public var callback:Function;
@@ -34,5 +34,5 @@
 
 
     }
-}//package com.ankamagames.atouin.types
+} com.ankamagames.atouin.types
 

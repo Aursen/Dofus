@@ -1,10 +1,10 @@
-﻿package com.ankamagames.dofus.network.types.game.data.items.effects
+package com.ankamagames.dofus.network.types.game.data.items.effects
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class ObjectEffectDate extends ObjectEffect implements INetworkType 
     {
 
@@ -86,26 +86,66 @@
         public function deserializeAs_ObjectEffectDate(input:ICustomDataInput):void
         {
             super.deserialize(input);
+            this._yearFunc(input);
+            this._monthFunc(input);
+            this._dayFunc(input);
+            this._hourFunc(input);
+            this._minuteFunc(input);
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_ObjectEffectDate(tree);
+        }
+
+        public function deserializeAsyncAs_ObjectEffectDate(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._yearFunc);
+            tree.addChild(this._monthFunc);
+            tree.addChild(this._dayFunc);
+            tree.addChild(this._hourFunc);
+            tree.addChild(this._minuteFunc);
+        }
+
+        private function _yearFunc(input:ICustomDataInput):void
+        {
             this.year = input.readVarUhShort();
             if (this.year < 0)
             {
                 throw (new Error((("Forbidden value (" + this.year) + ") on element of ObjectEffectDate.year.")));
             };
+        }
+
+        private function _monthFunc(input:ICustomDataInput):void
+        {
             this.month = input.readByte();
             if (this.month < 0)
             {
                 throw (new Error((("Forbidden value (" + this.month) + ") on element of ObjectEffectDate.month.")));
             };
+        }
+
+        private function _dayFunc(input:ICustomDataInput):void
+        {
             this.day = input.readByte();
             if (this.day < 0)
             {
                 throw (new Error((("Forbidden value (" + this.day) + ") on element of ObjectEffectDate.day.")));
             };
+        }
+
+        private function _hourFunc(input:ICustomDataInput):void
+        {
             this.hour = input.readByte();
             if (this.hour < 0)
             {
                 throw (new Error((("Forbidden value (" + this.hour) + ") on element of ObjectEffectDate.hour.")));
             };
+        }
+
+        private function _minuteFunc(input:ICustomDataInput):void
+        {
             this.minute = input.readByte();
             if (this.minute < 0)
             {
@@ -115,5 +155,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.data.items.effects
+} com.ankamagames.dofus.network.types.game.data.items.effects
 

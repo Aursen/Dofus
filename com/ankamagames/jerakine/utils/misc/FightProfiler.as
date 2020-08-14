@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.utils.misc
+package com.ankamagames.jerakine.utils.misc
 {
     import flash.utils.getTimer;
 
@@ -34,5 +34,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.utils.misc
+} com.ankamagames.jerakine.utils.misc
 

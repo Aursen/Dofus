@@ -1,15 +1,16 @@
-﻿package com.ankamagames.dofus.datacenter.quest
+package com.ankamagames.dofus.datacenter.quest
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
+    import com.ankamagames.dofus.types.IdAccessors;
     import __AS3__.vec.Vector;
     import com.ankamagames.jerakine.data.GameData;
-    import com.ankamagames.dofus.logic.game.roleplay.managers.RoleplayManager;
-    import com.ankamagames.dofus.logic.game.common.managers.PlayedCharacterManager;
     import com.ankamagames.jerakine.data.I18n;
     import com.ankamagames.dofus.datacenter.npcs.NpcMessage;
+    import com.ankamagames.dofus.misc.utils.DialogParamsDecoder;
+    import com.ankamagames.dofus.logic.game.common.managers.PlayedCharacterManager;
     import __AS3__.vec.*;
 
     public class QuestStep implements IDataCenter 
@@ -17,6 +18,7 @@
 
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(QuestStep));
         public static const MODULE:String = "QuestSteps";
+        public static var idAccessors:IdAccessors = new IdAccessors(getQuestStepById, getQuestSteps);
 
         public var id:uint;
         public var questId:uint;
@@ -25,9 +27,6 @@
         public var dialogId:int;
         public var optimalLevel:uint;
         public var duration:Number;
-        public var kamasScaleWithPlayerLevel:Boolean;
-        public var kamasRatio:Number;
-        public var xpRatio:Number;
         private var _currentLevelRewards:QuestStepRewards;
         public var objectiveIds:Vector.<uint>;
         public var rewardsIds:Vector.<uint>;
@@ -39,7 +38,7 @@
 
         public static function getQuestStepById(id:int):QuestStep
         {
-            return ((GameData.getObject(MODULE, id) as QuestStep));
+            return (GameData.getObject(MODULE, id) as QuestStep);
         }
 
         public static function getQuestSteps():Array
@@ -48,43 +47,51 @@
         }
 
 
-        public function get experienceReward():uint
+        public function get kamasReward():Number
         {
-            return (RoleplayManager.getInstance().getExperienceReward(PlayedCharacterManager.getInstance().infos.level, PlayedCharacterManager.getInstance().experiencePercent, this.optimalLevel, this.xpRatio, this.duration));
+            this.initCurrentLevelRewards();
+            return ((this._currentLevelRewards == null) ? 0 : this._currentLevelRewards.kamasReward);
         }
 
-        public function get kamasReward():uint
+        public function get experienceReward():uint
         {
-            return (RoleplayManager.getInstance().getKamasReward(this.kamasScaleWithPlayerLevel, this.optimalLevel, this.kamasRatio, this.duration));
+            this.initCurrentLevelRewards();
+            return ((this._currentLevelRewards == null) ? 0 : this._currentLevelRewards.experienceReward);
         }
 
         public function get itemsReward():Vector.<Vector.<uint>>
         {
             this.initCurrentLevelRewards();
-            return ((((this._currentLevelRewards == null)) ? null : this._currentLevelRewards.itemsReward));
+            return ((this._currentLevelRewards == null) ? null : this._currentLevelRewards.itemsReward);
         }
 
         public function get emotesReward():Vector.<uint>
         {
             this.initCurrentLevelRewards();
-            return ((((this._currentLevelRewards == null)) ? null : this._currentLevelRewards.emotesReward));
+            return ((this._currentLevelRewards == null) ? null : this._currentLevelRewards.emotesReward);
         }
 
         public function get jobsReward():Vector.<uint>
         {
             this.initCurrentLevelRewards();
-            return ((((this._currentLevelRewards == null)) ? null : this._currentLevelRewards.jobsReward));
+            return ((this._currentLevelRewards == null) ? null : this._currentLevelRewards.jobsReward);
         }
 
         public function get spellsReward():Vector.<uint>
         {
             this.initCurrentLevelRewards();
-            return ((((this._currentLevelRewards == null)) ? null : this._currentLevelRewards.spellsReward));
+            return ((this._currentLevelRewards == null) ? null : this._currentLevelRewards.spellsReward);
+        }
+
+        public function get titlesReward():Vector.<uint>
+        {
+            this.initCurrentLevelRewards();
+            return ((this._currentLevelRewards == null) ? null : this._currentLevelRewards.titlesReward);
         }
 
         public function get name():String
         {
-            if (!(this._name))
+            if (!this._name)
             {
                 this._name = I18n.getText(this.nameId);
             };
@@ -93,7 +100,7 @@
 
         public function get description():String
         {
-            if (!(this._description))
+            if (!this._description)
             {
                 this._description = I18n.getText(this.descriptionId);
             };
@@ -102,13 +109,15 @@
 
         public function get dialog():String
         {
+            var npcmsg:NpcMessage;
             if (this.dialogId < 1)
             {
                 return ("");
             };
-            if (!(this._dialog))
+            if (!this._dialog)
             {
-                this._dialog = NpcMessage.getNpcMessageById(this.dialogId).message;
+                npcmsg = NpcMessage.getNpcMessageById(this.dialogId);
+                this._dialog = ((npcmsg) ? DialogParamsDecoder.applyParams(npcmsg.message, npcmsg.messageParams) : "");
             };
             return (this._dialog);
         }
@@ -116,7 +125,7 @@
         public function get objectives():Vector.<QuestObjective>
         {
             var i:uint;
-            if (!(this._objectives))
+            if (!this._objectives)
             {
                 this._objectives = new Vector.<QuestObjective>(this.objectiveIds.length, true);
                 i = 0;
@@ -129,18 +138,30 @@
             return (this._objectives);
         }
 
+        public function getKamasReward(pPlayerLevel:int):Number
+        {
+            this.initCurrentLevelRewards();
+            return ((this._currentLevelRewards == null) ? 0 : this._currentLevelRewards.getKamasReward(pPlayerLevel));
+        }
+
+        public function getExperienceReward(pPlayerLevel:int, pXpBonus:int):Number
+        {
+            this.initCurrentLevelRewards();
+            return ((this._currentLevelRewards == null) ? 0 : this._currentLevelRewards.getExperienceReward(pPlayerLevel, pXpBonus));
+        }
+
         private function initCurrentLevelRewards():void
         {
             var rewardsId:uint;
             var rewards:QuestStepRewards;
-            var playerLvl:uint = PlayedCharacterManager.getInstance().infos.level;
-            if ((((((this._currentLevelRewards == null)) || ((((playerLvl < this._currentLevelRewards.levelMin)) && (!((this._currentLevelRewards.levelMin == -1))))))) || ((((playerLvl > this._currentLevelRewards.levelMax)) && (!((this._currentLevelRewards.levelMax == -1)))))))
+            var playerLvl:uint = PlayedCharacterManager.getInstance().limitedLevel;
+            if ((((this._currentLevelRewards == null) || ((playerLvl < this._currentLevelRewards.levelMin) && (!(this._currentLevelRewards.levelMin == -1)))) || ((playerLvl > this._currentLevelRewards.levelMax) && (!(this._currentLevelRewards.levelMax == -1)))))
             {
                 this._currentLevelRewards = null;
                 for each (rewardsId in this.rewardsIds)
                 {
                     rewards = QuestStepRewards.getQuestStepRewardsById(rewardsId);
-                    if ((((((playerLvl >= rewards.levelMin)) || ((rewards.levelMin == -1)))) && ((((playerLvl <= rewards.levelMax)) || ((rewards.levelMax == -1))))))
+                    if ((((playerLvl >= rewards.levelMin) || (rewards.levelMin == -1)) && ((playerLvl <= rewards.levelMax) || (rewards.levelMax == -1))))
                     {
                         this._currentLevelRewards = rewards;
                         break;
@@ -149,17 +170,7 @@
             };
         }
 
-        public function getKamasReward(pPlayerLevel:int):Number
-        {
-            return (RoleplayManager.getInstance().getKamasReward(this.kamasScaleWithPlayerLevel, this.optimalLevel, this.kamasRatio, this.duration, pPlayerLevel));
-        }
-
-        public function getExperienceReward(pPlayerLevel:int, pXpBonus:int):Number
-        {
-            return (RoleplayManager.getInstance().getExperienceReward(pPlayerLevel, pXpBonus, this.optimalLevel, this.xpRatio, this.duration));
-        }
-
 
     }
-}//package com.ankamagames.dofus.datacenter.quest
+} com.ankamagames.dofus.datacenter.quest
 

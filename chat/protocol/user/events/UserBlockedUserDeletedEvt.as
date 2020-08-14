@@ -1,0 +1,19 @@
+package chat.protocol.user.events
+{
+    import chat.protocol.common.JsonifiedMessage;
+
+    public class UserBlockedUserDeletedEvt extends JsonifiedMessage 
+    {
+
+        public var userId:String;
+        public var blockedUserId:String;
+
+        public function UserBlockedUserDeletedEvt(userId:String, blockedUserId:String)
+        {
+            this.userId = userId;
+            this.blockedUserId = blockedUserId;
+        }
+
+    }
+} chat.protocol.user.events
+

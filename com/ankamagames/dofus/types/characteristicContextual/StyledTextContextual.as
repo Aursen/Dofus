@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.types.characteristicContextual
+package com.ankamagames.dofus.types.characteristicContextual
 {
     import flash.display.DisplayObject;
     import flash.display.Sprite;
@@ -63,22 +63,22 @@
         private function init(value:String, style:uint):void
         {
             var last:DisplayObject;
-            var char:String;
+            var _local_5:String;
             var n:Sprite;
             var i:uint;
             while (i < value.length)
             {
-                char = value.charAt(i);
-                switch (char)
+                _local_5 = value.charAt(i);
+                switch (_local_5)
                 {
                     case "-":
-                        char = "MOINS";
+                        _local_5 = "MOINS";
                         break;
                     case "+":
-                        char = "PLUS";
+                        _local_5 = "PLUS";
                         break;
                 };
-                n = (new (StyledTextContextual[((("STYLE_" + style) + "_NUMBER_") + char)])() as Sprite);
+                n = (new (StyledTextContextual[((("STYLE_" + style) + "_NUMBER_") + _local_5)])() as Sprite);
                 n.scaleX = 0.7;
                 n.scaleY = 0.7;
                 if (last)
@@ -96,5 +96,5 @@
 
 
     }
-}//package com.ankamagames.dofus.types.characteristicContextual
+} com.ankamagames.dofus.types.characteristicContextual
 

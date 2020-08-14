@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.console.debug
+package com.ankamagames.dofus.console.debug
 {
     import com.ankamagames.jerakine.console.ConsoleInstructionHandler;
     import com.ankamagames.jerakine.logger.Logger;
@@ -6,6 +6,17 @@
     import flash.utils.getQualifiedClassName;
     import flash.utils.Dictionary;
     import com.ankamagames.dofus.console.debug.frames.ReccordNetworkPacketFrame;
+    import flash.filesystem.File;
+    import flash.display.BitmapData;
+    import com.ankamagames.dofus.misc.utils.errormanager.DofusErrorHandler;
+    import com.ankamagames.jerakine.console.ConsoleHandler;
+    import com.ankamagames.jerakine.logger.targets.SOSTarget;
+    import com.ankamagames.dofus.misc.lists.GameDataList;
+    import flash.display.DisplayObject;
+    import flash.geom.Matrix;
+    import flash.geom.Rectangle;
+    import flash.utils.ByteArray;
+    import flash.filesystem.FileStream;
     import __AS3__.vec.Vector;
     import com.ankamagames.dofus.datacenter.monsters.Monster;
     import com.ankamagames.jerakine.managers.ErrorManager;
@@ -15,55 +26,169 @@
     import com.ankamagames.dofus.kernel.net.ConnectionsHandler;
     import com.ankamagames.jerakine.types.Uri;
     import com.ankamagames.dofus.kernel.Kernel;
-    import com.ankamagames.jerakine.console.ConsoleHandler;
-    import com.ankamagames.dofus.misc.utils.errormanager.DofusErrorHandler;
-    import com.ankamagames.jerakine.logger.targets.SOSTarget;
+    import com.ankamagames.dofus.logic.game.common.misc.DofusEntities;
+    import com.ankamagames.dofus.logic.game.common.managers.PlayedCharacterManager;
+    import flash.filesystem.FileMode;
+    import com.ankamagames.jerakine.utils.display.EnterFrameDispatcher;
+    import com.ankamagames.jerakine.sequencer.AbstractSequencable;
+    import com.ankamagames.dofus.logic.common.managers.DofusFpsManager;
+    import com.ankamagames.jerakine.utils.display.StageShareManager;
+    import com.ankamagames.atouin.entities.behaviours.movements.AnimatedMovementBehavior;
+    import com.ankamagames.jerakine.utils.misc.DescribeTypeCache;
     import flash.utils.getDefinitionByName;
-    import flash.utils.describeType;
-    import com.ankamagames.dofus.misc.lists.GameDataList;
+    import com.ankamagames.atouin.Atouin;
+    import flash.display.DisplayObjectContainer;
+    import flash.geom.Point;
+    import com.ankamagames.atouin.AtouinConstants;
+    import com.ankamagames.jerakine.utils.display.FrameIdManager;
+    import by.blooddy.crypto.image.JPEGEncoder;
+    import __AS3__.vec.*;
 
     public class UtilInstructionHandler implements ConsoleInstructionHandler 
     {
 
         public static const _log:Logger = Log.getLogger(getQualifiedClassName(UtilInstructionHandler));
 
-        private const _validArgs0:Dictionary = UtilInstructionHandler.validArgs();
+        private const _validArgs0:Dictionary = validArgs();
 
         private var _reccordPacketFrame:ReccordNetworkPacketFrame;
+        private var _sessionDate:Date = new Date();
+        private var _sessionReccordFolder:File;
+        private var _sessionReccordBitmapData:BitmapData;
+
+
+        private static function enablereport(console:ConsoleHandler, cmd:String, args:Array):void
+        {
+            if (args.length == 0)
+            {
+                DofusErrorHandler.debugManuallyActivated = (!(DofusErrorHandler.debugManuallyActivated));
+            }
+            else
+            {
+                if (args.length == 1)
+                {
+                    switch (args[0])
+                    {
+                        case "true":
+                            DofusErrorHandler.debugManuallyActivated = true;
+                            break;
+                        case "false":
+                            DofusErrorHandler.debugManuallyActivated = false;
+                            break;
+                        case "":
+                            DofusErrorHandler.debugManuallyActivated = (!(DofusErrorHandler.debugManuallyActivated));
+                            break;
+                        default:
+                            console.output("Bad arg. Argument must be true, false, or null");
+                            return;
+                    };
+                }
+                else
+                {
+                    console.output((cmd + "requires 0 or 1 argument."));
+                    return;
+                };
+            };
+            console.output((("\tReport have been " + ((DofusErrorHandler.debugManuallyActivated) ? "enabled" : "disabled")) + ". Dofus need to restart."));
+        }
+
+        private static function enableLogs(console:ConsoleHandler, cmd:String, args:Array):void
+        {
+            if (args.length == 0)
+            {
+                SOSTarget.enabled = (!(SOSTarget.enabled));
+                console.output((("\tSOS logs have been " + ((SOSTarget.enabled) ? "enabled" : "disabled")) + "."));
+            }
+            else
+            {
+                if (args.length == 1)
+                {
+                    switch (args[0])
+                    {
+                        case "true":
+                            SOSTarget.enabled = true;
+                            console.output("\tSOS logs have been enabled.");
+                            break;
+                        case "false":
+                            SOSTarget.enabled = false;
+                            console.output("\tSOS logs have been disabled.");
+                            break;
+                        case "":
+                            SOSTarget.enabled = (!(SOSTarget.enabled));
+                            console.output((("\tSOS logs have been " + ((SOSTarget.enabled) ? "enabled" : "disabled")) + "."));
+                            break;
+                        default:
+                            console.output("Bad arg. Argument must be true, false, or null");
+                    };
+                }
+                else
+                {
+                    console.output((cmd + "requires 0 or 1 argument."));
+                };
+            };
+        }
+
+        private static function validArgs():Dictionary
+        {
+            var constant:Class;
+            var name:String;
+            var dico:Dictionary = new Dictionary();
+            for each (constant in GameDataList.CLASSES)
+            {
+                name = getQualifiedClassName(constant);
+                dico[name.substring((name.lastIndexOf("::") + 2)).toLowerCase()] = name;
+            };
+            return (dico);
+        }
 
 
         public function handle(console:ConsoleHandler, cmd:String, args:Array):void
         {
+            var animEntity:DisplayObject;
+            var newWidth:Number;
+            var newHeight:Number;
+            var newScale:Number;
+            var m:Matrix;
+            var mode:String;
+            var bounds:Rectangle;
+            var bd:BitmapData;
+            var ba:ByteArray;
+            var fileNum:uint;
+            var f:File;
+            var fs:FileStream;
             var matchMonsters:Array;
             var monsterFilter:String;
             var monsters:Vector.<Object>;
             var currentMonster:Monster;
             var spellFilter:String;
             var matchSpells:Vector.<Object>;
+            var marge:uint;
+            var size:Number;
+            var i:uint;
             switch (cmd)
             {
                 case "enablereport":
-                    this.enablereport(console, cmd, args);
-                    return;
+                    enablereport(console, cmd, args);
+                    break;
                 case "savereport":
                     ErrorManager.addError("Console report", new EmptyError());
-                    return;
+                    break;
                 case "enablelogs":
-                    this.enableLogs(console, cmd, args);
-                    return;
+                    enableLogs(console, cmd, args);
+                    break;
                 case "info":
                     this.info(console, cmd, args);
-                    return;
+                    break;
                 case "search":
                     this.search(console, cmd, args);
-                    return;
+                    break;
                 case "searchmonster":
                     if (args.length < 1)
                     {
                         console.output((cmd + " needs an argument to search for"));
-                        return;
+                        break;
                     };
-                    matchMonsters = new Array();
+                    matchMonsters = [];
                     monsterFilter = StringUtils.noAccent(args.join(" ").toLowerCase());
                     monsters = GameDataQuery.returnInstance(Monster, GameDataQuery.queryString(Monster, "name", monsterFilter));
                     for each (currentMonster in monsters)
@@ -73,29 +198,29 @@
                     matchMonsters.sort(Array.CASEINSENSITIVE);
                     console.output(matchMonsters.join("\n"));
                     console.output((("\tRESULT : " + matchMonsters.length) + " monsters found"));
-                    return;
+                    break;
                 case "searchspell":
                     if (args.length < 1)
                     {
                         console.output((cmd + " needs an argument to search for"));
-                        return;
+                        break;
                     };
                     spellFilter = StringUtils.noAccent(args.join(" ").toLowerCase());
                     matchSpells = GameDataQuery.returnInstance(Spell, GameDataQuery.queryString(Spell, "name", spellFilter));
                     matchSpells.sort(Array.CASEINSENSITIVE);
                     console.output(matchSpells.join("\n"));
                     console.output((("\tRESULT : " + matchSpells.length) + " spells found"));
-                    return;
+                    break;
                 case "loadpacket":
                     if (args.length < 1)
                     {
                         console.output((cmd + " needs an uri argument"));
-                        return;
+                        break;
                     };
                     ConnectionsHandler.getHttpConnection().request(new Uri(args[0], false));
-                    return;
+                    break;
                 case "reccordpacket":
-                    if (!(this._reccordPacketFrame))
+                    if (!this._reccordPacketFrame)
                     {
                         console.output("Start network reccording");
                         this._reccordPacketFrame = new ReccordNetworkPacketFrame();
@@ -108,7 +233,97 @@
                         Kernel.getWorker().removeFrame(this._reccordPacketFrame);
                         this._reccordPacketFrame = null;
                     };
-                    return;
+                    break;
+                case "exportcharacter":
+                    animEntity = (DofusEntities.getEntity(PlayedCharacterManager.getInstance().id) as DisplayObject);
+                    if (!animEntity)
+                    {
+                        console.output("Can't export this sprite");
+                        return;
+                    };
+                    m = new Matrix();
+                    mode = ((args.length > 0) ? args[0].toUpperCase() : "FIT");
+                    bounds = animEntity.getBounds(animEntity);
+                    if (mode == "FIT")
+                    {
+                        marge = ((args.length > 2) ? parseInt(args[2]) : 10);
+                        size = Math.max(((args.length > 1) ? parseInt(args[1]) : Math.max(bounds.width, bounds.height)));
+                        if (bounds.width > bounds.height)
+                        {
+                            newWidth = size;
+                            newHeight = (size / (bounds.width / bounds.height));
+                            newScale = (size / bounds.width);
+                        }
+                        else
+                        {
+                            newHeight = size;
+                            newWidth = ((size * bounds.width) / bounds.height);
+                            newScale = (size / bounds.height);
+                        };
+                        m.scale(newScale, newScale);
+                        bd = new BitmapData((newWidth + marge), (newHeight + marge), true, 0);
+                        m.translate((((bd.width - (bounds.width * newScale)) / 2) - (bounds.left * newScale)), (((bd.height - (bounds.height * newScale)) / 2) - (bounds.top * newScale)));
+                    };
+                    if (mode == "ZOOM")
+                    {
+                        if (args.length != 5)
+                        {
+                            console.output("Wrong number of arguments : MODE WIDTH HEIGHT ZOOM BOTTOM_MARGIN");
+                            break;
+                        };
+                        newScale = parseFloat(args[3]);
+                        bd = new BitmapData(parseInt(args[1]), parseInt(args[2]), true, 0);
+                        m.scale(newScale, newScale);
+                        m.translate((((bd.width - (bounds.width * newScale)) / 2) - (bounds.left * newScale)), ((bd.height - (bounds.height * newScale)) - (bounds.top * newScale)));
+                    };
+                    bd.draw(animEntity, m, null, null, null, true);
+                    ba = PNGEncoder2.encode(bd);
+                    fileNum = 0;
+                    while (File.desktopDirectory.resolvePath((("exportPlayer_" + fileNum) + ".png")).exists)
+                    {
+                        fileNum++;
+                    };
+                    f = File.desktopDirectory.resolvePath((("exportPlayer_" + fileNum) + ".png"));
+                    fs = new FileStream();
+                    fs.open(f, FileMode.WRITE);
+                    fs.writeBytes(ba);
+                    fs.close();
+                    console.output(("Export dans le fichier " + f.nativePath));
+                    break;
+                case "reccordimage":
+                    if (!EnterFrameDispatcher.hasEventListener(this.reccordImage))
+                    {
+                        if (!this._sessionReccordFolder)
+                        {
+                            i = 1;
+                            while ((!(this._sessionReccordFolder)))
+                            {
+                                this._sessionReccordFolder = File.desktopDirectory.resolvePath(((((((("Dofus_" + this._sessionDate.getFullYear()) + "-") + this._sessionDate.getMonth()) + "-") + this._sessionDate.getDate()) + "_session_") + i++));
+                                if (!this._sessionReccordFolder.exists)
+                                {
+                                    this._sessionReccordFolder.createDirectory();
+                                    break;
+                                };
+                                this._sessionReccordFolder = null;
+                            };
+                            console.output(("Export dans le dossier " + this._sessionReccordFolder.nativePath));
+                        };
+                        AbstractSequencable.DEFAULT_TIMEOUT = 500000;
+                        DofusFpsManager.allowSkipFrame = false;
+                        StageShareManager.stage.frameRate = 25;
+                        AnimatedMovementBehavior.updateRealtime = false;
+                        AnimatedMovementBehavior.updateForcedFps = 25;
+                        EnterFrameDispatcher.addEventListener(this.reccordImage, "imageReccord");
+                    }
+                    else
+                    {
+                        AbstractSequencable.DEFAULT_TIMEOUT = 5000;
+                        DofusFpsManager.allowSkipFrame = true;
+                        AnimatedMovementBehavior.updateRealtime = true;
+                        StageShareManager.stage.frameRate = 50;
+                        EnterFrameDispatcher.removeEventListener(this.reccordImage);
+                    };
+                    break;
             };
         }
 
@@ -134,8 +349,12 @@
                     return ("Load a remote file containing network(s) packets");
                 case "reccordpacket":
                     return ("Reccord network(s) packets into a file (usefull with /loadpacket command)");
+                case "exportcharacter":
+                    return ("Export the current player into PNG. Param 1 (opt): FIT or ZOOM\n/exportcharacter FIT SIZE MARGIN\n/exportcharacter ZOOM WIDTH HEIGHT MULTIPLICATOR MARGIN");
+                case "reccordimage":
+                    return ("Export each frame in 1920x1080 without lag in order to import them and create Video or Gif");
             };
-            return ((("Unknown command '" + cmd) + "'."));
+            return (("Unknown command '" + cmd) + "'.");
         }
 
         public function getParamPossibilities(cmd:String, paramIndex:uint=0, currentParams:Array=null):Array
@@ -143,7 +362,7 @@
             var infoClassName:String;
             var searchClassName:String;
             var arg0:String;
-            var possibilities:Array = new Array();
+            var possibilities:Array = [];
             switch (cmd)
             {
                 case "enablelogs":
@@ -177,7 +396,7 @@
                             arg0 = this._validArgs0[String(currentParams[0]).toLowerCase()];
                             if (arg0)
                             {
-                                possibilities = this.getSimpleVariablesAndAccessors(arg0);
+                                possibilities.push.apply(null, DescribeTypeCache.getVariables(getDefinitionByName(arg0)));
                             };
                         };
                     };
@@ -186,75 +405,27 @@
             return (possibilities);
         }
 
-        private function enablereport(console:ConsoleHandler, cmd:String, args:Array):void
+        private function reccordImage(... foo):void
         {
-            if (args.length == 0)
+            var world:DisplayObjectContainer = Atouin.getInstance().worldContainer;
+            var bitmapSize:Point = new Point();
+            bitmapSize.x = AtouinConstants.WIDESCREEN_BITMAP_WIDTH;
+            bitmapSize.y = StageShareManager.startHeight;
+            var r:Rectangle = new Rectangle(0, 0, bitmapSize.x, bitmapSize.y);
+            var m:Matrix = new Matrix();
+            m.translate(((bitmapSize.x - StageShareManager.startWidth) / 2), ((bitmapSize.y - StageShareManager.startHeight) / 2));
+            var s:Number = Math.max((1920 / r.width), (1080 / r.height));
+            m.scale(s, s);
+            if (!this._sessionReccordBitmapData)
             {
-                DofusErrorHandler.manualActivation = !(DofusErrorHandler.manualActivation);
-            }
-            else
-            {
-                if (args.length == 1)
-                {
-                    switch (args[0])
-                    {
-                        case "true":
-                            DofusErrorHandler.manualActivation = true;
-                            break;
-                        case "false":
-                            DofusErrorHandler.manualActivation = false;
-                            break;
-                        case "":
-                            DofusErrorHandler.manualActivation = !(DofusErrorHandler.manualActivation);
-                            break;
-                        default:
-                            console.output("Bad arg. Argument must be true, false, or null");
-                            return;
-                    };
-                }
-                else
-                {
-                    console.output((cmd + "requires 0 or 1 argument."));
-                    return;
-                };
+                this._sessionReccordBitmapData = new BitmapData(1920, 1080);
             };
-            console.output((("\tReport have been " + ((DofusErrorHandler.manualActivation) ? "enabled" : "disabled")) + ". Dofus need to restart."));
-        }
-
-        private function enableLogs(console:ConsoleHandler, cmd:String, args:Array):void
-        {
-            if (args.length == 0)
-            {
-                SOSTarget.enabled = !(SOSTarget.enabled);
-                console.output((("\tSOS logs have been " + ((SOSTarget.enabled) ? "enabled" : "disabled")) + "."));
-            }
-            else
-            {
-                if (args.length == 1)
-                {
-                    switch (args[0])
-                    {
-                        case "true":
-                            SOSTarget.enabled = true;
-                            console.output("\tSOS logs have been enabled.");
-                            break;
-                        case "false":
-                            SOSTarget.enabled = false;
-                            console.output("\tSOS logs have been disabled.");
-                            break;
-                        case "":
-                            SOSTarget.enabled = !(SOSTarget.enabled);
-                            console.output((("\tSOS logs have been " + ((SOSTarget.enabled) ? "enabled" : "disabled")) + "."));
-                            break;
-                        default:
-                            console.output("Bad arg. Argument must be true, false, or null");
-                    };
-                }
-                else
-                {
-                    console.output((cmd + "requires 0 or 1 argument."));
-                };
-            };
+            this._sessionReccordBitmapData.draw(world, m);
+            var f:File = this._sessionReccordFolder.resolvePath((FrameIdManager.frameId + ".jpg"));
+            var fs:FileStream = new FileStream();
+            fs.open(f, FileMode.WRITE);
+            fs.writeBytes(JPEGEncoder.encode(this._sessionReccordBitmapData, 95));
+            fs.close();
         }
 
         private function info(console:ConsoleHandler, cmd:String, args:Array):void
@@ -263,12 +434,11 @@
             var className:String;
             var id:int;
             var object:Object;
-            var idFunction:String;
-            var varAndAccess:Array;
+            var varAndAccess:Vector.<String>;
             var hasNameField:Boolean;
             var property:String;
             var currentObject:Object;
-            var _local_14:int;
+            var size:int;
             var result:String = "";
             if (args.length != 2)
             {
@@ -281,45 +451,49 @@
             if (className)
             {
                 object = getDefinitionByName(className);
-                idFunction = this.getIdFunction(className);
-                if (idFunction == null)
+                if (((!(object.hasOwnProperty("idAccessors"))) || (object.idAccessors.instanceById == null)))
                 {
                     console.output((("WARN : " + iDataCenter) + " has no getById function !"));
                     return;
                 };
-                object = object[idFunction](id);
+                object = object.idAccessors.instanceById(id);
                 if (object == null)
                 {
                     console.output((((iDataCenter + " ") + id) + " does not exist."));
                     return;
                 };
                 hasNameField = object.hasOwnProperty("name");
-                varAndAccess = this.getSimpleVariablesAndAccessors(className, true);
+                varAndAccess = DescribeTypeCache.getVariables(getDefinitionByName(className));
                 varAndAccess.sort(Array.CASEINSENSITIVE);
                 for each (property in varAndAccess)
                 {
-                    currentObject = object[property];
-                    if (!(currentObject))
+                    if (object.hasOwnProperty(property))
                     {
-                        result = (result + (("\t" + property) + " : null\n"));
-                    }
-                    else
-                    {
-                        if ((((currentObject is Number)) || ((currentObject is String))))
+                        currentObject = object[property];
+                        if (currentObject == null)
                         {
-                            result = (result + (((("\t" + property) + " : ") + currentObject.toString()) + "\n"));
+                            result = (result + (("\t" + property) + " : null\n"));
                         }
                         else
                         {
-                            _local_14 = currentObject.length;
-                            if (_local_14 > 30)
+                            if ((((((currentObject is Boolean) || (currentObject is int)) || (currentObject is uint)) || (currentObject is Number)) || (currentObject is String)))
                             {
-                                currentObject = currentObject.slice(0, 30);
-                                result = (result + (((((("\t" + property) + "(") + _local_14) + " element(s)) : ") + currentObject.toString()) + ", ...\n"));
+                                result = (result + (((("\t" + property) + " : ") + currentObject.toString()) + "\n"));
                             }
                             else
                             {
-                                result = (result + (((((("\t" + property) + "(") + _local_14) + " element(s)) : ") + currentObject.toString()) + "\n"));
+                                if ((((((currentObject is Vector.<Boolean>) || (currentObject is Vector.<int>)) || (currentObject is Vector.<uint>)) || (currentObject is Vector.<Number>)) || (currentObject is Vector.<String>)))
+                                {
+                                    size = currentObject.length;
+                                    if (size > 30)
+                                    {
+                                        result = (result + (((((("\t" + property) + "(") + size) + " element(s)) : ") + currentObject.slice(0, 30).toString()) + ", ...\n"));
+                                    }
+                                    else
+                                    {
+                                        result = (result + (((((("\t" + property) + "(") + size) + " element(s)) : ") + currentObject.toString()) + "\n"));
+                                    };
+                                };
                             };
                         };
                     };
@@ -339,12 +513,10 @@
             var iDataCenter:String;
             var member:String;
             var filter:String;
-            var validArgs1:Array;
             var className:String;
             var currentObject:Object;
             var hasNameField:Boolean;
             var object:Object;
-            var listingFunction:String;
             var results:Array;
             var matchSearch:Array;
             if (args.length < 3)
@@ -358,24 +530,22 @@
             className = this._validArgs0[iDataCenter.toLowerCase()];
             if (className)
             {
-                validArgs1 = this.getSimpleVariablesAndAccessors(className);
-                if (validArgs1.indexOf(member) != -1)
+                object = getDefinitionByName(className);
+                if (((!(object.hasOwnProperty("idAccessors"))) || (object.idAccessors.allInstances == null)))
                 {
-                    object = getDefinitionByName(className);
-                    listingFunction = this.getListingFunction(className);
-                    if (listingFunction == null)
-                    {
-                        console.output((("WARN : '" + iDataCenter) + "' has no listing function !"));
-                        return;
-                    };
-                    results = object[listingFunction]();
-                    matchSearch = new Array();
-                    if (results.length == 0)
-                    {
-                        console.output("No object found");
-                        return;
-                    };
-                    if ((results[0][member] is Number))
+                    console.output((("WARN : '" + iDataCenter) + "' has no listing function !"));
+                    return;
+                };
+                results = object.idAccessors.allInstances();
+                matchSearch = [];
+                if (results.length == 0)
+                {
+                    console.output("No object found");
+                    return;
+                };
+                if (results[0].hasOwnProperty(member))
+                {
+                    if ((((results[0][member] is int) || (results[0][member] is uint)) || (results[0][member] is Number)))
                     {
                         if (isNaN(Number(filter)))
                         {
@@ -384,7 +554,7 @@
                         };
                         for each (currentObject in results)
                         {
-                            if (!(currentObject))
+                            if (!currentObject)
                             {
                             }
                             else
@@ -403,7 +573,7 @@
                         {
                             for each (currentObject in results)
                             {
-                                if (!(currentObject))
+                                if (!currentObject)
                                 {
                                 }
                                 else
@@ -415,6 +585,11 @@
                                     };
                                 };
                             };
+                        }
+                        else
+                        {
+                            console.output((((("Bad args. Attribute '" + member) + "' must be int, uint, Number or String in '") + iDataCenter) + "' (Case sensitive)"));
+                            return;
                         };
                     };
                     matchSearch.sort(Array.CASEINSENSITIVE);
@@ -432,107 +607,9 @@
             };
         }
 
-        private function validArgs():Dictionary
-        {
-            var subXML:XML;
-            var varAndAccessors:Array;
-            var dico:Dictionary = new Dictionary();
-            var xml:XML = describeType(GameDataList);
-            for each (subXML in xml..constant)
-            {
-                varAndAccessors = this.getSimpleVariablesAndAccessors(String(subXML.@type));
-                if (varAndAccessors.indexOf("id") != -1)
-                {
-                    dico[String(subXML.@name).toLowerCase()] = String(subXML.@type);
-                };
-            };
-            return (dico);
-        }
-
-        private function getSimpleVariablesAndAccessors(clazz:String, addVectors:Boolean=false):Array
-        {
-            var type:String;
-            var currentXML:XML;
-            var result:Array = new Array();
-            var xml:XML = describeType(getDefinitionByName(clazz));
-            for each (currentXML in xml..variable)
-            {
-                type = String(currentXML.@type);
-                if ((((((((type == "int")) || ((type == "uint")))) || ((type == "Number")))) || ((type == "String"))))
-                {
-                    result.push(String(currentXML.@name));
-                };
-                if (addVectors)
-                {
-                    if (((((((!((type.indexOf("Vector.<int>") == -1))) || (!((type.indexOf("Vector.<uint>") == -1))))) || (!((type.indexOf("Vector.<Number>") == -1))))) || (!((type.indexOf("Vector.<String>") == -1)))))
-                    {
-                        if (type.split("Vector").length == 2)
-                        {
-                            result.push(String(currentXML.@name));
-                        };
-                    };
-                };
-            };
-            for each (currentXML in xml..accessor)
-            {
-                type = String(currentXML.@type);
-                if ((((((((type == "int")) || ((type == "uint")))) || ((type == "Number")))) || ((type == "String"))))
-                {
-                    result.push(String(currentXML.@name));
-                };
-                if (addVectors)
-                {
-                    if (((((((!((type.indexOf("Vector.<int>") == -1))) || (!((type.indexOf("Vector.<uint>") == -1))))) || (!((type.indexOf("Vector.<Number>") == -1))))) || (!((type.indexOf("Vector.<String>") == -1)))))
-                    {
-                        if (type.split("Vector").length == 2)
-                        {
-                            result.push(String(currentXML.@name));
-                        };
-                    };
-                };
-            };
-            return (result);
-        }
-
-        private function getIdFunction(clazz:String):String
-        {
-            var subXML:XML;
-            var parameterType:String;
-            var xml:XML = describeType(getDefinitionByName(clazz));
-            for each (subXML in xml..method)
-            {
-                if ((((subXML.@returnType == clazz)) && ((XMLList(subXML.parameter).length() == 1))))
-                {
-                    parameterType = String(XMLList(subXML.parameter)[0].@type);
-                    if ((((parameterType == "int")) || ((parameterType == "uint"))))
-                    {
-                        if (String(subXML.@name).indexOf("ById") != -1)
-                        {
-                            return (String(subXML.@name));
-                        };
-                    };
-                };
-            };
-            return (null);
-        }
-
-        private function getListingFunction(clazz:String):String
-        {
-            var subXML:XML;
-            var xml:XML = describeType(getDefinitionByName(clazz));
-            for each (subXML in xml..method)
-            {
-                if ((((subXML.@returnType == "Array")) && ((XMLList(subXML.parameter).length() == 0))))
-                {
-                    return (String(subXML.@name));
-                };
-            };
-            return (null);
-        }
-
 
     }
-}//package com.ankamagames.dofus.console.debug
+} com.ankamagames.dofus.console.debug
 
 class EmptyError extends Error 
 {
@@ -545,4 +622,5 @@ class EmptyError extends Error
 
 
 }
+
 

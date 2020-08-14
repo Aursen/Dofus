@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.utils
+package com.ankamagames.berilia.utils
 {
     import com.ankamagames.jerakine.resources.protocols.impl.FileProtocol;
     import com.ankamagames.jerakine.resources.protocols.IProtocol;
@@ -16,7 +16,7 @@
         {
             var path:String;
             getAdapter(uri, forcedAdapter);
-            if (!(_themePath))
+            if (!_themePath)
             {
                 _themePath = XmlConfig.getInstance().getEntry("config.ui.skin");
             };
@@ -33,5 +33,5 @@
 
 
     }
-}//package com.ankamagames.berilia.utils
+} com.ankamagames.berilia.utils
 

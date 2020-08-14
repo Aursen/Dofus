@@ -1,8 +1,9 @@
-﻿package com.ankamagames.dofus.network.types.game.context.roleplay.quest
+package com.ankamagames.dofus.network.types.game.context.roleplay.quest
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
     public class QuestActiveInformations implements INetworkType 
     {
@@ -49,6 +50,21 @@
 
         public function deserializeAs_QuestActiveInformations(input:ICustomDataInput):void
         {
+            this._questIdFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_QuestActiveInformations(tree);
+        }
+
+        public function deserializeAsyncAs_QuestActiveInformations(tree:FuncTree):void
+        {
+            tree.addChild(this._questIdFunc);
+        }
+
+        private function _questIdFunc(input:ICustomDataInput):void
+        {
             this.questId = input.readVarUhShort();
             if (this.questId < 0)
             {
@@ -58,5 +74,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.context.roleplay.quest
+} com.ankamagames.dofus.network.types.game.context.roleplay.quest
 

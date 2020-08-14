@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.types.graphic
+package com.ankamagames.berilia.types.graphic
 {
     import com.ankamagames.berilia.FinalizableUIComponent;
     import flash.display.Shape;
@@ -9,52 +9,51 @@
     import flash.events.Event;
     import com.ankamagames.berilia.types.event.UiRenderEvent;
     import flash.display.DisplayObject;
+    import com.ankamagames.jerakine.handlers.messages.keyboard.KeyboardKeyDownMessage;
     import com.ankamagames.jerakine.handlers.messages.mouse.MouseWheelMessage;
+    import flash.ui.Keyboard;
     import com.ankamagames.jerakine.messages.Message;
 
     public class ScrollContainer extends GraphicContainer implements FinalizableUIComponent 
     {
 
-        private var _finalized:Boolean = false;
+        public static const BASE_SCROLL_VALUE:int = 100;
+
         private var _mask:Shape;
         private var _content:DisplayObjectContainer;
-        private var d:Shape;
         private var _hScrollbar:ScrollBar;
         private var _vScrollbar:ScrollBar;
         private var _hScrollbarSpeed:Number = 1;
         private var _vScrollbarSpeed:Number = 1;
         private var _useHorizontalScroll:Boolean = true;
+        private var _useVerticalScroll:Boolean = true;
         private var _scrollBarCss:Uri;
-        private var _scrollBarSize:uint = 16;
+        private var _scrollBarSize:uint = 10;
+        private var _scrollbarOffset:int = 0;
+        private var _mouseEventCatcher:Shape;
+        private var _lastVerticalScrollValue:int;
 
         public function ScrollContainer()
         {
-            this.d = new Shape();
-            super();
             mouseEnabled = true;
             this._mask = new Shape();
             this._mask.graphics.beginFill(0xFFFF00);
             this._mask.graphics.drawRect(0, 0, 1, 1);
             this._content = new Sprite();
             this._content.mask = this._mask;
+            this._mouseEventCatcher = new Shape();
             super.addChild(this._content);
             super.addChild(this._mask);
-        }
-
-        public function set finalized(b:Boolean):void
-        {
-            this._finalized = b;
-        }
-
-        public function get finalized():Boolean
-        {
-            return (this._finalized);
         }
 
         override public function set width(n:Number):void
         {
             super.width = n;
             this._mask.width = n;
+            if (this._vScrollbar)
+            {
+                this._vScrollbar.x = (width - this._vScrollbar.width);
+            };
         }
 
         override public function set height(n:Number):void
@@ -63,6 +62,7 @@
             this._mask.height = n;
         }
 
+        [Uri]
         public function set scrollbarCss(sValue:Uri):void
         {
             this._scrollBarCss = sValue;
@@ -114,6 +114,16 @@
             this._useHorizontalScroll = yes;
         }
 
+        public function get useVerticalScroll():Boolean
+        {
+            return (this._useVerticalScroll);
+        }
+
+        public function set useVerticalScroll(yes:Boolean):void
+        {
+            this._useVerticalScroll = yes;
+        }
+
         public function get horizontalScrollSpeed():Number
         {
             if (this._hScrollbar)
@@ -150,6 +160,36 @@
             return (-1);
         }
 
+        public function set scrollbarOffset(sValue:int):void
+        {
+            this._scrollbarOffset = sValue;
+        }
+
+        public function get scrollbarOffset():int
+        {
+            return (this._scrollbarOffset);
+        }
+
+        public function get lastVerticalScrollValue():int
+        {
+            return (this._lastVerticalScrollValue);
+        }
+
+        public function get hasVerticalScrollBar():Boolean
+        {
+            return ((this._vScrollbar) && (this._vScrollbar.parent == this));
+        }
+
+        public function get verticalScrollBar():ScrollBar
+        {
+            return (this._vScrollbar);
+        }
+
+        public function get horizontalScrollBar():ScrollBar
+        {
+            return (this._hScrollbar);
+        }
+
         override public function addChild(child:DisplayObject):DisplayObject
         {
             child.addEventListener(Event.REMOVED, this.onChildRemoved);
@@ -168,17 +208,17 @@
             return (child);
         }
 
-        public function finalize():void
+        override public function finalize():void
         {
-            var hScroll:Boolean = (((width < Math.floor(this._content.width))) && (this._useHorizontalScroll));
-            var vScroll:Boolean = (height < Math.floor(this._content.height));
+            var hScroll:Boolean = ((width < Math.floor(this._content.width)) && (this._useHorizontalScroll));
+            var vScroll:Boolean = ((height < Math.floor(this._content.height)) && (this._useVerticalScroll));
             this._mask.height = height;
             this._mask.width = width;
             this._content.x = 0;
             this._content.y = 0;
             if (hScroll)
             {
-                if (!(this._hScrollbar))
+                if (!this._hScrollbar)
                 {
                     this._hScrollbar = new ScrollBar();
                     this._hScrollbar.vertical = false;
@@ -196,7 +236,7 @@
                 {
                     super.addChild(this._hScrollbar);
                 };
-                this._mask.height = (height - this._scrollBarSize);
+                this._mask.height = (height - (this._scrollBarSize + this._scrollbarOffset));
                 this._hScrollbar.width = (width - ((vScroll) ? this._scrollBarSize : 0));
                 this._hScrollbar.max = ((this._content.width - width) + ((vScroll) ? this._scrollBarSize : 0));
             }
@@ -209,7 +249,7 @@
             };
             if (vScroll)
             {
-                if (!(this._vScrollbar))
+                if (!this._vScrollbar)
                 {
                     this._vScrollbar = new ScrollBar();
                     this._vScrollbar.addEventListener(Event.CHANGE, this.onVerticalScroll);
@@ -227,9 +267,10 @@
                 {
                     super.addChild(this._vScrollbar);
                 };
-                this._mask.width = (width - this._scrollBarSize);
+                this._vScrollbar.total = this._content.height;
+                this._mask.width = ((width - this._scrollbarOffset) - this._scrollBarSize);
                 this._vScrollbar.height = (height - ((hScroll) ? this._scrollBarSize : 0));
-                this._vScrollbar.max = ((this._content.height - height) + ((vScroll) ? this._scrollBarSize : 0));
+                this._vScrollbar.max = ((this._content.height - height) + ((hScroll) ? this._scrollBarSize : 0));
             }
             else
             {
@@ -238,40 +279,78 @@
                     removeChild(this._vScrollbar);
                 };
             };
-            this._finalized = true;
-            var mouseEventCatcher:Shape = new Shape();
-            mouseEventCatcher.graphics.beginFill(0, 0);
-            mouseEventCatcher.graphics.drawRect(0, 0, __width, __height);
-            super.addChild(mouseEventCatcher);
+            _finalized = true;
+            this._mouseEventCatcher.graphics.clear();
+            this._mouseEventCatcher.graphics.beginFill(0, 0);
+            this._mouseEventCatcher.graphics.drawRect(0, 0, __width, __height);
+            super.addChild(this._mouseEventCatcher);
+            super.finalize();
             getUi().iAmFinalized(this);
         }
 
-        [HideInFakeClass]
         override public function process(msg:Message):Boolean
         {
+            var kdmsg:KeyboardKeyDownMessage;
             switch (true)
             {
                 case (msg is MouseWheelMessage):
-                    if (((this._vScrollbar) && (!((this._vScrollbar.parent == null)))))
+                    if (((this._vScrollbar) && (!(this._vScrollbar.parent == null))))
                     {
                         this._vScrollbar.onWheel(MouseWheelMessage(msg).mouseEvent);
                     }
                     else
                     {
-                        if (((this._hScrollbar) && (!((this._hScrollbar.parent == null)))))
+                        if (((this._hScrollbar) && (!(this._hScrollbar.parent == null))))
                         {
                             this._hScrollbar.onWheel(MouseWheelMessage(msg).mouseEvent);
                         };
                     };
                     return (true);
+                case (msg is KeyboardKeyDownMessage):
+                    kdmsg = (msg as KeyboardKeyDownMessage);
+                    switch (kdmsg.keyboardEvent.keyCode)
+                    {
+                        case Keyboard.PAGE_DOWN:
+                            if (this.hasVerticalScrollBar)
+                            {
+                                this._vScrollbar.value = (this._vScrollbar.value + (BASE_SCROLL_VALUE * 3));
+                                this.onVerticalScroll(null);
+                                return (true);
+                            };
+                            break;
+                        case Keyboard.PAGE_UP:
+                            if (this.hasVerticalScrollBar)
+                            {
+                                this._vScrollbar.value = (this._vScrollbar.value - (BASE_SCROLL_VALUE * 3));
+                                this.onVerticalScroll(null);
+                                return (true);
+                            };
+                            break;
+                        case Keyboard.UP:
+                            if (this.hasVerticalScrollBar)
+                            {
+                                this._vScrollbar.value = (this._vScrollbar.value - BASE_SCROLL_VALUE);
+                                this.onVerticalScroll(null);
+                                return (true);
+                            };
+                            break;
+                        case Keyboard.DOWN:
+                            if (this.hasVerticalScrollBar)
+                            {
+                                this._vScrollbar.value = (this._vScrollbar.value + BASE_SCROLL_VALUE);
+                                this.onVerticalScroll(null);
+                                return (true);
+                            };
+                            break;
+                    };
             };
             return (false);
         }
 
-        override public function getStrata(nStrata:uint):Sprite
+        override public function getStrata(nStrata:int):Sprite
         {
-            var _local_2:uint;
-            var _local_3:uint;
+            var nIndex:uint;
+            var i:uint;
             if (_aStrata[nStrata] != null)
             {
                 return (_aStrata[nStrata]);
@@ -279,15 +358,15 @@
             _aStrata[nStrata] = new Sprite();
             _aStrata[nStrata].name = ("strata_" + nStrata);
             _aStrata[nStrata].mouseEnabled = mouseEnabled;
-            _local_2 = 0;
-            _local_3 = 0;
-            while (_local_3 < _aStrata.length)
+            nIndex = 0;
+            i = 0;
+            while (i < _aStrata.length)
             {
-                if (_aStrata[_local_3] != null)
+                if (_aStrata[i] != null)
                 {
-                    this._content.addChildAt(_aStrata[_local_3], _local_2++);
+                    this._content.addChildAt(_aStrata[i], nIndex++);
                 };
-                _local_3++;
+                i++;
             };
             return (_aStrata[nStrata]);
         }
@@ -295,6 +374,7 @@
         private function onVerticalScroll(e:Event):void
         {
             this._content.y = -(this._vScrollbar.value);
+            this._lastVerticalScrollValue = this._vScrollbar.value;
         }
 
         private function onHorizontalScroll(e:Event):void
@@ -314,5 +394,5 @@
 
 
     }
-}//package com.ankamagames.berilia.types.graphic
+} com.ankamagames.berilia.types.graphic
 

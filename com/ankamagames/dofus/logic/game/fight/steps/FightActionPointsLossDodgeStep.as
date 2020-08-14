@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.fight.steps
+package com.ankamagames.dofus.logic.game.fight.steps
 {
     import com.ankamagames.dofus.logic.game.fight.steps.abstract.AbstractDodgePointLossStep;
     import com.ankamagames.dofus.logic.game.fight.fightEvents.FightEventsHelper;
@@ -7,7 +7,7 @@
     public class FightActionPointsLossDodgeStep extends AbstractDodgePointLossStep implements IFightStep 
     {
 
-        public function FightActionPointsLossDodgeStep(fighterId:int, amount:int)
+        public function FightActionPointsLossDodgeStep(fighterId:Number, amount:int)
         {
             super(fighterId, amount);
         }
@@ -25,5 +25,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.fight.steps
+} com.ankamagames.dofus.logic.game.fight.steps
 

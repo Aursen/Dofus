@@ -1,7 +1,8 @@
-﻿package com.ankamagames.dofus.logic.common.managers
+package com.ankamagames.dofus.logic.common.managers
 {
     import com.ankamagames.dofus.network.messages.game.guild.GuildFactsRequestMessage;
     import com.ankamagames.dofus.kernel.net.ConnectionsHandler;
+    import com.ankamagames.jerakine.utils.misc.StringUtils;
     import flash.geom.Rectangle;
     import com.ankamagames.berilia.types.data.TextTooltipInfo;
     import com.ankamagames.jerakine.data.I18n;
@@ -16,11 +17,15 @@
         public static function getLink(pGuild:*, pText:String=null):String
         {
             var text:String = ((pText) ? ("::" + pText) : "");
-            return (((((("{guild," + pGuild.guildId) + ",") + escape(pGuild.guildName)) + text) + "}"));
+            return ((((("{guild," + pGuild.guildId) + ",") + escape(pGuild.guildName)) + text) + "}");
         }
 
         public static function showGuild(guildId:uint, guildName:String):void
         {
+            if (guildId > int.MAX_VALUE)
+            {
+                guildId = 0;
+            };
             var gfrmsg:GuildFactsRequestMessage = new GuildFactsRequestMessage();
             gfrmsg.initGuildFactsRequestMessage(guildId);
             ConnectionsHandler.getConnection().send(gfrmsg);
@@ -28,7 +33,7 @@
 
         public static function getGuildName(guildId:uint, guildName:String):String
         {
-            return ((("[" + unescape(guildName)) + "]"));
+            return (("[" + StringUtils.unescapeAllowedChar(guildName)) + "]");
         }
 
         public static function rollOver(pX:int, pY:int, guildId:uint, guildName:String):void
@@ -40,5 +45,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.common.managers
+} com.ankamagames.dofus.logic.common.managers
 

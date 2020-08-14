@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.resources.adapters.impl
+package com.ankamagames.jerakine.resources.adapters.impl
 {
     import com.ankamagames.jerakine.resources.adapters.AbstractLoaderAdapter;
     import com.ankamagames.jerakine.resources.adapters.IAdapter;
@@ -9,7 +9,7 @@
     {
 
 
-        override protected function getResource(ldr:LoaderInfo)
+        override protected function getResource(ldr:LoaderInfo):*
         {
             return (ldr.loader.content);
         }
@@ -21,5 +21,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.resources.adapters.impl
+} com.ankamagames.jerakine.resources.adapters.impl
 

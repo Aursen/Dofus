@@ -1,20 +1,29 @@
-﻿package com.ankamagames.dofus.logic.game.fight.steps
+package com.ankamagames.dofus.logic.game.fight.steps
 {
     import com.ankamagames.jerakine.sequencer.AbstractSequencable;
+    import com.ankamagames.dofus.logic.game.fight.types.BasicBuff;
+    import com.ankamagames.dofus.logic.game.fight.frames.FightEntitiesFrame;
+    import com.ankamagames.dofus.network.types.game.context.fight.GameFightFighterInformations;
+    import com.ankamagames.dofus.network.messages.game.context.GameContextRefreshEntityLookMessage;
     import com.ankamagames.dofus.logic.game.fight.fightEvents.FightEventsHelper;
     import com.ankamagames.dofus.logic.game.fight.types.FightEventEnum;
     import com.ankamagames.dofus.logic.game.fight.managers.BuffManager;
+    import com.ankama.dofus.enums.ActionIds;
+    import com.ankamagames.dofus.kernel.Kernel;
+    import __AS3__.vec.Vector;
 
     public class FightDispellSpellStep extends AbstractSequencable implements IFightStep 
     {
 
-        private var _fighterId:int;
+        private var _fighterId:Number;
         private var _spellId:int;
+        private var _verboseCast:Boolean;
 
-        public function FightDispellSpellStep(fighterId:int, spellId:int)
+        public function FightDispellSpellStep(fighterId:Number, spellId:int, verboseCast:Boolean)
         {
             this._fighterId = fighterId;
             this._spellId = spellId;
+            this._verboseCast = verboseCast;
         }
 
         public function get stepType():String
@@ -24,12 +33,42 @@
 
         override public function start():void
         {
-            FightEventsHelper.sendFightEvent(FightEventEnum.FIGHTER_SPELL_DISPELLED, [this._fighterId, this._spellId], this._fighterId, castingSpellId);
+            var buff:BasicBuff;
+            var entitiesFrame:FightEntitiesFrame;
+            var fighterInfos:GameFightFighterInformations;
+            var gcrelmsg:GameContextRefreshEntityLookMessage;
+            if (this._verboseCast)
+            {
+                FightEventsHelper.sendFightEvent(FightEventEnum.FIGHTER_SPELL_DISPELLED, [this._fighterId, this._spellId], this._fighterId, castingSpellId);
+            };
+            var buffs:Array = BuffManager.getInstance().getAllBuff(this._fighterId);
+            var refreshEntityLook:Boolean;
+            for each (buff in buffs)
+            {
+                if (((buff.castingSpell.spell.id == this._spellId) && (buff.actionId == ActionIds.ACTION_CHARACTER_ADD_APPEARANCE)))
+                {
+                    refreshEntityLook = true;
+                    break;
+                };
+            };
             BuffManager.getInstance().dispellSpell(this._fighterId, this._spellId, true);
+            if (refreshEntityLook)
+            {
+                entitiesFrame = (Kernel.getWorker().getFrame(FightEntitiesFrame) as FightEntitiesFrame);
+                fighterInfos = (entitiesFrame.getEntityInfos(this._fighterId) as GameFightFighterInformations);
+                gcrelmsg = new GameContextRefreshEntityLookMessage();
+                gcrelmsg.initGameContextRefreshEntityLookMessage(this._fighterId, fighterInfos.look);
+                Kernel.getWorker().getFrame(FightEntitiesFrame).process(gcrelmsg);
+            };
             executeCallbacks();
+        }
+
+        public function get targets():Vector.<Number>
+        {
+            return (new <Number>[this._fighterId]);
         }
 
 
     }
-}//package com.ankamagames.dofus.logic.game.fight.steps
+} com.ankamagames.dofus.logic.game.fight.steps
 

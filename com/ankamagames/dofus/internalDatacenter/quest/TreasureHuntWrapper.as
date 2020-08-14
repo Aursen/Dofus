@@ -1,9 +1,9 @@
-﻿package com.ankamagames.dofus.internalDatacenter.quest
+package com.ankamagames.dofus.internalDatacenter.quest
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
-    import avmplus.getQualifiedClassName;
+    import flash.utils.getQualifiedClassName;
     import __AS3__.vec.Vector;
     import com.ankamagames.dofus.network.types.game.context.roleplay.treasureHunt.TreasureHuntStep;
     import com.ankamagames.dofus.types.enums.TreasureHuntStepTypeEnum;
@@ -24,18 +24,13 @@
         public var checkPointTotal:uint;
         public var totalStepCount:uint;
         public var availableRetryCount:int;
-        public var stepList:Vector.<TreasureHuntStepWrapper>;
+        public var stepList:Vector.<TreasureHuntStepWrapper> = new Vector.<TreasureHuntStepWrapper>();
 
-        public function TreasureHuntWrapper()
-        {
-            this.stepList = new Vector.<TreasureHuntStepWrapper>();
-            super();
-        }
 
-        public static function create(questType:uint, startMapId:uint, checkPointCurrent:uint, checkPointTotal:uint, totalStepCount:uint, availableRetryCount:int, stepList:Vector.<TreasureHuntStep>, flags:Vector.<TreasureHuntFlag>):TreasureHuntWrapper
+        public static function create(questType:uint, startMapId:Number, checkPointCurrent:uint, checkPointTotal:uint, totalStepCount:uint, availableRetryCount:int, stepList:Vector.<TreasureHuntStep>, flags:Vector.<TreasureHuntFlag>):TreasureHuntWrapper
         {
             var step:TreasureHuntStep;
-            var mapId:int;
+            var mapId:Number;
             var flagState:int;
             var item:TreasureHuntWrapper = new (TreasureHuntWrapper)();
             item.questType = questType;
@@ -50,7 +45,7 @@
             {
                 mapId = 0;
                 flagState = -1;
-                if (((((flags) && ((flags.length > i)))) && (flags[i])))
+                if ((((flags) && (flags.length > i)) && (flags[i])))
                 {
                     mapId = flags[i].mapId;
                     flagState = flags[i].state;
@@ -78,10 +73,10 @@
         }
 
 
-        public function update(questType:uint, startMapId:uint, checkPointCurrent:uint, checkPointTotal:uint, availableRetryCount:int, stepList:Vector.<TreasureHuntStep>, flags:Vector.<TreasureHuntFlag>):void
+        public function update(questType:uint, startMapId:Number, checkPointCurrent:uint, checkPointTotal:uint, availableRetryCount:int, stepList:Vector.<TreasureHuntStep>, flags:Vector.<TreasureHuntFlag>):void
         {
             var step:TreasureHuntStep;
-            var mapId:int;
+            var mapId:Number;
             var flagState:int;
             this.questType = questType;
             this.checkPointCurrent = checkPointCurrent;
@@ -96,7 +91,7 @@
             {
                 mapId = 0;
                 flagState = -1;
-                if (((((flags) && ((flags.length > i)))) && (flags[i])))
+                if ((((flags) && (flags.length > i)) && (flags[i])))
                 {
                     mapId = flags[i].mapId;
                     flagState = flags[i].state;
@@ -125,5 +120,5 @@
 
 
     }
-}//package com.ankamagames.dofus.internalDatacenter.quest
+} com.ankamagames.dofus.internalDatacenter.quest
 

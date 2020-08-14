@@ -1,12 +1,13 @@
-﻿package com.ankamagames.dofus.logic.game.fight.steps
+package com.ankamagames.dofus.logic.game.fight.steps
 {
     import com.ankamagames.jerakine.sequencer.AbstractSequencable;
     import com.ankamagames.jerakine.sequencer.ISequencableListener;
     import com.ankamagames.dofus.logic.game.fight.types.BasicBuff;
-    import com.ankamagames.dofus.logic.game.fight.miscs.ActionIdConverter;
+    import com.ankamagames.dofus.logic.game.fight.miscs.ActionIdProtocol;
     import com.ankamagames.dofus.logic.game.fight.managers.BuffManager;
     import com.ankamagames.dofus.logic.game.fight.types.StatBuff;
     import com.ankamagames.jerakine.sequencer.ISequencable;
+    import __AS3__.vec.Vector;
 
     public class FightDisplayBuffStep extends AbstractSequencable implements IFightStep, ISequencableListener 
     {
@@ -28,9 +29,9 @@
         {
             var statName:String;
             var buffUnknown:Boolean = true;
-            if (this._buff.actionId == ActionIdConverter.ACTION_CHARACTER_UPDATE_BOOST)
+            if (this._buff.actionId == ActionIdProtocol.ACTION_CHARACTER_UPDATE_BOOST)
             {
-                buffUnknown = !(BuffManager.getInstance().updateBuff(this._buff));
+                buffUnknown = (!(BuffManager.getInstance().updateBuff(this._buff)));
             }
             else
             {
@@ -52,7 +53,7 @@
                     BuffManager.getInstance().addBuff(this._buff);
                 };
             };
-            if (!(this._virtualStep))
+            if (!this._virtualStep)
             {
                 executeCallbacks();
             }
@@ -69,7 +70,12 @@
             executeCallbacks();
         }
 
+        public function get targets():Vector.<Number>
+        {
+            return (new <Number>[this._buff.targetId]);
+        }
+
 
     }
-}//package com.ankamagames.dofus.logic.game.fight.steps
+} com.ankamagames.dofus.logic.game.fight.steps
 

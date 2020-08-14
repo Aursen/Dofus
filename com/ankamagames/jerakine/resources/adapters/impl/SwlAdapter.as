@@ -1,9 +1,9 @@
-﻿package com.ankamagames.jerakine.resources.adapters.impl
+package com.ankamagames.jerakine.resources.adapters.impl
 {
     import com.ankamagames.jerakine.resources.adapters.AbstractUrlLoaderAdapter;
     import com.ankamagames.jerakine.resources.adapters.IAdapter;
-    import com.ankamagames.jerakine.pools.PoolableLoader;
     import com.ankamagames.jerakine.types.Swl;
+    import com.ankamagames.jerakine.pools.PoolableLoader;
     import com.ankamagames.jerakine.resources.ResourceType;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.resources.ResourceErrorCode;
@@ -22,12 +22,12 @@
     public class SwlAdapter extends AbstractUrlLoaderAdapter implements IAdapter 
     {
 
+        protected var _swl:Swl;
         private var _ldr:PoolableLoader;
         private var _onInit:Function;
-        private var _swl:Swl;
 
 
-        override protected function getResource(dataFormat:String, data:*)
+        override protected function getResource(dataFormat:String, data:*):*
         {
             return (this._swl);
         }
@@ -76,7 +76,7 @@
             this._ldr.contentLoaderInfo.addEventListener(Event.INIT, (this._onInit = this.onLibraryInit(frameRate, classesList)));
             this._ldr.contentLoaderInfo.addEventListener(IOErrorEvent.IO_ERROR, this.onLibraryError);
             var loaderContext:LoaderContext = getUri().loaderContext;
-            if (!(loaderContext))
+            if (!loaderContext)
             {
                 loaderContext = new LoaderContext();
             };
@@ -89,13 +89,7 @@
             return (URLLoaderDataFormat.BINARY);
         }
 
-        private function createResource(frameRate:uint, classesList:Array, appDomain:ApplicationDomain):void
-        {
-            this._swl = new Swl(frameRate, classesList, appDomain);
-            dispatchSuccess(null, null);
-        }
-
-        private function releaseLoader():void
+        protected function releaseLoader():void
         {
             this._ldr.contentLoaderInfo.removeEventListener(Event.INIT, this._onInit);
             this._ldr.contentLoaderInfo.removeEventListener(IOErrorEvent.IO_ERROR, this.onLibraryError);
@@ -104,22 +98,46 @@
             this._onInit = null;
         }
 
-        private function onLibraryInit(frameRate:uint, classesList:Array):Function
+        private function createResource(frameRate:uint, classesList:Array, appDomain:ApplicationDomain):void
+        {
+            this._swl = new Swl(frameRate, classesList, appDomain);
+            dispatchSuccess(null, null);
+        }
+
+        protected function onLibraryInit(frameRate:uint, classesList:Array):Function
         {
             return (function (e:Event):void
             {
+                var l:*;
+                var j:*;
                 var numClip:*;
                 var i:*;
+                var child:*;
                 var loaderInfo:* = (e.target as LoaderInfo);
                 var ap:* = loaderInfo.applicationDomain;
                 var clip:* = (loaderInfo.content as MovieClip);
                 if (clip)
                 {
-                    numClip = clip.numChildren;
-                    i = -1;
-                    while (++i < numClip)
+                    clip.stop();
+                    l = clip.totalFrames;
+                    j = 0;
+                    while (j < l)
                     {
-                        clip.removeChildAt(0);
+                        numClip = clip.numChildren;
+                        i = -1;
+                        while (++i < numClip)
+                        {
+                            child = (clip.removeChildAt(0) as MovieClip);
+                            if (child)
+                            {
+                                child.stop();
+                            };
+                        };
+                        j++;
+                    };
+                    if (((l > 1) || (numClip > 0)))
+                    {
+                        _log.warn((("Found and cleaned multiple frames and/or children on the scene of " + getUri().toString()) + ", its FLA should be cleaned though!"));
                     };
                 };
                 createResource(frameRate, classesList, ap);
@@ -135,5 +153,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.resources.adapters.impl
+} com.ankamagames.jerakine.resources.adapters.impl
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.types.zones
+package com.ankamagames.jerakine.types.zones
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
@@ -6,6 +6,7 @@
     import com.ankamagames.jerakine.map.IDataMapProvider;
     import __AS3__.vec.Vector;
     import com.ankamagames.jerakine.types.positions.MapPoint;
+    import mapTools.MapTools;
     import __AS3__.vec.*;
 
     public class Lozenge implements IZone 
@@ -55,13 +56,16 @@
 
         public function get surface():uint
         {
-            return ((Math.pow((this._radius + 1), 2) + Math.pow(this._radius, 2)));
+            return (Math.pow((this._radius + 1), 2) + Math.pow(this._radius, 2));
         }
 
         public function getCells(cellId:uint=0):Vector.<uint>
         {
             var i:int;
             var j:int;
+            var radiusStep:int;
+            var xResult:int;
+            var yResult:int;
             var aCells:Vector.<uint> = new Vector.<uint>();
             var origin:MapPoint = MapPoint.fromCellId(cellId);
             var x:int = origin.x;
@@ -74,42 +78,45 @@
                 };
                 return (aCells);
             };
-            var inc:int = 1;
-            var step:uint;
-            i = (x - this._radius);
-            while (i <= (x + this._radius))
+            radiusStep = this.radius;
+            while (radiusStep >= this._minRadius)
             {
-                j = -(step);
-                while (j <= step)
+                i = -(radiusStep);
+                while (i <= radiusStep)
                 {
-                    if (((!(this._minRadius)) || (((Math.abs((x - i)) + Math.abs(j)) >= this._minRadius))))
+                    j = -(radiusStep);
+                    while (j <= radiusStep)
                     {
-                        if (MapPoint.isInMap(i, (j + y)))
+                        if ((Math.abs(i) + Math.abs(j)) != radiusStep)
                         {
-                            this.addCell(i, (j + y), aCells);
+                        }
+                        else
+                        {
+                            xResult = (x + i);
+                            yResult = (y + j);
+                            if (MapPoint.isInMap(xResult, yResult))
+                            {
+                                this.addCell(xResult, yResult, aCells);
+                            };
                         };
+                        j++;
                     };
-                    j++;
+                    i++;
                 };
-                if (step == this._radius)
-                {
-                    inc = -(inc);
-                };
-                step = (step + inc);
-                i++;
+                radiusStep--;
             };
             return (aCells);
         }
 
         private function addCell(x:int, y:int, cellMap:Vector.<uint>):void
         {
-            if ((((this._dataMapProvider == null)) || (this._dataMapProvider.pointMov(x, y))))
+            if (((this._dataMapProvider == null) || (this._dataMapProvider.pointMov(x, y))))
             {
-                cellMap.push(MapPoint.fromCoords(x, y).cellId);
+                cellMap.push(MapTools.getCellIdByCoord(x, y));
             };
         }
 
 
     }
-}//package com.ankamagames.jerakine.types.zones
+} com.ankamagames.jerakine.types.zones
 

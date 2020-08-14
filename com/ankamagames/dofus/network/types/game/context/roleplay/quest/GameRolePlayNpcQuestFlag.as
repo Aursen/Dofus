@@ -1,7 +1,8 @@
-﻿package com.ankamagames.dofus.network.types.game.context.roleplay.quest
+package com.ankamagames.dofus.network.types.game.context.roleplay.quest
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import __AS3__.vec.Vector;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
     import __AS3__.vec.*;
@@ -11,15 +12,11 @@
 
         public static const protocolId:uint = 384;
 
-        public var questsToValidId:Vector.<uint>;
-        public var questsToStartId:Vector.<uint>;
+        public var questsToValidId:Vector.<uint> = new Vector.<uint>();
+        public var questsToStartId:Vector.<uint> = new Vector.<uint>();
+        private var _questsToValidIdtree:FuncTree;
+        private var _questsToStartIdtree:FuncTree;
 
-        public function GameRolePlayNpcQuestFlag()
-        {
-            this.questsToValidId = new Vector.<uint>();
-            this.questsToStartId = new Vector.<uint>();
-            super();
-        }
 
         public function getTypeId():uint
         {
@@ -105,7 +102,60 @@
             };
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GameRolePlayNpcQuestFlag(tree);
+        }
+
+        public function deserializeAsyncAs_GameRolePlayNpcQuestFlag(tree:FuncTree):void
+        {
+            this._questsToValidIdtree = tree.addChild(this._questsToValidIdtreeFunc);
+            this._questsToStartIdtree = tree.addChild(this._questsToStartIdtreeFunc);
+        }
+
+        private function _questsToValidIdtreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._questsToValidIdtree.addChild(this._questsToValidIdFunc);
+                i++;
+            };
+        }
+
+        private function _questsToValidIdFunc(input:ICustomDataInput):void
+        {
+            var _val:uint = input.readVarUhShort();
+            if (_val < 0)
+            {
+                throw (new Error((("Forbidden value (" + _val) + ") on elements of questsToValidId.")));
+            };
+            this.questsToValidId.push(_val);
+        }
+
+        private function _questsToStartIdtreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._questsToStartIdtree.addChild(this._questsToStartIdFunc);
+                i++;
+            };
+        }
+
+        private function _questsToStartIdFunc(input:ICustomDataInput):void
+        {
+            var _val:uint = input.readVarUhShort();
+            if (_val < 0)
+            {
+                throw (new Error((("Forbidden value (" + _val) + ") on elements of questsToStartId.")));
+            };
+            this.questsToStartId.push(_val);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.types.game.context.roleplay.quest
+} com.ankamagames.dofus.network.types.game.context.roleplay.quest
 

@@ -1,7 +1,8 @@
-﻿package com.ankamagames.dofus.network.types.game.context.roleplay
+package com.ankamagames.dofus.network.types.game.context.roleplay
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.dofus.network.types.game.guild.GuildEmblem;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
 
@@ -10,13 +11,9 @@
 
         public static const protocolId:uint = 417;
 
-        public var allianceEmblem:GuildEmblem;
+        public var allianceEmblem:GuildEmblem = new GuildEmblem();
+        private var _allianceEmblemtree:FuncTree;
 
-        public function AllianceInformations()
-        {
-            this.allianceEmblem = new GuildEmblem();
-            super();
-        }
 
         override public function getTypeId():uint
         {
@@ -59,7 +56,24 @@
             this.allianceEmblem.deserialize(input);
         }
 
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_AllianceInformations(tree);
+        }
+
+        public function deserializeAsyncAs_AllianceInformations(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            this._allianceEmblemtree = tree.addChild(this._allianceEmblemtreeFunc);
+        }
+
+        private function _allianceEmblemtreeFunc(input:ICustomDataInput):void
+        {
+            this.allianceEmblem = new GuildEmblem();
+            this.allianceEmblem.deserializeAsync(this._allianceEmblemtree);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.types.game.context.roleplay
+} com.ankamagames.dofus.network.types.game.context.roleplay
 

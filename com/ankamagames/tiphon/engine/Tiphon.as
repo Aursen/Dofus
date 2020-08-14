@@ -1,4 +1,4 @@
-﻿package com.ankamagames.tiphon.engine
+package com.ankamagames.tiphon.engine
 {
     import flash.events.EventDispatcher;
     import com.ankamagames.jerakine.interfaces.IFLAEventHandler;
@@ -30,14 +30,13 @@
         protected var carriedSprite:CarriedSprite;
         protected var equipmentSprite:EquipmentSprite;
         protected var scriptedAnimation:ScriptedAnimation;
-        private var _rasterizedAnimationNameList:Array;
-        private var _toOptions;
+        private var _rasterizedAnimationNameList:Array = new Array();
+        private var _toOptions:*;
         private var _waitForInit:Boolean;
+        public var useOptimization:Boolean = true;
 
         public function Tiphon()
         {
-            this._rasterizedAnimationNameList = new Array();
-            super();
             if (_self != null)
             {
                 throw (new SingletonError("Tiphon is a singleton and should not be instanciated directly."));
@@ -63,13 +62,14 @@
             return (this._rasterizedAnimationNameList[animName]);
         }
 
-        public function get options()
+        public function get options():*
         {
             return (this._toOptions);
         }
 
-        public function init(sSwfSkullPath:String, sSwfSkinPath:String, animIndexPath:String=null):void
+        public function init(sSwfSkullPath:String, sSwfSkinPath:String, animIndexPath:String=null, pUseOptimization:Boolean=true):void
         {
+            this.useOptimization = pUseOptimization;
             if (sSwfSkullPath.split("://").length == 1)
             {
                 sSwfSkullPath = ("file://" + sSwfSkullPath);
@@ -88,7 +88,7 @@
             };
             TiphonFpsManager.init();
             TiphonEventsManager.addListener(this, TiphonEvent.PLAYANIM_EVENT);
-            if (!(this._waitForInit))
+            if (!this._waitForInit)
             {
                 dispatchEvent(new Event(Event.INIT));
             };
@@ -140,5 +140,5 @@
 
 
     }
-}//package com.ankamagames.tiphon.engine
+} com.ankamagames.tiphon.engine
 

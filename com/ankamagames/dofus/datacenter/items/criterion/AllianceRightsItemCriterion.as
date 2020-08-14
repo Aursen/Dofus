@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.datacenter.items.criterion
+package com.ankamagames.dofus.datacenter.items.criterion
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.dofus.logic.game.common.frames.AllianceFrame;
@@ -17,7 +17,7 @@
         override public function get isRespected():Boolean
         {
             var hasThisRight:Boolean;
-            if (!(AllianceFrame.getInstance().hasAlliance))
+            if (!AllianceFrame.getInstance().hasAlliance)
             {
                 if (_operator.text == ItemCriterionOperator.DIFFERENT)
                 {
@@ -89,5 +89,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.items.criterion
+} com.ankamagames.dofus.datacenter.items.criterion
 

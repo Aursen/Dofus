@@ -1,4 +1,4 @@
-﻿package com.ankamagames.atouin.data.elements
+package com.ankamagames.atouin.data.elements
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
@@ -34,7 +34,7 @@
 
         public static function getInstance():Elements
         {
-            if (!(_self))
+            if (!_self)
             {
                 _self = new (Elements)();
             };
@@ -54,12 +54,12 @@
 
         public function getElementData(elementId:int):GraphicalElementData
         {
-            return (((this._elementsMap[elementId]) ? GraphicalElementData(this._elementsMap[elementId]) : this.readElement(elementId)));
+            return ((this._elementsMap[elementId]) ? GraphicalElementData(this._elementsMap[elementId]) : this.readElement(elementId));
         }
 
         public function isJpg(gfxId:uint):Boolean
         {
-            return ((this._jpgMap[gfxId] == true));
+            return (this._jpgMap[gfxId] == true);
         }
 
         public function fromRaw(raw:IDataInput):void
@@ -137,7 +137,7 @@
             this._rawData["position"] = this._elementsIndex[edId];
             var edType:int = this._rawData.readByte();
             var ed:GraphicalElementData = GraphicalElementFactory.getGraphicalElementData(edId, edType);
-            if (!(ed))
+            if (!ed)
             {
                 return (null);
             };
@@ -148,5 +148,5 @@
 
 
     }
-}//package com.ankamagames.atouin.data.elements
+} com.ankamagames.atouin.data.elements
 

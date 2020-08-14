@@ -1,8 +1,9 @@
-﻿package com.ankamagames.dofus.network.types.game.social
+package com.ankamagames.dofus.network.types.game.social
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
     public class AbstractSocialGroupInfos implements INetworkType 
     {
@@ -40,7 +41,15 @@
         {
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+        }
+
+        public function deserializeAsyncAs_AbstractSocialGroupInfos(tree:FuncTree):void
+        {
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.types.game.social
+} com.ankamagames.dofus.network.types.game.social
 

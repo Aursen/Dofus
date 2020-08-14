@@ -1,9 +1,10 @@
-﻿package com.ankamagames.dofus.datacenter.communication
+package com.ankamagames.dofus.datacenter.communication
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
+    import com.ankamagames.dofus.types.IdAccessors;
     import com.ankamagames.jerakine.data.GameData;
     import com.ankamagames.jerakine.data.I18n;
 
@@ -12,6 +13,7 @@
 
         public static const MODULE:String = "ChatChannels";
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(ChatChannel));
+        public static var idAccessors:IdAccessors = new IdAccessors(getChannelById, getChannels);
 
         public var id:uint;
         public var nameId:uint;
@@ -25,7 +27,7 @@
 
         public static function getChannelById(id:int):ChatChannel
         {
-            return ((GameData.getObject(MODULE, id) as ChatChannel));
+            return (GameData.getObject(MODULE, id) as ChatChannel);
         }
 
         public static function getChannels():Array
@@ -36,7 +38,7 @@
 
         public function get name():String
         {
-            if (!(this._name))
+            if (!this._name)
             {
                 this._name = I18n.getText(this.nameId);
             };
@@ -45,5 +47,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.communication
+} com.ankamagames.dofus.datacenter.communication
 

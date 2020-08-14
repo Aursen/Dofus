@@ -1,6 +1,7 @@
-﻿package com.ankamagames.dofus.datacenter.appearance
+package com.ankamagames.dofus.datacenter.appearance
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
+    import com.ankamagames.dofus.types.IdAccessors;
     import com.ankamagames.jerakine.data.GameData;
     import com.ankamagames.dofus.logic.game.common.managers.PlayedCharacterManager;
     import com.ankamagames.jerakine.data.I18n;
@@ -9,6 +10,7 @@
     {
 
         public static const MODULE:String = "Titles";
+        public static var idAccessors:IdAccessors = new IdAccessors(getTitleById, getAllTitle);
 
         public var id:int;
         public var nameMaleId:uint;
@@ -21,7 +23,7 @@
 
         public static function getTitleById(id:int):Title
         {
-            return ((GameData.getObject(MODULE, id) as Title));
+            return (GameData.getObject(MODULE, id) as Title);
         }
 
         public static function getAllTitle():Array
@@ -32,15 +34,15 @@
 
         public function get name():String
         {
-            if (((((!(PlayedCharacterManager.getInstance())) || (!(PlayedCharacterManager.getInstance().infos)))) || ((PlayedCharacterManager.getInstance().infos.sex == 0))))
+            if ((((!(PlayedCharacterManager.getInstance())) || (!(PlayedCharacterManager.getInstance().infos))) || (PlayedCharacterManager.getInstance().infos.sex == 0)))
             {
-                if (!(this._nameM))
+                if (!this._nameM)
                 {
                     this._nameM = I18n.getText(this.nameMaleId);
                 };
                 return (this._nameM);
             };
-            if (!(this._nameF))
+            if (!this._nameF)
             {
                 this._nameF = I18n.getText(this.nameFemaleId);
             };
@@ -49,7 +51,7 @@
 
         public function get nameMale():String
         {
-            if (!(this._nameM))
+            if (!this._nameM)
             {
                 this._nameM = I18n.getText(this.nameMaleId);
             };
@@ -58,7 +60,7 @@
 
         public function get nameFemale():String
         {
-            if (!(this._nameF))
+            if (!this._nameF)
             {
                 this._nameF = I18n.getText(this.nameFemaleId);
             };
@@ -67,5 +69,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.appearance
+} com.ankamagames.dofus.datacenter.appearance
 

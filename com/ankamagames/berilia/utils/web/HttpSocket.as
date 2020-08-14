@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.utils.web
+package com.ankamagames.berilia.utils.web
 {
     import flash.events.EventDispatcher;
     import flash.net.Socket;
@@ -70,7 +70,7 @@
 
         private function testSocket(socket:Socket):Boolean
         {
-            if (!(socket.connected))
+            if (!socket.connected)
             {
                 this.done();
                 return (false);
@@ -80,7 +80,7 @@
 
         public function tearDown():void
         {
-            if (((!((this.requestSocket == null))) && (this.requestSocket.connected)))
+            if (((!(this.requestSocket == null)) && (this.requestSocket.connected)))
             {
                 this.requestSocket.flush();
                 this.requestSocket.close();
@@ -89,5 +89,5 @@
 
 
     }
-}//package com.ankamagames.berilia.utils.web
+} com.ankamagames.berilia.utils.web
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.types.uiDefinition
+package com.ankamagames.berilia.types.uiDefinition
 {
     import com.ankamagames.berilia.types.graphic.GraphicLocation;
 
@@ -20,11 +20,11 @@
             var gl:GraphicLocation = new GraphicLocation(this.point, this.relativePoint, this.relativeTo);
             gl.offsetXType = this.offsetXType;
             gl.offsetYType = this.offsetYType;
-            if (!(isNaN(this.offsetX)))
+            if (!isNaN(this.offsetX))
             {
                 gl.setOffsetX(this.offsetX);
             };
-            if (!(isNaN(this.offsetY)))
+            if (!isNaN(this.offsetY))
             {
                 gl.setOffsetY(this.offsetY);
             };
@@ -33,5 +33,5 @@
 
 
     }
-}//package com.ankamagames.berilia.types.uiDefinition
+} com.ankamagames.berilia.types.uiDefinition
 

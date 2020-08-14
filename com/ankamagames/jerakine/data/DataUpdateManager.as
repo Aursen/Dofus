@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.data
+package com.ankamagames.jerakine.data
 {
     import flash.events.EventDispatcher;
     import com.ankamagames.jerakine.logger.Logger;
@@ -70,29 +70,29 @@
 
         protected function checkFileVersion(sFileName:String, sVersion:String):Boolean
         {
-            return ((this._versions[sFileName] == sVersion));
+            return (this._versions[sFileName] == sVersion);
         }
 
         protected function onLoaded(e:ResourceLoadedEvent):void
         {
-            var _local_2:LangMetaData;
-            var _local_3:Uri;
-            var _local_4:Object;
+            var meta:LangMetaData;
+            var uri:Uri;
+            var container:Object;
             var file:String;
             switch (e.uri.fileType)
             {
                 case "meta":
-                    _local_2 = LangMetaData.fromXml(e.resource, e.uri.uri, this.checkFileVersion);
-                    for (file in _local_2.clearFile)
+                    meta = LangMetaData.fromXml(e.resource, e.uri.uri, this.checkFileVersion);
+                    for (file in meta.clearFile)
                     {
-                        _local_3 = new Uri(((FileUtils.getFilePath(e.uri.path) + "/") + file));
-                        _local_3.tag = {
-                            "version":_local_2.clearFile[file],
+                        uri = new Uri(((FileUtils.getFilePath(e.uri.path) + "/") + file));
+                        uri.tag = {
+                            "version":meta.clearFile[file],
                             "file":((FileUtils.getFileStartName(e.uri.uri) + ".") + file)
                         };
-                        this._files.push(_local_3);
+                        this._files.push(uri);
                     };
-                    if (_local_2.clearFileCount)
+                    if (meta.clearFileCount)
                     {
                         this._loader.load(this._files);
                     }
@@ -100,15 +100,15 @@
                     {
                         dispatchEvent(new Event(Event.COMPLETE));
                     };
-                    return;
+                    break;
                 case "swf":
                     this._dataFilesLoaded = true;
-                    _local_4 = e.resource;
-                    StoreDataManager.getInstance().setData(JerakineConstants.DATASTORE_FILES_INFO, (_local_4.moduleName + "_filelist"), _local_4.fileList);
-                    StoreDataManager.getInstance().setData(JerakineConstants.DATASTORE_FILES_INFO, (_local_4.moduleName + "_chunkLength"), _local_4.chunkLength);
+                    container = e.resource;
+                    StoreDataManager.getInstance().setData(JerakineConstants.DATASTORE_FILES_INFO, (container.moduleName + "_filelist"), container.fileList);
+                    StoreDataManager.getInstance().setData(JerakineConstants.DATASTORE_FILES_INFO, (container.moduleName + "_chunkLength"), container.chunkLength);
                     this._loadedFileCount++;
-                    this.processFileData(_local_4, e.uri);
-                    return;
+                    this.processFileData(container, e.uri);
+                    break;
             };
         }
 
@@ -132,5 +132,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.data
+} com.ankamagames.jerakine.data
 

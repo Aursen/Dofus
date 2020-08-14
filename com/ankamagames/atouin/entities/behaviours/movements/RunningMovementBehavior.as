@@ -1,4 +1,4 @@
-﻿package com.ankamagames.atouin.entities.behaviours.movements
+package com.ankamagames.atouin.entities.behaviours.movements
 {
     public class RunningMovementBehavior extends AnimatedMovementBehavior 
     {
@@ -11,7 +11,7 @@
 
         public static function getInstance(speedAdjust:Number=0):RunningMovementBehavior
         {
-            return ((getFromCache(speedAdjust, RunningMovementBehavior) as RunningMovementBehavior));
+            return (getFromCache(speedAdjust, RunningMovementBehavior) as RunningMovementBehavior);
         }
 
 
@@ -37,5 +37,5 @@
 
 
     }
-}//package com.ankamagames.atouin.entities.behaviours.movements
+} com.ankamagames.atouin.entities.behaviours.movements
 

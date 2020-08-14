@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.misc.lists
+package com.ankamagames.dofus.misc.lists
 {
     import com.ankamagames.dofus.misc.utils.DofusApiAction;
     import com.ankamagames.dofus.logic.game.common.actions.mount.MountToggleRidingRequestAction;
@@ -8,6 +8,8 @@
     import com.ankamagames.dofus.logic.game.common.actions.mount.MountRenameRequestAction;
     import com.ankamagames.dofus.logic.game.common.actions.mount.MountSetXpRatioRequestAction;
     import com.ankamagames.dofus.logic.game.common.actions.mount.MountInfoRequestAction;
+    import com.ankamagames.dofus.logic.game.common.actions.mount.MountHarnessDissociateRequestAction;
+    import com.ankamagames.dofus.logic.game.common.actions.mount.MountHarnessColorsUpdateRequestAction;
     import com.ankamagames.dofus.logic.game.common.actions.mount.ExchangeRequestOnMountStockAction;
     import com.ankamagames.dofus.logic.game.common.actions.mount.ExchangeHandleMountStableAction;
     import com.ankamagames.dofus.logic.game.common.actions.mount.LeaveExchangeMountAction;
@@ -27,6 +29,8 @@
         public static const MountRenameRequest:DofusApiAction = new DofusApiAction("MountRenameRequest", MountRenameRequestAction);
         public static const MountSetXpRatioRequest:DofusApiAction = new DofusApiAction("MountSetXpRatioRequest", MountSetXpRatioRequestAction);
         public static const MountInfoRequest:DofusApiAction = new DofusApiAction("MountInfoRequest", MountInfoRequestAction);
+        public static const MountHarnessDissociateRequest:DofusApiAction = new DofusApiAction("MountHarnessDissociateRequest", MountHarnessDissociateRequestAction);
+        public static const MountHarnessColorsUpdateRequest:DofusApiAction = new DofusApiAction("MountHarnessColorsUpdateRequest", MountHarnessColorsUpdateRequestAction);
         public static const ExchangeRequestOnMountStock:DofusApiAction = new DofusApiAction("ExchangeRequestOnMountStock", ExchangeRequestOnMountStockAction);
         public static const ExchangeHandleMountStable:DofusApiAction = new DofusApiAction("ExchangeHandleMountStable", ExchangeHandleMountStableAction);
         public static const LeaveExchangeMount:DofusApiAction = new DofusApiAction("LeaveExchangeMount", LeaveExchangeMountAction);
@@ -38,5 +42,5 @@
 
 
     }
-}//package com.ankamagames.dofus.misc.lists
+} com.ankamagames.dofus.misc.lists
 

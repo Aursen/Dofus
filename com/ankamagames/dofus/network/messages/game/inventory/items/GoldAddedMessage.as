@@ -1,27 +1,23 @@
-﻿package com.ankamagames.dofus.network.messages.game.inventory.items
+package com.ankamagames.dofus.network.messages.game.inventory.items
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
     import com.ankamagames.dofus.network.types.game.data.items.GoldItem;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
 
-    [Trusted]
     public class GoldAddedMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 6030;
 
         private var _isInitialized:Boolean = false;
-        public var gold:GoldItem;
+        public var gold:GoldItem = new GoldItem();
+        private var _goldtree:FuncTree;
 
-        public function GoldAddedMessage()
-        {
-            this.gold = new GoldItem();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
@@ -58,6 +54,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_GoldAddedMessage(output);
@@ -79,7 +83,23 @@
             this.gold.deserialize(input);
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GoldAddedMessage(tree);
+        }
+
+        public function deserializeAsyncAs_GoldAddedMessage(tree:FuncTree):void
+        {
+            this._goldtree = tree.addChild(this._goldtreeFunc);
+        }
+
+        private function _goldtreeFunc(input:ICustomDataInput):void
+        {
+            this.gold = new GoldItem();
+            this.gold.deserializeAsync(this._goldtree);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.inventory.items
+} com.ankamagames.dofus.network.messages.game.inventory.items
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.fight.steps
+package com.ankamagames.dofus.logic.game.fight.steps
 {
     import com.ankamagames.jerakine.sequencer.AbstractSequencable;
     import com.ankamagames.jerakine.sequencer.ISequencer;
@@ -6,6 +6,7 @@
     import com.ankamagames.dofus.logic.game.fight.frames.FightEntitiesFrame;
     import com.ankamagames.tiphon.display.TiphonSprite;
     import com.ankamagames.jerakine.types.positions.MapPoint;
+    import com.ankamagames.dofus.network.types.game.context.fight.GameFightFighterInformations;
     import com.ankamagames.dofus.logic.game.common.misc.DofusEntities;
     import com.ankamagames.jerakine.entities.interfaces.IEntity;
     import com.ankamagames.dofus.types.entities.AnimatedCharacter;
@@ -24,6 +25,7 @@
     import com.ankamagames.dofus.types.enums.AnimationEnum;
     import com.ankamagames.tiphon.sequence.SetAnimationStep;
     import com.ankamagames.jerakine.types.events.SequencerEvent;
+    import __AS3__.vec.Vector;
     import com.ankamagames.tiphon.types.TiphonUtility;
     import com.ankamagames.dofus.logic.game.fight.miscs.CarrierAnimationModifier;
     import com.ankamagames.dofus.logic.game.fight.fightEvents.FightEventsHelper;
@@ -34,17 +36,17 @@
     public class FightCarryCharacterStep extends AbstractSequencable implements IFightStep 
     {
 
-        static const CARRIED_SUBENTITY_CATEGORY:uint = 3;
-        static const CARRIED_SUBENTITY_INDEX:uint = 0;
+        internal static const CARRIED_SUBENTITY_CATEGORY:uint = 3;
+        internal static const CARRIED_SUBENTITY_INDEX:uint = 0;
 
-        private var _fighterId:int;
-        private var _carriedId:int;
+        private var _fighterId:Number;
+        private var _carriedId:Number;
         private var _cellId:int;
         private var _carrySubSequence:ISequencer;
         private var _noAnimation:Boolean;
         private var _isCreature:Boolean;
 
-        public function FightCarryCharacterStep(fighterId:int, carriedId:int, cellId:int=-1, noAnimation:Boolean=false)
+        public function FightCarryCharacterStep(fighterId:Number, carriedId:Number, cellId:int=-1, noAnimation:Boolean=false)
         {
             this._fighterId = fighterId;
             this._carriedId = carriedId;
@@ -66,6 +68,9 @@
             var carryingEntityOnCell:Boolean;
             var carriedEntityOnCell:Boolean;
             var cellEntity:TiphonSprite;
+            var carriedEntityDirection:uint;
+            var entitiesFrame:FightEntitiesFrame;
+            var carriedEntityInfos:GameFightFighterInformations;
             var cEntity:IEntity = DofusEntities.getEntity(this._fighterId);
             var position:MapPoint = cEntity.position;
             var carryingEntity:TiphonSprite = (cEntity as TiphonSprite);
@@ -75,7 +80,7 @@
                 carryingEntity2 = (carryingEntity.getSubEntitySlot(SubEntityBindingPointCategoryEnum.HOOK_POINT_CATEGORY_MOUNT_DRIVER, 0) as TiphonSprite);
                 if (carryingEntity2 == null)
                 {
-                    if (!(carryingEntity.hasEventListener(TiphonEvent.SUB_ENTITY_ADDED)))
+                    if (!carryingEntity.hasEventListener(TiphonEvent.SUB_ENTITY_ADDED))
                     {
                         carryingEntity.addEventListener(TiphonEvent.SUB_ENTITY_ADDED, this.restart);
                     };
@@ -91,17 +96,17 @@
                 this.carryFinished();
                 return;
             };
-            if ((((((carryingEntity is TiphonSprite)) && ((carriedEntity is TiphonSprite)))) && ((TiphonSprite(carriedEntity).parentSprite == carryingEntity))))
+            if ((((carryingEntity is TiphonSprite) && (carriedEntity is TiphonSprite)) && (TiphonSprite(carriedEntity).parentSprite == carryingEntity)))
             {
                 this.updateCarriedEntityPosition((carryingEntity as IMovable), (carriedEntity as IMovable));
-                if (((((carryingEntity.rendered) && (carryingEntity.animationModifiers))) && ((carryingEntity.animationModifiers.length > 0))))
+                if ((((carryingEntity.rendered) && (carryingEntity.animationModifiers)) && (carryingEntity.animationModifiers.length > 0)))
                 {
                     carryingEntity.setAnimation(carryingEntity.getAnimation());
                 };
                 executeCallbacks();
                 return;
             };
-            var visible:Boolean = !(FightEntitiesHolder.getInstance().getEntity(carriedEntity.id));
+            var visible:* = (!(FightEntitiesHolder.getInstance().getEntity(carriedEntity.id)));
             this._carrySubSequence = new SerialSequencer(FightBattleFrame.FIGHT_SEQUENCER_NAME);
             if ((carryingEntity is TiphonSprite))
             {
@@ -120,27 +125,32 @@
                     carriedEntityOnCell = false;
                     for each (cellEntity in cellEntities)
                     {
-                        if ((((cellEntity == carriedEntity)) || ((cellEntity.getSubEntitySlot(2, 0) == carriedEntity))))
+                        if (((cellEntity == carriedEntity) || (cellEntity.getSubEntitySlot(2, 0) == carriedEntity)))
                         {
                             carriedEntityOnCell = true;
                         };
-                        if ((((cellEntity == carryingEntity)) || ((cellEntity.getSubEntitySlot(2, 0) == carryingEntity))))
+                        if (((cellEntity == carryingEntity) || (cellEntity.getSubEntitySlot(2, 0) == carryingEntity)))
                         {
                             carryingEntityOnCell = true;
                         };
                     };
+                    carriedEntityDirection = position.advancedOrientationTo(targetPosition);
                     if (((!(carryingEntityOnCell)) && (!(carriedEntityOnCell))))
                     {
-                        this._carrySubSequence.addStep(new SetDirectionStep(carryingEntity.rootEntity, position.advancedOrientationTo(targetPosition)));
-                    }
-                    else
+                        this._carrySubSequence.addStep(new SetDirectionStep(carryingEntity.rootEntity, carriedEntityDirection));
+                    };
+                    this.updateCarriedEntityPosition((carryingEntity as IMovable), (carriedEntity as IMovable));
+                    entitiesFrame = (Kernel.getWorker().getFrame(FightEntitiesFrame) as FightEntitiesFrame);
+                    carriedEntityInfos = (entitiesFrame.getEntityInfos(carriedEntity.id) as GameFightFighterInformations);
+                    if (carriedEntityInfos)
                     {
-                        this.updateCarriedEntityPosition((carryingEntity as IMovable), (carriedEntity as IMovable));
+                        carriedEntityInfos.disposition.cellId = carriedEntity.position.cellId;
+                        carriedEntityInfos.disposition.direction = carriedEntityDirection;
                     };
                 };
             };
             var look:TiphonEntityLook = (carriedEntity as TiphonSprite).look;
-            if (!(visible))
+            if (!visible)
             {
                 look.resetSkins();
                 look.setBone(761);
@@ -160,6 +170,11 @@
             this._carrySubSequence.start();
         }
 
+        public function get targets():Vector.<Number>
+        {
+            return (new <Number>[this._carriedId]);
+        }
+
         private function updateCarriedEntityPosition(pCarryingEntity:IMovable, pCarriedEntity:IMovable):void
         {
             if (((!(pCarryingEntity)) && ((DofusEntities.getEntity(this._fighterId) as AnimatedCharacter).isMounted())))
@@ -176,13 +191,15 @@
 
         private function carryFinished(e:Event=null):void
         {
+            var carrierAnimatedEntity:AnimatedCharacter;
+            var carriedAnimatedEntity:AnimatedCharacter;
             if (this._carrySubSequence)
             {
                 this._carrySubSequence.removeEventListener(SequencerEvent.SEQUENCE_END, this.carryFinished);
                 this._carrySubSequence = null;
             };
             var carryingEntity:TiphonSprite = (TiphonUtility.getEntityWithoutMount((DofusEntities.getEntity(this._fighterId) as TiphonSprite)) as TiphonSprite);
-            if (((((carryingEntity) && ((carryingEntity is TiphonSprite)))) && (!(this._isCreature))))
+            if ((((carryingEntity) && (carryingEntity is TiphonSprite)) && (!(this._isCreature))))
             {
                 (carryingEntity as TiphonSprite).addAnimationModifier(CarrierAnimationModifier.getInstance());
             };
@@ -194,6 +211,24 @@
             };
             FightEventsHelper.sendFightEvent(FightEventEnum.FIGHTER_CARRY, [this._fighterId, this._carriedId], 0, castingSpellId);
             FightSpellCastFrame.updateRangeAndTarget();
+            var fightEntitiesFrame:FightEntitiesFrame = (Kernel.getWorker().getFrame(FightEntitiesFrame) as FightEntitiesFrame);
+            if (fightEntitiesFrame !== null)
+            {
+                carrierAnimatedEntity = (carryingEntity as AnimatedCharacter);
+                carriedAnimatedEntity = (carriedEntity as AnimatedCharacter);
+                if (carrierAnimatedEntity === null)
+                {
+                    carrierAnimatedEntity = AnimatedCharacter.getFirstAnimatedParent(carryingEntity);
+                };
+                if (carriedAnimatedEntity === null)
+                {
+                    carriedAnimatedEntity = AnimatedCharacter.getFirstAnimatedParent((carriedEntity as TiphonSprite));
+                };
+                if (((!(carrierAnimatedEntity === null)) && (!(carriedAnimatedEntity === null))))
+                {
+                    fightEntitiesFrame.addCarrier(carrierAnimatedEntity, carriedAnimatedEntity, true);
+                };
+            };
             executeCallbacks();
         }
 
@@ -205,5 +240,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.fight.steps
+} com.ankamagames.dofus.logic.game.fight.steps
 

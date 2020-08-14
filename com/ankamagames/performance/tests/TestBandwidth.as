@@ -1,4 +1,4 @@
-﻿package com.ankamagames.performance.tests
+package com.ankamagames.performance.tests
 {
     import com.ankamagames.performance.IBenchmarkTest;
     import flash.net.URLLoader;
@@ -25,15 +25,15 @@
 
         public function TestBandwidth(loader:URLLoader=null, urlRequest:URLRequest=null)
         {
-            if (!(_results))
+            if (!_results)
             {
                 _results = [];
             };
-            if (!(urlRequest))
+            if (!urlRequest)
             {
-                urlRequest = new URLRequest((("http://dl.ak.ankama.com/games/dofus2-streaming/beta/dummy.version_" + new Date().time) + ".file"));
+                urlRequest = new URLRequest((("https://ankama.akamaized.net/games/dofus2-streaming/beta/dummy.version_" + new Date().time) + ".file"));
             };
-            if (!(loader))
+            if (!loader)
             {
                 loader = new URLLoader();
             };
@@ -45,21 +45,6 @@
             this._urlRequest = urlRequest;
             this._urlRequest.requestHeaders = [new URLRequestHeader("pragma", "no-cache")];
         }
-
-        public static function resetResults():void
-        {
-            _results = [];
-        }
-
-        public static function pushResult(speed:int):void
-        {
-            if (!(_results))
-            {
-                _results = [];
-            };
-            _results.push(speed);
-        }
-
 
         public function run():void
         {
@@ -95,7 +80,7 @@
             this.clean();
             var totalTime:Number = (getTimer() - this._startTime);
             var totalBytes:uint = event.currentTarget.bytesTotal;
-            var speed:int = (totalBytes / totalTime);
+            var speed:int = int((totalBytes / totalTime));
             _results.push(speed);
             Benchmark.onTestCompleted(this);
         }
@@ -141,12 +126,12 @@
                     i++;
                 };
                 average = (average / _results.length);
-                return (("bandwidthTest:" + average.toString()));
+                return ("bandwidthTest:" + average.toString());
             };
             return ("bandwidthTest:none");
         }
 
 
     }
-}//package com.ankamagames.performance.tests
+} com.ankamagames.performance.tests
 

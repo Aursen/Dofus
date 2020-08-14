@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.types.enums
+package com.ankamagames.jerakine.types.enums
 {
     public class DataStoreEnum 
     {
@@ -11,5 +11,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.types.enums
+} com.ankamagames.jerakine.types.enums
 

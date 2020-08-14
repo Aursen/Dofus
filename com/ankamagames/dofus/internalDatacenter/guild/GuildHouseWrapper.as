@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.internalDatacenter.guild
+package com.ankamagames.dofus.internalDatacenter.guild
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.jerakine.logger.Logger;
@@ -17,6 +17,7 @@
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(GuildHouseWrapper));
 
         public var houseId:int;
+        public var houseInstanceId:int;
         public var gfxId:int;
         public var houseName:String;
         public var description:String;
@@ -26,19 +27,15 @@
         public var worldY:int;
         public var subareaId:int;
         public var guildshareParams:uint;
-        private var _arrayShareParams:Array;
+        private var _arrayShareParams:Array = new Array();
 
-        public function GuildHouseWrapper()
-        {
-            this._arrayShareParams = new Array();
-            super();
-        }
 
         public static function create(pHouseInformationsForGuild:HouseInformationsForGuild):GuildHouseWrapper
         {
             var item:GuildHouseWrapper = new (GuildHouseWrapper)();
             var houseInfo:House = House.getGuildHouseById(pHouseInformationsForGuild.modelId);
             item.houseId = pHouseInformationsForGuild.houseId;
+            item.houseInstanceId = pHouseInformationsForGuild.instanceId;
             item.houseName = houseInfo.name;
             item.description = houseInfo.description;
             item.ownerName = pHouseInformationsForGuild.ownerName;
@@ -54,47 +51,47 @@
 
         public function get visibleGuildBrief():Boolean
         {
-            return (Boolean((1 & (this.guildshareParams >> 0))));
+            return (Boolean((0x01 & (this.guildshareParams >> 0))));
         }
 
         public function get doorSignGuild():Boolean
         {
-            return (Boolean((1 & (this.guildshareParams >> 1))));
+            return (Boolean((0x01 & (this.guildshareParams >> 1))));
         }
 
         public function get doorSignOthers():Boolean
         {
-            return (Boolean((1 & (this.guildshareParams >> 2))));
+            return (Boolean((0x01 & (this.guildshareParams >> 2))));
         }
 
         public function get allowDoorGuild():Boolean
         {
-            return (Boolean((1 & (this.guildshareParams >> 3))));
+            return (Boolean((0x01 & (this.guildshareParams >> 3))));
         }
 
         public function get forbiDoorOthers():Boolean
         {
-            return (Boolean((1 & (this.guildshareParams >> 4))));
+            return (Boolean((0x01 & (this.guildshareParams >> 4))));
         }
 
         public function get allowChestOthers():Boolean
         {
-            return (Boolean((1 & (this.guildshareParams >> 5))));
+            return (Boolean((0x01 & (this.guildshareParams >> 5))));
         }
 
         public function get forbidChestOthers():Boolean
         {
-            return (Boolean((1 & (this.guildshareParams >> 6))));
+            return (Boolean((0x01 & (this.guildshareParams >> 6))));
         }
 
         public function get teleport():Boolean
         {
-            return (Boolean((1 & (this.guildshareParams >> 7))));
+            return (Boolean((0x01 & (this.guildshareParams >> 7))));
         }
 
         public function get respawn():Boolean
         {
-            return (Boolean((1 & (this.guildshareParams >> 8))));
+            return (Boolean((0x01 & (this.guildshareParams >> 8))));
         }
 
         public function get skillListString():Vector.<String>
@@ -103,7 +100,10 @@
             var sls:Vector.<String> = new Vector.<String>();
             for each (id in this.skillListIds)
             {
-                sls.push(Skill.getSkillById(id).name);
+                if (id != 339)
+                {
+                    sls.push(Skill.getSkillById(id).name);
+                };
             };
             return (sls);
         }
@@ -130,6 +130,7 @@
         {
             var houseInfo:House = House.getGuildHouseById(pHouseInformationsForGuild.modelId);
             this.houseId = pHouseInformationsForGuild.houseId;
+            this.houseInstanceId = pHouseInformationsForGuild.instanceId;
             this.houseName = houseInfo.name;
             this.description = houseInfo.description;
             this.gfxId = houseInfo.gfxId;
@@ -143,5 +144,5 @@
 
 
     }
-}//package com.ankamagames.dofus.internalDatacenter.guild
+} com.ankamagames.dofus.internalDatacenter.guild
 

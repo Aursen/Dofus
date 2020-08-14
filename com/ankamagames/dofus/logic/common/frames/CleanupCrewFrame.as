@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.common.frames
+package com.ankamagames.dofus.logic.common.frames
 {
     import com.ankamagames.jerakine.messages.Frame;
     import com.ankamagames.jerakine.logger.Logger;
@@ -10,7 +10,6 @@
     import com.ankamagames.dofus.network.messages.game.basic.BasicNoOperationMessage;
     import com.ankamagames.dofus.network.messages.connection.CredentialsAcknowledgementMessage;
     import com.ankamagames.dofus.network.messages.game.initialization.OnConnectionEventMessage;
-    import com.ankamagames.dofus.network.messages.game.inventory.exchanges.ExchangeBidHouseBuyResultMessage;
     import com.ankamagames.dofus.network.messages.game.inventory.items.ObjectJobAddedMessage;
     import com.ankamagames.berilia.types.messages.AllUiXmlParsedMessage;
     import com.ankamagames.jerakine.messages.ConnectionResumedMessage;
@@ -35,6 +34,8 @@
     import com.ankamagames.dofus.network.messages.game.context.GameContextDestroyMessage;
     import com.ankamagames.dofus.network.messages.game.character.status.PlayerStatusUpdateMessage;
     import com.ankamagames.dofus.network.messages.game.context.roleplay.MapComplementaryInformationsDataMessage;
+    import com.ankamagames.dofus.network.messages.game.context.fight.GameFightTurnReadyRequestMessage;
+    import com.ankamagames.dofus.network.messages.game.context.fight.GameFightSynchronizeMessage;
     import com.ankamagames.atouin.messages.CellClickMessage;
     import com.ankamagames.atouin.messages.AdjacentMapClickMessage;
     import com.ankamagames.atouin.messages.AdjacentMapOutMessage;
@@ -49,10 +50,13 @@
     import com.ankamagames.jerakine.handlers.messages.mouse.MouseUpMessage;
     import com.ankamagames.jerakine.handlers.messages.mouse.MouseClickMessage;
     import com.ankamagames.jerakine.handlers.messages.mouse.MouseDoubleClickMessage;
+    import com.ankamagames.jerakine.handlers.messages.mouse.MouseRightClickMessage;
+    import com.ankamagames.jerakine.handlers.messages.mouse.MouseRightClickOutsideMessage;
+    import com.ankamagames.jerakine.handlers.messages.mouse.MouseRightDownMessage;
+    import com.ankamagames.jerakine.handlers.messages.mouse.MouseRightReleaseOutsideMessage;
+    import com.ankamagames.jerakine.handlers.messages.mouse.MouseRightUpMessage;
     import com.ankamagames.jerakine.handlers.messages.keyboard.KeyboardKeyDownMessage;
     import com.ankamagames.jerakine.handlers.messages.keyboard.KeyboardKeyUpMessage;
-    import com.ankamagames.jerakine.handlers.messages.mouse.MouseRightClickOutsideMessage;
-    import com.ankamagames.jerakine.handlers.messages.mouse.MouseRightClickMessage;
     import com.ankamagames.jerakine.handlers.messages.mouse.MouseReleaseOutsideMessage;
     import com.ankamagames.berilia.components.messages.ItemRollOverMessage;
     import com.ankamagames.berilia.components.messages.ItemRollOutMessage;
@@ -61,8 +65,10 @@
     import com.ankamagames.atouin.messages.CellOutMessage;
     import com.ankamagames.jerakine.entities.messages.EntityMouseOutMessage;
     import com.ankamagames.dofus.logic.game.common.actions.PlaySoundAction;
-    import com.ankamagames.dofus.logic.game.roleplay.actions.ShowMonstersInfoAction;
+    import com.ankamagames.dofus.logic.game.roleplay.actions.ShowEntitiesTooltipsAction;
     import com.ankamagames.dofus.network.messages.game.context.fight.SlaveSwitchContextMessage;
+    import com.ankamagames.berilia.components.messages.VideoBufferChangeMessage;
+    import com.ankamagames.berilia.components.messages.BrowserDomChange;
     import com.ankamagames.jerakine.messages.Message;
 
     public class CleanupCrewFrame implements Frame 
@@ -90,7 +96,6 @@
                 case (msg is BasicNoOperationMessage):
                 case (msg is CredentialsAcknowledgementMessage):
                 case (msg is OnConnectionEventMessage):
-                case (msg is ExchangeBidHouseBuyResultMessage):
                 case (msg is ObjectJobAddedMessage):
                 case (msg is AllUiXmlParsedMessage):
                 case (msg is ConnectionResumedMessage):
@@ -115,6 +120,8 @@
                 case (msg is GameContextDestroyMessage):
                 case (msg is PlayerStatusUpdateMessage):
                 case (msg is MapComplementaryInformationsDataMessage):
+                case (msg is GameFightTurnReadyRequestMessage):
+                case (msg is GameFightSynchronizeMessage):
                 case (msg is CellClickMessage):
                 case (msg is AdjacentMapClickMessage):
                 case (msg is AdjacentMapOutMessage):
@@ -129,6 +136,11 @@
                 case (msg is MouseUpMessage):
                 case (msg is MouseClickMessage):
                 case (msg is MouseDoubleClickMessage):
+                case (msg is MouseRightClickMessage):
+                case (msg is MouseRightClickOutsideMessage):
+                case (msg is MouseRightDownMessage):
+                case (msg is MouseRightReleaseOutsideMessage):
+                case (msg is MouseRightUpMessage):
                 case (msg is KeyboardKeyDownMessage):
                 case (msg is KeyboardKeyUpMessage):
                 case (msg is MouseRightClickOutsideMessage):
@@ -141,11 +153,13 @@
                 case (msg is CellOutMessage):
                 case (msg is EntityMouseOutMessage):
                 case (msg is PlaySoundAction):
-                case (msg is ShowMonstersInfoAction):
+                case (msg is ShowEntitiesTooltipsAction):
                 case (msg is SlaveSwitchContextMessage):
+                case (msg is VideoBufferChangeMessage):
+                case (msg is BrowserDomChange):
                     return (true);
                 default:
-                    _log.warn((("[Warning] " + (getQualifiedClassName(msg) as String).split("::")[1]) + " wasn't stopped by a frame."));
+                    _log.info((("[Warning] " + (getQualifiedClassName(msg) as String).split("::")[1]) + " wasn't stopped by a frame."));
                     return (true);
             };
         }
@@ -157,5 +171,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.common.frames
+} com.ankamagames.dofus.logic.common.frames
 

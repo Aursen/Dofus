@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.console.chat
+package com.ankamagames.dofus.console.chat
 {
     import com.ankamagames.jerakine.console.ConsoleInstructionHandler;
     import com.ankamagames.jerakine.console.ConsoleHandler;
@@ -21,10 +21,6 @@
             {
                 case "w":
                     return (I18n.getUiText("ui.chat.console.help.whisper"));
-                case "whisper":
-                    return (I18n.getUiText("ui.chat.console.help.whisper"));
-                case "msg":
-                    return (I18n.getUiText("ui.chat.console.help.whisper"));
                 case "t":
                     return (I18n.getUiText("ui.chat.console.help.teammessage"));
                 case "g":
@@ -37,8 +33,6 @@
                     return (I18n.getUiText("ui.chat.console.help.aroundguildmessage"));
                 case "b":
                     return (I18n.getUiText("ui.chat.console.help.sellbuymessage"));
-                case "m":
-                    return (I18n.getUiText("ui.chat.console.help.meetmessage"));
             };
             return (I18n.getUiText("ui.chat.console.noHelp", [cmd]));
         }
@@ -50,5 +44,5 @@
 
 
     }
-}//package com.ankamagames.dofus.console.chat
+} com.ankamagames.dofus.console.chat
 

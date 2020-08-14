@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.guild.tax
+package com.ankamagames.dofus.network.messages.game.guild.tax
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,16 +6,16 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class GuildFightLeaveRequestMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 5715;
 
         private var _isInitialized:Boolean = false;
-        public var taxCollectorId:uint = 0;
-        public var characterId:uint = 0;
+        public var taxCollectorId:Number = 0;
+        public var characterId:Number = 0;
 
 
         override public function get isInitialized():Boolean
@@ -28,7 +28,7 @@
             return (5715);
         }
 
-        public function initGuildFightLeaveRequestMessage(taxCollectorId:uint=0, characterId:uint=0):GuildFightLeaveRequestMessage
+        public function initGuildFightLeaveRequestMessage(taxCollectorId:Number=0, characterId:Number=0):GuildFightLeaveRequestMessage
         {
             this.taxCollectorId = taxCollectorId;
             this.characterId = characterId;
@@ -55,6 +55,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_GuildFightLeaveRequestMessage(output);
@@ -62,16 +70,16 @@
 
         public function serializeAs_GuildFightLeaveRequestMessage(output:ICustomDataOutput):void
         {
-            if (this.taxCollectorId < 0)
+            if (((this.taxCollectorId < 0) || (this.taxCollectorId > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.taxCollectorId) + ") on element taxCollectorId.")));
             };
-            output.writeInt(this.taxCollectorId);
-            if (this.characterId < 0)
+            output.writeDouble(this.taxCollectorId);
+            if (((this.characterId < 0) || (this.characterId > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.characterId) + ") on element characterId.")));
             };
-            output.writeVarInt(this.characterId);
+            output.writeVarLong(this.characterId);
         }
 
         public function deserialize(input:ICustomDataInput):void
@@ -81,13 +89,34 @@
 
         public function deserializeAs_GuildFightLeaveRequestMessage(input:ICustomDataInput):void
         {
-            this.taxCollectorId = input.readInt();
-            if (this.taxCollectorId < 0)
+            this._taxCollectorIdFunc(input);
+            this._characterIdFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GuildFightLeaveRequestMessage(tree);
+        }
+
+        public function deserializeAsyncAs_GuildFightLeaveRequestMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._taxCollectorIdFunc);
+            tree.addChild(this._characterIdFunc);
+        }
+
+        private function _taxCollectorIdFunc(input:ICustomDataInput):void
+        {
+            this.taxCollectorId = input.readDouble();
+            if (((this.taxCollectorId < 0) || (this.taxCollectorId > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.taxCollectorId) + ") on element of GuildFightLeaveRequestMessage.taxCollectorId.")));
             };
-            this.characterId = input.readVarUhInt();
-            if (this.characterId < 0)
+        }
+
+        private function _characterIdFunc(input:ICustomDataInput):void
+        {
+            this.characterId = input.readVarUhLong();
+            if (((this.characterId < 0) || (this.characterId > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.characterId) + ") on element of GuildFightLeaveRequestMessage.characterId.")));
             };
@@ -95,5 +124,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.guild.tax
+} com.ankamagames.dofus.network.messages.game.guild.tax
 

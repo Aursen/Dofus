@@ -1,27 +1,23 @@
-﻿package com.ankamagames.dofus.network.messages.game.guild
+package com.ankamagames.dofus.network.messages.game.guild
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
     import com.ankamagames.dofus.network.types.game.house.HouseInformationsForGuild;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
 
-    [Trusted]
     public class GuildHouseUpdateInformationMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 6181;
 
         private var _isInitialized:Boolean = false;
-        public var housesInformations:HouseInformationsForGuild;
+        public var housesInformations:HouseInformationsForGuild = new HouseInformationsForGuild();
+        private var _housesInformationstree:FuncTree;
 
-        public function GuildHouseUpdateInformationMessage()
-        {
-            this.housesInformations = new HouseInformationsForGuild();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
@@ -58,6 +54,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_GuildHouseUpdateInformationMessage(output);
@@ -79,7 +83,23 @@
             this.housesInformations.deserialize(input);
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GuildHouseUpdateInformationMessage(tree);
+        }
+
+        public function deserializeAsyncAs_GuildHouseUpdateInformationMessage(tree:FuncTree):void
+        {
+            this._housesInformationstree = tree.addChild(this._housesInformationstreeFunc);
+        }
+
+        private function _housesInformationstreeFunc(input:ICustomDataInput):void
+        {
+            this.housesInformations = new HouseInformationsForGuild();
+            this.housesInformations.deserializeAsync(this._housesInformationstree);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.guild
+} com.ankamagames.dofus.network.messages.game.guild
 

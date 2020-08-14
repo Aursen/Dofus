@@ -1,10 +1,10 @@
-﻿package com.ankamagames.dofus.logic.game.roleplay.frames
+package com.ankamagames.dofus.logic.game.roleplay.frames
 {
     import com.ankamagames.jerakine.messages.Frame;
     import com.ankamagames.jerakine.logger.Logger;
-    import flash.utils.Dictionary;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
+    import flash.utils.Dictionary;
     import com.ankamagames.jerakine.types.enums.Priority;
     import com.ankamagames.dofus.network.messages.game.context.roleplay.delay.GameRolePlayDelayedActionMessage;
     import com.ankamagames.dofus.logic.game.roleplay.messages.DelayedActionMessage;
@@ -12,6 +12,7 @@
     import com.ankamagames.dofus.network.messages.game.context.roleplay.delay.GameRolePlayDelayedObjectUseMessage;
     import com.ankamagames.dofus.network.messages.game.context.roleplay.CurrentMapMessage;
     import com.ankamagames.dofus.network.messages.game.context.GameContextRemoveElementMessage;
+    import com.ankamagames.dofus.network.messages.game.context.GameContextRemoveMultipleElementsMessage;
     import com.ankamagames.dofus.network.enums.DelayedActionTypeEnum;
     import com.ankamagames.jerakine.messages.Message;
     import com.ankamagames.dofus.internalDatacenter.communication.DelayedActionItem;
@@ -29,15 +30,9 @@
 
         private static const TOOLTIP_NAME:String = "delayedItemUse";
 
-        protected var _log:Logger;
-        private var _delayedActionEntities:Dictionary;
+        protected var _log:Logger = Log.getLogger(getQualifiedClassName(DelayedActionFrame));
+        private var _delayedActionEntities:Dictionary = new Dictionary();
 
-        public function DelayedActionFrame()
-        {
-            this._log = Log.getLogger(getQualifiedClassName(DelayedActionFrame));
-            this._delayedActionEntities = new Dictionary();
-            super();
-        }
 
         public function get priority():int
         {
@@ -57,41 +52,48 @@
 
         public function process(msg:Message):Boolean
         {
-            var _local_2:GameRolePlayDelayedActionMessage;
-            var _local_3:DelayedActionMessage;
-            var _local_4:GameRolePlayDelayedActionFinishedMessage;
-            var _local_5:GameRolePlayDelayedObjectUseMessage;
+            var grpdaMsg:GameRolePlayDelayedActionMessage;
+            var dam:DelayedActionMessage;
+            var grpdafMsg:GameRolePlayDelayedActionFinishedMessage;
+            var id:Number;
+            var grdoum:GameRolePlayDelayedObjectUseMessage;
             switch (true)
             {
                 case (msg is CurrentMapMessage):
                     this.removeAll();
-                    break;
+                    return (false);
                 case (msg is GameContextRemoveElementMessage):
                     this.removeEntity(GameContextRemoveElementMessage(msg).id);
                     break;
+                case (msg is GameContextRemoveMultipleElementsMessage):
+                    for each (id in GameContextRemoveMultipleElementsMessage(msg).elementsIds)
+                    {
+                        this.removeEntity(id);
+                    };
+                    break;
                 case (msg is GameRolePlayDelayedActionMessage):
-                    _local_2 = (msg as GameRolePlayDelayedActionMessage);
-                    switch (_local_2.delayTypeId)
+                    grpdaMsg = (msg as GameRolePlayDelayedActionMessage);
+                    switch (grpdaMsg.delayTypeId)
                     {
                         case DelayedActionTypeEnum.DELAYED_ACTION_OBJECT_USE:
-                            _local_5 = (msg as GameRolePlayDelayedObjectUseMessage);
-                            this.showItemUse(_local_5.delayedCharacterId, _local_5.objectGID, _local_2.delayEndTime);
+                            grdoum = (msg as GameRolePlayDelayedObjectUseMessage);
+                            this.showItemUse(grdoum.delayedCharacterId, grdoum.objectGID, grpdaMsg.delayEndTime);
                             break;
                     };
                     return (true);
                 case (msg is DelayedActionMessage):
-                    _local_3 = (msg as DelayedActionMessage);
-                    this.showItemUse(_local_3.playerId, _local_3.itemId, _local_3.endTime);
+                    dam = (msg as DelayedActionMessage);
+                    this.showItemUse(dam.playerId, dam.itemId, dam.endTime);
                     return (true);
                 case (msg is GameRolePlayDelayedActionFinishedMessage):
-                    _local_4 = (msg as GameRolePlayDelayedActionFinishedMessage);
-                    this.removeEntity(_local_4.delayedCharacterId);
+                    grpdafMsg = (msg as GameRolePlayDelayedActionFinishedMessage);
+                    this.removeEntity(grpdafMsg.delayedCharacterId);
                     return (true);
             };
             return (false);
         }
 
-        public function showItemUse(playerId:int, itemId:uint, endTime:Number):void
+        public function showItemUse(playerId:Number, itemId:uint, endTime:Number):void
         {
             var delay:Number;
             var w:DelayedActionItem;
@@ -108,7 +110,7 @@
             };
         }
 
-        private function removeEntity(id:int):void
+        private function removeEntity(id:Number):void
         {
             if (this._delayedActionEntities[id])
             {
@@ -128,5 +130,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.roleplay.frames
+} com.ankamagames.dofus.logic.game.roleplay.frames
 

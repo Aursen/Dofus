@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.fight.miscs
+package com.ankamagames.dofus.logic.game.fight.miscs
 {
     import com.ankamagames.tiphon.types.IAnimationModifier;
     import com.ankamagames.tiphon.types.AnimationModifierPriority;
@@ -13,7 +13,7 @@
 
         public static function getInstance():CarrierAnimationModifier
         {
-            if (!(_self))
+            if (!_self)
             {
                 _self = new (CarrierAnimationModifier)();
             };
@@ -23,7 +23,7 @@
 
         public function get priority():int
         {
-            return (AnimationModifierPriority.HIGH);
+            return (AnimationModifierPriority.VERY_HIGH);
         }
 
         public function getModifiedAnimation(animation:String, look:TiphonEntityLook):String
@@ -43,11 +43,19 @@
                 case AnimationEnum.ANIM_TACLE:
                     return (AnimationEnum.ANIM_TACLE_CARRYING);
                 default:
+                    if (animation.indexOf(AnimationEnum.ANIM_MARCHE) == 0)
+                    {
+                        return (AnimationEnum.ANIM_MARCHE_CARRYING);
+                    };
+                    if (animation.indexOf(AnimationEnum.ANIM_COURSE) == 0)
+                    {
+                        return (AnimationEnum.ANIM_COURSE_CARRYING);
+                    };
                     return (animation);
             };
         }
 
 
     }
-}//package com.ankamagames.dofus.logic.game.fight.miscs
+} com.ankamagames.dofus.logic.game.fight.miscs
 

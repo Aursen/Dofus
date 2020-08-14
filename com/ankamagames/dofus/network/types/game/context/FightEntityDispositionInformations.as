@@ -1,15 +1,16 @@
-﻿package com.ankamagames.dofus.network.types.game.context
+package com.ankamagames.dofus.network.types.game.context
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
     public class FightEntityDispositionInformations extends EntityDispositionInformations implements INetworkType 
     {
 
         public static const protocolId:uint = 217;
 
-        public var carryingCharacterId:int = 0;
+        public var carryingCharacterId:Number = 0;
 
 
         override public function getTypeId():uint
@@ -17,7 +18,7 @@
             return (217);
         }
 
-        public function initFightEntityDispositionInformations(cellId:int=0, direction:uint=1, carryingCharacterId:int=0):FightEntityDispositionInformations
+        public function initFightEntityDispositionInformations(cellId:int=0, direction:uint=1, carryingCharacterId:Number=0):FightEntityDispositionInformations
         {
             super.initEntityDispositionInformations(cellId, direction);
             this.carryingCharacterId = carryingCharacterId;
@@ -38,7 +39,11 @@
         public function serializeAs_FightEntityDispositionInformations(output:ICustomDataOutput):void
         {
             super.serializeAs_EntityDispositionInformations(output);
-            output.writeInt(this.carryingCharacterId);
+            if (((this.carryingCharacterId < -9007199254740992) || (this.carryingCharacterId > 9007199254740992)))
+            {
+                throw (new Error((("Forbidden value (" + this.carryingCharacterId) + ") on element carryingCharacterId.")));
+            };
+            output.writeDouble(this.carryingCharacterId);
         }
 
         override public function deserialize(input:ICustomDataInput):void
@@ -49,10 +54,30 @@
         public function deserializeAs_FightEntityDispositionInformations(input:ICustomDataInput):void
         {
             super.deserialize(input);
-            this.carryingCharacterId = input.readInt();
+            this._carryingCharacterIdFunc(input);
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_FightEntityDispositionInformations(tree);
+        }
+
+        public function deserializeAsyncAs_FightEntityDispositionInformations(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._carryingCharacterIdFunc);
+        }
+
+        private function _carryingCharacterIdFunc(input:ICustomDataInput):void
+        {
+            this.carryingCharacterId = input.readDouble();
+            if (((this.carryingCharacterId < -9007199254740992) || (this.carryingCharacterId > 9007199254740992)))
+            {
+                throw (new Error((("Forbidden value (" + this.carryingCharacterId) + ") on element of FightEntityDispositionInformations.carryingCharacterId.")));
+            };
         }
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.context
+} com.ankamagames.dofus.network.types.game.context
 

@@ -1,16 +1,16 @@
-﻿package com.ankamagames.dofus.network.types.game.context
+package com.ankamagames.dofus.network.types.game.context
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class ActorOrientation implements INetworkType 
     {
 
         public static const protocolId:uint = 353;
 
-        public var id:int = 0;
+        public var id:Number = 0;
         public var direction:uint = 1;
 
 
@@ -19,7 +19,7 @@
             return (353);
         }
 
-        public function initActorOrientation(id:int=0, direction:uint=1):ActorOrientation
+        public function initActorOrientation(id:Number=0, direction:uint=1):ActorOrientation
         {
             this.id = id;
             this.direction = direction;
@@ -39,7 +39,11 @@
 
         public function serializeAs_ActorOrientation(output:ICustomDataOutput):void
         {
-            output.writeInt(this.id);
+            if (((this.id < -9007199254740992) || (this.id > 9007199254740992)))
+            {
+                throw (new Error((("Forbidden value (" + this.id) + ") on element id.")));
+            };
+            output.writeDouble(this.id);
             output.writeByte(this.direction);
         }
 
@@ -50,7 +54,32 @@
 
         public function deserializeAs_ActorOrientation(input:ICustomDataInput):void
         {
-            this.id = input.readInt();
+            this._idFunc(input);
+            this._directionFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_ActorOrientation(tree);
+        }
+
+        public function deserializeAsyncAs_ActorOrientation(tree:FuncTree):void
+        {
+            tree.addChild(this._idFunc);
+            tree.addChild(this._directionFunc);
+        }
+
+        private function _idFunc(input:ICustomDataInput):void
+        {
+            this.id = input.readDouble();
+            if (((this.id < -9007199254740992) || (this.id > 9007199254740992)))
+            {
+                throw (new Error((("Forbidden value (" + this.id) + ") on element of ActorOrientation.id.")));
+            };
+        }
+
+        private function _directionFunc(input:ICustomDataInput):void
+        {
             this.direction = input.readByte();
             if (this.direction < 0)
             {
@@ -60,5 +89,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.context
+} com.ankamagames.dofus.network.types.game.context
 

@@ -1,9 +1,8 @@
-﻿package com.ankamagames.dofus.logic.common.utils
+package com.ankamagames.dofus.logic.common.utils
 {
     import __AS3__.vec.Vector;
-    import com.ankamagames.dofus.datacenter.misc.OptionalFeature;
-    import com.ankamagames.dofus.logic.common.frames.MiscFrame;
-    import com.ankamagames.dofus.kernel.Kernel;
+    import com.ankamagames.dofus.datacenter.feature.OptionalFeature;
+    import com.ankamagames.dofus.logic.common.managers.FeatureManager;
     import flash.utils.getTimer;
     import com.ankamagames.jerakine.network.INetworkMessage;
     import com.ankamagames.dofus.network.messages.game.basic.BasicAckMessage;
@@ -12,15 +11,17 @@
     public class LagometerAck extends Lagometer 
     {
 
-        private var _msgTimeStack:Vector.<uint>;
+        private var _msgTimeStack:Vector.<uint> = new Vector.<uint>();
         private var _active:Boolean = false;
         private var _optionId:uint;
 
         public function LagometerAck()
         {
-            this._msgTimeStack = new Vector.<uint>();
-            super();
-            this._optionId = OptionalFeature.getOptionalFeatureByKeyword("net.ack").id;
+            var feature:OptionalFeature = OptionalFeature.getOptionalFeatureByKeyword("system.lagByAck");
+            if (feature)
+            {
+                this._optionId = feature.id;
+            };
         }
 
         override public function stop():void
@@ -34,21 +35,21 @@
 
         override public function ping(msg:INetworkMessage=null):void
         {
-            var f:MiscFrame;
-            if (!(this._active))
+            var featureManager:FeatureManager;
+            if (!this._active)
             {
-                f = (Kernel.getWorker().getFrame(MiscFrame) as MiscFrame);
-                if (((f) && (f.isOptionalFeatureActive(this._optionId))))
+                featureManager = FeatureManager.getInstance();
+                if (((featureManager) && (featureManager.isFeatureWithIdEnabled(this._optionId))))
                 {
                     this._active = true;
                 };
             };
-            if (!(this._active))
+            if (!this._active)
             {
                 super.ping(msg);
                 return;
             };
-            if (!(this._msgTimeStack.length))
+            if (!this._msgTimeStack.length)
             {
                 _timer.delay = SHOW_LAG_DELAY;
                 _timer.start();
@@ -59,7 +60,7 @@
         override public function pong(msg:INetworkMessage=null):void
         {
             var latency:uint;
-            if (!(this._active))
+            if (!this._active)
             {
                 super.pong(msg);
                 return;
@@ -94,5 +95,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.common.utils
+} com.ankamagames.dofus.logic.common.utils
 

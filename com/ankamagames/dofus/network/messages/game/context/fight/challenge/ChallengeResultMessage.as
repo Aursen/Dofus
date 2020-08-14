@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.context.fight.challenge
+package com.ankamagames.dofus.network.messages.game.context.fight.challenge
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class ChallengeResultMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -55,6 +55,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_ChallengeResultMessage(output);
@@ -77,15 +85,36 @@
 
         public function deserializeAs_ChallengeResultMessage(input:ICustomDataInput):void
         {
+            this._challengeIdFunc(input);
+            this._successFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_ChallengeResultMessage(tree);
+        }
+
+        public function deserializeAsyncAs_ChallengeResultMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._challengeIdFunc);
+            tree.addChild(this._successFunc);
+        }
+
+        private function _challengeIdFunc(input:ICustomDataInput):void
+        {
             this.challengeId = input.readVarUhShort();
             if (this.challengeId < 0)
             {
                 throw (new Error((("Forbidden value (" + this.challengeId) + ") on element of ChallengeResultMessage.challengeId.")));
             };
+        }
+
+        private function _successFunc(input:ICustomDataInput):void
+        {
             this.success = input.readBoolean();
         }
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.context.fight.challenge
+} com.ankamagames.dofus.network.messages.game.context.fight.challenge
 

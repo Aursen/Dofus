@@ -1,12 +1,12 @@
-﻿package com.ankamagames.dofus.misc.utils
+package com.ankamagames.dofus.misc.utils
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
     import flash.utils.ByteArray;
     import flash.net.URLLoader;
-    import com.ankamagames.jerakine.types.DataStoreType;
     import com.ankamagames.jerakine.managers.StoreDataManager;
+    import com.ankamagames.jerakine.types.DataStoreType;
     import com.ankamagames.jerakine.data.XmlConfig;
     import flash.events.Event;
     import flash.events.IOErrorEvent;
@@ -30,22 +30,21 @@
         public var count:int;
         public var screen:int = 1;
         public var lang:String;
+        public var dataStore:Object;
         private var _backgroundUrlLoader:URLLoader;
         private var _foregroundUrlLoader:URLLoader;
-        public var dataStore:DataStoreType;
 
 
         public static function recover(dataStore:DataStoreType, name:String):CustomLoadingScreen
         {
-            var storedCustomLoadingScreen:CustomLoadingScreen = (StoreDataManager.getInstance().getData(dataStore, ("loading_" + name)) as CustomLoadingScreen);
-            return (storedCustomLoadingScreen);
+            return (StoreDataManager.getInstance().getData(dataStore, ("loading_" + name)) as CustomLoadingScreen);
         }
 
         public static function loadFromXml(xml:XML):CustomLoadingScreen
         {
             var cls:CustomLoadingScreen = new (CustomLoadingScreen)();
             cls.name = xml.@name;
-            if (((!(cls.name)) && ((xml.child("name").length() > 0))))
+            if (((!(cls.name)) && (xml.child("name").length() > 0)))
             {
                 cls.name = xml.name;
             };
@@ -112,17 +111,10 @@
 
         public function store(storeAsCurrent:Boolean=false):void
         {
-            if (this.dataStore)
+            StoreDataManager.getInstance().setData(CustomLoadingScreenManager.getInstance().dataStore, ("loading_" + this.name), this);
+            if (storeAsCurrent)
             {
-                StoreDataManager.getInstance().setData(this.dataStore, ("loading_" + this.name), this);
-                if (storeAsCurrent)
-                {
-                    StoreDataManager.getInstance().setData(this.dataStore, "currentLoadingScreen", this.name);
-                };
-            }
-            else
-            {
-                _log.error("Can't store loading screen without dataStore");
+                StoreDataManager.getInstance().setData(CustomLoadingScreenManager.getInstance().dataStore, "currentLoadingScreen", this.name);
             };
         }
 
@@ -138,7 +130,7 @@
         public function canBeRead():Boolean
         {
             var currentDate:Date = new Date();
-            if (((((((!(this.begin)) || ((this.begin.time < currentDate.time)))) && (((!(this.end)) || ((this.end.time > currentDate.time)))))) && ((((((this.countMax == -1)) || ((this.countMax == 0)))) || ((this.count < this.countMax))))))
+            if (((((!(this.begin)) || (this.begin.time < currentDate.time)) && ((!(this.end)) || (this.end.time > currentDate.time))) && (((this.countMax == -1) || (this.countMax == 0)) || (this.count < this.countMax))))
             {
                 return (true);
             };
@@ -147,7 +139,7 @@
 
         public function canBeReadOnScreen(beforeLogin:Boolean):Boolean
         {
-            return (((this.canBeRead()) && ((((((this.screen == 3)) || (((beforeLogin) && ((this.screen == 1)))))) || (((!(beforeLogin)) && ((this.screen == 2))))))));
+            return ((this.canBeRead()) && (((this.screen == 3) || ((beforeLogin) && (this.screen == 1))) || ((!(beforeLogin)) && (this.screen == 2))));
         }
 
         private function onComplete(e:Event):void
@@ -159,11 +151,11 @@
                 case this._backgroundUrlLoader:
                     this.backgroundImg = urlLoader.data;
                     this.store();
-                    return;
+                    break;
                 case this._foregroundUrlLoader:
                     this.foregroundImg = urlLoader.data;
                     this.store();
-                    return;
+                    break;
             };
         }
 
@@ -174,5 +166,5 @@
 
 
     }
-}//package com.ankamagames.dofus.misc.utils
+} com.ankamagames.dofus.misc.utils
 

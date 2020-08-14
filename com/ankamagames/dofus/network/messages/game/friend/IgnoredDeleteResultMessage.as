@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.friend
+package com.ankamagames.dofus.network.messages.game.friend
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,9 +6,9 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import com.ankamagames.jerakine.network.utils.BooleanByteWrapper;
 
-    [Trusted]
     public class IgnoredDeleteResultMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -59,6 +59,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_IgnoredDeleteResultMessage(output);
@@ -80,13 +88,34 @@
 
         public function deserializeAs_IgnoredDeleteResultMessage(input:ICustomDataInput):void
         {
+            this.deserializeByteBoxes(input);
+            this._nameFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_IgnoredDeleteResultMessage(tree);
+        }
+
+        public function deserializeAsyncAs_IgnoredDeleteResultMessage(tree:FuncTree):void
+        {
+            tree.addChild(this.deserializeByteBoxes);
+            tree.addChild(this._nameFunc);
+        }
+
+        private function deserializeByteBoxes(input:ICustomDataInput):void
+        {
             var _box0:uint = input.readByte();
             this.success = BooleanByteWrapper.getFlag(_box0, 0);
             this.session = BooleanByteWrapper.getFlag(_box0, 1);
+        }
+
+        private function _nameFunc(input:ICustomDataInput):void
+        {
             this.name = input.readUTF();
         }
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.friend
+} com.ankamagames.dofus.network.messages.game.friend
 

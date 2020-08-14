@@ -1,28 +1,24 @@
-﻿package com.ankamagames.dofus.network.messages.game.friend
+package com.ankamagames.dofus.network.messages.game.friend
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
     import com.ankamagames.dofus.network.types.game.friend.FriendInformations;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
     import com.ankamagames.dofus.network.ProtocolTypeManager;
 
-    [Trusted]
     public class FriendUpdateMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 5924;
 
         private var _isInitialized:Boolean = false;
-        public var friendUpdated:FriendInformations;
+        public var friendUpdated:FriendInformations = new FriendInformations();
+        private var _friendUpdatedtree:FuncTree;
 
-        public function FriendUpdateMessage()
-        {
-            this.friendUpdated = new FriendInformations();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
@@ -59,6 +55,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_FriendUpdateMessage(output);
@@ -82,7 +86,24 @@
             this.friendUpdated.deserialize(input);
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_FriendUpdateMessage(tree);
+        }
+
+        public function deserializeAsyncAs_FriendUpdateMessage(tree:FuncTree):void
+        {
+            this._friendUpdatedtree = tree.addChild(this._friendUpdatedtreeFunc);
+        }
+
+        private function _friendUpdatedtreeFunc(input:ICustomDataInput):void
+        {
+            var _id:uint = input.readUnsignedShort();
+            this.friendUpdated = ProtocolTypeManager.getInstance(FriendInformations, _id);
+            this.friendUpdated.deserializeAsync(this._friendUpdatedtree);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.friend
+} com.ankamagames.dofus.network.messages.game.friend
 

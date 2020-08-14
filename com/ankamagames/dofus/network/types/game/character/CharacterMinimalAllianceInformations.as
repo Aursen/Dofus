@@ -1,7 +1,8 @@
-﻿package com.ankamagames.dofus.network.types.game.character
+package com.ankamagames.dofus.network.types.game.character
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.dofus.network.types.game.context.roleplay.BasicAllianceInformations;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import com.ankamagames.dofus.network.types.game.look.EntityLook;
     import com.ankamagames.dofus.network.types.game.context.roleplay.BasicGuildInformations;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
@@ -12,22 +13,18 @@
 
         public static const protocolId:uint = 444;
 
-        public var alliance:BasicAllianceInformations;
+        public var alliance:BasicAllianceInformations = new BasicAllianceInformations();
+        private var _alliancetree:FuncTree;
 
-        public function CharacterMinimalAllianceInformations()
-        {
-            this.alliance = new BasicAllianceInformations();
-            super();
-        }
 
         override public function getTypeId():uint
         {
             return (444);
         }
 
-        public function initCharacterMinimalAllianceInformations(id:uint=0, level:uint=0, name:String="", entityLook:EntityLook=null, guild:BasicGuildInformations=null, alliance:BasicAllianceInformations=null):CharacterMinimalAllianceInformations
+        public function initCharacterMinimalAllianceInformations(id:Number=0, name:String="", level:uint=0, entityLook:EntityLook=null, breed:int=0, guild:BasicGuildInformations=null, alliance:BasicAllianceInformations=null):CharacterMinimalAllianceInformations
         {
-            super.initCharacterMinimalGuildInformations(id, level, name, entityLook, guild);
+            super.initCharacterMinimalGuildInformations(id, name, level, entityLook, breed, guild);
             this.alliance = alliance;
             return (this);
         }
@@ -61,7 +58,24 @@
             this.alliance.deserialize(input);
         }
 
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_CharacterMinimalAllianceInformations(tree);
+        }
+
+        public function deserializeAsyncAs_CharacterMinimalAllianceInformations(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            this._alliancetree = tree.addChild(this._alliancetreeFunc);
+        }
+
+        private function _alliancetreeFunc(input:ICustomDataInput):void
+        {
+            this.alliance = new BasicAllianceInformations();
+            this.alliance.deserializeAsync(this._alliancetree);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.types.game.character
+} com.ankamagames.dofus.network.types.game.character
 

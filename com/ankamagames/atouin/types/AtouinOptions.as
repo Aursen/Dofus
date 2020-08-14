@@ -1,11 +1,10 @@
-﻿package com.ankamagames.atouin.types
+package com.ankamagames.atouin.types
 {
     import com.ankamagames.jerakine.managers.OptionManager;
     import flash.display.DisplayObjectContainer;
     import com.ankamagames.jerakine.messages.MessageHandler;
-    import com.ankamagames.jerakine.utils.system.AirScanner;
 
-    public dynamic class AtouinOptions extends OptionManager 
+    public class AtouinOptions extends OptionManager 
     {
 
         private var _container:DisplayObjectContainer;
@@ -15,13 +14,14 @@
         {
             super("atouin");
             add("groundCacheMode", 1);
-            add("useInsideAutoZoom", AirScanner.isStreamingVersion());
-            add("useCacheAsBitmap", true);
+            add("useInsideAutoZoom", false);
+            add("useCacheAsBitmap", false);
             add("useSmooth", true);
             add("frustum", new Frustum(), false);
             add("alwaysShowGrid", false);
             add("debugLayer", false);
             add("showCellIdOnOver", false);
+            add("showEveryCellId", false);
             add("tweentInterMap", false);
             add("hideInterMap", false);
             add("virtualPlayerJump", false);
@@ -32,6 +32,8 @@
             add("elementsPath");
             add("pngSubPath");
             add("jpgSubPath");
+            add("pngPathOverride");
+            add("swfPath");
             add("mapsPath");
             add("elementsIndexPath");
             add("particlesScriptsPath");
@@ -39,8 +41,11 @@
             add("groundOnly", false);
             add("showTransitions", false);
             add("useLowDefSkin", true);
-            add("showProgressBar", AirScanner.isStreamingVersion());
+            add("showProgressBar", false);
             add("mapPictoExtension", "png");
+            add("hideBlackBorder", true);
+            add("tacticalModeTemplatesPath");
+            add("useWorldEntityPool", false);
             this._container = docContainer;
             this._handler = mhHandler;
         }
@@ -57,5 +62,5 @@
 
 
     }
-}//package com.ankamagames.atouin.types
+} com.ankamagames.atouin.types
 

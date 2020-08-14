@@ -1,18 +1,16 @@
-﻿package com.ankamagames.jerakine.handlers
+package com.ankamagames.jerakine.handlers
 {
     import com.ankamagames.jerakine.messages.MessageDispatcher;
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
-    import com.ankamagames.jerakine.utils.prng.ParkMillerCarta;
     import com.ankamagames.jerakine.messages.MessageHandler;
     import com.ankamagames.jerakine.utils.display.KeyPoll;
     import com.ankamagames.jerakine.utils.memory.WeakReference;
     import flash.events.KeyboardEvent;
     import flash.utils.Dictionary;
+    import com.ankamagames.jerakine.utils.prng.ParkMillerCarta;
     import com.ankamagames.jerakine.utils.errors.SingletonError;
-    import com.ankamagames.jerakine.utils.system.AirScanner;
-    import com.ankamagames.jerakine.managers.LangManager;
     import com.ankamagames.jerakine.utils.display.StageShareManager;
     import flash.events.MouseEvent;
     import flash.display.Stage;
@@ -20,7 +18,6 @@
     import com.ankamagames.jerakine.handlers.messages.mouse.MouseDoubleClickMessage;
     import flash.utils.getTimer;
     import com.ankamagames.jerakine.handlers.messages.mouse.MouseClickMessage;
-    import com.ankamagames.jerakine.messages.Worker;
     import com.ankamagames.jerakine.handlers.messages.mouse.MouseWheelMessage;
     import flash.display.DisplayObject;
     import flash.display.Sprite;
@@ -30,6 +27,8 @@
     import com.ankamagames.jerakine.handlers.messages.mouse.MouseMiddleClickMessage;
     import com.ankamagames.jerakine.handlers.messages.mouse.MouseRightClickOutsideMessage;
     import com.ankamagames.jerakine.handlers.messages.mouse.MouseRightClickMessage;
+    import com.ankamagames.jerakine.handlers.messages.mouse.MouseRightDownMessage;
+    import com.ankamagames.jerakine.handlers.messages.mouse.MouseRightUpMessage;
     import com.ankamagames.jerakine.handlers.messages.mouse.MouseDownMessage;
     import flash.display.InteractiveObject;
     import com.ankamagames.jerakine.handlers.messages.mouse.MouseReleaseOutsideMessage;
@@ -45,8 +44,6 @@
         private static const DOUBLE_CLICK_DELAY:uint = 500;
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(HumanInputHandler));
 
-        private const random:ParkMillerCarta = new ParkMillerCarta();
-
         private var _handler:MessageHandler;
         private var _keyPoll:KeyPoll;
         private var _lastTarget:WeakReference;
@@ -55,13 +52,13 @@
         private var _appleDown:Boolean;
         private var _appleKeyboardEvent:KeyboardEvent;
         private var _debugOver:Boolean = false;
-        private var _debugOverSprite:Dictionary;
-        private var _useDirectEventMode:Boolean = false;
+        private var _isMouseDown:Boolean = false;
+
+        private var _debugOverSprite:Dictionary = new Dictionary(true);
+        private const random:ParkMillerCarta = new ParkMillerCarta();
 
         public function HumanInputHandler()
         {
-            this._debugOverSprite = new Dictionary(true);
-            super();
             if (_self != null)
             {
                 throw (new SingletonError("HumanInputHandler constructor should not be called directly."));
@@ -78,6 +75,11 @@
             return (_self);
         }
 
+
+        public function get isMouseDown():Boolean
+        {
+            return (this._isMouseDown);
+        }
 
         public function get debugOver():Boolean
         {
@@ -124,10 +126,6 @@
         private function initialize():void
         {
             this._keyPoll = new KeyPoll();
-            if (AirScanner.isStreamingVersion())
-            {
-                this._useDirectEventMode = LangManager.getInstance().getBooleanEntry("directEventMode");
-            };
             this.registerListeners();
         }
 
@@ -148,6 +146,8 @@
             {
                 target.removeEventListener(MouseEvent.MIDDLE_CLICK, this.onMiddleClick, true);
                 target.removeEventListener(MouseEvent.RIGHT_CLICK, this.onRightClick, true);
+                target.removeEventListener(MouseEvent.RIGHT_MOUSE_DOWN, this.onRightMouseDown, true);
+                target.removeEventListener(MouseEvent.RIGHT_MOUSE_UP, this.onRightMouseUp, true);
             }
             catch(e:TypeError)
             {
@@ -174,6 +174,8 @@
             {
                 target.addEventListener(MouseEvent.MIDDLE_CLICK, this.onMiddleClick, true, 1, true);
                 target.addEventListener(MouseEvent.RIGHT_CLICK, this.onRightClick, true, 1, true);
+                target.addEventListener(MouseEvent.RIGHT_MOUSE_DOWN, this.onRightMouseDown, true, 1, true);
+                target.addEventListener(MouseEvent.RIGHT_MOUSE_UP, this.onRightMouseUp, true, 1, true);
             }
             catch(e:TypeError)
             {
@@ -206,34 +208,14 @@
                 }
                 else
                 {
-                    if (!(this._useDirectEventMode))
-                    {
-                        this._handler.process(GenericPool.get(MouseClickMessage, me.target, me));
-                    }
-                    else
-                    {
-                        if ((this._handler is Worker))
-                        {
-                            Worker(this._handler).processImmediately(GenericPool.get(MouseClickMessage, me.target, me));
-                        };
-                    };
+                    this._handler.process(GenericPool.get(MouseClickMessage, me.target, me));
                 };
             };
         }
 
         private function onMouseWheel(me:MouseEvent):void
         {
-            if (!(this._useDirectEventMode))
-            {
-                this._handler.process(GenericPool.get(MouseWheelMessage, me.target, me));
-            }
-            else
-            {
-                if ((this._handler is Worker))
-                {
-                    Worker(this._handler).processImmediately(GenericPool.get(MouseWheelMessage, me.target, me));
-                };
-            };
+            this._handler.process(GenericPool.get(MouseWheelMessage, me.target, me));
         }
 
         private function onMouseOver(me:MouseEvent):void
@@ -252,7 +234,7 @@
                 shapeName = (("#{{{debug_shape_" + dObj.name) + "}}}#");
                 present = false;
                 i = 0;
-                while ((((i < dObj.parent.numChildren)) && (!(present))))
+                while (((i < dObj.parent.numChildren) && (!(present))))
                 {
                     if (dObj.parent.getChildAt(i).name == shapeName)
                     {
@@ -269,7 +251,7 @@
                     j++;
                 };
                 this.random.seed(seed);
-                if (!(s))
+                if (!s)
                 {
                     s = new Sprite();
                     s.mouseEnabled = false;
@@ -300,7 +282,7 @@
 
         private function onRightClick(me:MouseEvent):void
         {
-            if (((!((this._lastTarget == null))) && (!((this._lastTarget.object == me.target)))))
+            if (((!(this._lastTarget == null)) && (!(this._lastTarget.object == me.target))))
             {
                 this._handler.process(GenericPool.get(MouseRightClickOutsideMessage, this._lastTarget.object, me));
             };
@@ -308,8 +290,19 @@
             this._handler.process(GenericPool.get(MouseRightClickMessage, me.target, me));
         }
 
+        private function onRightMouseDown(me:MouseEvent):void
+        {
+            this._handler.process(GenericPool.get(MouseRightDownMessage, me.target, me));
+        }
+
+        private function onRightMouseUp(me:MouseEvent):void
+        {
+            this._handler.process(GenericPool.get(MouseRightUpMessage, me.target, me));
+        }
+
         private function onMouseDown(me:MouseEvent):void
         {
+            this._isMouseDown = true;
             this._lastTarget = new WeakReference(me.target);
             this._handler.process(GenericPool.get(MouseDownMessage, me.target, me));
             FocusHandler.getInstance().setFocus(InteractiveObject(me.target));
@@ -317,7 +310,8 @@
 
         private function onMouseUp(me:MouseEvent):void
         {
-            if (((!((this._lastTarget == null))) && (!((this._lastTarget.object == me.target)))))
+            this._isMouseDown = false;
+            if (((!(this._lastTarget == null)) && (!(this._lastTarget.object == me.target))))
             {
                 this._handler.process(GenericPool.get(MouseReleaseOutsideMessage, this._lastTarget.object, me));
             };
@@ -342,23 +336,13 @@
                 }
                 else
                 {
-                    if ((((ke.keyCode == Keyboard.S)) && (ke.ctrlKey)))
+                    if (((ke.keyCode == Keyboard.S) && (ke.ctrlKey)))
                     {
                         ke.preventDefault();
                     };
                 };
             };
-            if (!(this._useDirectEventMode))
-            {
-                this._handler.process(GenericPool.get(KeyboardKeyDownMessage, FocusHandler.getInstance().getFocus(), ke));
-            }
-            else
-            {
-                if ((this._handler is Worker))
-                {
-                    Worker(this._handler).processImmediately(GenericPool.get(KeyboardKeyDownMessage, FocusHandler.getInstance().getFocus(), ke));
-                };
-            };
+            this._handler.process(GenericPool.get(KeyboardKeyDownMessage, FocusHandler.getInstance().getFocus(), ke));
         }
 
         private function onKeyUp(ke:KeyboardEvent):void
@@ -367,34 +351,9 @@
             {
                 ke.ctrlKey = true;
             };
-            if (AirScanner.isStreamingVersion())
+            if (!this._appleDown)
             {
-                if (ke.keyCode == Keyboard.ESCAPE)
-                {
-                    if (StageShareManager.justExitFullScreen)
-                    {
-                        StageShareManager.justExitFullScreen = false;
-                        if (!(StageShareManager.shortcutUsedToExitFullScreen))
-                        {
-                            return;
-                        };
-                        StageShareManager.shortcutUsedToExitFullScreen = false;
-                    };
-                };
-            };
-            if (!(this._appleDown))
-            {
-                if (!(this._useDirectEventMode))
-                {
-                    this._handler.process(GenericPool.get(KeyboardKeyUpMessage, FocusHandler.getInstance().getFocus(), ke));
-                }
-                else
-                {
-                    if ((this._handler is Worker))
-                    {
-                        Worker(this._handler).processImmediately(GenericPool.get(KeyboardKeyUpMessage, FocusHandler.getInstance().getFocus(), ke));
-                    };
-                };
+                this._handler.process(GenericPool.get(KeyboardKeyUpMessage, FocusHandler.getInstance().getFocus(), ke));
             }
             else
             {
@@ -404,5 +363,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.handlers
+} com.ankamagames.jerakine.handlers
 

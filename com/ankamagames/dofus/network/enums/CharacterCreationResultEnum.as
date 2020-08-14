@@ -1,6 +1,5 @@
-﻿package com.ankamagames.dofus.network.enums
+package com.ankamagames.dofus.network.enums
 {
-    [Trusted]
     public class CharacterCreationResultEnum 
     {
 
@@ -12,8 +11,9 @@
         public static const ERR_NOT_ALLOWED:uint = 5;
         public static const ERR_NEW_PLAYER_NOT_ALLOWED:uint = 6;
         public static const ERR_RESTRICED_ZONE:uint = 7;
+        public static const ERR_INCONSISTENT_COMMUNITY:uint = 8;
 
 
     }
-}//package com.ankamagames.dofus.network.enums
+} com.ankamagames.dofus.network.enums
 

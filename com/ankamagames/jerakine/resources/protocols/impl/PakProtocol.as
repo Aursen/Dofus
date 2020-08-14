@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.resources.protocols.impl
+package com.ankamagames.jerakine.resources.protocols.impl
 {
     import com.ankamagames.jerakine.resources.protocols.AbstractProtocol;
     import com.ankamagames.jerakine.resources.protocols.IProtocol;
@@ -22,10 +22,10 @@
         public function getFilesIndex(uri:Uri):Dictionary
         {
             var fileStream:FileStream = _streams[uri.path];
-            if (!(fileStream))
+            if (!fileStream)
             {
                 fileStream = this.initStream(uri);
-                if (!(fileStream))
+                if (!fileStream)
                 {
                     return (null);
                 };
@@ -36,10 +36,10 @@
         public function load(uri:Uri, observer:IResourceObserver, dispatchProgress:Boolean, cache:ICache, forcedAdapter:Class, uniqueFile:Boolean):void
         {
             var fileStream:FileStream = _streams[uri.path];
-            if (!(fileStream))
+            if (!fileStream)
             {
                 fileStream = this.initStream(uri);
-                if (!(fileStream))
+                if (!fileStream)
                 {
                     if (observer)
                     {
@@ -49,7 +49,7 @@
                 };
             };
             var index:Object = _indexes[uri.path][uri.subPath];
-            if (!(index))
+            if (!index)
             {
                 if (observer)
                 {
@@ -90,7 +90,7 @@
             var fileOffset:int;
             var fileLength:int;
             var file:File = uri.toFile();
-            if (!(file.exists))
+            if (!file.exists)
             {
                 return (null);
             };
@@ -116,5 +116,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.resources.protocols.impl
+} com.ankamagames.jerakine.resources.protocols.impl
 

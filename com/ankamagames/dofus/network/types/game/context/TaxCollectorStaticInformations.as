@@ -1,7 +1,8 @@
-﻿package com.ankamagames.dofus.network.types.game.context
+package com.ankamagames.dofus.network.types.game.context
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.dofus.network.types.game.context.roleplay.GuildInformations;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
 
@@ -12,13 +13,9 @@
 
         public var firstNameId:uint = 0;
         public var lastNameId:uint = 0;
-        public var guildIdentity:GuildInformations;
+        public var guildIdentity:GuildInformations = new GuildInformations();
+        private var _guildIdentitytree:FuncTree;
 
-        public function TaxCollectorStaticInformations()
-        {
-            this.guildIdentity = new GuildInformations();
-            super();
-        }
 
         public function getTypeId():uint
         {
@@ -67,21 +64,49 @@
 
         public function deserializeAs_TaxCollectorStaticInformations(input:ICustomDataInput):void
         {
+            this._firstNameIdFunc(input);
+            this._lastNameIdFunc(input);
+            this.guildIdentity = new GuildInformations();
+            this.guildIdentity.deserialize(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_TaxCollectorStaticInformations(tree);
+        }
+
+        public function deserializeAsyncAs_TaxCollectorStaticInformations(tree:FuncTree):void
+        {
+            tree.addChild(this._firstNameIdFunc);
+            tree.addChild(this._lastNameIdFunc);
+            this._guildIdentitytree = tree.addChild(this._guildIdentitytreeFunc);
+        }
+
+        private function _firstNameIdFunc(input:ICustomDataInput):void
+        {
             this.firstNameId = input.readVarUhShort();
             if (this.firstNameId < 0)
             {
                 throw (new Error((("Forbidden value (" + this.firstNameId) + ") on element of TaxCollectorStaticInformations.firstNameId.")));
             };
+        }
+
+        private function _lastNameIdFunc(input:ICustomDataInput):void
+        {
             this.lastNameId = input.readVarUhShort();
             if (this.lastNameId < 0)
             {
                 throw (new Error((("Forbidden value (" + this.lastNameId) + ") on element of TaxCollectorStaticInformations.lastNameId.")));
             };
+        }
+
+        private function _guildIdentitytreeFunc(input:ICustomDataInput):void
+        {
             this.guildIdentity = new GuildInformations();
-            this.guildIdentity.deserialize(input);
+            this.guildIdentity.deserializeAsync(this._guildIdentitytree);
         }
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.context
+} com.ankamagames.dofus.network.types.game.context
 

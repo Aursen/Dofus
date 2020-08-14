@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.context.roleplay.job
+package com.ankamagames.dofus.network.messages.game.context.roleplay.job
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,30 +6,26 @@
     import __AS3__.vec.Vector;
     import com.ankamagames.dofus.network.types.game.context.roleplay.job.JobCrafterDirectoryEntryJobInfo;
     import com.ankamagames.dofus.network.types.game.look.EntityLook;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
     import __AS3__.vec.*;
 
-    [Trusted]
     public class JobCrafterDirectoryEntryMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 6044;
 
         private var _isInitialized:Boolean = false;
-        public var playerInfo:JobCrafterDirectoryEntryPlayerInfo;
-        public var jobInfoList:Vector.<JobCrafterDirectoryEntryJobInfo>;
-        public var playerLook:EntityLook;
+        public var playerInfo:JobCrafterDirectoryEntryPlayerInfo = new JobCrafterDirectoryEntryPlayerInfo();
+        public var jobInfoList:Vector.<JobCrafterDirectoryEntryJobInfo> = new Vector.<JobCrafterDirectoryEntryJobInfo>();
+        public var playerLook:EntityLook = new EntityLook();
+        private var _playerInfotree:FuncTree;
+        private var _jobInfoListtree:FuncTree;
+        private var _playerLooktree:FuncTree;
 
-        public function JobCrafterDirectoryEntryMessage()
-        {
-            this.playerInfo = new JobCrafterDirectoryEntryPlayerInfo();
-            this.jobInfoList = new Vector.<JobCrafterDirectoryEntryJobInfo>();
-            this.playerLook = new EntityLook();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
@@ -67,6 +63,14 @@
         override public function unpack(input:ICustomDataInput, length:uint):void
         {
             this.deserialize(input);
+        }
+
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
         }
 
         public function serialize(output:ICustomDataOutput):void
@@ -110,7 +114,49 @@
             this.playerLook.deserialize(input);
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_JobCrafterDirectoryEntryMessage(tree);
+        }
+
+        public function deserializeAsyncAs_JobCrafterDirectoryEntryMessage(tree:FuncTree):void
+        {
+            this._playerInfotree = tree.addChild(this._playerInfotreeFunc);
+            this._jobInfoListtree = tree.addChild(this._jobInfoListtreeFunc);
+            this._playerLooktree = tree.addChild(this._playerLooktreeFunc);
+        }
+
+        private function _playerInfotreeFunc(input:ICustomDataInput):void
+        {
+            this.playerInfo = new JobCrafterDirectoryEntryPlayerInfo();
+            this.playerInfo.deserializeAsync(this._playerInfotree);
+        }
+
+        private function _jobInfoListtreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._jobInfoListtree.addChild(this._jobInfoListFunc);
+                i++;
+            };
+        }
+
+        private function _jobInfoListFunc(input:ICustomDataInput):void
+        {
+            var _item:JobCrafterDirectoryEntryJobInfo = new JobCrafterDirectoryEntryJobInfo();
+            _item.deserialize(input);
+            this.jobInfoList.push(_item);
+        }
+
+        private function _playerLooktreeFunc(input:ICustomDataInput):void
+        {
+            this.playerLook = new EntityLook();
+            this.playerLook.deserializeAsync(this._playerLooktree);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.context.roleplay.job
+} com.ankamagames.dofus.network.messages.game.context.roleplay.job
 

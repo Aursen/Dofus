@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.internalDatacenter.communication
+package com.ankamagames.dofus.internalDatacenter.communication
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import __AS3__.vec.Vector;
@@ -8,11 +8,11 @@
     {
 
         private var _receiverName:String;
-        private var _receiverId:uint;
+        private var _receiverId:Number;
 
-        public function ChatSentenceWithRecipient(id:uint, baseMsg:String, msg:String, channel:uint=0, time:Number=0, finger:String="", senderId:uint=0, senderName:String="", receiverName:String="", receiverId:uint=0, objects:Vector.<ItemWrapper>=null)
+        public function ChatSentenceWithRecipient(id:uint, baseMsg:String, msg:String, channel:uint=0, time:Number=0, finger:String="", senderId:Number=0, prefix:String="", senderName:String="", receiverName:String="", receiverId:Number=0, objects:Vector.<ItemWrapper>=null)
         {
-            super(id, baseMsg, msg, channel, time, finger, senderId, senderName, objects);
+            super(id, baseMsg, msg, channel, time, finger, senderId, prefix, senderName, objects);
             this._receiverName = receiverName;
             this._receiverId = receiverId;
         }
@@ -22,12 +22,12 @@
             return (this._receiverName);
         }
 
-        public function get receiverId():uint
+        public function get receiverId():Number
         {
             return (this._receiverId);
         }
 
 
     }
-}//package com.ankamagames.dofus.internalDatacenter.communication
+} com.ankamagames.dofus.internalDatacenter.communication
 

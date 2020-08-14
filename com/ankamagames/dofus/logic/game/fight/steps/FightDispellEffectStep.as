@@ -1,20 +1,22 @@
-﻿package com.ankamagames.dofus.logic.game.fight.steps
+package com.ankamagames.dofus.logic.game.fight.steps
 {
     import com.ankamagames.jerakine.sequencer.AbstractSequencable;
     import com.ankamagames.jerakine.sequencer.ISequencableListener;
     import com.ankamagames.dofus.logic.game.fight.types.StateBuff;
     import com.ankamagames.dofus.logic.game.fight.managers.BuffManager;
     import com.ankamagames.dofus.logic.game.fight.types.BasicBuff;
+    import com.ankama.dofus.enums.ActionIds;
     import com.ankamagames.jerakine.sequencer.ISequencable;
+    import __AS3__.vec.Vector;
 
     public class FightDispellEffectStep extends AbstractSequencable implements IFightStep, ISequencableListener 
     {
 
-        private var _fighterId:int;
+        private var _fighterId:Number;
         private var _boostUID:int;
         private var _virtualStep:IFightStep;
 
-        public function FightDispellEffectStep(fighterId:int, boostUID:int)
+        public function FightDispellEffectStep(fighterId:Number, boostUID:int)
         {
             this._fighterId = fighterId;
             this._boostUID = boostUID;
@@ -29,20 +31,20 @@
         {
             var sb:StateBuff;
             var buff:BasicBuff = BuffManager.getInstance().getBuff(this._boostUID, this._fighterId);
-            if (((buff) && ((buff is StateBuff))))
+            if (((buff) && (buff is StateBuff)))
             {
                 sb = (buff as StateBuff);
-                if (sb.actionId == 952)
+                if (sb.actionId == ActionIds.ACTION_FIGHT_DISABLE_STATE)
                 {
-                    this._virtualStep = new FightEnteringStateStep(sb.targetId, sb.stateId, sb.effects.durationString);
+                    this._virtualStep = new FightEnteringStateStep(sb.targetId, sb.stateId, sb.effect.durationString, buff);
                 }
                 else
                 {
-                    this._virtualStep = new FightLeavingStateStep(sb.targetId, sb.stateId);
+                    this._virtualStep = new FightLeavingStateStep(sb.targetId, sb.stateId, buff);
                 };
             };
             BuffManager.getInstance().dispellUniqueBuff(this._fighterId, this._boostUID, true, false, true);
-            if (!(this._virtualStep))
+            if (!this._virtualStep)
             {
                 executeCallbacks();
             }
@@ -59,7 +61,12 @@
             executeCallbacks();
         }
 
+        public function get targets():Vector.<Number>
+        {
+            return (new <Number>[this._fighterId]);
+        }
+
 
     }
-}//package com.ankamagames.dofus.logic.game.fight.steps
+} com.ankamagames.dofus.logic.game.fight.steps
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.internalDatacenter.items
+package com.ankamagames.dofus.internalDatacenter.items
 {
     import com.ankamagames.jerakine.interfaces.ISlotData;
     import com.ankamagames.jerakine.interfaces.IDataCenter;
@@ -13,7 +13,7 @@
 
         private static const _log:Logger = Log.getLogger(getQualifiedClassName(SimpleTextureWrapper));
 
-        private var _uri:Uri;
+        protected var _uri:Uri;
 
 
         public static function create(uri:Uri):SimpleTextureWrapper
@@ -83,5 +83,5 @@
 
 
     }
-}//package com.ankamagames.dofus.internalDatacenter.items
+} com.ankamagames.dofus.internalDatacenter.items
 

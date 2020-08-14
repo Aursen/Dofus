@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.inventory.items
+package com.ankamagames.dofus.network.messages.game.inventory.items
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class ObjectDropMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -55,6 +55,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_ObjectDropMessage(output);
@@ -81,11 +89,32 @@
 
         public function deserializeAs_ObjectDropMessage(input:ICustomDataInput):void
         {
+            this._objectUIDFunc(input);
+            this._quantityFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_ObjectDropMessage(tree);
+        }
+
+        public function deserializeAsyncAs_ObjectDropMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._objectUIDFunc);
+            tree.addChild(this._quantityFunc);
+        }
+
+        private function _objectUIDFunc(input:ICustomDataInput):void
+        {
             this.objectUID = input.readVarUhInt();
             if (this.objectUID < 0)
             {
                 throw (new Error((("Forbidden value (" + this.objectUID) + ") on element of ObjectDropMessage.objectUID.")));
             };
+        }
+
+        private function _quantityFunc(input:ICustomDataInput):void
+        {
             this.quantity = input.readVarUhInt();
             if (this.quantity < 0)
             {
@@ -95,5 +124,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.inventory.items
+} com.ankamagames.dofus.network.messages.game.inventory.items
 

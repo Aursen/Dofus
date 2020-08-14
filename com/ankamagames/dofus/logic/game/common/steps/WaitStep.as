@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.common.steps
+package com.ankamagames.dofus.logic.game.common.steps
 {
     import com.ankamagames.jerakine.sequencer.AbstractSequencable;
     import flash.utils.Timer;
@@ -51,10 +51,10 @@
 
         override public function toString():String
         {
-            return ((("Wait " + this._ms) + " ms"));
+            return (("Wait " + this._ms) + " ms");
         }
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.steps
+} com.ankamagames.dofus.logic.game.common.steps
 

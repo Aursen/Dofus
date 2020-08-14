@@ -1,12 +1,12 @@
-﻿package com.ankamagames.dofus.network.messages.connection
+package com.ankamagames.dofus.network.messages.connection
 {
     import com.ankamagames.jerakine.network.INetworkMessage;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class IdentificationSuccessWithLoginTokenMessage extends IdentificationSuccessMessage implements INetworkMessage 
     {
 
@@ -18,7 +18,7 @@
 
         override public function get isInitialized():Boolean
         {
-            return (((super.isInitialized) && (this._isInitialized)));
+            return ((super.isInitialized) && (this._isInitialized));
         }
 
         override public function getMessageId():uint
@@ -26,9 +26,9 @@
             return (6209);
         }
 
-        public function initIdentificationSuccessWithLoginTokenMessage(login:String="", nickname:String="", accountId:uint=0, communityId:uint=0, hasRights:Boolean=false, secretQuestion:String="", accountCreation:Number=0, subscriptionElapsedDuration:Number=0, subscriptionEndDate:Number=0, wasAlreadyConnected:Boolean=false, loginToken:String=""):IdentificationSuccessWithLoginTokenMessage
+        public function initIdentificationSuccessWithLoginTokenMessage(login:String="", nickname:String="", accountId:uint=0, communityId:uint=0, hasRights:Boolean=false, hasConsoleRight:Boolean=false, secretQuestion:String="", accountCreation:Number=0, subscriptionElapsedDuration:Number=0, subscriptionEndDate:Number=0, wasAlreadyConnected:Boolean=false, havenbagAvailableRoom:uint=0, loginToken:String=""):IdentificationSuccessWithLoginTokenMessage
         {
-            super.initIdentificationSuccessMessage(login, nickname, accountId, communityId, hasRights, secretQuestion, accountCreation, subscriptionElapsedDuration, subscriptionEndDate, wasAlreadyConnected);
+            super.initIdentificationSuccessMessage(login, nickname, accountId, communityId, hasRights, hasConsoleRight, secretQuestion, accountCreation, subscriptionElapsedDuration, subscriptionEndDate, wasAlreadyConnected, havenbagAvailableRoom);
             this.loginToken = loginToken;
             this._isInitialized = true;
             return (this);
@@ -53,6 +53,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         override public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_IdentificationSuccessWithLoginTokenMessage(output);
@@ -72,10 +80,26 @@
         public function deserializeAs_IdentificationSuccessWithLoginTokenMessage(input:ICustomDataInput):void
         {
             super.deserialize(input);
+            this._loginTokenFunc(input);
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_IdentificationSuccessWithLoginTokenMessage(tree);
+        }
+
+        public function deserializeAsyncAs_IdentificationSuccessWithLoginTokenMessage(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._loginTokenFunc);
+        }
+
+        private function _loginTokenFunc(input:ICustomDataInput):void
+        {
             this.loginToken = input.readUTF();
         }
 
 
     }
-}//package com.ankamagames.dofus.network.messages.connection
+} com.ankamagames.dofus.network.messages.connection
 

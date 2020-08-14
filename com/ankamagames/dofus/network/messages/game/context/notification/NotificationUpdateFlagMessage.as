@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.context.notification
+package com.ankamagames.dofus.network.messages.game.context.notification
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class NotificationUpdateFlagMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -52,6 +52,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_NotificationUpdateFlagMessage(output);
@@ -73,6 +81,21 @@
 
         public function deserializeAs_NotificationUpdateFlagMessage(input:ICustomDataInput):void
         {
+            this._indexFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_NotificationUpdateFlagMessage(tree);
+        }
+
+        public function deserializeAsyncAs_NotificationUpdateFlagMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._indexFunc);
+        }
+
+        private function _indexFunc(input:ICustomDataInput):void
+        {
             this.index = input.readVarUhShort();
             if (this.index < 0)
             {
@@ -82,5 +105,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.context.notification
+} com.ankamagames.dofus.network.messages.game.context.notification
 

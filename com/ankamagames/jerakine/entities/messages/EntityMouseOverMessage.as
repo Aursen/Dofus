@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.entities.messages
+package com.ankamagames.jerakine.entities.messages
 {
     import com.ankamagames.jerakine.entities.interfaces.IInteractive;
 
@@ -6,13 +6,15 @@
     {
 
         public var virtual:Boolean;
+        public var checkSuperposition:Boolean;
 
-        public function EntityMouseOverMessage(entity:IInteractive, virtual:Boolean=false)
+        public function EntityMouseOverMessage(entity:IInteractive, _arg_2:Boolean=false, checkSuperposition:Boolean=false)
         {
             super(entity);
-            this.virtual = virtual;
+            this.virtual = _arg_2;
+            this.checkSuperposition = checkSuperposition;
         }
 
     }
-}//package com.ankamagames.jerakine.entities.messages
+} com.ankamagames.jerakine.entities.messages
 

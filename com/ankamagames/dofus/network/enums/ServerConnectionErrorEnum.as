@@ -1,6 +1,5 @@
-﻿package com.ankamagames.dofus.network.enums
+package com.ankamagames.dofus.network.enums
 {
-    [Trusted]
     public class ServerConnectionErrorEnum 
     {
 
@@ -11,8 +10,11 @@
         public static const SERVER_CONNECTION_ERROR_LOCATION_RESTRICTED:uint = 4;
         public static const SERVER_CONNECTION_ERROR_SUBSCRIBERS_ONLY:uint = 5;
         public static const SERVER_CONNECTION_ERROR_REGULAR_PLAYERS_ONLY:uint = 6;
+        public static const SERVER_CONNECTION_ERROR_MONOACCOUNT_CANNOT_VERIFY:uint = 7;
+        public static const SERVER_CONNECTION_ERROR_MONOACCOUNT_ONLY:uint = 8;
+        public static const SERVER_CONNECTION_ERROR_SERVER_OVERLOAD:uint = 9;
 
 
     }
-}//package com.ankamagames.dofus.network.enums
+} com.ankamagames.dofus.network.enums
 

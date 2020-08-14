@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.types.data
+package com.ankamagames.berilia.types.data
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import flash.display.DisplayObject;
@@ -8,7 +8,7 @@
 
         public var index:uint;
         public var container:DisplayObject;
-        public var data;
+        public var data:*;
 
         public function GridItem(id:uint, c:DisplayObject, d:*)
         {
@@ -18,5 +18,5 @@
         }
 
     }
-}//package com.ankamagames.berilia.types.data
+} com.ankamagames.berilia.types.data
 

@@ -1,29 +1,25 @@
-﻿package com.ankamagames.dofus.network.messages.game.alliance
+package com.ankamagames.dofus.network.messages.game.alliance
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
     import __AS3__.vec.Vector;
     import com.ankamagames.dofus.network.types.game.social.AllianceFactSheetInformations;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
     import __AS3__.vec.*;
 
-    [Trusted]
     public class AllianceListMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 6408;
 
         private var _isInitialized:Boolean = false;
-        public var alliances:Vector.<AllianceFactSheetInformations>;
+        public var alliances:Vector.<AllianceFactSheetInformations> = new Vector.<AllianceFactSheetInformations>();
+        private var _alliancestree:FuncTree;
 
-        public function AllianceListMessage()
-        {
-            this.alliances = new Vector.<AllianceFactSheetInformations>();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
@@ -58,6 +54,14 @@
         override public function unpack(input:ICustomDataInput, length:uint):void
         {
             this.deserialize(input);
+        }
+
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
         }
 
         public function serialize(output:ICustomDataOutput):void
@@ -95,7 +99,35 @@
             };
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_AllianceListMessage(tree);
+        }
+
+        public function deserializeAsyncAs_AllianceListMessage(tree:FuncTree):void
+        {
+            this._alliancestree = tree.addChild(this._alliancestreeFunc);
+        }
+
+        private function _alliancestreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._alliancestree.addChild(this._alliancesFunc);
+                i++;
+            };
+        }
+
+        private function _alliancesFunc(input:ICustomDataInput):void
+        {
+            var _item:AllianceFactSheetInformations = new AllianceFactSheetInformations();
+            _item.deserialize(input);
+            this.alliances.push(_item);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.alliance
+} com.ankamagames.dofus.network.messages.game.alliance
 

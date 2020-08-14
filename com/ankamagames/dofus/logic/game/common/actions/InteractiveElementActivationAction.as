@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.common.actions
+package com.ankamagames.dofus.logic.game.common.actions
 {
     import com.ankamagames.jerakine.handlers.messages.Action;
     import com.ankamagames.dofus.network.types.game.interactive.InteractiveElement;
@@ -10,18 +10,20 @@
         public var interactiveElement:InteractiveElement;
         public var position:MapPoint;
         public var skillInstanceId:uint;
+        public var additionalParam:int;
 
 
-        public static function create(ie:InteractiveElement, position:MapPoint, skillInstanceId:uint):InteractiveElementActivationAction
+        public static function create(ie:InteractiveElement, position:MapPoint, skillInstanceId:uint, additionalParam:int=0):InteractiveElementActivationAction
         {
             var a:InteractiveElementActivationAction = new (InteractiveElementActivationAction)();
             a.interactiveElement = ie;
             a.position = position;
             a.skillInstanceId = skillInstanceId;
+            a.additionalParam = additionalParam;
             return (a);
         }
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.actions
+} com.ankamagames.dofus.logic.game.common.actions
 

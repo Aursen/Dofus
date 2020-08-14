@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.uiApi
+package com.ankamagames.dofus.uiApi
 {
     import com.ankamagames.berilia.interfaces.IApi;
     import com.ankamagames.jerakine.logger.Logger;
@@ -7,6 +7,8 @@
     import com.ankamagames.berilia.types.data.UiModule;
     import com.ankamagames.berilia.types.graphic.UiRootContainer;
     import flash.utils.Dictionary;
+    import com.ankamagames.berilia.types.tooltip.TooltipPlacer;
+    import com.ankamagames.jerakine.interfaces.IRectangle;
     import com.ankamagames.berilia.managers.UiModuleManager;
     import com.ankamagames.berilia.utils.errors.ApiError;
     import com.ankamagames.berilia.types.data.UiData;
@@ -15,17 +17,17 @@
     import com.ankamagames.jerakine.types.Uri;
     import com.ankamagames.berilia.types.tooltip.TooltipBlock;
     import com.ankamagames.berilia.factories.TooltipsFactory;
-    import com.ankamagames.jerakine.utils.misc.CheckCompatibility;
+    import com.ankamagames.jerakine.utils.misc.DescribeTypeCache;
     import com.ankamagames.berilia.interfaces.ITooltipMaker;
     import com.ankamagames.berilia.types.data.ChunkData;
-    import com.ankamagames.jerakine.interfaces.IRectangle;
     import com.ankamagames.berilia.types.event.UiRenderEvent;
     import com.ankamagames.jerakine.types.Callback;
-    import com.ankamagames.berilia.types.tooltip.TooltipPlacer;
     import com.ankamagames.dofus.types.data.SpellTooltipInfo;
     import com.ankamagames.dofus.internalDatacenter.spells.SpellWrapper;
     import com.ankamagames.dofus.types.data.ItemTooltipInfo;
     import com.ankamagames.dofus.internalDatacenter.items.ItemWrapper;
+    import com.ankamagames.dofus.types.data.WeaponTooltipInfo;
+    import com.ankamagames.dofus.internalDatacenter.items.WeaponWrapper;
     import com.ankamagames.dofus.logic.game.common.frames.PlayedCharacterUpdatesFrame;
     import com.ankamagames.berilia.types.tooltip.TooltipRectangle;
     import com.ankamagames.dofus.modules.utils.SpellTooltipSettings;
@@ -42,13 +44,18 @@
 
         private var _module:UiModule;
         private var _currentUi:UiRootContainer;
-        private var _ttCallbacks:Dictionary;
+        private var _ttCallbacks:Dictionary = new Dictionary();
 
-        public function TooltipApi()
+
+        private static function placeTooltip(pTooltipUi:UiRootContainer, pTarget:*, showDirectionalArrow:Object, pPoint:uint, pRelativePoint:uint, pOffset:*, pCheckSuperposition:Boolean, pCellId:int, pOffsetRect:IRectangle, pAlwaysDisplayed:Boolean):void
         {
-            this._ttCallbacks = new Dictionary();
-            super();
+            TooltipPlacer.place(pTooltipUi, pTarget, showDirectionalArrow, pPoint, pRelativePoint, pOffset, pAlwaysDisplayed);
+            if (((pCheckSuperposition) && (!(pCellId == -1))))
+            {
+                TooltipPlacer.addTooltipPosition(pTooltipUi, pTarget, pCellId, pOffsetRect);
+            };
         }
+
 
         [ApiData(name="module")]
         public function set module(value:UiModule):void
@@ -62,30 +69,27 @@
             this._currentUi = value;
         }
 
-        [Trusted]
         public function destroy():void
         {
             this._module = null;
             this._currentUi = null;
         }
 
-        [Untrusted]
         public function setDefaultTooltipUiScript(module:String, ui:String):void
         {
             var m:UiModule = UiModuleManager.getInstance().getModule(module);
-            if (!(m))
+            if (!m)
             {
                 throw (new ApiError((("Module " + module) + " doesn't exist")));
             };
             var uiData:UiData = m.getUi(ui);
-            if (!(uiData))
+            if (!uiData)
             {
                 throw (new ApiError(((("UI " + ui) + " doesn't exist in module ") + module)));
             };
             TooltipManager.defaultTooltipUiScript = uiData.uiClass;
         }
 
-        [Untrusted]
         [NoBoxing]
         public function createTooltip(baseUri:String, containerUri:String, separatorUri:String=null):Tooltip
         {
@@ -113,26 +117,24 @@
             return (t);
         }
 
-        [Untrusted]
         [NoBoxing]
-        public function createTooltipBlock(onAllChunkLoadedCallback:Function, contentGetter:Function):TooltipBlock
+        public function createTooltipBlock(onAllChunkLoadedCallback:Function, contentGetter:Function, chunkType:String="chunks"):TooltipBlock
         {
             var tb:TooltipBlock = new TooltipBlock();
             tb.onAllChunkLoadedCallback = onAllChunkLoadedCallback;
             tb.contentGetter = contentGetter;
+            tb.chunkType = chunkType;
             return (tb);
         }
 
-        [Untrusted]
         public function registerTooltipAssoc(targetClass:*, makerName:String):void
         {
             TooltipsFactory.registerAssoc(targetClass, makerName);
         }
 
-        [Untrusted]
         public function registerTooltipMaker(makerName:String, makerClass:Class, scriptClass:Class=null):void
         {
-            if (CheckCompatibility.isCompatible(ITooltipMaker, makerClass))
+            if (DescribeTypeCache.classImplementInterface(makerClass, ITooltipMaker))
             {
                 TooltipsFactory.registerMaker(makerName, makerClass, scriptClass);
             }
@@ -142,7 +144,6 @@
             };
         }
 
-        [Untrusted]
         [NoBoxing]
         public function createChunkData(name:String, uri:String):ChunkData
         {
@@ -154,87 +155,74 @@
             return (new ChunkData(name, newUri));
         }
 
-        [Untrusted]
-        public function place(target:*, point:uint=6, relativePoint:uint=0, offset:int=3, checkSuperposition:Boolean=false, cellId:int=-1, alwaysDisplayed:Boolean=true):void
+        public function place(target:IRectangle, showDirectionalArrow:Object, point:uint=6, relativePoint:uint=0, offset:*=3, checkSuperposition:Boolean=false, cellId:int=-1, offsetRect:IRectangle=null, alwaysDisplayed:Boolean=true):void
         {
-            if (((target) && (CheckCompatibility.isCompatible(IRectangle, target))))
+            if (target != null)
             {
                 if (this._currentUi.ready)
                 {
-                    this.placeTooltip(this._currentUi, target, point, relativePoint, offset, checkSuperposition, cellId, alwaysDisplayed);
+                    placeTooltip(this._currentUi, target, showDirectionalArrow, point, relativePoint, offset, checkSuperposition, cellId, offsetRect, alwaysDisplayed);
                 }
                 else
                 {
                     this._currentUi.removeEventListener(UiRenderEvent.UIRenderComplete, this.onTooltipReady);
-                    this._ttCallbacks[this._currentUi] = new Callback(this.placeTooltip, this._currentUi, target, point, relativePoint, offset, checkSuperposition, cellId, alwaysDisplayed);
+                    this._ttCallbacks[this._currentUi] = new Callback(placeTooltip, this._currentUi, target, showDirectionalArrow, point, relativePoint, offset, checkSuperposition, cellId, offsetRect, alwaysDisplayed);
                     this._currentUi.addEventListener(UiRenderEvent.UIRenderComplete, this.onTooltipReady);
                 };
             };
         }
 
-        private function placeTooltip(pTooltipUi:UiRootContainer, pTarget:*, pPoint:uint, pRelativePoint:uint, pOffset:int, pCheckSuperposition:Boolean, pCellId:int, pAlwaysDisplayed:Boolean):void
+        public function placeArrow(target:IRectangle):Object
         {
-            TooltipPlacer.place(pTooltipUi, pTarget, pPoint, pRelativePoint, pOffset, pAlwaysDisplayed);
-            if (((pCheckSuperposition) && (!((pCellId == -1)))))
-            {
-                TooltipPlacer.addTooltipPosition(pTooltipUi, pTarget, pCellId);
-            };
+            return (TooltipPlacer.placeWithArrow(this._currentUi, target));
         }
 
-        [Untrusted]
-        public function placeArrow(target:*):Object
-        {
-            if (((target) && (CheckCompatibility.isCompatible(IRectangle, target))))
-            {
-                return (TooltipPlacer.placeWithArrow(this._currentUi, target));
-            };
-            return (null);
-        }
-
-        [Untrusted]
         public function getSpellTooltipInfo(spellWrapper:SpellWrapper, shortcutKey:String=null):Object
         {
             return (new SpellTooltipInfo(spellWrapper, shortcutKey));
         }
 
-        [Untrusted]
         public function getItemTooltipInfo(itemWrapper:ItemWrapper, shortcutKey:String=null):Object
         {
             return (new ItemTooltipInfo(itemWrapper, shortcutKey));
         }
 
-        [Untrusted]
+        public function getWeaponTooltipInfo(spellWrapper:SpellWrapper, shortcutKey:String=null, makerParams:Object=null, weapon:WeaponWrapper=null):Object
+        {
+            return (new WeaponTooltipInfo(spellWrapper, shortcutKey, makerParams, weapon));
+        }
+
         public function getSpellTooltipCache():int
         {
             return (PlayedCharacterUpdatesFrame.SPELL_TOOLTIP_CACHE_NUM);
         }
 
-        [Untrusted]
         public function resetSpellTooltipCache():void
         {
             PlayedCharacterUpdatesFrame.SPELL_TOOLTIP_CACHE_NUM++;
         }
 
-        [Untrusted]
         [NoBoxing]
         public function createTooltipRectangle(x:Number=0, y:Number=0, width:Number=0, height:Number=0):TooltipRectangle
         {
             return (new TooltipRectangle(x, y, width, height));
         }
 
-        [Trusted]
         public function createSpellSettings():SpellTooltipSettings
         {
             return (new SpellTooltipSettings());
         }
 
-        [Trusted]
         public function createItemSettings():ItemTooltipSettings
         {
             return (new ItemTooltipSettings());
         }
 
-        [Untrusted]
+        public function update(ttCacheName:String, ... params):void
+        {
+            TooltipManager.update(ttCacheName, params);
+        }
+
         public function adjustTooltipPositions(tooltipNames:Array, sourceName:String, offset:int=0):void
         {
             var ui:UiRootContainer;
@@ -257,7 +245,7 @@
             };
             i = 0;
             goOnTop = true;
-            mainColumnTooltips = new Array();
+            mainColumnTooltips = [];
             mainColumnHeight = 0;
             mainColumnY = 0;
             for each (ui in tooltipUis)
@@ -268,12 +256,12 @@
                     {
                         if (((sourceUi.x - ui.width) - offset) >= 0)
                         {
-                            this.placeTooltip(ui, sourceUi, LocationEnum.POINT_TOPRIGHT, LocationEnum.POINT_TOPLEFT, offset, false, 0, true);
+                            placeTooltip(ui, sourceUi, false, LocationEnum.POINT_TOPRIGHT, LocationEnum.POINT_TOPLEFT, offset, false, 0, null, true);
                             ui.x = (ui.x - (offset * 2));
                         }
                         else
                         {
-                            this.placeTooltip(ui, sourceUi, LocationEnum.POINT_TOPLEFT, LocationEnum.POINT_TOPRIGHT, offset, false, 0, true);
+                            placeTooltip(ui, sourceUi, false, LocationEnum.POINT_TOPLEFT, LocationEnum.POINT_TOPRIGHT, offset, false, 0, null, true);
                         };
                         if ((ui.y - 41) >= 0)
                         {
@@ -283,12 +271,12 @@
                     };
                     if (((sourceUi.x - ui.width) - offset) >= 0)
                     {
-                        this.placeTooltip(ui, sourceUi, LocationEnum.POINT_RIGHT, LocationEnum.POINT_LEFT, offset, false, 0, true);
+                        placeTooltip(ui, sourceUi, false, LocationEnum.POINT_RIGHT, LocationEnum.POINT_LEFT, offset, false, 0, null, true);
                         ui.x = (ui.x - (offset * 2));
                     }
                     else
                     {
-                        this.placeTooltip(ui, sourceUi, LocationEnum.POINT_LEFT, LocationEnum.POINT_RIGHT, offset, false, 0, true);
+                        placeTooltip(ui, sourceUi, false, LocationEnum.POINT_LEFT, LocationEnum.POINT_RIGHT, offset, false, 0, null, true);
                     };
                     mainColumnHeight = (mainColumnHeight + (ui.height + offset));
                     mainColumnTooltips.push(ui);
@@ -298,19 +286,19 @@
                 {
                     if (i < 4)
                     {
-                        if (((goOnTop) && ((((lastUi.y - ui.height) - offset) < 0))))
+                        if (((goOnTop) && (((lastUi.y - ui.height) - offset) < 0)))
                         {
                             goOnTop = false;
                             lastUi = tooltipUis[0];
                         };
                         if (goOnTop)
                         {
-                            this.placeTooltip(ui, lastUi, LocationEnum.POINT_BOTTOM, LocationEnum.POINT_TOP, offset, false, 0, false);
+                            placeTooltip(ui, lastUi, false, LocationEnum.POINT_BOTTOM, LocationEnum.POINT_TOP, offset, false, 0, null, false);
                             mainColumnY = ui.y;
                         }
                         else
                         {
-                            this.placeTooltip(ui, lastUi, LocationEnum.POINT_TOP, LocationEnum.POINT_BOTTOM, offset, false, 0, false);
+                            placeTooltip(ui, lastUi, false, LocationEnum.POINT_TOP, LocationEnum.POINT_BOTTOM, offset, false, 0, null, false);
                         };
                         ui.x = lastUi.x;
                         mainColumnHeight = (mainColumnHeight + (ui.height + offset));
@@ -318,18 +306,18 @@
                     }
                     else
                     {
-                        if (((goOnTop) && ((((lastUi.y - ui.height) - offset) < 0))))
+                        if (((goOnTop) && (((lastUi.y - ui.height) - offset) < 0)))
                         {
                             goOnTop = false;
                             lastUi = sourceUi;
                         };
                         if (goOnTop)
                         {
-                            this.placeTooltip(ui, lastUi, LocationEnum.POINT_BOTTOM, LocationEnum.POINT_TOP, offset, false, 0, true);
+                            placeTooltip(ui, lastUi, false, LocationEnum.POINT_BOTTOM, LocationEnum.POINT_TOP, offset, false, 0, null, true);
                         }
                         else
                         {
-                            this.placeTooltip(ui, lastUi, LocationEnum.POINT_TOP, LocationEnum.POINT_BOTTOM, offset, false, 0, true);
+                            placeTooltip(ui, lastUi, false, LocationEnum.POINT_TOP, LocationEnum.POINT_BOTTOM, offset, false, 0, null, true);
                         };
                         ui.x = lastUi.x;
                     };
@@ -362,5 +350,5 @@
 
 
     }
-}//package com.ankamagames.dofus.uiApi
+} com.ankamagames.dofus.uiApi
 

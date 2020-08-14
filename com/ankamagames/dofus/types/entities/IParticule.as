@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.types.entities
+package com.ankamagames.dofus.types.entities
 {
     import flash.display.DisplayObject;
 
@@ -12,5 +12,5 @@
         function set subExplosion(_arg_1:Boolean):void;
 
     }
-}//package com.ankamagames.dofus.types.entities
+} com.ankamagames.dofus.types.entities
 

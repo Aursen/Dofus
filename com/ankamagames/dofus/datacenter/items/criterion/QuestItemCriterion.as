@@ -1,11 +1,12 @@
-﻿package com.ankamagames.dofus.datacenter.items.criterion
+package com.ankamagames.dofus.datacenter.items.criterion
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.dofus.datacenter.quest.Quest;
     import com.ankamagames.jerakine.data.I18n;
+    import com.ankamagames.dofus.logic.game.common.frames.QuestFrame;
+    import __AS3__.vec.Vector;
     import com.ankamagames.dofus.network.types.game.context.roleplay.quest.QuestActiveInformations;
     import com.ankamagames.dofus.kernel.Kernel;
-    import com.ankamagames.dofus.logic.game.common.frames.QuestFrame;
     import com.ankamagames.dofus.logic.game.common.managers.PlayedCharacterManager;
 
     public class QuestItemCriterion extends ItemCriterion implements IDataCenter 
@@ -23,7 +24,7 @@
         {
             var readableCriterion:String = "";
             var quest:Quest = Quest.getQuestById(this._questId);
-            if (!(quest))
+            if (!quest)
             {
                 return (readableCriterion);
             };
@@ -46,13 +47,15 @@
 
         override public function get isRespected():Boolean
         {
+            var questFrame:QuestFrame;
+            var completedQuests:Vector.<uint>;
             var questA:QuestActiveInformations;
             var quest:Quest = Quest.getQuestById(this._questId);
-            if (!(quest))
+            if (!quest)
             {
                 return (false);
             };
-            var questFrame:QuestFrame = (Kernel.getWorker().getFrame(QuestFrame) as QuestFrame);
+            questFrame = (Kernel.getWorker().getFrame(QuestFrame) as QuestFrame);
             var s:String = _serverCriterionForm.slice(0, 2);
             switch (s)
             {
@@ -68,7 +71,8 @@
                 case "Qc":
                     return (true);
                 case "Qf":
-                    return (!((questFrame.getCompletedQuests().indexOf(this._questId) == -1)));
+                    completedQuests = questFrame.getCompletedQuests();
+                    return ((completedQuests) ? (!(completedQuests.indexOf(this._questId) == -1)) : false);
             };
             return (false);
         }
@@ -86,5 +90,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.items.criterion
+} com.ankamagames.dofus.datacenter.items.criterion
 

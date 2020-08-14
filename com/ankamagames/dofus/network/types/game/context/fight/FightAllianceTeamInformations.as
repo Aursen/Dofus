@@ -1,9 +1,10 @@
-﻿package com.ankamagames.dofus.network.types.game.context.fight
+package com.ankamagames.dofus.network.types.game.context.fight
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import __AS3__.vec.Vector;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
     public class FightAllianceTeamInformations extends FightTeamInformations implements INetworkType 
     {
@@ -18,7 +19,7 @@
             return (439);
         }
 
-        public function initFightAllianceTeamInformations(teamId:uint=2, leaderId:int=0, teamSide:int=0, teamTypeId:uint=0, nbWaves:uint=0, teamMembers:Vector.<FightTeamMemberInformations>=null, relation:uint=0):FightAllianceTeamInformations
+        public function initFightAllianceTeamInformations(teamId:uint=2, leaderId:Number=0, teamSide:int=0, teamTypeId:uint=0, nbWaves:uint=0, teamMembers:Vector.<FightTeamMemberInformations>=null, relation:uint=0):FightAllianceTeamInformations
         {
             super.initFightTeamInformations(teamId, leaderId, teamSide, teamTypeId, nbWaves, teamMembers);
             this.relation = relation;
@@ -50,6 +51,22 @@
         public function deserializeAs_FightAllianceTeamInformations(input:ICustomDataInput):void
         {
             super.deserialize(input);
+            this._relationFunc(input);
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_FightAllianceTeamInformations(tree);
+        }
+
+        public function deserializeAsyncAs_FightAllianceTeamInformations(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._relationFunc);
+        }
+
+        private function _relationFunc(input:ICustomDataInput):void
+        {
             this.relation = input.readByte();
             if (this.relation < 0)
             {
@@ -59,5 +76,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.context.fight
+} com.ankamagames.dofus.network.types.game.context.fight
 

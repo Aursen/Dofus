@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.common.frames
+package com.ankamagames.dofus.logic.game.common.frames
 {
     import com.ankamagames.jerakine.messages.Frame;
     import com.ankamagames.jerakine.logger.Logger;
@@ -7,35 +7,39 @@
     import flash.utils.Timer;
     import com.ankamagames.jerakine.types.enums.Priority;
     import com.ankamagames.dofus.logic.game.common.actions.externalGame.OpenWebServiceAction;
-    import com.ankamagames.dofus.logic.game.common.actions.externalGame.KrosmasterTokenRequestAction;
-    import com.ankamagames.dofus.network.messages.web.krosmaster.KrosmasterAuthTokenErrorMessage;
-    import com.ankamagames.dofus.network.messages.web.krosmaster.KrosmasterAuthTokenMessage;
-    import com.ankamagames.dofus.logic.game.common.actions.externalGame.KrosmasterInventoryRequestAction;
-    import com.ankamagames.dofus.network.messages.web.krosmaster.KrosmasterInventoryRequestMessage;
-    import com.ankamagames.dofus.network.messages.web.krosmaster.KrosmasterInventoryErrorMessage;
-    import com.ankamagames.dofus.network.messages.web.krosmaster.KrosmasterInventoryMessage;
-    import com.ankamagames.dofus.logic.game.common.actions.externalGame.KrosmasterTransferRequestAction;
-    import com.ankamagames.dofus.network.messages.web.krosmaster.KrosmasterTransferRequestMessage;
-    import com.ankamagames.dofus.network.messages.web.krosmaster.KrosmasterTransferMessage;
-    import com.ankamagames.dofus.logic.game.common.actions.externalGame.KrosmasterPlayingStatusAction;
-    import com.ankamagames.dofus.network.messages.web.krosmaster.KrosmasterPlayingStatusMessage;
+    import com.ankamagames.dofus.network.messages.web.haapi.HaapiAuthErrorMessage;
+    import com.ankamagames.dofus.network.messages.web.haapi.HaapiShopApiKeyMessage;
+    import com.ankamagames.dofus.network.messages.web.haapi.HaapiTokenMessage;
     import com.ankamagames.dofus.logic.game.common.actions.externalGame.ShopArticlesListRequestAction;
     import com.ankamagames.dofus.logic.game.common.actions.externalGame.ShopBuyRequestAction;
     import com.ankamagames.dofus.logic.game.common.actions.externalGame.ShopSearchRequestAction;
-    import com.ankamagames.dofus.logic.game.common.actions.externalGame.GetComicRequestAction;
-    import com.ankamagames.dofus.logic.game.common.actions.externalGame.GetComicsLibraryRequestAction;
+    import com.ankamagames.dofus.logic.game.common.actions.externalGame.ShopOneClickBuyRequestAction;
+    import com.ankamagames.dofus.logic.game.common.actions.externalGame.ShopOneClickValidateOrderRequestAction;
+    import com.ankamagames.dofus.logic.game.common.actions.externalGame.ShopOneClickSendCodeRequestAction;
+    import com.ankamagames.dofus.network.messages.game.context.roleplay.havenbag.HavenBagRoomUpdateMessage;
+    import com.ankamagames.dofus.network.messages.game.context.roleplay.havenbag.HavenBagPackListMessage;
+    import __AS3__.vec.Vector;
+    import com.ankamagames.dofus.network.types.game.havenbag.HavenBagRoomPreviewInformation;
     import com.ankamagames.berilia.managers.KernelEventsManager;
     import com.ankamagames.dofus.misc.lists.ExternalGameHookList;
-    import com.ankamagames.dofus.kernel.net.ConnectionsHandler;
-    import com.ankamagames.dofus.BuildInfos;
-    import com.ankamagames.dofus.network.enums.BuildTypeEnum;
+    import com.ankamagames.dofus.network.enums.HaapiAuthTypeEnum;
+    import com.ankamagames.jerakine.data.XmlConfig;
     import com.ankamagames.berilia.managers.UiModuleManager;
     import com.ankamagames.dofus.logic.game.common.actions.externalGame.ShopAuthentificationRequestAction;
     import com.ankamagames.dofus.logic.game.common.managers.DofusShopManager;
-    import com.ankamagames.dofus.logic.game.common.actions.externalGame.ShopFrontPageRequestAction;
-    import com.ankamagames.dofus.logic.game.common.managers.ComicsManager;
+    import com.ankamagames.dofus.network.enums.HavenBagRoomActionEnum;
+    import com.ankamagames.dofus.logic.game.common.managers.PlayedCharacterManager;
+    import com.ankamagames.dofus.logic.common.managers.PlayerManager;
+    import com.ankamagames.dofus.misc.lists.HookList;
+    import com.ankamagames.dofus.logic.game.common.actions.externalGame.OpenCodesAndGiftRequestAction;
+    import com.ankamagames.dofus.logic.game.common.managers.CodesAndGiftManager;
+    import com.ankamagames.dofus.logic.game.common.actions.externalGame.ConsumeCodeAction;
+    import com.ankamagames.dofus.logic.game.common.actions.externalGame.ConsumeSimpleKardAction;
+    import com.ankamagames.dofus.logic.game.common.actions.externalGame.UpdateGiftListRequestAction;
+    import com.ankamagames.dofus.logic.game.common.actions.externalGame.ConsumeMultipleKardAction;
     import com.ankamagames.jerakine.messages.Message;
-    import com.ankamagames.dofus.network.messages.web.krosmaster.KrosmasterAuthTokenRequestMessage;
+    import com.ankamagames.dofus.network.messages.web.haapi.HaapiShopApiKeyRequestMessage;
+    import com.ankamagames.dofus.kernel.net.ConnectionsHandler;
     import flash.events.TimerEvent;
     import com.ankamagames.dofus.types.enums.DofusShopEnum;
 
@@ -44,15 +48,13 @@
 
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(ExternalGameFrame));
 
-        private var _tokenRequestCallback:Array;
+        private var _tokenRequestCallback:Array = [];
         private var _tokenRequestTimeoutTimer:Timer;
         private var _tokenRequestHasTimedOut:Boolean = false;
+        private var _haapiKeyRequestCallback:Array = [];
+        private var _haapiKeyRequestTimeoutTimer:Timer;
+        private var _haapiKeyRequestHasTimedOut:Boolean = false;
 
-        public function ExternalGameFrame()
-        {
-            this._tokenRequestCallback = [];
-            super();
-        }
 
         public function get priority():int
         {
@@ -73,130 +75,182 @@
 
         public function process(msg:Message):Boolean
         {
-            var _local_2:OpenWebServiceAction;
-            var _local_3:KrosmasterTokenRequestAction;
-            var _local_4:KrosmasterAuthTokenErrorMessage;
-            var _local_5:KrosmasterAuthTokenMessage;
-            var _local_6:KrosmasterInventoryRequestAction;
-            var _local_7:KrosmasterInventoryRequestMessage;
-            var _local_8:KrosmasterInventoryErrorMessage;
-            var _local_9:KrosmasterInventoryMessage;
-            var _local_10:KrosmasterTransferRequestAction;
-            var _local_11:KrosmasterTransferRequestMessage;
-            var _local_12:KrosmasterTransferMessage;
-            var _local_13:KrosmasterPlayingStatusAction;
-            var _local_14:KrosmasterPlayingStatusMessage;
-            var _local_15:ShopArticlesListRequestAction;
-            var _local_16:ShopBuyRequestAction;
-            var _local_17:ShopSearchRequestAction;
-            var _local_18:GetComicRequestAction;
-            var _local_19:GetComicsLibraryRequestAction;
+            var owsa:OpenWebServiceAction;
+            var haem:HaapiAuthErrorMessage;
+            var hsakm:HaapiShopApiKeyMessage;
+            var htm:HaapiTokenMessage;
+            var salra:ShopArticlesListRequestAction;
+            var sbra:ShopBuyRequestAction;
+            var ssra:ShopSearchRequestAction;
+            var socbra:ShopOneClickBuyRequestAction;
+            var socvora:ShopOneClickValidateOrderRequestAction;
+            var socscra:ShopOneClickSendCodeRequestAction;
+            var hbrum:HavenBagRoomUpdateMessage;
+            var hbplmsg:HavenBagPackListMessage;
+            var validThemes:Vector.<int>;
+            var commonThemeIndex:int;
             var commonMod:Object;
+            var currentList:Vector.<HavenBagRoomPreviewInformation>;
+            var j:int;
+            var found:Boolean;
+            var i:int;
             switch (true)
             {
                 case (msg is OpenWebServiceAction):
-                    _local_2 = (msg as OpenWebServiceAction);
-                    KernelEventsManager.getInstance().processCallback(ExternalGameHookList.OpenWebService, _local_2.uiName, _local_2.uiParams);
+                    owsa = (msg as OpenWebServiceAction);
+                    KernelEventsManager.getInstance().processCallback(ExternalGameHookList.OpenWebService, owsa.uiName, owsa.uiParams);
                     return (true);
-                case (msg is KrosmasterTokenRequestAction):
-                    _local_3 = (msg as KrosmasterTokenRequestAction);
-                    this.getIceToken();
-                    return (true);
-                case (msg is KrosmasterAuthTokenErrorMessage):
+                case (msg is HaapiAuthErrorMessage):
                     if (this._tokenRequestHasTimedOut)
                     {
                         return (true);
                     };
-                    _local_4 = (msg as KrosmasterAuthTokenErrorMessage);
-                    if (this._tokenRequestCallback.length)
+                    haem = (msg as HaapiAuthErrorMessage);
+                    if (haem.type == HaapiAuthTypeEnum.HAAPI_TOKEN)
                     {
-                        this.clearTokenRequestTimer();
-                        this.callOnTokenFunctions("");
+                        if (this._tokenRequestCallback.length)
+                        {
+                            this.clearTokenRequestTimer();
+                            this.callOnTokenFunctions("");
+                        }
+                        else
+                        {
+                            KernelEventsManager.getInstance().processCallback(ExternalGameHookList.HaapiAuthError);
+                        };
+                    };
+                    return (true);
+                case (msg is HaapiShopApiKeyMessage):
+                    if (this._haapiKeyRequestHasTimedOut)
+                    {
+                        return (true);
+                    };
+                    hsakm = (msg as HaapiShopApiKeyMessage);
+                    if (this._haapiKeyRequestCallback.length)
+                    {
+                        this.clearHaapiKeyRequestTimer();
+                        this.callOnHaapiKeyFunctions(hsakm.token);
                     }
                     else
                     {
-                        KernelEventsManager.getInstance().processCallback(ExternalGameHookList.KrosmasterAuthTokenError, _local_4.reason);
+                        KernelEventsManager.getInstance().processCallback(ExternalGameHookList.HaapiAuthToken, hsakm.token);
                     };
                     return (true);
-                case (msg is KrosmasterAuthTokenMessage):
+                case (msg is HaapiTokenMessage):
                     if (this._tokenRequestHasTimedOut)
                     {
                         return (true);
                     };
-                    _local_5 = (msg as KrosmasterAuthTokenMessage);
+                    htm = (msg as HaapiTokenMessage);
                     if (this._tokenRequestCallback.length)
                     {
                         this.clearTokenRequestTimer();
-                        this.callOnTokenFunctions(_local_5.token);
+                        this.callOnTokenFunctions(htm.token);
                     }
                     else
                     {
-                        KernelEventsManager.getInstance().processCallback(ExternalGameHookList.KrosmasterAuthToken, _local_5.token);
+                        KernelEventsManager.getInstance().processCallback(ExternalGameHookList.HaapiAuthToken, htm.token);
                     };
-                    return (true);
-                case (msg is KrosmasterInventoryRequestAction):
-                    _local_6 = (msg as KrosmasterInventoryRequestAction);
-                    _local_7 = new KrosmasterInventoryRequestMessage();
-                    _local_7.initKrosmasterInventoryRequestMessage();
-                    ConnectionsHandler.getConnection().send(_local_7);
-                    return (true);
-                case (msg is KrosmasterInventoryErrorMessage):
-                    _local_8 = (msg as KrosmasterInventoryErrorMessage);
-                    KernelEventsManager.getInstance().processCallback(ExternalGameHookList.KrosmasterInventoryError, _local_8.reason);
-                    return (true);
-                case (msg is KrosmasterInventoryMessage):
-                    _local_9 = (msg as KrosmasterInventoryMessage);
-                    KernelEventsManager.getInstance().processCallback(ExternalGameHookList.KrosmasterInventory, _local_9.figures);
-                    return (true);
-                case (msg is KrosmasterTransferRequestAction):
-                    _local_10 = (msg as KrosmasterTransferRequestAction);
-                    _local_11 = new KrosmasterTransferRequestMessage();
-                    _local_11.initKrosmasterTransferRequestMessage(_local_10.figureId);
-                    ConnectionsHandler.getConnection().send(_local_11);
-                    return (true);
-                case (msg is KrosmasterTransferMessage):
-                    _local_12 = (msg as KrosmasterTransferMessage);
-                    KernelEventsManager.getInstance().processCallback(ExternalGameHookList.KrosmasterTransfer, _local_12.uid, _local_12.failure);
-                    return (true);
-                case (msg is KrosmasterPlayingStatusAction):
-                    _local_13 = (msg as KrosmasterPlayingStatusAction);
-                    _local_14 = new KrosmasterPlayingStatusMessage();
-                    _local_14.initKrosmasterPlayingStatusMessage(_local_13.playing);
-                    ConnectionsHandler.getConnection().send(_local_14);
                     return (true);
                 case (msg is ShopAuthentificationRequestAction):
-                    if (BuildInfos.BUILD_TYPE > BuildTypeEnum.BETA)
+                    if (XmlConfig.getInstance().getEntry("config.dev.shopIceToken") == "true")
                     {
                         commonMod = UiModuleManager.getInstance().getModule("Ankama_Common").mainClass;
-                        commonMod.openInputPopup("ICE Authentication", "Please enter your ICE Token", this.onTokenInput, this.onCancel);
+                        commonMod.openInputPopup("ICE Authentication", "To access the Release shop, please enter a valid ICE Token.\nClose this message to access the Local shop.", this.onTokenInput, this.onCancel);
                     }
                     else
                     {
-                        this.getIceToken(this.openShop);
+                        this.getHaapiKey(this.openShop);
                     };
                     return (true);
                 case (msg is ShopArticlesListRequestAction):
-                    _local_15 = (msg as ShopArticlesListRequestAction);
-                    DofusShopManager.getInstance().getArticlesList(_local_15.categoryId, _local_15.pageId);
+                    salra = (msg as ShopArticlesListRequestAction);
+                    DofusShopManager.getInstance().getArticlesList(salra.categoryId);
                     return (true);
                 case (msg is ShopBuyRequestAction):
-                    _local_16 = (msg as ShopBuyRequestAction);
-                    DofusShopManager.getInstance().buyArticle(_local_16.articleId, _local_16.quantity);
-                    return (true);
-                case (msg is ShopFrontPageRequestAction):
-                    DofusShopManager.getInstance().getHome();
+                    sbra = (msg as ShopBuyRequestAction);
+                    DofusShopManager.getInstance().buyArticle(sbra.articleId, sbra.currency, sbra.quantity);
                     return (true);
                 case (msg is ShopSearchRequestAction):
-                    _local_17 = (msg as ShopSearchRequestAction);
-                    DofusShopManager.getInstance().searchForArticles(_local_17.text, _local_17.pageId);
+                    ssra = (msg as ShopSearchRequestAction);
+                    DofusShopManager.getInstance().searchForArticles(ssra.text);
                     return (true);
-                case (msg is GetComicRequestAction):
-                    _local_18 = (msg as GetComicRequestAction);
-                    ComicsManager.getInstance().getComic(_local_18.remoteId, _local_18.language, _local_18.previewOnly);
+                case (msg is ShopOneClickBuyRequestAction):
+                    socbra = (msg as ShopOneClickBuyRequestAction);
+                    DofusShopManager.getInstance().oneClickBuyArticle(socbra.data, socbra.currency, socbra.token);
                     return (true);
-                case (msg is GetComicsLibraryRequestAction):
-                    _local_19 = (msg as GetComicsLibraryRequestAction);
-                    ComicsManager.getInstance().getLibrary(_local_19.accountId);
+                case (msg is ShopOneClickValidateOrderRequestAction):
+                    socvora = (msg as ShopOneClickValidateOrderRequestAction);
+                    DofusShopManager.getInstance().oneClickValidateOrder(socvora.orderId, socvora.code);
+                    return (true);
+                case (msg is ShopOneClickSendCodeRequestAction):
+                    socscra = (msg as ShopOneClickSendCodeRequestAction);
+                    DofusShopManager.getInstance().onceClickSendCode(socscra.orderId);
+                    return (true);
+                case (msg is HavenBagRoomUpdateMessage):
+                    hbrum = (msg as HavenBagRoomUpdateMessage);
+                    if (((!(hbrum == null)) && (!(hbrum.roomsPreview == null))))
+                    {
+                        if (hbrum.action == HavenBagRoomActionEnum.HAVEN_BAG_ROOM_DISPATCH)
+                        {
+                            PlayedCharacterManager.getInstance().currentHavenbagRooms = hbrum.roomsPreview;
+                            PlayerManager.getInstance().havenbagAvailableRooms = hbrum.roomsPreview;
+                            KernelEventsManager.getInstance().processCallback(HookList.HavenbagAvailableRoomsUpdate, hbrum.roomsPreview);
+                        }
+                        else
+                        {
+                            currentList = PlayedCharacterManager.getInstance().currentHavenbagRooms;
+                            j = 0;
+                            while (j < hbrum.roomsPreview.length)
+                            {
+                                found = false;
+                                i = 0;
+                                while (i < currentList.length)
+                                {
+                                    if (currentList[i].roomId == hbrum.roomsPreview[j].roomId)
+                                    {
+                                        found = true;
+                                        currentList[i].themeId = hbrum.roomsPreview[j].themeId;
+                                        break;
+                                    };
+                                    i++;
+                                };
+                                if (!found)
+                                {
+                                    currentList.push(hbrum.roomsPreview[j]);
+                                };
+                                j++;
+                            };
+                            PlayedCharacterManager.getInstance().currentHavenbagRooms = currentList;
+                            PlayerManager.getInstance().havenbagAvailableRooms = currentList;
+                            KernelEventsManager.getInstance().processCallback(HookList.HavenbagAvailableRoomsUpdate, currentList);
+                        };
+                    };
+                    return (true);
+                case (msg is HavenBagPackListMessage):
+                    hbplmsg = (msg as HavenBagPackListMessage);
+                    validThemes = hbplmsg.packIds;
+                    commonThemeIndex = validThemes.indexOf(-1);
+                    if (commonThemeIndex != -1)
+                    {
+                        validThemes.splice(commonThemeIndex, 1);
+                    };
+                    PlayerManager.getInstance().havenbagAvailableThemes = validThemes;
+                    KernelEventsManager.getInstance().processCallback(HookList.HavenbagAvailableThemesUpdate, hbplmsg.packIds);
+                    return (true);
+                case (msg is OpenCodesAndGiftRequestAction):
+                    this.getHaapiKey(this.openCodesAndGift);
+                    return (true);
+                case (msg is ConsumeCodeAction):
+                    CodesAndGiftManager.getInstance().consumeCode((msg as ConsumeCodeAction).code);
+                    return (true);
+                case (msg is ConsumeSimpleKardAction):
+                    CodesAndGiftManager.getInstance().consumeKard((msg as ConsumeSimpleKardAction).id);
+                    return (true);
+                case (msg is UpdateGiftListRequestAction):
+                    CodesAndGiftManager.getInstance().updatePurchaseList();
+                    return (true);
+                case (msg is ConsumeMultipleKardAction):
+                    CodesAndGiftManager.getInstance().consumeKardMultiple((msg as ConsumeMultipleKardAction).id);
                     return (true);
             };
             return (false);
@@ -209,17 +263,30 @@
             {
                 this._tokenRequestCallback.push(callback);
             };
-            var katrmsg:KrosmasterAuthTokenRequestMessage = new KrosmasterAuthTokenRequestMessage();
-            katrmsg.initKrosmasterAuthTokenRequestMessage();
-            ConnectionsHandler.getConnection().send(katrmsg);
+            var hsakrm:HaapiShopApiKeyRequestMessage = new HaapiShopApiKeyRequestMessage();
+            ConnectionsHandler.getConnection().send(hsakrm);
             this._tokenRequestTimeoutTimer = new Timer(10000, 1);
             this._tokenRequestTimeoutTimer.addEventListener(TimerEvent.TIMER_COMPLETE, this.onTokenRequestTimeout);
             this._tokenRequestTimeoutTimer.start();
         }
 
+        public function getHaapiKey(callback:Function=null):void
+        {
+            this._haapiKeyRequestHasTimedOut = false;
+            if (callback != null)
+            {
+                this._haapiKeyRequestCallback.push(callback);
+            };
+            var hsakrm:HaapiShopApiKeyRequestMessage = new HaapiShopApiKeyRequestMessage();
+            ConnectionsHandler.getConnection().send(hsakrm);
+            this._haapiKeyRequestTimeoutTimer = new Timer(10000, 1);
+            this._haapiKeyRequestTimeoutTimer.addEventListener(TimerEvent.TIMER_COMPLETE, this.onHaapiKeyRequestTimeout);
+            this._haapiKeyRequestTimeoutTimer.start();
+        }
+
         private function openShop(token:String):void
         {
-            if (!(token))
+            if (!token)
             {
                 KernelEventsManager.getInstance().processCallback(ExternalGameHookList.DofusShopError, DofusShopEnum.ERROR_AUTHENTICATION_FAILED);
                 return;
@@ -227,11 +294,28 @@
             DofusShopManager.getInstance().init(token);
         }
 
+        private function openCodesAndGift(apiKey:String):void
+        {
+            if (!apiKey)
+            {
+                KernelEventsManager.getInstance().processCallback(ExternalGameHookList.DofusShopError, DofusShopEnum.ERROR_AUTHENTICATION_FAILED);
+                return;
+            };
+            CodesAndGiftManager.getInstance().init(apiKey);
+        }
+
         private function onTokenRequestTimeout(event:TimerEvent):void
         {
             this._tokenRequestHasTimedOut = true;
             this.clearTokenRequestTimer();
             this.callOnTokenFunctions("");
+        }
+
+        private function onHaapiKeyRequestTimeout(event:TimerEvent):void
+        {
+            this._haapiKeyRequestHasTimedOut = true;
+            this.clearHaapiKeyRequestTimer();
+            this.callOnHaapiKeyFunctions("");
         }
 
         private function callOnTokenFunctions(token:String):void
@@ -247,6 +331,19 @@
             };
         }
 
+        private function callOnHaapiKeyFunctions(token:String):void
+        {
+            var fct:Function;
+            if (this._haapiKeyRequestCallback.length)
+            {
+                for each (fct in this._haapiKeyRequestCallback)
+                {
+                    (fct(token));
+                };
+                this._haapiKeyRequestCallback.length = 0;
+            };
+        }
+
         private function clearTokenRequestTimer():void
         {
             if (this._tokenRequestTimeoutTimer)
@@ -257,6 +354,16 @@
             };
         }
 
+        private function clearHaapiKeyRequestTimer():void
+        {
+            if (this._haapiKeyRequestTimeoutTimer)
+            {
+                this._haapiKeyRequestTimeoutTimer.stop();
+                this._haapiKeyRequestTimeoutTimer.removeEventListener(TimerEvent.TIMER_COMPLETE, this.onHaapiKeyRequestTimeout);
+                this._haapiKeyRequestTimeoutTimer = null;
+            };
+        }
+
         private function onTokenInput(value:String):void
         {
             DofusShopManager.getInstance().init(value, true);
@@ -264,10 +371,10 @@
 
         private function onCancel():void
         {
-            this.getIceToken(this.openShop);
+            this.getHaapiKey(this.openShop);
         }
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.frames
+} com.ankamagames.dofus.logic.game.common.frames
 

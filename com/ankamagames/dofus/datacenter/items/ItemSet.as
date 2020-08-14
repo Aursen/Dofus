@@ -1,6 +1,7 @@
-﻿package com.ankamagames.dofus.datacenter.items
+package com.ankamagames.dofus.datacenter.items
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
+    import com.ankamagames.dofus.types.IdAccessors;
     import __AS3__.vec.Vector;
     import com.ankamagames.dofus.datacenter.effects.EffectInstance;
     import com.ankamagames.jerakine.data.GameData;
@@ -10,6 +11,7 @@
     {
 
         public static const MODULE:String = "ItemSets";
+        public static var idAccessors:IdAccessors = new IdAccessors(getItemSetById, getItemSets);
 
         public var id:uint;
         public var items:Vector.<uint>;
@@ -21,7 +23,7 @@
 
         public static function getItemSetById(id:uint):ItemSet
         {
-            return ((GameData.getObject(MODULE, id) as ItemSet));
+            return (GameData.getObject(MODULE, id) as ItemSet);
         }
 
         public static function getItemSets():Array
@@ -32,7 +34,7 @@
 
         public function get name():String
         {
-            if (!(this._name))
+            if (!this._name)
             {
                 this._name = I18n.getText(this.nameId);
             };
@@ -41,5 +43,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.items
+} com.ankamagames.dofus.datacenter.items
 

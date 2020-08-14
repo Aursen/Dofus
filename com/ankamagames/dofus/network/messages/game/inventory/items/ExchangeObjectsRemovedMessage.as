@@ -1,32 +1,28 @@
-﻿package com.ankamagames.dofus.network.messages.game.inventory.items
+package com.ankamagames.dofus.network.messages.game.inventory.items
 {
     import com.ankamagames.dofus.network.messages.game.inventory.exchanges.ExchangeObjectMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
     import __AS3__.vec.Vector;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
     import __AS3__.vec.*;
 
-    [Trusted]
     public class ExchangeObjectsRemovedMessage extends ExchangeObjectMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 6532;
 
         private var _isInitialized:Boolean = false;
-        public var objectUID:Vector.<uint>;
+        public var objectUID:Vector.<uint> = new Vector.<uint>();
+        private var _objectUIDtree:FuncTree;
 
-        public function ExchangeObjectsRemovedMessage()
-        {
-            this.objectUID = new Vector.<uint>();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
-            return (((super.isInitialized) && (this._isInitialized)));
+            return ((super.isInitialized) && (this._isInitialized));
         }
 
         override public function getMessageId():uint
@@ -59,6 +55,14 @@
         override public function unpack(input:ICustomDataInput, length:uint):void
         {
             this.deserialize(input);
+        }
+
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
         }
 
         override public function serialize(output:ICustomDataOutput):void
@@ -105,7 +109,39 @@
             };
         }
 
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_ExchangeObjectsRemovedMessage(tree);
+        }
+
+        public function deserializeAsyncAs_ExchangeObjectsRemovedMessage(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            this._objectUIDtree = tree.addChild(this._objectUIDtreeFunc);
+        }
+
+        private function _objectUIDtreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._objectUIDtree.addChild(this._objectUIDFunc);
+                i++;
+            };
+        }
+
+        private function _objectUIDFunc(input:ICustomDataInput):void
+        {
+            var _val:uint = input.readVarUhInt();
+            if (_val < 0)
+            {
+                throw (new Error((("Forbidden value (" + _val) + ") on elements of objectUID.")));
+            };
+            this.objectUID.push(_val);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.inventory.items
+} com.ankamagames.dofus.network.messages.game.inventory.items
 

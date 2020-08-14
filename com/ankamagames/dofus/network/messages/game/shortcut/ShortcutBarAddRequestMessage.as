@@ -1,15 +1,15 @@
-﻿package com.ankamagames.dofus.network.messages.game.shortcut
+package com.ankamagames.dofus.network.messages.game.shortcut
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
     import com.ankamagames.dofus.network.types.game.shortcut.Shortcut;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
     import com.ankamagames.dofus.network.ProtocolTypeManager;
 
-    [Trusted]
     public class ShortcutBarAddRequestMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -17,13 +17,9 @@
 
         private var _isInitialized:Boolean = false;
         public var barType:uint = 0;
-        public var shortcut:Shortcut;
+        public var shortcut:Shortcut = new Shortcut();
+        private var _shortcuttree:FuncTree;
 
-        public function ShortcutBarAddRequestMessage()
-        {
-            this.shortcut = new Shortcut();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
@@ -62,6 +58,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_ShortcutBarAddRequestMessage(output);
@@ -81,17 +85,40 @@
 
         public function deserializeAs_ShortcutBarAddRequestMessage(input:ICustomDataInput):void
         {
-            this.barType = input.readByte();
-            if (this.barType < 0)
-            {
-                throw (new Error((("Forbidden value (" + this.barType) + ") on element of ShortcutBarAddRequestMessage.barType.")));
-            };
+            this._barTypeFunc(input);
             var _id2:uint = input.readUnsignedShort();
             this.shortcut = ProtocolTypeManager.getInstance(Shortcut, _id2);
             this.shortcut.deserialize(input);
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_ShortcutBarAddRequestMessage(tree);
+        }
+
+        public function deserializeAsyncAs_ShortcutBarAddRequestMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._barTypeFunc);
+            this._shortcuttree = tree.addChild(this._shortcuttreeFunc);
+        }
+
+        private function _barTypeFunc(input:ICustomDataInput):void
+        {
+            this.barType = input.readByte();
+            if (this.barType < 0)
+            {
+                throw (new Error((("Forbidden value (" + this.barType) + ") on element of ShortcutBarAddRequestMessage.barType.")));
+            };
+        }
+
+        private function _shortcuttreeFunc(input:ICustomDataInput):void
+        {
+            var _id:uint = input.readUnsignedShort();
+            this.shortcut = ProtocolTypeManager.getInstance(Shortcut, _id);
+            this.shortcut.deserializeAsync(this._shortcuttree);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.shortcut
+} com.ankamagames.dofus.network.messages.game.shortcut
 

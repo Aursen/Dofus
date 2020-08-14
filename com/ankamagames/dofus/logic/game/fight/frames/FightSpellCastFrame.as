@@ -1,6 +1,7 @@
-﻿package com.ankamagames.dofus.logic.game.fight.frames
+package com.ankamagames.dofus.logic.game.fight.frames
 {
     import com.ankamagames.jerakine.messages.Frame;
+    import com.ankamagames.jerakine.data.XmlConfig;
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
@@ -9,28 +10,29 @@
     import flash.utils.Timer;
     import com.ankamagames.berilia.types.data.LinkedCursorData;
     import com.ankamagames.dofus.logic.game.fight.types.FightTeleportationPreview;
+    import com.ankamagames.dofus.logic.game.fight.types.FightSummonPreview;
+    import com.ankamagames.dofus.types.entities.AnimatedCharacter;
     import com.ankamagames.dofus.internalDatacenter.spells.SpellWrapper;
-    import com.ankamagames.dofus.datacenter.effects.EffectInstance;
-    import com.ankamagames.tiphon.types.look.TiphonEntityLook;
-    import com.ankamagames.dofus.datacenter.monsters.Monster;
-    import com.ankamagames.jerakine.entities.interfaces.IEntity;
+    import com.ankamagames.dofus.internalDatacenter.items.WeaponWrapper;
     import flash.geom.Point;
     import flash.events.TimerEvent;
     import com.ankamagames.dofus.logic.game.common.managers.PlayedCharacterManager;
-    import com.ankamagames.dofus.misc.EntityLookAdapter;
-    import com.ankamagames.dofus.types.entities.AnimatedCharacter;
-    import com.ankamagames.atouin.managers.EntitiesManager;
     import com.ankamagames.dofus.kernel.Kernel;
     import com.ankamagames.jerakine.types.enums.Priority;
-    import flash.utils.Dictionary;
+    import __AS3__.vec.Vector;
     import com.ankamagames.dofus.network.types.game.context.GameContextActorInformations;
     import com.ankamagames.dofus.network.types.game.context.fight.GameFightFighterInformations;
+    import com.ankamagames.atouin.Atouin;
+    import com.ankamagames.jerakine.types.events.PropertyChangeEvent;
+    import flash.utils.Dictionary;
     import com.ankamagames.dofus.logic.game.common.misc.DofusEntities;
     import com.ankamagames.dofus.network.enums.GameActionFightInvisibilityStateEnum;
     import com.ankamagames.dofus.logic.game.fight.managers.CurrentPlayedFighterManager;
     import com.ankamagames.berilia.managers.KernelEventsManager;
     import com.ankamagames.dofus.misc.lists.HookList;
     import com.ankamagames.atouin.messages.CellOverMessage;
+    import com.ankamagames.atouin.messages.CellOutMessage;
+    import com.ankamagames.jerakine.entities.interfaces.IEntity;
     import com.ankamagames.jerakine.entities.messages.EntityMouseOverMessage;
     import com.ankamagames.dofus.logic.game.fight.actions.TimelineEntityOverAction;
     import com.ankamagames.dofus.logic.game.fight.actions.TimelineEntityOutAction;
@@ -38,100 +40,113 @@
     import com.ankamagames.jerakine.entities.messages.EntityClickMessage;
     import com.ankamagames.dofus.logic.game.fight.actions.TimelineEntityClickAction;
     import com.ankamagames.jerakine.entities.messages.EntityMouseOutMessage;
-    import com.ankamagames.atouin.messages.CellOutMessage;
+    import com.ankamagames.atouin.managers.EntitiesManager;
     import com.ankamagames.atouin.messages.AdjacentMapClickMessage;
     import com.ankamagames.jerakine.handlers.messages.mouse.MouseRightClickMessage;
     import com.ankamagames.dofus.logic.game.fight.actions.BannerEmptySlotClickAction;
+    import com.ankamagames.jerakine.utils.display.KeyPoll;
+    import flash.ui.Keyboard;
     import com.ankamagames.jerakine.handlers.messages.mouse.MouseUpMessage;
     import com.ankamagames.jerakine.messages.Message;
     import com.ankamagames.berilia.managers.LinkedCursorSpriteManager;
-    import com.ankamagames.atouin.renderers.ZoneDARenderer;
+    import com.ankamagames.atouin.utils.IFightZoneRenderer;
     import com.ankamagames.jerakine.types.zones.IZone;
     import com.ankamagames.atouin.managers.SelectionManager;
     import com.ankamagames.atouin.enums.PlacementStrataEnums;
+    import com.ankamagames.jerakine.utils.display.spellZone.SpellShapeEnum;
+    import com.ankamagames.jerakine.types.zones.Cross;
+    import com.ankamagames.atouin.utils.DataMapProvider;
+    import com.ankamagames.jerakine.types.zones.Custom;
     import com.ankamagames.dofus.logic.game.fight.managers.SpellZoneManager;
     import com.ankamagames.jerakine.types.positions.MapPoint;
-    import com.ankamagames.atouin.Atouin;
-    import com.ankamagames.jerakine.types.zones.Cross;
-    import __AS3__.vec.Vector;
+    import com.ankamagames.dofus.logic.game.fight.types.SpellBuff;
     import com.ankamagames.dofus.logic.game.fight.types.MarkInstance;
     import com.ankamagames.dofus.network.types.game.character.characteristic.CharacterBaseCharacteristic;
+    import com.ankamagames.dofus.logic.game.fight.managers.BuffManager;
+    import com.ankama.dofus.enums.ActionIds;
     import com.ankamagames.atouin.AtouinConstants;
-    import com.ankamagames.atouin.utils.DataMapProvider;
     import com.ankamagames.jerakine.types.zones.Lozenge;
-    import com.ankamagames.jerakine.types.zones.Custom;
     import com.ankamagames.jerakine.map.LosDetector;
     import com.ankamagames.dofus.logic.game.fight.managers.MarkedCellsManager;
-    import com.ankamagames.dofus.network.enums.GameActionMarkTypeEnum;
+    import tools.enumeration.GameActionMarkTypeEnum;
     import com.ankamagames.dofus.logic.game.fight.managers.LinkedCellsManager;
     import com.ankamagames.jerakine.utils.display.Dofus2Line;
-    import com.ankamagames.dofus.logic.game.fight.miscs.DamageUtil;
-    import com.ankamagames.dofus.network.types.game.context.fight.GameFightMonsterInformations;
-    import com.ankamagames.dofus.logic.game.fight.managers.FightersStateManager;
+    import com.ankamagames.tiphon.display.TiphonSprite;
+    import damageCalculation.fighterManagement.HaxeFighter;
+    import com.ankamagames.jerakine.managers.OptionManager;
     import com.ankamagames.berilia.types.tooltip.TooltipPlacer;
     import com.ankamagames.berilia.managers.TooltipManager;
-    import com.ankamagames.dofus.logic.game.fight.miscs.ActionIdConverter;
+    import com.ankamagames.dofus.network.types.game.context.fight.GameFightCharacterInformations;
+    import com.ankamagames.dofus.logic.game.fight.types.SpellDamage;
+    import haxe.ds._List.ListNode;
+    import damageCalculation.damageManagement.EffectOutput;
+    import com.ankamagames.dofus.logic.game.fight.frames.Preview.DamagePreview;
+    import tools.BreedEnum;
+    import com.ankamagames.dofus.datacenter.effects.EffectInstance;
+    import com.ankamagames.dofus.internalDatacenter.fight.FighterInformations;
+    import com.ankamagames.dofus.network.messages.game.chat.ChatClientMultiMessage;
     import com.ankamagames.dofus.network.messages.game.actions.fight.GameActionFightCastOnTargetRequestMessage;
     import com.ankamagames.dofus.network.messages.game.actions.fight.GameActionFightCastRequestMessage;
+    import com.ankamagames.jerakine.data.I18n;
+    import com.ankamagames.dofus.network.enums.ChatActivableChannelsEnum;
     import com.ankamagames.dofus.kernel.net.ConnectionsHandler;
     import com.ankamagames.dofus.datacenter.spells.SpellLevel;
+    import com.ankamagames.atouin.utils.CellUtil;
     import com.ankamagames.atouin.managers.MapDisplayManager;
     import com.ankamagames.atouin.data.map.CellData;
     import com.ankamagames.dofus.types.entities.Glyph;
-    import com.ankamagames.atouin.managers.*;
+    import com.ankamagames.atouin.renderers.ZoneClipRenderer;
+    import com.ankamagames.atouin.renderers.ZoneDARenderer;
     import __AS3__.vec.*;
-    import com.ankamagames.jerakine.map.*;
     import com.ankamagames.atouin.types.*;
+    import com.ankamagames.atouin.managers.*;
+    import com.ankamagames.jerakine.map.*;
     import com.ankamagames.atouin.renderers.*;
 
     public class FightSpellCastFrame implements Frame 
     {
 
+        private static var SWF_LIB:String = XmlConfig.getInstance().getEntry("config.ui.skin").concat("assets_tacticmod.swf");
         private static const FORBIDDEN_CURSOR:Class = FightSpellCastFrame_FORBIDDEN_CURSOR;
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(FightSpellCastFrame));
         private static const RANGE_COLOR:Color = new Color(5533093);
         private static const LOS_COLOR:Color = new Color(2241433);
+        private static const POSSIBLE_TARGET_CELL_COLOR:Color = new Color(3359897);
         private static const PORTAL_COLOR:Color = new Color(251623);
+        private static const TARGET_CENTER_COLOR:Color = new Color(14487842);
         private static const TARGET_COLOR:Color = new Color(14487842);
         private static const SELECTION_RANGE:String = "SpellCastRange";
         private static const SELECTION_PORTALS:String = "SpellCastPortals";
         private static const SELECTION_LOS:String = "SpellCastLos";
         private static const SELECTION_TARGET:String = "SpellCastTarget";
+        private static const SELECTION_CENTER_TARGET:String = "SELECTION_CENTER_TARGET";
         private static const FORBIDDEN_CURSOR_NAME:String = "SpellCastForbiddenCusror";
-        private static const TELEPORTATION_EFFECTS:Array = [1100, 1104, 1105, 1106];
+        private static const MAX_TOOLTIP:uint = 10;
         private static var _currentTargetIsTargetable:Boolean;
 
         private var _spellLevel:Object;
         private var _spellId:uint;
-        private var _rangeSelection:Selection;
-        private var _losSelection:Selection;
         private var _portalsSelection:Selection;
         private var _targetSelection:Selection;
+        private var _targetCenterSelection:Selection;
         private var _currentCell:int = -1;
-        private var _virtualCast:Boolean;
         private var _cancelTimer:Timer;
         private var _cursorData:LinkedCursorData;
         private var _lastTargetStatus:Boolean = true;
         private var _isInfiniteTarget:Boolean;
-        private var _usedWrapper;
+        private var _usedWrapper:*;
         private var _targetingThroughPortal:Boolean;
         private var _clearTargetTimer:Timer;
         private var _spellmaximumRange:uint;
-        private var _invocationPreview:Array;
         private var _fightTeleportationPreview:FightTeleportationPreview;
+        private var _summoningPreview:FightSummonPreview;
+        private var _currentCellEntity:AnimatedCharacter;
+        private var _fightContextFrame:FightContextFrame;
 
         public function FightSpellCastFrame(spellId:uint)
         {
             var i:SpellWrapper;
-            var effect:EffectInstance;
-            var tes:TiphonEntityLook;
-            var invoquedEntityNumber:int;
-            var monsterId:*;
-            var monster:Monster;
-            var j:int;
-            var ts:IEntity;
-            var _local_10:*;
-            this._invocationPreview = new Array();
+            var weapon:WeaponWrapper;
             super();
             this._spellId = spellId;
             this._cursorData = new LinkedCursorData();
@@ -147,66 +162,25 @@
                     if (i.spellId == this._spellId)
                     {
                         this._spellLevel = i;
-                        if (this._spellId == 74)
-                        {
-                            tes = EntityLookAdapter.fromNetwork(PlayedCharacterManager.getInstance().infos.entityLook);
-                            invoquedEntityNumber = 1;
-                        }
-                        else
-                        {
-                            if (this._spellId == 2763)
-                            {
-                                tes = EntityLookAdapter.fromNetwork(PlayedCharacterManager.getInstance().infos.entityLook);
-                                invoquedEntityNumber = 4;
-                            };
-                        };
-                        for each (effect in this.currentSpell.effects)
-                        {
-                            if ((((((effect.effectId == 181)) || ((effect.effectId == 1008)))) || ((effect.effectId == 1011))))
-                            {
-                                monsterId = effect.parameter0;
-                                monster = Monster.getMonsterById(monsterId);
-                                tes = new TiphonEntityLook(monster.look);
-                                invoquedEntityNumber = 1;
-                                break;
-                            };
-                        };
-                        if (tes)
-                        {
-                            j = 0;
-                            while (j < invoquedEntityNumber)
-                            {
-                                ts = new AnimatedCharacter(EntitiesManager.getInstance().getFreeEntityId(), tes);
-                                (ts as AnimatedCharacter).setCanSeeThrough(true);
-                                (ts as AnimatedCharacter).transparencyAllowed = true;
-                                (ts as AnimatedCharacter).alpha = 0.65;
-                                (ts as AnimatedCharacter).mouseEnabled = false;
-                                this._invocationPreview.push(ts);
-                                j++;
-                            };
-                        }
-                        else
-                        {
-                            this.removeInvocationPreview();
-                        };
-                        break;
                     };
                 };
             }
             else
             {
-                _local_10 = PlayedCharacterManager.getInstance().currentWeapon;
+                weapon = PlayedCharacterManager.getInstance().currentWeapon;
                 this._spellLevel = {
-                    "effects":_local_10.effects,
-                    "castTestLos":_local_10.castTestLos,
-                    "castInLine":_local_10.castInLine,
-                    "castInDiagonal":_local_10.castInDiagonal,
-                    "minRange":_local_10.minRange,
-                    "range":_local_10.range,
-                    "apCost":_local_10.apCost,
+                    "effects":weapon.effects,
+                    "castTestLos":weapon.castTestLos,
+                    "castInLine":weapon.castInLine,
+                    "castInDiagonal":weapon.castInDiagonal,
+                    "minRange":weapon.minRange,
+                    "range":weapon.range,
+                    "apCost":weapon.apCost,
                     "needFreeCell":false,
                     "needTakenCell":false,
-                    "needFreeTrapCell":false
+                    "needFreeTrapCell":false,
+                    "name":weapon.name,
+                    "playerId":PlayedCharacterManager.getInstance().id
                 };
             };
             this._clearTargetTimer = new Timer(50, 1);
@@ -235,31 +209,43 @@
             return (Priority.HIGHEST);
         }
 
-        public function get currentSpell():Object
+        public function get hasSummoningPreview():Boolean
         {
-            return (this._spellLevel);
+            return ((this._summoningPreview) && (this._summoningPreview.previews.length > 0));
+        }
+
+        public function get invocationPreview():Vector.<AnimatedCharacter>
+        {
+            if (this._summoningPreview)
+            {
+                return (this._summoningPreview.previews);
+            };
+            return (null);
+        }
+
+        public function get spellId():uint
+        {
+            return (this._spellId);
         }
 
         public function pushed():Boolean
         {
-            var fef:FightEntitiesFrame;
-            var fighters:Dictionary;
             var actorInfos:GameContextActorInformations;
             var fighterInfos:GameFightFighterInformations;
-            var char:AnimatedCharacter;
-            var fbf:FightBattleFrame = (Kernel.getWorker().getFrame(FightBattleFrame) as FightBattleFrame);
-            if (fbf.playingSlaveEntity)
+            var character:AnimatedCharacter;
+            Atouin.getInstance().options.addEventListener(PropertyChangeEvent.PROPERTY_CHANGED, this.onPropertyChanged);
+            this._fightContextFrame = (Kernel.getWorker().getFrame(FightContextFrame) as FightContextFrame);
+            var fef:FightEntitiesFrame = (Kernel.getWorker().getFrame(FightEntitiesFrame) as FightEntitiesFrame);
+            var fighters:Dictionary = fef.getEntitiesDictionnary();
+            for each (actorInfos in fighters)
             {
-                fef = (Kernel.getWorker().getFrame(FightEntitiesFrame) as FightEntitiesFrame);
-                fighters = fef.getEntitiesDictionnary();
-                for each (actorInfos in fighters)
+                fighterInfos = (actorInfos as GameFightFighterInformations);
+                character = (DofusEntities.getEntity(fighterInfos.contextualId) as AnimatedCharacter);
+                if ((((character) && (!(fighterInfos.contextualId == CurrentPlayedFighterManager.getInstance().currentFighterId))) && (fighterInfos.stats.invisibilityState == GameActionFightInvisibilityStateEnum.DETECTED)))
                 {
-                    fighterInfos = (actorInfos as GameFightFighterInformations);
-                    char = (DofusEntities.getEntity(fighterInfos.contextualId) as AnimatedCharacter);
-                    if (((((char) && (!((fighterInfos.contextualId == CurrentPlayedFighterManager.getInstance().currentFighterId))))) && ((fighterInfos.stats.invisibilityState == GameActionFightInvisibilityStateEnum.DETECTED))))
-                    {
-                        char.setCanSeeThrough(true);
-                    };
+                    character.setCanSeeThrough(true);
+                    character.setCanWalkThrough(false);
+                    character.setCanWalkTo(false);
                 };
             };
             this._cancelTimer.reset();
@@ -272,12 +258,12 @@
                 }
                 else
                 {
-                    this._usedWrapper = SpellWrapper.create(-1, 0, 1, false, PlayedCharacterManager.getInstance().id);
+                    this._usedWrapper = SpellWrapper.create(0, 1, false, PlayedCharacterManager.getInstance().id);
                 };
             }
             else
             {
-                this._usedWrapper = SpellWrapper.getFirstSpellWrapperById(this._spellId, CurrentPlayedFighterManager.getInstance().currentFighterId);
+                this._usedWrapper = SpellWrapper.getSpellWrapperById(this._spellId, CurrentPlayedFighterManager.getInstance().currentFighterId);
             };
             KernelEventsManager.getInstance().processCallback(HookList.CastSpellMode, this._usedWrapper);
             this.drawRange();
@@ -287,73 +273,72 @@
 
         public function process(msg:Message):Boolean
         {
-            var _local_2:CellOverMessage;
-            var _local_3:EntityMouseOverMessage;
-            var _local_4:TimelineEntityOverAction;
-            var _local_5:IEntity;
-            var _local_6:TimelineEntityOutAction;
-            var _local_7:IEntity;
-            var _local_8:CellClickMessage;
-            var _local_9:EntityClickMessage;
-            var _local_10:TimelineEntityClickAction;
-            var previewEntity:IEntity;
+            var conmsg:CellOverMessage;
+            var comsg:CellOutMessage;
+            var cellEntity:IEntity;
+            var emomsg:EntityMouseOverMessage;
+            var teoa:TimelineEntityOverAction;
+            var timelineEntity:IEntity;
+            var teouta:TimelineEntityOutAction;
+            var outEntity:IEntity;
+            var ccmsg:CellClickMessage;
+            var ecmsg:EntityClickMessage;
+            var teica:TimelineEntityClickAction;
             switch (true)
             {
                 case (msg is CellOverMessage):
-                    _local_2 = (msg as CellOverMessage);
-                    FightContextFrame.currentCell = _local_2.cellId;
+                    conmsg = (msg as CellOverMessage);
+                    FightContextFrame.currentCell = conmsg.cellId;
                     this.refreshTarget();
                     return (false);
                 case (msg is EntityMouseOutMessage):
                     this.clearTarget();
                     return (false);
                 case (msg is CellOutMessage):
+                    comsg = (msg as CellOutMessage);
+                    cellEntity = EntitiesManager.getInstance().getEntityOnCell(comsg.cellId, AnimatedCharacter);
+                    this.removeTeleportationPreview();
+                    this.removeSummoningPreview();
                     this.clearTarget();
                     return (false);
                 case (msg is EntityMouseOverMessage):
-                    _local_3 = (msg as EntityMouseOverMessage);
-                    FightContextFrame.currentCell = _local_3.entity.position.cellId;
+                    emomsg = (msg as EntityMouseOverMessage);
+                    FightContextFrame.currentCell = emomsg.entity.position.cellId;
                     this.refreshTarget();
                     return (false);
                 case (msg is TimelineEntityOverAction):
-                    _local_4 = (msg as TimelineEntityOverAction);
-                    _local_5 = DofusEntities.getEntity(_local_4.targetId);
-                    if (((((_local_5) && (_local_5.position))) && ((_local_5.position.cellId > -1))))
+                    teoa = (msg as TimelineEntityOverAction);
+                    timelineEntity = DofusEntities.getEntity(teoa.targetId);
+                    if ((((timelineEntity) && (timelineEntity.position)) && (timelineEntity.position.cellId > -1)))
                     {
-                        FightContextFrame.currentCell = _local_5.position.cellId;
+                        FightContextFrame.currentCell = timelineEntity.position.cellId;
                         this.refreshTarget();
                     };
                     return (false);
                 case (msg is TimelineEntityOutAction):
-                    _local_6 = (msg as TimelineEntityOutAction);
-                    _local_7 = DofusEntities.getEntity(_local_6.targetId);
-                    if (((((_local_7) && (_local_7.position))) && ((_local_7.position.cellId == this._currentCell))))
-                    {
-                        this.removeTeleportationPreview();
-                    };
+                    teouta = (msg as TimelineEntityOutAction);
+                    outEntity = DofusEntities.getEntity(teouta.targetId);
+                    this.removeTeleportationPreview();
+                    this.removeSummoningPreview();
                     return (false);
                 case (msg is CellClickMessage):
-                    _local_8 = (msg as CellClickMessage);
-                    this.castSpell(_local_8.cellId);
+                    ccmsg = (msg as CellClickMessage);
+                    this.castSpell(ccmsg.cellId);
                     return (true);
                 case (msg is EntityClickMessage):
-                    _local_9 = (msg as EntityClickMessage);
-                    if (this._invocationPreview.length > 0)
+                    ecmsg = (msg as EntityClickMessage);
+                    if ((((this._summoningPreview) && (this._summoningPreview.isPreview(ecmsg.entity.id))) || ((this._fightTeleportationPreview) && (this._fightTeleportationPreview.isPreview(ecmsg.entity.id)))))
                     {
-                        for each (previewEntity in this._invocationPreview)
-                        {
-                            if (previewEntity.id == _local_9.entity.id)
-                            {
-                                this.castSpell(_local_9.entity.position.cellId);
-                                return (true);
-                            };
-                        };
+                        this.castSpell(ecmsg.entity.position.cellId);
+                    }
+                    else
+                    {
+                        this.castSpell(ecmsg.entity.position.cellId, ecmsg.entity.id);
                     };
-                    this.castSpell(_local_9.entity.position.cellId, _local_9.entity.id);
                     return (true);
                 case (msg is TimelineEntityClickAction):
-                    _local_10 = (msg as TimelineEntityClickAction);
-                    this.castSpell(0, _local_10.fighterId);
+                    teica = (msg as TimelineEntityClickAction);
+                    this.castSpell(0, teica.fighterId, true);
                     return (true);
                 case (msg is AdjacentMapClickMessage):
                 case (msg is MouseRightClickMessage):
@@ -363,7 +348,10 @@
                     this.cancelCast();
                     return (true);
                 case (msg is MouseUpMessage):
-                    this._cancelTimer.start();
+                    if (!KeyPoll.getInstance().isDown(Keyboard.ALTERNATE))
+                    {
+                        this._cancelTimer.start();
+                    };
                     return (false);
             };
             return (false);
@@ -374,31 +362,39 @@
             var fef:FightEntitiesFrame;
             var fighters:Dictionary;
             var actorInfos:GameContextActorInformations;
-            var char:AnimatedCharacter;
+            var fighterInfos:GameFightFighterInformations;
+            var character:AnimatedCharacter;
+            Atouin.getInstance().options.removeEventListener(PropertyChangeEvent.PROPERTY_CHANGED, this.onPropertyChanged);
             var fbf:FightBattleFrame = (Kernel.getWorker().getFrame(FightBattleFrame) as FightBattleFrame);
-            if (((fbf) && (fbf.playingSlaveEntity)))
+            if (fbf)
             {
                 fef = (Kernel.getWorker().getFrame(FightEntitiesFrame) as FightEntitiesFrame);
                 fighters = fef.getEntitiesDictionnary();
                 for each (actorInfos in fighters)
                 {
-                    char = (DofusEntities.getEntity(actorInfos.contextualId) as AnimatedCharacter);
-                    if (((char) && (!((actorInfos.contextualId == CurrentPlayedFighterManager.getInstance().currentFighterId)))))
+                    fighterInfos = (actorInfos as GameFightFighterInformations);
+                    character = (DofusEntities.getEntity(actorInfos.contextualId) as AnimatedCharacter);
+                    if ((((character) && (!(actorInfos.contextualId == CurrentPlayedFighterManager.getInstance().currentFighterId))) && (fighterInfos.stats.invisibilityState == GameActionFightInvisibilityStateEnum.VISIBLE)))
                     {
-                        char.setCanSeeThrough(false);
+                        character.setCanSeeThrough(false);
+                        character.setCanWalkThrough(false);
+                        character.setCanWalkTo(false);
                     };
                 };
             };
-            this._cancelTimer.reset();
+            this._clearTargetTimer.stop();
+            this._clearTargetTimer.removeEventListener(TimerEvent.TIMER, this.onClearTarget);
+            this._cancelTimer.stop();
+            this._cancelTimer.removeEventListener(TimerEvent.TIMER, this.cancelCast);
             this.hideTargetsTooltips();
             this.removeRange();
             this.removeTarget();
-            this.removeInvocationPreview();
+            this.removeSummoningPreview();
             LinkedCursorSpriteManager.getInstance().removeItem(FORBIDDEN_CURSOR_NAME);
-            this.removeTeleportationPreview();
+            this.removeTeleportationPreview(true);
             try
             {
-                KernelEventsManager.getInstance().processCallback(HookList.CancelCastSpell, SpellWrapper.getFirstSpellWrapperById(this._spellId, CurrentPlayedFighterManager.getInstance().currentFighterId));
+                KernelEventsManager.getInstance().processCallback(HookList.CancelCastSpell, SpellWrapper.getSpellWrapperById(this._spellId, CurrentPlayedFighterManager.getInstance().currentFighterId));
             }
             catch(e:Error)
             {
@@ -406,21 +402,34 @@
             return (true);
         }
 
+        public function entityMovement(pEntityId:Number):void
+        {
+            if (((this._currentCellEntity) && (this._currentCellEntity.id == pEntityId)))
+            {
+                this.removeSummoningPreview();
+                if (this._fightTeleportationPreview)
+                {
+                    this.removeTeleportationPreview();
+                };
+            }
+            else
+            {
+                if (((this._fightTeleportationPreview) && (!(this._fightTeleportationPreview.getEntitiesIds().indexOf(pEntityId) == -1))))
+                {
+                    this.removeTeleportationPreview();
+                };
+            };
+        }
+
         public function refreshTarget(force:Boolean=false):void
         {
-            var newTarget:int;
-            var currentFighterId:int;
+            var currentFighterId:Number;
             var entityInfos:GameFightFighterInformations;
-            var renderer:ZoneDARenderer;
+            var renderer:IFightZoneRenderer;
+            var ignoreMaxSize:Boolean;
+            var spellShape:uint;
             var spellZone:IZone;
-            var _local_10:Boolean;
-            var playerX:int;
-            var playerY:int;
-            var distance:int;
-            var positionArray:Array;
-            var i:int;
-            var _local_16:IEntity;
-            var preview:IEntity;
+            var updateStrata:Boolean;
             if (this._clearTargetTimer.running)
             {
                 this._clearTargetTimer.reset();
@@ -431,9 +440,9 @@
                 return;
             };
             this._targetingThroughPortal = false;
-            if (((((SelectionManager.getInstance().isInside(target, SELECTION_PORTALS)) && (SelectionManager.getInstance().isInside(target, SELECTION_LOS)))) && (!((this._spellId == 0)))))
+            var newTarget:int = -1;
+            if ((((SelectionManager.getInstance().isInside(target, SELECTION_PORTALS)) && (SelectionManager.getInstance().isInside(target, SELECTION_LOS))) && (!(this._spellId == 0))))
             {
-                newTarget = -1;
                 newTarget = this.getTargetThroughPortal(target, true);
                 if (newTarget != target)
                 {
@@ -441,18 +450,21 @@
                     target = newTarget;
                 };
             };
-            if (((!(force)) && ((this._currentCell == target))))
+            this.removeSummoningPreview();
+            this.removeTeleportationPreview();
+            if (((!(force)) && ((this._currentCell == target) && (!(this._currentCell == newTarget)))))
             {
                 if (((this._targetSelection) && (this.isValidCell(target))))
                 {
-                    this.showTargetsTooltips(this._targetSelection);
-                    this.showTeleportationPreview();
+                    this.showTargetsTooltips();
                 };
                 return;
             };
             this._currentCell = target;
+            var entitiesOnCell:Array = EntitiesManager.getInstance().getEntitiesOnCell(this._currentCell, AnimatedCharacter);
+            this._currentCellEntity = ((entitiesOnCell.length > 0) ? (this.getParentEntity(entitiesOnCell[0]) as AnimatedCharacter) : null);
             var fightTurnFrame:FightTurnFrame = (Kernel.getWorker().getFrame(FightTurnFrame) as FightTurnFrame);
-            if (!(fightTurnFrame))
+            if (!fightTurnFrame)
             {
                 return;
             };
@@ -460,16 +472,29 @@
             _currentTargetIsTargetable = this.isValidCell(target);
             if (_currentTargetIsTargetable)
             {
-                if (!(this._targetSelection))
+                if (!this._targetSelection)
                 {
                     this._targetSelection = new Selection();
-                    this._targetSelection.renderer = new ZoneDARenderer(PlacementStrataEnums.STRATA_AREA, 1, true);
-                    (this._targetSelection.renderer as ZoneDARenderer).showFarmCell = false;
+                    this._targetSelection.renderer = this.createZoneRenderer(TARGET_COLOR);
                     this._targetSelection.color = TARGET_COLOR;
-                    spellZone = SpellZoneManager.getInstance().getSpellZone(this._spellLevel, true);
+                    this._targetCenterSelection = new Selection();
+                    this._targetCenterSelection.renderer = this.createZoneRenderer(TARGET_CENTER_COLOR, ((Atouin.getInstance().options.getOption("transparentOverlayMode")) ? PlacementStrataEnums.STRATA_NO_Z_ORDER : PlacementStrataEnums.STRATA_AREA));
+                    this._targetCenterSelection.color = TARGET_CENTER_COLOR;
+                    ignoreMaxSize = true;
+                    spellShape = this.getSpellShape();
+                    if (spellShape == SpellShapeEnum.l)
+                    {
+                        ignoreMaxSize = false;
+                    };
+                    this._targetCenterSelection.zone = new Cross(0, 0, DataMapProvider.getInstance());
+                    SelectionManager.getInstance().addSelection(this._targetCenterSelection, SELECTION_CENTER_TARGET);
+                    SelectionManager.getInstance().addSelection(this._targetSelection, SELECTION_TARGET);
+                };
+                if (((!(this._targetSelection.zone)) || (this._targetSelection.zone is Custom)))
+                {
+                    spellZone = SpellZoneManager.getInstance().getSpellZone(this._spellLevel, true, ignoreMaxSize, target, FightEntitiesFrame.getCurrentInstance().getEntityInfos(this._spellLevel.playerId).disposition.cellId);
                     this._spellmaximumRange = spellZone.radius;
                     this._targetSelection.zone = spellZone;
-                    SelectionManager.getInstance().addSelection(this._targetSelection, SELECTION_TARGET);
                 };
                 currentFighterId = CurrentPlayedFighterManager.getInstance().currentFighterId;
                 entityInfos = (FightEntitiesFrame.getCurrentInstance().getEntityInfos(currentFighterId) as GameFightFighterInformations);
@@ -484,20 +509,22 @@
                         this._targetSelection.zone.direction = MapPoint(MapPoint.fromCellId(entityInfos.disposition.cellId)).advancedOrientationTo(MapPoint.fromCellId(target), false);
                     };
                 };
-                renderer = (this._targetSelection.renderer as ZoneDARenderer);
-                if (((Atouin.getInstance().options.transparentOverlayMode) && (!((this._spellmaximumRange == 63)))))
+                renderer = (this._targetSelection.renderer as IFightZoneRenderer);
+                if (((Atouin.getInstance().options.getOption("transparentOverlayMode")) && (!(this._spellmaximumRange == 63))))
                 {
                     renderer.currentStrata = PlacementStrataEnums.STRATA_NO_Z_ORDER;
                     SelectionManager.getInstance().update(SELECTION_TARGET, target, true);
+                    SelectionManager.getInstance().update(SELECTION_CENTER_TARGET, target, true);
                 }
                 else
                 {
                     if (renderer.currentStrata == PlacementStrataEnums.STRATA_NO_Z_ORDER)
                     {
                         renderer.currentStrata = PlacementStrataEnums.STRATA_AREA;
-                        _local_10 = true;
+                        updateStrata = true;
                     };
-                    SelectionManager.getInstance().update(SELECTION_TARGET, target, _local_10);
+                    SelectionManager.getInstance().update(SELECTION_TARGET, target, updateStrata);
+                    SelectionManager.getInstance().update(SELECTION_CENTER_TARGET, target, updateStrata);
                 };
                 if (myTurn)
                 {
@@ -512,54 +539,10 @@
                     };
                     this._lastTargetStatus = false;
                 };
-                this.showTargetsTooltips(this._targetSelection);
-                if (this._invocationPreview.length > 0)
-                {
-                    if (this._spellId == 2763)
-                    {
-                        playerX = MapPoint.fromCellId(entityInfos.disposition.cellId).x;
-                        playerY = MapPoint.fromCellId(entityInfos.disposition.cellId).y;
-                        distance = MapPoint.fromCellId(entityInfos.disposition.cellId).distanceTo(MapPoint.fromCellId(this._currentCell));
-                        positionArray = [MapPoint.fromCoords((playerX + distance), playerY), MapPoint.fromCoords((playerX - distance), playerY), MapPoint.fromCoords(playerX, (playerY + distance)), MapPoint.fromCoords(playerX, (playerY - distance))];
-                        i = 0;
-                        while (i < 4)
-                        {
-                            preview = this._invocationPreview[i];
-                            (preview as AnimatedCharacter).visible = true;
-                            preview.position = positionArray[i];
-                            (preview as AnimatedCharacter).setDirection(MapPoint.fromCellId(entityInfos.disposition.cellId).advancedOrientationTo(preview.position, true));
-                            if (((this.isValidCell(preview.position.cellId)) && (!((preview.position.cellId == this._currentCell)))))
-                            {
-                                (preview as AnimatedCharacter).display(PlacementStrataEnums.STRATA_PLAYER);
-                                (preview as AnimatedCharacter).visible = true;
-                            }
-                            else
-                            {
-                                (preview as AnimatedCharacter).visible = false;
-                            };
-                            i++;
-                        };
-                    }
-                    else
-                    {
-                        _local_16 = this._invocationPreview[0];
-                        (_local_16 as AnimatedCharacter).visible = true;
-                        _local_16.position = MapPoint.fromCellId(this._currentCell);
-                        (_local_16 as AnimatedCharacter).setDirection(MapPoint.fromCellId(entityInfos.disposition.cellId).advancedOrientationTo(MapPoint.fromCellId(this._currentCell), true));
-                        (_local_16 as AnimatedCharacter).display(PlacementStrataEnums.STRATA_PLAYER);
-                    };
-                };
-                this.showTeleportationPreview();
+                this.showTargetsTooltips();
             }
             else
             {
-                if (this._invocationPreview.length > 0)
-                {
-                    for each (preview in this._invocationPreview)
-                    {
-                        (preview as AnimatedCharacter).visible = false;
-                    };
-                };
                 if (this._lastTargetStatus)
                 {
                     LinkedCursorSpriteManager.getInstance().addItem(FORBIDDEN_CURSOR_NAME, this._cursorData, true);
@@ -567,29 +550,38 @@
                 this.removeTarget();
                 this._lastTargetStatus = false;
                 this.hideTargetsTooltips();
-                this.removeTeleportationPreview();
             };
         }
 
-        private function removeInvocationPreview():void
+        public function isTeleportationPreviewEntity(pEntityId:Number):Boolean
         {
-            var preview:IEntity;
-            for each (preview in this._invocationPreview)
+            return ((this._fightTeleportationPreview) && (this._fightTeleportationPreview.isPreview(pEntityId)));
+        }
+
+        public function isSummoningPreviewEntity(pEntityId:Number):Boolean
+        {
+            return ((this._summoningPreview) && (this._summoningPreview.isPreview(pEntityId)));
+        }
+
+        public function getSummonPreview(pEntityId:Number):AnimatedCharacter
+        {
+            if (this._summoningPreview)
             {
-                (preview as AnimatedCharacter).remove();
-                (preview as AnimatedCharacter).destroy();
-                preview = null;
+                return (this._summoningPreview.getSummonPreview(pEntityId));
             };
+            return (null);
         }
 
         public function drawRange():void
         {
+            var range:int;
             var shapePlus:Cross;
-            var sc:uint;
-            var _local_14:Vector.<uint>;
-            var _local_15:Vector.<uint>;
-            var _local_16:int;
-            var _local_17:int;
+            var selectionCellId:uint;
+            var spellBuff:SpellBuff;
+            var noLosRangeCell:Vector.<uint>;
+            var losRangeCell:Vector.<uint>;
+            var num:int;
+            var i:int;
             var cellId:uint;
             var cAfterPortal:int;
             var exitPortal:int;
@@ -599,27 +591,62 @@
             var portalsCellIds:Vector.<uint>;
             var lastPortalMp:MapPoint;
             var newTargetMp:MapPoint;
-            var cellsFromLine:Vector.<Point>;
+            var cellsFromLine:Array;
             var mp:MapPoint;
             var cellFromLine:Point;
             var cellsWithLosOk:Vector.<uint>;
-            var currentFighterId:int = CurrentPlayedFighterManager.getInstance().currentFighterId;
+            if (this._spellLevel == null)
+            {
+                return;
+            };
+            var currentFighterId:Number = CurrentPlayedFighterManager.getInstance().currentFighterId;
             var entityInfos:GameFightFighterInformations = (FightEntitiesFrame.getCurrentInstance().getEntityInfos(currentFighterId) as GameFightFighterInformations);
             var origin:uint = entityInfos.disposition.cellId;
             var playerRange:CharacterBaseCharacteristic = CurrentPlayedFighterManager.getInstance().getCharacteristicsInformations().range;
-            var range:int = this._spellLevel.range;
-            if (((((((!(this._spellLevel.castInLine)) && (!(this._spellLevel.castInDiagonal)))) && (!(this._spellLevel.castTestLos)))) && ((range == 63))))
+            if (((this._spellLevel.maximalRange) && (this._spellLevel.range)))
+            {
+                range = Math.max(this._spellLevel.maximalRange, this._spellLevel.range);
+            }
+            else
+            {
+                range = ((this._spellLevel.maximalRange) ? this._spellLevel.maximalRange : this._spellLevel.range);
+            };
+            var minRange:int = this._spellLevel.minRange;
+            var spellShape:uint = this.getSpellShape();
+            var castInLine:Boolean = ((this._spellLevel.castInLine) || (spellShape == SpellShapeEnum.l));
+            if (((((!(castInLine)) && (!(this._spellLevel.castInDiagonal))) && (!(this._spellLevel.castTestLos))) && (range == 63)))
             {
                 this._isInfiniteTarget = true;
                 return;
             };
             this._isInfiniteTarget = false;
+            var spellBuffs:Vector.<SpellBuff> = BuffManager.getInstance().getSpellBuffs(this._spellId, currentFighterId);
+            if (spellBuffs !== null)
+            {
+                for each (spellBuff in spellBuffs)
+                {
+                    if (spellBuff !== null)
+                    {
+                        if (((spellBuff.actionId === ActionIds.ACTION_BOOST_SPELL_RANGE_MAX) || (spellBuff.actionId === ActionIds.ACTION_DEBOOST_SPELL_RANGE_MAX)))
+                        {
+                            range = (range + spellBuff.delta);
+                        }
+                        else
+                        {
+                            if (((spellBuff.actionId === ActionIds.ACTION_BOOST_SPELL_RANGE_MIN) || (spellBuff.actionId === ActionIds.ACTION_DEBOOST_SPELL_RANGE_MIN)))
+                            {
+                                minRange = (minRange + spellBuff.delta);
+                            };
+                        };
+                    };
+                };
+            };
             if (this._spellLevel["rangeCanBeBoosted"])
             {
                 range = (range + (((playerRange.base + playerRange.objectsAndMountBonus) + playerRange.alignGiftBonus) + playerRange.contextModif));
-                if (range < this._spellLevel.minRange)
+                if (range < minRange)
                 {
-                    range = this._spellLevel.minRange;
+                    range = minRange;
                 };
             };
             range = Math.min(range, (AtouinConstants.MAP_WIDTH * AtouinConstants.MAP_HEIGHT));
@@ -627,72 +654,69 @@
             {
                 range = 0;
             };
-            this._rangeSelection = new Selection();
-            this._rangeSelection.renderer = new ZoneDARenderer(PlacementStrataEnums.STRATA_AREA);
-            (this._rangeSelection.renderer as ZoneDARenderer).showFarmCell = false;
-            this._rangeSelection.color = RANGE_COLOR;
-            this._rangeSelection.alpha = true;
-            if (((this._spellLevel.castInLine) && (this._spellLevel.castInDiagonal)))
+            var rangeSelection:Selection = new Selection();
+            rangeSelection.renderer = this.createZoneRenderer(RANGE_COLOR, PlacementStrataEnums.STRATA_AREA);
+            rangeSelection.color = RANGE_COLOR;
+            rangeSelection.alpha = true;
+            if (((castInLine) && (this._spellLevel.castInDiagonal)))
             {
-                shapePlus = new Cross(this._spellLevel.minRange, range, DataMapProvider.getInstance());
+                shapePlus = new Cross(minRange, range, DataMapProvider.getInstance());
                 shapePlus.allDirections = true;
-                this._rangeSelection.zone = shapePlus;
+                rangeSelection.zone = shapePlus;
             }
             else
             {
-                if (this._spellLevel.castInLine)
+                if (castInLine)
                 {
-                    this._rangeSelection.zone = new Cross(this._spellLevel.minRange, range, DataMapProvider.getInstance());
+                    rangeSelection.zone = new Cross(minRange, range, DataMapProvider.getInstance());
                 }
                 else
                 {
                     if (this._spellLevel.castInDiagonal)
                     {
-                        shapePlus = new Cross(this._spellLevel.minRange, range, DataMapProvider.getInstance());
+                        shapePlus = new Cross(minRange, range, DataMapProvider.getInstance());
                         shapePlus.diagonal = true;
-                        this._rangeSelection.zone = shapePlus;
+                        rangeSelection.zone = shapePlus;
                     }
                     else
                     {
-                        this._rangeSelection.zone = new Lozenge(this._spellLevel.minRange, range, DataMapProvider.getInstance());
+                        rangeSelection.zone = new Lozenge(minRange, range, DataMapProvider.getInstance());
                     };
                 };
             };
             var untargetableCells:Vector.<uint> = new Vector.<uint>();
-            this._losSelection = new Selection();
-            this._losSelection.renderer = new ZoneDARenderer(PlacementStrataEnums.STRATA_AREA);
-            (this._losSelection.renderer as ZoneDARenderer).showFarmCell = false;
-            this._losSelection.color = LOS_COLOR;
-            var allCells:Vector.<uint> = this._rangeSelection.zone.getCells(origin);
-            if (!(this._spellLevel.castTestLos))
+            var losSelection:Selection = new Selection();
+            losSelection.renderer = this.createZoneRenderer(LOS_COLOR, PlacementStrataEnums.STRATA_AREA);
+            losSelection.color = LOS_COLOR;
+            var allCells:Vector.<uint> = rangeSelection.zone.getCells(origin);
+            if (!this._spellLevel.castTestLos)
             {
-                this._losSelection.zone = new Custom(allCells);
+                losSelection.zone = new Custom(allCells);
             }
             else
             {
-                this._losSelection.zone = new Custom(LosDetector.getCell(DataMapProvider.getInstance(), allCells, MapPoint.fromCellId(origin)));
-                this._rangeSelection.renderer = new ZoneDARenderer(PlacementStrataEnums.STRATA_AREA, 0.5);
-                (this._rangeSelection.renderer as ZoneDARenderer).showFarmCell = false;
-                _local_14 = this._rangeSelection.zone.getCells(origin);
-                _local_15 = this._losSelection.zone.getCells(origin);
-                _local_16 = _local_14.length;
-                _local_17 = 0;
-                while (_local_17 < _local_16)
+                losSelection.zone = new Custom(LosDetector.getCell(DataMapProvider.getInstance(), allCells, MapPoint.fromCellId(origin)));
+                rangeSelection.renderer = this.createZoneRenderer(POSSIBLE_TARGET_CELL_COLOR, PlacementStrataEnums.STRATA_AREA);
+                noLosRangeCell = rangeSelection.zone.getCells(origin);
+                losRangeCell = losSelection.zone.getCells(origin);
+                num = noLosRangeCell.length;
+                i = 0;
+                while (i < num)
                 {
-                    cellId = _local_14[_local_17];
-                    if (_local_15.indexOf(cellId) == -1)
+                    cellId = noLosRangeCell[i];
+                    if (losRangeCell.indexOf(cellId) == -1)
                     {
                         untargetableCells.push(cellId);
                     };
-                    _local_17++;
+                    i++;
                 };
             };
             var mpWithPortals:Vector.<MapPoint> = MarkedCellsManager.getInstance().getMarksMapPoint(GameActionMarkTypeEnum.PORTAL);
             var portalUsableCells:Vector.<uint> = new Vector.<uint>();
             var cells:Vector.<uint> = new Vector.<uint>();
-            if (((mpWithPortals) && ((mpWithPortals.length >= 2))))
+            if (((mpWithPortals) && (mpWithPortals.length >= 2)))
             {
-                for each (c in this._losSelection.zone.getCells(origin))
+                for each (c in losSelection.zone.getCells(origin))
                 {
                     cAfterPortal = this.getTargetThroughPortal(c);
                     if (cAfterPortal != c)
@@ -738,24 +762,44 @@
                 };
             };
             var losCells:Vector.<uint> = new Vector.<uint>();
-            for each (sc in this._losSelection.zone.getCells(origin))
+            var losSelectionCells:Vector.<uint> = losSelection.zone.getCells(origin);
+            for each (selectionCellId in losSelectionCells)
             {
-                if (untargetableCells.indexOf(sc) == -1)
+                if (portalUsableCells.indexOf(selectionCellId) != -1)
                 {
-                    losCells.push(sc);
+                    losCells.push(selectionCellId);
+                }
+                else
+                {
+                    if ((((this._usedWrapper is SpellWrapper) && (this._usedWrapper.spellLevelInfos)) && (((this._usedWrapper.spellLevelInfos.needFreeCell) && (this.cellHasEntity(selectionCellId))) || ((this._usedWrapper.spellLevelInfos.needFreeTrapCell) && (MarkedCellsManager.getInstance().cellHasTrap(selectionCellId))))))
+                    {
+                        untargetableCells.push(selectionCellId);
+                    }
+                    else
+                    {
+                        if (untargetableCells.indexOf(selectionCellId) == -1)
+                        {
+                            losCells.push(selectionCellId);
+                        };
+                    };
                 };
             };
-            this._losSelection.zone = new Custom(losCells);
-            SelectionManager.getInstance().addSelection(this._losSelection, SELECTION_LOS, origin);
+            losSelection.zone = new Custom(losCells);
+            SelectionManager.getInstance().addSelection(losSelection, SELECTION_LOS, origin);
             if (untargetableCells.length > 0)
             {
-                this._rangeSelection.zone = new Custom(untargetableCells);
-                SelectionManager.getInstance().addSelection(this._rangeSelection, SELECTION_RANGE, origin);
+                rangeSelection.zone = new Custom(untargetableCells);
+                SelectionManager.getInstance().addSelection(rangeSelection, SELECTION_RANGE, origin);
+            }
+            else
+            {
+                rangeSelection.zone = new Custom(new Vector.<uint>());
+                SelectionManager.getInstance().addSelection(rangeSelection, SELECTION_RANGE, origin);
             };
             if (portalUsableCells.length > 0)
             {
                 this._portalsSelection = new Selection();
-                this._portalsSelection.renderer = new ZoneDARenderer(PlacementStrataEnums.STRATA_AREA);
+                this._portalsSelection.renderer = this.createZoneRenderer(PORTAL_COLOR, PlacementStrataEnums.STRATA_AREA);
                 this._portalsSelection.color = PORTAL_COLOR;
                 this._portalsSelection.alpha = true;
                 this._portalsSelection.zone = new Custom(portalUsableCells);
@@ -763,200 +807,260 @@
             };
         }
 
-        private function showTeleportationPreview():void
-        {
-            var effects:Vector.<EffectInstance>;
-            var effect:EffectInstance;
-            var fcf:FightContextFrame;
-            var spellZone:IZone;
-            var spellZoneCells:Vector.<uint>;
-            var currentCell:uint;
-            var entitiesIds:Vector.<int>;
-            var entityId:int;
-            var entityInfos:GameFightFighterInformations;
-            var targetedEntities:Vector.<int>;
-            var casterId:int;
-            var spellWTmp:SpellWrapper;
-            var tpEffectId:uint;
-            var nbTeleportationEffects:int;
-            var spellW:SpellWrapper = (this._usedWrapper as SpellWrapper);
-            if (spellW)
-            {
-                effects = spellW.effects.concat(spellW.criticalEffect);
-                fcf = (Kernel.getWorker().getFrame(FightContextFrame) as FightContextFrame);
-                currentCell = this._currentCell;
-                entitiesIds = fcf.entitiesFrame.getEntitiesIdsList();
-                targetedEntities = new Vector.<int>(0);
-                casterId = PlayedCharacterManager.getInstance().id;
-                for each (effect in effects)
-                {
-                    if (effect.effectId == 1160)
-                    {
-                        spellWTmp = SpellWrapper.create(0, (effect.parameter0 as uint), spellW.spellLevel);
-                        if (this.hasTeleportation(spellWTmp))
-                        {
-                            for each (entityId in entitiesIds)
-                            {
-                                entityInfos = (fcf.entitiesFrame.getEntityInfos(entityId) as GameFightFighterInformations);
-                                if (((entityInfos.alive) && (DamageUtil.verifySpellEffectMask(casterId, entityId, effect))))
-                                {
-                                    currentCell = entityInfos.disposition.cellId;
-                                    effects = spellWTmp.effects.concat(spellWTmp.criticalEffect);
-                                    break;
-                                };
-                            };
-                            break;
-                        };
-                    };
-                };
-                for each (effect in effects)
-                {
-                    if (TELEPORTATION_EFFECTS.indexOf(effect.effectId) != -1)
-                    {
-                        tpEffectId = effect.effectId;
-                        spellZone = SpellZoneManager.getInstance().getZone(effect.zoneShape, (effect.zoneSize as uint), (effect.zoneMinSize as uint));
-                        spellZoneCells = spellZone.getCells(currentCell);
-                        for each (entityId in entitiesIds)
-                        {
-                            entityInfos = (fcf.entitiesFrame.getEntityInfos(entityId) as GameFightFighterInformations);
-                            if (((((((((((((entityInfos.alive) && (!((spellZoneCells.indexOf(entityInfos.disposition.cellId) == -1))))) && (DofusEntities.getEntity(entityId)))) && ((targetedEntities.indexOf(entityId) == -1)))) && (DamageUtil.verifySpellEffectMask(casterId, entityId, effect)))) && (!((((currentCell == entityInfos.disposition.cellId)) && ((((tpEffectId == 1104)) || ((tpEffectId == 1106))))))))) && (this.canTeleport(entityInfos.contextualId))))
-                            {
-                                targetedEntities.push(entityId);
-                            };
-                        };
-                        nbTeleportationEffects++;
-                    };
-                };
-                if ((((((targetedEntities.length == 0)) && ((tpEffectId == 1104)))) && (this.canTeleport(casterId))))
-                {
-                    targetedEntities.push(casterId);
-                };
-                if (this._fightTeleportationPreview)
-                {
-                    this._fightTeleportationPreview.remove();
-                };
-                if (targetedEntities.length > 0)
-                {
-                    this._fightTeleportationPreview = new FightTeleportationPreview(targetedEntities, tpEffectId, currentCell, fcf.entitiesFrame.getEntityInfos(casterId).disposition.cellId, (nbTeleportationEffects > 1));
-                    this._fightTeleportationPreview.show();
-                };
-            };
-        }
-
-        private function canTeleport(pEntityId:int):Boolean
-        {
-            var monster:Monster;
-            var fcf:FightContextFrame = (Kernel.getWorker().getFrame(FightContextFrame) as FightContextFrame);
-            var entityInfos:GameFightFighterInformations = (fcf.entitiesFrame.getEntityInfos(pEntityId) as GameFightFighterInformations);
-            if ((entityInfos is GameFightMonsterInformations))
-            {
-                monster = Monster.getMonsterById((entityInfos as GameFightMonsterInformations).creatureGenericId);
-                if (!(monster.canSwitchPos))
-                {
-                    return (false);
-                };
-            };
-            var entityStates:Array = FightersStateManager.getInstance().getStates(pEntityId);
-            return (((!(entityStates)) || ((((entityStates.indexOf(6) == -1)) && ((entityStates.indexOf(97) == -1))))));
-        }
-
-        private function hasTeleportation(pSpellW:SpellWrapper):Boolean
-        {
-            var effect:EffectInstance;
-            for each (effect in pSpellW.effects)
-            {
-                if (TELEPORTATION_EFFECTS.indexOf(effect.effectId) != -1)
-                {
-                    return (true);
-                };
-            };
-            return (false);
-        }
-
-        private function removeTeleportationPreview():void
+        private function removeTeleportationPreview(destroy:Boolean=false):void
         {
             if (this._fightTeleportationPreview)
             {
-                this._fightTeleportationPreview.remove();
+                this._fightTeleportationPreview.remove(destroy);
+                if (destroy)
+                {
+                    this._fightTeleportationPreview = null;
+                };
             };
         }
 
-        private function showTargetsTooltips(pSelection:Selection):void
+        private function removeSummoningPreview():void
         {
-            var entityId:int;
-            var entityInfos:GameFightFighterInformations;
-            var fcf:FightContextFrame = (Kernel.getWorker().getFrame(FightContextFrame) as FightContextFrame);
-            var entitiesIds:Vector.<int> = fcf.entitiesFrame.getEntitiesIdsList();
-            var zoneCells:Vector.<uint> = pSelection.zone.getCells(this._currentCell);
-            var targetEntities:Vector.<int> = new Vector.<int>(0);
-            for each (entityId in entitiesIds)
+            if (this._summoningPreview)
             {
-                entityInfos = (fcf.entitiesFrame.getEntityInfos(entityId) as GameFightFighterInformations);
-                if (((!((zoneCells.indexOf(entityInfos.disposition.cellId) == -1))) && (DofusEntities.getEntity(entityId))))
+                this._summoningPreview.remove();
+            };
+        }
+
+        private function getParentEntity(pEntity:TiphonSprite):TiphonSprite
+        {
+            var parentEntity:TiphonSprite;
+            var parent:TiphonSprite = pEntity.parentSprite;
+            while (parent)
+            {
+                parentEntity = parent;
+                parent = parent.parentSprite;
+            };
+            return ((parentEntity) ? parentEntity : pEntity);
+        }
+
+        private function showTargetsTooltips():void
+        {
+            var paramsToShow:Vector.<Object>;
+            var movedFighters:Vector.<HaxeFighter>;
+            var summonedFighters:Vector.<HaxeFighter>;
+            var limitedParams:Vector.<Object>;
+            var result:Object;
+            var entityId:Number;
+            var hide:Boolean;
+            var params:Object;
+            var movementPreview:AnimatedCharacter;
+            var entId:Number;
+            var entity:AnimatedCharacter;
+            var entitiesIds:Vector.<Number> = this._fightContextFrame.entitiesFrame.getEntitiesIdsList();
+            var showDamages:Boolean = (((this._spellLevel) && (OptionManager.getOptionManager("dofus").getOption("showDamagesPreview") == true)) && (FightSpellCastFrame.isCurrentTargetTargetable()));
+            var showMove:Boolean = (((this._spellLevel) && (OptionManager.getOptionManager("dofus").getOption("showMovePreview") == true)) && (FightSpellCastFrame.isCurrentTargetTargetable()));
+            if (((showDamages) || (showMove)))
+            {
+                result = this.damagePreview();
+                paramsToShow = result.damages;
+                movedFighters = result.movements;
+                summonedFighters = result.summoned;
+            };
+            this._fightContextFrame.removeSpellTargetsTooltips();
+            if (((showMove) && (movedFighters)))
+            {
+                this.removeSummoningPreview();
+                if (summonedFighters.length > 0)
                 {
-                    targetEntities.push(entityId);
-                    TooltipPlacer.waitBeforeOrder(("tooltip_tooltipOverEntity_" + entityId));
-                }
-                else
+                    this._summoningPreview = new FightSummonPreview(summonedFighters);
+                    this._summoningPreview.show();
+                };
+                this.removeTeleportationPreview();
+                if (movedFighters.length > 0)
                 {
-                    if (((!(fcf.showPermanentTooltips)) || (((fcf.showPermanentTooltips) && ((fcf.battleFrame.targetedEntities.indexOf(entityId) == -1))))))
+                    if (!this._fightTeleportationPreview)
                     {
-                        TooltipManager.hide(("tooltipOverEntity_" + entityId));
+                        this._fightTeleportationPreview = new FightTeleportationPreview(movedFighters);
+                    }
+                    else
+                    {
+                        this._fightTeleportationPreview.init(movedFighters);
+                    };
+                    this._fightTeleportationPreview.show(this);
+                };
+            };
+            if (paramsToShow)
+            {
+                limitedParams = paramsToShow.slice(0, MAX_TOOLTIP);
+                for each (entityId in entitiesIds)
+                {
+                    hide = true;
+                    if (limitedParams)
+                    {
+                        for each (params in limitedParams)
+                        {
+                            if (params.fighterId == entityId)
+                            {
+                                if (this._fightTeleportationPreview != null)
+                                {
+                                    movementPreview = this._fightTeleportationPreview.getPreview(entityId);
+                                    if (movementPreview != null)
+                                    {
+                                        params.previewEntity = movementPreview;
+                                    };
+                                };
+                                TooltipPlacer.waitBeforeOrder(("tooltip_tooltipOverEntity_" + entityId));
+                                hide = false;
+                                break;
+                            };
+                        };
+                    };
+                    if (hide)
+                    {
+                        TooltipManager.hide(("tooltip_tooltipOverEntity_" + entityId));
                     };
                 };
-            };
-            fcf.removeSpellTargetsTooltips();
-            for each (entityId in targetEntities)
+            }
+            else
             {
-                entityInfos = (fcf.entitiesFrame.getEntityInfos(entityId) as GameFightFighterInformations);
-                if (entityInfos.alive)
+                for each (entId in entitiesIds)
                 {
-                    fcf.displayEntityTooltip(entityId, this._spellLevel, null, false, this._currentCell);
+                    TooltipManager.hide(("tooltip_tooltipOverEntity_" + entId));
                 };
             };
+            if ((((showDamages) && (limitedParams)) && (limitedParams.length > 0)))
+            {
+                for each (params in limitedParams)
+                {
+                    this._fightContextFrame.displayEntityTooltip(params.fighterId, this._spellLevel, true, this._currentCell, params);
+                };
+            }
+            else
+            {
+                entity = (EntitiesManager.getInstance().getEntityOnCell(this._currentCell, AnimatedCharacter) as AnimatedCharacter);
+                if (entity != null)
+                {
+                    this._fightContextFrame.displayEntityTooltip(entity.id, null, false, this._currentCell);
+                };
+            };
+        }
+
+        public function damagePreview():Object
+        {
+            var currentFighter:HaxeFighter;
+            var infos:GameFightCharacterInformations;
+            var spellDamage:SpellDamage;
+            var cursor:ListNode;
+            var params:Object;
+            var currentEffect:EffectOutput;
+            var affectedFighters:Array = DamagePreview.computePreview(this._fightContextFrame, this._spellLevel, CurrentPlayedFighterManager.getInstance().currentFighterId, this._currentCell);
+            var movedFighters:Vector.<HaxeFighter> = new Vector.<HaxeFighter>();
+            var summonedFighters:Vector.<HaxeFighter> = new Vector.<HaxeFighter>();
+            var paramsToShow:Vector.<Object> = new Vector.<Object>();
+            var currentCharacterIsXelor:Boolean;
+            var entityInfos:GameContextActorInformations = this._fightContextFrame.entitiesFrame.getEntityInfos(CurrentPlayedFighterManager.getInstance().currentFighterId);
+            if ((entityInfos is GameFightCharacterInformations))
+            {
+                infos = GameFightCharacterInformations(entityInfos);
+                if (((!(infos == null)) && (infos.breed == BreedEnum.Xelor)))
+                {
+                    currentCharacterIsXelor = true;
+                };
+            };
+            for each (currentFighter in affectedFighters)
+            {
+                spellDamage = new SpellDamage();
+                cursor = currentFighter.totalEffects.h;
+                params = {};
+                while (cursor != null)
+                {
+                    currentEffect = (cursor.item as EffectOutput);
+                    if (currentEffect.damageRange != null)
+                    {
+                        if (((!(currentEffect.shield == null)) && (!(currentEffect.shield.isZero()))))
+                        {
+                            spellDamage.addDamageRange(currentEffect.computeShieldDamage());
+                        };
+                        spellDamage.addDamageRange(currentEffect.computeLifeDamage());
+                        if (currentEffect.unknown)
+                        {
+                            spellDamage.unknownDamage = true;
+                        };
+                    }
+                    else
+                    {
+                        if ((((!(currentEffect.movement == null)) || (currentEffect.isPulled)) || (currentEffect.isPushed)))
+                        {
+                            if (movedFighters.indexOf(currentFighter) == -1)
+                            {
+                                movedFighters.push(currentFighter);
+                            };
+                            if ((((!(currentEffect.movement == null)) && (!(currentEffect.movement.swappedWith == null))) && (currentCharacterIsXelor)))
+                            {
+                                spellDamage.telefrag = true;
+                            };
+                        }
+                        else
+                        {
+                            if (currentEffect.summon != null)
+                            {
+                                summonedFighters.push(currentFighter);
+                            };
+                        };
+                    };
+                    cursor = cursor.next;
+                };
+                if (spellDamage.hasDamage())
+                {
+                    spellDamage.updateDamage();
+                    params.spellDamage = spellDamage;
+                };
+                params.fighterId = currentFighter.id;
+                paramsToShow.push(params);
+            };
+            return ({
+                "damages":paramsToShow,
+                "movements":movedFighters,
+                "summoned":summonedFighters
+            });
         }
 
         private function hideTargetsTooltips():void
         {
-            var entityId:int;
+            var entityId:Number;
             var ac:AnimatedCharacter;
-            var fcf:FightContextFrame = (Kernel.getWorker().getFrame(FightContextFrame) as FightContextFrame);
-            var entitiesId:Vector.<int> = fcf.entitiesFrame.getEntitiesIdsList();
+            var entitiesId:Vector.<Number> = this._fightContextFrame.entitiesFrame.getEntitiesIdsList();
             var overEntity:IEntity = EntitiesManager.getInstance().getEntityOnCell(FightContextFrame.currentCell, AnimatedCharacter);
             if (overEntity)
             {
                 ac = (overEntity as AnimatedCharacter);
-                if (((((ac) && (ac.parentSprite))) && ((ac.parentSprite.carriedEntity == ac))))
+                if ((((ac) && (ac.parentSprite)) && (ac.parentSprite.carriedEntity == ac)))
                 {
                     overEntity = (ac.parentSprite as AnimatedCharacter);
                 };
             };
             for each (entityId in entitiesId)
             {
-                if (((!(fcf.showPermanentTooltips)) || (((fcf.showPermanentTooltips) && ((fcf.battleFrame.targetedEntities.indexOf(entityId) == -1))))))
+                if (((!(this._fightContextFrame.showPermanentTooltips)) || ((this._fightContextFrame.showPermanentTooltips) && (this._fightContextFrame.battleFrame.targetedEntities.indexOf(entityId) == -1))))
                 {
                     TooltipManager.hide(("tooltipOverEntity_" + entityId));
                 };
             };
-            if (((fcf.showPermanentTooltips) && ((fcf.battleFrame.targetedEntities.length > 0))))
+            if (((this._fightContextFrame.showPermanentTooltips) && (this._fightContextFrame.battleFrame.targetedEntities.length > 0)))
             {
-                for each (entityId in fcf.battleFrame.targetedEntities)
+                for each (entityId in this._fightContextFrame.battleFrame.targetedEntities)
                 {
-                    if (((!(overEntity)) || (!((entityId == overEntity.id)))))
+                    if (((!(overEntity)) || (!(entityId == overEntity.id))))
                     {
-                        fcf.displayEntityTooltip(entityId);
+                        this._fightContextFrame.displayEntityTooltip(entityId);
                     };
                 };
             };
             if (overEntity)
             {
-                fcf.displayEntityTooltip(overEntity.id);
+                this._fightContextFrame.displayEntityTooltip(overEntity.id);
             };
         }
 
         private function clearTarget():void
         {
-            if (!(this._clearTargetTimer.running))
+            if (!this._clearTargetTimer.running)
             {
                 this._clearTargetTimer.start();
             };
@@ -973,28 +1077,28 @@
             var portalMark:MarkInstance;
             var portalp:MapPoint;
             var effect:EffectInstance;
-            var _local_16:MapPoint;
+            var newTargetPoint:MapPoint;
             var entryVector:Vector.<uint>;
             var exitVector:Vector.<uint>;
             if (((this._spellLevel) && (this._spellLevel.effects)))
             {
                 for each (effect in this._spellLevel.effects)
                 {
-                    if (effect.effectId == ActionIdConverter.ACTION_FIGHT_DISABLE_PORTAL)
+                    if (effect.effectId == ActionIds.ACTION_FIGHT_DISABLE_PORTAL)
                     {
                         return (target);
                     };
                 };
             };
-            var currentFighterId:int = CurrentPlayedFighterManager.getInstance().currentFighterId;
+            var currentFighterId:Number = CurrentPlayedFighterManager.getInstance().currentFighterId;
             var entityInfos:GameFightFighterInformations = (FightEntitiesFrame.getCurrentInstance().getEntityInfos(currentFighterId) as GameFightFighterInformations);
-            if (!(entityInfos))
+            if (!entityInfos)
             {
                 return (target);
             };
             var markedCellsManager:MarkedCellsManager = MarkedCellsManager.getInstance();
             var mpWithPortals:Vector.<MapPoint> = markedCellsManager.getMarksMapPoint(GameActionMarkTypeEnum.PORTAL);
-            if (((!(mpWithPortals)) || ((mpWithPortals.length < 2))))
+            if (((!(mpWithPortals)) || (mpWithPortals.length < 2)))
             {
                 return (target);
             };
@@ -1010,7 +1114,7 @@
                     };
                 };
             };
-            if (!(targetPortal))
+            if (!targetPortal)
             {
                 return (target);
             };
@@ -1018,48 +1122,153 @@
             var portalsCellIds:Vector.<uint> = LinkedCellsManager.getInstance().getLinks(targetPortal, mpWithPortals);
             var exitPoint:MapPoint = MapPoint.fromCellId(portalsCellIds.pop());
             var fighterPoint:MapPoint = MapPoint.fromCellId(entityInfos.disposition.cellId);
-            if (!(fighterPoint))
+            if (!fighterPoint)
             {
                 return (target);
             };
             var symmetricalTargetX:int = ((targetPortal.x - fighterPoint.x) + exitPoint.x);
             var symmetricalTargetY:int = ((targetPortal.y - fighterPoint.y) + exitPoint.y);
-            if (!(MapPoint.isInMap(symmetricalTargetX, symmetricalTargetY)))
+            if (!MapPoint.isInMap(symmetricalTargetX, symmetricalTargetY))
             {
-                return ((AtouinConstants.MAP_CELLS_COUNT + 1));
+                return (AtouinConstants.MAP_CELLS_COUNT + 1);
             };
-            _local_16 = MapPoint.fromCoords(symmetricalTargetX, symmetricalTargetY);
+            newTargetPoint = MapPoint.fromCoords(symmetricalTargetX, symmetricalTargetY);
             if (drawLinks)
             {
                 entryVector = new Vector.<uint>();
                 entryVector.push(fighterPoint.cellId);
                 entryVector.push(targetPortal.cellId);
                 LinkedCellsManager.getInstance().drawLinks("spellEntryLink", entryVector, 10, TARGET_COLOR.color, 1);
-                if (_local_16.cellId < AtouinConstants.MAP_CELLS_COUNT)
+                if (newTargetPoint.cellId < AtouinConstants.MAP_CELLS_COUNT)
                 {
                     exitVector = new Vector.<uint>();
                     exitVector.push(exitPoint.cellId);
-                    exitVector.push(_local_16.cellId);
+                    exitVector.push(newTargetPoint.cellId);
                     LinkedCellsManager.getInstance().drawLinks("spellExitLink", exitVector, 6, TARGET_COLOR.color, 1);
                 };
             };
-            return (_local_16.cellId);
+            return (newTargetPoint.cellId);
         }
 
-        private function castSpell(cell:uint, targetId:int=0):void
+        private function checkSpellCostAndPlayerAp():int
         {
+            var spell:SpellWrapper;
+            for each (spell in PlayedCharacterManager.getInstance().spellsInventory)
+            {
+                if (((spell.spellId == this._spellLevel.spellId) && (!(spell.apCost == this._spellLevel.apCost))))
+                {
+                    this._spellLevel.apCost = spell.apCost;
+                };
+            };
+            CurrentPlayedFighterManager.getInstance().getCharacteristicsInformations().actionPointsCurrent = new FighterInformations(CurrentPlayedFighterManager.getInstance().currentFighterId).actionPoints;
+            return (CurrentPlayedFighterManager.getInstance().getCharacteristicsInformations().actionPointsCurrent);
+        }
+
+        private function castSpell(cell:uint, targetId:Number=0, forceCheckForRange:Boolean=false):void
+        {
+            var entity:IEntity;
+            var text:String;
+            var targetName:String;
+            var fighter:GameFightFighterInformations;
+            var spellName:String;
+            var ccmmsg:ChatClientMultiMessage;
+            var cellEntity:IEntity;
             var gafcotrmsg:GameActionFightCastOnTargetRequestMessage;
             var gafcrmsg:GameActionFightCastRequestMessage;
             var fightTurnFrame:FightTurnFrame = (Kernel.getWorker().getFrame(FightTurnFrame) as FightTurnFrame);
-            if (((!(fightTurnFrame)) || (!(fightTurnFrame.myTurn))))
+            if (!fightTurnFrame)
             {
                 return;
             };
-            if (CurrentPlayedFighterManager.getInstance().getCharacteristicsInformations().actionPointsCurrent < this._spellLevel.apCost)
+            var apCurrent:int = this.checkSpellCostAndPlayerAp();
+            if (apCurrent < this._spellLevel.apCost)
             {
                 return;
             };
-            if (((!((targetId == 0))) && (!(FightEntitiesFrame.getCurrentInstance().entityIsIllusion(targetId)))))
+            if (KeyPoll.getInstance().isDown(Keyboard.ALTERNATE))
+            {
+                if (((cell == 0) && (!(targetId == 0))))
+                {
+                    entity = DofusEntities.getEntity(targetId);
+                    if (((entity) && (entity.position)))
+                    {
+                        cell = entity.position.cellId;
+                    };
+                };
+                if (((targetId == 0) && (cell > 0)))
+                {
+                    cellEntity = EntitiesManager.getInstance().getEntityOnCell(cell, AnimatedCharacter);
+                    if (cellEntity)
+                    {
+                        targetId = cellEntity.id;
+                    };
+                };
+                if (((!(targetId == 0)) && (!(entity))))
+                {
+                    fighter = (FightEntitiesFrame.getCurrentInstance().getEntityInfos(targetId) as GameFightFighterInformations);
+                };
+                if (((fighter) && (fighter.disposition.cellId)))
+                {
+                    targetName = (((("{entity," + targetId) + ",") + 1) + "}");
+                }
+                else
+                {
+                    targetName = I18n.getUiText("ui.fightAutomsg.cellTarget", [(((("{cell," + cell) + "::") + cell) + "}")]);
+                };
+                if (this._spellId == 0)
+                {
+                    spellName = this._spellLevel.name;
+                }
+                else
+                {
+                    spellName = (((("{spell," + this._spellId) + ",") + this._spellLevel.spellLevel) + "}");
+                };
+                if (SelectionManager.getInstance().isInside(cell, SELECTION_RANGE))
+                {
+                    text = I18n.getUiText("ui.fightAutomsg.targetcast.noLineOfSight", [spellName, targetName]);
+                }
+                else
+                {
+                    if (!SelectionManager.getInstance().isInside(cell, SELECTION_LOS))
+                    {
+                        text = I18n.getUiText("ui.fightAutomsg.targetcast.outsideRange", [spellName, targetName]);
+                    }
+                    else
+                    {
+                        text = I18n.getUiText("ui.fightAutomsg.targetcast.available", [spellName, targetName]);
+                    };
+                };
+                ccmmsg = new ChatClientMultiMessage();
+                ccmmsg.initChatClientMultiMessage(text, ChatActivableChannelsEnum.CHANNEL_TEAM);
+                ConnectionsHandler.getConnection().send(ccmmsg);
+                return;
+            };
+            if (((forceCheckForRange) && (this._spellLevel.maximalRange < 63)))
+            {
+                if (((cell == 0) && (!(targetId == 0))))
+                {
+                    entity = DofusEntities.getEntity(targetId);
+                    if (((entity) && (entity.position)))
+                    {
+                        cell = entity.position.cellId;
+                    };
+                };
+                if (((SelectionManager.getInstance().isInside(cell, SELECTION_RANGE)) || (!(SelectionManager.getInstance().isInside(cell, SELECTION_LOS)))))
+                {
+                    return;
+                };
+            };
+            if (!fightTurnFrame.myTurn)
+            {
+                return;
+            };
+            var fightBattleFrame:FightBattleFrame = (Kernel.getWorker().getFrame(FightBattleFrame) as FightBattleFrame);
+            if (((fightBattleFrame) && (fightBattleFrame.fightIsPaused)))
+            {
+                this.cancelCast();
+                return;
+            };
+            if (((((!(targetId == 0)) && (!(FightEntitiesFrame.getCurrentInstance().entityIsIllusion(targetId)))) && (!((this._fightTeleportationPreview) && (this._fightTeleportationPreview.isPreview(targetId))))) && (CurrentPlayedFighterManager.getInstance().canCastThisSpell(this._spellId, this._spellLevel.spellLevel, targetId))))
             {
                 CurrentPlayedFighterManager.getInstance().getCharacteristicsInformations().actionPointsCurrent = (CurrentPlayedFighterManager.getInstance().getCharacteristicsInformations().actionPointsCurrent - this._spellLevel.apCost);
                 gafcotrmsg = new GameActionFightCastOnTargetRequestMessage();
@@ -1070,10 +1279,8 @@
             {
                 if (this.isValidCell(cell))
                 {
-                    if (this._invocationPreview.length > 0)
-                    {
-                        this.removeInvocationPreview();
-                    };
+                    this.removeSummoningPreview();
+                    this.removeTeleportationPreview(true);
                     CurrentPlayedFighterManager.getInstance().getCharacteristicsInformations().actionPointsCurrent = (CurrentPlayedFighterManager.getInstance().getCharacteristicsInformations().actionPointsCurrent - this._spellLevel.apCost);
                     gafcrmsg = new GameActionFightCastRequestMessage();
                     gafcrmsg.initGameActionFightCastRequestMessage(this._spellId, cell);
@@ -1085,7 +1292,8 @@
 
         private function cancelCast(... args):void
         {
-            this.removeInvocationPreview();
+            this.removeSummoningPreview();
+            this.removeTeleportationPreview(true);
             this._cancelTimer.reset();
             Kernel.getWorker().removeFrame(this);
         }
@@ -1096,13 +1304,11 @@
             if (s)
             {
                 s.remove();
-                this._rangeSelection = null;
             };
             var los:Selection = SelectionManager.getInstance().getSelection(SELECTION_LOS);
             if (los)
             {
                 los.remove();
-                this._losSelection = null;
             };
             var ps:Selection = SelectionManager.getInstance().getSelection(SELECTION_PORTALS);
             if (ps)
@@ -1119,18 +1325,52 @@
             if (s)
             {
                 s.remove();
-                this._rangeSelection = null;
             };
+            s = SelectionManager.getInstance().getSelection(SELECTION_CENTER_TARGET);
+            if (s)
+            {
+                s.remove();
+            };
+        }
+
+        private function cellHasEntity(cellId:uint):Boolean
+        {
+            var entity:IEntity;
+            var skipEntity:Boolean;
+            var entities:Array = EntitiesManager.getInstance().getEntitiesOnCell(cellId, AnimatedCharacter);
+            var totalEntities:int = ((entities) ? entities.length : 0);
+            if (((totalEntities) && (this.hasSummoningPreview)))
+            {
+                skipEntity = true;
+                for each (entity in entities)
+                {
+                    if (this._summoningPreview.isPreview(entity.id))
+                    {
+                        skipEntity = false;
+                    };
+                    if (skipEntity)
+                    {
+                    }
+                    else
+                    {
+                        return (true);
+                    };
+                };
+            };
+            return (totalEntities > 0);
         }
 
         private function isValidCell(cell:uint, ignorePortal:Boolean=false):Boolean
         {
             var spellLevel:SpellLevel;
+            var entities:Array;
             var entity:IEntity;
             var isGlyph:Boolean;
-            var mustContinue:Boolean;
-            var preview:IEntity;
             var valid:Boolean;
+            if (!CellUtil.isValidCellIndex(cell))
+            {
+                return (false);
+            };
             var cellData:CellData = MapDisplayManager.getInstance().getDataMapContainer().dataMap.cells[cell];
             if (((!(cellData)) || (cellData.farmCell)))
             {
@@ -1143,43 +1383,34 @@
             if (this._spellId)
             {
                 spellLevel = this._spellLevel.spellLevelInfos;
-                for each (entity in EntitiesManager.getInstance().getEntitiesOnCell(cell))
+                entities = EntitiesManager.getInstance().getEntitiesOnCell(cell);
+                for each (entity in entities)
                 {
-                    if (this._invocationPreview.length > 0)
+                    if (((this.isTeleportationPreviewEntity(entity.id)) || (this.isSummoningPreviewEntity(entity.id))))
                     {
-                        mustContinue = false;
-                        for each (preview in this._invocationPreview)
+                    }
+                    else
+                    {
+                        if (!CurrentPlayedFighterManager.getInstance().canCastThisSpell(this._spellLevel.spellId, this._spellLevel.spellLevel, entity.id))
                         {
-                            if (entity.id == preview.id)
-                            {
-                                mustContinue = true;
-                                break;
-                            };
+                            return (false);
                         };
-                        if (mustContinue)
+                        isGlyph = (entity is Glyph);
+                        if ((((spellLevel.needFreeTrapCell) && (isGlyph)) && ((entity as Glyph).glyphType == GameActionMarkTypeEnum.TRAP)))
                         {
-                            continue;
+                            return (false);
                         };
-                    };
-                    if (!(CurrentPlayedFighterManager.getInstance().canCastThisSpell(this._spellLevel.spellId, this._spellLevel.spellLevel, entity.id)))
-                    {
-                        return (false);
-                    };
-                    isGlyph = (entity is Glyph);
-                    if (((((spellLevel.needFreeTrapCell) && (isGlyph))) && (((entity as Glyph).glyphType == GameActionMarkTypeEnum.TRAP))))
-                    {
-                        return (false);
-                    };
-                    if (((this._spellLevel.needFreeCell) && (!(isGlyph))))
-                    {
-                        return (false);
+                        if (((this._spellLevel.needFreeCell) && (!(isGlyph))))
+                        {
+                            return (false);
+                        };
                     };
                 };
             };
             if (((this._targetingThroughPortal) && (!(ignorePortal))))
             {
                 valid = this.isValidCell(this.getTargetThroughPortal(cell), true);
-                if (!(valid))
+                if (!valid)
                 {
                     return (false);
                 };
@@ -1190,16 +1421,53 @@
                 {
                     return (false);
                 };
-                if (cellData.mov)
-                {
-                    return (true);
-                };
-                return (false);
+                return (cellData.mov);
             };
             return (SelectionManager.getInstance().isInside(cell, SELECTION_LOS));
         }
 
+        private function getSpellShape():uint
+        {
+            var spellShape:uint;
+            var spellEffect:EffectInstance;
+            var size:uint;
+            var minSize:uint;
+            for each (spellEffect in this._spellLevel.effects)
+            {
+                if (((!(spellEffect.zoneShape == 0)) && ((spellEffect.zoneSize > size) || ((spellEffect.zoneSize == size) && ((spellEffect.zoneShape == SpellShapeEnum.P) || (spellEffect.zoneMinSize < minSize))))))
+                {
+                    spellShape = spellEffect.zoneShape;
+                };
+            };
+            return (spellShape);
+        }
+
+        private function createZoneRenderer(color:Color, strata:uint=90):IFightZoneRenderer
+        {
+            var renderer:IFightZoneRenderer;
+            switch (color)
+            {
+                case TARGET_CENTER_COLOR:
+                    renderer = new ZoneClipRenderer(strata, SWF_LIB, ["cellActive"], -1, false, false);
+                    break;
+                default:
+                    renderer = new ZoneDARenderer(PlacementStrataEnums.STRATA_AREA, 1, true);
+            };
+            renderer.showFarmCell = false;
+            return (renderer);
+        }
+
+        private function onPropertyChanged(e:PropertyChangeEvent):void
+        {
+            if (((this._targetCenterSelection) && (this._targetCenterSelection.visible)))
+            {
+                ZoneDARenderer(this._targetSelection.renderer).fixedStrata = false;
+                ZoneDARenderer(this._targetSelection.renderer).currentStrata = ((e.propertyValue == true) ? PlacementStrataEnums.STRATA_NO_Z_ORDER : PlacementStrataEnums.STRATA_AREA);
+                ZoneClipRenderer(this._targetCenterSelection.renderer).currentStrata = ((e.propertyValue == true) ? PlacementStrataEnums.STRATA_NO_Z_ORDER : PlacementStrataEnums.STRATA_AREA);
+            };
+        }
+
 
     }
-}//package com.ankamagames.dofus.logic.game.fight.frames
+} com.ankamagames.dofus.logic.game.fight.frames
 

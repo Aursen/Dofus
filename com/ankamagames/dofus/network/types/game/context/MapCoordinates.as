@@ -1,8 +1,9 @@
-﻿package com.ankamagames.dofus.network.types.game.context
+package com.ankamagames.dofus.network.types.game.context
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
     public class MapCoordinates implements INetworkType 
     {
@@ -38,12 +39,12 @@
 
         public function serializeAs_MapCoordinates(output:ICustomDataOutput):void
         {
-            if ((((this.worldX < -255)) || ((this.worldX > 0xFF))))
+            if (((this.worldX < -255) || (this.worldX > 0xFF)))
             {
                 throw (new Error((("Forbidden value (" + this.worldX) + ") on element worldX.")));
             };
             output.writeShort(this.worldX);
-            if ((((this.worldY < -255)) || ((this.worldY > 0xFF))))
+            if (((this.worldY < -255) || (this.worldY > 0xFF)))
             {
                 throw (new Error((("Forbidden value (" + this.worldY) + ") on element worldY.")));
             };
@@ -57,13 +58,34 @@
 
         public function deserializeAs_MapCoordinates(input:ICustomDataInput):void
         {
+            this._worldXFunc(input);
+            this._worldYFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_MapCoordinates(tree);
+        }
+
+        public function deserializeAsyncAs_MapCoordinates(tree:FuncTree):void
+        {
+            tree.addChild(this._worldXFunc);
+            tree.addChild(this._worldYFunc);
+        }
+
+        private function _worldXFunc(input:ICustomDataInput):void
+        {
             this.worldX = input.readShort();
-            if ((((this.worldX < -255)) || ((this.worldX > 0xFF))))
+            if (((this.worldX < -255) || (this.worldX > 0xFF)))
             {
                 throw (new Error((("Forbidden value (" + this.worldX) + ") on element of MapCoordinates.worldX.")));
             };
+        }
+
+        private function _worldYFunc(input:ICustomDataInput):void
+        {
             this.worldY = input.readShort();
-            if ((((this.worldY < -255)) || ((this.worldY > 0xFF))))
+            if (((this.worldY < -255) || (this.worldY > 0xFF)))
             {
                 throw (new Error((("Forbidden value (" + this.worldY) + ") on element of MapCoordinates.worldY.")));
             };
@@ -71,5 +93,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.context
+} com.ankamagames.dofus.network.types.game.context
 

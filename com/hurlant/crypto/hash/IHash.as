@@ -1,4 +1,4 @@
-﻿package com.hurlant.crypto.hash
+package com.hurlant.crypto.hash
 {
     import flash.utils.ByteArray;
 
@@ -12,5 +12,5 @@
         function getPadSize():int;
 
     }
-}//package com.hurlant.crypto.hash
+} com.hurlant.crypto.hash
 

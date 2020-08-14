@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.entities.messages
+package com.ankamagames.jerakine.entities.messages
 {
     import com.ankamagames.jerakine.messages.CancelableMessage;
     import com.ankamagames.jerakine.entities.interfaces.IInteractive;
@@ -25,5 +25,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.entities.messages
+} com.ankamagames.jerakine.entities.messages
 

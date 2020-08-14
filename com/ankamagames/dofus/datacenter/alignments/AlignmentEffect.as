@@ -1,9 +1,10 @@
-﻿package com.ankamagames.dofus.datacenter.alignments
+package com.ankamagames.dofus.datacenter.alignments
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
+    import com.ankamagames.dofus.types.IdAccessors;
     import com.ankamagames.jerakine.data.GameData;
     import com.ankamagames.jerakine.data.I18n;
 
@@ -12,6 +13,7 @@
 
         public static const MODULE:String = "AlignmentEffect";
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(AlignmentEffect));
+        public static var idAccessors:IdAccessors = new IdAccessors(getAlignmentEffectById, getAlignmentEffects);
 
         public var id:int;
         public var characteristicId:uint;
@@ -21,7 +23,7 @@
 
         public static function getAlignmentEffectById(id:int):AlignmentEffect
         {
-            return ((GameData.getObject(MODULE, id) as AlignmentEffect));
+            return (GameData.getObject(MODULE, id) as AlignmentEffect);
         }
 
         public static function getAlignmentEffects():Array
@@ -32,7 +34,7 @@
 
         public function get description():String
         {
-            if (!(this._description))
+            if (!this._description)
             {
                 this._description = I18n.getText(this.descriptionId);
             };
@@ -41,5 +43,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.alignments
+} com.ankamagames.dofus.datacenter.alignments
 

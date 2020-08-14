@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.utils.errors
+package com.ankamagames.jerakine.utils.errors
 {
     public class JerakineError extends Error 
     {
@@ -9,5 +9,5 @@
         }
 
     }
-}//package com.ankamagames.jerakine.utils.errors
+} com.ankamagames.jerakine.utils.errors
 

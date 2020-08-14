@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.internalDatacenter.spells
+package com.ankamagames.dofus.internalDatacenter.spells
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import __AS3__.vec.Vector;
@@ -32,7 +32,7 @@
             this._categories = new Array();
             for each (buff in buffs)
             {
-                effect = buff.effects;
+                effect = buff.effect;
                 effectData = Effect.getEffectById(effect.effectId);
                 category = ((effect.trigger) ? CATEGORY_TRIGGERED : this.getCategory(effectData));
                 this.addBuff(category, buff);
@@ -45,7 +45,7 @@
             var cat:Array = new Array();
             for (c in this._categories)
             {
-                if ((((this._categories[c].length > 0)) && ((cat[c] == null))))
+                if (((this._categories[c].length > 0) && (cat[c] == null)))
                 {
                     cat.push(c);
                 };
@@ -68,16 +68,16 @@
         {
             var b:BasicBuff;
             var e:Effect;
-            if (!(this._categories[category]))
+            if (!this._categories[category])
             {
                 this._categories[category] = new Array();
             };
             for each (b in this._categories[category])
             {
                 e = Effect.getEffectById(buff.actionId);
-                if (((((((e.useDice) && ((b.actionId == buff.actionId)))) && ((buff.trigger == false)))) && (!((buff is StateBuff)))))
+                if (((((e.useDice) && (b.actionId == buff.actionId)) && (buff.trigger == false)) && (!(buff is StateBuff))))
                 {
-                    if (!((buff.effects is EffectInstanceInteger)))
+                    if (!(buff.effect is EffectInstanceInteger))
                     {
                         throw (new Error("Tentative de cumulation d'effets ambigue"));
                     };
@@ -118,5 +118,5 @@
 
 
     }
-}//package com.ankamagames.dofus.internalDatacenter.spells
+} com.ankamagames.dofus.internalDatacenter.spells
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.common.types
+package com.ankamagames.dofus.logic.game.common.types
 {
     import com.ankamagames.tiphon.types.ISubEntityHandler;
     import com.ankamagames.dofus.network.enums.SubEntityBindingPointCategoryEnum;
@@ -33,5 +33,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.types
+} com.ankamagames.dofus.logic.game.common.types
 

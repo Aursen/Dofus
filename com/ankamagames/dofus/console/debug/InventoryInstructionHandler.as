@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.console.debug
+package com.ankamagames.dofus.console.debug
 {
     import com.ankamagames.jerakine.console.ConsoleInstructionHandler;
     import com.ankamagames.jerakine.logger.Logger;
@@ -23,12 +23,12 @@
 
         public function handle(console:ConsoleHandler, cmd:String, args:Array):void
         {
-            var _local_4:Array;
-            var _local_5:String;
-            var _local_6:Vector.<uint>;
-            var _local_7:Vector.<Object>;
-            var _local_8:Array;
-            var _local_9:uint;
+            var matchItems:Array;
+            var searchWord:String;
+            var ids:Vector.<uint>;
+            var items:Vector.<Object>;
+            var items2:Array;
+            var len:uint;
             var item:ItemWrapper;
             var currentItem:Item;
             var currentItem2:Item;
@@ -40,49 +40,49 @@
                     {
                         console.output(((((((("[UID: " + item.objectUID) + ", ID:") + item.objectGID) + "] ") + item.quantity) + " x ") + item["name"]));
                     };
-                    return;
+                    break;
                 case "searchitem":
                     if (args.length < 1)
                     {
                         console.output((cmd + " need an argument to search for"));
-                        return;
+                        break;
                     };
                     Chrono.start("Général");
-                    _local_4 = new Array();
-                    _local_5 = StringUtils.noAccent(args.join(" ").toLowerCase());
+                    matchItems = new Array();
+                    searchWord = StringUtils.noAccent(args.join(" ").toLowerCase());
                     Chrono.start("Query");
-                    _local_6 = GameDataQuery.queryString(Item, "name", _local_5);
+                    ids = GameDataQuery.queryString(Item, "name", searchWord);
                     Chrono.stop();
                     Chrono.start("Instance");
-                    _local_7 = GameDataQuery.returnInstance(Item, _local_6);
+                    items = GameDataQuery.returnInstance(Item, ids);
                     Chrono.stop();
                     Chrono.start("Add");
-                    for each (currentItem in _local_7)
+                    for each (currentItem in items)
                     {
-                        _local_4.push((((("\t" + currentItem.name) + " ( id : ") + currentItem.id) + " )"));
+                        matchItems.push((((("\t" + currentItem.name) + " ( id : ") + currentItem.id) + " )"));
                     };
                     Chrono.stop();
                     Chrono.stop();
-                    _log.debug((("sur " + _local_7.length) + " iterations"));
-                    _local_4.sort(Array.CASEINSENSITIVE);
-                    console.output(_local_4.join("\n"));
-                    console.output((("\tRESULT : " + _local_4.length) + " items founded"));
-                    return;
+                    _log.debug((("sur " + items.length) + " iterations"));
+                    matchItems.sort(Array.CASEINSENSITIVE);
+                    console.output(matchItems.join("\n"));
+                    console.output((("\tRESULT : " + matchItems.length) + " items founded"));
+                    break;
                 case "makeinventory":
-                    _local_8 = Item.getItems();
-                    _local_9 = parseInt(args[0], 10);
-                    for each (currentItem2 in _local_8)
+                    items2 = Item.getItems();
+                    len = parseInt(args[0], 10);
+                    for each (currentItem2 in items2)
                     {
-                        if (!!(currentItem2))
+                        if (currentItem2)
                         {
-                            if (!(_local_9)) break;
+                            if (!len) break;
                             aqcmsg = new AdminQuietCommandMessage();
                             aqcmsg.initAdminQuietCommandMessage(((("item * " + currentItem2.id) + " ") + Math.ceil((Math.random() * 10))));
                             ConnectionsHandler.getConnection().send(aqcmsg);
-                            _local_9--;
+                            len--;
                         };
                     };
-                    return;
+                    break;
             };
         }
 
@@ -97,7 +97,7 @@
                 case "makeinventory":
                     return ("Create an inventory");
             };
-            return ((("Unknown command '" + cmd) + "'."));
+            return (("Unknown command '" + cmd) + "'.");
         }
 
         public function getParamPossibilities(cmd:String, paramIndex:uint=0, currentParams:Array=null):Array
@@ -107,5 +107,5 @@
 
 
     }
-}//package com.ankamagames.dofus.console.debug
+} com.ankamagames.dofus.console.debug
 

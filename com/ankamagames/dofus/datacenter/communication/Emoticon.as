@@ -1,9 +1,10 @@
-﻿package com.ankamagames.dofus.datacenter.communication
+package com.ankamagames.dofus.datacenter.communication
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
+    import com.ankamagames.dofus.types.IdAccessors;
     import __AS3__.vec.Vector;
     import com.ankamagames.jerakine.data.GameData;
     import com.ankamagames.jerakine.data.I18n;
@@ -14,6 +15,7 @@
 
         public static const MODULE:String = "Emoticons";
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(Emoticon));
+        public static var idAccessors:IdAccessors = new IdAccessors(getEmoticonById, getEmoticons);
 
         public var id:uint;
         public var nameId:uint;
@@ -27,13 +29,14 @@
         public var cooldown:uint = 1000;
         public var duration:uint = 0;
         public var weight:uint;
+        public var spellLevelId:uint = 0;
         private var _name:String;
         private var _shortcut:String;
 
 
         public static function getEmoticonById(id:int):Emoticon
         {
-            return ((GameData.getObject(MODULE, id) as Emoticon));
+            return (GameData.getObject(MODULE, id) as Emoticon);
         }
 
         public static function getEmoticons():Array
@@ -44,7 +47,7 @@
 
         public function get name():String
         {
-            if (!(this._name))
+            if (!this._name)
             {
                 this._name = I18n.getText(this.nameId);
             };
@@ -53,11 +56,11 @@
 
         public function get shortcut():String
         {
-            if (!(this._shortcut))
+            if (!this._shortcut)
             {
                 this._shortcut = I18n.getText(this.shortcutId);
             };
-            if (((!(this._shortcut)) || ((this._shortcut == ""))))
+            if (((!(this._shortcut)) || (this._shortcut == "")))
             {
                 return (this.defaultAnim);
             };
@@ -66,25 +69,31 @@
 
         public function getAnimName(look:TiphonEntityLook):String
         {
-            var animName:String;
+            var lookBoneId:uint;
+            var i:int;
             var anim:String;
             var animCase:Array;
             var caseBoneId:uint;
             var caseSkins:Array;
-            var matchingSkin:uint;
             var skin:String;
             var skinId:uint;
-            var lookSkin:*;
+            var lookSkin:uint;
+            if ((((!(this.spellLevelId == 0)) && (!(this.defaultAnim))) && (this.anims.length == 0)))
+            {
+                return (null);
+            };
             if (look)
             {
-                for each (anim in this.anims)
+                lookBoneId = look.getBone();
+                i = (this.anims.length - 1);
+                while (i >= 0)
                 {
+                    anim = this.anims[i];
                     animCase = anim.split(";");
                     caseBoneId = parseInt(animCase[0]);
-                    if (((look) && ((caseBoneId == look.getBone()))))
+                    if (caseBoneId == lookBoneId)
                     {
                         caseSkins = animCase[1].split(",");
-                        matchingSkin = 0;
                         for each (skin in caseSkins)
                         {
                             skinId = parseInt(skin);
@@ -92,25 +101,18 @@
                             {
                                 if (skinId == lookSkin)
                                 {
-                                    matchingSkin++;
+                                    return ("AnimEmote" + animCase[2]);
                                 };
                             };
                         };
-                        if (matchingSkin > 0)
-                        {
-                            animName = ("AnimEmote" + animCase[2]);
-                        };
                     };
+                    i--;
                 };
             };
-            if (!(animName))
-            {
-                animName = ((("AnimEmote" + this.defaultAnim.charAt(0).toUpperCase()) + this.defaultAnim.substr(1).toLowerCase()) + "_0");
-            };
-            return (animName);
+            return ((("AnimEmote" + this.defaultAnim.charAt(0).toUpperCase()) + this.defaultAnim.substr(1).toLowerCase()) + "_0");
         }
 
 
     }
-}//package com.ankamagames.dofus.datacenter.communication
+} com.ankamagames.dofus.datacenter.communication
 

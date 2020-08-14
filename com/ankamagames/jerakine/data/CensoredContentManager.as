@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.data
+package com.ankamagames.jerakine.data
 {
     import flash.utils.Dictionary;
     import com.ankamagames.jerakine.utils.errors.SingletonError;
@@ -8,14 +8,11 @@
 
         private static var _self:CensoredContentManager;
 
-        private var _data:Dictionary;
-        private var _emtptyData:Dictionary;
+        private var _data:Dictionary = new Dictionary();
+        private var _emtptyData:Dictionary = new Dictionary();
 
         public function CensoredContentManager()
         {
-            this._data = new Dictionary();
-            this._emtptyData = new Dictionary();
-            super();
             if (_self)
             {
                 throw (new SingletonError());
@@ -24,7 +21,7 @@
 
         public static function getInstance():CensoredContentManager
         {
-            if (!(_self))
+            if (!_self)
             {
                 _self = new (CensoredContentManager)();
             };
@@ -39,7 +36,7 @@
             {
                 if (censoredData.lang == lang)
                 {
-                    if (!(this._data[censoredData.type]))
+                    if (!this._data[censoredData.type])
                     {
                         this._data[censoredData.type] = new Dictionary();
                     };
@@ -48,12 +45,12 @@
             };
         }
 
-        public function getCensoredIndex(type:int):Dictionary
+        public function getCensoredIndex(_arg_1:int):Dictionary
         {
-            return (((this._data[type]) ? this._data[type] : this._emtptyData));
+            return ((this._data[_arg_1]) ? this._data[_arg_1] : this._emtptyData);
         }
 
 
     }
-}//package com.ankamagames.jerakine.data
+} com.ankamagames.jerakine.data
 

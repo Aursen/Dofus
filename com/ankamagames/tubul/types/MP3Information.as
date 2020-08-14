@@ -1,4 +1,4 @@
-﻿package com.ankamagames.tubul.types
+package com.ankamagames.tubul.types
 {
     public class MP3Information 
     {
@@ -13,5 +13,5 @@
 
 
     }
-}//package com.ankamagames.tubul.types
+} com.ankamagames.tubul.types
 

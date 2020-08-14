@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.tasking
+package com.ankamagames.jerakine.tasking
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
@@ -50,7 +50,7 @@
         public function addTask(task:SplittedTask):void
         {
             this._queue.push(task);
-            if (!(this._running))
+            if (!this._running)
             {
                 EnterFrameDispatcher.addEventListener(this.onEnterFrame, "TaskingManager");
                 this._running = true;
@@ -65,7 +65,7 @@
             do 
             {
                 result = task.step();
-            } while ((((++iter < task.stepsPerFrame())) && (!(result))));
+            } while (((++iter < task.stepsPerFrame()) && (!(result))));
             if (result)
             {
                 this._queue.shift();
@@ -79,5 +79,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.tasking
+} com.ankamagames.jerakine.tasking
 

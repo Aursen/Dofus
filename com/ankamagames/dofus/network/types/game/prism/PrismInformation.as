@@ -1,8 +1,9 @@
-﻿package com.ankamagames.dofus.network.types.game.prism
+package com.ankamagames.dofus.network.types.game.prism
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
     public class PrismInformation implements INetworkType 
     {
@@ -77,26 +78,65 @@
 
         public function deserializeAs_PrismInformation(input:ICustomDataInput):void
         {
+            this._typeIdFunc(input);
+            this._stateFunc(input);
+            this._nextVulnerabilityDateFunc(input);
+            this._placementDateFunc(input);
+            this._rewardTokenCountFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_PrismInformation(tree);
+        }
+
+        public function deserializeAsyncAs_PrismInformation(tree:FuncTree):void
+        {
+            tree.addChild(this._typeIdFunc);
+            tree.addChild(this._stateFunc);
+            tree.addChild(this._nextVulnerabilityDateFunc);
+            tree.addChild(this._placementDateFunc);
+            tree.addChild(this._rewardTokenCountFunc);
+        }
+
+        private function _typeIdFunc(input:ICustomDataInput):void
+        {
             this.typeId = input.readByte();
             if (this.typeId < 0)
             {
                 throw (new Error((("Forbidden value (" + this.typeId) + ") on element of PrismInformation.typeId.")));
             };
+        }
+
+        private function _stateFunc(input:ICustomDataInput):void
+        {
             this.state = input.readByte();
             if (this.state < 0)
             {
                 throw (new Error((("Forbidden value (" + this.state) + ") on element of PrismInformation.state.")));
             };
+        }
+
+        private function _nextVulnerabilityDateFunc(input:ICustomDataInput):void
+        {
             this.nextVulnerabilityDate = input.readInt();
             if (this.nextVulnerabilityDate < 0)
             {
                 throw (new Error((("Forbidden value (" + this.nextVulnerabilityDate) + ") on element of PrismInformation.nextVulnerabilityDate.")));
             };
+        }
+
+        private function _placementDateFunc(input:ICustomDataInput):void
+        {
             this.placementDate = input.readInt();
             if (this.placementDate < 0)
             {
                 throw (new Error((("Forbidden value (" + this.placementDate) + ") on element of PrismInformation.placementDate.")));
             };
+        }
+
+        private function _rewardTokenCountFunc(input:ICustomDataInput):void
+        {
             this.rewardTokenCount = input.readVarUhInt();
             if (this.rewardTokenCount < 0)
             {
@@ -106,5 +146,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.prism
+} com.ankamagames.dofus.network.types.game.prism
 

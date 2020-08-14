@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.shortcut
+package com.ankamagames.dofus.network.messages.game.shortcut
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class ShortcutBarSwapRequestMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -58,6 +58,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_ShortcutBarSwapRequestMessage(output);
@@ -66,12 +74,12 @@
         public function serializeAs_ShortcutBarSwapRequestMessage(output:ICustomDataOutput):void
         {
             output.writeByte(this.barType);
-            if ((((this.firstSlot < 0)) || ((this.firstSlot > 99))))
+            if (((this.firstSlot < 0) || (this.firstSlot > 99)))
             {
                 throw (new Error((("Forbidden value (" + this.firstSlot) + ") on element firstSlot.")));
             };
             output.writeByte(this.firstSlot);
-            if ((((this.secondSlot < 0)) || ((this.secondSlot > 99))))
+            if (((this.secondSlot < 0) || (this.secondSlot > 99)))
             {
                 throw (new Error((("Forbidden value (" + this.secondSlot) + ") on element secondSlot.")));
             };
@@ -85,18 +93,45 @@
 
         public function deserializeAs_ShortcutBarSwapRequestMessage(input:ICustomDataInput):void
         {
+            this._barTypeFunc(input);
+            this._firstSlotFunc(input);
+            this._secondSlotFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_ShortcutBarSwapRequestMessage(tree);
+        }
+
+        public function deserializeAsyncAs_ShortcutBarSwapRequestMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._barTypeFunc);
+            tree.addChild(this._firstSlotFunc);
+            tree.addChild(this._secondSlotFunc);
+        }
+
+        private function _barTypeFunc(input:ICustomDataInput):void
+        {
             this.barType = input.readByte();
             if (this.barType < 0)
             {
                 throw (new Error((("Forbidden value (" + this.barType) + ") on element of ShortcutBarSwapRequestMessage.barType.")));
             };
+        }
+
+        private function _firstSlotFunc(input:ICustomDataInput):void
+        {
             this.firstSlot = input.readByte();
-            if ((((this.firstSlot < 0)) || ((this.firstSlot > 99))))
+            if (((this.firstSlot < 0) || (this.firstSlot > 99)))
             {
                 throw (new Error((("Forbidden value (" + this.firstSlot) + ") on element of ShortcutBarSwapRequestMessage.firstSlot.")));
             };
+        }
+
+        private function _secondSlotFunc(input:ICustomDataInput):void
+        {
             this.secondSlot = input.readByte();
-            if ((((this.secondSlot < 0)) || ((this.secondSlot > 99))))
+            if (((this.secondSlot < 0) || (this.secondSlot > 99)))
             {
                 throw (new Error((("Forbidden value (" + this.secondSlot) + ") on element of ShortcutBarSwapRequestMessage.secondSlot.")));
             };
@@ -104,5 +139,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.shortcut
+} com.ankamagames.dofus.network.messages.game.shortcut
 

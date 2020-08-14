@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.internalDatacenter.communication
+package com.ankamagames.dofus.internalDatacenter.communication
 {
     import flash.utils.Proxy;
     import com.ankamagames.jerakine.interfaces.IDataCenter;
@@ -22,12 +22,13 @@
         private var _uri:Uri;
         public var id:uint = 0;
         public var iconId:String;
-        public var order:int;
+        public var packId:int;
+        public var categoryId:int;
         public var isOkForMultiUse:Boolean = false;
         public var quantity:uint = 1;
 
 
-        public static function create(smileyId:uint, iconId:String, order:int, useCache:Boolean=true):SmileyWrapper
+        public static function create(smileyId:uint, iconId:String, packId:int, categoryId:int, useCache:Boolean=true):SmileyWrapper
         {
             var smiley:SmileyWrapper;
             if (((!(_cache[smileyId])) || (!(useCache))))
@@ -44,7 +45,8 @@
                 smiley = _cache[smileyId];
             };
             smiley.iconId = iconId;
-            smiley.order = order;
+            smiley.packId = packId;
+            smiley.categoryId = categoryId;
             return (smiley);
         }
 
@@ -56,7 +58,7 @@
 
         public function get iconUri():Uri
         {
-            if (!(this._uri))
+            if (!this._uri)
             {
                 this._uri = new Uri(((XmlConfig.getInstance().getEntry("config.content.path") + "gfx/smilies/assets.swf|") + this.iconId));
             };
@@ -65,7 +67,7 @@
 
         public function get fullSizeIconUri():Uri
         {
-            if (!(this._uri))
+            if (!this._uri)
             {
                 this._uri = new Uri(((XmlConfig.getInstance().getEntry("config.content.path") + "gfx/smilies/assets.swf|") + this.iconId));
             };
@@ -121,13 +123,13 @@
             return (true);
         }
 
-        override flash_proxy function getProperty(name:*)
+        override flash_proxy function getProperty(name:*):*
         {
             if (isAttribute(name))
             {
                 return (this[name]);
             };
-            return (("Error on smiley " + name));
+            return ("Error on smiley " + name);
         }
 
         override flash_proxy function hasProperty(name:*):Boolean
@@ -137,7 +139,7 @@
 
         public function toString():String
         {
-            return ((("[SmileyWrapper#" + this.id) + "]"));
+            return (("[SmileyWrapper#" + this.id) + "]");
         }
 
         public function addHolder(h:ISlotDataHolder):void
@@ -150,7 +152,7 @@
 
         public function getIconUri(pngMode:Boolean=true):Uri
         {
-            if (!(this._uri))
+            if (!this._uri)
             {
                 this._uri = new Uri(((XmlConfig.getInstance().getEntry("config.content.path") + "gfx/smilies/assets.swf|") + this.iconId));
             };
@@ -159,5 +161,5 @@
 
 
     }
-}//package com.ankamagames.dofus.internalDatacenter.communication
+} com.ankamagames.dofus.internalDatacenter.communication
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.fight.managers
+package com.ankamagames.dofus.logic.game.fight.managers
 {
     import com.ankamagames.jerakine.interfaces.IDestroyable;
     import com.ankamagames.jerakine.logger.Logger;
@@ -15,7 +15,9 @@
     import com.ankamagames.atouin.renderers.CellLinkRenderer;
     import com.ankamagames.atouin.managers.SelectionManager;
     import com.ankamagames.dofus.logic.game.fight.types.MarkInstance;
-    import com.ankamagames.dofus.network.enums.GameActionMarkTypeEnum;
+    import com.ankamagames.atouin.Atouin;
+    import com.ankamagames.atouin.enums.PlacementStrataEnums;
+    import tools.enumeration.GameActionMarkTypeEnum;
     import com.ankamagames.dofus.types.enums.PortalAnimationEnum;
     import com.ankamagames.atouin.AtouinConstants;
     import flash.geom.Point;
@@ -57,7 +59,7 @@
         {
             var next:MapPoint;
             var index:int;
-            if (((((!(checkPoints)) || (!(checkPoints.length)))) || ((((checkPoints.length == 1)) && ((startPoint.cellId == checkPoints[0].cellId))))))
+            if ((((!(checkPoints)) || (!(checkPoints.length))) || ((checkPoints.length == 1) && (startPoint.cellId == checkPoints[0].cellId))))
             {
                 return (new <uint>[startPoint.cellId]);
             };
@@ -74,7 +76,7 @@
             var res:Vector.<uint> = new Vector.<uint>();
             var current:MapPoint = startPoint;
             var maxTry:uint = (pointsList.length + 1);
-            while (((pointsList.length) || ((maxTry > 0))))
+            while (((pointsList.length) || (maxTry > 0)))
             {
                 maxTry--;
                 res.push(current.cellId);
@@ -100,7 +102,7 @@
         public function drawLinks(selectionName:String, orderedCellIds:Vector.<uint>, thickness:Number, color:uint, alpha:Number):void
         {
             var s:Selection;
-            if (((orderedCellIds) && ((orderedCellIds.length > 1))))
+            if (((orderedCellIds) && (orderedCellIds.length > 1)))
             {
                 s = new Selection();
                 s.cells = orderedCellIds;
@@ -132,16 +134,16 @@
                 s.cells = orderedCellIds;
                 s.color = new Color(251623);
                 s.zone = new Custom(orderedCellIds);
-                s.renderer = new CellLinkRenderer(10, 0.5, true);
+                s.renderer = new CellLinkRenderer(10, 0.5, true, ((Atouin.getInstance().options.getOption("transparentOverlayMode")) ? PlacementStrataEnums.STRATA_NO_Z_ORDER : PlacementStrataEnums.STRATA_LINK));
                 SelectionManager.getInstance().addSelection(s, "eliaPortals", orderedCellIds[0]);
                 this._selections["eliaPortals"] = s;
                 mark = MarkedCellsManager.getInstance().getMarkAtCellId(exitCellId, GameActionMarkTypeEnum.PORTAL);
-                if (!(mark))
+                if (!mark)
                 {
                     return;
                 };
                 this._portalExitGlyph = MarkedCellsManager.getInstance().getGlyph(mark.markId);
-                if (!(this._portalExitGlyph))
+                if (!this._portalExitGlyph)
                 {
                     return;
                 };
@@ -155,9 +157,9 @@
 
         public function clearLinks(selectionName:String=""):void
         {
-            var _local_3:Selection;
+            var s:Selection;
             var hasClearedLinks:Boolean;
-            if (!(selectionName))
+            if (!selectionName)
             {
                 for (selectionName in this._selections)
                 {
@@ -168,11 +170,11 @@
             }
             else
             {
-                _local_3 = SelectionManager.getInstance().getSelection(selectionName);
-                if (_local_3)
+                s = SelectionManager.getInstance().getSelection(selectionName);
+                if (s)
                 {
                     hasClearedLinks = true;
-                    _local_3.remove();
+                    s.remove();
                 };
                 if (this._selections[selectionName])
                 {
@@ -222,7 +224,7 @@
                     };
                 };
             };
-            if (!(closests.length))
+            if (!closests.length)
             {
                 return (null);
             };
@@ -246,7 +248,7 @@
             closests.sort(function (o1:MapPoint, o2:MapPoint):int
             {
                 var res:Number = (getPositiveOrientedAngle(refCoord, nudge, new Point(o1.x, o1.y)) - getPositiveOrientedAngle(refCoord, nudge, new Point(o2.x, o2.y)));
-                return ((((res)>0) ? 1 : (((res)<0) ? -1 : 0)));
+                return ((res > 0) ? 1 : ((res < 0) ? -1 : 0));
             });
             var res:MapPoint = this.getBestPortalWhenRefIsNotInsideClosests(refCell, closests);
             if (res != null)
@@ -292,7 +294,7 @@
                 case TRIGONOMETRIC:
                     return (this.getAngle(refCell, cellA, cellB));
                 case COUNTER_TRIGONOMETRIC:
-                    return (((2 * Math.PI) - this.getAngle(refCell, cellA, cellB)));
+                    return ((2 * Math.PI) - this.getAngle(refCell, cellA, cellB));
                 default:
                     return (0);
             };
@@ -305,9 +307,9 @@
             var det:int = this.getDeterminant(aVec, bVec);
             if (det != 0)
             {
-                return ((((det > 0)) ? TRIGONOMETRIC : COUNTER_TRIGONOMETRIC));
+                return ((det > 0) ? TRIGONOMETRIC : COUNTER_TRIGONOMETRIC);
             };
-            return (((((((aVec.x >= 0) == (bVec.x >= 0))) && (((aVec.y >= 0) == (bVec.y >= 0))))) ? SAME : OPPOSITE));
+            return ((((aVec.x >= 0) == (bVec.x >= 0)) && ((aVec.y >= 0) == (bVec.y >= 0))) ? SAME : OPPOSITE);
         }
 
         private function getAngle(coordRef:Point, coordA:Point, coordB:Point):Number
@@ -325,7 +327,7 @@
 
         private function getDeterminant(aVec:Point, bVec:Point):int
         {
-            return (((aVec.x * bVec.y) - (aVec.y * bVec.x)));
+            return ((aVec.x * bVec.y) - (aVec.y * bVec.x));
         }
 
         private function vector(start:Point, end:Point):Point
@@ -335,5 +337,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.fight.managers
+} com.ankamagames.dofus.logic.game.fight.managers
 

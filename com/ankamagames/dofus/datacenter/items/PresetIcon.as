@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.datacenter.items
+package com.ankamagames.dofus.datacenter.items
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.jerakine.data.GameData;
@@ -14,7 +14,7 @@
 
         public static function getPresetIconById(id:int):PresetIcon
         {
-            return ((GameData.getObject(MODULE, id) as PresetIcon));
+            return (GameData.getObject(MODULE, id) as PresetIcon);
         }
 
         public static function getPresetIcons():Array
@@ -24,5 +24,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.items
+} com.ankamagames.dofus.datacenter.items
 

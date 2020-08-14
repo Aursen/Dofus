@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.utils.display
+package com.ankamagames.jerakine.utils.display
 {
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.utils.errors.SingletonError;
@@ -35,7 +35,7 @@
 
         public static function getInstance():KeyPoll
         {
-            if (!(_self))
+            if (!_self)
             {
                 _self = new (KeyPoll)();
             };
@@ -45,12 +45,12 @@
 
         private function keyDownListener(ev:KeyboardEvent):void
         {
-            this.states[(ev.keyCode >>> 3)] = (this.states[(ev.keyCode >>> 3)] | (1 << (ev.keyCode & 7)));
+            this.states[(ev.keyCode >>> 3)] = (this.states[(ev.keyCode >>> 3)] | (1 << (ev.keyCode & 0x07)));
         }
 
         private function keyUpListener(ev:KeyboardEvent):void
         {
-            this.states[(ev.keyCode >>> 3)] = (this.states[(ev.keyCode >>> 3)] & ~((1 << (ev.keyCode & 7))));
+            this.states[(ev.keyCode >>> 3)] = (this.states[(ev.keyCode >>> 3)] & (~(1 << (ev.keyCode & 0x07))));
         }
 
         private function activateListener(ev:Event):void
@@ -75,15 +75,15 @@
 
         public function isDown(keyCode:uint):Boolean
         {
-            return (!(((this.states[(keyCode >>> 3)] & (1 << (keyCode & 7))) == 0)));
+            return (!((this.states[(keyCode >>> 3)] & (1 << (keyCode & 0x07))) == 0));
         }
 
         public function isUp(keyCode:uint):Boolean
         {
-            return (((this.states[(keyCode >>> 3)] & (1 << (keyCode & 7))) == 0));
+            return ((this.states[(keyCode >>> 3)] & (1 << (keyCode & 0x07))) == 0);
         }
 
 
     }
-}//package com.ankamagames.jerakine.utils.display
+} com.ankamagames.jerakine.utils.display
 

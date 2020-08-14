@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.common.steps
+package com.ankamagames.dofus.logic.game.common.steps
 {
     import com.ankamagames.jerakine.sequencer.AbstractSequencable;
     import com.ankamagames.dofus.types.entities.AnimatedCharacter;
@@ -13,7 +13,7 @@
     {
 
         private var _entity:AnimatedCharacter;
-        private var _bubble;
+        private var _bubble:*;
         private var _waitForEnd:Boolean;
         private var _timer:Timer;
         private var _timerDelay:Number;
@@ -36,7 +36,7 @@
                 this._timer.start();
             };
             TooltipManager.show(this._bubble, this._entity.absoluteBounds, UiModuleManager.getInstance().getModule("Ankama_Tooltips"), true, ("textBubble" + this._entity.id), LocationEnum.POINT_BOTTOMLEFT, LocationEnum.POINT_TOPRIGHT, 0, true, null, null, null, null, false, StrataEnum.STRATA_WORLD);
-            if (!(this._waitForEnd))
+            if (!this._waitForEnd)
             {
                 executeCallbacks();
             };
@@ -59,5 +59,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.steps
+} com.ankamagames.dofus.logic.game.common.steps
 

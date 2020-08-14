@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.inventory.exchanges
+package com.ankamagames.dofus.network.messages.game.inventory.exchanges
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,15 +6,15 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class ExchangeOnHumanVendorRequestMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 5772;
 
         private var _isInitialized:Boolean = false;
-        public var humanVendorId:uint = 0;
+        public var humanVendorId:Number = 0;
         public var humanVendorCell:uint = 0;
 
 
@@ -28,7 +28,7 @@
             return (5772);
         }
 
-        public function initExchangeOnHumanVendorRequestMessage(humanVendorId:uint=0, humanVendorCell:uint=0):ExchangeOnHumanVendorRequestMessage
+        public function initExchangeOnHumanVendorRequestMessage(humanVendorId:Number=0, humanVendorCell:uint=0):ExchangeOnHumanVendorRequestMessage
         {
             this.humanVendorId = humanVendorId;
             this.humanVendorCell = humanVendorCell;
@@ -55,6 +55,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_ExchangeOnHumanVendorRequestMessage(output);
@@ -62,12 +70,12 @@
 
         public function serializeAs_ExchangeOnHumanVendorRequestMessage(output:ICustomDataOutput):void
         {
-            if (this.humanVendorId < 0)
+            if (((this.humanVendorId < 0) || (this.humanVendorId > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.humanVendorId) + ") on element humanVendorId.")));
             };
-            output.writeVarInt(this.humanVendorId);
-            if ((((this.humanVendorCell < 0)) || ((this.humanVendorCell > 559))))
+            output.writeVarLong(this.humanVendorId);
+            if (((this.humanVendorCell < 0) || (this.humanVendorCell > 559)))
             {
                 throw (new Error((("Forbidden value (" + this.humanVendorCell) + ") on element humanVendorCell.")));
             };
@@ -81,13 +89,34 @@
 
         public function deserializeAs_ExchangeOnHumanVendorRequestMessage(input:ICustomDataInput):void
         {
-            this.humanVendorId = input.readVarUhInt();
-            if (this.humanVendorId < 0)
+            this._humanVendorIdFunc(input);
+            this._humanVendorCellFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_ExchangeOnHumanVendorRequestMessage(tree);
+        }
+
+        public function deserializeAsyncAs_ExchangeOnHumanVendorRequestMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._humanVendorIdFunc);
+            tree.addChild(this._humanVendorCellFunc);
+        }
+
+        private function _humanVendorIdFunc(input:ICustomDataInput):void
+        {
+            this.humanVendorId = input.readVarUhLong();
+            if (((this.humanVendorId < 0) || (this.humanVendorId > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.humanVendorId) + ") on element of ExchangeOnHumanVendorRequestMessage.humanVendorId.")));
             };
+        }
+
+        private function _humanVendorCellFunc(input:ICustomDataInput):void
+        {
             this.humanVendorCell = input.readVarUhShort();
-            if ((((this.humanVendorCell < 0)) || ((this.humanVendorCell > 559))))
+            if (((this.humanVendorCell < 0) || (this.humanVendorCell > 559)))
             {
                 throw (new Error((("Forbidden value (" + this.humanVendorCell) + ") on element of ExchangeOnHumanVendorRequestMessage.humanVendorCell.")));
             };
@@ -95,5 +124,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.inventory.exchanges
+} com.ankamagames.dofus.network.messages.game.inventory.exchanges
 

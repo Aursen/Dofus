@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.types.data
+package com.ankamagames.dofus.types.data
 {
     public class ServerCommand 
     {
@@ -13,7 +13,7 @@
         {
             this.name = name;
             this.help = help;
-            if (!(_cmdByName[name]))
+            if (!_cmdByName[name])
             {
                 _cmdByName[name] = this;
                 _cmdList.push(name);
@@ -49,8 +49,8 @@
                     if (i > aMatch[0].length) break;
                     for each (sCmd in aMatch)
                     {
-                        bMatch = ((bMatch) && ((sCmd.indexOf(aMatch[0].substr(0, i)) == 0)));
-                        if (!(bMatch)) break;
+                        bMatch = ((bMatch) && (sCmd.indexOf(aMatch[0].substr(0, i)) == 0));
+                        if (!bMatch) break;
                     };
                     if (bMatch)
                     {
@@ -83,7 +83,7 @@
 
         public static function getHelp(cmd:String):String
         {
-            return (((_cmdByName[cmd]) ? _cmdByName[cmd].help : null));
+            return ((_cmdByName[cmd]) ? _cmdByName[cmd].help : null);
         }
 
         public static function hasCommand(cmd:String):Boolean
@@ -93,5 +93,5 @@
 
 
     }
-}//package com.ankamagames.dofus.types.data
+} com.ankamagames.dofus.types.data
 

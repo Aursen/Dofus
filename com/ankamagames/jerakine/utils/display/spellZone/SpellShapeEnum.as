@@ -1,6 +1,5 @@
-﻿package com.ankamagames.jerakine.utils.display.spellZone
+package com.ankamagames.jerakine.utils.display.spellZone
 {
-    [Untrusted]
     public class SpellShapeEnum 
     {
 
@@ -28,8 +27,9 @@
         public static const Z:uint = 90;
         public static const semicolon:uint = 59;
         public static const empty:uint = 32;
+        public static const l:uint = 108;
 
 
     }
-}//package com.ankamagames.jerakine.utils.display.spellZone
+} com.ankamagames.jerakine.utils.display.spellZone
 

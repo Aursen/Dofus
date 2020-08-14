@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.connection.managers
+package com.ankamagames.dofus.logic.connection.managers
 {
     import mx.core.ByteArrayAsset;
 
@@ -8,5 +8,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.connection.managers
+} com.ankamagames.dofus.logic.connection.managers
 

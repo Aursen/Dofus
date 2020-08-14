@@ -1,31 +1,26 @@
-﻿package com.ankamagames.dofus.network.messages.game.achievement
+package com.ankamagames.dofus.network.messages.game.achievement
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
     import __AS3__.vec.Vector;
-    import com.ankamagames.dofus.network.types.game.achievement.AchievementRewardable;
+    import com.ankamagames.dofus.network.types.game.achievement.AchievementAchieved;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.dofus.network.ProtocolTypeManager;
     import __AS3__.vec.*;
 
-    [Trusted]
     public class AchievementListMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 6205;
 
         private var _isInitialized:Boolean = false;
-        public var finishedAchievementsIds:Vector.<uint>;
-        public var rewardableAchievements:Vector.<AchievementRewardable>;
+        public var finishedAchievements:Vector.<AchievementAchieved> = new Vector.<AchievementAchieved>();
+        private var _finishedAchievementstree:FuncTree;
 
-        public function AchievementListMessage()
-        {
-            this.finishedAchievementsIds = new Vector.<uint>();
-            this.rewardableAchievements = new Vector.<AchievementRewardable>();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
@@ -37,18 +32,16 @@
             return (6205);
         }
 
-        public function initAchievementListMessage(finishedAchievementsIds:Vector.<uint>=null, rewardableAchievements:Vector.<AchievementRewardable>=null):AchievementListMessage
+        public function initAchievementListMessage(finishedAchievements:Vector.<AchievementAchieved>=null):AchievementListMessage
         {
-            this.finishedAchievementsIds = finishedAchievementsIds;
-            this.rewardableAchievements = rewardableAchievements;
+            this.finishedAchievements = finishedAchievements;
             this._isInitialized = true;
             return (this);
         }
 
         override public function reset():void
         {
-            this.finishedAchievementsIds = new Vector.<uint>();
-            this.rewardableAchievements = new Vector.<AchievementRewardable>();
+            this.finishedAchievements = new Vector.<AchievementAchieved>();
             this._isInitialized = false;
         }
 
@@ -64,6 +57,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_AchievementListMessage(output);
@@ -71,23 +72,13 @@
 
         public function serializeAs_AchievementListMessage(output:ICustomDataOutput):void
         {
-            output.writeShort(this.finishedAchievementsIds.length);
+            output.writeShort(this.finishedAchievements.length);
             var _i1:uint;
-            while (_i1 < this.finishedAchievementsIds.length)
+            while (_i1 < this.finishedAchievements.length)
             {
-                if (this.finishedAchievementsIds[_i1] < 0)
-                {
-                    throw (new Error((("Forbidden value (" + this.finishedAchievementsIds[_i1]) + ") on element 1 (starting at 1) of finishedAchievementsIds.")));
-                };
-                output.writeVarShort(this.finishedAchievementsIds[_i1]);
+                output.writeShort((this.finishedAchievements[_i1] as AchievementAchieved).getTypeId());
+                (this.finishedAchievements[_i1] as AchievementAchieved).serialize(output);
                 _i1++;
-            };
-            output.writeShort(this.rewardableAchievements.length);
-            var _i2:uint;
-            while (_i2 < this.rewardableAchievements.length)
-            {
-                (this.rewardableAchievements[_i2] as AchievementRewardable).serializeAs_AchievementRewardable(output);
-                _i2++;
             };
         }
 
@@ -98,32 +89,50 @@
 
         public function deserializeAs_AchievementListMessage(input:ICustomDataInput):void
         {
-            var _val1:uint;
-            var _item2:AchievementRewardable;
-            var _finishedAchievementsIdsLen:uint = input.readUnsignedShort();
+            var _id1:uint;
+            var _item1:AchievementAchieved;
+            var _finishedAchievementsLen:uint = input.readUnsignedShort();
             var _i1:uint;
-            while (_i1 < _finishedAchievementsIdsLen)
+            while (_i1 < _finishedAchievementsLen)
             {
-                _val1 = input.readVarUhShort();
-                if (_val1 < 0)
-                {
-                    throw (new Error((("Forbidden value (" + _val1) + ") on elements of finishedAchievementsIds.")));
-                };
-                this.finishedAchievementsIds.push(_val1);
+                _id1 = input.readUnsignedShort();
+                _item1 = ProtocolTypeManager.getInstance(AchievementAchieved, _id1);
+                _item1.deserialize(input);
+                this.finishedAchievements.push(_item1);
                 _i1++;
             };
-            var _rewardableAchievementsLen:uint = input.readUnsignedShort();
-            var _i2:uint;
-            while (_i2 < _rewardableAchievementsLen)
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_AchievementListMessage(tree);
+        }
+
+        public function deserializeAsyncAs_AchievementListMessage(tree:FuncTree):void
+        {
+            this._finishedAchievementstree = tree.addChild(this._finishedAchievementstreeFunc);
+        }
+
+        private function _finishedAchievementstreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
             {
-                _item2 = new AchievementRewardable();
-                _item2.deserialize(input);
-                this.rewardableAchievements.push(_item2);
-                _i2++;
+                this._finishedAchievementstree.addChild(this._finishedAchievementsFunc);
+                i++;
             };
+        }
+
+        private function _finishedAchievementsFunc(input:ICustomDataInput):void
+        {
+            var _id:uint = input.readUnsignedShort();
+            var _item:AchievementAchieved = ProtocolTypeManager.getInstance(AchievementAchieved, _id);
+            _item.deserialize(input);
+            this.finishedAchievements.push(_item);
         }
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.achievement
+} com.ankamagames.dofus.network.messages.game.achievement
 

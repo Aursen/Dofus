@@ -1,6 +1,5 @@
-﻿package com.ankamagames.jerakine.script
+package com.ankamagames.jerakine.script
 {
-    [Trusted]
     public class ScriptErrorEnum 
     {
 
@@ -9,5 +8,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.script
+} com.ankamagames.jerakine.script
 

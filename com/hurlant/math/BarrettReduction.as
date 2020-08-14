@@ -1,11 +1,11 @@
-﻿package com.hurlant.math
+package com.hurlant.math
 {
     import com.hurlant.math.BigInteger;
-    import com.hurlant.math.bi_internal; 
+    import com.hurlant.math.bi_internal;
 
     use namespace bi_internal;
 
-    class BarrettReduction implements IReduction 
+    internal class BarrettReduction implements IReduction 
     {
 
         private var m:BigInteger;
@@ -41,8 +41,8 @@
 
         public function convert(x:BigInteger):BigInteger
         {
-            var _local_2:BigInteger;
-            if ((((x.s < 0)) || ((x.t > (2 * this.m.t)))))
+            var r:BigInteger;
+            if (((x.s < 0) || (x.t > (2 * this.m.t))))
             {
                 return (x.mod(this.m));
             };
@@ -50,10 +50,10 @@
             {
                 return (x);
             };
-            _local_2 = new BigInteger();
-            x.copyTo(_local_2);
-            this.reduce(_local_2);
-            return (_local_2);
+            r = new BigInteger();
+            x.copyTo(r);
+            this.reduce(r);
+            return (r);
         }
 
         public function reduce(lx:BigInteger):void
@@ -80,5 +80,5 @@
 
 
     }
-}//package com.hurlant.math
+} com.hurlant.math
 

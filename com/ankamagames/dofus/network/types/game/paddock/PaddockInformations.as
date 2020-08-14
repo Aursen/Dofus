@@ -1,8 +1,9 @@
-﻿package com.ankamagames.dofus.network.types.game.paddock
+package com.ankamagames.dofus.network.types.game.paddock
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
     public class PaddockInformations implements INetworkType 
     {
@@ -57,11 +58,32 @@
 
         public function deserializeAs_PaddockInformations(input:ICustomDataInput):void
         {
+            this._maxOutdoorMountFunc(input);
+            this._maxItemsFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_PaddockInformations(tree);
+        }
+
+        public function deserializeAsyncAs_PaddockInformations(tree:FuncTree):void
+        {
+            tree.addChild(this._maxOutdoorMountFunc);
+            tree.addChild(this._maxItemsFunc);
+        }
+
+        private function _maxOutdoorMountFunc(input:ICustomDataInput):void
+        {
             this.maxOutdoorMount = input.readVarUhShort();
             if (this.maxOutdoorMount < 0)
             {
                 throw (new Error((("Forbidden value (" + this.maxOutdoorMount) + ") on element of PaddockInformations.maxOutdoorMount.")));
             };
+        }
+
+        private function _maxItemsFunc(input:ICustomDataInput):void
+        {
             this.maxItems = input.readVarUhShort();
             if (this.maxItems < 0)
             {
@@ -71,5 +93,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.paddock
+} com.ankamagames.dofus.network.types.game.paddock
 

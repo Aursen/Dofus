@@ -1,21 +1,21 @@
-﻿package com.ankamagames.atouin.messages
+package com.ankamagames.atouin.messages
 {
     import com.ankamagames.jerakine.messages.Message;
 
     public class MapMessage implements Message 
     {
 
-        private var _id:uint;
+        private var _id:Number;
         private var _transitionType:String;
         public var renderRequestId:uint;
 
 
-        public function get id():uint
+        public function get id():Number
         {
             return (this._id);
         }
 
-        public function set id(nValue:uint):void
+        public function set id(nValue:Number):void
         {
             this._id = nValue;
         }
@@ -32,5 +32,5 @@
 
 
     }
-}//package com.ankamagames.atouin.messages
+} com.ankamagames.atouin.messages
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.tiphon.types
+package com.ankamagames.tiphon.types
 {
     import com.ankamagames.jerakine.entities.interfaces.ISubEntityContainer;
     import flash.display.Sprite;
@@ -19,5 +19,5 @@
         function getDirection():uint;
 
     }
-}//package com.ankamagames.tiphon.types
+} com.ankamagames.tiphon.types
 

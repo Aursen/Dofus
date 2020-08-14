@@ -1,27 +1,28 @@
-﻿package com.ankamagames.dofus.network.messages.game.chat
+package com.ankamagames.dofus.network.messages.game.chat
 {
     import com.ankamagames.jerakine.network.INetworkMessage;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class ChatServerMessage extends ChatAbstractServerMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 881;
 
         private var _isInitialized:Boolean = false;
-        public var senderId:int = 0;
+        public var senderId:Number = 0;
         [Transient]
         public var senderName:String = "";
+        public var prefix:String = "";
         public var senderAccountId:uint = 0;
 
 
         override public function get isInitialized():Boolean
         {
-            return (((super.isInitialized) && (this._isInitialized)));
+            return ((super.isInitialized) && (this._isInitialized));
         }
 
         override public function getMessageId():uint
@@ -29,11 +30,12 @@
             return (881);
         }
 
-        public function initChatServerMessage(channel:uint=0, content:String="", timestamp:uint=0, fingerprint:String="", senderId:int=0, senderName:String="", senderAccountId:uint=0):ChatServerMessage
+        public function initChatServerMessage(channel:uint=0, content:String="", timestamp:uint=0, fingerprint:String="", senderId:Number=0, senderName:String="", prefix:String="", senderAccountId:uint=0):ChatServerMessage
         {
             super.initChatAbstractServerMessage(channel, content, timestamp, fingerprint);
             this.senderId = senderId;
             this.senderName = senderName;
+            this.prefix = prefix;
             this.senderAccountId = senderAccountId;
             this._isInitialized = true;
             return (this);
@@ -44,6 +46,7 @@
             super.reset();
             this.senderId = 0;
             this.senderName = "";
+            this.prefix = "";
             this.senderAccountId = 0;
             this._isInitialized = false;
         }
@@ -60,6 +63,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         override public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_ChatServerMessage(output);
@@ -68,8 +79,13 @@
         public function serializeAs_ChatServerMessage(output:ICustomDataOutput):void
         {
             super.serializeAs_ChatAbstractServerMessage(output);
-            output.writeInt(this.senderId);
+            if (((this.senderId < -9007199254740992) || (this.senderId > 9007199254740992)))
+            {
+                throw (new Error((("Forbidden value (" + this.senderId) + ") on element senderId.")));
+            };
+            output.writeDouble(this.senderId);
             output.writeUTF(this.senderName);
+            output.writeUTF(this.prefix);
             if (this.senderAccountId < 0)
             {
                 throw (new Error((("Forbidden value (" + this.senderAccountId) + ") on element senderAccountId.")));
@@ -85,8 +101,47 @@
         public function deserializeAs_ChatServerMessage(input:ICustomDataInput):void
         {
             super.deserialize(input);
-            this.senderId = input.readInt();
+            this._senderIdFunc(input);
+            this._senderNameFunc(input);
+            this._prefixFunc(input);
+            this._senderAccountIdFunc(input);
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_ChatServerMessage(tree);
+        }
+
+        public function deserializeAsyncAs_ChatServerMessage(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._senderIdFunc);
+            tree.addChild(this._senderNameFunc);
+            tree.addChild(this._prefixFunc);
+            tree.addChild(this._senderAccountIdFunc);
+        }
+
+        private function _senderIdFunc(input:ICustomDataInput):void
+        {
+            this.senderId = input.readDouble();
+            if (((this.senderId < -9007199254740992) || (this.senderId > 9007199254740992)))
+            {
+                throw (new Error((("Forbidden value (" + this.senderId) + ") on element of ChatServerMessage.senderId.")));
+            };
+        }
+
+        private function _senderNameFunc(input:ICustomDataInput):void
+        {
             this.senderName = input.readUTF();
+        }
+
+        private function _prefixFunc(input:ICustomDataInput):void
+        {
+            this.prefix = input.readUTF();
+        }
+
+        private function _senderAccountIdFunc(input:ICustomDataInput):void
+        {
             this.senderAccountId = input.readInt();
             if (this.senderAccountId < 0)
             {
@@ -96,5 +151,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.chat
+} com.ankamagames.dofus.network.messages.game.chat
 

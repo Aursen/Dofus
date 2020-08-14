@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.task
+package com.ankamagames.jerakine.task
 {
     import com.ankamagames.jerakine.tasking.SplittedTask;
     import com.ankamagames.jerakine.logger.Logger;
@@ -42,25 +42,9 @@
                 };
                 dispatchEvent(new LangFileEvent(LangFileEvent.COMPLETE, false, false, file.url, this._sUrlProvider));
             };
-            if (!(this._aFiles.length))
+            if (!this._aFiles.length)
             {
                 dispatchEvent(new LangFileEvent(LangFileEvent.ALL_COMPLETE, false, false, this._sUrlProvider, this._sUrlProvider));
-            };
-            return (!(this._aFiles.length));
-        }
-
-        public function parseForReg():Boolean
-        {
-            var file:LangFile;
-            if (this._aFiles.length)
-            {
-                file = LangFile(this._aFiles.shift());
-                this.parseXml(file.content, file.category);
-                if (((file.metaData) && (file.metaData.clearFile[file.url])))
-                {
-                    LangManager.getInstance().setFileVersion(((FileUtils.getFileStartName(this._sUrlProvider) + ".") + file.url), file.metaData.clearFile[file.url]);
-                };
-                dispatchEvent(new LangFileEvent(LangFileEvent.COMPLETE, false, false, file.url, this._sUrlProvider));
             };
             return (!(this._aFiles.length));
         }
@@ -101,5 +85,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.task
+} com.ankamagames.jerakine.task
 

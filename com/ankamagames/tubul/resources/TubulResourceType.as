@@ -1,4 +1,4 @@
-﻿package com.ankamagames.tubul.resources
+package com.ankamagames.tubul.resources
 {
     public class TubulResourceType 
     {
@@ -8,5 +8,5 @@
 
 
     }
-}//package com.ankamagames.tubul.resources
+} com.ankamagames.tubul.resources
 

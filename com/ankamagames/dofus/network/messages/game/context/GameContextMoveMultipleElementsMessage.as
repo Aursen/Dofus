@@ -1,29 +1,25 @@
-﻿package com.ankamagames.dofus.network.messages.game.context
+package com.ankamagames.dofus.network.messages.game.context
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
     import __AS3__.vec.Vector;
     import com.ankamagames.dofus.network.types.game.context.EntityMovementInformations;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
     import __AS3__.vec.*;
 
-    [Trusted]
     public class GameContextMoveMultipleElementsMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 254;
 
         private var _isInitialized:Boolean = false;
-        public var movements:Vector.<EntityMovementInformations>;
+        public var movements:Vector.<EntityMovementInformations> = new Vector.<EntityMovementInformations>();
+        private var _movementstree:FuncTree;
 
-        public function GameContextMoveMultipleElementsMessage()
-        {
-            this.movements = new Vector.<EntityMovementInformations>();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
@@ -58,6 +54,14 @@
         override public function unpack(input:ICustomDataInput, length:uint):void
         {
             this.deserialize(input);
+        }
+
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
         }
 
         public function serialize(output:ICustomDataOutput):void
@@ -95,7 +99,35 @@
             };
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GameContextMoveMultipleElementsMessage(tree);
+        }
+
+        public function deserializeAsyncAs_GameContextMoveMultipleElementsMessage(tree:FuncTree):void
+        {
+            this._movementstree = tree.addChild(this._movementstreeFunc);
+        }
+
+        private function _movementstreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._movementstree.addChild(this._movementsFunc);
+                i++;
+            };
+        }
+
+        private function _movementsFunc(input:ICustomDataInput):void
+        {
+            var _item:EntityMovementInformations = new EntityMovementInformations();
+            _item.deserialize(input);
+            this.movements.push(_item);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.context
+} com.ankamagames.dofus.network.messages.game.context
 

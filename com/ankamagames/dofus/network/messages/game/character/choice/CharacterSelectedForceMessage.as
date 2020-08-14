@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.character.choice
+package com.ankamagames.dofus.network.messages.game.character.choice
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class CharacterSelectedForceMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -52,6 +52,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_CharacterSelectedForceMessage(output);
@@ -59,7 +67,7 @@
 
         public function serializeAs_CharacterSelectedForceMessage(output:ICustomDataOutput):void
         {
-            if ((((this.id < 1)) || ((this.id > 2147483647))))
+            if (((this.id < 1) || (this.id > 2147483647)))
             {
                 throw (new Error((("Forbidden value (" + this.id) + ") on element id.")));
             };
@@ -73,8 +81,23 @@
 
         public function deserializeAs_CharacterSelectedForceMessage(input:ICustomDataInput):void
         {
+            this._idFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_CharacterSelectedForceMessage(tree);
+        }
+
+        public function deserializeAsyncAs_CharacterSelectedForceMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._idFunc);
+        }
+
+        private function _idFunc(input:ICustomDataInput):void
+        {
             this.id = input.readInt();
-            if ((((this.id < 1)) || ((this.id > 2147483647))))
+            if (((this.id < 1) || (this.id > 2147483647)))
             {
                 throw (new Error((("Forbidden value (" + this.id) + ") on element of CharacterSelectedForceMessage.id.")));
             };
@@ -82,5 +105,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.character.choice
+} com.ankamagames.dofus.network.messages.game.character.choice
 

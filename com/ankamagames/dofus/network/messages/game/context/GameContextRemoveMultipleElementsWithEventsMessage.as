@@ -1,31 +1,27 @@
-﻿package com.ankamagames.dofus.network.messages.game.context
+package com.ankamagames.dofus.network.messages.game.context
 {
     import com.ankamagames.jerakine.network.INetworkMessage;
     import __AS3__.vec.Vector;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
     import __AS3__.vec.*;
 
-    [Trusted]
     public class GameContextRemoveMultipleElementsWithEventsMessage extends GameContextRemoveMultipleElementsMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 6416;
 
         private var _isInitialized:Boolean = false;
-        public var elementEventIds:Vector.<uint>;
+        public var elementEventIds:Vector.<uint> = new Vector.<uint>();
+        private var _elementEventIdstree:FuncTree;
 
-        public function GameContextRemoveMultipleElementsWithEventsMessage()
-        {
-            this.elementEventIds = new Vector.<uint>();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
-            return (((super.isInitialized) && (this._isInitialized)));
+            return ((super.isInitialized) && (this._isInitialized));
         }
 
         override public function getMessageId():uint
@@ -33,9 +29,9 @@
             return (6416);
         }
 
-        public function initGameContextRemoveMultipleElementsWithEventsMessage(id:Vector.<int>=null, elementEventIds:Vector.<uint>=null):GameContextRemoveMultipleElementsWithEventsMessage
+        public function initGameContextRemoveMultipleElementsWithEventsMessage(elementsIds:Vector.<Number>=null, elementEventIds:Vector.<uint>=null):GameContextRemoveMultipleElementsWithEventsMessage
         {
-            super.initGameContextRemoveMultipleElementsMessage(id);
+            super.initGameContextRemoveMultipleElementsMessage(elementsIds);
             this.elementEventIds = elementEventIds;
             this._isInitialized = true;
             return (this);
@@ -58,6 +54,14 @@
         override public function unpack(input:ICustomDataInput, length:uint):void
         {
             this.deserialize(input);
+        }
+
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
         }
 
         override public function serialize(output:ICustomDataOutput):void
@@ -104,7 +108,39 @@
             };
         }
 
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GameContextRemoveMultipleElementsWithEventsMessage(tree);
+        }
+
+        public function deserializeAsyncAs_GameContextRemoveMultipleElementsWithEventsMessage(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            this._elementEventIdstree = tree.addChild(this._elementEventIdstreeFunc);
+        }
+
+        private function _elementEventIdstreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._elementEventIdstree.addChild(this._elementEventIdsFunc);
+                i++;
+            };
+        }
+
+        private function _elementEventIdsFunc(input:ICustomDataInput):void
+        {
+            var _val:uint = input.readByte();
+            if (_val < 0)
+            {
+                throw (new Error((("Forbidden value (" + _val) + ") on elements of elementEventIds.")));
+            };
+            this.elementEventIds.push(_val);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.context
+} com.ankamagames.dofus.network.messages.game.context
 

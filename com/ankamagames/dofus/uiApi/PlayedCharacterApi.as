@@ -1,10 +1,10 @@
-﻿package com.ankamagames.dofus.uiApi
+package com.ankamagames.dofus.uiApi
 {
     import com.ankamagames.berilia.interfaces.IApi;
     import flash.utils.Dictionary;
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
-    import avmplus.getQualifiedClassName;
+    import flash.utils.getQualifiedClassName;
     import com.ankamagames.dofus.logic.game.common.managers.PlayedCharacterManager;
     import com.ankamagames.dofus.network.types.game.character.characteristic.CharacterCharacteristicsInformations;
     import com.ankamagames.dofus.network.types.game.character.choice.CharacterBaseInformations;
@@ -16,9 +16,17 @@
     import com.ankamagames.dofus.logic.game.common.managers.InventoryManager;
     import __AS3__.vec.Vector;
     import com.ankamagames.dofus.internalDatacenter.items.ItemWrapper;
+    import com.ankamagames.dofus.network.enums.CharacterInventoryPositionEnum;
+    import com.ankamagames.dofus.kernel.Kernel;
+    import com.ankamagames.dofus.logic.game.common.frames.SpellInventoryManagementFrame;
+    import com.ankamagames.dofus.datacenter.temporis.ForgettableSpell;
+    import com.ankamagames.dofus.network.types.game.data.items.ForgettableSpellItem;
+    import com.ankamagames.dofus.logic.game.fight.types.castSpellManager.SpellManager;
+    import com.ankamagames.dofus.datacenter.temporis.CustomModeBreedSpell;
+    import com.ankamagames.dofus.internalDatacenter.spells.SpellWrapper;
+    import com.ankamagames.dofus.datacenter.breeds.Breed;
     import com.ankamagames.dofus.datacenter.appearance.Title;
     import com.ankamagames.dofus.network.types.game.context.roleplay.GameRolePlayCharacterInformations;
-    import com.ankamagames.dofus.kernel.Kernel;
     import com.ankamagames.dofus.logic.game.common.frames.TinselFrame;
     import com.ankamagames.dofus.network.types.game.context.roleplay.HumanOptionTitle;
     import com.ankamagames.dofus.datacenter.appearance.Ornament;
@@ -26,6 +34,7 @@
     import com.ankamagames.dofus.logic.game.fight.frames.FightEntitiesFrame;
     import com.ankamagames.dofus.logic.game.roleplay.frames.RoleplayEntitiesFrame;
     import com.ankamagames.dofus.logic.game.roleplay.types.CharacterTooltipInformation;
+    import com.ankamagames.dofus.logic.game.common.frames.PlayedCharacterUpdatesFrame;
     import com.ankamagames.dofus.logic.game.fight.frames.FightContextFrame;
     import com.ankamagames.dofus.logic.game.fight.frames.FightPreparationFrame;
     import com.ankamagames.dofus.network.types.game.character.restriction.ActorRestrictionsInformations;
@@ -33,42 +42,56 @@
     import com.ankamagames.dofus.network.types.game.context.roleplay.GameRolePlayActorInformations;
     import com.ankamagames.dofus.network.types.game.context.roleplay.GameRolePlayMutantInformations;
     import com.ankamagames.dofus.logic.game.common.managers.EntitiesLooksManager;
+    import com.ankamagames.dofus.network.enums.AlignmentSideEnum;
     import com.ankamagames.dofus.logic.game.fight.managers.CurrentPlayedFighterManager;
-    import com.ankamagames.dofus.internalDatacenter.spells.SpellWrapper;
     import com.ankamagames.dofus.network.types.game.character.characteristic.CharacterSpellModification;
-    import com.ankamagames.dofus.logic.common.frames.MiscFrame;
-    import com.ankamagames.dofus.network.types.game.house.AccountHouseInformations;
+    import com.ankamagames.dofus.logic.game.common.frames.HouseFrame;
+    import com.ankamagames.dofus.internalDatacenter.house.HouseWrapper;
     import com.ankamagames.dofus.internalDatacenter.world.WorldPointWrapper;
     import com.ankamagames.dofus.datacenter.world.SubArea;
+    import com.ankamagames.dofus.internalDatacenter.DataEnum;
     import com.ankamagames.dofus.network.enums.PlayerLifeStatusEnum;
-    import com.ankamagames.dofus.logic.game.common.frames.PlayedCharacterUpdatesFrame;
     import com.ankamagames.dofus.types.data.PlayerSetInfo;
+    import com.ankamagames.dofus.internalDatacenter.items.BuildWrapper;
     import com.ankamagames.dofus.internalDatacenter.items.WeaponWrapper;
+    import com.ankamagames.dofus.internalDatacenter.items.IdolsPresetWrapper;
     import com.ankamagames.dofus.datacenter.spells.SpellLevel;
     import com.ankamagames.dofus.datacenter.spells.Spell;
+    import com.ankamagames.dofus.logic.game.roleplay.frames.HavenbagFrame;
+    import com.ankamagames.dofus.logic.game.common.managers.DebtManager;
+    import com.ankamagames.dofus.network.types.game.character.characteristic.CharacterBaseCharacteristic;
+    import __AS3__.vec.*;
 
     public class PlayedCharacterApi implements IApi 
     {
 
         public static var MEMORY_LOG:Dictionary = new Dictionary(true);
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(PlayedCharacterApi));
+        private static var _instance:PlayedCharacterApi;
+        private static const LIFE_POINTS_GAINED_BY_LEVEL:int = 5;
+        private static const BASE_LIFE_POINTS:int = 50;
 
         public function PlayedCharacterApi()
         {
             MEMORY_LOG[this] = 1;
+            _instance = this;
         }
 
-        [Untrusted]
-        public static function characteristics():CharacterCharacteristicsInformations
+        public static function getInstance():PlayedCharacterApi
+        {
+            return (_instance);
+        }
+
+
+        public function characteristics():CharacterCharacteristicsInformations
         {
             return (PlayedCharacterManager.getInstance().characteristics);
         }
 
-        [Untrusted]
-        public static function getPlayedCharacterInfo():Object
+        public function getPlayedCharacterInfo():Object
         {
             var i:CharacterBaseInformations = PlayedCharacterManager.getInstance().infos;
-            if (!(i))
+            if (!i)
             {
                 return (null);
             };
@@ -76,11 +99,19 @@
             o.id = i.id;
             o.breed = i.breed;
             o.level = i.level;
+            o.limitedLevel = PlayedCharacterManager.getInstance().limitedLevel;
             o.sex = i.sex;
             o.name = i.name;
-            o.entityLook = EntityLookAdapter.fromNetwork(i.entityLook);
-            o.realEntityLook = o.entityLook;
-            if (((isCreature()) && (PlayedCharacterManager.getInstance().realEntityLook)))
+            if (PlayedCharacterManager.getInstance().realEntityLook)
+            {
+                o.entityLook = EntityLookAdapter.fromNetwork(PlayedCharacterManager.getInstance().realEntityLook);
+            }
+            else
+            {
+                o.entityLook = EntityLookAdapter.fromNetwork(i.entityLook);
+            };
+            o.realEntityLook = (o.entityLook as TiphonEntityLook).clone();
+            if (((this.isCreature()) && (PlayedCharacterManager.getInstance().realEntityLook)))
             {
                 o.entityLook = EntityLookAdapter.fromNetwork(PlayedCharacterManager.getInstance().realEntityLook);
             };
@@ -96,8 +127,7 @@
             return (o);
         }
 
-        [Untrusted]
-        public static function getCurrentEntityLook():Object
+        public function getCurrentEntityLook():TiphonEntityLook
         {
             var look:TiphonEntityLook;
             var entity:AnimatedCharacter = (DofusEntities.getEntity(PlayedCharacterManager.getInstance().id) as AnimatedCharacter);
@@ -112,20 +142,18 @@
             return (look);
         }
 
-        [Untrusted]
-        public static function getInventory():Vector.<ItemWrapper>
+        public function getInventory():Vector.<ItemWrapper>
         {
             return (InventoryManager.getInstance().realInventory);
         }
 
-        [Untrusted]
-        public static function getEquipment():Array
+        public function getEquipment():Array
         {
             var item:*;
             var equipment:Array = new Array();
             for each (item in PlayedCharacterManager.getInstance().inventory)
             {
-                if (item.position <= 15)
+                if (item.position <= CharacterInventoryPositionEnum.ACCESSORY_POSITION_SHIELD)
                 {
                     equipment.push(item);
                 };
@@ -133,29 +161,119 @@
             return (equipment);
         }
 
-        [Untrusted]
-        public static function getSpellInventory():Array
+        public function getSpellInventory():Array
         {
             return (PlayedCharacterManager.getInstance().spellsInventory);
         }
 
-        [Untrusted]
-        public static function getJobs():Array
+        public function getSpells(returnBreedSpells:Boolean):Array
+        {
+            var spim:SpellInventoryManagementFrame = (Kernel.getWorker().getFrame(SpellInventoryManagementFrame) as SpellInventoryManagementFrame);
+            if (returnBreedSpells)
+            {
+                return (spim.getBreedSpellsInVariantsArray());
+            };
+            return (spim.getCommonSpellsInVariantsArray());
+        }
+
+        public function getPlayerForgettableSpells():Dictionary
+        {
+            return (PlayedCharacterManager.getInstance().playerTemporisSpellDictionary);
+        }
+
+        public function getPlayerMaxTemporisSpellsNumber():int
+        {
+            return (PlayedCharacterManager.getInstance().playerMaxTemporisSpellsNumber);
+        }
+
+        public function getForgettableSpells():Array
+        {
+            return (ForgettableSpell.getForgettableSpells());
+        }
+
+        public function getForgettableSpellById(id:int):ForgettableSpell
+        {
+            return (ForgettableSpell.getForgettableSpellById(id));
+        }
+
+        public function isForgettableSpellAvailable(id:int):Boolean
+        {
+            var forgettableSpellItems:Dictionary = PlayedCharacterManager.getInstance().playerTemporisSpellDictionary;
+            if (forgettableSpellItems === null)
+            {
+                return (false);
+            };
+            var forgettableSpellItem:ForgettableSpellItem = forgettableSpellItems[id];
+            if (forgettableSpellItem === null)
+            {
+                return (false);
+            };
+            return (forgettableSpellItem.available);
+        }
+
+        public function isForgettableSpell(spellId:int):Boolean
+        {
+            return (SpellManager.isForgettableSpell(spellId));
+        }
+
+        public function getCustomModeBreedSpells():Array
+        {
+            return (CustomModeBreedSpell.getCustomModeBreedSpells());
+        }
+
+        public function getCustomModeBreedSpellById(id:int):CustomModeBreedSpell
+        {
+            return (CustomModeBreedSpell.getCustomModeBreedSpellById(id));
+        }
+
+        public function getCustomModeSpellIds():Array
+        {
+            return (CustomModeBreedSpell.getAllCustomModeBreedSpellIds());
+        }
+
+        public function getCustomModeBreedSpellList(breedId:int):Array
+        {
+            return (CustomModeBreedSpell.getCustomModeBreedSpellList(breedId));
+        }
+
+        public function getBreedSpellActivatedIds():Array
+        {
+            var spellWrapper:SpellWrapper;
+            var spellsInventory:Array = PlayedCharacterManager.getInstance().spellsInventory;
+            var activatedSpellIds:Array = new Array();
+            var playerBreedId:int = PlayedCharacterManager.getInstance().infos.breed;
+            var breedData:Breed = Breed.getBreedById(playerBreedId);
+            var breedSpellsId:Array = breedData.allSpellsId;
+            for each (spellWrapper in spellsInventory)
+            {
+                if (spellWrapper === null)
+                {
+                }
+                else
+                {
+                    if (((spellWrapper.variantActivated) && (!(breedSpellsId.indexOf(spellWrapper.id) == -1))))
+                    {
+                        activatedSpellIds.push(spellWrapper.id);
+                    };
+                };
+            };
+            return (activatedSpellIds);
+        }
+
+        public function getJobs():Array
         {
             return (PlayedCharacterManager.getInstance().jobs);
         }
 
-        [Untrusted]
-        public static function getMount():Object
+        public function getMount():Object
         {
             return (PlayedCharacterManager.getInstance().mount);
         }
 
-        [Untrusted]
-        public static function getTitle():Title
+        public function getTitle():Title
         {
             var title:Title;
-            var _local_3:GameRolePlayCharacterInformations;
+            var playerInfo:GameRolePlayCharacterInformations;
             var option:*;
             var title2:Title;
             var titleId:int = (Kernel.getWorker().getFrame(TinselFrame) as TinselFrame).currentTitle;
@@ -164,10 +282,10 @@
                 title = Title.getTitleById(titleId);
                 return (title);
             };
-            _local_3 = getEntityInfos();
-            if (((_local_3) && (_local_3.humanoidInfo)))
+            playerInfo = this.getEntityInfos();
+            if (((playerInfo) && (playerInfo.humanoidInfo)))
             {
-                for each (option in _local_3.humanoidInfo.options)
+                for each (option in playerInfo.humanoidInfo.options)
                 {
                     if ((option is HumanOptionTitle))
                     {
@@ -180,8 +298,7 @@
             return (null);
         }
 
-        [Untrusted]
-        public static function getOrnament():Ornament
+        public function getOrnament():Ornament
         {
             var ornament:Ornament;
             var ornamentId:int = (Kernel.getWorker().getFrame(TinselFrame) as TinselFrame).currentOrnament;
@@ -193,29 +310,25 @@
             return (null);
         }
 
-        [Untrusted]
-        public static function getKnownTitles():Vector.<uint>
+        public function getKnownTitles():Vector.<uint>
         {
             return ((Kernel.getWorker().getFrame(TinselFrame) as TinselFrame).knownTitles);
         }
 
-        [Untrusted]
-        public static function getKnownOrnaments():Vector.<uint>
+        public function getKnownOrnaments():Vector.<uint>
         {
             return ((Kernel.getWorker().getFrame(TinselFrame) as TinselFrame).knownOrnaments);
         }
 
-        [Untrusted]
-        public static function titlesOrnamentsAskedBefore():Boolean
+        public function titlesOrnamentsAskedBefore():Boolean
         {
             return ((Kernel.getWorker().getFrame(TinselFrame) as TinselFrame).titlesOrnamentsAskedBefore);
         }
 
-        [Untrusted]
-        public static function getEntityInfos():GameRolePlayCharacterInformations
+        public function getEntityInfos():GameRolePlayCharacterInformations
         {
             var entitiesFrame:AbstractEntitiesFrame;
-            if (isInFight())
+            if (this.isInFight())
             {
                 entitiesFrame = (Kernel.getWorker().getFrame(FightEntitiesFrame) as AbstractEntitiesFrame);
             }
@@ -223,7 +336,7 @@
             {
                 entitiesFrame = (Kernel.getWorker().getFrame(RoleplayEntitiesFrame) as AbstractEntitiesFrame);
             };
-            if (!(entitiesFrame))
+            if (!entitiesFrame)
             {
                 return (null);
             };
@@ -231,11 +344,10 @@
             return (playerInfo);
         }
 
-        [Untrusted]
-        public static function getEntityTooltipInfos():CharacterTooltipInformation
+        public function getEntityTooltipInfos():CharacterTooltipInformation
         {
-            var playerInfo:GameRolePlayCharacterInformations = getEntityInfos();
-            if (!(playerInfo))
+            var playerInfo:GameRolePlayCharacterInformations = this.getEntityInfos();
+            if (!playerInfo)
             {
                 return (null);
             };
@@ -243,149 +355,151 @@
             return (tooltipInfos);
         }
 
-        [Untrusted]
-        public static function inventoryWeight():uint
+        public function getKamasMaxLimit():Number
+        {
+            var playedCharacterFrame:PlayedCharacterUpdatesFrame = (Kernel.getWorker().getFrame(PlayedCharacterUpdatesFrame) as PlayedCharacterUpdatesFrame);
+            if (playedCharacterFrame)
+            {
+                return (playedCharacterFrame.kamasLimit);
+            };
+            return (0);
+        }
+
+        public function inventoryWeight():uint
         {
             return (PlayedCharacterManager.getInstance().inventoryWeight);
         }
 
-        [Untrusted]
-        public static function inventoryWeightMax():uint
+        public function shopWeight():uint
+        {
+            return (PlayedCharacterManager.getInstance().shopWeight);
+        }
+
+        public function inventoryWeightMax():uint
         {
             return (PlayedCharacterManager.getInstance().inventoryWeightMax);
         }
 
-        [Untrusted]
-        public static function isIncarnation():Boolean
+        public function isIncarnation():Boolean
         {
             return (PlayedCharacterManager.getInstance().isIncarnation);
         }
 
-        [Untrusted]
-        public static function isMutated():Boolean
+        public function isMutated():Boolean
         {
             return (PlayedCharacterManager.getInstance().isMutated);
         }
 
-        [Untrusted]
-        public static function isInHouse():Boolean
+        public function isInHouse():Boolean
         {
             return (PlayedCharacterManager.getInstance().isInHouse);
         }
 
-        [Untrusted]
-        public static function isInExchange():Boolean
+        public function isIndoor():Boolean
+        {
+            return (PlayedCharacterManager.getInstance().isIndoor);
+        }
+
+        public function isInExchange():Boolean
         {
             return (PlayedCharacterManager.getInstance().isInExchange);
         }
 
-        [Untrusted]
-        public static function isInFight():Boolean
+        public function isInFight():Boolean
         {
-            return (!((Kernel.getWorker().getFrame(FightContextFrame) == null)));
+            return (!(Kernel.getWorker().getFrame(FightContextFrame) == null));
         }
 
-        [Untrusted]
-        public static function isInPreFight():Boolean
+        public function isInPreFight():Boolean
         {
-            return (!((Kernel.getWorker().getFrame(FightPreparationFrame) == null)));
+            return ((Kernel.getWorker().contains(FightPreparationFrame)) || (Kernel.getWorker().isBeingAdded(FightPreparationFrame)));
         }
 
-        [Untrusted]
-        public static function isInParty():Boolean
+        public function isSpectator():Boolean
+        {
+            return (PlayedCharacterManager.getInstance().isSpectator);
+        }
+
+        public function isInParty():Boolean
         {
             return (PlayedCharacterManager.getInstance().isInParty);
         }
 
-        [Untrusted]
-        public static function isPartyLeader():Boolean
+        public function isPartyLeader():Boolean
         {
             return (PlayedCharacterManager.getInstance().isPartyLeader);
         }
 
-        [Untrusted]
-        public static function isRidding():Boolean
+        public function isRidding():Boolean
         {
             return (PlayedCharacterManager.getInstance().isRidding);
         }
 
-        [Untrusted]
-        public static function isPetsMounting():Boolean
+        public function isPetsMounting():Boolean
         {
             return (PlayedCharacterManager.getInstance().isPetsMounting);
         }
 
-        [Untrusted]
-        public static function hasCompanion():Boolean
+        public function hasCompanion():Boolean
         {
             return (PlayedCharacterManager.getInstance().hasCompanion);
         }
 
-        [Untrusted]
-        public static function id():uint
+        public function id():Number
         {
             return (PlayedCharacterManager.getInstance().id);
         }
 
-        [Untrusted]
-        public static function restrictions():ActorRestrictionsInformations
+        public function restrictions():ActorRestrictionsInformations
         {
             return (PlayedCharacterManager.getInstance().restrictions);
         }
 
-        [Untrusted]
-        public static function isMutant():Boolean
+        public function isMutant():Boolean
         {
             var rcf:RoleplayContextFrame = (Kernel.getWorker().getFrame(RoleplayContextFrame) as RoleplayContextFrame);
             var infos:GameRolePlayActorInformations = (rcf.entitiesFrame.getEntityInfos(PlayedCharacterManager.getInstance().id) as GameRolePlayActorInformations);
-            return ((infos is GameRolePlayMutantInformations));
+            return (infos is GameRolePlayMutantInformations);
         }
 
-        [Untrusted]
-        public static function publicMode():Boolean
+        public function publicMode():Boolean
         {
             return (PlayedCharacterManager.getInstance().publicMode);
         }
 
-        [Untrusted]
-        public static function artworkId():int
+        public function artworkId():int
         {
             return (PlayedCharacterManager.getInstance().artworkId);
         }
 
-        [Untrusted]
-        public static function isCreature():Boolean
+        public function isCreature():Boolean
         {
-            return (EntitiesLooksManager.getInstance().isCreature(id()));
+            return (EntitiesLooksManager.getInstance().isCreature(this.id()));
         }
 
-        [Untrusted]
-        public static function getBone():uint
+        public function getBone():uint
         {
             var i:CharacterBaseInformations = PlayedCharacterManager.getInstance().infos;
             return (EntityLookAdapter.fromNetwork(i.entityLook).getBone());
         }
 
-        [Untrusted]
-        public static function getSkin():uint
+        public function getSkin():uint
         {
             var i:CharacterBaseInformations = PlayedCharacterManager.getInstance().infos;
-            if (((((EntityLookAdapter.fromNetwork(i.entityLook)) && (EntityLookAdapter.fromNetwork(i.entityLook).getSkins()))) && ((EntityLookAdapter.fromNetwork(i.entityLook).getSkins().length > 0))))
+            if ((((EntityLookAdapter.fromNetwork(i.entityLook)) && (EntityLookAdapter.fromNetwork(i.entityLook).getSkins())) && (EntityLookAdapter.fromNetwork(i.entityLook).getSkins().length > 0)))
             {
                 return (EntityLookAdapter.fromNetwork(i.entityLook).getSkins()[0]);
             };
             return (0);
         }
 
-        [Untrusted]
-        public static function getColors():Object
+        public function getColors():Object
         {
             var i:CharacterBaseInformations = PlayedCharacterManager.getInstance().infos;
             return (EntityLookAdapter.fromNetwork(i.entityLook).getColors());
         }
 
-        [Untrusted]
-        public static function getSubentityColors():Object
+        public function getSubentityColors():Object
         {
             var i:CharacterBaseInformations = PlayedCharacterManager.getInstance().infos;
             var subTel:TiphonEntityLook = EntityLookAdapter.fromNetwork(i.entityLook).getSubEntity(SubEntityBindingPointCategoryEnum.HOOK_POINT_CATEGORY_MOUNT_DRIVER, 0);
@@ -393,155 +507,227 @@
             {
                 subTel = EntityLookAdapter.fromNetwork(PlayedCharacterManager.getInstance().realEntityLook).getSubEntity(SubEntityBindingPointCategoryEnum.HOOK_POINT_CATEGORY_MOUNT_DRIVER, 0);
             };
-            return (((subTel) ? subTel.getColors() : null));
+            return ((subTel) ? subTel.getColors() : null);
         }
 
-        [Untrusted]
-        public static function getAlignmentSide():int
+        public function getAlignmentSide():int
         {
-            return (PlayedCharacterManager.getInstance().characteristics.alignmentInfos.alignmentSide);
+            if (PlayedCharacterManager.getInstance().characteristics)
+            {
+                return (PlayedCharacterManager.getInstance().characteristics.alignmentInfos.alignmentSide);
+            };
+            return (AlignmentSideEnum.ALIGNMENT_NEUTRAL);
         }
 
-        [Untrusted]
-        public static function getAlignmentValue():uint
+        public function getAlignmentValue():uint
         {
             return (PlayedCharacterManager.getInstance().characteristics.alignmentInfos.alignmentValue);
         }
 
-        [Untrusted]
-        public static function getAlignmentAggressableStatus():uint
+        public function getAlignmentAggressableStatus():uint
         {
             return (PlayedCharacterManager.getInstance().characteristics.alignmentInfos.aggressable);
         }
 
-        [Untrusted]
-        public static function getAlignmentGrade():uint
+        public function getAlignmentGrade():uint
         {
             return (PlayedCharacterManager.getInstance().characteristics.alignmentInfos.alignmentGrade);
         }
 
-        [Untrusted]
-        public static function getMaxSummonedCreature():uint
+        public function getMaxSummonedCreature():uint
         {
             return (CurrentPlayedFighterManager.getInstance().getMaxSummonedCreature());
         }
 
-        [Untrusted]
-        public static function getCurrentSummonedCreature():uint
+        public function getCurrentSummonedCreature():uint
         {
             return (CurrentPlayedFighterManager.getInstance().getCurrentSummonedCreature());
         }
 
-        [Untrusted]
-        public static function canSummon():Boolean
+        public function canSummon():Boolean
         {
             return (CurrentPlayedFighterManager.getInstance().canSummon());
         }
 
-        [Untrusted]
-        public static function getSpell(spellId:uint):SpellWrapper
+        public function getSpell(spellId:uint):SpellWrapper
         {
             return (CurrentPlayedFighterManager.getInstance().getSpellById(spellId));
         }
 
-        [Untrusted]
-        public static function canCastThisSpell(spellId:uint, lvl:uint):Boolean
+        public function canCastThisSpell(spellId:uint, lvl:uint):Boolean
         {
             return (CurrentPlayedFighterManager.getInstance().canCastThisSpell(spellId, lvl));
         }
 
-        [Untrusted]
-        public static function canCastThisSpellOnTarget(spellId:uint, lvl:uint, pTargetId:int):Boolean
+        public function canCastThisSpellWithResult(spellId:uint, lvl:uint, target:Number=0):String
+        {
+            var resultA:Array = ["."];
+            CurrentPlayedFighterManager.getInstance().canCastThisSpell(spellId, lvl, target, resultA);
+            return (resultA[0]);
+        }
+
+        public function canCastThisSpellOnTarget(spellId:uint, lvl:uint, pTargetId:Number):Boolean
         {
             return (CurrentPlayedFighterManager.getInstance().canCastThisSpell(spellId, lvl, pTargetId));
         }
 
-        [Untrusted]
-        public static function getSpellModification(spellId:uint, carac:int):int
+        public function getSpellModification(spellId:uint, carac:int):int
         {
             var modif:CharacterSpellModification = CurrentPlayedFighterManager.getInstance().getSpellModifications(spellId, carac);
             if (((modif) && (modif.value)))
             {
-                return (((((modif.value.alignGiftBonus + modif.value.base) + modif.value.additionnal) + modif.value.contextModif) + modif.value.objectsAndMountBonus));
+                return ((((modif.value.alignGiftBonus + modif.value.base) + modif.value.additionnal) + modif.value.contextModif) + modif.value.objectsAndMountBonus);
             };
             return (0);
         }
 
-        [Untrusted]
-        public static function isInHisHouse():Boolean
+        public function getSpellModifications(spellId:uint):Vector.<CharacterSpellModification>
+        {
+            var spellModif:CharacterSpellModification;
+            var spellModifs:Vector.<CharacterSpellModification> = new Vector.<CharacterSpellModification>(0);
+            for each (spellModif in CurrentPlayedFighterManager.getInstance().getCharacteristicsInformations().spellModifications)
+            {
+                if (spellModif.spellId == spellId)
+                {
+                    spellModifs.push(spellModif);
+                };
+            };
+            return (spellModifs);
+        }
+
+        public function isInHisHouse():Boolean
         {
             return (PlayedCharacterManager.getInstance().isInHisHouse);
         }
 
-        [Untrusted]
-        public static function getPlayerHouses():Vector.<AccountHouseInformations>
+        public function getPlayerHouses():Vector.<HouseWrapper>
         {
-            return ((Kernel.getWorker().getFrame(MiscFrame) as MiscFrame).accountHouses);
+            return ((Kernel.getWorker().getFrame(HouseFrame) as HouseFrame).accountHouses);
         }
 
-        [Untrusted]
-        public static function currentMap():WorldPointWrapper
+        public function currentMap():WorldPointWrapper
         {
             return (PlayedCharacterManager.getInstance().currentMap);
         }
 
-        [Untrusted]
-        public static function currentSubArea():SubArea
+        public function previousMap():WorldPointWrapper
+        {
+            return (PlayedCharacterManager.getInstance().previousMap);
+        }
+
+        public function previousWorldMapId():int
+        {
+            return (PlayedCharacterManager.getInstance().previousWorldMapId);
+        }
+
+        public function previousSubArea():SubArea
+        {
+            return (PlayedCharacterManager.getInstance().previousSubArea);
+        }
+
+        public function currentSubArea():SubArea
         {
             return (PlayedCharacterManager.getInstance().currentSubArea);
         }
 
-        [Untrusted]
-        public static function state():uint
+        public function isInTutorialArea():Boolean
+        {
+            var subarea:SubArea = PlayedCharacterManager.getInstance().currentSubArea;
+            return ((subarea) && (subarea.id == DataEnum.SUBAREA_TUTORIAL));
+        }
+
+        public function state():uint
         {
             return (PlayedCharacterManager.getInstance().state);
         }
 
-        [Untrusted]
-        public static function isAlive():Boolean
+        public function isAlive():Boolean
         {
-            return ((PlayedCharacterManager.getInstance().state == PlayerLifeStatusEnum.STATUS_ALIVE_AND_KICKING));
+            return (PlayedCharacterManager.getInstance().state == PlayerLifeStatusEnum.STATUS_ALIVE_AND_KICKING);
         }
 
-        [Untrusted]
-        public static function getFollowingPlayerId():int
+        public function getFollowingPlayerIds():Vector.<Number>
         {
-            return (PlayedCharacterManager.getInstance().followingPlayerId);
+            return (PlayedCharacterManager.getInstance().followingPlayerIds);
         }
 
-        [Untrusted]
-        public static function getPlayerSet(objectGID:uint):PlayerSetInfo
+        public function getPlayerSet(objectGID:uint):PlayerSetInfo
         {
             return (PlayedCharacterUpdatesFrame(Kernel.getWorker().getFrame(PlayedCharacterUpdatesFrame)).getPlayerSet(objectGID));
         }
 
-        [Untrusted]
-        public static function getWeapon():WeaponWrapper
+        public function getWeapon():WeaponWrapper
         {
+            var build:BuildWrapper;
+            var iw:ItemWrapper;
+            if (InventoryManager.getInstance().currentBuildId != -1)
+            {
+                for each (build in InventoryManager.getInstance().builds)
+                {
+                    if (build.id == InventoryManager.getInstance().currentBuildId)
+                    {
+                        break;
+                    };
+                };
+                for each (iw in build.equipment)
+                {
+                    if ((iw is WeaponWrapper))
+                    {
+                        break;
+                    };
+                };
+                if ((iw as WeaponWrapper))
+                {
+                    return (iw as WeaponWrapper);
+                };
+                return (null);
+            };
             return (PlayedCharacterManager.getInstance().currentWeapon);
         }
 
-        [Untrusted]
-        public static function getExperienceBonusPercent():int
+        public function getExperienceBonusPercent():int
         {
             return (PlayedCharacterManager.getInstance().experiencePercent);
         }
 
-        [Untrusted]
-        public static function getWaitingGifts():Array
+        public function getAchievementPoints():int
+        {
+            return (PlayedCharacterManager.getInstance().achievementPoints);
+        }
+
+        public function getWaitingGifts():Array
         {
             return (PlayedCharacterManager.getInstance().waitingGifts);
         }
 
-        [Untrusted]
-        public static function knowSpell(pSpellId:uint):int
+        public function getSoloIdols():Vector.<uint>
+        {
+            return (PlayedCharacterManager.getInstance().soloIdols);
+        }
+
+        public function getPartyIdols():Vector.<uint>
+        {
+            return (PlayedCharacterManager.getInstance().partyIdols);
+        }
+
+        public function setPartyIdols(pIdols:Vector.<uint>):void
+        {
+            PlayedCharacterManager.getInstance().partyIdols = pIdols;
+        }
+
+        public function getIdolsPresets():Vector.<IdolsPresetWrapper>
+        {
+            return (PlayedCharacterManager.getInstance().idolsPresets);
+        }
+
+        public function knowSpell(pSpellId:uint):int
         {
             var obtentionSpellLevel:uint;
             var playerSpellLevel:uint;
             var sp:SpellWrapper;
             var disable:Boolean;
             var spellWrapper:SpellWrapper;
-            var _local_10:SpellLevel;
+            var spellLevelZero:SpellLevel;
             var spell:Spell = Spell.getSpellById(pSpellId);
             var spellLevel:SpellLevel = SpellLevel.getLevelById(pSpellId);
             if (pSpellId == 0)
@@ -550,10 +736,10 @@
             }
             else
             {
-                _local_10 = spell.getSpellLevel(1);
-                obtentionSpellLevel = _local_10.minPlayerLevel;
+                spellLevelZero = spell.getSpellLevel(1);
+                obtentionSpellLevel = spellLevelZero.minPlayerLevel;
             };
-            var spellInv:Array = getSpellInventory();
+            var spellInv:Array = this.getSpellInventory();
             for each (sp in spellInv)
             {
                 if (sp.spellId == pSpellId)
@@ -576,7 +762,64 @@
             return (playerSpellLevel);
         }
 
+        public function isInHisHavenbag():Boolean
+        {
+            return (PlayedCharacterManager.getInstance().isInHisHavenbag);
+        }
+
+        public function isInHavenbag():Boolean
+        {
+            return (PlayedCharacterManager.getInstance().isInHavenbag);
+        }
+
+        public function havenbagSharePermissions():uint
+        {
+            var hbFrame:HavenbagFrame = (Kernel.getWorker().getFrame(HavenbagFrame) as HavenbagFrame);
+            return (hbFrame.sharePermissions);
+        }
+
+        public function isInBreach():Boolean
+        {
+            return (PlayedCharacterManager.getInstance().isInBreach);
+        }
+
+        public function isInBreachSubArea():Boolean
+        {
+            return ((PlayedCharacterManager.getInstance().currentSubArea.id == 904) || (PlayedCharacterManager.getInstance().currentSubArea.id == 938));
+        }
+
+        public function isInAnomaly():Boolean
+        {
+            return (PlayedCharacterManager.getInstance().isInAnomaly);
+        }
+
+        public function hasDebt():Boolean
+        {
+            return (DebtManager.getInstance().hasDebt());
+        }
+
+        public function getKamaDebt():uint
+        {
+            return (DebtManager.getInstance().getTotalKamaDebt());
+        }
+
+        public function getTotalValueFromCharacteristic(characteristic:CharacterBaseCharacteristic):Number
+        {
+            return ((((characteristic.base + characteristic.additionnal) + characteristic.objectsAndMountBonus) + characteristic.alignGiftBonus) + characteristic.contextModif);
+        }
+
+        public function getBaseLifePoints():Number
+        {
+            var level:int = 1;
+            var playedCharacterInfo:Object = this.getPlayedCharacterInfo();
+            if (playedCharacterInfo)
+            {
+                level = playedCharacterInfo.limitedLevel;
+            };
+            return (BASE_LIFE_POINTS + (LIFE_POINTS_GAINED_BY_LEVEL * level));
+        }
+
 
     }
-}//package com.ankamagames.dofus.uiApi
+} com.ankamagames.dofus.uiApi
 

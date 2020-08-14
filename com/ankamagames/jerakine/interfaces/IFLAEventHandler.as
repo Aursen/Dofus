@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.interfaces
+package com.ankamagames.jerakine.interfaces
 {
     import com.ankamagames.jerakine.entities.interfaces.IEntity;
 
@@ -9,5 +9,5 @@
         function removeEntitySound(_arg_1:IEntity):void;
 
     }
-}//package com.ankamagames.jerakine.interfaces
+} com.ankamagames.jerakine.interfaces
 

@@ -1,8 +1,9 @@
-﻿package com.ankamagames.dofus.network.types.game.shortcut
+package com.ankamagames.dofus.network.types.game.shortcut
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
     public class ShortcutObject extends Shortcut implements INetworkType 
     {
@@ -46,7 +47,17 @@
             super.deserialize(input);
         }
 
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_ShortcutObject(tree);
+        }
+
+        public function deserializeAsyncAs_ShortcutObject(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.types.game.shortcut
+} com.ankamagames.dofus.network.types.game.shortcut
 

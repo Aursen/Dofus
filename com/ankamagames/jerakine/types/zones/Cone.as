@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.types.zones
+package com.ankamagames.jerakine.types.zones
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
@@ -7,6 +7,7 @@
     import __AS3__.vec.Vector;
     import com.ankamagames.jerakine.types.positions.MapPoint;
     import com.ankamagames.jerakine.types.enums.DirectionsEnum;
+    import mapTools.MapTools;
     import __AS3__.vec.*;
 
     public class Cone implements IZone 
@@ -18,7 +19,6 @@
         private var _minRadius:uint = 0;
         private var _nDirection:uint = 1;
         private var _dataMapProvider:IDataMapProvider;
-        private var _diagonalFree:Boolean = false;
 
         public function Cone(nMinRadius:uint, nRadius:uint, dataMapProvider:IDataMapProvider)
         {
@@ -89,7 +89,7 @@
                         j = -(step);
                         while (j <= step)
                         {
-                            if (((!(this._minRadius)) || (((Math.abs((x - i)) + Math.abs(j)) >= this._minRadius))))
+                            if (((!(this._minRadius)) || ((Math.abs((x - i)) + Math.abs(j)) >= this._minRadius)))
                             {
                                 if (MapPoint.isInMap(i, (j + y)))
                                 {
@@ -109,7 +109,7 @@
                         i = -(step);
                         while (i <= step)
                         {
-                            if (((!(this._minRadius)) || (((Math.abs(i) + Math.abs((y - j))) >= this._minRadius))))
+                            if (((!(this._minRadius)) || ((Math.abs(i) + Math.abs((y - j))) >= this._minRadius)))
                             {
                                 if (MapPoint.isInMap((i + x), j))
                                 {
@@ -129,7 +129,7 @@
                         j = -(step);
                         while (j <= step)
                         {
-                            if (((!(this._minRadius)) || (((Math.abs((x - i)) + Math.abs(j)) >= this._minRadius))))
+                            if (((!(this._minRadius)) || ((Math.abs((x - i)) + Math.abs(j)) >= this._minRadius)))
                             {
                                 if (MapPoint.isInMap(i, (j + y)))
                                 {
@@ -149,7 +149,7 @@
                         i = -(step);
                         while (i <= step)
                         {
-                            if (((!(this._minRadius)) || (((Math.abs(i) + Math.abs((y - j))) >= this._minRadius))))
+                            if (((!(this._minRadius)) || ((Math.abs(i) + Math.abs((y - j))) >= this._minRadius)))
                             {
                                 if (MapPoint.isInMap((i + x), j))
                                 {
@@ -168,13 +168,13 @@
 
         private function addCell(x:int, y:int, cellMap:Vector.<uint>):void
         {
-            if ((((this._dataMapProvider == null)) || (this._dataMapProvider.pointMov(x, y))))
+            if (((this._dataMapProvider == null) || (this._dataMapProvider.pointMov(x, y))))
             {
-                cellMap.push(MapPoint.fromCoords(x, y).cellId);
+                cellMap.push(MapTools.getCellIdByCoord(x, y));
             };
         }
 
 
     }
-}//package com.ankamagames.jerakine.types.zones
+} com.ankamagames.jerakine.types.zones
 

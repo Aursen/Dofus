@@ -1,8 +1,9 @@
-﻿package com.ankamagames.dofus.network.types.game.character.characteristic
+package com.ankamagames.dofus.network.types.game.character.characteristic
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
     public class CharacterBaseCharacteristic implements INetworkType 
     {
@@ -61,14 +62,53 @@
 
         public function deserializeAs_CharacterBaseCharacteristic(input:ICustomDataInput):void
         {
+            this._baseFunc(input);
+            this._additionnalFunc(input);
+            this._objectsAndMountBonusFunc(input);
+            this._alignGiftBonusFunc(input);
+            this._contextModifFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_CharacterBaseCharacteristic(tree);
+        }
+
+        public function deserializeAsyncAs_CharacterBaseCharacteristic(tree:FuncTree):void
+        {
+            tree.addChild(this._baseFunc);
+            tree.addChild(this._additionnalFunc);
+            tree.addChild(this._objectsAndMountBonusFunc);
+            tree.addChild(this._alignGiftBonusFunc);
+            tree.addChild(this._contextModifFunc);
+        }
+
+        private function _baseFunc(input:ICustomDataInput):void
+        {
             this.base = input.readVarShort();
+        }
+
+        private function _additionnalFunc(input:ICustomDataInput):void
+        {
             this.additionnal = input.readVarShort();
+        }
+
+        private function _objectsAndMountBonusFunc(input:ICustomDataInput):void
+        {
             this.objectsAndMountBonus = input.readVarShort();
+        }
+
+        private function _alignGiftBonusFunc(input:ICustomDataInput):void
+        {
             this.alignGiftBonus = input.readVarShort();
+        }
+
+        private function _contextModifFunc(input:ICustomDataInput):void
+        {
             this.contextModif = input.readVarShort();
         }
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.character.characteristic
+} com.ankamagames.dofus.network.types.game.character.characteristic
 

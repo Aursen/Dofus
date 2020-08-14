@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.managers
+package com.ankamagames.jerakine.managers
 {
     import flash.utils.Dictionary;
     import flash.display.DisplayObject;
@@ -11,7 +11,7 @@
 
         private var dFilters:Dictionary;
 
-        public function FiltersManager(pvt:PrivateClass):void
+        public function FiltersManager():void
         {
             this.dFilters = new Dictionary(true);
         }
@@ -20,7 +20,7 @@
         {
             if (_self == null)
             {
-                _self = new (FiltersManager)(new PrivateClass());
+                _self = new (FiltersManager)();
             };
             return (_self);
         }
@@ -44,7 +44,7 @@
             {
                 filters = (this.dFilters[pTarget] = pTarget.filters);
             };
-            var index:int = this.indexOf(filters, pFilter);
+            var index:int = this.indexOf(pTarget, pFilter);
             if (index != -1)
             {
                 filters.splice(index, 1);
@@ -52,13 +52,18 @@
             };
         }
 
-        public function indexOf(pFilters:Array, pFilter:BitmapFilter):int
+        public function indexOf(pTarget:DisplayObject, pFilter:BitmapFilter):int
         {
             var f:BitmapFilter;
-            var index:int = pFilters.length;
+            var filters:Array = (this.dFilters[pTarget] as Array);
+            if (filters == null)
+            {
+                return (-1);
+            };
+            var index:int = filters.length;
             while (index--)
             {
-                f = pFilters[index];
+                f = filters[index];
                 if (f == pFilter)
                 {
                     return (index);
@@ -69,11 +74,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.managers
-
-class PrivateClass 
-{
-
-
-}
+} com.ankamagames.jerakine.managers
 

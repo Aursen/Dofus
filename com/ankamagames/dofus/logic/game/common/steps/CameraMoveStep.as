@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.common.steps
+package com.ankamagames.dofus.logic.game.common.steps
 {
     import com.ankamagames.jerakine.sequencer.AbstractSequencable;
     import com.ankamagames.dofus.misc.utils.Camera;
@@ -33,9 +33,9 @@
             var mp:MapPoint;
             var cell:GraphicCell;
             var cellPos:Point;
-            var _local_4:Object;
-            var _local_5:TweenLite;
-            if ((((((this._camera.currentZoom > Atouin.getInstance().options.frustum.scale)) && (!(isNaN(this._camera.x))))) && (!(isNaN(this._camera.y)))))
+            var camPosObj:Object;
+            var t:TweenLite;
+            if ((((this._camera.currentZoom > Atouin.getInstance().options.getOption("frustum").scale) && (!(isNaN(this._camera.x)))) && (!(isNaN(this._camera.y)))))
             {
                 mp = ScriptsUtil.getMapPoint(this._args);
                 cell = InteractiveCellManager.getInstance().getCell(mp.cellId);
@@ -48,15 +48,15 @@
                 }
                 else
                 {
-                    _local_4 = {
+                    camPosObj = {
                         "x":this._camera.x,
                         "y":this._camera.y
                     };
-                    _local_5 = new TweenLite(_local_4, 2, {
+                    t = new TweenLite(camPosObj, 2, {
                         "x":this._targetPos.x,
                         "y":this._targetPos.y,
                         "onUpdate":this.updatePos,
-                        "onUpdateParams":[_local_4],
+                        "onUpdateParams":[camPosObj],
                         "onComplete":this.moveComplete
                     });
                 };
@@ -75,5 +75,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.steps
+} com.ankamagames.dofus.logic.game.common.steps
 

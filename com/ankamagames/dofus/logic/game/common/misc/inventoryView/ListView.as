@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.common.misc.inventoryView
+package com.ankamagames.dofus.logic.game.common.misc.inventoryView
 {
     import com.ankamagames.dofus.logic.game.common.misc.IInventoryView;
     import com.ankamagames.jerakine.logger.Logger;
@@ -14,13 +14,11 @@
 
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(ListView));
 
-        protected var _view:Vector.<ItemWrapper>;
+        protected var _view:Vector.<ItemWrapper> = new Vector.<ItemWrapper>();
         protected var _hookLock:IHookLock;
 
         public function ListView(hookLock:IHookLock)
         {
-            this._view = new Vector.<ItemWrapper>();
-            super();
             this._hookLock = hookLock;
         }
 
@@ -88,5 +86,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.misc.inventoryView
+} com.ankamagames.dofus.logic.game.common.misc.inventoryView
 

@@ -1,35 +1,39 @@
-﻿package com.ankamagames.dofus.logic.connection.managers
+package com.ankamagames.dofus.logic.connection.managers
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
     import com.ankamagames.jerakine.types.CustomSharedObject;
     import com.ankamagames.jerakine.utils.errors.SingletonError;
-    import com.ankamagames.jerakine.utils.system.AirScanner;
-    import com.ankamagames.jerakine.utils.system.CommandLineArguments;
-    import com.hurlant.util.Base64;
-    import com.ankamagames.dofus.logic.game.approach.managers.PartManagerV2;
     import com.ankamagames.dofus.logic.common.managers.PlayerManager;
-    import com.ankamagames.dofus.misc.interClient.InterClientManager;
+    import com.ankamagames.dofus.BuildInfos;
+    import flash.display.Screen;
+    import by.blooddy.crypto.MD5;
+    import com.ankamagames.berilia.frames.UiStatsFrame;
+    import com.ankamagames.jerakine.utils.display.StageShareManager;
+    import flash.display.StageDisplayState;
+    import com.ankamagames.berilia.managers.ThemeManager;
+    import com.ankamagames.atouin.Atouin;
     import flash.system.Capabilities;
     import com.ankamagames.jerakine.utils.system.SystemManager;
-    import com.ankamagames.dofus.misc.utils.RpcServiceManager;
-    import by.blooddy.crypto.MD5;
+    import com.ankamagames.dofus.misc.interClient.InterClientManager;
     import com.ankamagames.performance.Benchmark;
-    import com.ankamagames.dofus.BuildInfos;
-    import com.ankamagames.dofus.misc.utils.RpcServiceCenter;
+    import flash.system.ApplicationDomain;
+    import flash.events.ErrorEvent;
     import flash.events.Event;
-    import flash.events.IOErrorEvent;
+    import by.blooddy.crypto.serialization.JSON;
+    import com.ankamagames.dofus.misc.utils.HaapiDebugManager;
 
     public class StoreUserDataManager 
     {
 
-        private static const INFOS_EXCLUDED_FROM_MD5CHECK:Array = ["CPUFrequencies", "FreeSystemMemory"];
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(StoreUserDataManager));
         private static var _self:StoreUserDataManager;
+        private static const NUMBER_OF_UPLOAD_PER_VERSION:uint = 1;
 
+        public var statsEnabled:Boolean = false;
         private var _so:CustomSharedObject;
-        private var _postMd5CheckInfos:String;
+        private var _userData:Object;
 
         public function StoreUserDataManager()
         {
@@ -49,297 +53,260 @@
         }
 
 
-        public function savePlayerData():void
+        public function gatherUserData():void
         {
-            var datas:Array;
-            var data:String;
-            var key:String;
-            var value:String;
-            var dict:Array;
-            var obj:Object;
-            var tmp:Array;
-            if (AirScanner.isStreamingVersion())
+            this._so = CustomSharedObject.getLocal(("playerData_" + PlayerManager.getInstance().accountId));
+            var hasAlreadyUploadedStatsForCurrentVersion:Boolean;
+            if ((((((((this._so) && (this._so.data)) && (this._so.data.hasOwnProperty("version"))) && (this._so.data.version.major == BuildInfos.VERSION.major)) && (this._so.data.version.minor == BuildInfos.VERSION.minor)) && (this._so.data.hasOwnProperty("totalUploads"))) && (this._so.data.totalUploads >= NUMBER_OF_UPLOAD_PER_VERSION)))
             {
-                this.savePlayerStreamingData();
+                hasAlreadyUploadedStatsForCurrentVersion = true;
+            };
+            if (hasAlreadyUploadedStatsForCurrentVersion)
+            {
+                _log.debug("Data already saved.");
                 return;
             };
-            var isUsingUpdater:Boolean;
-            var newValue:String = "";
-            var val:String = "";
-            if (CommandLineArguments.getInstance().hasArgument("sysinfos"))
+            this._userData = new Object();
+            this.addBaseInfoToUserData();
+            this.addAirAvailableInfoToUserData(false);
+        }
+
+        private function addBaseInfoToUserData():void
+        {
+            var screens:Array;
+            var screensW:Array;
+            var screensH:Array;
+            var screen:Screen;
+            this.addData("client_buildType", BuildInfos.BUILD_TYPE);
+            this.addData("client_version", ((BuildInfos.VERSION.major + ".") + BuildInfos.VERSION.minor));
+            this.addData("client_sUid", MD5.hash(PlayerManager.getInstance().accountId.toString()));
+            this.addData("client_isAbo", ((PlayerManager.getInstance().subscriptionEndDate > 0) || (PlayerManager.getInstance().hasRights)));
+            this.addData("client_creationAbo", PlayerManager.getInstance().accountCreation);
+            this.addData("client_creationAboDate", UiStatsFrame.formatDate(new Date(PlayerManager.getInstance().accountCreation)));
+            this.addData("client_currentScreenResolution", ((StageShareManager.stage.fullScreenWidth + "x") + StageShareManager.stage.fullScreenHeight));
+            if (((Screen.screens) && (Screen.screens.length)))
             {
-                val = Base64.decode(CommandLineArguments.getInstance().getArgument("sysinfos"));
-                datas = val.split("\n");
-                dict = new Array();
-                for each (data in datas)
+                screens = new Array();
+                screensW = new Array();
+                screensH = new Array();
+                for each (screen in Screen.screens)
                 {
-                    data = data.replace("\n", "");
-                    if ((((data == "")) || ((data.search(":") == -1))))
+                    screens.push(((screen.bounds.width + "x") + screen.bounds.height));
+                    screensW.push(screen.bounds.width);
+                    screensH.push(screen.bounds.height);
+                };
+                this.addData("client_availableScreens", screens);
+            };
+            var displayState:String = StageShareManager.stage.displayState;
+            this.addData("client_nativeWindow", ((StageShareManager.stage.nativeWindow.width + "x") + StageShareManager.stage.nativeWindow.height));
+            if (displayState == StageDisplayState.NORMAL)
+            {
+                displayState = StageShareManager.stage.nativeWindow.displayState;
+            };
+            this.addData("client_displayState", displayState);
+            this.addData("client_uiTheme", ThemeManager.getInstance().currentTheme);
+            this.addData("client_hideBlackBorders", Atouin.getInstance().options.getOption("hideBlackBorder"));
+            this.addData("client_mapInteriorZoom", Atouin.getInstance().options.getOption("useInsideAutoZoom"));
+            var totalUploads:int = 1;
+            if ((((this._so) && (this._so.data)) && (this._so.data.hasOwnProperty("totalUploads"))))
+            {
+                totalUploads = (this._so.data.hasOwnProperty("totalUploads") + 1);
+            };
+            this.addData("client_totalUploads", totalUploads);
+            var osFullName:String = Capabilities.os.toLowerCase();
+            var osName:String = "other";
+            if (osFullName.search("windows") != -1)
+            {
+                osName = "windows";
+            }
+            else
+            {
+                if (Capabilities.manufacturer.toLowerCase().search("android") != -1)
+                {
+                    osName = "android";
+                }
+                else
+                {
+                    if (osFullName.search("mac") != -1)
                     {
+                        osName = "mac";
                     }
                     else
                     {
-                        tmp = data.split(":");
-                        key = tmp[0];
-                        value = tmp[1];
-                        if ((((value == "")) || ((key == ""))))
+                        if (osFullName.search("linux") != -1)
                         {
+                            osName = "linux";
                         }
                         else
                         {
-                            switch (key)
+                            if (((!(osFullName.search("ipad") == -1)) || (!(osFullName.search("iphone") == -1))))
                             {
-                                case "RAM_FREE":
-                                case "DISK_FREE":
-                                    continue;
-                                case "VIDEO_DRIVER_INSTALLATION_DATE":
-                                    value = value.substr(0, 6);
-                                    break;
-                            };
-                            dict.push({
-                                "key":key,
-                                "value":value
-                            });
-                        };
-                    };
-                };
-                dict.sortOn("key");
-                for each (obj in dict)
-                {
-                    newValue = (newValue + (((obj.key + ":") + obj.value) + ";"));
-                };
-                isUsingUpdater = true;
-            }
-            else
-            {
-                if (((CommandLineArguments.getInstance().hasArgument("updater_version")) && ((CommandLineArguments.getInstance().getArgument("updater_version") == "v2"))))
-                {
-                    PartManagerV2.getInstance().getSystemConfiguration();
-                    isUsingUpdater = true;
-                    return;
-                };
-            };
-            this.savePlayerAirData(newValue, isUsingUpdater);
-        }
-
-        private function savePlayerAirData(newValue:String, isUsingUpdater:Boolean):void
-        {
-            newValue = (newValue + "envType:air;");
-            newValue = (newValue + (("isAbo:" + (((PlayerManager.getInstance().subscriptionEndDate > 0)) || (PlayerManager.getInstance().hasRights))) + ";"));
-            newValue = (newValue + (("creationAbo:" + PlayerManager.getInstance().accountCreation) + ";"));
-            newValue = (newValue + (("flashKey:" + InterClientManager.getInstance().flashKey) + ";"));
-            newValue = (newValue + (((("screenResolution:" + Capabilities.screenResolutionX) + "x") + Capabilities.screenResolutionY) + ";"));
-            var osNoFormate:String = Capabilities.os.toLowerCase();
-            newValue = (newValue + "os:");
-            if (osNoFormate.search("windows") != -1)
-            {
-                newValue = (newValue + "windows");
-            }
-            else
-            {
-                if (osNoFormate.search("mac") != -1)
-                {
-                    newValue = (newValue + "mac");
-                }
-                else
-                {
-                    if (osNoFormate.search("linux") != -1)
-                    {
-                        newValue = (newValue + "linux");
-                    }
-                    else
-                    {
-                        newValue = (newValue + "other");
-                    };
-                };
-            };
-            newValue = (newValue + ";");
-            newValue = (newValue + (("osVersion:" + SystemManager.getSingleton().version) + ";"));
-            newValue = (newValue + "supports:");
-            if (((Capabilities.supports32BitProcesses) && (!(Capabilities.supports64BitProcesses))))
-            {
-                newValue = (newValue + "32Bits");
-            }
-            else
-            {
-                if (Capabilities.supports64BitProcesses)
-                {
-                    newValue = (newValue + "64Bits");
-                }
-                else
-                {
-                    newValue = (newValue + "none");
-                };
-            };
-            newValue = (newValue + ";");
-            newValue = (newValue + (("isUsingUpdater:" + isUsingUpdater) + ";"));
-            this.submitData(newValue);
-        }
-
-        private function savePlayerStreamingData():void
-        {
-            var newValue:String = "";
-            newValue = (newValue + "envType:streaming;");
-            newValue = (newValue + (("isAbo:" + (((PlayerManager.getInstance().subscriptionEndDate > 0)) || (PlayerManager.getInstance().hasRights))) + ";"));
-            newValue = (newValue + (("creationAbo:" + PlayerManager.getInstance().accountCreation) + ";"));
-            newValue = (newValue + (((("screenResolution:" + Capabilities.screenResolutionX) + "x") + Capabilities.screenResolutionY) + ";"));
-            var osNoFormate:String = Capabilities.os.toLowerCase();
-            newValue = (newValue + "os:");
-            if (osNoFormate.search("windows") != -1)
-            {
-                newValue = (newValue + "windows");
-            }
-            else
-            {
-                if (osNoFormate.search("mac") != -1)
-                {
-                    newValue = (newValue + "mac");
-                }
-                else
-                {
-                    if (Capabilities.manufacturer.toLowerCase().search("android") != -1)
-                    {
-                        newValue = (newValue + "android");
-                    }
-                    else
-                    {
-                        if (osNoFormate.search("linux") != -1)
-                        {
-                            newValue = (newValue + "linux");
-                        }
-                        else
-                        {
-                            if (((!((osNoFormate.search("ipad") == -1))) || (!((osNoFormate.search("iphone") == -1)))))
-                            {
-                                newValue = (newValue + "ios");
-                            }
-                            else
-                            {
-                                newValue = (newValue + "other");
+                                osName = "ios";
                             };
                         };
                     };
                 };
             };
-            newValue = (newValue + ";");
-            newValue = (newValue + (("osVersion:" + SystemManager.getSingleton().version) + ";"));
-            newValue = (newValue + "supports:");
+            this.addData("client_os", osName);
+            this.addData("client_osVersion", SystemManager.getSingleton().version);
+            var supportArchCPU:String = "none";
             if (((Capabilities.supports32BitProcesses) && (!(Capabilities.supports64BitProcesses))))
             {
-                newValue = (newValue + "32Bits");
+                supportArchCPU = "32-bit";
             }
             else
             {
                 if (Capabilities.supports64BitProcesses)
                 {
-                    newValue = (newValue + "64Bits");
-                }
-                else
-                {
-                    newValue = (newValue + "none");
+                    supportArchCPU = "64-bit";
                 };
             };
-            newValue = (newValue + ";");
-            newValue = (newValue + (("browser:" + SystemManager.getSingleton().browser) + ";"));
-            newValue = (newValue + (("browserVersion:" + SystemManager.getSingleton().browserVersion) + ";"));
-            newValue = (newValue + (("fpVersion:" + Capabilities.version) + ";"));
-            newValue = (newValue + (("fpManufacturer:" + Capabilities.manufacturer) + ";"));
-            this.submitData(newValue);
+            this.addData("client_supportedCpuArchitecture", supportArchCPU);
         }
 
-        private function submitData(playerData:String):void
+        private function addAirAvailableInfoToUserData(isUsingUpdater:Boolean):void
         {
-            var _local_4:RpcServiceManager;
-            var _local_5:Object;
-            var md5value:String = MD5.hash(playerData);
-            playerData = (playerData + this._postMd5CheckInfos);
-            this._postMd5CheckInfos = "";
-            var playerId:uint = PlayerManager.getInstance().accountId;
-            this._so = CustomSharedObject.getLocal(("playerData_" + playerId));
-            if (((((((((this._so.data) && (this._so.data.hasOwnProperty("version")))) && ((this._so.data.md5 == md5value)))) && ((((this._so.data.version.major >= 2)) && ((this._so.data.version.minor >= 23)))))) && (Benchmark.hasCachedResults)))
+            var flashKeyParts:Array;
+            this.addData("client_envType", "air");
+            this.addData("client_isUsingUpdater", isUsingUpdater);
+            var flashKey:String = InterClientManager.getInstance().flashKey;
+            if (flashKey)
             {
-                return;
+                flashKeyParts = flashKey.split("#");
+                this.addData("client_flashKeyBase", flashKeyParts[0]);
+                if (flashKeyParts[1])
+                {
+                    this.addData("client_flashKeyId", parseInt(flashKeyParts[1]));
+                };
+            };
+            this.checkStage3D();
+        }
+
+        private function addBenchmarkInfoToUserData():void
+        {
+            var benchmarkResultsList:Array;
+            var res:String;
+            var resList:Array;
+            var benchmarkResults:String = Benchmark.getResults(true);
+            if (benchmarkResults)
+            {
+                benchmarkResultsList = benchmarkResults.split(";");
+                for each (res in benchmarkResultsList)
+                {
+                    resList = res.split(":");
+                    if (resList.length == 2)
+                    {
+                        if (resList[1] == "none")
+                        {
+                        }
+                        else
+                        {
+                            if (resList[1] == "error")
+                            {
+                                resList[1] = "-1";
+                            };
+                            this.addData(("client_benchmark_" + resList[0]), parseInt(resList[1]));
+                        };
+                    };
+                };
+            };
+        }
+
+        private function checkStage3D():void
+        {
+            var stage3Ds:*;
+            if (ApplicationDomain.currentDomain.hasDefinition("flash.display.Stage3D"))
+            {
+                stage3Ds = StageShareManager.stage["stage3Ds"];
+                if ((((stage3Ds) && (stage3Ds.length)) && (stage3Ds[0])))
+                {
+                    stage3Ds[0].addEventListener("context3DCreate", this.onContext3DCreate);
+                    stage3Ds[0].addEventListener(ErrorEvent.ERROR, this.onContext3DError);
+                    stage3Ds[0].requestContext3D();
+                };
+            }
+            else
+            {
+                this.addData("client_stage3dDriverInfo", "NotSupported");
+                this.submitData();
+            };
+        }
+
+        private function onContext3DCreate(e:Event):void
+        {
+            var driverInfo:String = "ContextLost";
+            if (e.target.context3D)
+            {
+                driverInfo = e.target.context3D.driverInfo;
+            };
+            this.destroyContext3D(e.target);
+            this.addData("client_stage3dDriverInfo", driverInfo);
+            this.submitData();
+        }
+
+        private function onContext3DError(e:ErrorEvent):void
+        {
+            this.destroyContext3D(e.target);
+            this.addData("client_stage3dDriverInfo", "ContextCreationError");
+            this.submitData();
+        }
+
+        private function destroyContext3D(stage3D:*):void
+        {
+            stage3D.removeEventListener("context3DCreate", this.onContext3DCreate);
+            stage3D.removeEventListener(ErrorEvent.ERROR, this.onContext3DError);
+            if (stage3D.context3D)
+            {
+                stage3D.context3D.dispose(false);
+            };
+        }
+
+        private function submitData():void
+        {
+            _log.debug("Sending data...");
+            this.addBenchmarkInfoToUserData();
+            var jsonInfo:String = by.blooddy.crypto.serialization.JSON.encode(this._userData);
+            _log.debug(("final json: " + jsonInfo));
+            HaapiDebugManager.getInstance().submitData(HaapiDebugManager.HARDWARE_DATA_TYPE, jsonInfo, this.onUserDataUploaded, this.onUserDataUploadError);
+        }
+
+        private function addData(key:String, value:*):void
+        {
+            this._userData[key] = value;
+        }
+
+        private function onUserDataUploaded():void
+        {
+            var isSameVersion:Boolean;
+            var previousTotalUploads:int;
+            if (this._so.data)
+            {
+                if ((((this._so.data.hasOwnProperty("version")) && (this._so.data.version.major == BuildInfos.VERSION.major)) && (this._so.data.version.minor == BuildInfos.VERSION.minor)))
+                {
+                    isSameVersion = true;
+                };
+                if (((isSameVersion) && (this._so.data.hasOwnProperty("totalUploads"))))
+                {
+                    previousTotalUploads = this._so.data.totalUploads;
+                };
             };
             this._so.data = new Object();
-            this._so.data.md5 = md5value;
             this._so.data.version = {
-                "major":BuildInfos.BUILD_VERSION.major,
-                "minor":BuildInfos.BUILD_VERSION.minor
+                "major":BuildInfos.VERSION.major,
+                "minor":BuildInfos.VERSION.minor
             };
+            this._so.data.totalUploads = (previousTotalUploads + 1);
             this._so.flush();
-            _local_4 = new RpcServiceManager((RpcServiceCenter.getInstance().apiDomain + "/dofus/logger.json"), "json");
-            _local_4.addEventListener(Event.COMPLETE, this.onDataSavedComplete);
-            _local_4.addEventListener(IOErrorEvent.IO_ERROR, this.onDataSavedError);
-            _local_4.addEventListener(RpcServiceManager.SERVER_ERROR, this.onDataSavedError);
-            _local_5 = {
-                "sUid":MD5.hash(playerId.toString()),
-                "aValues":{
-                    "config":playerData,
-                    "benchmark":Benchmark.getResults(true)
-                }
-            };
-            _local_4.callMethod("Log", _local_5);
+            this._userData = null;
+            this._so = null;
         }
 
-        private function onDataSavedComplete(pEvt:Event):void
+        private function onUserDataUploadError():void
         {
-            var rpcService:RpcServiceManager = (pEvt.currentTarget as RpcServiceManager);
-            if (this._so != null)
-            {
-                _log.debug("User data saved.");
-                this._so.flush();
-            };
-            this.clearService(rpcService);
-        }
-
-        private function onDataSavedError(pEvt:Event):void
-        {
-            _log.error("Can't send player's data to server !");
-            var rpcService:RpcServiceManager = (pEvt.currentTarget as RpcServiceManager);
-            this.clearService(rpcService);
-        }
-
-        private function clearService(rpcService:RpcServiceManager):void
-        {
-            rpcService.removeEventListener(Event.COMPLETE, this.onDataSavedComplete);
-            rpcService.removeEventListener(IOErrorEvent.IO_ERROR, this.onDataSavedError);
-            rpcService.removeEventListener(RpcServiceManager.SERVER_ERROR, this.onDataSavedError);
-            rpcService.destroy();
-        }
-
-        public function onSystemConfiguration(config:*):void
-        {
-            var key:String;
-            var obj:Object;
-            var newValue:String = "";
-            this._postMd5CheckInfos = "";
-            var dict:Array = new Array();
-            if (config)
-            {
-                for (key in config.config)
-                {
-                    dict.push({
-                        "key":key,
-                        "value":config.config[key]
-                    });
-                };
-            };
-            dict.sortOn("key");
-            for each (obj in dict)
-            {
-                if (INFOS_EXCLUDED_FROM_MD5CHECK.indexOf(obj.key) == -1)
-                {
-                    newValue = (newValue + (((obj.key + ":") + obj.value) + ";"));
-                }
-                else
-                {
-                    this._postMd5CheckInfos = (this._postMd5CheckInfos + (((obj.key + ":") + obj.value) + ";"));
-                };
-            };
-            this.savePlayerAirData(newValue, true);
+            _log.error("Couldn't send user data, an error occurred during the upload.");
         }
 
 
     }
-}//package com.ankamagames.dofus.logic.connection.managers
+} com.ankamagames.dofus.logic.connection.managers
 

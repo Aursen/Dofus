@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.common.frames
+package com.ankamagames.dofus.logic.common.frames
 {
     import com.ankamagames.jerakine.messages.Frame;
     import com.ankamagames.jerakine.logger.Logger;
@@ -6,6 +6,7 @@
     import flash.utils.getQualifiedClassName;
     import com.ankamagames.jerakine.types.enums.Priority;
     import com.ankamagames.dofus.network.messages.common.basic.BasicPongMessage;
+    import com.ankamagames.dofus.network.messages.game.basic.BasicLatencyStatsRequestMessage;
     import com.ankamagames.jerakine.network.IServerConnection;
     import com.ankamagames.dofus.network.messages.game.basic.BasicLatencyStatsMessage;
     import flash.utils.getTimer;
@@ -14,7 +15,6 @@
     import com.ankamagames.dofus.network.enums.ChatActivableChannelsEnum;
     import com.ankamagames.dofus.logic.game.common.managers.TimeManager;
     import com.ankamagames.dofus.kernel.net.ConnectionsHandler;
-    import com.ankamagames.dofus.network.messages.game.basic.BasicLatencyStatsRequestMessage;
     import com.ankamagames.jerakine.messages.Message;
 
     public class LatencyFrame implements Frame 
@@ -37,29 +37,31 @@
 
         public function process(msg:Message):Boolean
         {
-            var _local_2:BasicPongMessage;
-            var _local_3:uint;
-            var _local_4:uint;
-            var _local_5:IServerConnection;
-            var _local_6:BasicLatencyStatsMessage;
+            var bpmsg:BasicPongMessage;
+            var pongReceived:uint;
+            var delay:uint;
+            var blsrmsg:BasicLatencyStatsRequestMessage;
+            var connection:IServerConnection;
+            var blsmsg:BasicLatencyStatsMessage;
             switch (true)
             {
                 case (msg is BasicPongMessage):
-                    _local_2 = (msg as BasicPongMessage);
-                    if (_local_2.quiet)
+                    bpmsg = (msg as BasicPongMessage);
+                    if (bpmsg.quiet)
                     {
                         return (true);
                     };
-                    _local_3 = getTimer();
-                    _local_4 = (_local_3 - this.pingRequested);
+                    pongReceived = getTimer();
+                    delay = (pongReceived - this.pingRequested);
                     this.pingRequested = 0;
-                    KernelEventsManager.getInstance().processCallback(ChatHookList.TextInformation, (("Pong " + _local_4) + "ms !"), ChatActivableChannelsEnum.PSEUDO_CHANNEL_INFO, TimeManager.getInstance().getTimestamp());
+                    KernelEventsManager.getInstance().processCallback(ChatHookList.TextInformation, (("Pong " + delay) + "ms !"), ChatActivableChannelsEnum.PSEUDO_CHANNEL_INFO, TimeManager.getInstance().getTimestamp());
                     return (true);
                 case (msg is BasicLatencyStatsRequestMessage):
-                    _local_5 = ConnectionsHandler.getConnection().mainConnection;
-                    _local_6 = new BasicLatencyStatsMessage();
-                    _local_6.initBasicLatencyStatsMessage(Math.min(32767, _local_5.latencyAvg), _local_5.latencySamplesCount, _local_5.latencySamplesMax);
-                    _local_5.send(_local_6);
+                    blsrmsg = (msg as BasicLatencyStatsRequestMessage);
+                    connection = ConnectionsHandler.getConnection().getSubConnection(blsrmsg.sourceConnection);
+                    blsmsg = new BasicLatencyStatsMessage();
+                    blsmsg.initBasicLatencyStatsMessage(Math.min(32767, connection.latencyAvg), connection.latencySamplesCount, connection.latencySamplesMax);
+                    ConnectionsHandler.getConnection().send(blsmsg, blsrmsg.sourceConnection);
                     return (true);
             };
             return (false);
@@ -72,5 +74,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.common.frames
+} com.ankamagames.dofus.logic.common.frames
 

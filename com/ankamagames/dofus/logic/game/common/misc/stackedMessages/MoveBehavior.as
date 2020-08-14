@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.common.misc.stackedMessages
+package com.ankamagames.dofus.logic.game.common.misc.stackedMessages
 {
     import com.ankamagames.dofus.logic.game.common.frames.AbstractEntitiesFrame;
     import com.ankamagames.jerakine.entities.interfaces.IEntity;
@@ -10,7 +10,6 @@
     import com.ankamagames.dofus.logic.game.common.misc.DofusEntities;
     import com.ankamagames.dofus.network.types.game.context.roleplay.GameRolePlayGroupMonsterInformations;
     import com.ankamagames.jerakine.types.positions.MapPoint;
-    import com.ankamagames.jerakine.utils.system.AirScanner;
     import com.ankamagames.berilia.frames.ShortcutsFrame;
     import com.ankamagames.jerakine.utils.system.SystemManager;
     import com.ankamagames.jerakine.enum.OperatingSystem;
@@ -45,7 +44,7 @@
             {
                 this._abstractEntitiesFrame = (Kernel.getWorker().getFrame(RoleplayEntitiesFrame) as RoleplayEntitiesFrame);
             };
-            if ((((((((pMsgToProcess is CellClickMessage)) || ((pMsgToProcess is EntityClickMessage)))) && (!(PlayedCharacterManager.getInstance().isFighting)))) && ((pMode == type))))
+            if (((((pMsgToProcess is CellClickMessage) || (pMsgToProcess is EntityClickMessage)) && (!(PlayedCharacterManager.getInstance().isFighting))) && (pMode == type)))
             {
                 entity = DofusEntities.getEntity(PlayedCharacterManager.getInstance().id);
                 if ((pMsgToProcess is CellClickMessage))
@@ -54,7 +53,7 @@
                 }
                 else
                 {
-                    if ((((pMsgToProcess is EntityClickMessage)) && ((this._abstractEntitiesFrame.getEntityInfos((pMsgToProcess as EntityClickMessage).entity.id) is GameRolePlayGroupMonsterInformations))))
+                    if (((pMsgToProcess is EntityClickMessage) && (this._abstractEntitiesFrame.getEntityInfos((pMsgToProcess as EntityClickMessage).entity.id) is GameRolePlayGroupMonsterInformations)))
                     {
                         tmpCellId = (pMsgToProcess as EntityClickMessage).entity.position.cellId;
                     }
@@ -63,7 +62,7 @@
                         return (false);
                     };
                 };
-                if (((!((entity == null))) && (!((entity.position.cellId == tmpCellId)))))
+                if (((!(entity == null)) && (!(entity.position.cellId == tmpCellId))))
                 {
                     pendingMessage = pMsgToProcess;
                     canBeStacked = true;
@@ -72,7 +71,7 @@
                     {
                         ccm = (pMsgToProcess as CellClickMessage);
                         position = ccm.cell;
-                        if (!(position))
+                        if (!position)
                         {
                             position = MapPoint.fromCellId(ccm.cellId);
                         };
@@ -84,13 +83,13 @@
                             position = (pMsgToProcess as EntityClickMessage).entity.position;
                         };
                     };
-                    this.forceWalk = ((AirScanner.isStreamingVersion()) ? false : (((OptionManager.getOptionManager("dofus")["enableForceWalk"] == true)) && (((ShortcutsFrame.ctrlKeyDown) || ((((SystemManager.getSingleton().os == OperatingSystem.MAC_OS)) && (ShortcutsFrame.altKeyDown)))))));
+                    this.forceWalk = ((OptionManager.getOptionManager("dofus").getOption("enableForceWalk") == true) && ((ShortcutsFrame.ctrlKeyDown) || ((SystemManager.getSingleton().os == OperatingSystem.MAC_OS) && (ShortcutsFrame.altKeyDown))));
                     return (true);
                 };
             }
             else
             {
-                if ((((((pMsgToProcess is CellClickMessage)) && (!(PlayedCharacterManager.getInstance().isFighting)))) && ((pMode == ALWAYS))))
+                if ((((pMsgToProcess is CellClickMessage) && (!(PlayedCharacterManager.getInstance().isFighting))) && (pMode == ALWAYS)))
                 {
                     this._fakepos = (pMsgToProcess as CellClickMessage).cellId;
                     return (true);
@@ -102,17 +101,17 @@
         override public function processOutputMessage(pMsgToProcess:Message, pMode:String):Boolean
         {
             var entity:IEntity;
-            if ((((pMsgToProcess is CellClickMessage)) && ((pMode == ALWAYS))))
+            if (((pMsgToProcess is CellClickMessage) && (pMode == ALWAYS)))
             {
                 isAvailableToStart = false;
             }
             else
             {
-                if ((((pMsgToProcess is CharacterMovementStoppedMessage)) || ((pMsgToProcess is EntityMovementStoppedMessage))))
+                if (((pMsgToProcess is CharacterMovementStoppedMessage) || (pMsgToProcess is EntityMovementStoppedMessage)))
                 {
                     this._fakepos = -1;
                     entity = DofusEntities.getEntity(PlayedCharacterManager.getInstance().id);
-                    if (((!((entity == null))) && ((entity.position.cellId == position.cellId))))
+                    if (((!(entity == null)) && (entity.position.cellId == position.cellId)))
                     {
                         this._fakepos = -1;
                         actionStarted = true;
@@ -138,7 +137,8 @@
 
         override public function copy():AbstractBehavior
         {
-            var cp:MoveBehavior = new MoveBehavior();
+            var cp:MoveBehavior;
+            cp = new MoveBehavior();
             cp.pendingMessage = this.pendingMessage;
             cp.position = this.position;
             cp.type = this.type;
@@ -149,7 +149,7 @@
 
         override public function get needToWait():Boolean
         {
-            return (!((this._fakepos == -1)));
+            return (!(this._fakepos == -1));
         }
 
         override public function getFakePosition():MapPoint
@@ -174,5 +174,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.misc.stackedMessages
+} com.ankamagames.dofus.logic.game.common.misc.stackedMessages
 

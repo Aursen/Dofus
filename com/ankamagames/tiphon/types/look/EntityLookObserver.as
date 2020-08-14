@@ -1,4 +1,4 @@
-﻿package com.ankamagames.tiphon.types.look
+package com.ankamagames.tiphon.types.look
 {
     public interface EntityLookObserver 
     {
@@ -10,5 +10,5 @@
         function subEntitiesChanged(_arg_1:TiphonEntityLook):void;
 
     }
-}//package com.ankamagames.tiphon.types.look
+} com.ankamagames.tiphon.types.look
 

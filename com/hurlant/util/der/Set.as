@@ -1,11 +1,11 @@
-﻿package com.hurlant.util.der
+package com.hurlant.util.der
 {
     public dynamic class Set extends Sequence implements IAsn1Type 
     {
 
-        public function Set(type:uint=49, length:uint=0)
+        public function Set(_arg_1:uint=49, length:uint=0)
         {
-            super(type, length);
+            super(_arg_1, length);
         }
 
         override public function toString():String
@@ -15,10 +15,10 @@
             DER.indent = (DER.indent + "    ");
             var t:String = join("\n");
             DER.indent = s;
-            return ((((((((((DER.indent + "Set[") + type) + "][") + len) + "][\n") + t) + "\n") + s) + "]"));
+            return (((((((((DER.indent + "Set[") + type) + "][") + len) + "][\n") + t) + "\n") + s) + "]");
         }
 
 
     }
-}//package com.hurlant.util.der
+} com.hurlant.util.der
 

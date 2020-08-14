@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.utils.benchmark.monitoring.ui
+package com.ankamagames.jerakine.utils.benchmark.monitoring.ui
 {
     import flash.display.Sprite;
     import com.ankamagames.jerakine.utils.benchmark.monitoring.FpsManagerConst;
@@ -22,13 +22,36 @@
             this._leakState.addEventListener("follow", this.addGraphToMemory);
         }
 
+        public function dumpData():String
+        {
+            return (this._leakState.dumpData());
+        }
+
         public function get lastGc():int
         {
             return (this._memoryState.lastGc);
         }
 
-        public function changeState():void
+        public function changeState(forceState:int=-1):void
         {
+            if (forceState != -1)
+            {
+                if (forceState == 1)
+                {
+                    this._currentState = 0;
+                }
+                else
+                {
+                    if (forceState == 2)
+                    {
+                        this._currentState = 1;
+                    }
+                    else
+                    {
+                        this._currentState = 2;
+                    };
+                };
+            };
             switch (this._currentState)
             {
                 case 0:
@@ -37,19 +60,28 @@
                     this._memoryState.y = 5;
                     addChild(this._memoryState);
                     this._currentState++;
-                    return;
+                    break;
                 case 1:
                     this._currentState++;
                     this._leakState.y = ((this._memoryState.y + FpsManagerConst.BOX_HEIGHT) + 5);
                     addChild(this._leakState);
-                    return;
+                    break;
                 case 2:
-                    this._parent.removeChild(this);
-                    removeChild(this._memoryState);
-                    removeChild(this._leakState);
-                    this._memoryState.clearOtherGraph();
+                    if (this.parent)
+                    {
+                        this._parent.removeChild(this);
+                    };
+                    if (this._memoryState.parent)
+                    {
+                        removeChild(this._memoryState);
+                        this._memoryState.clearOtherGraph();
+                    };
+                    if (this._leakState.parent)
+                    {
+                        removeChild(this._leakState);
+                    };
                     this._currentState = 0;
-                    return;
+                    break;
             };
         }
 
@@ -57,7 +89,7 @@
         {
             this._memoryState.updateData();
             this._leakState.updateData();
-            if ((((this._currentState == 1)) || ((this._currentState == 2))))
+            if (((this._currentState == 1) || (this._currentState == 2)))
             {
                 this._memoryState.render();
             };
@@ -74,9 +106,9 @@
             this._memoryState.lastGc = val;
         }
 
-        public function watchObject(o:Object, pColor:uint, pIncrementParents:Boolean=false):void
+        public function watchObject(o:Object, pColor:uint, pIncrementParents:Boolean=false, objectClassName:String=null):void
         {
-            this._leakState.watchObject(o, pColor, pIncrementParents);
+            this._leakState.watchObject(o, pColor, pIncrementParents, objectClassName);
         }
 
         public function updateGc(max_memory:Number=0):void
@@ -86,5 +118,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.utils.benchmark.monitoring.ui
+} com.ankamagames.jerakine.utils.benchmark.monitoring.ui
 

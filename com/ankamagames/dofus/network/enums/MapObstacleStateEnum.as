@@ -1,6 +1,5 @@
-﻿package com.ankamagames.dofus.network.enums
+package com.ankamagames.dofus.network.enums
 {
-    [Trusted]
     public class MapObstacleStateEnum 
     {
 
@@ -9,5 +8,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.enums
+} com.ankamagames.dofus.network.enums
 

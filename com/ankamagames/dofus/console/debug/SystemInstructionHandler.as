@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.console.debug
+package com.ankamagames.dofus.console.debug
 {
     import com.ankamagames.jerakine.console.ConsoleInstructionHandler;
     import com.ankamagames.dofus.misc.interClient.InterClientManager;
@@ -14,7 +14,7 @@
             {
                 case "getuid":
                     console.output(("Client flashkey : " + InterClientManager.getInstance().flashKey));
-                    return;
+                    break;
             };
         }
 
@@ -25,7 +25,7 @@
                 case "getuid":
                     return ("Get the client flashkey.");
             };
-            return ((("No help for command '" + cmd) + "'"));
+            return (("No help for command '" + cmd) + "'");
         }
 
         public function getParamPossibilities(cmd:String, paramIndex:uint=0, currentParams:Array=null):Array
@@ -35,5 +35,5 @@
 
 
     }
-}//package com.ankamagames.dofus.console.debug
+} com.ankamagames.dofus.console.debug
 

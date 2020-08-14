@@ -1,4 +1,4 @@
-﻿package com.ankamagames.atouin.types
+package com.ankamagames.atouin.types
 {
     import flash.display.Bitmap;
     import com.ankamagames.jerakine.interfaces.ICustomUnicNameGetter;
@@ -22,5 +22,5 @@
 
 
     }
-}//package com.ankamagames.atouin.types
+} com.ankamagames.atouin.types
 

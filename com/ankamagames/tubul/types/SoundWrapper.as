@@ -1,4 +1,4 @@
-﻿package com.ankamagames.tubul.types
+package com.ankamagames.tubul.types
 {
     import flash.events.EventDispatcher;
     import flash.media.Sound;
@@ -25,15 +25,15 @@
         private var _endOfFileEventDispatched:Boolean = false;
         private var _notify:Boolean = false;
         private var _notifyTime:Number;
-        var _volume:Number = 1;
-        var _leftToLeft:Number = 1;
-        var _rightToLeft:Number = 0;
-        var _rightToRight:Number = 1;
-        var _leftToRight:Number = 0;
-        var _pan:Number = 0;
-        var soundData:ByteArray;
-        var hadBeenCut:Boolean;
-        var _extractFinished:Boolean;
+        internal var _volume:Number = 1;
+        internal var _leftToLeft:Number = 1;
+        internal var _rightToLeft:Number = 0;
+        internal var _rightToRight:Number = 1;
+        internal var _leftToRight:Number = 0;
+        internal var _pan:Number = 0;
+        internal var soundData:ByteArray;
+        internal var hadBeenCut:Boolean;
+        internal var _extractFinished:Boolean;
 
         public function SoundWrapper(snd:Sound, loops:int=1)
         {
@@ -63,8 +63,8 @@
 
         public function get position():Number
         {
-            var _local_2:SoundChannel;
-            if ((((this.soundData == null)) && ((this.sound == null))))
+            var sc:SoundChannel;
+            if (((this.soundData == null) && (this.sound == null)))
             {
                 return (-1);
             };
@@ -75,10 +75,10 @@
             }
             else
             {
-                _local_2 = Tubul.getInstance().soundMerger.getSoundChannel(this);
-                if (_local_2 != null)
+                sc = Tubul.getInstance().soundMerger.getSoundChannel(this);
+                if (sc != null)
                 {
-                    pos = (Math.round(_local_2.position) / 1000);
+                    pos = (Math.round(sc.position) / 1000);
                 };
             };
             return (pos);
@@ -187,7 +187,7 @@
             this.applySoundTransform(st);
         }
 
-        function extractFinished():void
+        internal function extractFinished():void
         {
             this._extractFinished = true;
             this._snd = null;
@@ -202,7 +202,7 @@
             };
             if ((this.duration - this.position) < (this._notifyTime + 0.5))
             {
-                if ((((this.currentLoop == (this._loops - 1))) && ((this._endOfFileEventDispatched == false))))
+                if (((this.currentLoop == (this._loops - 1)) && (this._endOfFileEventDispatched == false)))
                 {
                     swe = new SoundWrapperEvent(SoundWrapperEvent.SOON_END_OF_FILE);
                     dispatchEvent(swe);
@@ -225,7 +225,7 @@
                     return (stInDic);
                 };
             };
-            if (!(this._stDic))
+            if (!this._stDic)
             {
                 this._stDic = new Dictionary(true);
             };
@@ -241,7 +241,7 @@
         public function notifyWhenEndOfFile(pNotify:Boolean=false, pTime:Number=-1):void
         {
             this._notify = pNotify;
-            if (((pNotify) && ((pTime <= 0))))
+            if (((pNotify) && (pTime <= 0)))
             {
                 this._notify = false;
                 return;
@@ -260,5 +260,5 @@
 
 
     }
-}//package com.ankamagames.tubul.types
+} com.ankamagames.tubul.types
 

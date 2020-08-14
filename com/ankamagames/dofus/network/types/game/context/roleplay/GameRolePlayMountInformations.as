@@ -1,10 +1,11 @@
-﻿package com.ankamagames.dofus.network.types.game.context.roleplay
+package com.ankamagames.dofus.network.types.game.context.roleplay
 {
     import com.ankamagames.jerakine.network.INetworkType;
-    import com.ankamagames.dofus.network.types.game.look.EntityLook;
     import com.ankamagames.dofus.network.types.game.context.EntityDispositionInformations;
+    import com.ankamagames.dofus.network.types.game.look.EntityLook;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
     public class GameRolePlayMountInformations extends GameRolePlayNamedActorInformations implements INetworkType 
     {
@@ -20,9 +21,9 @@
             return (180);
         }
 
-        public function initGameRolePlayMountInformations(contextualId:int=0, look:EntityLook=null, disposition:EntityDispositionInformations=null, name:String="", ownerName:String="", level:uint=0):GameRolePlayMountInformations
+        public function initGameRolePlayMountInformations(contextualId:Number=0, disposition:EntityDispositionInformations=null, look:EntityLook=null, name:String="", ownerName:String="", level:uint=0):GameRolePlayMountInformations
         {
-            super.initGameRolePlayNamedActorInformations(contextualId, look, disposition, name);
+            super.initGameRolePlayNamedActorInformations(contextualId, disposition, look, name);
             this.ownerName = ownerName;
             this.level = level;
             return (this);
@@ -44,7 +45,7 @@
         {
             super.serializeAs_GameRolePlayNamedActorInformations(output);
             output.writeUTF(this.ownerName);
-            if ((((this.level < 0)) || ((this.level > 0xFF))))
+            if (((this.level < 0) || (this.level > 0xFF)))
             {
                 throw (new Error((("Forbidden value (" + this.level) + ") on element level.")));
             };
@@ -59,9 +60,31 @@
         public function deserializeAs_GameRolePlayMountInformations(input:ICustomDataInput):void
         {
             super.deserialize(input);
+            this._ownerNameFunc(input);
+            this._levelFunc(input);
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GameRolePlayMountInformations(tree);
+        }
+
+        public function deserializeAsyncAs_GameRolePlayMountInformations(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._ownerNameFunc);
+            tree.addChild(this._levelFunc);
+        }
+
+        private function _ownerNameFunc(input:ICustomDataInput):void
+        {
             this.ownerName = input.readUTF();
+        }
+
+        private function _levelFunc(input:ICustomDataInput):void
+        {
             this.level = input.readUnsignedByte();
-            if ((((this.level < 0)) || ((this.level > 0xFF))))
+            if (((this.level < 0) || (this.level > 0xFF)))
             {
                 throw (new Error((("Forbidden value (" + this.level) + ") on element of GameRolePlayMountInformations.level.")));
             };
@@ -69,5 +92,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.context.roleplay
+} com.ankamagames.dofus.network.types.game.context.roleplay
 

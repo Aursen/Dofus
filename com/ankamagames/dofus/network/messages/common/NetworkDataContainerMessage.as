@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.common
+package com.ankamagames.dofus.network.messages.common
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -7,8 +7,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class NetworkDataContainerMessage extends NetworkMessage implements INetworkMessage, INetworkDataContainerMessage 
     {
 
@@ -63,6 +63,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_NetworkDataContainerMessage(output);
@@ -71,6 +79,7 @@
         public function serializeAs_NetworkDataContainerMessage(output:ICustomDataOutput):void
         {
             output.writeBytes(this.content);
+            throw (new Error("Not implemented"));
         }
 
         public function deserialize(input:ICustomDataInput):void
@@ -78,16 +87,26 @@
             this.deserializeAs_NetworkDataContainerMessage(input);
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_RawDataMessage(tree);
+        }
+
         public function deserializeAs_NetworkDataContainerMessage(input:ICustomDataInput):void
         {
-            var _contentLen:uint = input.readUnsignedShort();
+            var _contentLen:uint = input.readVarInt();
             var tmpBuffer:ByteArray = new ByteArray();
             input.readBytes(tmpBuffer, 0, _contentLen);
             tmpBuffer.uncompress();
             this.content = tmpBuffer;
         }
 
+        public function deserializeAsyncAs_RawDataMessage(tree:FuncTree):void
+        {
+            tree.addChild(this.deserializeAs_NetworkDataContainerMessage);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.common
+} com.ankamagames.dofus.network.messages.common
 

@@ -1,12 +1,12 @@
-﻿package com.ankamagames.dofus.network.types.game.social
+package com.ankamagames.dofus.network.types.game.social
 {
     import com.ankamagames.dofus.network.types.game.context.roleplay.AllianceInformations;
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.dofus.network.types.game.guild.GuildEmblem;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class AllianceFactSheetInformations extends AllianceInformations implements INetworkType 
     {
 
@@ -56,6 +56,22 @@
         public function deserializeAs_AllianceFactSheetInformations(input:ICustomDataInput):void
         {
             super.deserialize(input);
+            this._creationDateFunc(input);
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_AllianceFactSheetInformations(tree);
+        }
+
+        public function deserializeAsyncAs_AllianceFactSheetInformations(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._creationDateFunc);
+        }
+
+        private function _creationDateFunc(input:ICustomDataInput):void
+        {
             this.creationDate = input.readInt();
             if (this.creationDate < 0)
             {
@@ -65,5 +81,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.social
+} com.ankamagames.dofus.network.types.game.social
 

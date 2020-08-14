@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.roleplay.types
+package com.ankamagames.dofus.logic.game.roleplay.types
 {
     import com.ankamagames.dofus.network.types.game.context.roleplay.GameRolePlayActorInformations;
     import com.ankamagames.jerakine.logger.Logger;
@@ -19,5 +19,5 @@
         }
 
     }
-}//package com.ankamagames.dofus.logic.game.roleplay.types
+} com.ankamagames.dofus.logic.game.roleplay.types
 

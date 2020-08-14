@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.common.misc.inventoryView
+package com.ankamagames.dofus.logic.game.common.misc.inventoryView
 {
     import __AS3__.vec.Vector;
     import com.ankamagames.dofus.logic.game.common.misc.IStorageView;
@@ -32,7 +32,7 @@
         override public function isListening(item:ItemWrapper):Boolean
         {
             var data:Item = Item.getItemById(item.objectGID);
-            return (((((((this._parent.isListening(item)) && (super.isListening(item)))) && ((data.level <= this._maxItemLevel)))) && (!((this._allowedTypes.indexOf(data.typeId) == -1)))));
+            return ((((this._parent.isListening(item)) && (super.isListening(item))) && (data.level <= this._maxItemLevel)) && (!(this._allowedTypes.indexOf(data.typeId) == -1)));
         }
 
         override public function updateView():void
@@ -56,5 +56,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.misc.inventoryView
+} com.ankamagames.dofus.logic.game.common.misc.inventoryView
 

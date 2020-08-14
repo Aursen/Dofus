@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.pvp
+package com.ankamagames.dofus.network.messages.game.pvp
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class UpdateSelfAgressableStatusMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -55,6 +55,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_UpdateSelfAgressableStatusMessage(output);
@@ -77,11 +85,32 @@
 
         public function deserializeAs_UpdateSelfAgressableStatusMessage(input:ICustomDataInput):void
         {
+            this._statusFunc(input);
+            this._probationTimeFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_UpdateSelfAgressableStatusMessage(tree);
+        }
+
+        public function deserializeAsyncAs_UpdateSelfAgressableStatusMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._statusFunc);
+            tree.addChild(this._probationTimeFunc);
+        }
+
+        private function _statusFunc(input:ICustomDataInput):void
+        {
             this.status = input.readByte();
             if (this.status < 0)
             {
                 throw (new Error((("Forbidden value (" + this.status) + ") on element of UpdateSelfAgressableStatusMessage.status.")));
             };
+        }
+
+        private function _probationTimeFunc(input:ICustomDataInput):void
+        {
             this.probationTime = input.readInt();
             if (this.probationTime < 0)
             {
@@ -91,5 +120,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.pvp
+} com.ankamagames.dofus.network.messages.game.pvp
 

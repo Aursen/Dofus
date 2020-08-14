@@ -1,11 +1,11 @@
-﻿package com.hurlant.math
+package com.hurlant.math
 {
     import com.hurlant.math.BigInteger;
-    import com.hurlant.math.bi_internal; 
+    import com.hurlant.math.bi_internal;
 
     use namespace bi_internal;
 
-    class ClassicReduction implements IReduction 
+    internal class ClassicReduction implements IReduction 
     {
 
         private var m:BigInteger;
@@ -17,7 +17,7 @@
 
         public function convert(x:BigInteger):BigInteger
         {
-            if ((((x.s < 0)) || ((x.compareTo(this.m) >= 0))))
+            if (((x.s < 0) || (x.compareTo(this.m) >= 0)))
             {
                 return (x.mod(this.m));
             };
@@ -48,5 +48,5 @@
 
 
     }
-}//package com.hurlant.math
+} com.hurlant.math
 

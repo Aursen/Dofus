@@ -1,12 +1,12 @@
-﻿package com.ankamagames.dofus.network.messages.game.context.roleplay.party
+package com.ankamagames.dofus.network.messages.game.context.roleplay.party
 {
     import com.ankamagames.jerakine.network.INetworkMessage;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class PartyInvitationMessage extends AbstractPartyMessage implements INetworkMessage 
     {
 
@@ -16,14 +16,14 @@
         public var partyType:uint = 0;
         public var partyName:String = "";
         public var maxParticipants:uint = 0;
-        public var fromId:uint = 0;
+        public var fromId:Number = 0;
         public var fromName:String = "";
-        public var toId:uint = 0;
+        public var toId:Number = 0;
 
 
         override public function get isInitialized():Boolean
         {
-            return (((super.isInitialized) && (this._isInitialized)));
+            return ((super.isInitialized) && (this._isInitialized));
         }
 
         override public function getMessageId():uint
@@ -31,7 +31,7 @@
             return (5586);
         }
 
-        public function initPartyInvitationMessage(partyId:uint=0, partyType:uint=0, partyName:String="", maxParticipants:uint=0, fromId:uint=0, fromName:String="", toId:uint=0):PartyInvitationMessage
+        public function initPartyInvitationMessage(partyId:uint=0, partyType:uint=0, partyName:String="", maxParticipants:uint=0, fromId:Number=0, fromName:String="", toId:Number=0):PartyInvitationMessage
         {
             super.initAbstractPartyMessage(partyId);
             this.partyType = partyType;
@@ -68,6 +68,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         override public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_PartyInvitationMessage(output);
@@ -83,17 +91,17 @@
                 throw (new Error((("Forbidden value (" + this.maxParticipants) + ") on element maxParticipants.")));
             };
             output.writeByte(this.maxParticipants);
-            if (this.fromId < 0)
+            if (((this.fromId < 0) || (this.fromId > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.fromId) + ") on element fromId.")));
             };
-            output.writeVarInt(this.fromId);
+            output.writeVarLong(this.fromId);
             output.writeUTF(this.fromName);
-            if (this.toId < 0)
+            if (((this.toId < 0) || (this.toId > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.toId) + ") on element toId.")));
             };
-            output.writeVarInt(this.toId);
+            output.writeVarLong(this.toId);
         }
 
         override public function deserialize(input:ICustomDataInput):void
@@ -104,25 +112,71 @@
         public function deserializeAs_PartyInvitationMessage(input:ICustomDataInput):void
         {
             super.deserialize(input);
+            this._partyTypeFunc(input);
+            this._partyNameFunc(input);
+            this._maxParticipantsFunc(input);
+            this._fromIdFunc(input);
+            this._fromNameFunc(input);
+            this._toIdFunc(input);
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_PartyInvitationMessage(tree);
+        }
+
+        public function deserializeAsyncAs_PartyInvitationMessage(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._partyTypeFunc);
+            tree.addChild(this._partyNameFunc);
+            tree.addChild(this._maxParticipantsFunc);
+            tree.addChild(this._fromIdFunc);
+            tree.addChild(this._fromNameFunc);
+            tree.addChild(this._toIdFunc);
+        }
+
+        private function _partyTypeFunc(input:ICustomDataInput):void
+        {
             this.partyType = input.readByte();
             if (this.partyType < 0)
             {
                 throw (new Error((("Forbidden value (" + this.partyType) + ") on element of PartyInvitationMessage.partyType.")));
             };
+        }
+
+        private function _partyNameFunc(input:ICustomDataInput):void
+        {
             this.partyName = input.readUTF();
+        }
+
+        private function _maxParticipantsFunc(input:ICustomDataInput):void
+        {
             this.maxParticipants = input.readByte();
             if (this.maxParticipants < 0)
             {
                 throw (new Error((("Forbidden value (" + this.maxParticipants) + ") on element of PartyInvitationMessage.maxParticipants.")));
             };
-            this.fromId = input.readVarUhInt();
-            if (this.fromId < 0)
+        }
+
+        private function _fromIdFunc(input:ICustomDataInput):void
+        {
+            this.fromId = input.readVarUhLong();
+            if (((this.fromId < 0) || (this.fromId > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.fromId) + ") on element of PartyInvitationMessage.fromId.")));
             };
+        }
+
+        private function _fromNameFunc(input:ICustomDataInput):void
+        {
             this.fromName = input.readUTF();
-            this.toId = input.readVarUhInt();
-            if (this.toId < 0)
+        }
+
+        private function _toIdFunc(input:ICustomDataInput):void
+        {
+            this.toId = input.readVarUhLong();
+            if (((this.toId < 0) || (this.toId > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.toId) + ") on element of PartyInvitationMessage.toId.")));
             };
@@ -130,5 +184,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.context.roleplay.party
+} com.ankamagames.dofus.network.messages.game.context.roleplay.party
 

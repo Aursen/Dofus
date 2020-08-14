@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.datacenter.items.criterion
+package com.ankamagames.dofus.datacenter.items.criterion
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.dofus.datacenter.world.SubArea;
@@ -25,13 +25,13 @@
             if (_operator.text == ItemCriterionOperator.EQUAL)
             {
                 aggressable = PlayedCharacterManager.getInstance().characteristics.alignmentInfos.aggressable;
-                if (((!((aggressable == AggressableStatusEnum.AvA_ENABLED_AGGRESSABLE))) && (!((aggressable == AggressableStatusEnum.AvA_PREQUALIFIED_AGGRESSABLE)))))
+                if (((!(aggressable == AggressableStatusEnum.AvA_ENABLED_AGGRESSABLE)) && (!(aggressable == AggressableStatusEnum.AvA_PREQUALIFIED_AGGRESSABLE))))
                 {
                     return (false);
                 };
                 subArea = PlayedCharacterManager.getInstance().currentSubArea;
                 currentPrism = AllianceFrame.getInstance().getPrismSubAreaById(subArea.id);
-                if (((!(currentPrism)) || ((currentPrism.mapId == -1))))
+                if (((!(currentPrism)) || (currentPrism.mapId == -1)))
                 {
                     return (false);
                 };
@@ -62,5 +62,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.items.criterion
+} com.ankamagames.dofus.datacenter.items.criterion
 

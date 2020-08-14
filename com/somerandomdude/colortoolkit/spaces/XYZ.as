@@ -1,4 +1,4 @@
-﻿package com.somerandomdude.colortoolkit.spaces
+package com.somerandomdude.colortoolkit.spaces
 {
     import com.somerandomdude.colortoolkit.CoreColor;
 
@@ -101,10 +101,10 @@
             {
                 b = (12.92 * b);
             };
-            var cR:int = (Math.round(r) << 16);
-            var cG:int = (Math.round(g) << 8);
+            var cR:* = (Math.round(r) << 16);
+            var cG:* = (Math.round(g) << 8);
             var cB:int = Math.round(b);
-            return (((cR | cG) | cB));
+            return ((cR | cG) | cB);
         }
 
         private function generateXYZFromColor(color:int):XYZ
@@ -144,5 +144,5 @@
 
 
     }
-}//package com.somerandomdude.colortoolkit.spaces
+} com.somerandomdude.colortoolkit.spaces
 

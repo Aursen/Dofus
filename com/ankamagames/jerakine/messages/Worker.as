@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.messages
+package com.ankamagames.jerakine.messages
 {
     import flash.events.EventDispatcher;
     import com.ankamagames.jerakine.logger.Logger;
@@ -35,15 +35,19 @@
         private var _paused:Boolean;
         private var _pauseFilter:Class;
         private var _pausedQueue:Vector.<Message>;
-        private var _unstoppableMsgClassList:Array;
-        private var _framesBeingDeleted:Dictionary;
+        private var _terminated:Boolean = false;
+        private var _terminating:Boolean = false;
+        private var _unstoppableMsgClassList:Array = new Array();
+        private var _framesBeingDeleted:Dictionary = new Dictionary(true);
         private var _currentFrameTypesCache:Dictionary;
+        private var _blacklistedFloodMessages:Dictionary = new Dictionary(true);
 
         public function Worker()
         {
-            this._unstoppableMsgClassList = new Array();
-            this._framesBeingDeleted = new Dictionary(true);
-            super();
+            this._blacklistedFloodMessages["GameRolePlayShowActorMessage"] = true;
+            this._blacklistedFloodMessages["EmotePlayMessage"] = true;
+            this._blacklistedFloodMessages["GameContextRefreshEntityLookMessage"] = true;
+            this._blacklistedFloodMessages["GameRolePlaySpellAnimMessage"] = true;
         }
 
         public function get framesList():Vector.<Frame>
@@ -61,8 +65,22 @@
             return (this._pausedQueue);
         }
 
+        public function get terminated():Boolean
+        {
+            return (this._terminated);
+        }
+
+        public function get terminating():Boolean
+        {
+            return (this._terminating);
+        }
+
         public function process(msg:Message):Boolean
         {
+            if (this._terminated)
+            {
+                return (false);
+            };
             this._messagesQueue.push(msg);
             this.run();
             return (true);
@@ -70,16 +88,24 @@
 
         public function processImmediately(msg:Message):Boolean
         {
+            if (this._terminated)
+            {
+                return (false);
+            };
             this.processMessage(msg);
             return (true);
         }
 
-        public function addFrame(frame:Frame, allowDuplicateFrame:Boolean=false):void
+        public function addFrame(frame:Frame):void
         {
+            var f:Frame;
             var frameRemoving:Boolean;
             var frameAdding:Boolean;
-            var f:Frame;
-            var f2:Frame;
+            var isAlreadyIn:Boolean;
+            if (this._terminated)
+            {
+                return;
+            };
             if (this._currentFrameTypesCache[frame["constructor"]])
             {
                 frameRemoving = false;
@@ -94,11 +120,11 @@
                             break;
                         };
                     };
-                    if (!(frameAdding))
+                    if (!frameAdding)
                     {
-                        for each (f2 in this._framesToRemove)
+                        for each (f in this._framesToRemove)
                         {
-                            if (f2["constructor"] == frame["constructor"])
+                            if (f["constructor"] == frame["constructor"])
                             {
                                 frameRemoving = true;
                                 break;
@@ -109,13 +135,10 @@
                 if (((!(frameRemoving)) || (frameAdding)))
                 {
                     _log.error((((("Someone asked for the frame " + frame) + " to be ") + "added to the worker, but there is already another ") + "frame of the same type within it."));
-                    if (!(allowDuplicateFrame))
-                    {
-                        return;
-                    };
+                    return;
                 };
             };
-            if (!(frame))
+            if (!frame)
             {
                 return;
             };
@@ -125,7 +148,18 @@
             };
             if (this._processingMessage)
             {
-                this._framesToAdd.push(frame);
+                isAlreadyIn = false;
+                for each (f in this._framesToAdd)
+                {
+                    if (getQualifiedClassName(f) == getQualifiedClassName(frame))
+                    {
+                        isAlreadyIn = true;
+                    };
+                };
+                if (!isAlreadyIn)
+                {
+                    this._framesToAdd.push(frame);
+                };
             }
             else
             {
@@ -135,7 +169,11 @@
 
         public function removeFrame(frame:Frame):void
         {
-            if (!(frame))
+            if (this._terminated)
+            {
+                return;
+            };
+            if (!frame)
             {
                 return;
             };
@@ -149,7 +187,7 @@
             }
             else
             {
-                if (!(this.isBeingDeleted(frame)))
+                if (!this.isBeingDeleted(frame))
                 {
                     this._framesBeingDeleted[frame] = true;
                     this.pullFrame(frame);
@@ -157,7 +195,7 @@
             };
         }
 
-        private function isBeingDeleted(frame:Frame):Boolean
+        public function isBeingDeleted(frame:Frame):Boolean
         {
             var fr:*;
             for (fr in this._framesBeingDeleted)
@@ -170,9 +208,22 @@
             return (false);
         }
 
+        public function isBeingAdded(frame:Class):Boolean
+        {
+            var fr:*;
+            for each (fr in this._framesToAdd)
+            {
+                if ((fr is frame))
+                {
+                    return (true);
+                };
+            };
+            return (false);
+        }
+
         public function contains(frameClass:Class):Boolean
         {
-            return (!((this.getFrame(frameClass) == null)));
+            return (!(this.getFrame(frameClass) == null));
         }
 
         public function getFrame(frameClass:Class):Frame
@@ -211,7 +262,11 @@
 
         public function resume():void
         {
-            if (!(this._paused))
+            if (this._terminated)
+            {
+                return;
+            };
+            if (!this._paused)
             {
                 return;
             };
@@ -223,19 +278,35 @@
             this.processMessages();
         }
 
+        public function terminate():void
+        {
+            this._terminating = true;
+            this.clear();
+            this._terminating = false;
+            this._terminated = true;
+        }
+
         public function clear():void
         {
+            var frameList:Vector.<Frame>;
             var frame:Frame;
             if (DEBUG_FRAMES)
             {
                 _log.info("Clearing worker (no more frames or messages in queue)");
             };
             var nonPulledFrameList:Vector.<Frame> = new Vector.<Frame>();
-            for each (frame in this._framesList)
+            if (this._framesList)
             {
-                if (!(frame.pulled()))
+                frameList = this._framesList.concat();
+                for each (frame in frameList)
                 {
-                    nonPulledFrameList.push(frame);
+                    if (this._framesList.indexOf(frame) != -1)
+                    {
+                        if (!frame.pulled())
+                        {
+                            nonPulledFrameList.push(frame);
+                        };
+                    };
                 };
             };
             this._framesList = new Vector.<Frame>();
@@ -311,18 +382,73 @@
 
         private function processMessages():void
         {
+            var seuil:int;
+            var msgCount:Dictionary;
+            var mustClean:Boolean;
+            var floodMsg:Dictionary;
+            var i:uint;
+            var c:String;
+            var cleanedQueue:Vector.<Message>;
             var msg:Message;
+            if (this._messagesQueue.length > MAX_MESSAGES_PER_FRAME)
+            {
+                seuil = 10;
+                msgCount = new Dictionary();
+                mustClean = false;
+                floodMsg = new Dictionary();
+                i = 0;
+                while (i < this._messagesQueue.length)
+                {
+                    c = getQualifiedClassName(this._messagesQueue[i]);
+                    c = c.substring((c.indexOf("::") + 2));
+                    if (!this._blacklistedFloodMessages[c])
+                    {
+                    }
+                    else
+                    {
+                        if (!msgCount[c])
+                        {
+                            msgCount[c] = 1;
+                        }
+                        else
+                        {
+                            if (msgCount[c]++ > seuil)
+                            {
+                                floodMsg[c] = true;
+                                mustClean = true;
+                            };
+                        };
+                    };
+                    i++;
+                };
+                if (mustClean)
+                {
+                    cleanedQueue = new Vector.<Message>();
+                    i = 0;
+                    while (i < this._messagesQueue.length)
+                    {
+                        c = getQualifiedClassName(this._messagesQueue[i]);
+                        msgCount[c]--;
+                        if (((!(floodMsg[c])) || (msgCount[c] == 0)))
+                        {
+                            cleanedQueue.push(this._messagesQueue[i]);
+                        };
+                        i++;
+                    };
+                    this._messagesQueue = cleanedQueue;
+                };
+            };
             var messagesProcessed:uint;
             var startTime:uint = getTimer();
-            while ((((((messagesProcessed < MAX_MESSAGES_PER_FRAME)) && ((this._messagesQueue.length > 0)))) && (((getTimer() - startTime) < MAX_TIME_FRAME))))
+            while ((((messagesProcessed < MAX_MESSAGES_PER_FRAME) && (this._messagesQueue.length > 0)) && ((getTimer() - startTime) < MAX_TIME_FRAME)))
             {
                 msg = this._messagesQueue.shift();
-                if ((((msg is CancelableMessage)) && (CancelableMessage(msg).cancel)))
+                if (((msg is CancelableMessage) && (CancelableMessage(msg).cancel)))
                 {
                 }
                 else
                 {
-                    if (((((this._paused) && ((msg is QueueableMessage)))) && (!(this.msgIsUnstoppable(msg)))))
+                    if ((((this._paused) && (msg is QueueableMessage)) && (!(this.msgIsUnstoppable(msg)))))
                     {
                         this._pausedQueue.push(msg);
                         _log.warn(("Queued message: " + msg));
@@ -345,7 +471,6 @@
             };
         }
 
-        [APALogInfo(customInfo="'Msg: ' + msg")]
         private function processMessage(msg:Message):void
         {
             var processed:Boolean;
@@ -360,7 +485,7 @@
                 };
             };
             this._processingMessage = false;
-            if (((!(processed)) && (!((msg is DiscardableMessage)))))
+            if (((!(processed)) && (!(msg is DiscardableMessage))))
             {
                 _log.debug((((("Discarded message: " + msg) + " (at frame ") + FrameIdManager.frameId) + ")"));
             };
@@ -390,5 +515,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.messages
+} com.ankamagames.jerakine.messages
 

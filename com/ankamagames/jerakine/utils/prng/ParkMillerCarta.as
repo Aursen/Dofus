@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.utils.prng
+package com.ankamagames.jerakine.utils.prng
 {
     public class ParkMillerCarta implements PRNG 
     {
@@ -22,7 +22,7 @@
 
         public function nextDouble():Number
         {
-            return ((this.gen() / 2147483647));
+            return (this.gen() / 2147483647);
         }
 
         public function nextIntR(min:Number, max:Number):uint
@@ -34,17 +34,17 @@
 
         public function nextDoubleR(min:Number, max:Number):Number
         {
-            return ((min + ((max - min) * this.nextDouble())));
+            return (min + ((max - min) * this.nextDouble()));
         }
 
         private function gen():uint
         {
             var hi:uint = (16807 * (this._seed >> 16));
-            var lo:uint = (((16807 * (this._seed & 0xFFFF)) + ((hi & 32767) << 16)) + (hi >> 15));
-            return ((this._seed = (((lo > 2147483647)) ? (lo - 2147483647) : lo)));
+            var lo:uint = (((16807 * (this._seed & 0xFFFF)) + ((hi & 0x7FFF) << 16)) + (hi >> 15));
+            return (this._seed = ((lo > 2147483647) ? (lo - 2147483647) : lo));
         }
 
 
     }
-}//package com.ankamagames.jerakine.utils.prng
+} com.ankamagames.jerakine.utils.prng
 

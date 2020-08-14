@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.data
+package com.ankamagames.jerakine.data
 {
     import com.ankamagames.jerakine.utils.errors.SingletonError;
 
@@ -7,12 +7,10 @@
 
         private static var _self:XmlConfig;
 
-        private var _constants:Array;
+        private var _constants:Array = new Array();
 
         public function XmlConfig()
         {
-            this._constants = new Array();
-            super();
             if (_self)
             {
                 throw (new SingletonError());
@@ -21,7 +19,7 @@
 
         public static function getInstance():XmlConfig
         {
-            if (!(_self))
+            if (!_self)
             {
                 _self = new (XmlConfig)();
             };
@@ -43,7 +41,7 @@
             };
         }
 
-        public function getEntry(name:String)
+        public function getEntry(name:String):*
         {
             return (this._constants[name]);
         }
@@ -53,7 +51,7 @@
             var v:* = this._constants[name];
             if ((v is String))
             {
-                return ((((String(v).toLowerCase() == "true")) || ((v == "1"))));
+                return ((String(v).toLowerCase() == "true") || (v == "1"));
             };
             return (v);
         }
@@ -65,5 +63,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.data
+} com.ankamagames.jerakine.data
 

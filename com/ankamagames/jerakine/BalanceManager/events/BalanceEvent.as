@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.BalanceManager.events
+package com.ankamagames.jerakine.BalanceManager.events
 {
     import flash.events.Event;
 
@@ -11,11 +11,11 @@
         public var newBalance:uint;
         public var previousBalance:uint;
 
-        public function BalanceEvent(type:String, bubbles:Boolean=false, cancelable:Boolean=false)
+        public function BalanceEvent(_arg_1:String, bubbles:Boolean=false, cancelable:Boolean=false)
         {
-            super(type, bubbles, cancelable);
+            super(_arg_1, bubbles, cancelable);
         }
 
     }
-}//package com.ankamagames.jerakine.BalanceManager.events
+} com.ankamagames.jerakine.BalanceManager.events
 

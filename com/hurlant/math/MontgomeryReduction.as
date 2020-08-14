@@ -1,12 +1,12 @@
-﻿package com.hurlant.math
+package com.hurlant.math
 {
     import com.hurlant.math.BigInteger;
+    import com.hurlant.math.bi_internal;
     import com.hurlant.math.*;
-    import com.hurlant.math.bi_internal; 
 
     use namespace bi_internal;
 
-    class MontgomeryReduction implements IReduction 
+    internal class MontgomeryReduction implements IReduction 
     {
 
         private var m:BigInteger;
@@ -20,7 +20,7 @@
         {
             this.m = m;
             this.mp = m.invDigit();
-            this.mpl = (this.mp & 32767);
+            this.mpl = (this.mp & 0x7FFF);
             this.mph = (this.mp >> 15);
             this.um = ((1 << (BigInteger.DB - 15)) - 1);
             this.mt2 = (2 * m.t);
@@ -31,7 +31,7 @@
             var r:BigInteger = new BigInteger();
             x.abs().dlShiftTo(this.m.t, r);
             r.divRemTo(this.m, null, r);
-            if ((((x.s < 0)) && ((r.compareTo(BigInteger.ZERO) > 0))))
+            if (((x.s < 0) && (r.compareTo(BigInteger.ZERO) > 0)))
             {
                 this.m.subTo(r, r);
             };
@@ -52,23 +52,20 @@
             var u0:int;
             while (x.t <= this.mt2)
             {
-                var _local_5 = x.t++;
+                var _local_5:* = x.t++;
                 x.a[_local_5] = 0;
             };
             var i:int;
             while (i < this.m.t)
             {
-                j = (x.a[i] & 32767);
+                j = (x.a[i] & 0x7FFF);
                 u0 = (((j * this.mpl) + ((((j * this.mph) + ((x.a[i] >> 15) * this.mpl)) & this.um) << 15)) & BigInteger.DM);
                 j = (i + this.m.t);
                 x.a[j] = (x.a[j] + this.m.am(0, u0, x, i, 0, this.m.t));
                 while (x.a[j] >= BigInteger.DV)
                 {
                     x.a[j] = (x.a[j] - BigInteger.DV);
-                    _local_5 = x.a;
-                    var _local_6 = ++j;
-                    var _local_7 = (_local_5[_local_6] + 1);
-                    _local_5[_local_6] = _local_7;
+                    x.a[++j]++;
                 };
                 i++;
             };
@@ -94,5 +91,5 @@
 
 
     }
-}//package com.hurlant.math
+} com.hurlant.math
 

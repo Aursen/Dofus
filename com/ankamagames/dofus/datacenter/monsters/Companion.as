@@ -1,6 +1,7 @@
-﻿package com.ankamagames.dofus.datacenter.monsters
+package com.ankamagames.dofus.datacenter.monsters
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
+    import com.ankamagames.dofus.types.IdAccessors;
     import __AS3__.vec.Vector;
     import com.ankamagames.jerakine.data.GameData;
     import com.ankamagames.jerakine.data.I18n;
@@ -9,6 +10,7 @@
     {
 
         public static const MODULE:String = "Companions";
+        public static var idAccessors:IdAccessors = new IdAccessors(getCompanionById, getCompanions);
 
         public var id:int;
         public var nameId:uint;
@@ -26,7 +28,7 @@
 
         public static function getCompanionById(id:uint):Companion
         {
-            return ((GameData.getObject(MODULE, id) as Companion));
+            return (GameData.getObject(MODULE, id) as Companion);
         }
 
         public static function getCompanions():Array
@@ -37,7 +39,7 @@
 
         public function get name():String
         {
-            if (!(this._name))
+            if (!this._name)
             {
                 this._name = I18n.getText(this.nameId);
             };
@@ -46,7 +48,7 @@
 
         public function get description():String
         {
-            if (!(this._desc))
+            if (!this._desc)
             {
                 this._desc = I18n.getText(this.descriptionId);
             };
@@ -55,5 +57,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.monsters
+} com.ankamagames.dofus.datacenter.monsters
 

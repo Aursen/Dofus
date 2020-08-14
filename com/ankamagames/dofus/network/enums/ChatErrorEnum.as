@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.enums
+package com.ankamagames.dofus.network.enums
 {
     public class ChatErrorEnum 
     {
@@ -12,8 +12,10 @@
         public static const CHAT_ERROR_INVALID_MAP:uint = 6;
         public static const CHAT_ERROR_NO_PARTY_ARENA:uint = 7;
         public static const CHAT_ERROR_NO_TEAM:uint = 8;
+        public static const CHAT_ERROR_MALFORMED_CONTENT:uint = 9;
+        public static const CHAT_ERROR_NO_CHANNEL_COMMUNITY:uint = 10;
 
 
     }
-}//package com.ankamagames.dofus.network.enums
+} com.ankamagames.dofus.network.enums
 

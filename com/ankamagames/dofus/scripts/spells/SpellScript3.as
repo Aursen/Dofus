@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.scripts.spells
+package com.ankamagames.dofus.scripts.spells
 {
     import com.ankamagames.jerakine.types.positions.MapPoint;
     import com.ankamagames.jerakine.sequencer.ISequencable;
@@ -24,7 +24,7 @@
             var targetCell:MapPoint = FxApi.GetCurrentTargetedCell(runner);
             var casterCell:MapPoint = FxApi.GetEntityCell(caster);
             var portalsCells:Vector.<MapPoint> = SpellFxApi.GetPortalCells(runner);
-            if (((portalsCells) && ((portalsCells.length > 1))))
+            if (((portalsCells) && (portalsCells.length > 1)))
             {
                 entryPortalCell = portalsCells[0];
                 exitPortalCell = portalsCells[(portalsCells.length - 1)];
@@ -35,9 +35,9 @@
             addCasterAnimationStep();
             if (SpellFxApi.HasSpellParam(spell, "casterGfxId"))
             {
-                addGfxEntityStep(casterCell, casterCell, targetCell, PREFIX_CASTER);
+                addNewGfxEntityStep(casterCell, casterCell, targetCell, PREFIX_CASTER, "", caster);
             };
-            if (SpellFxApi.HasSpellParam(spell, "trailGfxId"))
+            if (((SpellFxApi.HasSpellParam(spell, "trailGfxId")) && (tmpTargetCell)))
             {
                 trailGfxShowUnder = false;
                 if (SpellFxApi.HasSpellParam(spell, "trailGfxShowUnder"))
@@ -54,12 +54,12 @@
                 {
                     useOnlySpellZone = SpellFxApi.GetSpellParam(spell, "useOnlySpellZone");
                 };
-                trailStep = SequenceApi.CreateAddGfxInLineStep(runner, SpellFxApi.GetSpellParam(spell, "trailGfxId"), casterCell, tmpTargetCell, SpellFxApi.GetSpellParam(spell, "trailGfxYOffset"), SpellFxApi.GetSpellParam(spell, "trailDisplayType"), SpellFxApi.GetSpellParam(spell, "trailGfxMinScale"), SpellFxApi.GetSpellParam(spell, "trailGfxMaxScale"), SpellFxApi.GetSpellParam(spell, "startTrailOnCaster"), SpellFxApi.GetSpellParam(spell, "endTrailOnTarget"), trailGfxShowUnder, useSpellZone, useOnlySpellZone);
-                if (tmpTargetCell == entryPortalCell)
+                trailStep = SequenceApi.CreateAddGfxInLineStep(runner, SpellFxApi.GetSpellParam(spell, "trailGfxId"), casterCell, tmpTargetCell, SpellFxApi.GetSpellParam(spell, "trailGfxYOffset"), SpellFxApi.GetSpellParam(spell, "trailDisplayType"), SpellFxApi.GetSpellParam(spell, "trailGfxMinScale"), SpellFxApi.GetSpellParam(spell, "trailGfxMaxScale"), SpellFxApi.GetSpellParam(spell, "startTrailOnCaster"), SpellFxApi.GetSpellParam(spell, "endTrailOnTarget"), trailGfxShowUnder, useSpellZone, useOnlySpellZone, caster);
+                if (((entryPortalCell) && (tmpTargetCell == entryPortalCell)))
                 {
                     trailStep2 = SequenceApi.CreateAddGfxInLineStep(runner, SpellFxApi.GetSpellParam(spell, "trailGfxId"), tmpCasterCell, targetCell, SpellFxApi.GetSpellParam(spell, "trailGfxYOffset"), SpellFxApi.GetSpellParam(spell, "trailDisplayType"), SpellFxApi.GetSpellParam(spell, "trailGfxMinScale"), SpellFxApi.GetSpellParam(spell, "trailGfxMaxScale"), SpellFxApi.GetSpellParam(spell, "startTrailOnCaster"), SpellFxApi.GetSpellParam(spell, "endTrailOnTarget"), trailGfxShowUnder, useSpellZone, useOnlySpellZone);
                 };
-                if (!(latestStep))
+                if (!latestStep)
                 {
                     SpellFxApi.AddFrontStep(runner, trailStep);
                 }
@@ -77,12 +77,13 @@
             };
             if (SpellFxApi.HasSpellParam(spell, "targetGfxId"))
             {
-                addGfxEntityStep(targetCell, tmpCasterCell, targetCell, PREFIX_TARGET);
+                addNewGfxEntityStep(targetCell, tmpCasterCell, targetCell, PREFIX_TARGET);
             };
             addAnimHitSteps();
+            addFBackgroundSteps();
             destroy();
         }
 
     }
-}//package com.ankamagames.dofus.scripts.spells
+} com.ankamagames.dofus.scripts.spells
 

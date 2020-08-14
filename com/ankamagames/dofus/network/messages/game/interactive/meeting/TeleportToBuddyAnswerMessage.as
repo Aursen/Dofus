@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.interactive.meeting
+package com.ankamagames.dofus.network.messages.game.interactive.meeting
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class TeleportToBuddyAnswerMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -15,7 +15,7 @@
 
         private var _isInitialized:Boolean = false;
         public var dungeonId:uint = 0;
-        public var buddyId:uint = 0;
+        public var buddyId:Number = 0;
         public var accept:Boolean = false;
 
 
@@ -29,7 +29,7 @@
             return (6293);
         }
 
-        public function initTeleportToBuddyAnswerMessage(dungeonId:uint=0, buddyId:uint=0, accept:Boolean=false):TeleportToBuddyAnswerMessage
+        public function initTeleportToBuddyAnswerMessage(dungeonId:uint=0, buddyId:Number=0, accept:Boolean=false):TeleportToBuddyAnswerMessage
         {
             this.dungeonId = dungeonId;
             this.buddyId = buddyId;
@@ -58,6 +58,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_TeleportToBuddyAnswerMessage(output);
@@ -70,11 +78,11 @@
                 throw (new Error((("Forbidden value (" + this.dungeonId) + ") on element dungeonId.")));
             };
             output.writeVarShort(this.dungeonId);
-            if (this.buddyId < 0)
+            if (((this.buddyId < 0) || (this.buddyId > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.buddyId) + ") on element buddyId.")));
             };
-            output.writeVarInt(this.buddyId);
+            output.writeVarLong(this.buddyId);
             output.writeBoolean(this.accept);
         }
 
@@ -85,20 +93,47 @@
 
         public function deserializeAs_TeleportToBuddyAnswerMessage(input:ICustomDataInput):void
         {
+            this._dungeonIdFunc(input);
+            this._buddyIdFunc(input);
+            this._acceptFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_TeleportToBuddyAnswerMessage(tree);
+        }
+
+        public function deserializeAsyncAs_TeleportToBuddyAnswerMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._dungeonIdFunc);
+            tree.addChild(this._buddyIdFunc);
+            tree.addChild(this._acceptFunc);
+        }
+
+        private function _dungeonIdFunc(input:ICustomDataInput):void
+        {
             this.dungeonId = input.readVarUhShort();
             if (this.dungeonId < 0)
             {
                 throw (new Error((("Forbidden value (" + this.dungeonId) + ") on element of TeleportToBuddyAnswerMessage.dungeonId.")));
             };
-            this.buddyId = input.readVarUhInt();
-            if (this.buddyId < 0)
+        }
+
+        private function _buddyIdFunc(input:ICustomDataInput):void
+        {
+            this.buddyId = input.readVarUhLong();
+            if (((this.buddyId < 0) || (this.buddyId > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.buddyId) + ") on element of TeleportToBuddyAnswerMessage.buddyId.")));
             };
+        }
+
+        private function _acceptFunc(input:ICustomDataInput):void
+        {
             this.accept = input.readBoolean();
         }
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.interactive.meeting
+} com.ankamagames.dofus.network.messages.game.interactive.meeting
 

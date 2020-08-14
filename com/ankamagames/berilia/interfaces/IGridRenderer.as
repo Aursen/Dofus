@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.interfaces
+package com.ankamagames.berilia.interfaces
 {
     import com.ankamagames.berilia.components.Grid;
     import flash.display.DisplayObject;
@@ -18,5 +18,5 @@
         function getDataLength(_arg_1:*, _arg_2:Boolean):uint;
 
     }
-}//package com.ankamagames.berilia.interfaces
+} com.ankamagames.berilia.interfaces
 

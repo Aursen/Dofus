@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.internalDatacenter.appearance
+package com.ankamagames.dofus.internalDatacenter.appearance
 {
     import flash.utils.Proxy;
     import com.ankamagames.jerakine.interfaces.IDataCenter;
@@ -59,7 +59,7 @@
 
         public function get iconUri():Uri
         {
-            if (!(this._uri))
+            if (!this._uri)
             {
                 this._uri = new Uri(XmlConfig.getInstance().getEntry("config.content.path").concat("gfx/ornaments/").concat(this.iconId).concat(".png"));
             };
@@ -68,7 +68,7 @@
 
         public function get fullSizeIconUri():Uri
         {
-            if (!(this._uri))
+            if (!this._uri)
             {
                 this._uri = new Uri(XmlConfig.getInstance().getEntry("config.content.path").concat("gfx/ornaments/").concat(this.iconId).concat(".png"));
             };
@@ -109,10 +109,6 @@
             return (0);
         }
 
-        public function set timerToStart(t:int):void
-        {
-        }
-
         public function get active():Boolean
         {
             return (true);
@@ -133,7 +129,7 @@
             return (false);
         }
 
-        override flash_proxy function getProperty(name:*)
+        override flash_proxy function getProperty(name:*):*
         {
             var t:* = undefined;
             var r:* = undefined;
@@ -142,7 +138,7 @@
                 return (this[name]);
             };
             t = this.ornament;
-            if (!(t))
+            if (!t)
             {
                 r = "";
             };
@@ -152,7 +148,7 @@
             }
             catch(e:Error)
             {
-                return (("Error_on_item_" + name));
+                return ("Error_on_item_" + name);
             };
         }
 
@@ -163,7 +159,7 @@
 
         public function toString():String
         {
-            return ((("[OrnamentWrapper#" + this.id) + "]"));
+            return (("[OrnamentWrapper#" + this.id) + "]");
         }
 
         public function addHolder(h:ISlotDataHolder):void
@@ -176,7 +172,7 @@
 
         public function getIconUri(pngMode:Boolean=true):Uri
         {
-            if (!(this._uri))
+            if (!this._uri)
             {
                 this._uri = new Uri(XmlConfig.getInstance().getEntry("config.content.path").concat("gfx/ornaments/").concat(this.iconId).concat(".png"));
             };
@@ -185,5 +181,5 @@
 
 
     }
-}//package com.ankamagames.dofus.internalDatacenter.appearance
+} com.ankamagames.dofus.internalDatacenter.appearance
 

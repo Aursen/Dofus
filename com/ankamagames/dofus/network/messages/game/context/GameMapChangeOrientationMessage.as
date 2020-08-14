@@ -1,27 +1,23 @@
-﻿package com.ankamagames.dofus.network.messages.game.context
+package com.ankamagames.dofus.network.messages.game.context
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
     import com.ankamagames.dofus.network.types.game.context.ActorOrientation;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
 
-    [Trusted]
     public class GameMapChangeOrientationMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 946;
 
         private var _isInitialized:Boolean = false;
-        public var orientation:ActorOrientation;
+        public var orientation:ActorOrientation = new ActorOrientation();
+        private var _orientationtree:FuncTree;
 
-        public function GameMapChangeOrientationMessage()
-        {
-            this.orientation = new ActorOrientation();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
@@ -58,6 +54,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_GameMapChangeOrientationMessage(output);
@@ -79,7 +83,23 @@
             this.orientation.deserialize(input);
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GameMapChangeOrientationMessage(tree);
+        }
+
+        public function deserializeAsyncAs_GameMapChangeOrientationMessage(tree:FuncTree):void
+        {
+            this._orientationtree = tree.addChild(this._orientationtreeFunc);
+        }
+
+        private function _orientationtreeFunc(input:ICustomDataInput):void
+        {
+            this.orientation = new ActorOrientation();
+            this.orientation.deserializeAsync(this._orientationtree);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.context
+} com.ankamagames.dofus.network.messages.game.context
 

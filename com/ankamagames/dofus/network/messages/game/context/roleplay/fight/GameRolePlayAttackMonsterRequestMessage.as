@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.context.roleplay.fight
+package com.ankamagames.dofus.network.messages.game.context.roleplay.fight
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,15 +6,15 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class GameRolePlayAttackMonsterRequestMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 6191;
 
         private var _isInitialized:Boolean = false;
-        public var monsterGroupId:int = 0;
+        public var monsterGroupId:Number = 0;
 
 
         override public function get isInitialized():Boolean
@@ -27,7 +27,7 @@
             return (6191);
         }
 
-        public function initGameRolePlayAttackMonsterRequestMessage(monsterGroupId:int=0):GameRolePlayAttackMonsterRequestMessage
+        public function initGameRolePlayAttackMonsterRequestMessage(monsterGroupId:Number=0):GameRolePlayAttackMonsterRequestMessage
         {
             this.monsterGroupId = monsterGroupId;
             this._isInitialized = true;
@@ -52,6 +52,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_GameRolePlayAttackMonsterRequestMessage(output);
@@ -59,7 +67,11 @@
 
         public function serializeAs_GameRolePlayAttackMonsterRequestMessage(output:ICustomDataOutput):void
         {
-            output.writeInt(this.monsterGroupId);
+            if (((this.monsterGroupId < -9007199254740992) || (this.monsterGroupId > 9007199254740992)))
+            {
+                throw (new Error((("Forbidden value (" + this.monsterGroupId) + ") on element monsterGroupId.")));
+            };
+            output.writeDouble(this.monsterGroupId);
         }
 
         public function deserialize(input:ICustomDataInput):void
@@ -69,10 +81,29 @@
 
         public function deserializeAs_GameRolePlayAttackMonsterRequestMessage(input:ICustomDataInput):void
         {
-            this.monsterGroupId = input.readInt();
+            this._monsterGroupIdFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GameRolePlayAttackMonsterRequestMessage(tree);
+        }
+
+        public function deserializeAsyncAs_GameRolePlayAttackMonsterRequestMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._monsterGroupIdFunc);
+        }
+
+        private function _monsterGroupIdFunc(input:ICustomDataInput):void
+        {
+            this.monsterGroupId = input.readDouble();
+            if (((this.monsterGroupId < -9007199254740992) || (this.monsterGroupId > 9007199254740992)))
+            {
+                throw (new Error((("Forbidden value (" + this.monsterGroupId) + ") on element of GameRolePlayAttackMonsterRequestMessage.monsterGroupId.")));
+            };
         }
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.context.roleplay.fight
+} com.ankamagames.dofus.network.messages.game.context.roleplay.fight
 

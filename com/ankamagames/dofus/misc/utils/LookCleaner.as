@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.misc.utils
+package com.ankamagames.dofus.misc.utils
 {
     import com.ankamagames.dofus.datacenter.breeds.Breed;
     import com.ankamagames.tiphon.types.look.TiphonEntityLook;
@@ -34,5 +34,5 @@
 
 
     }
-}//package com.ankamagames.dofus.misc.utils
+} com.ankamagames.dofus.misc.utils
 

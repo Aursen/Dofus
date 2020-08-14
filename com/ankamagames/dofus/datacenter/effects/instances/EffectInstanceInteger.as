@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.datacenter.effects.instances
+package com.ankamagames.dofus.datacenter.effects.instances
 {
     import com.ankamagames.dofus.datacenter.effects.EffectInstance;
     import com.ankamagames.jerakine.interfaces.IDataCenter;
@@ -14,14 +14,20 @@
             var o:EffectInstanceInteger = new EffectInstanceInteger();
             o.rawZone = rawZone;
             o.effectId = effectId;
+            o.order = order;
             o.duration = duration;
             o.delay = delay;
             o.value = this.value;
             o.random = random;
             o.group = group;
-            o.hidden = hidden;
+            o.visibleInTooltip = visibleInTooltip;
+            o.visibleInBuffUi = visibleInBuffUi;
+            o.visibleInFightLog = visibleInFightLog;
+            o.visibleOnTerrain = visibleOnTerrain;
             o.targetId = targetId;
             o.targetMask = targetMask;
+            o.forClientOnly = forClientOnly;
+            o.dispellable = dispellable;
             return (o);
         }
 
@@ -58,5 +64,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.effects.instances
+} com.ankamagames.dofus.datacenter.effects.instances
 

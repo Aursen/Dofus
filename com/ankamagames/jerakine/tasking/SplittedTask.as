@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.tasking
+package com.ankamagames.jerakine.tasking
 {
     import flash.events.EventDispatcher;
     import com.ankamagames.jerakine.utils.misc.Prioritizable;
@@ -37,5 +37,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.tasking
+} com.ankamagames.jerakine.tasking
 

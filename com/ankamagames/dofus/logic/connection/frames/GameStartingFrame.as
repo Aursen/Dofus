@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.connection.frames
+package com.ankamagames.dofus.logic.connection.frames
 {
     import com.ankamagames.jerakine.messages.Frame;
     import com.ankamagames.jerakine.logger.Logger;
@@ -9,6 +9,7 @@
     import com.ankamagames.jerakine.types.enums.Priority;
     import com.ankamagames.dofus.kernel.Kernel;
     import com.ankamagames.dofus.logic.connection.messages.GameStartingMessage;
+    import com.ankamagames.dofus.BuildInfos;
     import com.ankamagames.dofus.logic.connection.messages.DelayedSystemMessageDisplayMessage;
     import com.ankamagames.dofus.network.messages.server.basic.SystemMessageDisplayMessage;
     import com.ankamagames.dofus.logic.common.actions.AgreementAgreedAction;
@@ -31,6 +32,7 @@
     {
 
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(GameStartingFrame));
+        private static var displayMacOsSupportWarning:Boolean = true;
 
         private var _worker:Worker;
         private var m:MapEditorManager;
@@ -46,45 +48,45 @@
             this._worker = Kernel.getWorker();
             this.m = new MapEditorManager();
             Kernel.getWorker().process(new GameStartingMessage());
-            Dofus.getInstance().renameApp("Dofus");
+            Dofus.getInstance().renameApp(("Dofus " + BuildInfos.VERSION.toStringForAppName()));
             return (true);
         }
 
         public function process(msg:Message):Boolean
         {
-            var _local_2:DelayedSystemMessageDisplayMessage;
-            var _local_3:SystemMessageDisplayMessage;
-            var _local_4:AgreementAgreedAction;
-            var _local_5:String;
+            var dsmdmsg:DelayedSystemMessageDisplayMessage;
+            var smdmsg:SystemMessageDisplayMessage;
+            var aaa:AgreementAgreedAction;
+            var newLength:String;
             var dsmdmsg2:DelayedSystemMessageDisplayMessage;
             switch (true)
             {
                 case (msg is DelayedSystemMessageDisplayMessage):
-                    _local_2 = (msg as DelayedSystemMessageDisplayMessage);
-                    this.systemMessageDisplay(_local_2);
+                    dsmdmsg = (msg as DelayedSystemMessageDisplayMessage);
+                    this.systemMessageDisplay(dsmdmsg);
                     return (true);
                 case (msg is SystemMessageDisplayMessage):
-                    _local_3 = (msg as SystemMessageDisplayMessage);
-                    if (_local_3.hangUp)
+                    smdmsg = (msg as SystemMessageDisplayMessage);
+                    if (smdmsg.hangUp)
                     {
                         ConnectionsHandler.connectionGonnaBeClosed(DisconnectionReasonEnum.DISCONNECTED_BY_POPUP);
                         dsmdmsg2 = new DelayedSystemMessageDisplayMessage();
-                        dsmdmsg2.initDelayedSystemMessageDisplayMessage(_local_3.hangUp, _local_3.msgId, _local_3.parameters);
+                        dsmdmsg2.initDelayedSystemMessageDisplayMessage(smdmsg.hangUp, smdmsg.msgId, smdmsg.parameters);
                         DisconnectionHandlerFrame.messagesAfterReset.push(dsmdmsg2);
                     };
-                    this.systemMessageDisplay(_local_3);
+                    this.systemMessageDisplay(smdmsg);
                     return (true);
                 case (msg is AgreementAgreedAction):
-                    _local_4 = AgreementAgreedAction(msg);
-                    if (_local_4.fileName == "tou")
+                    aaa = AgreementAgreedAction(msg);
+                    if (aaa.fileName == "tou")
                     {
-                        _local_5 = ((XmlConfig.getInstance().getEntry("config.lang.current") + "#") + (I18n.getUiText("ui.legal.tou1") + I18n.getUiText("ui.legal.tou2")).length);
-                        OptionManager.getOptionManager("dofus")["legalAgreementTou"] = _local_5;
+                        newLength = ((XmlConfig.getInstance().getEntry("config.lang.current") + "#") + (I18n.getUiText("ui.legal.tou1") + I18n.getUiText("ui.legal.tou2")).length);
+                        OptionManager.getOptionManager("dofus").setOption("legalAgreementTou", newLength);
                     };
-                    if (_local_4.fileName == "modstou")
+                    if (aaa.fileName == "modstou")
                     {
-                        _local_5 = ((XmlConfig.getInstance().getEntry("config.lang.current") + "#") + I18n.getUiText("ui.legal.modstou").length);
-                        OptionManager.getOptionManager("dofus")["legalAgreementModsTou"] = _local_5;
+                        newLength = ((XmlConfig.getInstance().getEntry("config.lang.current") + "#") + I18n.getUiText("ui.legal.modstou").length);
+                        OptionManager.getOptionManager("dofus").setOption("legalAgreementModsTou", newLength);
                     };
                     return (true);
                 case (msg is OpenMainMenuAction):
@@ -135,5 +137,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.connection.frames
+} com.ankamagames.dofus.logic.connection.frames
 

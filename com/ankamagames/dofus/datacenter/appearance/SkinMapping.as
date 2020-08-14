@@ -1,16 +1,14 @@
-﻿package com.ankamagames.dofus.datacenter.appearance
+package com.ankamagames.dofus.datacenter.appearance
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
-    import com.ankamagames.jerakine.logger.Logger;
-    import com.ankamagames.jerakine.logger.Log;
-    import flash.utils.getQualifiedClassName;
+    import com.ankamagames.dofus.types.IdAccessors;
     import com.ankamagames.jerakine.data.GameData;
 
     public class SkinMapping implements IDataCenter 
     {
 
         public static const MODULE:String = "SkinMappings";
-        private static var _log:Logger = Log.getLogger(getQualifiedClassName(SkinMapping));
+        public static var idAccessors:IdAccessors = new IdAccessors(getSkinMappingById, getSkinMappings);
 
         public var id:int;
         public var lowDefId:int;
@@ -18,7 +16,7 @@
 
         public static function getSkinMappingById(id:int):SkinMapping
         {
-            return ((GameData.getObject(MODULE, id) as SkinMapping));
+            return (GameData.getObject(MODULE, id) as SkinMapping);
         }
 
         public static function getSkinMappings():Array
@@ -28,5 +26,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.appearance
+} com.ankamagames.dofus.datacenter.appearance
 

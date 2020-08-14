@@ -1,8 +1,9 @@
-﻿package com.ankamagames.dofus.network.types.game.context.roleplay.treasureHunt
+package com.ankamagames.dofus.network.types.game.context.roleplay.treasureHunt
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
     public class TreasureHuntStepFollowDirection extends TreasureHuntStep implements INetworkType 
     {
@@ -55,11 +56,33 @@
         public function deserializeAs_TreasureHuntStepFollowDirection(input:ICustomDataInput):void
         {
             super.deserialize(input);
+            this._directionFunc(input);
+            this._mapCountFunc(input);
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_TreasureHuntStepFollowDirection(tree);
+        }
+
+        public function deserializeAsyncAs_TreasureHuntStepFollowDirection(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._directionFunc);
+            tree.addChild(this._mapCountFunc);
+        }
+
+        private function _directionFunc(input:ICustomDataInput):void
+        {
             this.direction = input.readByte();
             if (this.direction < 0)
             {
                 throw (new Error((("Forbidden value (" + this.direction) + ") on element of TreasureHuntStepFollowDirection.direction.")));
             };
+        }
+
+        private function _mapCountFunc(input:ICustomDataInput):void
+        {
             this.mapCount = input.readVarUhShort();
             if (this.mapCount < 0)
             {
@@ -69,5 +92,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.context.roleplay.treasureHunt
+} com.ankamagames.dofus.network.types.game.context.roleplay.treasureHunt
 

@@ -1,29 +1,25 @@
-﻿package com.ankamagames.berilia.types.data
+package com.ankamagames.berilia.types.data
 {
     import com.ankamagames.jerakine.interfaces.IModuleUtil;
-    import flash.utils.Dictionary;
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
     import com.ankamagames.jerakine.types.Uri;
     import __AS3__.vec.Vector;
-    import flash.display.Loader;
-    import flash.system.ApplicationDomain;
-    import com.ankamagames.berilia.utils.ModuleScriptAnalyzer;
     import com.ankamagames.jerakine.managers.StoreDataManager;
     import com.ankamagames.berilia.BeriliaConstants;
     import com.ankamagames.berilia.managers.UiModuleManager;
     import com.ankamagames.berilia.managers.UiGroupManager;
-    import com.ankamagames.berilia.utils.errors.BeriliaError;
+    import flash.utils.getDefinitionByName;
     import __AS3__.vec.*;
 
     public class UiModule implements IModuleUtil 
     {
 
         private static var ID_COUNT:uint = 0;
-        public static var MEMORY_LOG:Dictionary = new Dictionary(true);
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(UiModule));
 
+        public var shortcutsXml:XML;
         private var _instanceId:uint;
         private var _id:String;
         private var _name:String;
@@ -36,33 +32,22 @@
         private var _script:String;
         private var _shortcuts:String;
         private var _uis:Array;
-        private var _trusted:Boolean = false;
-        private var _trustedInit:Boolean = false;
-        private var _activated:Boolean = false;
         private var _rootPath:String;
         private var _storagePath:String;
         private var _mainClass:Object;
         private var _cachedFiles:Array;
         private var _apiList:Vector.<Object>;
         private var _groups:Vector.<UiGroup>;
-        var _loader:Loader;
-        private var _moduleAppDomain:ApplicationDomain;
+        internal var _scriptClass:Class;
         private var _enable:Boolean = true;
         private var _rawXml:XML;
-        private var _scriptAnalyser:ModuleScriptAnalyzer;
-        private var _apiScriptAnalyserCallback:Dictionary;
-        private var _hookScriptAnalyserCallback:Dictionary;
-        private var _actionScriptAnalyserCallback:Dictionary;
+        private var _priority:int;
 
-        public function UiModule(id:String=null, name:String=null, version:String=null, gameVersion:String=null, author:String=null, shortDescription:String=null, description:String=null, iconUri:String=null, script:String=null, shortcuts:String=null, uis:Array=null, cachedFiles:Array=null, activated:Boolean=false)
+        public function UiModule(id:String=null, name:String=null, version:String=null, gameVersion:String=null, author:String=null, shortDescription:String=null, description:String=null, iconUri:String=null, script:String=null, shortcuts:String=null, priority:int=0, uis:Array=null, cachedFiles:Array=null)
         {
             var ui:UiData;
             this._instanceId = ++ID_COUNT;
-            this._apiScriptAnalyserCallback = new Dictionary();
-            this._hookScriptAnalyserCallback = new Dictionary();
-            this._actionScriptAnalyserCallback = new Dictionary();
             super();
-            MEMORY_LOG[this] = 1;
             this._name = name;
             this._version = version;
             this._gameVersion = gameVersion;
@@ -72,9 +57,10 @@
             this._iconUri = new Uri(iconUri);
             this._script = script;
             this._shortcuts = shortcuts;
+            this._priority = priority;
             this._id = id;
-            this._uis = new Array();
-            this._cachedFiles = ((cachedFiles) ? cachedFiles : new Array());
+            this._uis = [];
+            this._cachedFiles = ((cachedFiles) ? cachedFiles : []);
             for each (ui in uis)
             {
                 this._uis[ui.name] = ui;
@@ -90,12 +76,17 @@
         }
 
 
-        public function set loader(l:Loader):void
+        public function set scriptClass(c:Class):void
         {
-            if (!(this._loader))
+            if (!this._scriptClass)
             {
-                this._loader = l;
+                this._scriptClass = c;
             };
+        }
+
+        public function get scriptClass():Class
+        {
+            return (this._scriptClass);
         }
 
         public function get instanceId():uint
@@ -153,37 +144,14 @@
             return (this._shortcuts);
         }
 
+        public function get priority():int
+        {
+            return (this._priority);
+        }
+
         public function get uis():Array
         {
             return (this._uis);
-        }
-
-        public function get trusted():Boolean
-        {
-            return (this._trusted);
-        }
-
-        public function set trusted(v:Boolean):void
-        {
-            var state:*;
-            if (!(this._trustedInit))
-            {
-                this._trusted = v;
-                this._trustedInit = true;
-                state = StoreDataManager.getInstance().getData(BeriliaConstants.DATASTORE_MOD, this.id);
-                if (state == null)
-                {
-                    this._enable = this._trusted;
-                }
-                else
-                {
-                    this._enable = ((state) || (this._trusted));
-                };
-                if (!(this._enable))
-                {
-                    this.enable = false;
-                };
-            };
         }
 
         public function get enable():Boolean
@@ -193,7 +161,7 @@
 
         public function set enable(v:Boolean):void
         {
-            var _local_2:UiGroup;
+            var uiGroup:UiGroup;
             StoreDataManager.getInstance().setData(BeriliaConstants.DATASTORE_MOD, this.id, v);
             if (((!(this._enable)) && (v)))
             {
@@ -203,9 +171,9 @@
             else
             {
                 this._enable = false;
-                for each (_local_2 in this._groups)
+                for each (uiGroup in this._groups)
                 {
-                    UiGroupManager.getInstance().removeGroup(_local_2.name);
+                    UiGroupManager.getInstance().removeGroup(uiGroup.name);
                 };
                 UiModuleManager.getInstance().unloadModule(this.id);
             };
@@ -231,30 +199,22 @@
             return (this._apiList);
         }
 
-        public function set applicationDomain(appDomain:ApplicationDomain):void
+        public function bindUiClasses():void
         {
             var ui:UiData;
-            if (this._moduleAppDomain)
-            {
-                throw (new BeriliaError("ApplicationDomain cannot be set twice."));
-            };
+            var uiClass:Class;
             for each (ui in this.uis)
             {
-                if (((appDomain) && (appDomain.hasDefinition(ui.uiClassName))))
+                uiClass = (getDefinitionByName(ui.uiClassName) as Class);
+                if (uiClass)
                 {
-                    ui.uiClass = (appDomain.getDefinition(ui.uiClassName) as Class);
+                    ui.uiClass = uiClass;
                 }
                 else
                 {
                     _log.error((ui.uiClassName + " cannot be found"));
                 };
             };
-            this._moduleAppDomain = appDomain;
-        }
-
-        public function get applicationDomain():ApplicationDomain
-        {
-            return (this._moduleAppDomain);
         }
 
         public function get mainClass():Object
@@ -264,10 +224,6 @@
 
         public function set mainClass(instance:Object):void
         {
-            if (this._mainClass)
-            {
-                throw (new BeriliaError("mainClass cannot be set twice."));
-            };
             this._mainClass = instance;
         }
 
@@ -279,15 +235,6 @@
         public function get rawXml():XML
         {
             return (this._rawXml);
-        }
-
-        public function addUiGroup(groupName:String, exclusive:Boolean, permanent:Boolean):void
-        {
-            if (!(this._groups))
-            {
-                this._groups = new Vector.<UiGroup>();
-            };
-            this._groups.push(new UiGroup(groupName, exclusive, permanent));
         }
 
         public function getUi(name:String):UiData
@@ -302,10 +249,6 @@
             {
                 result = (result + ("\nName:" + this._name));
             };
-            if (this._trusted)
-            {
-                result = (result + ("\nTrusted:" + this._trusted));
-            };
             if (this._author)
             {
                 result = (result + ("\nAuthor:" + this._author));
@@ -319,86 +262,6 @@
 
         public function destroy():void
         {
-            if (this._loader)
-            {
-                this._loader.unloadAndStop(true);
-            };
-        }
-
-        public function usedApiList(callBack:Function):void
-        {
-            if (this._apiScriptAnalyserCallback)
-            {
-                if (!(this._scriptAnalyser))
-                {
-                    this._scriptAnalyser = new ModuleScriptAnalyzer(this, this.onScriptAnalyserReady, null);
-                };
-                this._apiScriptAnalyserCallback[callBack] = callBack;
-            }
-            else
-            {
-                (callBack(this._scriptAnalyser.apis));
-            };
-        }
-
-        public function usedHookList(callBack:Function):void
-        {
-            if (this._hookScriptAnalyserCallback)
-            {
-                if (!(this._scriptAnalyser))
-                {
-                    this._scriptAnalyser = new ModuleScriptAnalyzer(this, this.onScriptAnalyserReady, null);
-                };
-                this._hookScriptAnalyserCallback[callBack] = callBack;
-            }
-            else
-            {
-                (callBack(this._scriptAnalyser.hooks));
-            };
-        }
-
-        public function usedActionList(callBack:Function):void
-        {
-            if (this._actionScriptAnalyserCallback)
-            {
-                if (!(this._scriptAnalyser))
-                {
-                    this._scriptAnalyser = new ModuleScriptAnalyzer(this, this.onScriptAnalyserReady, null);
-                };
-                this._actionScriptAnalyserCallback[callBack] = callBack;
-            }
-            else
-            {
-                (callBack(this._scriptAnalyser.actions));
-            };
-        }
-
-        private function initScriptAnalyser():void
-        {
-            if (!(this._scriptAnalyser))
-            {
-                this._scriptAnalyser = new ModuleScriptAnalyzer(this, this.onScriptAnalyserReady, this._moduleAppDomain);
-            };
-        }
-
-        private function onScriptAnalyserReady():void
-        {
-            var f:Function;
-            for each (f in this._actionScriptAnalyserCallback)
-            {
-                (f(this._scriptAnalyser.actions));
-            };
-            for each (f in this._hookScriptAnalyserCallback)
-            {
-                (f(this._scriptAnalyser.hooks));
-            };
-            for each (f in this._apiScriptAnalyserCallback)
-            {
-                (f(this._scriptAnalyser.apis));
-            };
-            this._actionScriptAnalyserCallback = null;
-            this._hookScriptAnalyserCallback = null;
-            this._apiScriptAnalyserCallback = null;
         }
 
         protected function fillFromXml(xml:XML, nativePath:String, id:String):void
@@ -417,17 +280,19 @@
             var file:String;
             var mod:String;
             var fileuri:String;
-            this.setProperty("name", xml..header..name);
-            this.setProperty("version", xml..header..version);
-            this.setProperty("gameVersion", xml..header..gameVersion);
-            this.setProperty("author", xml..header..author);
-            this.setProperty("description", xml..header..description);
-            this.setProperty("shortDescription", xml..header..shortDescription);
-            this.setProperty("script", xml..script);
-            this.setProperty("shortcuts", xml..shortcuts);
+            var header:XMLList = xml.child("header");
+            this.setProperty("name", header.child("name"));
+            this.setProperty("version", header.child("version"));
+            this.setProperty("gameVersion", header.child("gameVersion"));
+            this.setProperty("author", header.child("author"));
+            this.setProperty("description", header.child("description"));
+            this.setProperty("shortDescription", header.child("shortDescription"));
+            this.setProperty("priority", header.child("priority"));
+            this.setProperty("script", xml.child("script"));
+            this.setProperty("shortcuts", xml.child("shortcuts"));
             this._rawXml = xml;
             nativePath = nativePath.split("app:/").join("");
-            if ((((nativePath.indexOf("file://") == -1)) && (!((nativePath.substr(0, 2) == "\\\\")))))
+            if (((nativePath.indexOf("file://") == -1) && (!(nativePath.substr(0, 2) == "\\\\"))))
             {
                 nativePath = ("file://" + nativePath);
             };
@@ -442,7 +307,7 @@
             };
             this._rootPath = (nativePath + "/");
             this._storagePath = unescape((this._rootPath + "storage/")).replace("file://", "");
-            var iconPath:String = xml..header..icon;
+            var iconPath:String = header.child("icon");
             if (((iconPath) && (iconPath.length)))
             {
                 this._iconUri = new Uri((this._rootPath + iconPath));
@@ -450,7 +315,7 @@
             this._groups = new Vector.<UiGroup>();
             for each (group in xml.uiGroup)
             {
-                uiNames = new Array();
+                uiNames = [];
                 groupName = group..@name;
                 try
                 {
@@ -472,10 +337,6 @@
                 uisGroup = uis.@group.toString();
                 for each (ui in uis..ui)
                 {
-                    if (ui.@group.toString().length)
-                    {
-                        uisGroup = ui.@group.toString();
-                    };
                     file = null;
                     if (ui.@file.toString().length)
                     {
@@ -515,5 +376,5 @@
 
 
     }
-}//package com.ankamagames.berilia.types.data
+} com.ankamagames.berilia.types.data
 

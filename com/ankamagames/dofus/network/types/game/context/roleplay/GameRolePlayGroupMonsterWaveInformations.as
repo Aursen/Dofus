@@ -1,9 +1,10 @@
-﻿package com.ankamagames.dofus.network.types.game.context.roleplay
+package com.ankamagames.dofus.network.types.game.context.roleplay
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import __AS3__.vec.Vector;
-    import com.ankamagames.dofus.network.types.game.look.EntityLook;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import com.ankamagames.dofus.network.types.game.context.EntityDispositionInformations;
+    import com.ankamagames.dofus.network.types.game.look.EntityLook;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
     import com.ankamagames.dofus.network.ProtocolTypeManager;
@@ -15,22 +16,18 @@
         public static const protocolId:uint = 464;
 
         public var nbWaves:uint = 0;
-        public var alternatives:Vector.<GroupMonsterStaticInformations>;
+        public var alternatives:Vector.<GroupMonsterStaticInformations> = new Vector.<GroupMonsterStaticInformations>();
+        private var _alternativestree:FuncTree;
 
-        public function GameRolePlayGroupMonsterWaveInformations()
-        {
-            this.alternatives = new Vector.<GroupMonsterStaticInformations>();
-            super();
-        }
 
         override public function getTypeId():uint
         {
             return (464);
         }
 
-        public function initGameRolePlayGroupMonsterWaveInformations(contextualId:int=0, look:EntityLook=null, disposition:EntityDispositionInformations=null, staticInfos:GroupMonsterStaticInformations=null, ageBonus:int=0, lootShare:int=0, alignmentSide:int=0, keyRingBonus:Boolean=false, hasHardcoreDrop:Boolean=false, hasAVARewardToken:Boolean=false, nbWaves:uint=0, alternatives:Vector.<GroupMonsterStaticInformations>=null):GameRolePlayGroupMonsterWaveInformations
+        public function initGameRolePlayGroupMonsterWaveInformations(contextualId:Number=0, disposition:EntityDispositionInformations=null, look:EntityLook=null, staticInfos:GroupMonsterStaticInformations=null, lootShare:int=0, alignmentSide:int=0, keyRingBonus:Boolean=false, hasHardcoreDrop:Boolean=false, hasAVARewardToken:Boolean=false, nbWaves:uint=0, alternatives:Vector.<GroupMonsterStaticInformations>=null):GameRolePlayGroupMonsterWaveInformations
         {
-            super.initGameRolePlayGroupMonsterInformations(contextualId, look, disposition, staticInfos, ageBonus, lootShare, alignmentSide, keyRingBonus, hasHardcoreDrop, hasAVARewardToken);
+            super.initGameRolePlayGroupMonsterInformations(contextualId, disposition, look, staticInfos, lootShare, alignmentSide, keyRingBonus, hasHardcoreDrop, hasAVARewardToken);
             this.nbWaves = nbWaves;
             this.alternatives = alternatives;
             return (this);
@@ -76,11 +73,7 @@
             var _id2:uint;
             var _item2:GroupMonsterStaticInformations;
             super.deserialize(input);
-            this.nbWaves = input.readByte();
-            if (this.nbWaves < 0)
-            {
-                throw (new Error((("Forbidden value (" + this.nbWaves) + ") on element of GameRolePlayGroupMonsterWaveInformations.nbWaves.")));
-            };
+            this._nbWavesFunc(input);
             var _alternativesLen:uint = input.readUnsignedShort();
             var _i2:uint;
             while (_i2 < _alternativesLen)
@@ -93,7 +86,47 @@
             };
         }
 
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GameRolePlayGroupMonsterWaveInformations(tree);
+        }
+
+        public function deserializeAsyncAs_GameRolePlayGroupMonsterWaveInformations(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._nbWavesFunc);
+            this._alternativestree = tree.addChild(this._alternativestreeFunc);
+        }
+
+        private function _nbWavesFunc(input:ICustomDataInput):void
+        {
+            this.nbWaves = input.readByte();
+            if (this.nbWaves < 0)
+            {
+                throw (new Error((("Forbidden value (" + this.nbWaves) + ") on element of GameRolePlayGroupMonsterWaveInformations.nbWaves.")));
+            };
+        }
+
+        private function _alternativestreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._alternativestree.addChild(this._alternativesFunc);
+                i++;
+            };
+        }
+
+        private function _alternativesFunc(input:ICustomDataInput):void
+        {
+            var _id:uint = input.readUnsignedShort();
+            var _item:GroupMonsterStaticInformations = ProtocolTypeManager.getInstance(GroupMonsterStaticInformations, _id);
+            _item.deserialize(input);
+            this.alternatives.push(_item);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.types.game.context.roleplay
+} com.ankamagames.dofus.network.types.game.context.roleplay
 

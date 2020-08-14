@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.context.fight
+package com.ankamagames.dofus.network.messages.game.context.fight
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,15 +6,15 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class GameFightLeaveMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 721;
 
         private var _isInitialized:Boolean = false;
-        public var charId:int = 0;
+        public var charId:Number = 0;
 
 
         override public function get isInitialized():Boolean
@@ -27,7 +27,7 @@
             return (721);
         }
 
-        public function initGameFightLeaveMessage(charId:int=0):GameFightLeaveMessage
+        public function initGameFightLeaveMessage(charId:Number=0):GameFightLeaveMessage
         {
             this.charId = charId;
             this._isInitialized = true;
@@ -52,6 +52,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_GameFightLeaveMessage(output);
@@ -59,7 +67,11 @@
 
         public function serializeAs_GameFightLeaveMessage(output:ICustomDataOutput):void
         {
-            output.writeInt(this.charId);
+            if (((this.charId < -9007199254740992) || (this.charId > 9007199254740992)))
+            {
+                throw (new Error((("Forbidden value (" + this.charId) + ") on element charId.")));
+            };
+            output.writeDouble(this.charId);
         }
 
         public function deserialize(input:ICustomDataInput):void
@@ -69,10 +81,29 @@
 
         public function deserializeAs_GameFightLeaveMessage(input:ICustomDataInput):void
         {
-            this.charId = input.readInt();
+            this._charIdFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GameFightLeaveMessage(tree);
+        }
+
+        public function deserializeAsyncAs_GameFightLeaveMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._charIdFunc);
+        }
+
+        private function _charIdFunc(input:ICustomDataInput):void
+        {
+            this.charId = input.readDouble();
+            if (((this.charId < -9007199254740992) || (this.charId > 9007199254740992)))
+            {
+                throw (new Error((("Forbidden value (" + this.charId) + ") on element of GameFightLeaveMessage.charId.")));
+            };
         }
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.context.fight
+} com.ankamagames.dofus.network.messages.game.context.fight
 

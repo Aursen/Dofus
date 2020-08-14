@@ -1,4 +1,4 @@
-﻿package com.hurlant.util.der
+package com.hurlant.util.der
 {
     import flash.utils.ByteArray;
 
@@ -10,5 +10,5 @@
         function toDER():ByteArray;
 
     }
-}//package com.hurlant.util.der
+} com.hurlant.util.der
 

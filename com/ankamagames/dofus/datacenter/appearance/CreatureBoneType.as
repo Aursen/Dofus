@@ -1,12 +1,14 @@
-﻿package com.ankamagames.dofus.datacenter.appearance
+package com.ankamagames.dofus.datacenter.appearance
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
+    import com.ankamagames.dofus.types.IdAccessors;
     import com.ankamagames.jerakine.data.GameData;
 
     public class CreatureBoneType implements IDataCenter 
     {
 
         public static const MODULE:String = "CreatureBonesTypes";
+        public static var idAccessors:IdAccessors = new IdAccessors(null, getAllCreatureBonesTypes);
 
         public var id:int;
         public var creatureBoneId:int;
@@ -69,5 +71,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.appearance
+} com.ankamagames.dofus.datacenter.appearance
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.common.messages
+package com.ankamagames.dofus.logic.game.common.messages
 {
     import com.ankamagames.jerakine.messages.Message;
 
@@ -13,5 +13,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.messages
+} com.ankamagames.dofus.logic.game.common.messages
 

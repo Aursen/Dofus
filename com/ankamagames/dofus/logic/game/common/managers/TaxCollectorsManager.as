@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.common.managers
+package com.ankamagames.dofus.logic.game.common.managers
 {
     import com.ankamagames.jerakine.interfaces.IDestroyable;
     import com.ankamagames.jerakine.logger.Logger;
@@ -12,14 +12,16 @@
     import com.ankamagames.dofus.network.types.game.guild.tax.TaxCollectorFightersInformation;
     import com.ankamagames.dofus.logic.game.common.frames.SocialFrame;
     import com.ankamagames.dofus.internalDatacenter.guild.SocialEntityInFightWrapper;
-    import com.ankamagames.dofus.network.enums.TaxCollectorStateEnum;
     import com.ankamagames.dofus.network.types.game.prism.PrismFightersInformation;
     import flash.utils.getTimer;
+    import com.ankamagames.dofus.network.types.game.guild.tax.TaxCollectorComplementaryInformations;
+    import com.ankamagames.dofus.network.types.game.fight.ProtectedEntityWaitingForHelpInfo;
+    import com.ankamagames.dofus.network.enums.TaxCollectorStateEnum;
+    import com.ankamagames.dofus.network.types.game.guild.tax.TaxCollectorWaitingForHelpInformations;
     import com.ankamagames.dofus.internalDatacenter.guild.SocialFightersWrapper;
     import com.ankamagames.berilia.managers.KernelEventsManager;
     import com.ankamagames.dofus.misc.lists.SocialHookList;
     import com.ankamagames.dofus.network.types.game.character.CharacterMinimalPlusLookInformations;
-    import __AS3__.vec.*;
 
     public class TaxCollectorsManager implements IDestroyable 
     {
@@ -31,7 +33,8 @@
 
         private var _taxCollectors:Dictionary;
         private var _guildTaxCollectorsInFight:Dictionary;
-        private var _allTaxCollectorsInPreFight:Dictionary;
+        private var _allTaxCollectorsInFight:Dictionary;
+        private var _collectedTaxCollectors:Dictionary;
         private var _prismsInFight:Dictionary;
         public var maxTaxCollectorsCount:int;
         public var taxCollectorsCount:int;
@@ -49,7 +52,8 @@
             };
             this._taxCollectors = new Dictionary();
             this._guildTaxCollectorsInFight = new Dictionary();
-            this._allTaxCollectorsInPreFight = new Dictionary();
+            this._allTaxCollectorsInFight = new Dictionary();
+            this._collectedTaxCollectors = new Dictionary();
             this._prismsInFight = new Dictionary();
         }
 
@@ -67,7 +71,8 @@
         {
             this._taxCollectors = new Dictionary();
             this._guildTaxCollectorsInFight = new Dictionary();
-            this._allTaxCollectorsInPreFight = new Dictionary();
+            this._allTaxCollectorsInFight = new Dictionary();
+            this._collectedTaxCollectors = new Dictionary();
             this._prismsInFight = new Dictionary();
             _self = null;
         }
@@ -82,9 +87,14 @@
             return (this._guildTaxCollectorsInFight);
         }
 
-        public function get allTaxCollectorsInPreFight():Dictionary
+        public function get allTaxCollectorsInFight():Dictionary
         {
-            return (this._allTaxCollectorsInPreFight);
+            return (this._allTaxCollectorsInFight);
+        }
+
+        public function get collectedTaxCollectors():Dictionary
+        {
+            return (this._collectedTaxCollectors);
         }
 
         public function get prismsFighters():Dictionary
@@ -106,36 +116,36 @@
         {
             var fightTime:int;
             var waitTime:Number;
-            var char:Object;
+            var _local_6:Object;
             var tc:TaxCollectorFightersInformation;
             var tcWrapper:TaxCollectorWrapper;
             var allies:Array = new Array();
             var enemies:Array = new Array();
             var myGuildId:int = SocialFrame.getInstance().guild.guildId;
             this._guildTaxCollectorsInFight = new Dictionary();
-            this._allTaxCollectorsInPreFight = new Dictionary();
+            this._allTaxCollectorsInFight = new Dictionary();
             for each (tc in tcList)
             {
                 tcWrapper = this._taxCollectors[tc.collectorId];
-                if (!(tcWrapper))
+                if (!tcWrapper)
                 {
                     _log.error((("Tax collector " + tc.collectorId) + " doesn't exist IS PROBLEM"));
                 }
                 else
                 {
                     fightTime = tcWrapper.fightTime;
-                    waitTime = (tcWrapper.waitTimeForPlacement * 100);
+                    waitTime = tcWrapper.waitTimeForPlacement;
                     allies = new Array();
                     enemies = new Array();
-                    for each (char in tc.allyCharactersInformations)
+                    for each (_local_6 in tc.allyCharactersInformations)
                     {
-                        allies.push(char);
+                        allies.push(_local_6);
                     };
-                    for each (char in tc.enemyCharactersInformations)
+                    for each (_local_6 in tc.enemyCharactersInformations)
                     {
-                        enemies.push(char);
+                        enemies.push(_local_6);
                     };
-                    if (((!(tcWrapper.guild)) || ((tcWrapper.guild.guildId == myGuildId))))
+                    if (((!(tcWrapper.guild)) || (tcWrapper.guild.guildId == myGuildId)))
                     {
                         if (this._guildTaxCollectorsInFight[tc.collectorId])
                         {
@@ -147,25 +157,15 @@
                         };
                         this._guildTaxCollectorsInFight[tc.collectorId].addPonyFighter(tcWrapper);
                     };
-                    if (tcWrapper.state != TaxCollectorStateEnum.STATE_WAITING_FOR_HELP)
+                    if (this._allTaxCollectorsInFight[tc.collectorId])
                     {
-                        if (this._allTaxCollectorsInPreFight[tc.collectorId])
-                        {
-                            delete this._allTaxCollectorsInPreFight[tc.collectorId];
-                        };
+                        this._allTaxCollectorsInFight[tc.collectorId].update(TYPE_TAX_COLLECTOR, tc.collectorId, allies, enemies, fightTime, waitTime, tcWrapper.nbPositionPerTeam);
                     }
                     else
                     {
-                        if (this._allTaxCollectorsInPreFight[tc.collectorId])
-                        {
-                            this._allTaxCollectorsInPreFight[tc.collectorId].update(TYPE_TAX_COLLECTOR, tc.collectorId, allies, enemies, fightTime, waitTime, tcWrapper.nbPositionPerTeam);
-                        }
-                        else
-                        {
-                            this._allTaxCollectorsInPreFight[tc.collectorId] = SocialEntityInFightWrapper.create(TYPE_TAX_COLLECTOR, tc.collectorId, allies, enemies, fightTime, waitTime, tcWrapper.nbPositionPerTeam);
-                        };
-                        this._allTaxCollectorsInPreFight[tc.collectorId].addPonyFighter(tcWrapper);
+                        this._allTaxCollectorsInFight[tc.collectorId] = SocialEntityInFightWrapper.create(TYPE_TAX_COLLECTOR, tc.collectorId, allies, enemies, fightTime, waitTime, tcWrapper.nbPositionPerTeam);
                     };
+                    this._allTaxCollectorsInFight[tc.collectorId].addPonyFighter(tcWrapper);
                 };
             };
         }
@@ -174,7 +174,7 @@
         {
             var allies:Array;
             var enemies:Array;
-            var char:Object;
+            var _local_4:Object;
             var fightTime:int;
             var pfi:PrismFightersInformation;
             this._prismsInFight = new Dictionary();
@@ -182,13 +182,13 @@
             {
                 allies = new Array();
                 enemies = new Array();
-                for each (char in pfi.allyCharactersInformations)
+                for each (_local_4 in pfi.allyCharactersInformations)
                 {
-                    allies.push(char);
+                    allies.push(_local_4);
                 };
-                for each (char in pfi.enemyCharactersInformations)
+                for each (_local_4 in pfi.enemyCharactersInformations)
                 {
-                    enemies.push(char);
+                    enemies.push(_local_4);
                 };
                 fightTime = ((pfi.waitingForHelpInfo.timeLeftBeforeFight * 100) + getTimer());
                 if (this._prismsInFight[pfi.subAreaId])
@@ -215,6 +215,10 @@
 
         public function addTaxCollector(taxCollector:TaxCollectorInformations):Boolean
         {
+            var timeLeftBeforeFight:int;
+            var waitTimeForPlacement:int;
+            var complementaryInfo:TaxCollectorComplementaryInformations;
+            var waitingForHelpInfo:ProtectedEntityWaitingForHelpInfo;
             var newTC:Boolean;
             if (this._taxCollectors[taxCollector.uniqueId])
             {
@@ -225,7 +229,7 @@
                 this._taxCollectors[taxCollector.uniqueId] = TaxCollectorWrapper.create(taxCollector);
                 newTC = true;
             };
-            var belongsToMyGuild:Boolean = (((this._taxCollectors[taxCollector.uniqueId].guild == null)) || ((this._taxCollectors[taxCollector.uniqueId].guild.guildId == SocialFrame.getInstance().guild.guildId)));
+            var belongsToMyGuild:Boolean = ((this._taxCollectors[taxCollector.uniqueId].guild == null) || (this._taxCollectors[taxCollector.uniqueId].guild.guildId == SocialFrame.getInstance().guild.guildId));
             if (belongsToMyGuild)
             {
                 if (taxCollector.state == TaxCollectorStateEnum.STATE_COLLECTING)
@@ -248,39 +252,70 @@
                     };
                 };
             };
-            if (taxCollector.state != TaxCollectorStateEnum.STATE_WAITING_FOR_HELP)
+            if (taxCollector.state == TaxCollectorStateEnum.STATE_COLLECTING)
             {
-                delete this._allTaxCollectorsInPreFight[taxCollector.uniqueId];
+                if (this._allTaxCollectorsInFight[taxCollector.uniqueId])
+                {
+                    delete this._allTaxCollectorsInFight[taxCollector.uniqueId];
+                };
             }
             else
             {
-                this._allTaxCollectorsInPreFight[taxCollector.uniqueId] = SocialEntityInFightWrapper.create(TYPE_TAX_COLLECTOR, taxCollector.uniqueId);
-                this._allTaxCollectorsInPreFight[taxCollector.uniqueId].addPonyFighter(this._taxCollectors[taxCollector.uniqueId]);
+                timeLeftBeforeFight = 0;
+                waitTimeForPlacement = 0;
+                if (taxCollector.complements.length > 0)
+                {
+                    for each (complementaryInfo in taxCollector.complements)
+                    {
+                        if ((complementaryInfo is TaxCollectorWaitingForHelpInformations))
+                        {
+                            waitingForHelpInfo = (complementaryInfo as TaxCollectorWaitingForHelpInformations).waitingForHelpInfo;
+                            if (waitingForHelpInfo == null)
+                            {
+                                break;
+                            };
+                            timeLeftBeforeFight = ((waitingForHelpInfo.timeLeftBeforeFight * 100) + getTimer());
+                            waitTimeForPlacement = (waitingForHelpInfo.waitTimeForPlacement * 100);
+                        };
+                    };
+                };
+                if (this._allTaxCollectorsInFight[taxCollector.uniqueId])
+                {
+                    this._allTaxCollectorsInFight[taxCollector.uniqueId].update(TYPE_TAX_COLLECTOR, taxCollector.uniqueId, new Array(), new Array(), timeLeftBeforeFight, waitTimeForPlacement);
+                }
+                else
+                {
+                    this._allTaxCollectorsInFight[taxCollector.uniqueId] = SocialEntityInFightWrapper.create(TYPE_TAX_COLLECTOR, taxCollector.uniqueId, new Array(), new Array(), timeLeftBeforeFight, waitTimeForPlacement);
+                };
+                if (taxCollector.state == TaxCollectorStateEnum.STATE_WAITING_FOR_HELP)
+                {
+                    this._allTaxCollectorsInFight[taxCollector.uniqueId].addPonyFighter(this._taxCollectors[taxCollector.uniqueId]);
+                };
             };
             return (newTC);
         }
 
         public function addPrism(prism:PrismFightersInformation):void
         {
-            var char:Object;
+            var _local_4:Object;
             var fightTime:int;
             var allies:Array = new Array();
             var enemies:Array = new Array();
-            for each (char in prism.allyCharactersInformations)
+            for each (_local_4 in prism.allyCharactersInformations)
             {
-                allies.push(char);
+                allies.push(_local_4);
             };
-            for each (char in prism.enemyCharactersInformations)
+            for each (_local_4 in prism.enemyCharactersInformations)
             {
-                enemies.push(char);
+                enemies.push(_local_4);
             };
             fightTime = ((prism.waitingForHelpInfo.timeLeftBeforeFight * 100) + getTimer());
             this._prismsInFight[prism.subAreaId] = SocialEntityInFightWrapper.create(TYPE_PRISM, prism.subAreaId, allies, enemies, fightTime, (prism.waitingForHelpInfo.waitTimeForPlacement * 100), prism.waitingForHelpInfo.nbPositionForDefensors);
         }
 
-        public function addFighter(pType:int, pFightId:int, pPlayerInfo:CharacterMinimalPlusLookInformations, ally:Boolean, pDispatchHook:Boolean=true):void
+        public function addFighter(pType:int, pFightId:Number, pPlayerInfo:CharacterMinimalPlusLookInformations, ally:Boolean, pDispatchHook:Boolean=true):void
         {
-            var entity:SocialEntityInFightWrapper;
+            var socialEntityFight:SocialEntityInFightWrapper;
             var entitiesToUpdate:Array = new Array();
             if (pType == TYPE_PRISM)
             {
@@ -294,37 +329,29 @@
                     {
                         entitiesToUpdate.push(this._guildTaxCollectorsInFight[pFightId]);
                     };
-                    if (this._allTaxCollectorsInPreFight[pFightId])
+                    if (this._allTaxCollectorsInFight[pFightId])
                     {
-                        entitiesToUpdate.push(this._allTaxCollectorsInPreFight[pFightId]);
+                        entitiesToUpdate.push(this._allTaxCollectorsInFight[pFightId]);
                     };
                 };
             };
-            for each (entity in entitiesToUpdate)
+            for each (socialEntityFight in entitiesToUpdate)
             {
                 if (ally)
                 {
-                    if (entity.allyCharactersInformations == null)
+                    if (socialEntityFight.allyCharactersInformations == null)
                     {
-                        entity.allyCharactersInformations = new Vector.<SocialFightersWrapper>();
+                        socialEntityFight.allyCharactersInformations = new Array();
                     };
-                    entity.allyCharactersInformations.push(SocialFightersWrapper.create(0, pPlayerInfo));
-                    if (pDispatchHook)
-                    {
-                        KernelEventsManager.getInstance().processCallback(SocialHookList.GuildFightAlliesListUpdate, pType, pFightId);
-                    };
+                    socialEntityFight.allyCharactersInformations.push(SocialFightersWrapper.create(0, pPlayerInfo));
                 }
                 else
                 {
-                    if (entity.enemyCharactersInformations == null)
+                    if (socialEntityFight.enemyCharactersInformations == null)
                     {
-                        entity.enemyCharactersInformations = new Vector.<SocialFightersWrapper>();
+                        socialEntityFight.enemyCharactersInformations = new Array();
                     };
-                    entity.enemyCharactersInformations.push(SocialFightersWrapper.create(1, pPlayerInfo));
-                    if (pDispatchHook)
-                    {
-                        KernelEventsManager.getInstance().processCallback(SocialHookList.GuildFightEnnemiesListUpdate, pType, pFightId);
-                    };
+                    socialEntityFight.enemyCharactersInformations.push(SocialFightersWrapper.create(1, pPlayerInfo));
                 };
             };
             if (pDispatchHook)
@@ -340,12 +367,12 @@
             };
         }
 
-        public function removeFighter(pType:int, pFightId:int, pPlayerId:int, ally:Boolean, pDispatchHook:Boolean=true):void
+        public function removeFighter(pType:int, pFightId:Number, pPlayerId:Number, ally:Boolean, pDispatchHook:Boolean=true):void
         {
             var index:uint;
             var entity:SocialEntityInFightWrapper;
             var allyFighter:SocialFightersWrapper;
-            var _local_10:SocialFightersWrapper;
+            var enemyFighter:SocialFightersWrapper;
             var entitiesToUpdate:Array = new Array();
             if (pType == TYPE_PRISM)
             {
@@ -359,9 +386,9 @@
                     {
                         entitiesToUpdate.push(this._guildTaxCollectorsInFight[pFightId]);
                     };
-                    if (this._allTaxCollectorsInPreFight[pFightId])
+                    if (this._allTaxCollectorsInFight[pFightId])
                     {
-                        entitiesToUpdate.push(this._allTaxCollectorsInPreFight[pFightId]);
+                        entitiesToUpdate.push(this._allTaxCollectorsInFight[pFightId]);
                     };
                 };
             };
@@ -387,9 +414,9 @@
                 }
                 else
                 {
-                    for each (_local_10 in entity.enemyCharactersInformations)
+                    for each (enemyFighter in entity.enemyCharactersInformations)
                     {
-                        if (_local_10.playerCharactersInformations.id == pPlayerId)
+                        if (enemyFighter.playerCharactersInformations.id == pPlayerId)
                         {
                             break;
                         };
@@ -413,5 +440,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.managers
+} com.ankamagames.dofus.logic.game.common.managers
 

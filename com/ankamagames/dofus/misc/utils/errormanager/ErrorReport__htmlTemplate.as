@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.misc.utils.errormanager
+package com.ankamagames.dofus.misc.utils.errormanager
 {
     import mx.core.ByteArrayAsset;
 
@@ -8,5 +8,5 @@
 
 
     }
-}//package com.ankamagames.dofus.misc.utils.errormanager
+} com.ankamagames.dofus.misc.utils.errormanager
 

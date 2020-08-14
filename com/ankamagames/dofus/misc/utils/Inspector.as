@@ -1,19 +1,21 @@
-﻿package com.ankamagames.dofus.misc.utils
+package com.ankamagames.dofus.misc.utils
 {
     import flash.text.TextField;
     import flash.display.Sprite;
     import __AS3__.vec.Vector;
     import flash.utils.Dictionary;
+    import flash.geom.Point;
     import flash.text.TextFormat;
     import flash.text.TextFieldAutoSize;
     import com.ankamagames.jerakine.utils.display.StageShareManager;
     import flash.events.MouseEvent;
     import flash.events.KeyboardEvent;
     import flash.display.DisplayObject;
+    import flash.display.Stage;
+    import flash.geom.Rectangle;
     import flash.ui.Keyboard;
     import flash.desktop.Clipboard;
     import flash.desktop.ClipboardFormats;
-    import flash.display.Stage;
     import com.ankamagames.berilia.types.graphic.UiRootContainer;
     import com.ankamagames.berilia.types.graphic.GraphicContainer;
     import com.ankamagames.atouin.types.GraphicCell;
@@ -30,20 +32,18 @@
     public class Inspector 
     {
 
-        private var _tooltipTf:TextField;
-        private var _tooltip:Sprite;
+        private var _tooltipTf:TextField = new TextField();
+        private var _tooltip:Sprite = new Sprite();
         private var _enable:Boolean;
         private var _lastTarget:Vector.<InteractiveItem>;
         private var _currentShortCut:Vector.<ShortcutItem>;
         private var _berilaAllInteraction:Boolean;
-        private var _berilaChangedInteraction:Dictionary;
+        private var _berilaChangedInteraction:Dictionary = new Dictionary(true);
+        private var _hierachicalMode:Boolean = true;
+        private var _underPoint:Point = new Point();
 
         public function Inspector()
         {
-            this._tooltipTf = new TextField();
-            this._tooltip = new Sprite();
-            this._berilaChangedInteraction = new Dictionary(true);
-            super();
             this._tooltip.mouseEnabled = false;
             this._tooltipTf.mouseEnabled = false;
             var tf:TextFormat = new TextFormat("Verdana");
@@ -54,20 +54,32 @@
             this._tooltipTf.autoSize = TextFieldAutoSize.LEFT;
         }
 
+        public function get hierachicalMode():Boolean
+        {
+            return (this._hierachicalMode);
+        }
+
+        public function set hierachicalMode(value:Boolean):void
+        {
+            this._hierachicalMode = value;
+        }
+
         public function set enable(b:Boolean):void
         {
             if (b)
             {
-                StageShareManager.stage.addEventListener(MouseEvent.MOUSE_MOVE, this.onRollover);
+                StageShareManager.stage.addEventListener(MouseEvent.MOUSE_MOVE, this.onMouseMove);
                 StageShareManager.stage.addEventListener(MouseEvent.MOUSE_OUT, this.onRollout);
                 StageShareManager.stage.addEventListener(KeyboardEvent.KEY_UP, this.onKeyUp);
+                StageShareManager.stage.addEventListener(MouseEvent.CLICK, this.onRelease);
             }
             else
             {
                 this.onRollout(this._lastTarget);
-                StageShareManager.stage.removeEventListener(MouseEvent.MOUSE_MOVE, this.onRollover);
+                StageShareManager.stage.removeEventListener(MouseEvent.MOUSE_MOVE, this.onMouseMove);
                 StageShareManager.stage.removeEventListener(MouseEvent.MOUSE_OUT, this.onRollout);
                 StageShareManager.stage.removeEventListener(KeyboardEvent.KEY_UP, this.onKeyUp);
+                StageShareManager.stage.removeEventListener(MouseEvent.CLICK, this.onRelease);
             };
             this._enable = b;
         }
@@ -91,15 +103,44 @@
             };
         }
 
-        private function onRollover(e:MouseEvent):void
+        private function getDeepestObject(target:DisplayObject):DisplayObject
         {
+            var item:DisplayObject;
+            var currentItem:DisplayObject;
+            this._underPoint.x = StageShareManager.mouseX;
+            this._underPoint.y = StageShareManager.mouseY;
+            var objets:Array = StageShareManager.stage.getObjectsUnderPoint(this._underPoint);
+            for each (item in objets)
+            {
+                currentItem = item;
+                while ((((currentItem) && (!(currentItem is Stage))) && (currentItem.parent)))
+                {
+                    if (currentItem == target)
+                    {
+                        return (item);
+                    };
+                    currentItem = currentItem.parent;
+                };
+            };
+            return (target);
+        }
+
+        private function onRelease(e:MouseEvent):void
+        {
+            var tempTarget:DisplayObject = (e.target as DisplayObject);
+        }
+
+        private function onMouseMove(e:MouseEvent):void
+        {
+            var tooltipStr:String;
             var item:InteractiveItem;
             var currentTooltipStr:String;
             var rawTooltipStr:String;
             var s:ShortcutItem;
+            var stageBounds:Rectangle;
             this.onRollout(this._lastTarget);
-            this._lastTarget = this.findElements((e.target as DisplayObject));
-            var tooltipStr:String = "";
+            this._lastTarget = ((this._hierachicalMode) ? this.findElements(this.getDeepestObject((e.target as DisplayObject))) : this.findSameLevelElements());
+            tooltipStr = ((("Mouse pos : " + StageShareManager.stage.mouseX) + " / ") + StageShareManager.stage.mouseY);
             var ind:String = "";
             var i:uint;
             while (i < this._lastTarget.length)
@@ -109,7 +150,10 @@
                 currentTooltipStr = (((tooltipStr.length) ? "<br/><br/>" : "") + item.tooltip());
                 currentTooltipStr = currentTooltipStr.split("<br/>").join(("<br/>" + ind));
                 tooltipStr = (tooltipStr + currentTooltipStr);
-                ind = (ind + "&nbsp;&nbsp;&nbsp;");
+                if (this._hierachicalMode)
+                {
+                    ind = (ind + "&nbsp;&nbsp;&nbsp;");
+                };
                 i++;
             };
             this._currentShortCut = null;
@@ -143,15 +187,16 @@
                 this._tooltip.graphics.endFill();
                 if (this._lastTarget.length)
                 {
-                    this._tooltip.x = StageShareManager.mouseX;
+                    this._tooltip.x = (StageShareManager.mouseX + 20);
                     this._tooltip.y = ((StageShareManager.mouseY - this._tooltip.height) - 5);
+                    stageBounds = StageShareManager.stageVisibleBounds;
                     if (this._tooltip.y < 0)
                     {
                         this._tooltip.y = 5;
                     };
-                    if ((this._tooltip.x + this._tooltip.width) > StageShareManager.startWidth)
+                    if ((this._tooltip.x + this._tooltip.width) > stageBounds.right)
                     {
-                        this._tooltip.x = (this._tooltip.x + (StageShareManager.startWidth - (this._tooltip.x + this._tooltip.width)));
+                        this._tooltip.x = (this._tooltip.x + (stageBounds.right - (this._tooltip.x + this._tooltip.width)));
                     };
                 }
                 else
@@ -167,65 +212,94 @@
             var currentItem:InteractiveItem;
             var result:Vector.<InteractiveItem> = new Vector.<InteractiveItem>();
             var ind:String = "";
-            while (((((target) && (!((target is Stage))))) && (target.parent)))
+            while ((((target) && (!(target is Stage))) && (target.parent)))
             {
-                switch (true)
+                currentItem = this.cast(target);
+                if (currentItem)
                 {
-                    case (target is UiRootContainer):
-                    case (target is GraphicContainer):
-                        currentItem = new InteractiveItemUi();
-                        currentItem.target = target;
-                        result.push(currentItem);
-                        break;
-                    case (target is GraphicCell):
-                    case (target is CellContainer):
-                        currentItem = new InteractiveItemCell();
-                        currentItem.target = target;
-                        result.push(currentItem);
-                        break;
-                    case (target is AnimatedCharacter):
-                        currentItem = new InteractiveItemEntity();
-                        currentItem.target = target;
-                        result.push(currentItem);
-                        currentItem = new InteractiveItemCell();
-                        currentItem.target = InteractiveCellManager.getInstance().getCell(AnimatedCharacter(target).position.cellId);
-                        result.push(currentItem);
-                        break;
-                    case (target is SpriteWrapper):
-                        currentItem = new InteractiveItemElement();
-                        currentItem.target = target;
-                        result.push(currentItem);
-                        break;
-                    case (target is FrustumShape):
-                        currentItem = new InteractiveItemMapBorder();
-                        currentItem.target = target;
-                        result.push(currentItem);
-                        break;
+                    result.push(currentItem);
                 };
                 target = target.parent;
             };
             return (result);
         }
 
+        private function findSameLevelElements():Vector.<InteractiveItem>
+        {
+            var currentItem:InteractiveItem;
+            var item:DisplayObject;
+            var result:Vector.<InteractiveItem> = new Vector.<InteractiveItem>();
+            this._underPoint.x = StageShareManager.mouseX;
+            this._underPoint.y = StageShareManager.mouseY;
+            var objets:Array = StageShareManager.stage.getObjectsUnderPoint(this._underPoint);
+            for each (item in objets)
+            {
+                while ((((item) && (!(item is Stage))) && (item.parent)))
+                {
+                    currentItem = this.cast(item);
+                    if (currentItem)
+                    {
+                        result.push(currentItem);
+                        break;
+                    };
+                    item = item.parent;
+                };
+            };
+            return (result);
+        }
+
+        private function cast(target:DisplayObject):InteractiveItem
+        {
+            var currentItem:InteractiveItem;
+            switch (true)
+            {
+                case (target is UiRootContainer):
+                case (target is GraphicContainer):
+                    currentItem = new InteractiveItemUi();
+                    currentItem.target = target;
+                    break;
+                case (target is GraphicCell):
+                case (target is CellContainer):
+                    currentItem = new InteractiveItemCell();
+                    currentItem.target = target;
+                    break;
+                case (target is AnimatedCharacter):
+                    currentItem = new InteractiveItemEntity();
+                    currentItem.target = target;
+                    currentItem = new InteractiveItemCell();
+                    currentItem.target = InteractiveCellManager.getInstance().getCell(AnimatedCharacter(target).position.cellId);
+                    break;
+                case (target is SpriteWrapper):
+                    currentItem = new InteractiveItemElement();
+                    currentItem.target = target;
+                    break;
+                case (target is FrustumShape):
+                    currentItem = new InteractiveItemMapBorder();
+                    currentItem.target = target;
+                    break;
+            };
+            return (currentItem);
+        }
+
         private function changeBeriliaInteraction():void
         {
-            var _local_1:*;
-            this._berilaAllInteraction = !(this._berilaAllInteraction);
+            var current:*;
+            this._berilaAllInteraction = (!(this._berilaAllInteraction));
             if (this._berilaAllInteraction)
             {
                 this.changeInteraction(Berilia.getInstance().docMain);
             }
             else
             {
-                for (_local_1 in this._berilaChangedInteraction)
+                for (current in this._berilaChangedInteraction)
                 {
-                    if ((((((_local_1 is InteractiveObject)) && ((this._berilaChangedInteraction[_local_1] == 1)))) || ((this._berilaChangedInteraction[_local_1] == 3))))
+                    if ((((current is InteractiveObject) && (this._berilaChangedInteraction[current] == 1)) || (this._berilaChangedInteraction[current] == 3)))
                     {
-                        InteractiveObject(_local_1).mouseEnabled = false;
+                        InteractiveObject(current).mouseEnabled = false;
                     };
-                    if ((((_local_1 is DisplayObjectContainer)) && ((this._berilaChangedInteraction[_local_1] > 1))))
+                    if (((current is DisplayObjectContainer) && (this._berilaChangedInteraction[current] > 1)))
                     {
-                        DisplayObjectContainer(_local_1).mouseChildren = false;
+                        DisplayObjectContainer(current).mouseChildren = false;
                     };
                 };
                 this._berilaChangedInteraction = new Dictionary(true);
@@ -239,14 +313,14 @@
             while (i < target.numChildren)
             {
                 current = target.getChildAt(i);
-                if ((((current is InteractiveObject)) && (!(InteractiveObject(current).mouseEnabled))))
+                if (((current is InteractiveObject) && (!(InteractiveObject(current).mouseEnabled))))
                 {
                     InteractiveObject(current).mouseEnabled = true;
                     this._berilaChangedInteraction[current] = 1;
                 };
                 if ((current is DisplayObjectContainer))
                 {
-                    if (!(DisplayObjectContainer(current).mouseChildren))
+                    if (!DisplayObjectContainer(current).mouseChildren)
                     {
                         DisplayObjectContainer(current).mouseChildren = true;
                         this._berilaChangedInteraction[current] = (this._berilaChangedInteraction[current] + 2);
@@ -260,11 +334,11 @@
         private function onKeyUp(e:KeyboardEvent):void
         {
             var s:ShortcutItem;
-            if (((((this._lastTarget) && (this._lastTarget.length))) && (this._currentShortCut)))
+            if ((((this._lastTarget) && (this._lastTarget.length)) && (this._currentShortCut)))
             {
                 for each (s in this._currentShortCut)
                 {
-                    if ((((((((s.ctrl == e.ctrlKey)) && ((s.shift == e.shiftKey)))) && ((s.alt == e.altKey)))) && ((s.key == e.keyCode))))
+                    if (((((s.ctrl == e.ctrlKey) && (s.shift == e.shiftKey)) && (s.alt == e.altKey)) && (s.key == e.keyCode)))
                     {
                         s.callback();
                     };
@@ -274,7 +348,7 @@
 
 
     }
-}//package com.ankamagames.dofus.misc.utils
+} com.ankamagames.dofus.misc.utils
 
 import flash.display.Shape;
 import flash.geom.ColorTransform;
@@ -284,13 +358,16 @@ import flash.desktop.Clipboard;
 import flash.desktop.ClipboardFormats;
 import flash.ui.Keyboard;
 import com.ankamagames.berilia.types.graphic.GraphicContainer;
-import com.ankamagames.berilia.components.Grid;
 import com.ankamagames.berilia.components.ComboBox;
+import com.ankamagames.berilia.components.Grid;
 import flash.geom.Rectangle;
 import com.ankamagames.berilia.types.graphic.UiRootContainer;
 import com.ankamagames.jerakine.utils.display.StageShareManager;
 import com.ankamagames.berilia.types.data.BeriliaUiElementSound;
-import avmplus.getQualifiedClassName;
+import flash.utils.getQualifiedClassName;
+import com.ankamagames.berilia.components.TextureBase;
+import com.ankamagames.berilia.components.Label;
+import com.ankamagames.berilia.components.Slot;
 import com.ankamagames.berilia.managers.UiSoundManager;
 import com.ankamagames.atouin.types.Selection;
 import com.ankamagames.atouin.renderers.ZoneDARenderer;
@@ -323,7 +400,6 @@ import com.ankamagames.dofus.datacenter.jobs.Skill;
 import com.ankamagames.atouin.types.FrustumShape;
 import com.ankamagames.atouin.managers.FrustumManager;
 import com.ankamagames.jerakine.types.enums.DirectionsEnum;
-import com.ankamagames.jerakine.utils.misc.DescribeTypeCache;
 import __AS3__.vec.*;
 
 class ShortcutItem 
@@ -362,11 +438,12 @@ class ShortcutItem
             keys.push("shift");
         };
         keys.push(String.fromCharCode(this.key));
-        return (((keys.join(" + ") + " : ") + this.legend));
+        return ((keys.join(" + ") + " : ") + this.legend);
     }
 
 
 }
+
 class InteractiveItem 
 {
 
@@ -399,6 +476,7 @@ class InteractiveItem
 
 
 }
+
 class InteractiveItemUi extends InteractiveItem 
 {
 
@@ -410,7 +488,7 @@ class InteractiveItemUi extends InteractiveItem
             toClipboard((((('click( UiHelper.get("' + GraphicContainer(target).getUi().uiData.name) + '"), "') + GraphicContainer(target).customUnicName) + '");'));
         }, true, true, false), new ShortcutItem("Cmd son survol", Keyboard.S, function ():void
         {
-            if ((((target is Grid)) || ((target is ComboBox))))
+            if (((target is Grid) || (target is ComboBox)))
             {
                 toClipboard((((("/adduisoundelement " + GraphicContainer(target).getUi().uiData.name) + " ") + target.name) + " onItemRollOver [ID_SON]"));
             }
@@ -431,7 +509,7 @@ class InteractiveItemUi extends InteractiveItem
     {
         var pos:Rectangle;
         var elem:InteractiveItem;
-        var firstElem:Boolean = (index == 0);
+        var firstElem:* = (index == 0);
         var firstUi:Boolean = true;
         for each (elem in elements)
         {
@@ -439,7 +517,7 @@ class InteractiveItemUi extends InteractiveItem
             {
                 break;
             };
-            if ((((elem is InteractiveItemUi)) && (!((elem.target == target)))))
+            if (((elem is InteractiveItemUi) && (!(elem.target == target))))
             {
                 firstUi = false;
                 break;
@@ -447,7 +525,7 @@ class InteractiveItemUi extends InteractiveItem
         };
         if ((target is UiRootContainer))
         {
-            if (!(firstUi))
+            if (!firstUi)
             {
                 firstUi = true;
                 StageShareManager.stage.addChild(_highlightShape2);
@@ -461,7 +539,7 @@ class InteractiveItemUi extends InteractiveItem
         }
         else
         {
-            if (!(firstElem))
+            if (!firstElem)
             {
                 StageShareManager.stage.addChild(_highlightShape);
                 pos = target.getBounds(StageShareManager.stage);
@@ -473,7 +551,7 @@ class InteractiveItemUi extends InteractiveItem
             }
             else
             {
-                if ((((target is Grid)) || ((target is ComboBox))))
+                if (((target is Grid) || (target is ComboBox)))
                 {
                 };
             };
@@ -493,10 +571,32 @@ class InteractiveItemUi extends InteractiveItem
         target.transform.colorTransform = _normalEffect;
     }
 
+    /*private*/ function djb2(str:String):int
+    {
+        var hash:* = 5381;
+        var i:int;
+        while (i < str.length)
+        {
+            hash = (((hash << 5) + hash) + str.charCodeAt(i));
+            i++;
+        };
+        return (hash);
+    }
+
+    /*private*/ function hashStringToColor(str:String):String
+    {
+        var hash:int = this.djb2(str);
+        var r:* = ((hash & 0xFF0000) >> 16);
+        var g:* = ((hash & 0xFF00) >> 8);
+        var b:* = (hash & 0xFF);
+        return ((("#" + (("0" + r.toString(16)) as String).substr(-2)) + (("0" + g.toString(16)) as String).substr(-2)) + (("0" + b.toString(16)) as String).substr(-2));
+    }
+
     override public function tooltip():String
     {
         var uirc:UiRootContainer;
-        var _local_4:Vector.<BeriliaUiElementSound>;
+        var cptClass:String;
+        var soundParams:Vector.<BeriliaUiElementSound>;
         var soundParam:BeriliaUiElementSound;
         var str:String = "";
         var color:String = "#0";
@@ -521,14 +621,29 @@ class InteractiveItemUi extends InteractiveItem
         }
         else
         {
-            str = (str + "<b><font color='#964D8C'>Composant</font></b><br/>");
+            cptClass = getQualifiedClassName(target).split("::").pop();
+            str = (str + (((("<b><font color='#964D8C'>Composant </font><font color='" + this.hashStringToColor(cptClass)) + "' >") + cptClass) + "</font></b><br/>"));
             str = (str + (((("<b>Nom : </b><font color='" + color) + "'>") + target.name) + "</font><br/>"));
-            str = (str + (("<b>Type : </b>" + getQualifiedClassName(target).split("::").pop()) + "<br/>"));
-            _local_4 = UiSoundManager.getInstance().getAllSoundUiElement((target as GraphicContainer));
-            str = (str + (("<b>Sons : </b>" + ((_local_4.length) ? "" : "Aucun")) + ""));
-            if (_local_4.length)
+            switch (true)
             {
-                for each (soundParam in _local_4)
+                case (target is TextureBase):
+                    str = (str + (("<b>Chemin : </b>" + TextureBase(target).uri) + "<br/>"));
+                    break;
+                case (target is Label):
+                    str = (str + (("<b>Css : </b>" + Label(target).css) + "<br/>"));
+                    str = (str + (("<b>Classe css : </b>" + Label(target).cssClass) + "<br/>"));
+                    break;
+                case (target is Slot):
+                    str = (str + (("<b>emptyTexture : </b>" + Slot(target).emptyTexture) + "<br/>"));
+                    str = (str + (("<b>acceptDragTexture : </b>" + Slot(target).acceptDragTexture) + "<br/>"));
+                    str = (str + (("<b>refuseDragTexture : </b>" + Slot(target).refuseDragTexture) + "<br/>"));
+                    break;
+            };
+            soundParams = UiSoundManager.getInstance().getAllSoundUiElement((target as GraphicContainer));
+            str = (str + (("<b>Sons : </b>" + ((soundParams.length) ? "" : "Aucun")) + ""));
+            if (soundParams.length)
+            {
+                for each (soundParam in soundParams)
                 {
                     str = (str + ((("<br/>&nbsp;&nbsp;&nbsp; - " + soundParam.hook) + " : ") + soundParam.file));
                 };
@@ -539,6 +654,7 @@ class InteractiveItemUi extends InteractiveItem
 
 
 }
+
 class InteractiveItemCell extends InteractiveItem 
 {
 
@@ -563,12 +679,12 @@ class InteractiveItemCell extends InteractiveItem
     {
         var cellId:uint = Object(target).cellId;
         var mp:MapPoint = MapPoint.fromCellId(cellId);
-        var textInfo:String = (((((("<b><font color='#66572D'>Cell " + cellId) + "</font></b> (") + mp.x) + "/") + mp.y) + ")");
-        textInfo = (textInfo + ("<br/>Ligne de vue : " + !(DataMapProvider.getInstance().pointLos(mp.x, mp.y))));
-        textInfo = (textInfo + ("<br/>Blocage éditeur : " + !(DataMapProvider.getInstance().pointMov(mp.x, mp.y))));
-        textInfo = (textInfo + ("<br/>Blocage entitée : " + !(DataMapProvider.getInstance().pointMov(mp.x, mp.y, false))));
+        var textInfo:* = (((((("<b><font color='#66572D'>Cell " + cellId) + "</font></b> (") + mp.x) + "/") + mp.y) + ")");
+        textInfo = (textInfo + ("<br/>Ligne de vue : " + (!(DataMapProvider.getInstance().pointLos(mp.x, mp.y)))));
+        textInfo = (textInfo + ("<br/>Blocage éditeur : " + (!(DataMapProvider.getInstance().pointMov(mp.x, mp.y)))));
+        textInfo = (textInfo + ("<br/>Blocage entitée : " + (!(DataMapProvider.getInstance().pointMov(mp.x, mp.y, false)))));
         var cellData:CellData = CellData(MapDisplayManager.getInstance().getDataMapContainer().dataMap.cells[cellId]);
-        if (((((((cellData.useBottomArrow) || (cellData.useTopArrow))) || (cellData.useRightArrow))) || (cellData.useLeftArrow)))
+        if (((((cellData.useBottomArrow) || (cellData.useTopArrow)) || (cellData.useRightArrow)) || (cellData.useLeftArrow)))
         {
             textInfo = (textInfo + ("<br/>Forcage fleche bas : " + cellData.useBottomArrow));
             textInfo = (textInfo + ("<br/>Forcage fleche haut : " + cellData.useTopArrow));
@@ -594,6 +710,7 @@ class InteractiveItemCell extends InteractiveItem
 
 
 }
+
 class InteractiveItemEntity extends InteractiveItem 
 {
 
@@ -622,7 +739,7 @@ class InteractiveItemEntity extends InteractiveItem
         var e:IEntity = (target as IEntity);
         var str:String = (("<b>Entity " + e.id) + "</b>");
         var entityFrame:AbstractEntitiesFrame = (Kernel.getWorker().getFrame(RoleplayEntitiesFrame) as RoleplayEntitiesFrame);
-        if (!(entityFrame))
+        if (!entityFrame)
         {
             entityFrame = (Kernel.getWorker().getFrame(FightEntitiesFrame) as FightEntitiesFrame);
         };
@@ -646,7 +763,7 @@ class InteractiveItemEntity extends InteractiveItem
                     str = (str + (("Npc Id: " + npc.id) + "<br/>"));
                     str = (str + (("Entity Id: " + e.id) + "<br/>"));
                     str = (str + ("look: " + npc.look));
-                    if (((npc.actions) && ((npc.actions.length > 0))))
+                    if (((npc.actions) && (npc.actions.length > 0)))
                     {
                         for each (action in npc.actions)
                         {
@@ -669,7 +786,7 @@ class InteractiveItemEntity extends InteractiveItem
                     monsters = monsters.concat(monsterGroup.staticInfos.underlings);
                     for each (m in monsters)
                     {
-                        monster = Monster.getMonsterById(m.creatureGenericId);
+                        monster = Monster.getMonsterById(m.genericId);
                         str = (str + (((((((("<br/> " + monster.name) + " (id: ") + monster.id) + ", lvl: ") + monster.getMonsterGrade(m.grade).level) + ", look: ") + monster.look) + ")"));
                     };
                     break;
@@ -680,6 +797,7 @@ class InteractiveItemEntity extends InteractiveItem
 
 
 }
+
 class InteractiveItemElement extends InteractiveItem 
 {
 
@@ -700,7 +818,7 @@ class InteractiveItemElement extends InteractiveItem
         var skill:InteractiveElementSkill;
         var str:String;
         var entitiesFrame:RoleplayEntitiesFrame = (Kernel.getWorker().getFrame(RoleplayEntitiesFrame) as RoleplayEntitiesFrame);
-        if (!(entitiesFrame))
+        if (!entitiesFrame)
         {
             return ("");
         };
@@ -728,6 +846,7 @@ class InteractiveItemElement extends InteractiveItem
 
 
 }
+
 class InteractiveItemMapBorder extends InteractiveItem 
 {
 
@@ -750,17 +869,18 @@ class InteractiveItemMapBorder extends InteractiveItem
         {
             case FrustumManager.getInstance().getShape(DirectionsEnum.LEFT):
             case FrustumManager.getInstance().getShape(DirectionsEnum.RIGHT):
-                prc = Math.round(((mb.mouseY / mb.height) * 100));
+                prc = uint(Math.round(((mb.mouseY / mb.height) * 100)));
                 break;
             case FrustumManager.getInstance().getShape(DirectionsEnum.UP):
             case FrustumManager.getInstance().getShape(DirectionsEnum.DOWN):
-                prc = Math.round(((mb.mouseX / mb.width) * 100));
+                prc = uint(Math.round(((mb.mouseX / mb.width) * 100)));
                 break;
         };
-        var str:String = (((("<b><font color='#40BD00'>Bord de map " + DescribeTypeCache.getConstantName(DirectionsEnum, mb.direction)) + " (") + prc) + "%)</font></b>");
+        var str:* = (((("<b><font color='#40BD00'>Bord de map " + DirectionsEnum.getNameFromDirection(mb.direction)) + " (") + prc) + "%)</font></b>");
         return (str);
     }
 
 
 }
+
 

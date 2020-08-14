@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.console.chat
+package com.ankamagames.dofus.console.chat
 {
     import com.ankamagames.jerakine.console.ConsoleInstructionHandler;
     import com.ankamagames.berilia.managers.KernelEventsManager;
@@ -14,17 +14,9 @@
         {
             switch (cmd)
             {
-                case "tab":
-                    if (((!(args[0])) || ((args[0] < 1))))
-                    {
-                        console.output("Error : need a valid tab index.");
-                        return;
-                    };
-                    KernelEventsManager.getInstance().processCallback(ChatHookList.TabNameChange, args[0], args[1]);
-                    return;
                 case "clear":
                     KernelEventsManager.getInstance().processCallback(ChatHookList.ClearChat);
-                    return;
+                    break;
             };
         }
 
@@ -32,8 +24,6 @@
         {
             switch (cmd)
             {
-                case "tab":
-                    return (I18n.getUiText("ui.chat.console.help.tab"));
                 case "clear":
                     return (I18n.getUiText("ui.chat.console.help.clear"));
             };
@@ -47,5 +37,5 @@
 
 
     }
-}//package com.ankamagames.dofus.console.chat
+} com.ankamagames.dofus.console.chat
 

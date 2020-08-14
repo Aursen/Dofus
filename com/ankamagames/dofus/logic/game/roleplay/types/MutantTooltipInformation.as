@@ -1,10 +1,10 @@
-﻿package com.ankamagames.dofus.logic.game.roleplay.types
+package com.ankamagames.dofus.logic.game.roleplay.types
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
-    import com.ankamagames.dofus.network.types.game.context.roleplay.GameRolePlayMutantInformations;
     import com.ankamagames.jerakine.data.XmlConfig;
+    import com.ankamagames.dofus.network.types.game.context.roleplay.GameRolePlayMutantInformations;
     import com.ankamagames.berilia.managers.CssManager;
     import com.ankamagames.berilia.types.data.ExtendedStyleSheet;
 
@@ -13,7 +13,7 @@
 
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(MutantTooltipInformation));
 
-        private var _cssUri:String;
+        private var _cssUri:String = (XmlConfig.getInstance().getEntry("config.ui.skin") + "css/tooltip_title.css");
         public var infos:GameRolePlayMutantInformations;
         public var wingsEffect:int;
         public var titleName:String;
@@ -21,8 +21,6 @@
 
         public function MutantTooltipInformation(pInfos:GameRolePlayMutantInformations)
         {
-            this._cssUri = (XmlConfig.getInstance().getEntry("config.ui.skin") + "css/tooltip_title.css");
-            super();
             this.infos = pInfos;
         }
 
@@ -36,5 +34,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.roleplay.types
+} com.ankamagames.dofus.logic.game.roleplay.types
 

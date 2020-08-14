@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.context.mount
+package com.ankamagames.dofus.network.messages.game.context.mount
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class MountInformationRequestMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -55,6 +55,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_MountInformationRequestMessage(output);
@@ -62,12 +70,12 @@
 
         public function serializeAs_MountInformationRequestMessage(output:ICustomDataOutput):void
         {
-            if ((((this.id < -9007199254740992)) || ((this.id > 9007199254740992))))
+            if (((this.id < -9007199254740992) || (this.id > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.id) + ") on element id.")));
             };
             output.writeDouble(this.id);
-            if ((((this.time < -9007199254740992)) || ((this.time > 9007199254740992))))
+            if (((this.time < -9007199254740992) || (this.time > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.time) + ") on element time.")));
             };
@@ -81,13 +89,34 @@
 
         public function deserializeAs_MountInformationRequestMessage(input:ICustomDataInput):void
         {
+            this._idFunc(input);
+            this._timeFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_MountInformationRequestMessage(tree);
+        }
+
+        public function deserializeAsyncAs_MountInformationRequestMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._idFunc);
+            tree.addChild(this._timeFunc);
+        }
+
+        private function _idFunc(input:ICustomDataInput):void
+        {
             this.id = input.readDouble();
-            if ((((this.id < -9007199254740992)) || ((this.id > 9007199254740992))))
+            if (((this.id < -9007199254740992) || (this.id > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.id) + ") on element of MountInformationRequestMessage.id.")));
             };
+        }
+
+        private function _timeFunc(input:ICustomDataInput):void
+        {
             this.time = input.readDouble();
-            if ((((this.time < -9007199254740992)) || ((this.time > 9007199254740992))))
+            if (((this.time < -9007199254740992) || (this.time > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.time) + ") on element of MountInformationRequestMessage.time.")));
             };
@@ -95,5 +124,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.context.mount
+} com.ankamagames.dofus.network.messages.game.context.mount
 

@@ -1,4 +1,4 @@
-﻿package com.somerandomdude.colortoolkit.schemes
+package com.somerandomdude.colortoolkit.schemes
 {
     import com.somerandomdude.colortoolkit.Color;
     import com.somerandomdude.colortoolkit.spaces.HSB;
@@ -30,11 +30,11 @@
 
         override protected function generate():void
         {
-            var _local_5:Number;
+            var multiplier:Number;
             var _primaryCol:Color = new Color(_primaryColor);
             var c1:HSB = new HSB();
             c1.color = ColorUtil.rybRotate(_primaryColor, this._angle);
-            if (!(this.alt))
+            if (!this.alt)
             {
                 if (_primaryCol.brightness < 50)
                 {
@@ -47,13 +47,13 @@
             }
             else
             {
-                _local_5 = ((50 - _primaryCol.brightness) / 50);
-                c1.brightness = (c1.brightness + Math.min(20, Math.max(-20, (20 * _local_5))));
+                multiplier = ((50 - _primaryCol.brightness) / 50);
+                c1.brightness = (c1.brightness + Math.min(20, Math.max(-20, (20 * multiplier))));
             };
             _colors.push(c1.color);
             var c2:HSB = new HSB();
             c2.color = ColorUtil.rybRotate(_primaryColor, (this._angle * 2));
-            if (!(this.alt))
+            if (!this.alt)
             {
                 if (_primaryCol.brightness > 50)
                 {
@@ -66,8 +66,8 @@
             }
             else
             {
-                _local_5 = ((50 - _primaryCol.brightness) / 50);
-                c2.brightness = (c2.brightness + Math.min(10, Math.max(-10, (10 * _local_5))));
+                multiplier = ((50 - _primaryCol.brightness) / 50);
+                c2.brightness = (c2.brightness + Math.min(10, Math.max(-10, (10 * multiplier))));
             };
             _colors.push(c2.color);
             var c3:HSB = new HSB();
@@ -78,5 +78,5 @@
 
 
     }
-}//package com.somerandomdude.colortoolkit.schemes
+} com.somerandomdude.colortoolkit.schemes
 

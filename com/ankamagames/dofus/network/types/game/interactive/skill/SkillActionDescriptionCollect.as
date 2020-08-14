@@ -1,10 +1,10 @@
-﻿package com.ankamagames.dofus.network.types.game.interactive.skill
+package com.ankamagames.dofus.network.types.game.interactive.skill
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class SkillActionDescriptionCollect extends SkillActionDescriptionTimed implements INetworkType 
     {
 
@@ -62,11 +62,33 @@
         public function deserializeAs_SkillActionDescriptionCollect(input:ICustomDataInput):void
         {
             super.deserialize(input);
+            this._minFunc(input);
+            this._maxFunc(input);
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_SkillActionDescriptionCollect(tree);
+        }
+
+        public function deserializeAsyncAs_SkillActionDescriptionCollect(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._minFunc);
+            tree.addChild(this._maxFunc);
+        }
+
+        private function _minFunc(input:ICustomDataInput):void
+        {
             this.min = input.readVarUhShort();
             if (this.min < 0)
             {
                 throw (new Error((("Forbidden value (" + this.min) + ") on element of SkillActionDescriptionCollect.min.")));
             };
+        }
+
+        private function _maxFunc(input:ICustomDataInput):void
+        {
             this.max = input.readVarUhShort();
             if (this.max < 0)
             {
@@ -76,5 +98,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.interactive.skill
+} com.ankamagames.dofus.network.types.game.interactive.skill
 

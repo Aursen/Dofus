@@ -1,4 +1,4 @@
-﻿package com.ankamagames.atouin.types
+package com.ankamagames.atouin.types
 {
     import flash.geom.Rectangle;
     import com.ankamagames.jerakine.logger.Logger;
@@ -11,8 +11,8 @@
     {
 
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(Frustum));
-        public static const MAX_WIDTH:Number = ((AtouinConstants.MAP_WIDTH + 0.5) * AtouinConstants.CELL_WIDTH);//1247
-        public static const MAX_HEIGHT:Number = ((AtouinConstants.MAP_HEIGHT + 0.5) * AtouinConstants.CELL_HEIGHT);//881.5
+        public static const MAX_WIDTH:Number = ((AtouinConstants.MAP_WIDTH * AtouinConstants.CELL_WIDTH) + AtouinConstants.CELL_HALF_WIDTH);//1247
+        public static const MAX_HEIGHT:Number = ((AtouinConstants.MAP_HEIGHT * AtouinConstants.CELL_HEIGHT) + AtouinConstants.CELL_HALF_HEIGHT);//881.5
         public static const RATIO:Number = (MAX_WIDTH / MAX_HEIGHT);//1.41463414634146
 
         private var _marginLeft:int;
@@ -21,7 +21,7 @@
         private var _marginBottom:int;
         public var scale:Number;
 
-        public function Frustum(marginRight:uint=0, marginTop:uint=0, marginLeft:uint=0, marginBottom:uint=0)
+        public function Frustum(marginRight:int=0, marginTop:int=0, marginLeft:int=0, marginBottom:int=0)
         {
             this._marginTop = marginTop;
             this._marginRight = marginRight;
@@ -30,26 +30,48 @@
             this.refresh();
         }
 
-        public function refresh():Frustum
+        public function get marginLeft():int
+        {
+            return (this._marginLeft);
+        }
+
+        public function get marginRight():int
+        {
+            return (this._marginRight);
+        }
+
+        public function get marginTop():int
+        {
+            return (this._marginTop);
+        }
+
+        public function get marginBottom():int
+        {
+            return (this._marginBottom);
+        }
+
+        public function refresh():void
         {
             var divX:Number;
             var divY:Number;
-            width = ((MAX_WIDTH + this._marginRight) + this._marginLeft);
-            height = ((MAX_HEIGHT + this._marginTop) + this._marginBottom);
-            var yScale:Number = (StageShareManager.startHeight / height);
-            width = (MAX_WIDTH * yScale);
-            height = (MAX_HEIGHT * yScale);
-            if ((width / height) < RATIO)
+            this.scale = (StageShareManager.startHeight / ((MAX_HEIGHT + this._marginTop) + this._marginBottom));
+            width = (MAX_WIDTH * this.scale);
+            height = (MAX_HEIGHT * this.scale);
+            var currentRatio:Number = (width / height);
+            if (currentRatio < RATIO)
             {
                 height = (width / RATIO);
-            };
-            if ((width / height) > RATIO)
+            }
+            else
             {
-                width = (height * RATIO);
+                if (currentRatio > RATIO)
+                {
+                    width = (height * RATIO);
+                };
             };
-            this.scale = yScale;
             var xSpace:Number = (((StageShareManager.startWidth - (MAX_WIDTH * this.scale)) + this._marginLeft) - this._marginRight);
             var ySpace:Number = (((StageShareManager.startHeight - (MAX_HEIGHT * this.scale)) + this._marginTop) - this._marginBottom);
+            var divisor:uint = 2;
             if (((this._marginLeft) && (this._marginRight)))
             {
                 divX = ((this._marginLeft + this._marginRight) / this._marginLeft);
@@ -58,17 +80,17 @@
             {
                 if (this._marginLeft)
                 {
-                    divX = (2 + (xSpace / this._marginLeft));
+                    divX = (divisor + (xSpace / this._marginLeft));
                 }
                 else
                 {
                     if (this._marginRight)
                     {
-                        divX = (2 - (xSpace / this._marginRight));
+                        divX = (divisor - (xSpace / this._marginRight));
                     }
                     else
                     {
-                        divX = 2;
+                        divX = divisor;
                     };
                 };
             };
@@ -80,31 +102,30 @@
             {
                 if (this._marginTop)
                 {
-                    divY = (2 + (ySpace / this._marginTop));
+                    divY = (divisor + (ySpace / this._marginTop));
                 }
                 else
                 {
                     if (this._marginBottom)
                     {
-                        divY = ((ySpace / this._marginBottom) - 2);
+                        divY = ((ySpace / this._marginBottom) - divisor);
                     }
                     else
                     {
-                        divY = 2;
+                        divY = divisor;
                     };
                 };
             };
             x = (xSpace / divX);
             y = (ySpace / divY);
-            return (this);
         }
 
         override public function toString():String
         {
-            return (((super.toString() + " scale=") + this.scale));
+            return ((super.toString() + " scale=") + this.scale);
         }
 
 
     }
-}//package com.ankamagames.atouin.types
+} com.ankamagames.atouin.types
 

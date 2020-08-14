@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.enums
+package com.ankamagames.berilia.enums
 {
     import __AS3__.vec.Vector;
     import __AS3__.vec.*;
@@ -29,5 +29,5 @@
 
 
     }
-}//package com.ankamagames.berilia.enums
+} com.ankamagames.berilia.enums
 

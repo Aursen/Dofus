@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.scripts.api
+package com.ankamagames.dofus.scripts.api
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
@@ -38,7 +38,7 @@
 
         public static function IsCasterPlayer(runner:SpellFxRunner):Boolean
         {
-            return ((runner.caster.id == PlayedCharacterManager.getInstance().id));
+            return (runner.caster.id == PlayedCharacterManager.getInstance().id);
         }
 
         public static function GetOrientationTo(fromPoint:MapPoint, toPoint:MapPoint, use4Dir:Boolean=true):uint
@@ -50,7 +50,7 @@
         {
             var ac:int = (CellUtil.getPixelXFromMapPoint(toPoint) - CellUtil.getPixelXFromMapPoint(fromPoint));
             var bc:int = (CellUtil.getPixelYFromMapPoint(fromPoint) - CellUtil.getPixelYFromMapPoint(toPoint));
-            return ((((Math.acos((ac / Math.sqrt((Math.pow(ac, 2) + Math.pow(bc, 2))))) * 180) / Math.PI) * (((CellUtil.getPixelYFromMapPoint(toPoint) > CellUtil.getPixelYFromMapPoint(fromPoint))) ? 1 : -1)));
+            return (((Math.acos((ac / Math.sqrt((Math.pow(ac, 2) + Math.pow(bc, 2))))) * 180) / Math.PI) * ((CellUtil.getPixelYFromMapPoint(toPoint) > CellUtil.getPixelYFromMapPoint(fromPoint)) ? 1 : -1));
         }
 
         public static function SetGfxRotation(gfx:DisplayObject, angle:Number):void
@@ -60,7 +60,12 @@
 
         public static function GetEntityCell(entity:IEntity):MapPoint
         {
-            return (entity.position);
+            if (entity)
+            {
+                return (entity.position);
+            };
+            _log.warn("GetEntityCell() is returning a null position, because specified entity is null");
+            return (null);
         }
 
         public static function IsPositionsEquals(pointOne:MapPoint, pointTwo:MapPoint):Boolean
@@ -69,7 +74,7 @@
             {
                 return (false);
             };
-            return ((pointOne.cellId == pointTwo.cellId));
+            return (pointOne.cellId == pointTwo.cellId);
         }
 
         public static function GetEntityOnCell(point:MapPoint):IEntity
@@ -89,15 +94,15 @@
 
         public static function CreateGfxEntity(gfxId:uint, cell:MapPoint, randomRotationMin:Number=0, randomRotationMax:Number=0, randomFlip:Boolean=false, startPlayingOnlyWhenDisplayed:Boolean=true):IEntity
         {
-            var id:int = -10000;
+            var id:* = -10000;
             while (DofusEntities.getEntity(id))
             {
-                id = (-10000 + (Math.random() * 10000));
+                id = int((-10000 + (Math.random() * 10000)));
             };
             var entity:Projectile = new Projectile(id, TiphonEntityLook.fromString((("{" + gfxId) + "}")), false);
             entity.position = cell;
             entity.rotation = ((Math.random() * (randomRotationMax - randomRotationMin)) + randomRotationMin);
-            if (((randomFlip) && ((Math.random() < 0.5))))
+            if (((randomFlip) && (Math.random() < 0.5)))
             {
                 entity.scaleX = -1;
             };
@@ -124,15 +129,15 @@
 
         public static function CreateParticlesEntity(rendererType:uint):ParticuleEmitterEntity
         {
-            var id:int = -10000;
+            var id:* = -10000;
             while (DofusEntities.getEntity(id))
             {
-                id = (-10000 + (Math.random() * 10000));
+                id = int((-10000 + (Math.random() * 10000)));
             };
             return (new ParticuleEmitterEntity(id, rendererType));
         }
 
 
     }
-}//package com.ankamagames.dofus.scripts.api
+} com.ankamagames.dofus.scripts.api
 

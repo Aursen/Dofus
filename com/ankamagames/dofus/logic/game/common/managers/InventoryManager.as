@@ -1,9 +1,11 @@
-﻿package com.ankamagames.dofus.logic.game.common.managers
+package com.ankamagames.dofus.logic.game.common.managers
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
     import com.ankamagames.dofus.logic.game.common.misc.Inventory;
+    import com.ankamagames.dofus.network.enums.CharacterInventoryPositionEnum;
+    import com.ankamagames.dofus.network.ProtocolConstantsEnum;
     import com.ankamagames.dofus.logic.game.common.misc.PlayerInventory;
     import com.ankamagames.dofus.logic.game.common.misc.inventoryView.RealView;
     import com.ankamagames.dofus.logic.game.common.misc.inventoryView.EquipmentView;
@@ -33,14 +35,18 @@
 
         private var _inventory:Inventory;
         private var _bankInventory:Inventory;
-        private var _presets:Array;
         private var _shortcutBarSpells:Array;
         private var _shortcutBarItems:Array;
+        private var _builds:Array;
+        private var _currentBuildId:int = -1;
+        private var _maxBuildCount:int;
+        private var _presetsItemPositionsOrder:Array = [CharacterInventoryPositionEnum.ACCESSORY_POSITION_HAT, CharacterInventoryPositionEnum.ACCESSORY_POSITION_CAPE, CharacterInventoryPositionEnum.ACCESSORY_POSITION_BELT, CharacterInventoryPositionEnum.ACCESSORY_POSITION_BOOTS, CharacterInventoryPositionEnum.ACCESSORY_POSITION_AMULET, CharacterInventoryPositionEnum.INVENTORY_POSITION_RING_LEFT, CharacterInventoryPositionEnum.INVENTORY_POSITION_RING_RIGHT, CharacterInventoryPositionEnum.INVENTORY_POSITION_COSTUME, CharacterInventoryPositionEnum.ACCESSORY_POSITION_WEAPON, CharacterInventoryPositionEnum.ACCESSORY_POSITION_SHIELD, CharacterInventoryPositionEnum.INVENTORY_POSITION_ENTITY, CharacterInventoryPositionEnum.ACCESSORY_POSITION_PETS, CharacterInventoryPositionEnum.INVENTORY_POSITION_DOFUS_1, CharacterInventoryPositionEnum.INVENTORY_POSITION_DOFUS_2, CharacterInventoryPositionEnum.INVENTORY_POSITION_DOFUS_3, CharacterInventoryPositionEnum.INVENTORY_POSITION_DOFUS_4, CharacterInventoryPositionEnum.INVENTORY_POSITION_DOFUS_5, CharacterInventoryPositionEnum.INVENTORY_POSITION_DOFUS_6];
 
         public function InventoryManager()
         {
+            this._maxBuildCount = ProtocolConstantsEnum.MAX_PRESET_COUNT;
             this._inventory = new PlayerInventory();
-            this._presets = new Array(8);
+            this._builds = new Array();
             this._shortcutBarItems = new Array();
             this._shortcutBarSpells = new Array();
             this.inventory.addView(new RealView(this.inventory.hookLock));
@@ -57,7 +63,7 @@
 
         public static function getInstance():InventoryManager
         {
-            if (!(_self))
+            if (!_self)
             {
                 _self = new (InventoryManager)();
             };
@@ -68,7 +74,7 @@
         public function init():void
         {
             this._inventory.initialize(new Vector.<ItemWrapper>());
-            this._presets = new Array(8);
+            this._builds = new Array();
             this._shortcutBarItems = new Array();
             this._shortcutBarSpells = new Array();
         }
@@ -83,19 +89,19 @@
             return (this._inventory.getView("real").content);
         }
 
-        public function get presets():Array
+        public function get builds():Array
         {
-            return (this._presets);
+            return (this._builds);
         }
 
-        public function set presets(aPresets:Array):void
+        public function set builds(builds:Array):void
         {
-            this._presets = aPresets;
+            this._builds = builds;
         }
 
         public function get bankInventory():Inventory
         {
-            if (!(this._bankInventory))
+            if (!this._bankInventory)
             {
                 this._bankInventory = new Inventory();
                 this._bankInventory.addView(new BankView(this._bankInventory.hookLock));
@@ -128,7 +134,27 @@
             this._shortcutBarSpells = aSpells;
         }
 
+        public function getMaxItemsCountForPreset():int
+        {
+            return (this._presetsItemPositionsOrder.length);
+        }
+
+        public function getPositionForPresetItemIndex(index:int):int
+        {
+            return (this._presetsItemPositionsOrder[index]);
+        }
+
+        public function get currentBuildId():int
+        {
+            return (this._currentBuildId);
+        }
+
+        public function set currentBuildId(value:int):void
+        {
+            this._currentBuildId = value;
+        }
+
 
     }
-}//package com.ankamagames.dofus.logic.game.common.managers
+} com.ankamagames.dofus.logic.game.common.managers
 

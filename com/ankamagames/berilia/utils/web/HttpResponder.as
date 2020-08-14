@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.utils.web
+package com.ankamagames.berilia.utils.web
 {
     import flash.net.Socket;
     import flash.utils.ByteArray;
@@ -33,10 +33,10 @@
         {
             var fileToServe:File;
             var hj:String;
-            var _local_8:Date;
+            var fileModifiedDate:Date;
             super();
             this._socket = socket;
-            if (((!((httpVerb == HttpResponder.HTTP_VERB_GET))) && (!((httpVerb == HttpResponder.HTTP_VERB_HEAD)))))
+            if (((!(httpVerb == HttpResponder.HTTP_VERB_GET)) && (!(httpVerb == HttpResponder.HTTP_VERB_HEAD))))
             {
                 this.throw501();
             };
@@ -50,7 +50,7 @@
                 relativeFilePath = relativeFilePath.substring(0, relativeFilePath.indexOf("?"));
             };
             relativeFilePath = decodeURI(relativeFilePath);
-            if (((!((relativeFilePath.indexOf("../") == -1))) || (!((relativeFilePath.indexOf("..\\") == -1)))))
+            if (((!(relativeFilePath.indexOf("../") == -1)) || (!(relativeFilePath.indexOf("..\\") == -1))))
             {
                 this.throw403();
             };
@@ -79,8 +79,8 @@
                     }
                     else
                     {
-                        _local_8 = fileToServe.modificationDate;
-                        this._dateHeader = ("Date: " + this.toRFC802(_local_8));
+                        fileModifiedDate = fileToServe.modificationDate;
+                        this._dateHeader = ("Date: " + this.toRFC802(fileModifiedDate));
                         this._mimeHeader = this.getMimeHeader(fileToServe);
                         this._stream = new FileStream();
                         this._stream.addEventListener(Event.COMPLETE, this.onFileReadDone);
@@ -156,7 +156,7 @@
                         img = (img + "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAQAAAC1+jfqAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAC4SURBVCjPdZFbDsIgEEWnrsMm7oGGfZrohxvU+Iq1TyjU60Bf1pac4Yc5YS4ZAtGWBMk/drQBOVwJlZrWYkLhsB8UV9K0BUrPGy9cWbng2CtEEUmLGppPjRwpbixUKHBiZRS0p+ZGhvs4irNEvWD8heHpbsyDXznPhYFOyTjJc13olIqzZCHBouE0FRMUjA+s1gTjaRgVFpqRwC8mfoXPPEVPS7LbRaJL2y7bOifRCTEli3U7BMWgLzKlW/CuebZPAAAAAElFTkSuQmCC");
                 };
             };
-            return ((img + '" />'));
+            return (img + '" />');
         }
 
         private function onDirectoryList(e:FileListEvent):void
@@ -164,7 +164,7 @@
             var f:File;
             var isDir:Boolean;
             this._statusHeader = "HTTP/1.0 200 OK";
-            var html:String = (("<html><head><title>Dofus Module Server</title></head><body><h2>Index of /" + this.getRelativePath(File(e.target))) + "</h2><ul>");
+            var html:* = (("<html><head><title>Dofus Module Server</title></head><body><h2>Index of /" + this.getRelativePath(File(e.target))) + "</h2><ul>");
             html = (html + "<table><tr><td></td><td><b>Name</b></td><td><b>Last modified</b></td><td><b>Size (octet)</b></td></tr>");
             if (this.getRelativePath(File(e.target)) != "")
             {
@@ -256,7 +256,7 @@
         private function getMimeHeader(file:File):String
         {
             var extn:String = file.extension;
-            return (("Content-Type: " + MimeTypeHelper.getMimeType(extn)));
+            return ("Content-Type: " + MimeTypeHelper.getMimeType(extn));
         }
 
         private function toRFC802(date:Date):String
@@ -353,5 +353,5 @@
 
 
     }
-}//package com.ankamagames.berilia.utils.web
+} com.ankamagames.berilia.utils.web
 

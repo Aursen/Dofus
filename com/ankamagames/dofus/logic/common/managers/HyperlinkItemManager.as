@@ -1,22 +1,26 @@
-﻿package com.ankamagames.dofus.logic.common.managers
+package com.ankamagames.dofus.logic.common.managers
 {
     import com.ankamagames.dofus.logic.game.common.managers.InventoryManager;
     import com.ankamagames.dofus.internalDatacenter.items.ItemWrapper;
     import com.ankamagames.berilia.managers.KernelEventsManager;
     import com.ankamagames.dofus.misc.lists.ChatHookList;
     import com.ankamagames.berilia.managers.TooltipManager;
+    import com.ankamagames.dofus.network.types.game.data.items.effects.ObjectEffect;
+    import com.ankamagames.dofus.misc.lists.HookList;
+    import com.ankamagames.dofus.types.enums.ItemCategoryEnum;
+    import com.ankamagames.berilia.utils.BeriliaHookList;
     import com.ankamagames.dofus.datacenter.items.Item;
     import flash.geom.Rectangle;
-    import com.ankamagames.berilia.types.data.TextTooltipInfo;
-    import com.ankamagames.jerakine.data.I18n;
     import com.ankamagames.berilia.managers.UiModuleManager;
+    import com.ankamagames.berilia.types.LocationEnum;
     import com.ankamagames.berilia.enums.StrataEnum;
+    import __AS3__.vec.*;
 
     public class HyperlinkItemManager 
     {
 
         private static var _itemId:int = 0;
-        private static var _itemList:Array = new Array();
+        private static var _itemList:Array = [];
         public static var lastItemTooltipId:int = -1;
 
 
@@ -35,7 +39,7 @@
 
         public static function showChatItem(id:int):void
         {
-            if ((((id == lastItemTooltipId)) && (TooltipManager.isVisible("Hyperlink"))))
+            if (((id == lastItemTooltipId) && (TooltipManager.isVisible("Hyperlink"))))
             {
                 TooltipManager.hide("Hyperlink");
                 lastItemTooltipId = -1;
@@ -44,6 +48,65 @@
             lastItemTooltipId = id;
             HyperlinkSpellManager.lastSpellTooltipId = -1;
             KernelEventsManager.getInstance().processCallback(ChatHookList.ShowObjectLinked, _itemList[id]);
+        }
+
+        public static function showBestiaryItem(objectGID:uint):void
+        {
+            var item:ItemWrapper = ItemWrapper.create(0, 0, objectGID, 1, new Vector.<ObjectEffect>(), false);
+            var data:Object = {};
+            data.monsterId = 0;
+            data.monsterSearch = item.name;
+            data.monsterIdsList = item.dropMonsterIds;
+            data.forceOpen = true;
+            KernelEventsManager.getInstance().processCallback(HookList.OpenEncyclopedia, "bestiaryTab", data);
+        }
+
+        public static function showResourceItem(objectGID:uint):void
+        {
+            var item:ItemWrapper = ItemWrapper.create(0, 0, objectGID, 1, new Vector.<ObjectEffect>(), false);
+            var data:Object = {};
+            data.resourceSearch = item.name;
+            data.resourceId = item.objectGID;
+            if (item.category == ItemCategoryEnum.CONSUMABLES_CATEGORY)
+            {
+                data.forceOpenConsumableTab = true;
+                KernelEventsManager.getInstance().processCallback(HookList.OpenEncyclopedia, "consumableTab", data);
+            }
+            else
+            {
+                if (item.category == ItemCategoryEnum.RESOURCES_CATEGORY)
+                {
+                    data.forceOpenResourceTab = true;
+                    KernelEventsManager.getInstance().processCallback(HookList.OpenEncyclopedia, "resourceTab", data);
+                }
+                else
+                {
+                    if (item.type.isInEncyclopedia)
+                    {
+                        data.forceOpenEquipmentTab = true;
+                        KernelEventsManager.getInstance().processCallback(HookList.OpenEncyclopedia, "equipmentTab", data);
+                    }
+                    else
+                    {
+                        showItem(objectGID, item.objectUID);
+                    };
+                };
+            };
+        }
+
+        public static function showPinnedItemTooltip(objectGID:uint, objectUID:uint=0, uiName:String=null):void
+        {
+            if (!uiName)
+            {
+                return;
+            };
+            KernelEventsManager.getInstance().processCallback(HookList.DisplayPinnedItemTooltip, uiName, objectGID, objectUID);
+        }
+
+        public static function insertItem(objectGID:uint, objectUID:uint=0, uiName:String=null):void
+        {
+            var item:ItemWrapper = ItemWrapper.create(0, objectUID, objectGID, 1, new Vector.<ObjectEffect>(), false);
+            KernelEventsManager.getInstance().processCallback(BeriliaHookList.MouseShiftClick, {"data":item});
         }
 
         public static function duplicateChatHyperlink(id:int):void
@@ -56,7 +119,7 @@
             var item:Item = Item.getItemById(objectGID);
             if (item)
             {
-                return ((("[" + item.name) + "]"));
+                return (("[" + item.name) + "]");
             };
             return ("[null]");
         }
@@ -64,19 +127,24 @@
         public static function newChatItem(item:ItemWrapper):String
         {
             _itemList[_itemId] = item;
-            var code:String = (((("{chatitem," + _itemId) + "::[") + item.realName) + "]}");
+            var code:* = (((("{chatitem," + _itemId) + "::[") + item.realName) + "]}");
             _itemId++;
             return (code);
         }
 
         public static function rollOver(pX:int, pY:int, objectGID:uint, objectUID:uint=0):void
         {
-            var target:Rectangle = new Rectangle(pX, pY, 10, 10);
-            var info:TextTooltipInfo = new TextTooltipInfo(I18n.getUiText("ui.tooltip.chat.object"));
-            TooltipManager.show(info, target, UiModuleManager.getInstance().getModule("Ankama_GameUiCore"), false, "HyperLink", 6, 2, 3, true, null, null, null, null, false, StrataEnum.STRATA_TOOLTIP, 1);
+            var item:Item = _itemList[objectGID];
+            TooltipManager.show(item, new Rectangle(pX, pY, 10, 10), UiModuleManager.getInstance().getModule("Ankama_Tooltips"), false, "standard", LocationEnum.POINT_BOTTOMLEFT, LocationEnum.POINT_TOPRIGHT, 3, true, null, null, {
+                "header":true,
+                "description":false,
+                "equipped":false,
+                "noFooter":true,
+                "showEffects":true
+            }, null, false, StrataEnum.STRATA_TOOLTIP, 1);
         }
 
 
     }
-}//package com.ankamagames.dofus.logic.common.managers
+} com.ankamagames.dofus.logic.common.managers
 

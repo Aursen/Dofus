@@ -1,7 +1,8 @@
-﻿package com.ankamagames.dofus.network.types.game.context.roleplay
+package com.ankamagames.dofus.network.types.game.context.roleplay
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import __AS3__.vec.Vector;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
     import __AS3__.vec.*;
@@ -12,13 +13,9 @@
         public static const protocolId:uint = 394;
 
         public var playerCount:int = 0;
-        public var monsters:Vector.<MonsterInGroupLightInformations>;
+        public var monsters:Vector.<MonsterInGroupLightInformations> = new Vector.<MonsterInGroupLightInformations>();
+        private var _monsterstree:FuncTree;
 
-        public function AlternativeMonstersInGroupLightInformations()
-        {
-            this.monsters = new Vector.<MonsterInGroupLightInformations>();
-            super();
-        }
 
         public function getTypeId():uint
         {
@@ -63,7 +60,7 @@
         public function deserializeAs_AlternativeMonstersInGroupLightInformations(input:ICustomDataInput):void
         {
             var _item2:MonsterInGroupLightInformations;
-            this.playerCount = input.readInt();
+            this._playerCountFunc(input);
             var _monstersLen:uint = input.readUnsignedShort();
             var _i2:uint;
             while (_i2 < _monstersLen)
@@ -75,7 +72,41 @@
             };
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_AlternativeMonstersInGroupLightInformations(tree);
+        }
+
+        public function deserializeAsyncAs_AlternativeMonstersInGroupLightInformations(tree:FuncTree):void
+        {
+            tree.addChild(this._playerCountFunc);
+            this._monsterstree = tree.addChild(this._monsterstreeFunc);
+        }
+
+        private function _playerCountFunc(input:ICustomDataInput):void
+        {
+            this.playerCount = input.readInt();
+        }
+
+        private function _monsterstreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._monsterstree.addChild(this._monstersFunc);
+                i++;
+            };
+        }
+
+        private function _monstersFunc(input:ICustomDataInput):void
+        {
+            var _item:MonsterInGroupLightInformations = new MonsterInGroupLightInformations();
+            _item.deserialize(input);
+            this.monsters.push(_item);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.types.game.context.roleplay
+} com.ankamagames.dofus.network.types.game.context.roleplay
 

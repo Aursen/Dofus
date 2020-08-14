@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.datacenter.breeds
+package com.ankamagames.dofus.datacenter.breeds
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.jerakine.logger.Logger;
@@ -22,7 +22,7 @@
 
         public function get description():String
         {
-            if (!(this._description))
+            if (!this._description)
             {
                 this._description = I18n.getText(this.descriptionId);
             };
@@ -31,5 +31,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.breeds
+} com.ankamagames.dofus.datacenter.breeds
 

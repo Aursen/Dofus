@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.actions.sequence
+package com.ankamagames.dofus.network.messages.game.actions.sequence
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class SequenceStartMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -15,7 +15,7 @@
 
         private var _isInitialized:Boolean = false;
         public var sequenceType:int = 0;
-        public var authorId:int = 0;
+        public var authorId:Number = 0;
 
 
         override public function get isInitialized():Boolean
@@ -28,7 +28,7 @@
             return (955);
         }
 
-        public function initSequenceStartMessage(sequenceType:int=0, authorId:int=0):SequenceStartMessage
+        public function initSequenceStartMessage(sequenceType:int=0, authorId:Number=0):SequenceStartMessage
         {
             this.sequenceType = sequenceType;
             this.authorId = authorId;
@@ -55,6 +55,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_SequenceStartMessage(output);
@@ -63,7 +71,11 @@
         public function serializeAs_SequenceStartMessage(output:ICustomDataOutput):void
         {
             output.writeByte(this.sequenceType);
-            output.writeInt(this.authorId);
+            if (((this.authorId < -9007199254740992) || (this.authorId > 9007199254740992)))
+            {
+                throw (new Error((("Forbidden value (" + this.authorId) + ") on element authorId.")));
+            };
+            output.writeDouble(this.authorId);
         }
 
         public function deserialize(input:ICustomDataInput):void
@@ -73,11 +85,36 @@
 
         public function deserializeAs_SequenceStartMessage(input:ICustomDataInput):void
         {
+            this._sequenceTypeFunc(input);
+            this._authorIdFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_SequenceStartMessage(tree);
+        }
+
+        public function deserializeAsyncAs_SequenceStartMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._sequenceTypeFunc);
+            tree.addChild(this._authorIdFunc);
+        }
+
+        private function _sequenceTypeFunc(input:ICustomDataInput):void
+        {
             this.sequenceType = input.readByte();
-            this.authorId = input.readInt();
+        }
+
+        private function _authorIdFunc(input:ICustomDataInput):void
+        {
+            this.authorId = input.readDouble();
+            if (((this.authorId < -9007199254740992) || (this.authorId > 9007199254740992)))
+            {
+                throw (new Error((("Forbidden value (" + this.authorId) + ") on element of SequenceStartMessage.authorId.")));
+            };
         }
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.actions.sequence
+} com.ankamagames.dofus.network.messages.game.actions.sequence
 

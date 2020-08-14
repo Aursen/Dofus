@@ -1,15 +1,15 @@
-﻿package com.ankamagames.tiphon.types.look
+package com.ankamagames.tiphon.types.look
 {
     import __AS3__.vec.Vector;
+    import flash.utils.Dictionary;
 
     public class EntityLookParser 
     {
 
-        public static const CURRENT_FORMAT_VERSION:uint = 0;
         public static const DEFAULT_NUMBER_BASE:uint = 10;
 
 
-        public static function fromString(str:String, pFormatVersion:uint=0, pNumberBase:uint=10, tiphonInstance:TiphonEntityLook=null):TiphonEntityLook
+        public static function fromString(str:String, pNumberBase:uint=10, tiphonInstance:TiphonEntityLook=null):TiphonEntityLook
         {
             var headersStr:String;
             var headers:Array;
@@ -33,8 +33,11 @@
             var bindingCategory:uint;
             var bindingIndex:uint;
             var el:TiphonEntityLook = ((tiphonInstance) ? tiphonInstance : new TiphonEntityLook());
+            if (!str)
+            {
+                return (el);
+            };
             el.lock();
-            var formatVersion:uint = CURRENT_FORMAT_VERSION;
             var numberBase:uint = DEFAULT_NUMBER_BASE;
             if (str.charAt(0) == "[")
             {
@@ -46,23 +49,18 @@
                     {
                         throw (new Error("Malformated headers in an Entity Look string."));
                     };
-                    formatVersion = uint(headers[0]);
                     numberBase = getNumberBase(headers[1]);
-                }
-                else
-                {
-                    formatVersion = uint(headersStr);
                 };
                 str = str.substr((str.indexOf("]") + 1));
             };
-            if (((!((str.charAt(0) == "{"))) || (!((str.charAt((str.length - 1)) == "}")))))
+            if (((!(str.charAt(0) == "{")) || (!(str.charAt((str.length - 1)) == "}"))))
             {
                 throw (new Error("Malformed body in an Entity Look string."));
             };
             str = str.substring(1, (str.length - 1));
             var body:Array = str.split("|");
             el.setBone(parseInt(body[0], numberBase));
-            if ((((body.length > 1)) && ((body[1].length > 0))))
+            if (((body.length > 1) && (body[1].length > 0)))
             {
                 skins = body[1].split(",");
                 for each (skin in skins)
@@ -70,7 +68,7 @@
                     el.addSkin(parseInt(skin, numberBase));
                 };
             };
-            if ((((body.length > 2)) && ((body[2].length > 0))))
+            if (((body.length > 2) && (body[2].length > 0)))
             {
                 colors = body[2].split(",");
                 for each (color in colors)
@@ -93,7 +91,7 @@
                     el.setColor(colorIndex, colorValue);
                 };
             };
-            if ((((body.length > 3)) && ((body[3].length > 0))))
+            if (((body.length > 3) && (body[3].length > 0)))
             {
                 scales = body[3].split(",");
                 if (scales.length == 1)
@@ -117,7 +115,7 @@
             {
                 el.setScales(1, 1);
             };
-            if ((((body.length > 4)) && ((body[4].length > 0))))
+            if (((body.length > 4) && (body[4].length > 0)))
             {
                 subEntitiesStr = "";
                 i = 4;
@@ -149,7 +147,7 @@
                     };
                     bindingCategory = parseInt(subEntityBinding[0], numberBase);
                     bindingIndex = parseInt(subEntityBinding[1], numberBase);
-                    el.addSubEntity(bindingCategory, bindingIndex, EntityLookParser.fromString(subEntityBody, formatVersion, numberBase));
+                    el.addSubEntity(bindingCategory, bindingIndex, EntityLookParser.fromString(subEntityBody, numberBase));
                 };
             };
             el.unlock(true);
@@ -177,7 +175,7 @@
                 isFirstSkin = true;
                 for each (skin in skins)
                 {
-                    if ((((i++ == 0)) && (!((el.defaultSkin == -1)))))
+                    if (((i++ == 0) && (!(el.defaultSkin == -1))))
                     {
                     }
                     else
@@ -215,7 +213,7 @@
             out = (out + "|");
             var scaleX:Number = el.getScaleX();
             var scaleY:Number = el.getScaleY();
-            if (((!((scaleX == 1))) || (!((scaleY == 1)))))
+            if (((!(scaleX == 1)) || (!(scaleY == 1))))
             {
                 out = (out + Math.round((scaleX * 100)).toString(DEFAULT_NUMBER_BASE));
                 if (scaleY != scaleX)
@@ -224,7 +222,7 @@
                 };
             };
             out = (out + "|");
-            var subEntities:Array = el.getSubEntities(true);
+            var subEntities:Dictionary = el.getSubEntities(true);
             if (subEntities != null)
             {
                 isFirstSubEntity = true;
@@ -249,7 +247,7 @@
             {
                 out = out.substr(0, (out.length - 1));
             };
-            return ((out + "}"));
+            return (out + "}");
         }
 
         private static function getNumberBase(l:String):uint
@@ -268,5 +266,5 @@
 
 
     }
-}//package com.ankamagames.tiphon.types.look
+} com.ankamagames.tiphon.types.look
 

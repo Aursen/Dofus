@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.utils.display.spellZone
+package com.ankamagames.jerakine.utils.display.spellZone
 {
     public class ZoneEffect implements IZoneShape 
     {
@@ -34,5 +34,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.utils.display.spellZone
+} com.ankamagames.jerakine.utils.display.spellZone
 

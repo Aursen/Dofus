@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.inventory.items
+package com.ankamagames.dofus.network.messages.game.inventory.items
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class ObjectSetPositionMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -58,6 +58,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_ObjectSetPositionMessage(output);
@@ -70,7 +78,7 @@
                 throw (new Error((("Forbidden value (" + this.objectUID) + ") on element objectUID.")));
             };
             output.writeVarInt(this.objectUID);
-            output.writeByte(this.position);
+            output.writeShort(this.position);
             if (this.quantity < 0)
             {
                 throw (new Error((("Forbidden value (" + this.quantity) + ") on element quantity.")));
@@ -85,16 +93,43 @@
 
         public function deserializeAs_ObjectSetPositionMessage(input:ICustomDataInput):void
         {
+            this._objectUIDFunc(input);
+            this._positionFunc(input);
+            this._quantityFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_ObjectSetPositionMessage(tree);
+        }
+
+        public function deserializeAsyncAs_ObjectSetPositionMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._objectUIDFunc);
+            tree.addChild(this._positionFunc);
+            tree.addChild(this._quantityFunc);
+        }
+
+        private function _objectUIDFunc(input:ICustomDataInput):void
+        {
             this.objectUID = input.readVarUhInt();
             if (this.objectUID < 0)
             {
                 throw (new Error((("Forbidden value (" + this.objectUID) + ") on element of ObjectSetPositionMessage.objectUID.")));
             };
-            this.position = input.readUnsignedByte();
-            if ((((this.position < 0)) || ((this.position > 0xFF))))
+        }
+
+        private function _positionFunc(input:ICustomDataInput):void
+        {
+            this.position = input.readShort();
+            if (this.position < 0)
             {
                 throw (new Error((("Forbidden value (" + this.position) + ") on element of ObjectSetPositionMessage.position.")));
             };
+        }
+
+        private function _quantityFunc(input:ICustomDataInput):void
+        {
             this.quantity = input.readVarUhInt();
             if (this.quantity < 0)
             {
@@ -104,5 +139,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.inventory.items
+} com.ankamagames.dofus.network.messages.game.inventory.items
 

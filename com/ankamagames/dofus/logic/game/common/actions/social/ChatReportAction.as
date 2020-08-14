@@ -1,11 +1,11 @@
-﻿package com.ankamagames.dofus.logic.game.common.actions.social
+package com.ankamagames.dofus.logic.game.common.actions.social
 {
     import com.ankamagames.jerakine.handlers.messages.Action;
 
     public class ChatReportAction implements Action 
     {
 
-        public var reportedId:uint;
+        public var reportedId:Number;
         public var reason:uint;
         public var channel:uint;
         public var timestamp:Number;
@@ -14,7 +14,7 @@
         public var name:String;
 
 
-        public static function create(reportedId:uint, reason:uint, name:String, channel:uint, fingerprint:String, message:String, timestamp:Number):ChatReportAction
+        public static function create(reportedId:Number, reason:uint, name:String, channel:uint, fingerprint:String, message:String, timestamp:Number):ChatReportAction
         {
             var a:ChatReportAction = new (ChatReportAction)();
             a.reportedId = reportedId;
@@ -29,5 +29,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.actions.social
+} com.ankamagames.dofus.logic.game.common.actions.social
 

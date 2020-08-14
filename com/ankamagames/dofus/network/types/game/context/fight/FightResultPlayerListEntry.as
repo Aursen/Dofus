@@ -1,7 +1,8 @@
-﻿package com.ankamagames.dofus.network.types.game.context.fight
+package com.ankamagames.dofus.network.types.game.context.fight
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import __AS3__.vec.Vector;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
     import com.ankamagames.dofus.network.ProtocolTypeManager;
@@ -13,20 +14,16 @@
         public static const protocolId:uint = 24;
 
         public var level:uint = 0;
-        public var additional:Vector.<FightResultAdditionalData>;
+        public var additional:Vector.<FightResultAdditionalData> = new Vector.<FightResultAdditionalData>();
+        private var _additionaltree:FuncTree;
 
-        public function FightResultPlayerListEntry()
-        {
-            this.additional = new Vector.<FightResultAdditionalData>();
-            super();
-        }
 
         override public function getTypeId():uint
         {
             return (24);
         }
 
-        public function initFightResultPlayerListEntry(outcome:uint=0, wave:uint=0, rewards:FightLoot=null, id:int=0, alive:Boolean=false, level:uint=0, additional:Vector.<FightResultAdditionalData>=null):FightResultPlayerListEntry
+        public function initFightResultPlayerListEntry(outcome:uint=0, wave:uint=0, rewards:FightLoot=null, id:Number=0, alive:Boolean=false, level:uint=0, additional:Vector.<FightResultAdditionalData>=null):FightResultPlayerListEntry
         {
             super.initFightResultFighterListEntry(outcome, wave, rewards, id, alive);
             this.level = level;
@@ -49,11 +46,11 @@
         public function serializeAs_FightResultPlayerListEntry(output:ICustomDataOutput):void
         {
             super.serializeAs_FightResultFighterListEntry(output);
-            if ((((this.level < 1)) || ((this.level > 200))))
+            if (this.level < 0)
             {
                 throw (new Error((("Forbidden value (" + this.level) + ") on element level.")));
             };
-            output.writeByte(this.level);
+            output.writeVarShort(this.level);
             output.writeShort(this.additional.length);
             var _i2:uint;
             while (_i2 < this.additional.length)
@@ -74,11 +71,7 @@
             var _id2:uint;
             var _item2:FightResultAdditionalData;
             super.deserialize(input);
-            this.level = input.readUnsignedByte();
-            if ((((this.level < 1)) || ((this.level > 200))))
-            {
-                throw (new Error((("Forbidden value (" + this.level) + ") on element of FightResultPlayerListEntry.level.")));
-            };
+            this._levelFunc(input);
             var _additionalLen:uint = input.readUnsignedShort();
             var _i2:uint;
             while (_i2 < _additionalLen)
@@ -91,7 +84,47 @@
             };
         }
 
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_FightResultPlayerListEntry(tree);
+        }
+
+        public function deserializeAsyncAs_FightResultPlayerListEntry(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._levelFunc);
+            this._additionaltree = tree.addChild(this._additionaltreeFunc);
+        }
+
+        private function _levelFunc(input:ICustomDataInput):void
+        {
+            this.level = input.readVarUhShort();
+            if (this.level < 0)
+            {
+                throw (new Error((("Forbidden value (" + this.level) + ") on element of FightResultPlayerListEntry.level.")));
+            };
+        }
+
+        private function _additionaltreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._additionaltree.addChild(this._additionalFunc);
+                i++;
+            };
+        }
+
+        private function _additionalFunc(input:ICustomDataInput):void
+        {
+            var _id:uint = input.readUnsignedShort();
+            var _item:FightResultAdditionalData = ProtocolTypeManager.getInstance(FightResultAdditionalData, _id);
+            _item.deserialize(input);
+            this.additional.push(_item);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.types.game.context.fight
+} com.ankamagames.dofus.network.types.game.context.fight
 

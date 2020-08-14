@@ -1,29 +1,25 @@
-﻿package com.ankamagames.dofus.network.messages.game.interactive
+package com.ankamagames.dofus.network.messages.game.interactive
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
     import __AS3__.vec.Vector;
     import com.ankamagames.dofus.network.types.game.interactive.StatedElement;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
     import __AS3__.vec.*;
 
-    [Trusted]
     public class StatedMapUpdateMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 5716;
 
         private var _isInitialized:Boolean = false;
-        public var statedElements:Vector.<StatedElement>;
+        public var statedElements:Vector.<StatedElement> = new Vector.<StatedElement>();
+        private var _statedElementstree:FuncTree;
 
-        public function StatedMapUpdateMessage()
-        {
-            this.statedElements = new Vector.<StatedElement>();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
@@ -58,6 +54,14 @@
         override public function unpack(input:ICustomDataInput, length:uint):void
         {
             this.deserialize(input);
+        }
+
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
         }
 
         public function serialize(output:ICustomDataOutput):void
@@ -95,7 +99,35 @@
             };
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_StatedMapUpdateMessage(tree);
+        }
+
+        public function deserializeAsyncAs_StatedMapUpdateMessage(tree:FuncTree):void
+        {
+            this._statedElementstree = tree.addChild(this._statedElementstreeFunc);
+        }
+
+        private function _statedElementstreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._statedElementstree.addChild(this._statedElementsFunc);
+                i++;
+            };
+        }
+
+        private function _statedElementsFunc(input:ICustomDataInput):void
+        {
+            var _item:StatedElement = new StatedElement();
+            _item.deserialize(input);
+            this.statedElements.push(_item);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.interactive
+} com.ankamagames.dofus.network.messages.game.interactive
 

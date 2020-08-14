@@ -1,4 +1,4 @@
-﻿package com.ankamagames.tiphon.display
+package com.ankamagames.tiphon.display
 {
     import flash.utils.Dictionary;
     import com.ankamagames.tiphon.types.ScriptedAnimation;
@@ -63,5 +63,5 @@
 
 
     }
-}//package com.ankamagames.tiphon.display
+} com.ankamagames.tiphon.display
 

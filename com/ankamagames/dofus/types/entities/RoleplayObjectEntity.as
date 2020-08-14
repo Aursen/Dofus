@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.types.entities
+package com.ankamagames.dofus.types.entities
 {
     import flash.display.Sprite;
     import com.ankamagames.jerakine.entities.interfaces.IInteractive;
@@ -20,7 +20,7 @@
 
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(RoleplayObjectEntity));
 
-        private var _id:int;
+        private var _id:Number;
         private var _position:MapPoint;
         private var _displayed:Boolean;
         protected var _displayBehavior:IDisplayBehavior;
@@ -33,12 +33,12 @@
             mouseChildren = false;
         }
 
-        public function get id():int
+        public function get id():Number
         {
             return (this._id);
         }
 
-        public function set id(nValue:int):void
+        public function set id(nValue:Number):void
         {
             this._id = nValue;
         }
@@ -85,7 +85,7 @@
 
         public function get enabledInteractions():uint
         {
-            return (((InteractionsEnum.CLICK | InteractionsEnum.OUT) | InteractionsEnum.OVER));
+            return ((InteractionsEnum.CLICK | InteractionsEnum.OUT) | InteractionsEnum.OVER);
         }
 
         public function display(strata:uint=10):void
@@ -102,5 +102,5 @@
 
 
     }
-}//package com.ankamagames.dofus.types.entities
+} com.ankamagames.dofus.types.entities
 

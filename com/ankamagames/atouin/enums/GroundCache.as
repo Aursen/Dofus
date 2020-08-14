@@ -1,9 +1,8 @@
-﻿package com.ankamagames.atouin.enums
+package com.ankamagames.atouin.enums
 {
     public class GroundCache 
     {
 
-        public static const GROUND_CACHE_DISABLED:int = 0;
         public static const GROUND_CACHE_HIGH_QUALITY:int = 1;
         public static const GROUND_CACHE_MEDIUM_QUALITY:int = 2;
         public static const GROUND_CACHE_LOW_QUALITY:int = 3;
@@ -14,5 +13,5 @@
 
 
     }
-}//package com.ankamagames.atouin.enums
+} com.ankamagames.atouin.enums
 

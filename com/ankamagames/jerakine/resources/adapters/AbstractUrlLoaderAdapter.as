@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.resources.adapters
+package com.ankamagames.jerakine.resources.adapters
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
@@ -6,17 +6,11 @@
     import com.ankamagames.jerakine.pools.PoolableURLLoader;
     import com.ankamagames.jerakine.resources.IResourceObserver;
     import com.ankamagames.jerakine.types.Uri;
-    import flash.net.URLRequest;
-    import flash.filesystem.File;
-    import flash.filesystem.FileStream;
     import flash.errors.IllegalOperationError;
-    import com.ankamagames.jerakine.utils.system.AirScanner;
-    import com.ankamagames.jerakine.utils.system.SystemManager;
-    import com.ankamagames.jerakine.enum.OperatingSystem;
-    import flash.filesystem.FileMode;
+    import flash.net.URLRequest;
+    import flash.net.URLRequestHeader;
     import flash.net.URLLoaderDataFormat;
     import flash.utils.ByteArray;
-    import flash.net.URLRequestHeader;
     import com.ankamagames.jerakine.utils.errors.AbstractMethodCallError;
     import com.ankamagames.jerakine.pools.PoolsManager;
     import flash.events.Event;
@@ -39,11 +33,6 @@
 
         public function loadDirectly(uri:Uri, path:String, observer:IResourceObserver, dispatchProgress:Boolean):void
         {
-            var r:URLRequest;
-            var f:File;
-            var fs:FileStream;
-            var dataFormat:String;
-            var data:* = undefined;
             if (this._ldr)
             {
                 throw (new IllegalOperationError("A single adapter can't handle two simultaneous loadings."));
@@ -51,41 +40,10 @@
             this._observer = observer;
             this._uri = uri;
             this._dispatchProgress = dispatchProgress;
-            if ((((((SystemManager.getSingleton().os == OperatingSystem.MAC_OS)) && (!(AirScanner.isStreamingVersion())))) && (Uri.checkAbsolutePath(path))))
-            {
-                try
-                {
-                    f = uri.toFile();
-                    fs = new FileStream();
-                    dataFormat = this.getDataFormat();
-                    fs.open(uri.toFile(), FileMode.READ);
-                    if (dataFormat == URLLoaderDataFormat.TEXT)
-                    {
-                        data = fs.readUTFBytes(fs.bytesAvailable);
-                    }
-                    else
-                    {
-                        data = new ByteArray();
-                        fs.readBytes(data);
-                    };
-                    fs.close();
-                    this.process(dataFormat, data);
-                }
-                catch(error:Error)
-                {
-                    prepareLoader();
-                    r = new URLRequest(path);
-                    r.requestHeaders = [new URLRequestHeader("pragma", "no-cache")];
-                    _ldr.load(r);
-                };
-            }
-            else
-            {
-                this.prepareLoader();
-                r = new URLRequest(path);
-                r.requestHeaders = [new URLRequestHeader("pragma", "no-cache")];
-                this._ldr.load(r);
-            };
+            this.prepareLoader();
+            var r:URLRequest = new URLRequest((((path.substr(0, 2) == "//") ? "file://" : "") + path));
+            r.requestHeaders = [new URLRequestHeader("pragma", "no-cache")];
+            this._ldr.load(r);
         }
 
         public function loadFromData(uri:Uri, data:ByteArray, observer:IResourceObserver, dispatchProgress:Boolean):void
@@ -134,7 +92,7 @@
             return (this._uri);
         }
 
-        protected function getResource(dataFormat:String, data:*)
+        protected function getResource(dataFormat:String, data:*):*
         {
             throw (new AbstractMethodCallError("This method should be overrided."));
         }
@@ -177,7 +135,6 @@
             this._ldr = null;
         }
 
-        [APALogInfo(customInfo="'Path: ' + _uri.path")]
         protected function onComplete(e:Event):void
         {
             this.process(this._ldr.dataFormat, this._ldr.data);
@@ -196,5 +153,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.resources.adapters
+} com.ankamagames.jerakine.resources.adapters
 

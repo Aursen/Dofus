@@ -1,4 +1,4 @@
-﻿package com.ankamagames.atouin.data.elements
+package com.ankamagames.atouin.data.elements
 {
     public class GraphicalElementTypes 
     {
@@ -12,5 +12,5 @@
 
 
     }
-}//package com.ankamagames.atouin.data.elements
+} com.ankamagames.atouin.data.elements
 

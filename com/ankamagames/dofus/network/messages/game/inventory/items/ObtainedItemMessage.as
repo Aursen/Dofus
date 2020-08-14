@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.inventory.items
+package com.ankamagames.dofus.network.messages.game.inventory.items
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class ObtainedItemMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -55,6 +55,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_ObtainedItemMessage(output);
@@ -81,11 +89,32 @@
 
         public function deserializeAs_ObtainedItemMessage(input:ICustomDataInput):void
         {
+            this._genericIdFunc(input);
+            this._baseQuantityFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_ObtainedItemMessage(tree);
+        }
+
+        public function deserializeAsyncAs_ObtainedItemMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._genericIdFunc);
+            tree.addChild(this._baseQuantityFunc);
+        }
+
+        private function _genericIdFunc(input:ICustomDataInput):void
+        {
             this.genericId = input.readVarUhShort();
             if (this.genericId < 0)
             {
                 throw (new Error((("Forbidden value (" + this.genericId) + ") on element of ObtainedItemMessage.genericId.")));
             };
+        }
+
+        private function _baseQuantityFunc(input:ICustomDataInput):void
+        {
             this.baseQuantity = input.readVarUhInt();
             if (this.baseQuantity < 0)
             {
@@ -95,5 +124,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.inventory.items
+} com.ankamagames.dofus.network.messages.game.inventory.items
 

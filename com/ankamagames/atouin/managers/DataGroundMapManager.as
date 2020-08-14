@@ -1,10 +1,8 @@
-﻿package com.ankamagames.atouin.managers
+package com.ankamagames.atouin.managers
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
-    import flash.display.Shape;
-    import com.ankamagames.jerakine.utils.misc.AsyncJPGEncoder;
     import flash.filesystem.FileStream;
     import flash.filesystem.File;
     import flash.display.BitmapData;
@@ -30,16 +28,14 @@
         private static const JPEG_HIGH_QUALITY:uint = 80;
         private static const JPEG_MEDIUM_QUALITY:uint = 70;
         private static const JPEG_LOW_QUALITY:uint = 60;
+        private static const INITIAL_ENCODER_QUALITY:int = -1;
         private static var _currentQuality:uint;
-        private static var _mask:Shape;
         private static var _currentDiskUsed:Number = 0;
-        private static var _jpgEncoder:AsyncJPGEncoder;
-        private static const _currentEncoderQuality:int = -1;
         private static var _currentOutputFileStream:FileStream;
         private static var _bitmapDataList:Array = new Array();
         private static var _processing:Boolean = false;
         private static var _directory:File;
-        private static var _currentMapId:int = -1;
+        private static var _currentMapId:Number = -1;
         private static var buffer:BitmapData;
         private static var _m:Matrix = new Matrix();
 
@@ -51,33 +47,33 @@
 
         public static function getCurrentDiskUsed():Number
         {
-            var _local_1:Number;
-            var _local_2:File;
-            var _local_3:Array;
-            var _local_4:int;
-            var _local_5:int;
+            var value:Number;
+            var directory:File;
+            var mapList:Array;
+            var num:int;
+            var i:int;
             var map:File;
             if (_currentDiskUsed)
             {
                 return (_currentDiskUsed);
             };
-            _local_1 = 0;
-            _local_2 = new File((CustomSharedObject.getCustomSharedObjectDirectory() + MAPS_DIRECTORY));
-            if (((!(_local_2.exists)) || (!(_local_2.isDirectory))))
+            value = 0;
+            directory = new File((CustomSharedObject.getCustomSharedObjectDirectory() + MAPS_DIRECTORY));
+            if (((!(directory.exists)) || (!(directory.isDirectory))))
             {
                 return (0);
             };
-            _local_3 = _local_2.getDirectoryListing();
-            _local_4 = _local_3.length;
-            _local_5 = 0;
-            while (_local_5 < _local_4)
+            mapList = directory.getDirectoryListing();
+            num = mapList.length;
+            i = 0;
+            while (i < num)
             {
-                map = _local_3[_local_5];
-                _local_1 = (_local_1 + map.size);
-                _local_5++;
+                map = mapList[i];
+                value = (value + map.size);
+                i++;
             };
-            _currentDiskUsed = _local_1;
-            return (_local_1);
+            _currentDiskUsed = value;
+            return (value);
         }
 
         public static function clearGroundCache():void
@@ -110,9 +106,9 @@
                     break;
             };
             FpsManager.getInstance().startTracking("groundMap", 10621692);
-            if (((!((ground.width == cacheSize.x))) || (!((ground.height == cacheSize.y)))))
+            if (((!(ground.width == cacheSize.x)) || (!(ground.height == cacheSize.y))))
             {
-                if ((((((buffer == null)) || (!((buffer.width == cacheSize.x))))) || (!((buffer.height == cacheSize.y)))))
+                if ((((buffer == null) || (!(buffer.width == cacheSize.x))) || (!(buffer.height == cacheSize.y))))
                 {
                     buffer = new BitmapData(cacheSize.x, cacheSize.y, false, 0xFF0000);
                 };
@@ -138,10 +134,10 @@
             try
             {
                 FpsManager.getInstance().startTracking("groundMap", 10621692);
-                if (!(_directory))
+                if (!_directory)
                 {
                     _directory = new File((CustomSharedObject.getCustomSharedObjectDirectory() + MAPS_DIRECTORY));
-                    if (!(_directory.exists))
+                    if (!_directory.exists)
                     {
                         _directory.createDirectory();
                     };
@@ -212,7 +208,7 @@
             var map:Map;
             var file:File;
             var t:uint;
-            var res:ByteArray;
+            var encodedData:ByteArray;
             if (((!(_processing)) && (_bitmapDataList.length)))
             {
                 _processing = true;
@@ -231,16 +227,17 @@
                     _log.info(("Le fichier est locké " + file.nativePath));
                 };
                 t = getTimer();
-                res = JPEGEncoder.encode(bitmapData, _currentQuality);
-                trace((((((("Encodage " + bitmapData.width) + " x ") + bitmapData.height) + " : ") + (getTimer() - t)) + " ms"));
-                jpgGenerated(res, map);
+                encodedData = JPEGEncoder.encode(bitmapData, _currentQuality);
+                encodedData.position = 0;
+                _log.debug((((((((((("Encoded as JPEG a " + bitmapData.width) + " x ") + bitmapData.height) + " ground map bitmap (mapId ") + map.id) + ") in ") + (getTimer() - t)) + " ms (") + encodedData.bytesAvailable) + " bytes)"));
+                jpgGenerated(encodedData, map);
             };
         }
 
         private static function initEncoder(qualityEnum:uint):void
         {
             var quality:uint;
-            if (_currentEncoderQuality != qualityEnum)
+            if (INITIAL_ENCODER_QUALITY != qualityEnum)
             {
                 switch (true)
                 {
@@ -270,6 +267,7 @@
                 _currentOutputFileStream.writeInt(map.groundCRC);
                 _currentDiskUsed = (_currentDiskUsed + rawJPG.length);
                 _currentOutputFileStream.writeBytes(rawJPG);
+                rawJPG.clear();
                 _processing = false;
                 _currentMapId = -1;
             }
@@ -289,5 +287,5 @@
 
 
     }
-}//package com.ankamagames.atouin.managers
+} com.ankamagames.atouin.managers
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.common.managers
+package com.ankamagames.dofus.logic.game.common.managers
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
@@ -7,9 +7,11 @@
     import flash.events.TimerEvent;
     import com.ankamagames.dofus.network.messages.common.basic.BasicPingMessage;
     import com.ankamagames.dofus.kernel.net.ConnectionsHandler;
+    import com.ankamagames.dofus.kernel.net.ConnectionType;
     import com.ankamagames.jerakine.utils.display.StageShareManager;
     import flash.events.KeyboardEvent;
     import flash.events.MouseEvent;
+    import com.ankamagames.dofus.logic.common.managers.FeatureManager;
     import com.ankamagames.berilia.managers.KernelEventsManager;
     import com.ankamagames.dofus.misc.lists.HookList;
     import flash.events.Event;
@@ -20,7 +22,8 @@
         private static var _self:InactivityManager;
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(InactivityManager));
         private static const SERVER_INACTIVITY_DELAY:int = ((10 * 60) * 1000);//600000
-        private static const INACTIVITY_DELAY:int = ((20 * 60) * 1000);//1200000
+        private static const SERVER_INACTIVITY_SPEED_PING_DELAY:int = (5 * 1000);//5000
+        private static const INACTIVITY_DELAY:int = ((60 * 60) * 1000);//3600000
 
         private var _isAfk:Boolean;
         private var _activityTimer:Timer;
@@ -39,7 +42,7 @@
 
         public static function getInstance():InactivityManager
         {
-            if (!(_self))
+            if (!_self)
             {
                 _self = new (InactivityManager)();
             };
@@ -53,7 +56,7 @@
             {
                 msg = new BasicPingMessage();
                 msg.initBasicPingMessage(true);
-                ConnectionsHandler.getConnection().send(msg);
+                ConnectionsHandler.getConnection().send(msg, ConnectionType.TO_ALL_SERVERS);
             };
         }
 
@@ -101,6 +104,21 @@
             this._serverActivityTimer.start();
         }
 
+        public function updateServerInactivityDelay():void
+        {
+            var serverInactivityDelay:int = SERVER_INACTIVITY_DELAY;
+            var featureManager:FeatureManager = FeatureManager.getInstance();
+            if (((featureManager) && (featureManager.isFeatureWithKeywordEnabled("system.fastPing"))))
+            {
+                serverInactivityDelay = SERVER_INACTIVITY_SPEED_PING_DELAY;
+            };
+            this._serverActivityTimer.stop();
+            this._serverActivityTimer.removeEventListener(TimerEvent.TIMER, this.onServerActivityTimerUp);
+            this._serverActivityTimer = new Timer(serverInactivityDelay, 0);
+            this._serverActivityTimer.addEventListener(TimerEvent.TIMER, this.onServerActivityTimerUp);
+            this.resetServerActivity();
+        }
+
         public function activity():void
         {
             this.resetActivity();
@@ -130,9 +148,10 @@
                 this._hasActivity = false;
                 serverNotification();
             };
+            this.resetServerActivity();
         }
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.managers
+} com.ankamagames.dofus.logic.game.common.managers
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.logger.targets
+package com.ankamagames.jerakine.logger.targets
 {
     import flash.net.XMLSocket;
     import com.ankamagames.jerakine.logger.LogLevel;
@@ -17,14 +17,21 @@
         public static var serverPort:int = 4444;
 
 
-        private static function send(level:int, message:String):void
+        private static function send(level:int, message:String, subMessage:String):void
         {
-            var _local_3:LoggerHistoryElement;
+            var he:LoggerHistoryElement;
             if (_socket.connected)
             {
                 if (level != LogLevel.COMMANDS)
                 {
-                    _socket.send((((('!SOS<showMessage key="' + getKeyName(level)) + '"><![CDATA[') + message) + "]]></showMessage>"));
+                    if (subMessage)
+                    {
+                        _socket.send((((((('!SOS<showFoldMessage key="' + getKeyName(level)) + '"><title><![CDATA[') + message) + "]]></title><message><![CDATA[") + subMessage) + "]]></message></showFoldMessage>"));
+                    }
+                    else
+                    {
+                        _socket.send((((('!SOS<showMessage key="' + getKeyName(level)) + '"><![CDATA[') + message) + "]]></showMessage>"));
+                    };
                 }
                 else
                 {
@@ -33,19 +40,19 @@
             }
             else
             {
-                if (!(_socket.hasEventListener("connect")))
+                if (!_socket.hasEventListener("connect"))
                 {
                     _socket.addEventListener("connect", onSocket);
                     _socket.addEventListener("ioError", onSocketError);
                     _socket.addEventListener("securityError", onSocketError);
                 };
-                if (!(_connecting))
+                if (!_connecting)
                 {
                     _socket.connect(serverHost, serverPort);
                     _connecting = true;
                 };
-                _local_3 = new LoggerHistoryElement(level, message);
-                _history.push(_local_3);
+                he = new LoggerHistoryElement(level, message, subMessage);
+                _history.push(he);
             };
         }
 
@@ -75,7 +82,7 @@
             _connecting = false;
             for each (o in _history)
             {
-                send(o.level, o.message);
+                send(o.level, o.message, o.subMessage);
             };
             _history = new Array();
         }
@@ -99,7 +106,7 @@
         override public function logEvent(event:LogEvent):void
         {
             var msg:String;
-            if (((enabled) && ((event is TextLogEvent))))
+            if (((enabled) && (event is TextLogEvent)))
             {
                 msg = event.message;
                 if (event.level == LogLevel.COMMANDS)
@@ -111,7 +118,7 @@
                             break;
                     };
                 };
-                send(event.level, event.message);
+                send(event.level, event.message, event.stackTrace);
             };
         }
 
@@ -129,5 +136,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.logger.targets
+} com.ankamagames.jerakine.logger.targets
 

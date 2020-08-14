@@ -1,9 +1,9 @@
-﻿package com.ankamagames.atouin.entities.behaviours.movements
+package com.ankamagames.atouin.entities.behaviours.movements
 {
     import com.ankamagames.jerakine.entities.behaviours.IMovementBehavior;
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
-    import avmplus.getQualifiedClassName;
+    import flash.utils.getQualifiedClassName;
     import flash.utils.Dictionary;
     import com.ankamagames.atouin.managers.InteractiveCellManager;
     import com.ankamagames.atouin.types.TweenEntityData;
@@ -18,7 +18,6 @@
     import com.ankamagames.atouin.utils.errors.AtouinError;
     import com.ankamagames.jerakine.types.positions.PathElement;
     import com.ankamagames.atouin.messages.EntityMovementStoppedMessage;
-    import flash.utils.getTimer;
     import com.ankamagames.atouin.messages.EntityMovementCompleteMessage;
     import com.ankamagames.jerakine.interfaces.ISoundPositionListener;
     import flash.geom.Point;
@@ -26,11 +25,15 @@
     import com.ankamagames.jerakine.entities.interfaces.IEntity;
     import flash.display.Sprite;
     import flash.events.Event;
+    import flash.utils.getTimer;
+    import com.ankamagames.jerakine.utils.display.FrameIdManager;
     import com.ankamagames.jerakine.utils.display.EnterFrameDispatcher;
 
     public class AnimatedMovementBehavior implements IMovementBehavior 
     {
 
+        public static var updateRealtime:Boolean = true;
+        public static var updateForcedFps:int = 50;
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(AnimatedMovementBehavior));
         protected static var _movingCount:uint;
         protected static var _aEntitiesMoving:Array = new Array();
@@ -42,24 +45,24 @@
         public var speedAdjust:Number = 0;
 
 
-        protected static function getFromCache(speedAdjust:Number, type:Class):AnimatedMovementBehavior
+        protected static function getFromCache(speedAdjust:Number, _arg_2:Class):AnimatedMovementBehavior
         {
             var m:*;
             var newInstance:AnimatedMovementBehavior;
-            if (!(_cache[type]))
+            if (!_cache[_arg_2])
             {
-                _cache[type] = new Dictionary(true);
+                _cache[_arg_2] = new Dictionary(true);
             };
-            for (m in _cache[type])
+            for (m in _cache[_arg_2])
             {
                 if (AnimatedMovementBehavior(m).speedAdjust == speedAdjust)
                 {
                     return (m);
                 };
             };
-            newInstance = (new (type)() as AnimatedMovementBehavior);
+            newInstance = (new (_arg_2)() as AnimatedMovementBehavior);
             newInstance.speedAdjust = speedAdjust;
-            _cache[type][newInstance] = true;
+            _cache[_arg_2][newInstance] = true;
             return (newInstance);
         }
 
@@ -87,13 +90,13 @@
             var carriedEntity:IMovable;
             var subEntities:Array;
             var subEntity:*;
-            var _local_7:TiphonSprite;
+            var mount:TiphonSprite;
             var subSubEntities:Array;
             var subSubEntity:*;
             if ((entityRef is TiphonSprite))
             {
                 ts = (entityRef as TiphonSprite);
-                if (((subEntityContainer) && ((subEntityContainer is TiphonSprite))))
+                if (((subEntityContainer) && (subEntityContainer is TiphonSprite)))
                 {
                     ts = TiphonSprite(subEntityContainer);
                 };
@@ -103,10 +106,10 @@
                 }
                 else
                 {
-                    _local_7 = (ts.getSubEntitySlot(2, 0) as TiphonSprite);
-                    if (((_local_7) && (_local_7.carriedEntity)))
+                    mount = (ts.getSubEntitySlot(2, 0) as TiphonSprite);
+                    if (((mount) && (mount.carriedEntity)))
                     {
-                        carriedEntity = (_local_7.carriedEntity as IMovable);
+                        carriedEntity = (mount.carriedEntity as IMovable);
                     };
                 };
                 while (carriedEntity)
@@ -129,7 +132,7 @@
                             subEntity.position.x = entityRef.position.x;
                             subEntity.position.y = entityRef.position.y;
                         };
-                        if (((subEntity.movementBehavior) && (!((subEntity == entityRef)))))
+                        if (((subEntity.movementBehavior) && (!(subEntity == entityRef))))
                         {
                             subEntity.movementBehavior.synchroniseSubEntitiesPosition(subEntity);
                         };
@@ -141,7 +144,7 @@
                             subSubEntities = TiphonSprite(subEntity).getSubEntitiesList();
                             for each (subSubEntity in subSubEntities)
                             {
-                                if ((((((subSubEntity is IMovable)) && (subSubEntity.movementBehavior))) && (!((subSubEntity == entityRef)))))
+                                if ((((subSubEntity is IMovable) && (subSubEntity.movementBehavior)) && (!(subSubEntity == entityRef))))
                                 {
                                     IMovable(subSubEntity).movementBehavior.synchroniseSubEntitiesPosition(entityRef, subEntity);
                                 };
@@ -163,7 +166,7 @@
             if (forceStop)
             {
                 animsList = (entity as TiphonSprite).animationList;
-                if (((animsList) && (!((animsList.indexOf("AnimStatique") == -1)))))
+                if (((animsList) && (!(animsList.indexOf("AnimStatique") == -1))))
                 {
                     IAnimated(entity).setAnimation("AnimStatique");
                 };
@@ -178,12 +181,12 @@
 
         public function isMoving(entity:IMovable):Boolean
         {
-            return (!((_aEntitiesMoving[entity.id] == null)));
+            return (!(_aEntitiesMoving[entity.id] == null));
         }
 
         public function getNextCell(entity:IMovable):MapPoint
         {
-            return ((((_aEntitiesMoving[entity.id])!=null) ? TweenEntityData(_aEntitiesMoving[entity.id]).nextCell : null));
+            return ((_aEntitiesMoving[entity.id] != null) ? TweenEntityData(_aEntitiesMoving[entity.id]).nextCell : null);
         }
 
         protected function getLinearVelocity():Number
@@ -221,7 +224,7 @@
             };
             _aEntitiesMoving[oMobile.id] = tweenData;
             _movingCount++;
-            if (!(wasLinked))
+            if (!wasLinked)
             {
                 firstPe = tweenData.path.path.shift();
                 if (((this.mustChangeOrientation()) && (firstPe)))
@@ -268,19 +271,19 @@
                 {
                     tweenData.orientation = pe.orientation;
                 };
-                tweenData.start = getTimer();
+                tweenData.start = this.getCurrentTime();
             }
             else
             {
-                if (!(tweenData.currentCell.equals(tweenData.path.end)))
+                if (!tweenData.currentCell.equals(tweenData.path.end))
                 {
                     tweenData.velocity = this.getVelocity(tweenData, IAnimated(entity).getDirection());
-                    if (((this.mustChangeOrientation()) && (!((tweenData.orientation == -1)))))
+                    if (((this.mustChangeOrientation()) && (!(tweenData.orientation == -1))))
                     {
                         IAnimated(entity).setDirection(tweenData.orientation);
                     };
                     tweenData.nextCell = tweenData.path.end;
-                    tweenData.start = getTimer();
+                    tweenData.start = this.getCurrentTime();
                 }
                 else
                 {
@@ -293,7 +296,10 @@
 
         protected function stopMovement(entity:IMovable):void
         {
-            IAnimated(entity).setAnimation("AnimStatique");
+            if (IAnimated(entity).getAnimation() != "AnimMort")
+            {
+                IAnimated(entity).setAnimation("AnimStatique");
+            };
             var callback:Function = (_aEntitiesMoving[entity.id] as TweenEntityData).callback;
             delete _aEntitiesMoving[entity.id];
             _movingCount--;
@@ -326,7 +332,7 @@
             {
                 tweenData.barycentre = 1;
             };
-            if (!(tweenData.currentCellSprite))
+            if (!tweenData.currentCellSprite)
             {
                 tweenData.currentCellSprite = _cellsManager.getCell(tweenData.currentCell.cellId);
                 tweenData.nextCellSprite = _cellsManager.getCell(tweenData.nextCell.cellId);
@@ -339,7 +345,7 @@
                 newPoint = new Point(displayObject.x, displayObject.y);
                 listener.setSoundSourcePosition(tweenData.entity.id, newPoint);
             };
-            if (((!(tweenData.wasOrdered)) && ((tweenData.barycentre > 0.5))))
+            if (((!(tweenData.wasOrdered)) && (tweenData.barycentre > 0.5)))
             {
                 EntitiesDisplayManager.getInstance().orderEntity(displayObject, tweenData.nextCellSprite);
             };
@@ -369,23 +375,28 @@
         private function onEnterFrame(e:Event):void
         {
             var tweenData:TweenEntityData;
-            var currentTime:uint = getTimer();
+            var currentTime:uint = this.getCurrentTime();
             for each (tweenData in _aEntitiesMoving)
             {
                 this.processMovement(tweenData, currentTime);
             };
         }
 
+        private function getCurrentTime():int
+        {
+            return ((updateRealtime) ? getTimer() : int(((FrameIdManager.frameId * 1000) / updateForcedFps)));
+        }
+
         protected function checkIfEnterFrameNeeded():void
         {
-            if ((((_movingCount == 0)) && (_enterFrameRegistered)))
+            if (((_movingCount == 0) && (_enterFrameRegistered)))
             {
                 EnterFrameDispatcher.removeEventListener(this.onEnterFrame);
                 _enterFrameRegistered = false;
             }
             else
             {
-                if ((((_movingCount > 0)) && (!(_enterFrameRegistered))))
+                if (((_movingCount > 0) && (!(_enterFrameRegistered))))
                 {
                     EnterFrameDispatcher.addEventListener(this.onEnterFrame, "AnimatedMovementBehaviour", 50);
                     _enterFrameRegistered = true;
@@ -395,5 +406,5 @@
 
 
     }
-}//package com.ankamagames.atouin.entities.behaviours.movements
+} com.ankamagames.atouin.entities.behaviours.movements
 

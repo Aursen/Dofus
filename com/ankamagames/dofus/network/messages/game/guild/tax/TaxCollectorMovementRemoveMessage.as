@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.guild.tax
+package com.ankamagames.dofus.network.messages.game.guild.tax
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,15 +6,15 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class TaxCollectorMovementRemoveMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 5915;
 
         private var _isInitialized:Boolean = false;
-        public var collectorId:int = 0;
+        public var collectorId:Number = 0;
 
 
         override public function get isInitialized():Boolean
@@ -27,7 +27,7 @@
             return (5915);
         }
 
-        public function initTaxCollectorMovementRemoveMessage(collectorId:int=0):TaxCollectorMovementRemoveMessage
+        public function initTaxCollectorMovementRemoveMessage(collectorId:Number=0):TaxCollectorMovementRemoveMessage
         {
             this.collectorId = collectorId;
             this._isInitialized = true;
@@ -52,6 +52,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_TaxCollectorMovementRemoveMessage(output);
@@ -59,7 +67,11 @@
 
         public function serializeAs_TaxCollectorMovementRemoveMessage(output:ICustomDataOutput):void
         {
-            output.writeInt(this.collectorId);
+            if (((this.collectorId < 0) || (this.collectorId > 9007199254740992)))
+            {
+                throw (new Error((("Forbidden value (" + this.collectorId) + ") on element collectorId.")));
+            };
+            output.writeDouble(this.collectorId);
         }
 
         public function deserialize(input:ICustomDataInput):void
@@ -69,10 +81,29 @@
 
         public function deserializeAs_TaxCollectorMovementRemoveMessage(input:ICustomDataInput):void
         {
-            this.collectorId = input.readInt();
+            this._collectorIdFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_TaxCollectorMovementRemoveMessage(tree);
+        }
+
+        public function deserializeAsyncAs_TaxCollectorMovementRemoveMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._collectorIdFunc);
+        }
+
+        private function _collectorIdFunc(input:ICustomDataInput):void
+        {
+            this.collectorId = input.readDouble();
+            if (((this.collectorId < 0) || (this.collectorId > 9007199254740992)))
+            {
+                throw (new Error((("Forbidden value (" + this.collectorId) + ") on element of TaxCollectorMovementRemoveMessage.collectorId.")));
+            };
         }
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.guild.tax
+} com.ankamagames.dofus.network.messages.game.guild.tax
 

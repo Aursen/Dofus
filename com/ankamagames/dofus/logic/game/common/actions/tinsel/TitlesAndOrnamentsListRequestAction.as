@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.common.actions.tinsel
+package com.ankamagames.dofus.logic.game.common.actions.tinsel
 {
     import com.ankamagames.jerakine.handlers.messages.Action;
 
@@ -14,5 +14,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.actions.tinsel
+} com.ankamagames.dofus.logic.game.common.actions.tinsel
 

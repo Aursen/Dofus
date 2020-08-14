@@ -1,4 +1,4 @@
-﻿package com.somerandomdude.colortoolkit.spaces
+package com.somerandomdude.colortoolkit.spaces
 {
     import com.somerandomdude.colortoolkit.CoreColor;
 
@@ -83,10 +83,10 @@
             r = Math.max(0, Math.min(((((298 * c) + (409 * e)) + 128) >> 8), 0xFF));
             g = Math.max(0, Math.min((((((298 * c) - (100 * d)) - (208 * e)) + 128) >> 8), 0xFF));
             b = Math.max(0, Math.min(((((298 * c) + (516 * d)) + 128) >> 8), 0xFF));
-            var cR:int = (Math.round(r) << 16);
-            var cG:int = (Math.round(g) << 8);
+            var cR:* = (Math.round(r) << 16);
+            var cG:* = (Math.round(g) << 8);
             var cB:int = Math.round(b);
-            return (((cR | cG) | cB));
+            return ((cR | cG) | cB);
         }
 
         private function generateYUVFromColor(color:int):YUV
@@ -105,5 +105,5 @@
 
 
     }
-}//package com.somerandomdude.colortoolkit.spaces
+} com.somerandomdude.colortoolkit.spaces
 

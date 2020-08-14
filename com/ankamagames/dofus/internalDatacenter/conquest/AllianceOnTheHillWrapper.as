@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.internalDatacenter.conquest
+package com.ankamagames.dofus.internalDatacenter.conquest
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.dofus.internalDatacenter.guild.EmblemWrapper;
@@ -27,8 +27,8 @@
             item._allianceName = pAllianceName;
             if (pAllianceEmblem != null)
             {
-                item.upEmblem = EmblemWrapper.create(pAllianceEmblem.symbolShape, EmblemWrapper.UP, pAllianceEmblem.symbolColor);
-                item.backEmblem = EmblemWrapper.create(pAllianceEmblem.backgroundShape, EmblemWrapper.BACK, pAllianceEmblem.backgroundColor);
+                item.upEmblem = EmblemWrapper.create(pAllianceEmblem.symbolShape, EmblemWrapper.UP, pAllianceEmblem.symbolColor, true);
+                item.backEmblem = EmblemWrapper.create(pAllianceEmblem.backgroundShape, EmblemWrapper.BACK, pAllianceEmblem.backgroundColor, true);
             };
             item.nbMembers = nbMembers;
             item.roundWeigth = roundWeigth;
@@ -81,5 +81,5 @@
 
 
     }
-}//package com.ankamagames.dofus.internalDatacenter.conquest
+} com.ankamagames.dofus.internalDatacenter.conquest
 

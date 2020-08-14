@@ -1,6 +1,5 @@
-﻿package com.ankamagames.dofus.network.enums
+package com.ankamagames.dofus.network.enums
 {
-    [Trusted]
     public class IdentificationFailureReasonEnum 
     {
 
@@ -15,11 +14,14 @@
         public static const CREDENTIALS_RESET:uint = 9;
         public static const EMAIL_UNVALIDATED:uint = 10;
         public static const OTP_TIMEOUT:uint = 11;
+        public static const LOCKED:uint = 12;
         public static const SERVICE_UNAVAILABLE:uint = 53;
+        public static const EXTERNAL_ACCOUNT_LINK_REFUSED:uint = 61;
+        public static const EXTERNAL_ACCOUNT_ALREADY_LINKED:uint = 62;
         public static const UNKNOWN_AUTH_ERROR:uint = 99;
         public static const SPARE:uint = 100;
 
 
     }
-}//package com.ankamagames.dofus.network.enums
+} com.ankamagames.dofus.network.enums
 

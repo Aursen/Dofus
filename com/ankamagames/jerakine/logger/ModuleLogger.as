@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.logger
+package com.ankamagames.jerakine.logger
 {
     import __AS3__.vec.Vector;
     import __AS3__.vec.*;
@@ -27,7 +27,16 @@
             _callbacks.push(callBack);
         }
 
+        public static function removeCallback(callBack:Function):void
+        {
+            var index:int = _callbacks.indexOf(callBack);
+            if (index != -1)
+            {
+                _callbacks.splice(index, 1);
+            };
+        }
+
 
     }
-}//package com.ankamagames.jerakine.logger
+} com.ankamagames.jerakine.logger
 

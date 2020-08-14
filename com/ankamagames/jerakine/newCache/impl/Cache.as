@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.newCache.impl
+package com.ankamagames.jerakine.newCache.impl
 {
     import com.ankamagames.jerakine.newCache.ICache;
     import com.ankamagames.jerakine.newCache.ICacheGarbageCollector;
@@ -26,7 +26,7 @@
             {
                 return (_namedCacheIndex[name]);
             };
-            cache = new (Cache)(bounds, gc);
+            cache = new Cache(bounds, gc);
             if (name)
             {
                 _namedCacheIndex[name] = cache;
@@ -45,13 +45,13 @@
             super.destroy();
         }
 
-        override public function extract(ref:*)
+        override public function extract(ref:*):*
         {
             this._gc.used(ref);
             return (super.extract(ref));
         }
 
-        override public function peek(ref:*)
+        override public function peek(ref:*):*
         {
             this._gc.used(ref);
             return (super.peek(ref));
@@ -60,7 +60,7 @@
         override public function store(ref:*, obj:*):Boolean
         {
             var bb:uint;
-            if (((this._bounds) && (((_size + 1) > this._bounds))))
+            if (((this._bounds) && ((_size + 1) > this._bounds)))
             {
                 bb = (((this._bounds * 0.7) + 1) >> 0);
                 this._gc.purge(bb);
@@ -72,5 +72,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.newCache.impl
+} com.ankamagames.jerakine.newCache.impl
 

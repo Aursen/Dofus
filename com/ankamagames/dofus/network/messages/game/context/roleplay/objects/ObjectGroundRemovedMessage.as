@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.context.roleplay.objects
+package com.ankamagames.dofus.network.messages.game.context.roleplay.objects
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class ObjectGroundRemovedMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -52,6 +52,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_ObjectGroundRemovedMessage(output);
@@ -59,7 +67,7 @@
 
         public function serializeAs_ObjectGroundRemovedMessage(output:ICustomDataOutput):void
         {
-            if ((((this.cell < 0)) || ((this.cell > 559))))
+            if (((this.cell < 0) || (this.cell > 559)))
             {
                 throw (new Error((("Forbidden value (" + this.cell) + ") on element cell.")));
             };
@@ -73,8 +81,23 @@
 
         public function deserializeAs_ObjectGroundRemovedMessage(input:ICustomDataInput):void
         {
+            this._cellFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_ObjectGroundRemovedMessage(tree);
+        }
+
+        public function deserializeAsyncAs_ObjectGroundRemovedMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._cellFunc);
+        }
+
+        private function _cellFunc(input:ICustomDataInput):void
+        {
             this.cell = input.readVarUhShort();
-            if ((((this.cell < 0)) || ((this.cell > 559))))
+            if (((this.cell < 0) || (this.cell > 559)))
             {
                 throw (new Error((("Forbidden value (" + this.cell) + ") on element of ObjectGroundRemovedMessage.cell.")));
             };
@@ -82,5 +105,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.context.roleplay.objects
+} com.ankamagames.dofus.network.messages.game.context.roleplay.objects
 

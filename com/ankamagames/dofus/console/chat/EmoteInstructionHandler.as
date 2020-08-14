@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.console.chat
+package com.ankamagames.dofus.console.chat
 {
     import com.ankamagames.jerakine.console.ConsoleInstructionHandler;
     import com.ankamagames.dofus.logic.game.roleplay.actions.EmotePlayRequestAction;
@@ -20,7 +20,7 @@
             var emoteId:uint = this.getEmoteId(cmd);
             var playerManager:PlayedCharacterManager = PlayedCharacterManager.getInstance();
             var entFrame:AbstractEntitiesFrame = (Kernel.getWorker().getFrame(RoleplayEntitiesFrame) as AbstractEntitiesFrame);
-            if ((((((emoteId > 0)) && ((playerManager.state == PlayerLifeStatusEnum.STATUS_ALIVE_AND_KICKING)))) && (((((((playerManager.isRidding) || (playerManager.isPetsMounting))) || ((playerManager.infos.entityLook.bonesId == 1)))) || (((entFrame) && (entFrame.creaturesMode)))))))
+            if ((((emoteId > 0) && (playerManager.state == PlayerLifeStatusEnum.STATUS_ALIVE_AND_KICKING)) && ((((playerManager.isRidding) || (playerManager.isPetsMounting)) || (playerManager.infos.entityLook.bonesId == 1)) || ((entFrame) && (entFrame.creaturesMode)))))
             {
                 epra = EmotePlayRequestAction.create(emoteId);
                 Kernel.getWorker().process(epra);
@@ -56,5 +56,5 @@
 
 
     }
-}//package com.ankamagames.dofus.console.chat
+} com.ankamagames.dofus.console.chat
 

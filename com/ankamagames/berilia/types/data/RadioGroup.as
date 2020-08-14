@@ -1,11 +1,12 @@
-﻿package com.ankamagames.berilia.types.data
+package com.ankamagames.berilia.types.data
 {
+    import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
     import com.ankamagames.berilia.interfaces.IRadioItem;
 
-    public class RadioGroup 
+    public class RadioGroup implements IDataCenter 
     {
 
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(RadioGroup));
@@ -40,7 +41,7 @@
             this._selected = null;
         }
 
-        public function get value()
+        public function get value():*
         {
             if (this._selected)
             {
@@ -85,5 +86,5 @@
 
 
     }
-}//package com.ankamagames.berilia.types.data
+} com.ankamagames.berilia.types.data
 

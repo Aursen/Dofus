@@ -1,10 +1,10 @@
-﻿package com.hurlant.math
+package com.hurlant.math
 {
     import flash.utils.ByteArray;
     import com.hurlant.util.Hex;
     import com.hurlant.crypto.prng.Random;
     import com.hurlant.util.Memory;
-    import com.hurlant.math.bi_internal; 
+    import com.hurlant.math.bi_internal;
 
     use namespace bi_internal;
 
@@ -35,7 +35,7 @@
             this.a = new Array();
             if ((value is String))
             {
-                if (((radix) && (!((radix == 16)))))
+                if (((radix) && (!(radix == 16))))
                 {
                     throw (new Error("BigInteger construction with radix!=16 is not supported."));
                 };
@@ -45,7 +45,7 @@
             if ((value is ByteArray))
             {
                 array = (value as ByteArray);
-                length = ((radix) || ((array.length - array.position)));
+                length = ((radix) || (array.length - array.position));
                 this.fromArray(array, length, unsigned);
             };
         }
@@ -79,7 +79,7 @@
             var k:int;
             if (this.s < 0)
             {
-                return (("-" + this.negate().toString(radix)));
+                return ("-" + this.negate().toString(radix));
             };
             switch (radix)
             {
@@ -107,7 +107,7 @@
             var p:int = (DB - ((i * DB) % k));
             if (i-- > 0)
             {
-                if ((((p < DB)) && (((d = (this.a[i] >> p)) > 0))))
+                if (((p < DB) && ((d = (this.a[i] >> p)) > 0)))
                 {
                     m = true;
                     r = d.toString(36);
@@ -117,14 +117,11 @@
                     if (p < k)
                     {
                         d = ((this.a[i] & ((1 << p) - 1)) << (k - p));
-                        var _temp_1 = d;
-                        p = (p + (DB - k));
-                        d = (_temp_1 | (this.a[--i] >> p));
+                        d = (d | (this.a[--i] >> (p = (p + (DB - k)))));
                     }
                     else
                     {
-                        p = (p - k);
-                        d = ((this.a[i] >> p) & km);
+                        d = ((this.a[i] >> (p = (p - k))) & km);
                         if (p <= 0)
                         {
                             p = (p + DB);
@@ -141,7 +138,7 @@
                     };
                 };
             };
-            return (((m) ? r : "0"));
+            return ((m) ? r : "0");
         }
 
         public function toArray(array:ByteArray):uint
@@ -155,7 +152,7 @@
             var c:int;
             if (i-- > 0)
             {
-                if ((((p < DB)) && (((d = (this.a[i] >> p)) > 0))))
+                if (((p < DB) && ((d = (this.a[i] >> p)) > 0)))
                 {
                     m = true;
                     array.writeByte(d);
@@ -166,14 +163,11 @@
                     if (p < k)
                     {
                         d = ((this.a[i] & ((1 << p) - 1)) << (k - p));
-                        var _temp_1 = d;
-                        p = (p + (DB - k));
-                        d = (_temp_1 | (this.a[--i] >> p));
+                        d = (d | (this.a[--i] >> (p = (p + (DB - k)))));
                     }
                     else
                     {
-                        p = (p - k);
-                        d = ((this.a[i] >> p) & km);
+                        d = ((this.a[i] >> (p = (p - k))) & km);
                         if (p <= 0)
                         {
                             p = (p + DB);
@@ -221,7 +215,7 @@
 
         public function abs():BigInteger
         {
-            return ((((this.s)<0) ? this.negate() : this));
+            return ((this.s < 0) ? this.negate() : this);
         }
 
         public function compareTo(v:BigInteger):int
@@ -252,32 +246,27 @@
         {
             var t:int;
             var r:int = 1;
-            t = (x >>> 16);
-            if (t != 0)
+            if ((t = (x >>> 16)) != 0)
             {
                 x = t;
                 r = (r + 16);
             };
-            t = (x >> 8);
-            if (t != 0)
+            if ((t = (x >> 8)) != 0)
             {
                 x = t;
                 r = (r + 8);
             };
-            t = (x >> 4);
-            if (t != 0)
+            if ((t = (x >> 4)) != 0)
             {
                 x = t;
                 r = (r + 4);
             };
-            t = (x >> 2);
-            if (t != 0)
+            if ((t = (x >> 2)) != 0)
             {
                 x = t;
                 r = (r + 2);
             };
-            t = (x >> 1);
-            if (t != 0)
+            if ((t = (x >> 1)) != 0)
             {
                 x = t;
                 r = (r + 1);
@@ -291,14 +280,14 @@
             {
                 return (0);
             };
-            return (((DB * (this.t - 1)) + this.nbits((this.a[(this.t - 1)] ^ (this.s & DM)))));
+            return ((DB * (this.t - 1)) + this.nbits((this.a[(this.t - 1)] ^ (this.s & DM))));
         }
 
         public function mod(v:BigInteger):BigInteger
         {
             var r:BigInteger = this.nbi();
             this.abs().divRemTo(v, null, r);
-            if ((((this.s < 0)) && ((r.compareTo(ZERO) > 0))))
+            if (((this.s < 0) && (r.compareTo(ZERO) > 0)))
             {
                 v.subTo(r, r);
             };
@@ -308,7 +297,7 @@
         public function modPowInt(e:int, m:BigInteger):BigInteger
         {
             var z:IReduction;
-            if ((((e < 0x0100)) || (m.isEven())))
+            if (((e < 0x0100) || (m.isEven())))
             {
                 z = new ClassicReduction(m);
             }
@@ -334,7 +323,7 @@
         bi_internal function fromInt(value:int):void
         {
             this.t = 1;
-            this.s = (((value)<0) ? -1 : 0);
+            this.s = ((value < 0) ? -1 : 0);
             if (value > 0)
             {
                 this.a[0] = value;
@@ -363,10 +352,10 @@
             this.s = 0;
             while (--i >= p)
             {
-                x = (((i < value.length)) ? value[i] : 0);
+                x = ((i < value.length) ? value[i] : 0);
                 if (sh == 0)
                 {
-                    var _local_9 = this.t++;
+                    var _local_9:* = this.t++;
                     this.a[_local_9] = x;
                 }
                 else
@@ -388,7 +377,7 @@
                     sh = (sh - DB);
                 };
             };
-            if (((!(unsigned)) && (((value[0] & 128) == 128))))
+            if (((!(unsigned)) && ((value[0] & 0x80) == 128)))
             {
                 this.s = -1;
                 if (sh > 0)
@@ -402,8 +391,8 @@
 
         bi_internal function clamp():void
         {
-            var c:int = (this.s & DM);
-            while ((((this.t > 0)) && ((this.a[(this.t - 1)] == c))))
+            var c:* = (this.s & DM);
+            while (((this.t > 0) && (this.a[(this.t - 1)] == c)))
             {
                 this.t--;
             };
@@ -447,8 +436,8 @@
             var bs:int = (n % DB);
             var cbs:int = (DB - bs);
             var bm:int = ((1 << cbs) - 1);
-            var ds:int = (n / DB);
-            var c:int = ((this.s << bs) & DM);
+            var ds:int = int((n / DB));
+            var c:* = ((this.s << bs) & DM);
             i = (this.t - 1);
             while (i >= 0)
             {
@@ -472,7 +461,7 @@
         {
             var i:int;
             r.s = this.s;
-            var ds:int = (n / DB);
+            var ds:int = int((n / DB));
             if (ds >= this.t)
             {
                 r.t = 0;
@@ -505,7 +494,7 @@
             while (i < m)
             {
                 c = (c + (this.a[i] - v.a[i]));
-                var _local_6 = i++;
+                var _local_6:* = i++;
                 r.a[_local_6] = (c & DM);
                 c = (c >> DB);
             };
@@ -533,7 +522,7 @@
                 };
                 c = (c - v.s);
             };
-            r.s = (((c)<0) ? -1 : 0);
+            r.s = ((c < 0) ? -1 : 0);
             if (c < -1)
             {
                 _local_6 = i++;
@@ -556,17 +545,17 @@
             var l:int;
             var h:int;
             var m:int;
-            var xl:int = (x & 32767);
-            var xh:int = (x >> 15);
+            var xl:* = (x & 0x7FFF);
+            var xh:* = (x >> 15);
             while (--n >= 0)
             {
-                l = (this.a[i] & 32767);
+                l = (this.a[i] & 0x7FFF);
                 h = (this.a[i++] >> 15);
                 m = ((xh * l) + (h * xl));
-                l = ((((xl * l) + ((m & 32767) << 15)) + w.a[j]) + (c & 1073741823));
+                l = ((((xl * l) + ((m & 0x7FFF) << 15)) + w.a[j]) + (c & 0x3FFFFFFF));
                 c = ((((l >>> 30) + (m >>> 15)) + (xh * h)) + (c >>> 30));
-                var _local_12 = j++;
-                w.a[_local_12] = (l & 1073741823);
+                var _local_12:* = j++;
+                w.a[_local_12] = (l & 0x3FFFFFFF);
             };
             return (c);
         }
@@ -668,17 +657,17 @@
             {
                 return;
             };
-            var yt:Number = ((y0 * (1 << F1)) + (((ys)>1) ? (y.a[(ys - 2)] >> F2) : 0));
+            var yt:Number = ((y0 * (1 << F1)) + ((ys > 1) ? (y.a[(ys - 2)] >> F2) : 0));
             var d1:Number = (FV / yt);
             var d2:Number = ((1 << F1) / yt);
             var e:Number = (1 << F2);
             var i:int = r.t;
             var j:int = (i - ys);
-            var t:BigInteger = (((q)==null) ? this.nbi() : q);
+            var t:BigInteger = ((q == null) ? this.nbi() : q);
             y.dlShiftTo(j, t);
             if (r.compareTo(t) >= 0)
             {
-                var _local_5 = r.t++;
+                var _local_5:* = r.t++;
                 r.a[_local_5] = 1;
                 r.subTo(t, r);
             };
@@ -690,12 +679,12 @@
             };
             while (--j >= 0)
             {
-                qd = (((r.a[--i])==y0) ? DM : ((Number(r.a[i]) * d1) + ((Number(r.a[(i - 1)]) + e) * d2)));
+                qd = ((r.a[--i] == y0) ? DM : ((Number(r.a[i]) * d1) + ((Number(r.a[(i - 1)]) + e) * d2)));
                 if ((r.a[i] = (r.a[i] + y.am(0, qd, r, j, 0, ys))) < qd)
                 {
                     y.dlShiftTo(j, t);
                     r.subTo(t, r);
-                    while ((qd = (qd - 1)), r.a[i] < qd)
+                    while (r.a[i] < --qd)
                     {
                         r.subTo(t, r);
                     };
@@ -728,27 +717,27 @@
                 return (0);
             };
             var x:int = this.a[0];
-            if ((x & 1) == 0)
+            if ((x & 0x01) == 0)
             {
                 return (0);
             };
-            var y:int = (x & 3);
-            y = ((y * (2 - ((x & 15) * y))) & 15);
+            var y:* = (x & 0x03);
+            y = ((y * (2 - ((x & 0x0F) * y))) & 0x0F);
             y = ((y * (2 - ((x & 0xFF) * y))) & 0xFF);
             y = ((y * (2 - (((x & 0xFFFF) * y) & 0xFFFF))) & 0xFFFF);
             y = ((y * (2 - ((x * y) % DV))) % DV);
-            return ((((y)>0) ? (DV - y) : -(y)));
+            return ((y > 0) ? (DV - y) : -(y));
         }
 
         bi_internal function isEven():Boolean
         {
-            return (((((this.t)>0) ? (this.a[0] & 1) : this.s) == 0));
+            return (((this.t > 0) ? (this.a[0] & 0x01) : this.s) == 0);
         }
 
         bi_internal function exp(e:int, z:IReduction):BigInteger
         {
-            var _local_7:BigInteger;
-            if ((((e > 0xFFFFFFFF)) || ((e < 1))))
+            var t:BigInteger;
+            if (((e > 0xFFFFFFFF) || (e < 1)))
             {
                 return (ONE);
             };
@@ -766,9 +755,9 @@
                 }
                 else
                 {
-                    _local_7 = r;
+                    t = r;
                     r = r2;
-                    r2 = _local_7;
+                    r2 = t;
                 };
             };
             return (z.revert(r));
@@ -779,7 +768,7 @@
             return (parseInt(str.charAt(index), 36));
         }
 
-        protected function nbi()
+        protected function nbi():*
         {
             return (new BigInteger());
         }
@@ -797,7 +786,7 @@
             {
                 if (this.t == 1)
                 {
-                    return ((this.a[0] - DV));
+                    return (this.a[0] - DV);
                 };
                 if (this.t == 0)
                 {
@@ -815,17 +804,17 @@
                     return (0);
                 };
             };
-            return ((((this.a[1] & ((1 << (32 - DB)) - 1)) << DB) | this.a[0]));
+            return (((this.a[1] & ((1 << (32 - DB)) - 1)) << DB) | this.a[0]);
         }
 
         public function byteValue():int
         {
-            return ((((this.t)==0) ? this.s : ((this.a[0] << 24) >> 24)));
+            return ((this.t == 0) ? this.s : ((this.a[0] << 24) >> 24));
         }
 
         public function shortValue():int
         {
-            return ((((this.t)==0) ? this.s : ((this.a[0] << 16) >> 16)));
+            return ((this.t == 0) ? this.s : ((this.a[0] << 16) >> 16));
         }
 
         protected function chunkSize(r:Number):int
@@ -839,7 +828,7 @@
             {
                 return (-1);
             };
-            if ((((this.t <= 0)) || ((((this.t == 1)) && ((this.a[0] <= 0))))))
+            if (((this.t <= 0) || ((this.t == 1) && (this.a[0] <= 0))))
             {
                 return (0);
             };
@@ -848,7 +837,7 @@
 
         protected function toRadix(b:uint=10):String
         {
-            if ((((((this.sigNum() == 0)) || ((b < 2)))) || ((b > 32))))
+            if ((((this.sigNum() == 0) || (b < 2)) || (b > 32)))
             {
                 return ("0");
             };
@@ -864,7 +853,7 @@
                 r = ((a + z.intValue()).toString(b).substr(1) + r);
                 y.divRemTo(d, y, z);
             };
-            return ((z.intValue().toString(b) + r));
+            return (z.intValue().toString(b) + r);
         }
 
         protected function fromRadix(s:String, b:int=10):void
@@ -882,7 +871,7 @@
                 x = this.intAt(s, i);
                 if (x < 0)
                 {
-                    if ((((s.charAt(i) == "-")) && ((this.sigNum() == 0))))
+                    if (((s.charAt(i) == "-") && (this.sigNum() == 0)))
                     {
                         mi = true;
                     };
@@ -921,9 +910,9 @@
             var k:int;
             if (i-- > 0)
             {
-                if ((((p < DB)) && (!(((d = (this.a[i] >> p)) == ((this.s & DM) >> p))))))
+                if (((p < DB) && (!((d = (this.a[i] >> p)) == ((this.s & DM) >> p)))))
                 {
-                    var _local_6 = k++;
+                    var _local_6:* = k++;
                     r[_local_6] = (d | (this.s << (DB - p)));
                 };
                 while (i >= 0)
@@ -931,29 +920,26 @@
                     if (p < 8)
                     {
                         d = ((this.a[i] & ((1 << p) - 1)) << (8 - p));
-                        var _temp_1 = d;
-                        p = (p + (DB - 8));
-                        d = (_temp_1 | (this.a[--i] >> p));
+                        d = (d | (this.a[--i] >> (p = (p + (DB - 8)))));
                     }
                     else
                     {
-                        p = (p - 8);
-                        d = ((this.a[i] >> p) & 0xFF);
+                        d = ((this.a[i] >> (p = (p - 8))) & 0xFF);
                         if (p <= 0)
                         {
                             p = (p + DB);
                             i--;
                         };
                     };
-                    if ((d & 128) != 0)
+                    if ((d & 0x80) != 0)
                     {
-                        d = (d | -256);
+                        d = (d | 0xFFFFFF00);
                     };
-                    if ((((k == 0)) && (!(((this.s & 128) == (d & 128))))))
+                    if (((k == 0) && (!((this.s & 0x80) == (d & 0x80)))))
                     {
                         k++;
                     };
-                    if ((((k > 0)) || (!((d == this.s)))))
+                    if (((k > 0) || (!(d == this.s))))
                     {
                         _local_6 = k++;
                         r[_local_6] = d;
@@ -965,17 +951,17 @@
 
         public function equals(a:BigInteger):Boolean
         {
-            return ((this.compareTo(a) == 0));
+            return (this.compareTo(a) == 0);
         }
 
         public function min(a:BigInteger):BigInteger
         {
-            return ((((this.compareTo(a))<0) ? this : a));
+            return ((this.compareTo(a) < 0) ? this : a);
         }
 
         public function max(a:BigInteger):BigInteger
         {
-            return ((((this.compareTo(a))>0) ? this : a));
+            return ((this.compareTo(a) > 0) ? this : a);
         }
 
         protected function bitwiseTo(a:BigInteger, op:Function, r:BigInteger):void
@@ -1017,7 +1003,7 @@
 
         private function op_and(x:int, y:int):int
         {
-            return ((x & y));
+            return (x & y);
         }
 
         public function and(a:BigInteger):BigInteger
@@ -1029,7 +1015,7 @@
 
         private function op_or(x:int, y:int):int
         {
-            return ((x | y));
+            return (x | y);
         }
 
         public function or(a:BigInteger):BigInteger
@@ -1041,7 +1027,7 @@
 
         private function op_xor(x:int, y:int):int
         {
-            return ((x ^ y));
+            return (x ^ y);
         }
 
         public function xor(a:BigInteger):BigInteger
@@ -1053,7 +1039,7 @@
 
         private function op_andnot(x:int, y:int):int
         {
-            return ((x & ~(y)));
+            return (x & (~(y)));
         }
 
         public function andNot(a:BigInteger):BigInteger
@@ -1069,11 +1055,11 @@
             var i:int;
             while (i < this.t)
             {
-                r[i] = (DM & ~(this.a[i]));
+                r[i] = (DM & (~(this.a[i])));
                 i++;
             };
             r.t = this.t;
-            r.s = ~(this.s);
+            r.s = (~(this.s));
             return (r);
         }
 
@@ -1122,17 +1108,17 @@
                 x = (x >> 8);
                 r = (r + 8);
             };
-            if ((x & 15) == 0)
+            if ((x & 0x0F) == 0)
             {
                 x = (x >> 4);
                 r = (r + 4);
             };
-            if ((x & 3) == 0)
+            if ((x & 0x03) == 0)
             {
                 x = (x >> 2);
                 r = (r + 2);
             };
-            if ((x & 1) == 0)
+            if ((x & 0x01) == 0)
             {
                 r++;
             };
@@ -1146,13 +1132,13 @@
             {
                 if (this.a[i] != 0)
                 {
-                    return (((i * DB) + this.lbit(this.a[i])));
+                    return ((i * DB) + this.lbit(this.a[i]));
                 };
                 i++;
             };
             if (this.s < 0)
             {
-                return ((this.t * DB));
+                return (this.t * DB);
             };
             return (-1);
         }
@@ -1171,7 +1157,7 @@
         public function bitCount():int
         {
             var r:int;
-            var x:int = (this.s & DM);
+            var x:* = (this.s & DM);
             var i:int;
             while (i < this.t)
             {
@@ -1183,12 +1169,12 @@
 
         public function testBit(n:int):Boolean
         {
-            var j:int = Math.floor((n / DB));
+            var j:int = int(Math.floor((n / DB)));
             if (j >= this.t)
             {
-                return (!((this.s == 0)));
+                return (!(this.s == 0));
             };
-            return (!(((this.a[j] & (1 << (n % DB))) == 0)));
+            return (!((this.a[j] & (1 << (n % DB))) == 0));
         }
 
         protected function changeBit(n:int, op:Function):BigInteger
@@ -1221,7 +1207,7 @@
             while (i < m)
             {
                 c = (c + (this.a[i] + a.a[i]));
-                var _local_6 = i++;
+                var _local_6:* = i++;
                 r.a[_local_6] = (c & DM);
                 c = (c >> DB);
             };
@@ -1249,7 +1235,7 @@
                 };
                 c = (c + a.s);
             };
-            r.s = (((c)<0) ? -1 : 0);
+            r.s = ((c < 0) ? -1 : 0);
             if (c > 0)
             {
                 _local_6 = i++;
@@ -1321,7 +1307,7 @@
         {
             while (this.t <= w)
             {
-                var _local_3 = this.t++;
+                var _local_3:* = this.t++;
                 this.a[_local_3] = 0;
             };
             this.a[w] = (this.a[w] + n);
@@ -1333,10 +1319,7 @@
                     _local_3 = this.t++;
                     this.a[_local_3] = 0;
                 };
-                _local_3 = this.a;
-                var _local_4 = w;
-                var _local_5 = (_local_3[_local_4] + 1);
-                _local_3[_local_4] = _local_5;
+                this.a[w]++;
             };
         }
 
@@ -1353,7 +1336,7 @@
             r.t = i;
             while (i > 0)
             {
-                var _local_6 = --i;
+                var _local_6:* = --i;
                 r.a[_local_6] = 0;
             };
             j = (r.t - this.t);
@@ -1482,13 +1465,12 @@
                     };
                 };
                 n = k;
-                while ((w & 1) == 0)
+                while ((w & 0x01) == 0)
                 {
                     w = (w >> 1);
                     n--;
                 };
-                i = (i - n);
-                if (i < 0)
+                if ((i = (i - n)) < 0)
                 {
                     i = (i + DB);
                     j--;
@@ -1518,7 +1500,7 @@
                     };
                     z.mulTo(r2, g[w], r);
                 };
-                while ((((j >= 0)) && (((e.a[j] & (1 << i)) == 0))))
+                while (((j >= 0) && ((e.a[j] & (1 << i)) == 0)))
                 {
                     z.sqrTo(r, r2);
                     t = r;
@@ -1537,8 +1519,8 @@
         public function gcd(a:BigInteger):BigInteger
         {
             var t:BigInteger;
-            var x:BigInteger = (((this.s)<0) ? this.negate() : this.clone());
-            var y:BigInteger = (((a.s)<0) ? a.negate() : a.clone());
+            var x:BigInteger = ((this.s < 0) ? this.negate() : this.clone());
+            var y:BigInteger = ((a.s < 0) ? a.negate() : a.clone());
             if (x.compareTo(y) < 0)
             {
                 t = x;
@@ -1562,13 +1544,11 @@
             };
             while (x.sigNum() > 0)
             {
-                i = x.getLowestSetBit();
-                if (i > 0)
+                if ((i = x.getLowestSetBit()) > 0)
                 {
                     x.rShiftTo(i, x);
                 };
-                i = y.getLowestSetBit();
-                if (i > 0)
+                if ((i = y.getLowestSetBit()) > 0)
                 {
                     y.rShiftTo(i, y);
                 };
@@ -1592,13 +1572,13 @@
 
         protected function modInt(n:int):int
         {
-            var _local_4:int;
+            var i:int;
             if (n <= 0)
             {
                 return (0);
             };
             var d:int = (DV % n);
-            var r:int = (((this.s)<0) ? (n - 1) : 0);
+            var r:int = ((this.s < 0) ? (n - 1) : 0);
             if (this.t > 0)
             {
                 if (d == 0)
@@ -1607,11 +1587,11 @@
                 }
                 else
                 {
-                    _local_4 = (this.t - 1);
-                    while (_local_4 >= 0)
+                    i = (this.t - 1);
+                    while (i >= 0)
                     {
-                        r = (((d * r) + this.a[_local_4]) % n);
-                        _local_4--;
+                        r = (((d * r) + this.a[i]) % n);
+                        i--;
                     };
                 };
             };
@@ -1621,7 +1601,7 @@
         public function modInverse(m:BigInteger):BigInteger
         {
             var ac:Boolean = m.isEven();
-            if (((((this.isEven()) && (ac))) || ((m.sigNum() == 0))))
+            if ((((this.isEven()) && (ac)) || (m.sigNum() == 0)))
             {
                 return (BigInteger.ZERO);
             };
@@ -1647,7 +1627,7 @@
                     }
                     else
                     {
-                        if (!(b.isEven()))
+                        if (!b.isEven())
                         {
                             b.subTo(m, b);
                         };
@@ -1668,7 +1648,7 @@
                     }
                     else
                     {
-                        if (!(d.isEven()))
+                        if (!d.isEven())
                         {
                             d.subTo(m, d);
                         };
@@ -1723,7 +1703,7 @@
             var m:int;
             var j:int;
             var x:BigInteger = this.abs();
-            if ((((x.t == 1)) && ((x.a[0] <= lowprimes[(lowprimes.length - 1)]))))
+            if (((x.t == 1) && (x.a[0] <= lowprimes[(lowprimes.length - 1)])))
             {
                 i = 0;
                 while (i < lowprimes.length)
@@ -1745,7 +1725,7 @@
             {
                 m = lowprimes[i];
                 j = (i + 1);
-                while ((((j < lowprimes.length)) && ((m < lplim))))
+                while (((j < lowprimes.length) && (m < lplim)))
                 {
                     m = (m * lowprimes[j++]);
                 };
@@ -1783,10 +1763,10 @@
             {
                 a.fromInt(lowprimes[i]);
                 y = a.modPow(r, this);
-                if (((!((y.compareTo(BigInteger.ONE) == 0))) && (!((y.compareTo(n1) == 0)))))
+                if (((!(y.compareTo(BigInteger.ONE) == 0)) && (!(y.compareTo(n1) == 0))))
                 {
                     j = 1;
-                    while ((((j++ < k)) && (!((y.compareTo(n1) == 0)))))
+                    while (((j++ < k) && (!(y.compareTo(n1) == 0))))
                     {
                         y = y.modPowInt(2, this);
                         if (y.compareTo(BigInteger.ONE) == 0)
@@ -1806,7 +1786,7 @@
 
         public function primify(bits:int, t:int):void
         {
-            if (!(this.testBit((bits - 1))))
+            if (!this.testBit((bits - 1)))
             {
                 this.bitwiseTo(BigInteger.ONE.shiftLeft((bits - 1)), this.op_or, this);
             };
@@ -1814,7 +1794,7 @@
             {
                 this.dAddOffset(1, 0);
             };
-            while (!(this.isProbablePrime(t)))
+            while ((!(this.isProbablePrime(t))))
             {
                 this.dAddOffset(2, 0);
                 while (this.bitLength() > bits)
@@ -1826,5 +1806,5 @@
 
 
     }
-}//package com.hurlant.math
+} com.hurlant.math
 

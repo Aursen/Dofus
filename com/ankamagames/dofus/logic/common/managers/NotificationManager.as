@@ -1,5 +1,8 @@
-﻿package com.ankamagames.dofus.logic.common.managers
+package com.ankamagames.dofus.logic.common.managers
 {
+    import com.ankamagames.jerakine.logger.Logger;
+    import com.ankamagames.jerakine.logger.Log;
+    import avmplus.getQualifiedClassName;
     import __AS3__.vec.Vector;
     import com.ankamagames.jerakine.types.Uri;
     import com.ankamagames.berilia.managers.KernelEventsManager;
@@ -12,10 +15,11 @@
     {
 
         private static var _self:NotificationManager;
+        protected static const _log:Logger = Log.getLogger(getQualifiedClassName(NotificationManager));
 
         private var _notificationList:Vector.<Notification>;
 
-        public function NotificationManager(pvt:PrivateClass)
+        public function NotificationManager()
         {
             this._notificationList = new Vector.<Notification>();
         }
@@ -24,35 +28,38 @@
         {
             if (_self == null)
             {
-                _self = new (NotificationManager)(new PrivateClass());
+                _self = new (NotificationManager)();
             };
             return (_self);
         }
 
 
-        public function showNotification(pTitle:String, pContent:String, pType:uint=0):void
-        {
-            var notif:Notification = new Notification();
-            notif.title = pTitle;
-            notif.contentText = pContent;
-            notif.type = pType;
-            this.openNotification(notif);
-        }
-
-        public function prepareNotification(pTitle:String, pContent:String, pType:uint=0, pNotificationName:String="", pNotifyUser:Boolean=false):uint
+        public function showNotification(pTitle:String, pContent:String, pType:uint=0, pNotificationName:String=""):void
         {
             var notif:Notification = new Notification();
             notif.title = pTitle;
             notif.contentText = pContent;
             notif.type = pType;
             notif.name = pNotificationName;
-            return ((this._notificationList.push(notif) - 1));
+            this.openNotification(notif);
         }
 
-        public function addButtonToNotification(pId:uint, pTitle:String, pAction:String, pParams:Object=null, pForceClose:Boolean=false, pWidth:Number=0, pHeight:Number=0, pType:String="action"):void
+        public function prepareNotification(pTitle:String, pContent:String, pType:uint=0, pNotificationName:String="", pNotifyUser:Boolean=false, pRefreshWithoutCallback:Boolean=false):uint
+        {
+            var notif:Notification = new Notification();
+            notif.title = pTitle;
+            notif.contentText = pContent;
+            notif.type = pType;
+            notif.name = pNotificationName;
+            notif.refreshWithoutCallback = pRefreshWithoutCallback;
+            notif.notifyUser = pNotifyUser;
+            return (this._notificationList.push(notif) - 1);
+        }
+
+        public function addButtonToNotification(pId:uint, pTitle:String, pAction:String, pParams:Array=null, pForceClose:Boolean=false, pWidth:Number=0, pHeight:Number=0, pType:String="action", pIcnDataId:String=null, pIcnSize:uint=0):void
         {
             var notif:Notification = this.getNotification(pId);
-            notif.addButton(pTitle, pAction, pParams, pForceClose, pWidth, pHeight, pType);
+            notif.addButton(pTitle, pAction, pParams, pForceClose, pWidth, pHeight, pType, pIcnDataId, pIcnSize);
         }
 
         public function addCallbackToNotification(pId:uint, pAction:String, pParams:Object=null, pType:String="action"):void
@@ -91,7 +98,7 @@
             }
             else
             {
-                if ((((((notificationId >= 0)) && ((notificationId < this._notificationList.length)))) && (!((this._notificationList[notificationId] == null)))))
+                if ((((notificationId >= 0) && (notificationId < this._notificationList.length)) && (!(this._notificationList[notificationId] == null))))
                 {
                     this.openNotification((this._notificationList[notificationId] as Notification));
                     this._notificationList.splice(notificationId, 1);
@@ -130,15 +137,10 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.common.managers
+} com.ankamagames.dofus.logic.common.managers
 
 import com.ankamagames.jerakine.types.Uri;
 
-class PrivateClass 
-{
-
-
-}
 class Notification 
 {
 
@@ -152,19 +154,17 @@ class Notification
     public var callback:String;
     public var callbackType:String;
     public var callbackParams:Object;
+    public var refreshWithoutCallback:Boolean;
     public var texture:Object;
     public var position:int;
     public var notifyUser:Boolean = false;
     public var tutorialId:int = -1;
     public var blockCallbackOnTimerEnds:Boolean = false;
-    /*private*/ var _buttonList:Array;
-    /*private*/ var _imageList:Array;
+    /*private*/ var _buttonList:Array = new Array();
+    /*private*/ var _imageList:Array = new Array();
 
     public function Notification():void
     {
-        this._buttonList = new Array();
-        this._imageList = new Array();
-        super();
     }
 
     public function get duration():int
@@ -174,7 +174,7 @@ class Notification
 
     public function get displayText():String
     {
-        return (((this.title + "\n\n") + this.contentText));
+        return ((this.title + "\n\n") + this.contentText);
     }
 
     public function get buttonList():Array
@@ -187,17 +187,19 @@ class Notification
         return (this._imageList);
     }
 
-    public function addButton(pTitle:String, pAction:String, pParams:Object=null, pForceClose:Boolean=false, pWidth:Number=0, pHeight:Number=0, pType:String="action"):void
+    public function addButton(pTitle:String, pAction:String, pParams:Array=null, pForceClose:Boolean=false, pWidth:Number=0, pHeight:Number=0, pType:String="action", pIcnDataId:String=null, pIcnSize:uint=0):void
     {
         var btn:Object = new Object();
         btn.label = pTitle;
         btn.action = pAction;
         btn.actionType = pType;
         btn.params = pParams;
-        btn.width = (((pWidth)<=0) ? 130 : pWidth);
-        btn.height = (((pHeight)<=0) ? 32 : pHeight);
+        btn.width = ((pWidth <= 0) ? 130 : pWidth);
+        btn.height = ((pHeight <= 0) ? 32 : pHeight);
         btn.forceClose = pForceClose;
         btn.name = ("btn" + (this._buttonList.length + 1).toString());
+        btn.icnDataId = pIcnDataId;
+        btn.icnSize = pIcnSize;
         this._buttonList.push(btn);
     }
 
@@ -227,4 +229,5 @@ class Notification
 
 
 }
+
 

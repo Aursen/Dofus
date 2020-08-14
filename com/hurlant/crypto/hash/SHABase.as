@@ -1,4 +1,4 @@
-﻿package com.hurlant.crypto.hash
+package com.hurlant.crypto.hash
 {
     import flash.utils.Endian;
     import flash.utils.ByteArray;
@@ -44,7 +44,7 @@
             };
             var h:Array = this.core(a, len);
             var out:ByteArray = new ByteArray();
-            var words:uint = (this.getHashSize() / 4);
+            var words:uint = uint((this.getHashSize() / 4));
             i = 0;
             while (i < words)
             {
@@ -68,5 +68,5 @@
 
 
     }
-}//package com.hurlant.crypto.hash
+} com.hurlant.crypto.hash
 

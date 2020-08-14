@@ -1,8 +1,9 @@
-﻿package com.ankamagames.dofus.network.types.game.context.fight
+package com.ankamagames.dofus.network.types.game.context.fight
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
     public class GameFightFighterNamedLightInformations extends GameFightFighterLightInformations implements INetworkType 
     {
@@ -17,7 +18,7 @@
             return (456);
         }
 
-        public function initGameFightFighterNamedLightInformations(id:int=0, wave:uint=0, level:uint=0, breed:int=0, sex:Boolean=false, alive:Boolean=false, name:String=""):GameFightFighterNamedLightInformations
+        public function initGameFightFighterNamedLightInformations(id:Number=0, wave:uint=0, level:uint=0, breed:int=0, sex:Boolean=false, alive:Boolean=false, name:String=""):GameFightFighterNamedLightInformations
         {
             super.initGameFightFighterLightInformations(id, wave, level, breed, sex, alive);
             this.name = name;
@@ -49,10 +50,26 @@
         public function deserializeAs_GameFightFighterNamedLightInformations(input:ICustomDataInput):void
         {
             super.deserialize(input);
+            this._nameFunc(input);
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GameFightFighterNamedLightInformations(tree);
+        }
+
+        public function deserializeAsyncAs_GameFightFighterNamedLightInformations(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._nameFunc);
+        }
+
+        private function _nameFunc(input:ICustomDataInput):void
+        {
             this.name = input.readUTF();
         }
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.context.fight
+} com.ankamagames.dofus.network.types.game.context.fight
 

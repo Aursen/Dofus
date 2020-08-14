@@ -1,12 +1,12 @@
-﻿package com.ankamagames.dofus.network.messages.game.actions
+package com.ankamagames.dofus.network.messages.game.actions
 {
     import com.ankamagames.jerakine.network.INetworkMessage;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class AbstractGameActionWithAckMessage extends AbstractGameActionMessage implements INetworkMessage 
     {
 
@@ -18,7 +18,7 @@
 
         override public function get isInitialized():Boolean
         {
-            return (((super.isInitialized) && (this._isInitialized)));
+            return ((super.isInitialized) && (this._isInitialized));
         }
 
         override public function getMessageId():uint
@@ -26,7 +26,7 @@
             return (1001);
         }
 
-        public function initAbstractGameActionWithAckMessage(actionId:uint=0, sourceId:int=0, waitAckId:int=0):AbstractGameActionWithAckMessage
+        public function initAbstractGameActionWithAckMessage(actionId:uint=0, sourceId:Number=0, waitAckId:int=0):AbstractGameActionWithAckMessage
         {
             super.initAbstractGameActionMessage(actionId, sourceId);
             this.waitAckId = waitAckId;
@@ -53,6 +53,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         override public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_AbstractGameActionWithAckMessage(output);
@@ -72,10 +80,26 @@
         public function deserializeAs_AbstractGameActionWithAckMessage(input:ICustomDataInput):void
         {
             super.deserialize(input);
+            this._waitAckIdFunc(input);
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_AbstractGameActionWithAckMessage(tree);
+        }
+
+        public function deserializeAsyncAs_AbstractGameActionWithAckMessage(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._waitAckIdFunc);
+        }
+
+        private function _waitAckIdFunc(input:ICustomDataInput):void
+        {
             this.waitAckId = input.readShort();
         }
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.actions
+} com.ankamagames.dofus.network.messages.game.actions
 

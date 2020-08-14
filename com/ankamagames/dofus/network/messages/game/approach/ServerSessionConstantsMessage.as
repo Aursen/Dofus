@@ -1,9 +1,10 @@
-﻿package com.ankamagames.dofus.network.messages.game.approach
+package com.ankamagames.dofus.network.messages.game.approach
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
     import __AS3__.vec.Vector;
     import com.ankamagames.dofus.network.types.game.approach.ServerSessionConstant;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
@@ -11,20 +12,15 @@
     import com.ankamagames.dofus.network.ProtocolTypeManager;
     import __AS3__.vec.*;
 
-    [Trusted]
     public class ServerSessionConstantsMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 6434;
 
         private var _isInitialized:Boolean = false;
-        public var variables:Vector.<ServerSessionConstant>;
+        public var variables:Vector.<ServerSessionConstant> = new Vector.<ServerSessionConstant>();
+        private var _variablestree:FuncTree;
 
-        public function ServerSessionConstantsMessage()
-        {
-            this.variables = new Vector.<ServerSessionConstant>();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
@@ -59,6 +55,14 @@
         override public function unpack(input:ICustomDataInput, length:uint):void
         {
             this.deserialize(input);
+        }
+
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
         }
 
         public function serialize(output:ICustomDataOutput):void
@@ -99,7 +103,36 @@
             };
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_ServerSessionConstantsMessage(tree);
+        }
+
+        public function deserializeAsyncAs_ServerSessionConstantsMessage(tree:FuncTree):void
+        {
+            this._variablestree = tree.addChild(this._variablestreeFunc);
+        }
+
+        private function _variablestreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._variablestree.addChild(this._variablesFunc);
+                i++;
+            };
+        }
+
+        private function _variablesFunc(input:ICustomDataInput):void
+        {
+            var _id:uint = input.readUnsignedShort();
+            var _item:ServerSessionConstant = ProtocolTypeManager.getInstance(ServerSessionConstant, _id);
+            _item.deserialize(input);
+            this.variables.push(_item);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.approach
+} com.ankamagames.dofus.network.messages.game.approach
 

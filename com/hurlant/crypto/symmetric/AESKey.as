@@ -1,4 +1,4 @@
-﻿package com.hurlant.crypto.symmetric
+package com.hurlant.crypto.symmetric
 {
     import flash.utils.ByteArray;
     import com.hurlant.crypto.prng.Random;
@@ -76,7 +76,7 @@
             var tmp3:uint;
             var tmp4:uint;
             var idx:uint;
-            var Nk:uint = (this.key.length / 4);
+            var Nk:uint = uint((this.key.length / 4));
             this.Nr = (Nk + 6);
             idx = Nk;
             while (idx < (Nb * (this.Nr + 1)))
@@ -85,17 +85,17 @@
                 tmp1 = this.key[((4 * idx) - 3)];
                 tmp2 = this.key[((4 * idx) - 2)];
                 tmp3 = this.key[((4 * idx) - 1)];
-                if (!((idx % Nk)))
+                if (!(idx % Nk))
                 {
                     tmp4 = tmp3;
                     tmp3 = Sbox[tmp0];
-                    tmp0 = (Sbox[tmp1] ^ Rcon[(idx / Nk)]);
+                    tmp0 = uint((Sbox[tmp1] ^ Rcon[(idx / Nk)]));
                     tmp1 = Sbox[tmp2];
                     tmp2 = Sbox[tmp4];
                 }
                 else
                 {
-                    if ((((Nk > 6)) && (((idx % Nk) == 4))))
+                    if (((Nk > 6) && ((idx % Nk) == 4)))
                     {
                         tmp0 = Sbox[tmp0];
                         tmp1 = Sbox[tmp1];
@@ -308,10 +308,10 @@
 
         public function toString():String
         {
-            return (("aes" + (8 * this.keyLength)));
+            return ("aes" + (8 * this.keyLength));
         }
 
 
     }
-}//package com.hurlant.crypto.symmetric
+} com.hurlant.crypto.symmetric
 

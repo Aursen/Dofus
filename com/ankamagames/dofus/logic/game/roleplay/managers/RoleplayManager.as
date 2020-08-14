@@ -1,9 +1,14 @@
-﻿package com.ankamagames.dofus.logic.game.roleplay.managers
+package com.ankamagames.dofus.logic.game.roleplay.managers
 {
     import com.ankamagames.jerakine.interfaces.IDestroyable;
+    import com.ankamagames.jerakine.logger.Logger;
+    import com.ankamagames.jerakine.logger.Log;
+    import avmplus.getQualifiedClassName;
+    import flash.utils.Timer;
     import com.ankamagames.jerakine.utils.errors.SingletonError;
     import com.ankamagames.dofus.kernel.Kernel;
     import com.ankamagames.dofus.logic.game.roleplay.frames.RoleplayContextFrame;
+    import flash.events.TimerEvent;
     import com.ankamagames.berilia.managers.UiModuleManager;
     import com.ankamagames.berilia.factories.MenusFactory;
     import com.ankamagames.berilia.types.data.ContextMenuData;
@@ -23,6 +28,23 @@
     import com.ankamagames.atouin.managers.EntitiesDisplayManager;
     import com.ankamagames.dofus.types.entities.AnimatedCharacter;
     import com.ankamagames.dofus.logic.game.common.managers.PlayedCharacterManager;
+    import com.ankamagames.dofus.network.ProtocolConstantsEnum;
+    import com.ankamagames.berilia.managers.KernelEventsManager;
+    import com.ankamagames.dofus.misc.lists.ChatHookList;
+    import com.ankamagames.jerakine.data.I18n;
+    import com.ankamagames.dofus.network.enums.ChatActivableChannelsEnum;
+    import com.ankamagames.dofus.logic.game.common.managers.TimeManager;
+    import com.ankamagames.dofus.logic.game.common.actions.chat.ChatSmileyRequestAction;
+    import com.ankamagames.dofus.internalDatacenter.communication.EmoteWrapper;
+    import com.ankamagames.dofus.logic.game.roleplay.actions.EmotePlayRequestAction;
+    import flash.events.Event;
+    import com.ankamagames.dofus.logic.game.roleplay.types.RoleplaySpellCastProvider;
+    import com.ankamagames.dofus.datacenter.spells.Spell;
+    import com.ankamagames.jerakine.types.positions.MapPoint;
+    import com.ankamagames.dofus.scripts.SpellScriptManager;
+    import com.ankamagames.jerakine.types.Callback;
+    import com.ankamagames.jerakine.sequencer.ISequencable;
+    import com.ankamagames.jerakine.sequencer.SerialSequencer;
 
     public class RoleplayManager implements IDestroyable 
     {
@@ -31,6 +53,8 @@
         private static const REWARD_SCALE_CAP:Number = 1.5;
         private static const REWARD_REDUCED_SCALE:Number = 0.7;
 
+        protected var _log:Logger = Log.getLogger(getQualifiedClassName(RoleplayManager));
+        private var _timer:Timer;
         public var dofusTimeYearLag:int;
 
         public function RoleplayManager()
@@ -53,11 +77,16 @@
 
         private function get roleplayContextFrame():RoleplayContextFrame
         {
-            return ((Kernel.getWorker().getFrame(RoleplayContextFrame) as RoleplayContextFrame));
+            return (Kernel.getWorker().getFrame(RoleplayContextFrame) as RoleplayContextFrame);
         }
 
         public function destroy():void
         {
+            if (this._timer)
+            {
+                this._timer.removeEventListener(TimerEvent.TIMER, this.onTimer);
+                this._timer = null;
+            };
             _self = null;
         }
 
@@ -92,22 +121,31 @@
                     menu = MenusFactory.create(pGameContextActorInformations, null, [pEntity]);
                     break;
                 case (pGameContextActorInformations is GameRolePlayNpcInformations):
-                    menu = MenusFactory.create(pGameContextActorInformations, null, [pEntity]);
+                    menu = MenusFactory.create(pGameContextActorInformations, null, {
+                        "entity":pEntity,
+                        "rightClick":false
+                    });
                     break;
                 case (pGameContextActorInformations is GameRolePlayTaxCollectorInformations):
-                    menu = MenusFactory.create(pGameContextActorInformations, null, [pEntity]);
+                    menu = MenusFactory.create(pGameContextActorInformations, null, {
+                        "entity":pEntity,
+                        "rightClick":false
+                    });
                     break;
                 case (pGameContextActorInformations is GameRolePlayPrismInformations):
-                    menu = MenusFactory.create(pGameContextActorInformations, null, [pEntity]);
+                    menu = MenusFactory.create(pGameContextActorInformations, null, {
+                        "entity":pEntity,
+                        "rightClick":false
+                    });
                     break;
                 case (pGameContextActorInformations is GameRolePlayPortalInformations):
-                    menu = MenusFactory.create(pGameContextActorInformations, null, [pEntity]);
+                    menu = MenusFactory.create(pGameContextActorInformations, null, {
+                        "entity":pEntity,
+                        "rightClick":false
+                    });
                     break;
                 case (pGameContextActorInformations is GameContextPaddockItemInformations):
-                    if (this.roleplayContextFrame.currentPaddock.guildIdentity)
-                    {
-                        menu = MenusFactory.create(pGameContextActorInformations, null, [pEntity]);
-                    };
+                    menu = MenusFactory.create(pGameContextActorInformations, null, [pEntity]);
                     break;
                 case (pGameContextActorInformations is GameRolePlayMountInformations):
                     menu = MenusFactory.create(pGameContextActorInformations, null, [pEntity]);
@@ -127,34 +165,125 @@
             EntitiesDisplayManager.getInstance().orderEntity(entity, cellSprite);
         }
 
+        public function celebrate():void
+        {
+            if (!this._timer)
+            {
+                this._timer = new Timer(500, 3);
+                this._timer.addEventListener(TimerEvent.TIMER, this.onTimer);
+            };
+            this._timer.reset();
+            this.dispatchCallback();
+        }
+
         public function getKamasReward(kamasScaleWithPlayerLevel:Boolean=true, optimalLevel:int=-1, kamasRatio:Number=1, duration:Number=1, pPlayerLevel:int=-1):Number
         {
-            if ((((pPlayerLevel == -1)) && (kamasScaleWithPlayerLevel)))
+            if (((pPlayerLevel == -1) && (kamasScaleWithPlayerLevel)))
             {
-                pPlayerLevel = PlayedCharacterManager.getInstance().infos.level;
+                pPlayerLevel = PlayedCharacterManager.getInstance().limitedLevel;
             };
             var lvl:int = ((kamasScaleWithPlayerLevel) ? pPlayerLevel : optimalLevel);
-            return (((((Math.pow(lvl, 2) + (20 * lvl)) - 20) * kamasRatio) * duration));
+            return (Math.floor(((((Math.pow(lvl, 2) + (20 * lvl)) - 20) * kamasRatio) * duration)));
         }
 
         public function getExperienceReward(pPlayerLevel:int, pXpBonus:int, optimalLevel:int=-1, xpRatio:Number=1, duration:Number=1):int
         {
-            var rewLevel:int;
+            var rewardLevel:int;
+            var fixeOptimalLevelExperienceReward:Number;
+            var fixeLevelExperienceReward:Number;
+            var reducedOptimalExperienceReward:Number;
+            var reducedExperienceReward:Number;
+            var sumExperienceRewards:int;
+            var result:int;
             var xpBonus:Number = (1 + (pXpBonus / 100));
+            if (pPlayerLevel > ProtocolConstantsEnum.MAX_LEVEL)
+            {
+                pPlayerLevel = ProtocolConstantsEnum.MAX_LEVEL;
+            };
             if (pPlayerLevel > optimalLevel)
             {
-                rewLevel = Math.min(pPlayerLevel, (optimalLevel * REWARD_SCALE_CAP));
-                return (((((1 - REWARD_REDUCED_SCALE) * this.getFixeExperienceReward(optimalLevel, duration, xpRatio)) + (REWARD_REDUCED_SCALE * this.getFixeExperienceReward(rewLevel, duration, xpRatio))) * xpBonus));
+                rewardLevel = Math.min(pPlayerLevel, (optimalLevel * REWARD_SCALE_CAP));
+                fixeOptimalLevelExperienceReward = this.getFixeExperienceReward(optimalLevel, duration, xpRatio);
+                fixeLevelExperienceReward = this.getFixeExperienceReward(rewardLevel, duration, xpRatio);
+                reducedOptimalExperienceReward = ((1 - REWARD_REDUCED_SCALE) * fixeOptimalLevelExperienceReward);
+                reducedExperienceReward = (REWARD_REDUCED_SCALE * fixeLevelExperienceReward);
+                sumExperienceRewards = Math.floor((reducedOptimalExperienceReward + reducedExperienceReward));
+                result = Math.floor((sumExperienceRewards * xpBonus));
+                return (result);
             };
-            return ((this.getFixeExperienceReward(pPlayerLevel, duration, xpRatio) * xpBonus));
+            return (Math.floor((this.getFixeExperienceReward(pPlayerLevel, duration, xpRatio) * xpBonus)));
         }
 
         private function getFixeExperienceReward(level:int, duration:Number, xpRatio:Number):Number
         {
-            return (((((level * Math.pow((100 + (2 * level)), 2)) / 20) * duration) * xpRatio));
+            var levelPow:int = Math.pow((100 + (2 * level)), 2);
+            var result:Number = ((((level * levelPow) / 20) * duration) * xpRatio);
+            return (result);
+        }
+
+        private function dispatchCallback():void
+        {
+            this.onTimer(null);
+            this._timer.start();
+            KernelEventsManager.getInstance().processCallback(ChatHookList.TextInformation, (I18n.getUiText("ui.common.congratulation") + " !"), ChatActivableChannelsEnum.PSEUDO_CHANNEL_INFO, TimeManager.getInstance().getTimestamp());
+        }
+
+        private function onTimer(e:Event):void
+        {
+            var csra:ChatSmileyRequestAction;
+            var emotes:Array;
+            var rndEmoteId:int;
+            var emoteWrapper:EmoteWrapper;
+            var i:int;
+            var epra:EmotePlayRequestAction;
+            var spellEffects:Array = [1846, 1841, 1848];
+            var cellId:int = int((Math.floor((Math.random() * 195)) + 363));
+            var spellIndex:int = int(Math.floor((Math.random() * spellEffects.length)));
+            this.playSpellAnimation(spellEffects[spellIndex], 5, cellId);
+            if (((this._timer.currentCount == this._timer.repeatCount) || (this._timer.running == false)))
+            {
+                csra = ChatSmileyRequestAction.create(5);
+                Kernel.getWorker().process(csra);
+                emotes = [27, 88, 32, 43, 42, 50];
+                i = 5;
+                while (i > 0)
+                {
+                    rndEmoteId = int(Math.floor((Math.random() * emotes.length)));
+                    emoteWrapper = EmoteWrapper.getEmoteWrapperById(emotes[rndEmoteId]);
+                    if (((emoteWrapper) && (emoteWrapper.isUsable)))
+                    {
+                        break;
+                    };
+                    i--;
+                };
+                epra = EmotePlayRequestAction.create(emotes[rndEmoteId]);
+                Kernel.getWorker().process(epra);
+            };
+        }
+
+        private function playSpellAnimation(spellId:int, spellLevel:int, targetCellId:int):void
+        {
+            var rpSpellCastProvider:RoleplaySpellCastProvider = new RoleplaySpellCastProvider();
+            rpSpellCastProvider.castingSpell.casterId = PlayedCharacterManager.getInstance().id;
+            rpSpellCastProvider.castingSpell.spell = Spell.getSpellById(spellId);
+            rpSpellCastProvider.castingSpell.spellRank = rpSpellCastProvider.castingSpell.spell.getSpellLevel(spellLevel);
+            rpSpellCastProvider.castingSpell.targetedCell = MapPoint.fromCellId(targetCellId);
+            var spellScriptId:int = rpSpellCastProvider.castingSpell.spell.getScriptId(rpSpellCastProvider.castingSpell.isCriticalHit);
+            SpellScriptManager.getInstance().runSpellScript(spellScriptId, rpSpellCastProvider, new Callback(this.executeSpellBuffer, null, true, true, rpSpellCastProvider), new Callback(this.executeSpellBuffer, null, true, false, rpSpellCastProvider));
+        }
+
+        private function executeSpellBuffer(callback:Function, hadScript:Boolean, scriptSuccess:Boolean=false, castProvider:RoleplaySpellCastProvider=null):void
+        {
+            var step:ISequencable;
+            var ss:SerialSequencer = new SerialSequencer();
+            for each (step in castProvider.stepsBuffer)
+            {
+                ss.addStep(step);
+            };
+            ss.start();
         }
 
 
     }
-}//package com.ankamagames.dofus.logic.game.roleplay.managers
+} com.ankamagames.dofus.logic.game.roleplay.managers
 

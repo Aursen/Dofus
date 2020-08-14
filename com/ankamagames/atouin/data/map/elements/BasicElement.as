@@ -1,4 +1,4 @@
-﻿package com.ankamagames.atouin.data.map.elements
+package com.ankamagames.atouin.data.map.elements
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
@@ -19,16 +19,16 @@
             this._cell = cell;
         }
 
-        public static function getElementFromType(type:int, cell:Cell):BasicElement
+        public static function getElementFromType(_arg_1:int, cell:Cell):BasicElement
         {
-            switch (type)
+            switch (_arg_1)
             {
                 case ElementTypesEnum.GRAPHICAL:
                     return (new GraphicalElement(cell));
                 case ElementTypesEnum.SOUND:
                     return (new SoundElement(cell));
             };
-            throw (new UnknownElementError((((("Un élément de type inconnu " + type) + " a été trouvé sur la cellule ") + cell.cellId) + "!")));
+            throw (new UnknownElementError((((("Un élément de type inconnu " + _arg_1) + " a été trouvé sur la cellule ") + cell.cellId) + "!")));
         }
 
 
@@ -49,5 +49,5 @@
 
 
     }
-}//package com.ankamagames.atouin.data.map.elements
+} com.ankamagames.atouin.data.map.elements
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.common.managers
+package com.ankamagames.dofus.logic.common.managers
 {
     import com.ankamagames.dofus.logic.game.common.managers.TaxCollectorsManager;
     import com.ankamagames.dofus.internalDatacenter.guild.TaxCollectorWrapper;
@@ -15,13 +15,20 @@
     {
 
 
-        public static function showPosition(posX:int, posY:int, worldMapId:int, taxCollectorId:uint):void
+        public static function showPosition(posX:int, posY:int, worldMapId:int, taxCollectorId:Number):void
         {
             var taxcollector:TaxCollectorWrapper = TaxCollectorsManager.getInstance().taxCollectors[taxCollectorId];
-            KernelEventsManager.getInstance().processCallback(HookList.AddMapFlag, ("flag_taxcollector" + taxCollectorId), (((((posX + ",") + posY) + " (") + I18n.getUiText("ui.cartography.positionof", [((taxcollector.firstName + " ") + taxcollector.lastName)])) + ")"), worldMapId, posX, posY, 0xFF6600, true);
+            if (taxcollector)
+            {
+                KernelEventsManager.getInstance().processCallback(HookList.AddMapFlag, ("flag_taxcollector" + taxCollectorId), (((((posX + ",") + posY) + " (") + I18n.getUiText("ui.cartography.positionof", [((taxcollector.firstName + " ") + taxcollector.lastName)])) + ")"), worldMapId, posX, posY, 0xFF6600, true);
+            }
+            else
+            {
+                KernelEventsManager.getInstance().processCallback(HookList.AddMapFlag, ("flag_taxcollector" + taxCollectorId), (((((I18n.getUiText("ui.cartography.customFlag") + " (") + posX) + ",") + posY) + ")"), worldMapId, posX, posY, 0xFF6600, true);
+            };
         }
 
-        public static function rollOver(pX:int, pY:int, worldMapId:int, taxCollectorId:uint, posX:int, posY:int):void
+        public static function rollOver(pX:int, pY:int, worldMapId:int, taxCollectorId:Number, posX:int, posY:int):void
         {
             var target:Rectangle = new Rectangle(pX, pY, 10, 10);
             var info:TextTooltipInfo = new TextTooltipInfo(I18n.getUiText("ui.tooltip.chat.position"));
@@ -30,5 +37,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.common.managers
+} com.ankamagames.dofus.logic.common.managers
 

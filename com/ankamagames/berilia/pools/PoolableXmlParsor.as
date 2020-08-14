@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.pools
+package com.ankamagames.berilia.pools
 {
     import com.ankamagames.berilia.uiRender.XmlParsor;
     import com.ankamagames.jerakine.pools.Poolable;
@@ -9,9 +9,14 @@
 
         public function free():void
         {
+            _xmlDoc = null;
+            _sUrl = null;
+            _aName = null;
+            _glPoint = null;
+            rootPath = null;
         }
 
 
     }
-}//package com.ankamagames.berilia.pools
+} com.ankamagames.berilia.pools
 

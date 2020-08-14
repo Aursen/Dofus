@@ -1,4 +1,4 @@
-﻿package com.ankamagames.atouin.resources.adapters
+package com.ankamagames.atouin.resources.adapters
 {
     import com.ankamagames.jerakine.resources.adapters.AbstractUrlLoaderAdapter;
     import com.ankamagames.jerakine.resources.adapters.IAdapter;
@@ -13,7 +13,7 @@
     {
 
 
-        override protected function getResource(dataFormat:String, data:*)
+        override protected function getResource(dataFormat:String, data:*):*
         {
             var ba:ByteArray = (data as ByteArray);
             ba.endian = Endian.BIG_ENDIAN;
@@ -53,5 +53,5 @@
 
 
     }
-}//package com.ankamagames.atouin.resources.adapters
+} com.ankamagames.atouin.resources.adapters
 

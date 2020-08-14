@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.common.frames
+package com.ankamagames.dofus.logic.game.common.frames
 {
     import com.ankamagames.jerakine.messages.Frame;
     import com.ankamagames.jerakine.logger.Logger;
@@ -12,6 +12,7 @@
     import com.ankamagames.dofus.misc.lists.ExchangeHookList;
     import com.ankamagames.dofus.network.messages.game.inventory.exchanges.ExchangeStartedBidBuyerMessage;
     import com.ankamagames.dofus.logic.game.common.actions.bid.ExchangeBidHouseSearchAction;
+    import com.ankamagames.dofus.network.messages.game.inventory.exchanges.ExchangeBidHouseSearchMessage;
     import com.ankamagames.dofus.logic.game.common.actions.bid.ExchangeBidHouseListAction;
     import com.ankamagames.dofus.logic.game.common.actions.bid.ExchangeBidHouseTypeAction;
     import com.ankamagames.dofus.network.messages.game.inventory.exchanges.ExchangeBidHouseTypeMessage;
@@ -20,9 +21,9 @@
     import com.ankamagames.dofus.logic.game.common.actions.bid.ExchangeBidHousePriceAction;
     import com.ankamagames.dofus.network.messages.game.inventory.exchanges.ExchangeBidHousePriceMessage;
     import com.ankamagames.dofus.network.messages.game.inventory.exchanges.ExchangeBidPriceForSellerMessage;
+    import com.ankamagames.dofus.network.messages.game.inventory.exchanges.ExchangeBidHouseBuyResultMessage;
     import com.ankamagames.dofus.network.messages.game.inventory.exchanges.ExchangeBidPriceMessage;
     import com.ankamagames.dofus.network.messages.game.inventory.exchanges.ExchangeBidHouseItemAddOkMessage;
-    import com.ankamagames.dofus.datacenter.items.Item;
     import com.ankamagames.dofus.network.messages.game.inventory.exchanges.ExchangeBidHouseItemRemoveOkMessage;
     import com.ankamagames.dofus.network.messages.game.inventory.exchanges.ExchangeBidHouseGenericItemAddedMessage;
     import com.ankamagames.dofus.network.messages.game.inventory.exchanges.ExchangeBidHouseGenericItemRemovedMessage;
@@ -33,14 +34,14 @@
     import com.ankamagames.dofus.network.messages.game.inventory.exchanges.ExchangeBidHouseInListRemovedMessage;
     import com.ankamagames.dofus.network.messages.game.inventory.exchanges.ExchangeTypesExchangerDescriptionForUserMessage;
     import com.ankamagames.dofus.network.messages.game.inventory.exchanges.ExchangeTypesItemsExchangerDescriptionForUserMessage;
-    import com.ankamagames.dofus.network.messages.game.inventory.exchanges.ExchangeBidSearchOkMessage;
     import com.ankamagames.dofus.logic.game.common.actions.bid.BidHouseStringSearchAction;
     import com.ankamagames.dofus.network.messages.game.context.roleplay.npc.NpcGenericActionRequestMessage;
     import com.ankamagames.dofus.network.messages.game.inventory.exchanges.ExchangeLeaveMessage;
-    import com.ankamagames.dofus.network.messages.game.inventory.exchanges.ExchangeBidHouseSearchMessage;
     import com.ankamagames.dofus.network.messages.game.inventory.exchanges.ExchangeBidHouseListMessage;
     import com.ankamagames.dofus.network.types.game.data.items.BidExchangerObjectInfo;
+    import com.ankamagames.dofus.datacenter.items.Item;
     import com.ankamagames.dofus.kernel.net.ConnectionsHandler;
+    import com.ankamagames.jerakine.utils.misc.StringUtils;
     import flash.utils.getTimer;
     import com.ankamagames.dofus.logic.game.common.managers.PlayedCharacterManager;
     import com.ankamagames.dofus.logic.game.common.actions.bid.BidSwitchToBuyerModeAction;
@@ -58,7 +59,6 @@
 
         private var _bidHouseObjects:Array;
         private var _vendorObjects:Array;
-        private var _typeAsk:uint;
         private var _GIDAsk:uint;
         private var _NPCId:uint;
         private var _listItemsSearchMode:Array;
@@ -86,13 +86,13 @@
         {
             var objectInfo:ObjectItemToSellInBid;
             var iw:ItemWrapper;
-            var price:uint;
+            var price:Number;
             var unsoldDelay:uint;
             this._switching = false;
             var esbsmsg:ExchangeStartedBidSellerMessage = (msg as ExchangeStartedBidSellerMessage);
             this._NPCId = esbsmsg.sellerDescriptor.npcContextualId;
             this.initSearchMode(esbsmsg.sellerDescriptor.types);
-            this._vendorObjects = new Array();
+            this._vendorObjects = [];
             for each (objectInfo in esbsmsg.objectsInfos)
             {
                 iw = ItemWrapper.create(63, objectInfo.objectUID, objectInfo.objectGID, objectInfo.quantity, objectInfo.effects);
@@ -112,82 +112,84 @@
             var esbbmsg:ExchangeStartedBidBuyerMessage = (msg as ExchangeStartedBidBuyerMessage);
             this._NPCId = esbbmsg.buyerDescriptor.npcContextualId;
             this.initSearchMode(esbbmsg.buyerDescriptor.types);
-            this._bidHouseObjects = new Array();
+            this._bidHouseObjects = [];
             for each (typeObject in esbbmsg.buyerDescriptor.types)
             {
-                this._bidHouseObjects.push(new TypeObjectData(typeObject, null));
+                this._bidHouseObjects.push(new TypeObjectData(typeObject, []));
             };
             this._kernelEventsManager.processCallback(ExchangeHookList.ExchangeStartedBidBuyer, esbbmsg.buyerDescriptor);
         }
 
         public function process(msg:Message):Boolean
         {
-            var _local_2:ExchangeBidHouseSearchAction;
-            var _local_3:ExchangeBidHouseListAction;
-            var _local_4:ExchangeBidHouseTypeAction;
-            var _local_5:ExchangeBidHouseTypeMessage;
-            var _local_6:ExchangeBidHouseBuyAction;
-            var _local_7:ExchangeBidHouseBuyMessage;
-            var _local_8:ExchangeBidHousePriceAction;
-            var _local_9:ExchangeBidHousePriceMessage;
-            var _local_10:ExchangeBidPriceForSellerMessage;
-            var _local_11:ExchangeBidPriceMessage;
-            var _local_12:ExchangeBidHouseItemAddOkMessage;
-            var _local_13:Item;
-            var _local_14:ItemWrapper;
-            var _local_15:uint;
-            var _local_16:uint;
-            var _local_17:ExchangeBidHouseItemRemoveOkMessage;
-            var _local_18:uint;
-            var _local_19:ExchangeBidHouseGenericItemAddedMessage;
-            var _local_20:TypeObjectData;
-            var _local_21:ExchangeBidHouseGenericItemRemovedMessage;
-            var _local_22:TypeObjectData;
-            var _local_23:int;
-            var _local_24:ExchangeObjectModifyPricedAction;
-            var _local_25:ExchangeObjectModifyPricedMessage;
-            var _local_26:ExchangeBidHouseInListUpdatedMessage;
-            var _local_27:TypeObjectData;
-            var _local_28:GIDObjectData;
-            var _local_29:ExchangeBidHouseInListAddedMessage;
-            var _local_30:TypeObjectData;
-            var _local_31:GIDObjectData;
-            var _local_32:ExchangeBidHouseInListRemovedMessage;
-            var _local_33:uint;
-            var _local_34:GIDObjectData;
-            var _local_35:uint;
-            var _local_36:ExchangeTypesExchangerDescriptionForUserMessage;
-            var _local_37:TypeObjectData;
-            var _local_38:ExchangeTypesItemsExchangerDescriptionForUserMessage;
-            var _local_39:GIDObjectData;
-            var _local_40:GIDObjectData;
-            var _local_41:ExchangeBidSearchOkMessage;
-            var _local_42:BidHouseStringSearchAction;
-            var _local_43:String;
-            var _local_44:int;
-            var _local_45:int;
-            var _local_46:int;
-            var _local_47:Vector.<uint>;
-            var _local_48:NpcGenericActionRequestMessage;
-            var _local_49:NpcGenericActionRequestMessage;
-            var _local_50:ExchangeLeaveMessage;
+            var ebhsa:ExchangeBidHouseSearchAction;
             var ebhsmsg:ExchangeBidHouseSearchMessage;
+            var ebhla:ExchangeBidHouseListAction;
+            var ebhta:ExchangeBidHouseTypeAction;
+            var ebhtmsg:ExchangeBidHouseTypeMessage;
+            var ebhba:ExchangeBidHouseBuyAction;
+            var ebhbmsg:ExchangeBidHouseBuyMessage;
+            var ebhpa:ExchangeBidHousePriceAction;
+            var ebhpmsg:ExchangeBidHousePriceMessage;
+            var ebpfsmsg:ExchangeBidPriceForSellerMessage;
+            var ebhbrmsg:ExchangeBidHouseBuyResultMessage;
+            var ebpmsg:ExchangeBidPriceMessage;
+            var ebhiaomsg:ExchangeBidHouseItemAddOkMessage;
+            var iwrapper:ItemWrapper;
+            var priceObject:Number;
+            var unsoldDelay:uint;
+            var ebhiromsg:ExchangeBidHouseItemRemoveOkMessage;
+            var comptSellItem:uint;
+            var ebhgiamsg:ExchangeBidHouseGenericItemAddedMessage;
+            var typeAsk:int;
+            var typeObjectDt:TypeObjectData;
+            var ebhgirmsg:ExchangeBidHouseGenericItemRemovedMessage;
+            var typeAsked:uint;
+            var typeObjectD:TypeObjectData;
+            var gidIndex:int;
+            var eompa:ExchangeObjectModifyPricedAction;
+            var eomfpmsg:ExchangeObjectModifyPricedMessage;
+            var ebhilumsg:ExchangeBidHouseInListUpdatedMessage;
+            var utypeObjects:TypeObjectData;
+            var ugodat:GIDObjectData;
+            var ebhilamsg:ExchangeBidHouseInListAddedMessage;
+            var typeObjects:TypeObjectData;
+            var godat:GIDObjectData;
+            var ebhilrmsg:ExchangeBidHouseInListRemovedMessage;
+            var typeAsked_1:uint;
+            var GIDobj:GIDObjectData;
+            var comptGID:uint;
+            var etedfumsg:ExchangeTypesExchangerDescriptionForUserMessage;
+            var tod:TypeObjectData;
+            var etiedfumsg:ExchangeTypesItemsExchangerDescriptionForUserMessage;
+            var typeAsked_2:uint;
+            var goData0:GIDObjectData;
+            var goData:GIDObjectData;
+            var bhssa:BidHouseStringSearchAction;
+            var searchText:String;
+            var i:int;
+            var nItems:int;
+            var time:int;
+            var itemsMatch:Vector.<uint>;
+            var buyngarmsg:NpcGenericActionRequestMessage;
+            var sellngarmsg:NpcGenericActionRequestMessage;
+            var elm:ExchangeLeaveMessage;
             var ebhlmsg:ExchangeBidHouseListMessage;
-            var _local_53:ExchangeBidHouseListMessage;
+            var ebhlmsg2:ExchangeBidHouseListMessage;
             var objectToSell:ItemSellByPlayer;
             var ugoda:GIDObjectData;
             var objectUpdate:ItemSellByBid;
-            var objectsuPrice:Vector.<int>;
-            var priceu:uint;
+            var objectsuPrice:Vector.<Number>;
+            var priceu:Number;
             var goda:GIDObjectData;
             var itemwra:ItemWrapper;
-            var objectsPrice:Vector.<int>;
-            var pric:uint;
+            var objectsPrice:Vector.<Number>;
+            var pric:Number;
             var newGIDObject:GIDObjectData;
             var itemwra2:ItemWrapper;
-            var objectsPrice2:Vector.<int>;
-            var pric2:uint;
-            var _local_67:ItemSellByBid;
+            var objectsPrice2:Vector.<Number>;
+            var pric2:Number;
+            var isbbid:ItemSellByBid;
             var tod1:TypeObjectData;
             var tempObjects:Array;
             var objectGIDD:GIDObjectData;
@@ -196,321 +198,320 @@
             var goTest:GIDObjectData;
             var objectInfo:BidExchangerObjectInfo;
             var itemW:ItemWrapper;
-            var objectsPrices:Vector.<int>;
-            var pri:uint;
+            var objectsPrices:Vector.<Number>;
+            var pri:Number;
             var lsItems:Array;
-            var currentItem:Object;
+            var itemForSearch:Item;
             var currentName:String;
             switch (true)
             {
                 case (msg is ExchangeBidHouseSearchAction):
-                    _local_2 = (msg as ExchangeBidHouseSearchAction);
-                    if (((!((this._typeAsk == _local_2.type))) || ((this._typeAsk == _local_2.type))))
-                    {
-                        ebhsmsg = new ExchangeBidHouseSearchMessage();
-                        ebhsmsg.initExchangeBidHouseSearchMessage(_local_2.type, _local_2.genId);
-                        this._typeAsk = _local_2.type;
-                        this._GIDAsk = _local_2.genId;
-                        ConnectionsHandler.getConnection().send(ebhsmsg);
-                    };
+                    ebhsa = (msg as ExchangeBidHouseSearchAction);
+                    ebhsmsg = new ExchangeBidHouseSearchMessage();
+                    ebhsmsg.initExchangeBidHouseSearchMessage(ebhsa.genId, ebhsa.follow);
+                    this._GIDAsk = ebhsa.genId;
+                    ConnectionsHandler.getConnection().send(ebhsmsg);
                     return (true);
                 case (msg is ExchangeBidHouseListAction):
-                    _local_3 = (msg as ExchangeBidHouseListAction);
-                    if (this._GIDAsk != _local_3.id)
+                    ebhla = (msg as ExchangeBidHouseListAction);
+                    if (this._GIDAsk != ebhla.id)
                     {
-                        this._GIDAsk = _local_3.id;
+                        this._GIDAsk = ebhla.id;
                         ebhlmsg = new ExchangeBidHouseListMessage();
-                        ebhlmsg.initExchangeBidHouseListMessage(_local_3.id);
+                        ebhlmsg.initExchangeBidHouseListMessage(ebhla.id, ebhla.follow);
                         ConnectionsHandler.getConnection().send(ebhlmsg);
                     }
                     else
                     {
-                        _local_53 = new ExchangeBidHouseListMessage();
-                        _local_53.initExchangeBidHouseListMessage(_local_3.id);
-                        ConnectionsHandler.getConnection().send(_local_53);
+                        ebhlmsg2 = new ExchangeBidHouseListMessage();
+                        ebhlmsg2.initExchangeBidHouseListMessage(ebhla.id, ebhla.follow);
+                        ConnectionsHandler.getConnection().send(ebhlmsg2);
                     };
                     return (true);
                 case (msg is ExchangeBidHouseTypeAction):
-                    _local_4 = (msg as ExchangeBidHouseTypeAction);
-                    _local_5 = new ExchangeBidHouseTypeMessage();
-                    if (this._typeAsk != _local_4.type)
-                    {
-                        this._typeAsk = _local_4.type;
-                        _local_5.initExchangeBidHouseTypeMessage(_local_4.type);
-                        ConnectionsHandler.getConnection().send(_local_5);
-                    }
-                    else
-                    {
-                        _local_5.initExchangeBidHouseTypeMessage(_local_4.type);
-                        ConnectionsHandler.getConnection().send(_local_5);
-                    };
+                    ebhta = (msg as ExchangeBidHouseTypeAction);
+                    ebhtmsg = new ExchangeBidHouseTypeMessage();
+                    ebhtmsg.initExchangeBidHouseTypeMessage(ebhta.type, ebhta.follow);
+                    ConnectionsHandler.getConnection().send(ebhtmsg);
                     return (true);
                 case (msg is ExchangeBidHouseBuyAction):
-                    _local_6 = (msg as ExchangeBidHouseBuyAction);
-                    _local_7 = new ExchangeBidHouseBuyMessage();
-                    _local_7.initExchangeBidHouseBuyMessage(_local_6.uid, _local_6.qty, _local_6.price);
-                    ConnectionsHandler.getConnection().send(_local_7);
+                    ebhba = (msg as ExchangeBidHouseBuyAction);
+                    ebhbmsg = new ExchangeBidHouseBuyMessage();
+                    ebhbmsg.initExchangeBidHouseBuyMessage(ebhba.uid, ebhba.qty, ebhba.price);
+                    ConnectionsHandler.getConnection().send(ebhbmsg);
                     return (true);
                 case (msg is ExchangeBidHousePriceAction):
-                    _local_8 = (msg as ExchangeBidHousePriceAction);
-                    _local_9 = new ExchangeBidHousePriceMessage();
-                    _local_9.initExchangeBidHousePriceMessage(_local_8.genId);
-                    ConnectionsHandler.getConnection().send(_local_9);
+                    ebhpa = (msg as ExchangeBidHousePriceAction);
+                    ebhpmsg = new ExchangeBidHousePriceMessage();
+                    ebhpmsg.initExchangeBidHousePriceMessage(ebhpa.genId);
+                    ConnectionsHandler.getConnection().send(ebhpmsg);
                     return (true);
                 case (msg is ExchangeBidPriceForSellerMessage):
-                    _local_10 = (msg as ExchangeBidPriceForSellerMessage);
-                    this._kernelEventsManager.processCallback(ExchangeHookList.ExchangeBidPriceForSeller, _local_10.genericId, _local_10.averagePrice, _local_10.minimalPrices, _local_10.allIdentical);
+                    ebpfsmsg = (msg as ExchangeBidPriceForSellerMessage);
+                    this._kernelEventsManager.processCallback(ExchangeHookList.ExchangeBidPriceForSeller, ebpfsmsg.genericId, ebpfsmsg.averagePrice, ebpfsmsg.minimalPrices, ebpfsmsg.allIdentical);
+                    return (true);
+                case (msg is ExchangeBidHouseBuyResultMessage):
+                    ebhbrmsg = (msg as ExchangeBidHouseBuyResultMessage);
+                    this._kernelEventsManager.processCallback(ExchangeHookList.BidHouseBuyResult, ebhbrmsg.bought, ebhbrmsg.uid);
                     return (true);
                 case (msg is ExchangeBidPriceMessage):
-                    _local_11 = (msg as ExchangeBidPriceMessage);
-                    this._kernelEventsManager.processCallback(ExchangeHookList.ExchangeBidPrice, _local_11.genericId, _local_11.averagePrice);
+                    ebpmsg = (msg as ExchangeBidPriceMessage);
+                    this._kernelEventsManager.processCallback(ExchangeHookList.ExchangeBidPrice, ebpmsg.genericId, ebpmsg.averagePrice);
                     return (true);
                 case (msg is ExchangeBidHouseItemAddOkMessage):
-                    _local_12 = (msg as ExchangeBidHouseItemAddOkMessage);
-                    _local_13 = Item.getItemById(_local_12.itemInfo.objectGID);
-                    _local_14 = ItemWrapper.create(63, _local_12.itemInfo.objectUID, _local_12.itemInfo.objectGID, _local_12.itemInfo.quantity, _local_12.itemInfo.effects);
-                    _local_15 = _local_12.itemInfo.objectPrice;
-                    _local_16 = _local_12.itemInfo.unsoldDelay;
-                    this._vendorObjects.push(new ItemSellByPlayer(_local_14, _local_15, _local_16));
+                    ebhiaomsg = (msg as ExchangeBidHouseItemAddOkMessage);
+                    iwrapper = ItemWrapper.create(63, ebhiaomsg.itemInfo.objectUID, ebhiaomsg.itemInfo.objectGID, ebhiaomsg.itemInfo.quantity, ebhiaomsg.itemInfo.effects);
+                    priceObject = ebhiaomsg.itemInfo.objectPrice;
+                    unsoldDelay = ebhiaomsg.itemInfo.unsoldDelay;
+                    this._vendorObjects.push(new ItemSellByPlayer(iwrapper, priceObject, unsoldDelay));
                     this._kernelEventsManager.processCallback(ExchangeHookList.SellerObjectListUpdate, this._vendorObjects);
                     return (true);
                 case (msg is ExchangeBidHouseItemRemoveOkMessage):
-                    _local_17 = (msg as ExchangeBidHouseItemRemoveOkMessage);
-                    _local_18 = 0;
+                    ebhiromsg = (msg as ExchangeBidHouseItemRemoveOkMessage);
+                    comptSellItem = 0;
                     for each (objectToSell in this._vendorObjects)
                     {
-                        if (objectToSell.itemWrapper.objectUID == _local_17.sellerId)
+                        if (objectToSell.itemWrapper.objectUID == ebhiromsg.sellerId)
                         {
-                            this._vendorObjects.splice(_local_18, 1);
+                            this._vendorObjects.splice(comptSellItem, 1);
                         };
-                        _local_18++;
+                        comptSellItem++;
                     };
                     this._kernelEventsManager.processCallback(ExchangeHookList.SellerObjectListUpdate, this._vendorObjects);
                     return (true);
                 case (msg is ExchangeBidHouseGenericItemAddedMessage):
-                    _local_19 = (msg as ExchangeBidHouseGenericItemAddedMessage);
-                    _local_20 = this.getTypeObject(this._typeAsk);
-                    _local_20.objects.push(new GIDObjectData(_local_19.objGenericId, new Array()));
-                    this._kernelEventsManager.processCallback(ExchangeHookList.BidObjectTypeListUpdate, _local_20.objects);
+                    ebhgiamsg = (msg as ExchangeBidHouseGenericItemAddedMessage);
+                    typeAsk = Item.getItemById(ebhgiamsg.objGenericId).typeId;
+                    typeObjectDt = this.getTypeObject(typeAsk);
+                    typeObjectDt.objects.push(new GIDObjectData(ebhgiamsg.objGenericId, []));
+                    this._kernelEventsManager.processCallback(ExchangeHookList.BidObjectTypeListUpdate, typeObjectDt.objects, typeObjectDt.typeObject);
                     return (true);
                 case (msg is ExchangeBidHouseGenericItemRemovedMessage):
-                    _local_21 = (msg as ExchangeBidHouseGenericItemRemovedMessage);
-                    _local_22 = this.getTypeObject(this._typeAsk);
-                    _local_23 = this.getGIDObjectIndex(this._typeAsk, _local_21.objGenericId);
-                    if (_local_23 == -1)
+                    ebhgirmsg = (msg as ExchangeBidHouseGenericItemRemovedMessage);
+                    typeAsked = Item.getItemById(ebhgirmsg.objGenericId).typeId;
+                    typeObjectD = this.getTypeObject(typeAsked);
+                    gidIndex = this.getGIDObjectIndex(typeAsked, ebhgirmsg.objGenericId);
+                    if (gidIndex == -1)
                     {
                         return (true);
                     };
-                    _local_22.objects.splice(_local_23, 1);
-                    this._kernelEventsManager.processCallback(ExchangeHookList.BidObjectTypeListUpdate, _local_22.objects);
+                    typeObjectD.objects.splice(gidIndex, 1);
+                    this._kernelEventsManager.processCallback(ExchangeHookList.BidObjectTypeListUpdate, typeObjectD.objects, typeObjectD.typeObject);
                     return (true);
                 case (msg is ExchangeObjectModifyPricedAction):
-                    _local_24 = (msg as ExchangeObjectModifyPricedAction);
-                    _local_25 = new ExchangeObjectModifyPricedMessage();
-                    _local_25.initExchangeObjectModifyPricedMessage(_local_24.objectUID, _local_24.quantity, _local_24.price);
-                    ConnectionsHandler.getConnection().send(_local_25);
+                    eompa = (msg as ExchangeObjectModifyPricedAction);
+                    eomfpmsg = new ExchangeObjectModifyPricedMessage();
+                    eomfpmsg.initExchangeObjectModifyPricedMessage(eompa.objectUID, eompa.quantity, eompa.price);
+                    ConnectionsHandler.getConnection().send(eomfpmsg);
                     return (true);
                 case (msg is ExchangeBidHouseInListUpdatedMessage):
-                    _local_26 = (msg as ExchangeBidHouseInListUpdatedMessage);
-                    _local_27 = this.getTypeObject(this._typeAsk);
-                    for each (ugoda in _local_27.objects)
+                    ebhilumsg = (msg as ExchangeBidHouseInListUpdatedMessage);
+                    utypeObjects = this.getTypeObject(ebhilumsg.objectType);
+                    if (!utypeObjects)
                     {
-                        if (ugoda.GIDObject == _local_26.objGenericId)
+                        return (true);
+                    };
+                    for each (ugoda in utypeObjects.objects)
+                    {
+                        if (ugoda.GIDObject == ebhilumsg.objectGID)
                         {
-                            _local_28 = ugoda;
+                            ugodat = ugoda;
                             for each (objectUpdate in ugoda.objects)
                             {
-                                if (objectUpdate.itemWrapper.objectUID == _local_26.itemUID)
+                                if (objectUpdate.itemWrapper.objectUID == ebhilumsg.itemUID)
                                 {
-                                    objectUpdate.itemWrapper.update(63, _local_26.itemUID, _local_26.objGenericId, 1, _local_26.effects);
-                                    objectsuPrice = new Vector.<int>();
-                                    for each (priceu in _local_26.prices)
+                                    objectUpdate.itemWrapper.update(63, ebhilumsg.itemUID, ebhilumsg.objectGID, 1, ebhilumsg.effects);
+                                    objectsuPrice = new Vector.<Number>();
+                                    for each (priceu in ebhilumsg.prices)
                                     {
-                                        objectsuPrice.push((priceu as int));
+                                        objectsuPrice.push((priceu as Number));
                                     };
                                     objectUpdate.prices = objectsuPrice;
                                 };
                             };
                         };
                     };
-                    this._kernelEventsManager.processCallback(ExchangeHookList.BidObjectListUpdate, _local_28.objects);
+                    if (!ugodat)
+                    {
+                        return (true);
+                    };
+                    this._kernelEventsManager.processCallback(ExchangeHookList.BidObjectListUpdate, ugodat.objects, ebhilumsg.objectGID);
                     return (true);
                 case (msg is ExchangeBidHouseInListAddedMessage):
-                    _local_29 = (msg as ExchangeBidHouseInListAddedMessage);
-                    _local_30 = this.getTypeObject(this._typeAsk);
-                    for each (goda in _local_30.objects)
+                    ebhilamsg = (msg as ExchangeBidHouseInListAddedMessage);
+                    typeObjects = this.getTypeObject(ebhilamsg.objectType);
+                    for each (goda in typeObjects.objects)
                     {
-                        if (goda.GIDObject == _local_29.objGenericId)
+                        if (goda.GIDObject == ebhilamsg.objectGID)
                         {
-                            _local_31 = goda;
+                            godat = goda;
                             if (goda.objects == null)
                             {
-                                goda.objects = new Array();
+                                goda.objects = [];
                             };
-                            itemwra = ItemWrapper.create(63, _local_29.itemUID, _local_29.objGenericId, 1, _local_29.effects);
-                            objectsPrice = new Vector.<int>();
-                            for each (pric in _local_29.prices)
+                            itemwra = ItemWrapper.create(63, ebhilamsg.itemUID, ebhilamsg.objectGID, 1, ebhilamsg.effects);
+                            objectsPrice = new Vector.<Number>();
+                            for each (pric in ebhilamsg.prices)
                             {
-                                objectsPrice.push((pric as int));
+                                objectsPrice.push((pric as Number));
                             };
                             goda.objects.push(new ItemSellByBid(itemwra, objectsPrice));
                         };
                     };
-                    if (!(_local_31))
+                    if (!godat)
                     {
-                        newGIDObject = new GIDObjectData(_local_29.objGenericId, new Array());
-                        _local_31 = newGIDObject;
-                        itemwra2 = ItemWrapper.create(63, _local_29.itemUID, _local_29.objGenericId, 1, _local_29.effects);
-                        objectsPrice2 = new Vector.<int>();
-                        for each (pric2 in _local_29.prices)
+                        newGIDObject = new GIDObjectData(ebhilamsg.objectGID, []);
+                        godat = newGIDObject;
+                        itemwra2 = ItemWrapper.create(63, ebhilamsg.itemUID, ebhilamsg.objectGID, 1, ebhilamsg.effects);
+                        objectsPrice2 = new Vector.<Number>();
+                        for each (pric2 in ebhilamsg.prices)
                         {
-                            objectsPrice2.push((pric2 as int));
+                            objectsPrice2.push((pric2 as Number));
                         };
                         newGIDObject.objects.push(new ItemSellByBid(itemwra2, objectsPrice2));
-                        _local_30.objects.push(newGIDObject);
-                        this._kernelEventsManager.processCallback(ExchangeHookList.BidObjectTypeListUpdate, _local_30.objects);
+                        typeObjects.objects.push(newGIDObject);
+                        this._kernelEventsManager.processCallback(ExchangeHookList.BidObjectTypeListUpdate, typeObjects.objects, typeObjects.typeObject);
                     };
-                    this._kernelEventsManager.processCallback(ExchangeHookList.BidObjectListUpdate, _local_31.objects);
+                    this._kernelEventsManager.processCallback(ExchangeHookList.BidObjectListUpdate, godat.objects, ebhilamsg.objectGID);
                     return (true);
                 case (msg is ExchangeBidHouseInListRemovedMessage):
-                    _local_32 = (msg as ExchangeBidHouseInListRemovedMessage);
-                    _local_33 = 0;
-                    _local_34 = this.getGIDObject(this._typeAsk, this._GIDAsk);
-                    _local_35 = 0;
-                    if (_local_34 == null)
+                    ebhilrmsg = (msg as ExchangeBidHouseInListRemovedMessage);
+                    typeAsked_1 = ebhilrmsg.objectType;
+                    GIDobj = this.getGIDObject(typeAsked_1, ebhilrmsg.objectGID);
+                    comptGID = 0;
+                    if (GIDobj == null)
                     {
                         return (true);
                     };
-                    for each (_local_67 in _local_34.objects)
+                    for each (isbbid in GIDobj.objects)
                     {
-                        if (_local_32.itemUID == _local_67.itemWrapper.objectUID)
+                        if (ebhilrmsg.itemUID == isbbid.itemWrapper.objectUID)
                         {
-                            _local_34.objects.splice(_local_35, 1);
+                            GIDobj.objects.splice(comptGID, 1);
                         };
-                        _local_35++;
+                        comptGID++;
                     };
-                    if (_local_34.objects.length == 0)
+                    if (GIDobj.objects.length == 0)
                     {
-                        tod1 = this.getTypeObject(this._typeAsk);
-                        tempObjects = new Array();
+                        tod1 = this.getTypeObject(typeAsked_1);
+                        tempObjects = [];
                         for each (objectGIDD in tod1.objects)
                         {
-                            if (objectGIDD.GIDObject != this._GIDAsk)
+                            if (objectGIDD.GIDObject != ebhilrmsg.objectGID)
                             {
                                 tempObjects.push(objectGIDD);
                             };
                         };
                         tod1.objects = tempObjects;
-                        this._kernelEventsManager.processCallback(ExchangeHookList.BidObjectTypeListUpdate, tod1.objects);
+                        this._kernelEventsManager.processCallback(ExchangeHookList.BidObjectTypeListUpdate, tod1.objects, tod1.typeObject);
                     };
-                    this._kernelEventsManager.processCallback(ExchangeHookList.BidObjectListUpdate, _local_34.objects);
+                    this._kernelEventsManager.processCallback(ExchangeHookList.BidObjectListUpdate, GIDobj.objects, ebhilrmsg.objectGID);
                     return (true);
                 case (msg is ExchangeTypesExchangerDescriptionForUserMessage):
-                    _local_36 = (msg as ExchangeTypesExchangerDescriptionForUserMessage);
-                    _local_37 = this.getTypeObject(this._typeAsk);
-                    _local_37.objects = new Array();
-                    for each (objectGID in _local_36.typeDescription)
+                    etedfumsg = (msg as ExchangeTypesExchangerDescriptionForUserMessage);
+                    tod = this.getTypeObject(etedfumsg.objectType);
+                    tod.objects = [];
+                    for each (objectGID in etedfumsg.typeDescription)
                     {
-                        _local_37.objects.push(new GIDObjectData(objectGID, new Array()));
+                        tod.objects.push(new GIDObjectData(objectGID, []));
                     };
-                    this._kernelEventsManager.processCallback(ExchangeHookList.BidObjectTypeListUpdate, _local_37.objects);
+                    this._kernelEventsManager.processCallback(ExchangeHookList.BidObjectTypeListUpdate, tod.objects, tod.typeObject);
                     return (true);
                 case (msg is ExchangeTypesItemsExchangerDescriptionForUserMessage):
-                    _local_38 = (msg as ExchangeTypesItemsExchangerDescriptionForUserMessage);
-                    _local_39 = this.getGIDObject(this._typeAsk, this._GIDAsk);
-                    if (!(_local_39))
+                    etiedfumsg = (msg as ExchangeTypesItemsExchangerDescriptionForUserMessage);
+                    typeAsked_2 = etiedfumsg.objectType;
+                    if (etiedfumsg.itemTypeDescriptions.length > 0)
                     {
-                        tod0 = this.getTypeObject(this._typeAsk);
-                        goTest = new GIDObjectData(this._GIDAsk, new Array());
-                        if (!(tod0.objects))
+                        this._GIDAsk = (etiedfumsg.itemTypeDescriptions[0] as BidExchangerObjectInfo).objectGID;
+                    };
+                    goData0 = this.getGIDObject(typeAsked_2, this._GIDAsk);
+                    if (!goData0)
+                    {
+                        tod0 = this.getTypeObject(typeAsked_2);
+                        goTest = new GIDObjectData(this._GIDAsk, []);
+                        if (tod0)
                         {
-                            tod0.objects = new Array();
-                        };
-                        if (tod0.objects.indexOf(goTest) == -1)
-                        {
-                            tod0.objects.push(goTest);
+                            if (!tod0.objects)
+                            {
+                                tod0.objects = [];
+                            };
+                            if (tod0.objects.indexOf(goTest) == -1)
+                            {
+                                tod0.objects.push(goTest);
+                            };
                         };
                     };
-                    _local_40 = this.getGIDObject(this._typeAsk, this._GIDAsk);
-                    if (_local_40)
+                    goData = this.getGIDObject(typeAsked_2, this._GIDAsk);
+                    if (goData)
                     {
-                        _local_40.objects = new Array();
-                        for each (objectInfo in _local_38.itemTypeDescriptions)
+                        goData.objects = [];
+                        for each (objectInfo in etiedfumsg.itemTypeDescriptions)
                         {
-                            itemW = ItemWrapper.create(63, objectInfo.objectUID, this._GIDAsk, 1, objectInfo.effects);
-                            objectsPrices = new Vector.<int>();
+                            itemW = ItemWrapper.create(63, objectInfo.objectUID, objectInfo.objectGID, 1, objectInfo.effects);
+                            objectsPrices = new Vector.<Number>();
                             for each (pri in objectInfo.prices)
                             {
-                                objectsPrices.push((pri as int));
+                                objectsPrices.push((pri as Number));
                             };
-                            _local_40.objects.push(new ItemSellByBid(itemW, objectsPrices));
+                            goData.objects.push(new ItemSellByBid(itemW, objectsPrices));
                         };
-                        this._kernelEventsManager.processCallback(ExchangeHookList.BidObjectListUpdate, _local_40.objects, false, true);
+                        this._kernelEventsManager.processCallback(ExchangeHookList.BidObjectListUpdate, goData.objects, this._GIDAsk, false, true);
                     }
                     else
                     {
-                        this._kernelEventsManager.processCallback(ExchangeHookList.BidObjectListUpdate, null, false, true);
+                        this._kernelEventsManager.processCallback(ExchangeHookList.BidObjectListUpdate, null, this._GIDAsk, false, true);
                     };
                     return (true);
-                case (msg is ExchangeBidSearchOkMessage):
-                    _local_41 = (msg as ExchangeBidSearchOkMessage);
-                    return (true);
                 case (msg is BidHouseStringSearchAction):
-                    _local_42 = (msg as BidHouseStringSearchAction);
-                    _local_43 = _local_42.searchString;
-                    _local_46 = getTimer();
-                    _local_47 = new Vector.<uint>();
+                    bhssa = (msg as BidHouseStringSearchAction);
+                    searchText = StringUtils.noAccent(bhssa.searchString);
+                    time = getTimer();
+                    itemsMatch = new Vector.<uint>();
                     if (this._listItemsSearchMode == null)
                     {
                         this._listItemsSearchMode = new Array();
                         lsItems = Item.getItems();
-                        _local_45 = lsItems.length;
-                        _local_44 = 0;
-                        while (_local_44 < _local_45)
+                        nItems = lsItems.length;
+                        for each (itemForSearch in lsItems)
                         {
-                            currentItem = lsItems[_local_44];
-                            if (((currentItem) && (!((this._itemsTypesAllowed.indexOf(currentItem.typeId) == -1)))))
+                            if ((((itemForSearch) && (!(this._itemsTypesAllowed.indexOf(itemForSearch.typeId) == -1))) && (itemForSearch.name)))
                             {
-                                if (currentItem.name)
-                                {
-                                    this._listItemsSearchMode.push(currentItem.name.toLowerCase(), currentItem.id);
-                                };
+                                this._listItemsSearchMode.push(itemForSearch.undiatricalName, itemForSearch.id);
                             };
-                            _local_44++;
                         };
-                        _log.debug((("Initialisation recherche HDV en " + (getTimer() - _local_46)) + " ms."));
+                        _log.debug((("Initialisation recherche HDV en " + (getTimer() - time)) + " ms."));
                     };
-                    _local_45 = this._listItemsSearchMode.length;
-                    _local_44 = 0;
-                    while (_local_44 < _local_45)
+                    nItems = this._listItemsSearchMode.length;
+                    i = 0;
+                    while (i < nItems)
                     {
-                        currentName = this._listItemsSearchMode[_local_44];
-                        if (currentName.indexOf(_local_43) != -1)
+                        currentName = StringUtils.noAccent(this._listItemsSearchMode[i]);
+                        if (currentName.indexOf(searchText) != -1)
                         {
-                            _local_47.push(this._listItemsSearchMode[(_local_44 + 1)]);
+                            itemsMatch.push(this._listItemsSearchMode[(i + 1)]);
                         };
-                        _local_44 = (_local_44 + 2);
+                        i = (i + 2);
                     };
-                    this._kernelEventsManager.processCallback(ExchangeHookList.BidObjectTypeListUpdate, _local_47, true);
+                    this._kernelEventsManager.processCallback(ExchangeHookList.BidObjectTypeListUpdate, itemsMatch, 0, true);
                     return (true);
                 case (msg is BidSwitchToBuyerModeAction):
                     this._switching = true;
-                    _local_48 = new NpcGenericActionRequestMessage();
-                    _local_48.initNpcGenericActionRequestMessage(this._NPCId, 6, PlayedCharacterManager.getInstance().currentMap.mapId);
-                    ConnectionsHandler.getConnection().send(_local_48);
+                    buyngarmsg = new NpcGenericActionRequestMessage();
+                    buyngarmsg.initNpcGenericActionRequestMessage(this._NPCId, 6, PlayedCharacterManager.getInstance().currentMap.mapId);
+                    ConnectionsHandler.getConnection().send(buyngarmsg);
                     return (true);
                 case (msg is BidSwitchToSellerModeAction):
                     this._switching = true;
-                    _local_49 = new NpcGenericActionRequestMessage();
-                    _local_49.initNpcGenericActionRequestMessage(this._NPCId, 5, PlayedCharacterManager.getInstance().currentMap.mapId);
-                    ConnectionsHandler.getConnection().send(_local_49);
+                    sellngarmsg = new NpcGenericActionRequestMessage();
+                    sellngarmsg.initNpcGenericActionRequestMessage(this._NPCId, 5, PlayedCharacterManager.getInstance().currentMap.mapId);
+                    ConnectionsHandler.getConnection().send(sellngarmsg);
                     return (true);
                 case (msg is ExchangeLeaveMessage):
-                    _local_50 = (msg as ExchangeLeaveMessage);
-                    if (_local_50.dialogType == DialogTypeEnum.DIALOG_EXCHANGE)
+                    elm = (msg as ExchangeLeaveMessage);
+                    if (((elm.dialogType == DialogTypeEnum.DIALOG_EXCHANGE) && (!(this.switching))))
                     {
                         PlayedCharacterManager.getInstance().isInExchange = false;
-                        this._success = _local_50.success;
+                        this._success = elm.success;
                         Kernel.getWorker().removeFrame(this);
                     };
                     return (true);
@@ -526,7 +527,7 @@
 
         public function pulled():Boolean
         {
-            if (!(this.switching))
+            if (!this.switching)
             {
                 if (Kernel.getWorker().contains(CommonExchangeManagementFrame))
                 {
@@ -645,7 +646,7 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.frames
+} com.ankamagames.dofus.logic.game.common.frames
 
 import com.ankamagames.dofus.internalDatacenter.items.ItemWrapper;
 import __AS3__.vec.Vector;
@@ -654,10 +655,10 @@ class ItemSellByPlayer
 {
 
     public var itemWrapper:ItemWrapper;
-    public var price:int;
+    public var price:Number = 0;
     public var unsoldDelay:uint;
 
-    public function ItemSellByPlayer(pItemWrapper:ItemWrapper, pPrice:int, pUnsoldDelay:uint)
+    public function ItemSellByPlayer(pItemWrapper:ItemWrapper, pPrice:Number, pUnsoldDelay:uint)
     {
         this.itemWrapper = pItemWrapper;
         this.price = pPrice;
@@ -665,19 +666,21 @@ class ItemSellByPlayer
     }
 
 }
+
 class ItemSellByBid 
 {
 
     public var itemWrapper:ItemWrapper;
-    public var prices:Vector.<int>;
+    public var prices:Vector.<Number>;
 
-    public function ItemSellByBid(pItemWrapper:ItemWrapper, pPrices:Vector.<int>)
+    public function ItemSellByBid(pItemWrapper:ItemWrapper, pPrices:Vector.<Number>)
     {
         this.itemWrapper = pItemWrapper;
         this.prices = pPrices;
     }
 
 }
+
 class TypeObjectData 
 {
 
@@ -691,6 +694,7 @@ class TypeObjectData
     }
 
 }
+
 class GIDObjectData 
 {
 
@@ -704,4 +708,5 @@ class GIDObjectData
     }
 
 }
+
 

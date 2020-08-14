@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.roleplay.frames
+package com.ankamagames.dofus.logic.game.roleplay.frames
 {
     import com.ankamagames.jerakine.messages.Frame;
     import com.ankamagames.jerakine.logger.Logger;
@@ -32,11 +32,22 @@
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(EstateFrame));
 
         private var _estateList:Array;
+        private var _estateType:uint;
 
 
         public function get priority():int
         {
             return (Priority.NORMAL);
+        }
+
+        public function get estateType():uint
+        {
+            return (this._estateType);
+        }
+
+        public function get estateList():Array
+        {
+            return (this._estateList);
         }
 
         public function pushed():Boolean
@@ -46,17 +57,17 @@
 
         public function process(msg:Message):Boolean
         {
-            var _local_2:HouseToSellListMessage;
-            var _local_3:PaddockToSellListMessage;
-            var _local_4:HouseToSellFilterAction;
-            var _local_5:HouseToSellFilterMessage;
-            var _local_6:PaddockToSellFilterAction;
-            var _local_7:PaddockToSellFilterMessage;
-            var _local_8:HouseToSellListRequestAction;
-            var _local_9:HouseToSellListRequestMessage;
-            var _local_10:PaddockToSellListRequestAction;
-            var _local_11:PaddockToSellListRequestMessage;
-            var _local_12:LeaveDialogRequestMessage;
+            var htslmsg:HouseToSellListMessage;
+            var ptslmsg:PaddockToSellListMessage;
+            var htsfa:HouseToSellFilterAction;
+            var htsfmsg:HouseToSellFilterMessage;
+            var ptsfa:PaddockToSellFilterAction;
+            var pfmsg:PaddockToSellFilterMessage;
+            var htslra:HouseToSellListRequestAction;
+            var htslrmsg:HouseToSellListRequestMessage;
+            var ptslra:PaddockToSellListRequestAction;
+            var ptslrmsg:PaddockToSellListRequestMessage;
+            var ldrmsg:LeaveDialogRequestMessage;
             var house:HouseInformationsForSell;
             var estHouse:Estate;
             var paddock:PaddockInformationsForSell;
@@ -64,52 +75,54 @@
             switch (true)
             {
                 case (msg is HouseToSellListMessage):
-                    _local_2 = (msg as HouseToSellListMessage);
+                    htslmsg = (msg as HouseToSellListMessage);
+                    this._estateType = 0;
                     this._estateList = new Array();
-                    for each (house in _local_2.houseList)
+                    for each (house in htslmsg.houseList)
                     {
                         estHouse = new Estate(house);
                         this._estateList.push(estHouse);
                     };
-                    KernelEventsManager.getInstance().processCallback(RoleplayHookList.EstateToSellList, this._estateList, _local_2.pageIndex, _local_2.totalPage, 0);
+                    KernelEventsManager.getInstance().processCallback(RoleplayHookList.EstateToSellList, this._estateList, htslmsg.pageIndex, htslmsg.totalPage, this._estateType);
                     return (true);
                 case (msg is PaddockToSellListMessage):
-                    _local_3 = (msg as PaddockToSellListMessage);
+                    ptslmsg = (msg as PaddockToSellListMessage);
+                    this._estateType = 1;
                     this._estateList = new Array();
-                    for each (paddock in _local_3.paddockList)
+                    for each (paddock in ptslmsg.paddockList)
                     {
                         estPaddock = new Estate(paddock);
                         this._estateList.push(estPaddock);
                     };
-                    KernelEventsManager.getInstance().processCallback(RoleplayHookList.EstateToSellList, this._estateList, _local_3.pageIndex, _local_3.totalPage, 1);
+                    KernelEventsManager.getInstance().processCallback(RoleplayHookList.EstateToSellList, this._estateList, ptslmsg.pageIndex, ptslmsg.totalPage, this._estateType);
                     return (true);
                 case (msg is HouseToSellFilterAction):
-                    _local_4 = (msg as HouseToSellFilterAction);
-                    _local_5 = new HouseToSellFilterMessage();
-                    _local_5.initHouseToSellFilterMessage(_local_4.areaId, _local_4.atLeastNbRoom, _local_4.atLeastNbChest, _local_4.skillRequested, _local_4.maxPrice);
-                    ConnectionsHandler.getConnection().send(_local_5);
+                    htsfa = (msg as HouseToSellFilterAction);
+                    htsfmsg = new HouseToSellFilterMessage();
+                    htsfmsg.initHouseToSellFilterMessage(htsfa.areaId, htsfa.atLeastNbRoom, htsfa.atLeastNbChest, htsfa.skillRequested, htsfa.maxPrice, htsfa.orderBy);
+                    ConnectionsHandler.getConnection().send(htsfmsg);
                     return (true);
                 case (msg is PaddockToSellFilterAction):
-                    _local_6 = (msg as PaddockToSellFilterAction);
-                    _local_7 = new PaddockToSellFilterMessage();
-                    _local_7.initPaddockToSellFilterMessage(_local_6.areaId, _local_6.atLeastNbMount, _local_6.atLeastNbMachine, _local_6.maxPrice);
-                    ConnectionsHandler.getConnection().send(_local_7);
+                    ptsfa = (msg as PaddockToSellFilterAction);
+                    pfmsg = new PaddockToSellFilterMessage();
+                    pfmsg.initPaddockToSellFilterMessage(ptsfa.areaId, ptsfa.atLeastNbMount, ptsfa.atLeastNbMachine, ptsfa.maxPrice, ptsfa.orderBy);
+                    ConnectionsHandler.getConnection().send(pfmsg);
                     return (true);
                 case (msg is HouseToSellListRequestAction):
-                    _local_8 = (msg as HouseToSellListRequestAction);
-                    _local_9 = new HouseToSellListRequestMessage();
-                    _local_9.initHouseToSellListRequestMessage(_local_8.pageIndex);
-                    ConnectionsHandler.getConnection().send(_local_9);
+                    htslra = (msg as HouseToSellListRequestAction);
+                    htslrmsg = new HouseToSellListRequestMessage();
+                    htslrmsg.initHouseToSellListRequestMessage(htslra.pageIndex);
+                    ConnectionsHandler.getConnection().send(htslrmsg);
                     return (true);
                 case (msg is PaddockToSellListRequestAction):
-                    _local_10 = (msg as PaddockToSellListRequestAction);
-                    _local_11 = new PaddockToSellListRequestMessage();
-                    _local_11.initPaddockToSellListRequestMessage(_local_10.pageIndex);
-                    ConnectionsHandler.getConnection().send(_local_11);
+                    ptslra = (msg as PaddockToSellListRequestAction);
+                    ptslrmsg = new PaddockToSellListRequestMessage();
+                    ptslrmsg.initPaddockToSellListRequestMessage(ptslra.pageIndex);
+                    ConnectionsHandler.getConnection().send(ptslrmsg);
                     return (true);
                 case (msg is LeaveDialogRequestAction):
-                    _local_12 = new LeaveDialogRequestMessage();
-                    ConnectionsHandler.getConnection().send(_local_12);
+                    ldrmsg = new LeaveDialogRequestMessage();
+                    ConnectionsHandler.getConnection().send(ldrmsg);
                     return (true);
             };
             return (false);
@@ -123,5 +136,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.roleplay.frames
+} com.ankamagames.dofus.logic.game.roleplay.frames
 

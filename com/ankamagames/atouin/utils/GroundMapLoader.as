@@ -1,12 +1,13 @@
-﻿package com.ankamagames.atouin.utils
+package com.ankamagames.atouin.utils
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
-    import flash.display.Loader;
+    import com.ankamagames.jerakine.pools.PoolableLoader;
     import com.ankamagames.atouin.data.map.Map;
     import flash.filesystem.FileStream;
     import flash.utils.ByteArray;
+    import com.ankamagames.jerakine.pools.PoolsManager;
     import flash.events.Event;
     import flash.events.IOErrorEvent;
     import flash.events.ProgressEvent;
@@ -24,7 +25,7 @@
 
         private var _callBack:Function;
         private var _errorCallBack:Function;
-        private var _loader:Loader;
+        private var _loader:PoolableLoader;
         private var _map:Map;
         private var _groundIsLoaded:Boolean = false;
         private var _time:int = 0;
@@ -39,7 +40,7 @@
                 this._map = map;
                 this._callBack = callBack;
                 this._errorCallBack = errorCallBack;
-                this._loader = new Loader();
+                this._loader = (PoolsManager.getInstance().getLoadersPool().checkOut() as PoolableLoader);
                 this._loader.contentLoaderInfo.addEventListener(Event.COMPLETE, this.onJPGReady);
                 this._loader.contentLoaderInfo.addEventListener(IOErrorEvent.IO_ERROR, this.onError);
                 this._loader.contentLoaderInfo.addEventListener(ProgressEvent.PROGRESS, this.onProgress);
@@ -53,11 +54,11 @@
                 fileStream.close();
                 this._loader.loadBytes(rawJPG);
             }
-            catch(e:Error)
+            catch(error:Error)
             {
-                if (e)
+                if (error)
                 {
-                    _log.fatal(e.getStackTrace());
+                    _log.fatal(error.getStackTrace());
                 };
                 onError(null);
             };
@@ -65,7 +66,7 @@
 
         public static function loadGroundMap(map:Map, file:File, callBack:Function, errorCallBack:Function):void
         {
-            new (GroundMapLoader)(map, file, callBack, errorCallBack);
+            new GroundMapLoader(map, file, callBack, errorCallBack);
         }
 
 
@@ -76,21 +77,19 @@
             {
                 this._groundIsLoaded = true;
                 bitmap = (this._loader.content as Bitmap);
-                if ((((this._map.groundCacheCurrentlyUsed == GroundCache.GROUND_CACHE_LOW_QUALITY)) || ((this._map.groundCacheCurrentlyUsed == GroundCache.GROUND_CACHE_MEDIUM_QUALITY))))
+                if (((this._map.groundCacheCurrentlyUsed == GroundCache.GROUND_CACHE_LOW_QUALITY) || (this._map.groundCacheCurrentlyUsed == GroundCache.GROUND_CACHE_MEDIUM_QUALITY)))
                 {
                     bitmap.width = AtouinConstants.RESOLUTION_HIGH_QUALITY.x;
                     bitmap.height = AtouinConstants.RESOLUTION_HIGH_QUALITY.y;
                 };
-                this._loader.contentLoaderInfo.removeEventListener(Event.INIT, this.onJPGReady);
-                this._loader.contentLoaderInfo.removeEventListener(IOErrorEvent.IO_ERROR, this.onError);
-                this._loader.contentLoaderInfo.removeEventListener(ProgressEvent.PROGRESS, this.onProgress);
                 this._callBack(bitmap);
+                this.destroy();
             }
-            catch(e:Error)
+            catch(error:Error)
             {
-                if (e)
+                if (error)
                 {
-                    _log.fatal(e.getStackTrace());
+                    _log.fatal(error.getStackTrace());
                 };
                 onError(null);
             };
@@ -98,11 +97,12 @@
 
         private function onError(e:Event):void
         {
-            _log.info("On a pas pu charger la map :/");
-            this._errorCallBack(this._map.id);
-            this._loader.contentLoaderInfo.removeEventListener(Event.INIT, this.onJPGReady);
-            this._loader.contentLoaderInfo.removeEventListener(IOErrorEvent.IO_ERROR, this.onError);
-            this._loader.contentLoaderInfo.removeEventListener(ProgressEvent.PROGRESS, this.onProgress);
+            if (this._map)
+            {
+                _log.info(("Failed to load ground resource for map " + this._map.id));
+                this._errorCallBack(this._map.id);
+                this.destroy();
+            };
         }
 
         private function onProgress(e:ProgressEvent):void
@@ -117,7 +117,7 @@
         {
             if (this._time > 5)
             {
-                if (!(this._groundIsLoaded))
+                if (!this._groundIsLoaded)
                 {
                     this._groundIsLoaded = true;
                     this.onError(null);
@@ -130,7 +130,22 @@
             };
         }
 
+        private function destroy():void
+        {
+            if (this._loader)
+            {
+                this._loader.contentLoaderInfo.removeEventListener(Event.COMPLETE, this.onJPGReady);
+                this._loader.contentLoaderInfo.removeEventListener(IOErrorEvent.IO_ERROR, this.onError);
+                this._loader.contentLoaderInfo.removeEventListener(ProgressEvent.PROGRESS, this.onProgress);
+                PoolsManager.getInstance().getLoadersPool().checkIn(this._loader);
+                this._loader = null;
+            };
+            this._map = null;
+            this._callBack = null;
+            this._errorCallBack = null;
+        }
+
 
     }
-}//package com.ankamagames.atouin.utils
+} com.ankamagames.atouin.utils
 

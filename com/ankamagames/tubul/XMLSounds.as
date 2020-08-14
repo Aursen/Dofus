@@ -1,4 +1,4 @@
-﻿package com.ankamagames.tubul
+package com.ankamagames.tubul
 {
     import com.ankamagames.jerakine.types.Uri;
     import com.ankamagames.jerakine.managers.LangManager;
@@ -13,5 +13,5 @@
 
 
     }
-}//package com.ankamagames.tubul
+} com.ankamagames.tubul
 

@@ -1,6 +1,7 @@
-﻿package com.ankamagames.dofus.datacenter.quest.treasureHunt
+package com.ankamagames.dofus.datacenter.quest.treasureHunt
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
+    import com.ankamagames.dofus.types.IdAccessors;
     import com.ankamagames.jerakine.data.GameData;
     import com.ankamagames.jerakine.data.I18n;
 
@@ -8,6 +9,7 @@
     {
 
         public static const MODULE:String = "PointOfInterestCategory";
+        public static var idAccessors:IdAccessors = new IdAccessors(getPointOfInterestCategoryById, getPointOfInterestCategories);
 
         public var id:uint;
         public var actionLabelId:uint;
@@ -16,7 +18,7 @@
 
         public static function getPointOfInterestCategoryById(id:int):PointOfInterestCategory
         {
-            return ((GameData.getObject(MODULE, id) as PointOfInterestCategory));
+            return (GameData.getObject(MODULE, id) as PointOfInterestCategory);
         }
 
         public static function getPointOfInterestCategories():Array
@@ -27,7 +29,7 @@
 
         public function get actionLabel():String
         {
-            if (!(this._actionLabel))
+            if (!this._actionLabel)
             {
                 this._actionLabel = I18n.getText(this.actionLabelId);
             };
@@ -36,5 +38,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.quest.treasureHunt
+} com.ankamagames.dofus.datacenter.quest.treasureHunt
 

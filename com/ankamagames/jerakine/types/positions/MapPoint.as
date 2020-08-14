@@ -1,5 +1,8 @@
-﻿package com.ankamagames.jerakine.types.positions
+package com.ankamagames.jerakine.types.positions
 {
+    import com.ankamagames.jerakine.logger.Logger;
+    import com.ankamagames.jerakine.logger.Log;
+    import flash.utils.getQualifiedClassName;
     import flash.geom.Point;
     import com.ankamagames.jerakine.types.enums.DirectionsEnum;
     import com.ankamagames.jerakine.map.IDataMapProvider;
@@ -10,6 +13,7 @@
     public class MapPoint 
     {
 
+        protected static const _log:Logger = Log.getLogger(getQualifiedClassName(MapPoint));
         private static const VECTOR_RIGHT:Point = new Point(1, 1);
         private static const VECTOR_DOWN_RIGHT:Point = new Point(1, 0);
         private static const VECTOR_DOWN:Point = new Point(1, -1);
@@ -47,12 +51,13 @@
 
         public static function getOrientationsDistance(currentOrientation:int, defaultOrientation:int):int
         {
-            return (Math.min(Math.abs((defaultOrientation - currentOrientation)), Math.abs(((8 - defaultOrientation) + currentOrientation))));
+            var dist:int = Math.min(Math.abs((defaultOrientation - currentOrientation)), Math.abs(((8 - defaultOrientation) + currentOrientation)));
+            return (dist);
         }
 
         public static function isInMap(x:int, y:int):Boolean
         {
-            return (((((((((x + y) >= 0)) && (((x - y) >= 0)))) && (((x - y) < (MAP_HEIGHT * 2))))) && (((x + y) < (MAP_WIDTH * 2)))));
+            return (((((x + y) >= 0) && ((x - y) >= 0)) && ((x - y) < (MAP_HEIGHT * 2))) && ((x + y) < (MAP_WIDTH * 2)));
         }
 
         private static function init():void
@@ -131,62 +136,61 @@
 
         public function distanceToCell(cell:MapPoint):int
         {
-            return ((Math.abs((this.x - cell.x)) + Math.abs((this.y - cell.y))));
+            return (Math.abs((this.x - cell.x)) + Math.abs((this.y - cell.y)));
         }
 
         public function orientationTo(mp:MapPoint):uint
         {
             var result:uint;
-            if ((((this.x == mp.x)) && ((this.y == mp.y))))
+            if (((this.x == mp.x) && (this.y == mp.y)))
             {
                 return (1);
             };
-            var pt:Point = new Point();
-            pt.x = (((mp.x)>this.x) ? 1 : (((mp.x)<this.x) ? -1 : 0));
-            pt.y = (((mp.y)>this.y) ? 1 : (((mp.y)<this.y) ? -1 : 0));
-            if ((((pt.x == VECTOR_RIGHT.x)) && ((pt.y == VECTOR_RIGHT.y))))
+            var ptX:int = ((mp.x > this.x) ? 1 : ((mp.x < this.x) ? -1 : 0));
+            var ptY:int = ((mp.y > this.y) ? 1 : ((mp.y < this.y) ? -1 : 0));
+            if (((ptX == VECTOR_RIGHT.x) && (ptY == VECTOR_RIGHT.y)))
             {
                 result = DirectionsEnum.RIGHT;
             }
             else
             {
-                if ((((pt.x == VECTOR_DOWN_RIGHT.x)) && ((pt.y == VECTOR_DOWN_RIGHT.y))))
+                if (((ptX == VECTOR_DOWN_RIGHT.x) && (ptY == VECTOR_DOWN_RIGHT.y)))
                 {
                     result = DirectionsEnum.DOWN_RIGHT;
                 }
                 else
                 {
-                    if ((((pt.x == VECTOR_DOWN.x)) && ((pt.y == VECTOR_DOWN.y))))
+                    if (((ptX == VECTOR_DOWN.x) && (ptY == VECTOR_DOWN.y)))
                     {
                         result = DirectionsEnum.DOWN;
                     }
                     else
                     {
-                        if ((((pt.x == VECTOR_DOWN_LEFT.x)) && ((pt.y == VECTOR_DOWN_LEFT.y))))
+                        if (((ptX == VECTOR_DOWN_LEFT.x) && (ptY == VECTOR_DOWN_LEFT.y)))
                         {
                             result = DirectionsEnum.DOWN_LEFT;
                         }
                         else
                         {
-                            if ((((pt.x == VECTOR_LEFT.x)) && ((pt.y == VECTOR_LEFT.y))))
+                            if (((ptX == VECTOR_LEFT.x) && (ptY == VECTOR_LEFT.y)))
                             {
                                 result = DirectionsEnum.LEFT;
                             }
                             else
                             {
-                                if ((((pt.x == VECTOR_UP_LEFT.x)) && ((pt.y == VECTOR_UP_LEFT.y))))
+                                if (((ptX == VECTOR_UP_LEFT.x) && (ptY == VECTOR_UP_LEFT.y)))
                                 {
                                     result = DirectionsEnum.UP_LEFT;
                                 }
                                 else
                                 {
-                                    if ((((pt.x == VECTOR_UP.x)) && ((pt.y == VECTOR_UP.y))))
+                                    if (((ptX == VECTOR_UP.x) && (ptY == VECTOR_UP.y)))
                                     {
                                         result = DirectionsEnum.UP;
                                     }
                                     else
                                     {
-                                        if ((((pt.x == VECTOR_UP_RIGHT.x)) && ((pt.y == VECTOR_UP_RIGHT.y))))
+                                        if (((ptX == VECTOR_UP_RIGHT.x) && (ptY == VECTOR_UP_RIGHT.y)))
                                         {
                                             result = DirectionsEnum.UP_RIGHT;
                                         };
@@ -200,22 +204,22 @@
             return (result);
         }
 
-        public function advancedOrientationTo(mp:MapPoint, fourDir:Boolean=true):uint
+        public function advancedOrientationTo(target:MapPoint, fourDir:Boolean=true):uint
         {
-            if (!(mp))
+            if (!target)
             {
                 return (0);
             };
-            var ac:int = (mp.x - this.x);
-            var bc:int = (this.y - mp.y);
-            var angle:int = (((Math.acos((ac / Math.sqrt((Math.pow(ac, 2) + Math.pow(bc, 2))))) * 180) / Math.PI) * (((mp.y > this.y)) ? -1 : 1));
+            var xDifference:int = (target.x - this.x);
+            var yDifference:int = (this.y - target.y);
+            var angle:int = (((Math.acos((xDifference / Math.sqrt((Math.pow(xDifference, 2) + Math.pow(yDifference, 2))))) * 180) / Math.PI) * ((target.y > this.y) ? -1 : 1));
             if (fourDir)
             {
-                angle = ((Math.round((angle / 90)) * 2) + 1);
+                angle = int(((Math.round((angle / 90)) * 2) + 1));
             }
             else
             {
-                angle = (Math.round((angle / 45)) + 1);
+                angle = int((Math.round((angle / 45)) + 1));
             };
             if (angle < 0)
             {
@@ -278,7 +282,6 @@
         {
             var i:int;
             var speed:int;
-            var weight:int;
             var mp:MapPoint;
             if (forbidenCellsId == null)
             {
@@ -290,38 +293,54 @@
             while (i < 8)
             {
                 mp = this.getNearestCellInDirection(i);
-                if (((!((mp == null))) && ((forbidenCellsId.indexOf(mp.cellId) == -1))))
+                cells[i] = mp;
+                if (mp != null)
                 {
                     speed = mapProvider.getCellSpeed(mp.cellId);
-                    if (!(mapProvider.pointMov(mp._nX, mp._nY, allowThoughEntity, this.cellId)))
+                    if (forbidenCellsId.indexOf(mp.cellId) == -1)
                     {
-                        speed = -100;
+                        if (mapProvider.pointMov(mp._nX, mp._nY, allowThoughEntity, this.cellId))
+                        {
+                            weights[i] = (getOrientationsDistance(i, orientation) + ((ignoreSpeed) ? 0 : ((speed >= 0) ? (5 - speed) : (11 + Math.abs(speed)))));
+                        }
+                        else
+                        {
+                            forbidenCellsId.push(mp.cellId);
+                            weights[i] = -1;
+                        };
+                    }
+                    else
+                    {
+                        weights[i] = ((mapProvider.pointMov(mp._nX, mp._nY, allowThoughEntity, this.cellId)) ? ((100 + getOrientationsDistance(i, orientation)) + ((ignoreSpeed) ? 0 : ((speed >= 0) ? (5 - speed) : (11 + Math.abs(speed))))) : -1);
                     };
-                    weights[i] = (getOrientationsDistance(i, orientation) + ((!(ignoreSpeed)) ? (((speed)>=0) ? (5 - speed) : (11 + Math.abs(speed))) : 0));
                 }
                 else
                 {
-                    weights[i] = 1000;
+                    weights[i] = -1;
                 };
-                cells[i] = mp;
                 i++;
             };
-            mp = null;
-            var minWeightOrientation:int;
-            var minWeight:int = weights[0];
-            i = 1;
+            var minWeightOrientation:int = -1;
+            var minWeight:* = 10000;
+            i = 0;
             while (i < 8)
             {
-                weight = weights[i];
-                if ((((weight < minWeight)) && (!((cells[i] == null)))))
+                if ((((!(weights[i] == -1)) && (weights[i] < minWeight)) && (!(cells[i] == null))))
                 {
-                    minWeight = weight;
+                    minWeight = weights[i];
                     minWeightOrientation = i;
                 };
                 i++;
             };
-            mp = cells[minWeightOrientation];
-            if ((((((mp == null)) && (allowItself))) && (mapProvider.pointMov(this._nX, this._nY, allowThoughEntity, this.cellId))))
+            if (minWeightOrientation != -1)
+            {
+                mp = cells[minWeightOrientation];
+            }
+            else
+            {
+                mp = null;
+            };
+            if ((((mp == null) && (allowItself)) && (mapProvider.pointMov(this._nX, this._nY, allowThoughEntity, this.cellId))))
             {
                 return (this);
             };
@@ -341,17 +360,17 @@
 
         public function equals(mp:MapPoint):Boolean
         {
-            return ((mp.cellId == this.cellId));
+            return (mp.cellId == this.cellId);
         }
 
         public function toString():String
         {
-            return ((((((("[MapPoint(x:" + this._nX) + ", y:") + this._nY) + ", id:") + this._nCellId) + ")]"));
+            return (((((("[MapPoint(x:" + this._nX) + ", y:") + this._nY) + ", id:") + this._nCellId) + ")]");
         }
 
         private function setFromCoords():void
         {
-            if (!(_bInit))
+            if (!_bInit)
             {
                 init();
             };
@@ -360,11 +379,11 @@
 
         private function setFromCellId():void
         {
-            if (!(_bInit))
+            if (!_bInit)
             {
                 init();
             };
-            if (!(CELLPOS[this._nCellId]))
+            if (!CELLPOS[this._nCellId])
             {
                 throw (new JerakineError((("Cell identifier out of bounds (" + this._nCellId) + ").")));
             };
@@ -375,5 +394,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.types.positions
+} com.ankamagames.jerakine.types.positions
 

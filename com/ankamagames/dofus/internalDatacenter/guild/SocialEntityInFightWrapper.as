@@ -1,6 +1,9 @@
-﻿package com.ankamagames.dofus.internalDatacenter.guild
+package com.ankamagames.dofus.internalDatacenter.guild
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
+    import com.ankamagames.jerakine.logger.Logger;
+    import com.ankamagames.jerakine.logger.Log;
+    import flash.utils.getQualifiedClassName;
     import com.ankamagames.dofus.network.types.game.character.CharacterMinimalPlusLookInformations;
     import com.ankamagames.dofus.kernel.Kernel;
     import com.ankamagames.dofus.logic.game.common.frames.SocialFrame;
@@ -8,10 +11,11 @@
     public class SocialEntityInFightWrapper implements IDataCenter 
     {
 
+        protected static const _log:Logger = Log.getLogger(getQualifiedClassName(SocialEntityInFightWrapper));
         private static const TYPE_TAX_COLLECTOR:int = 0;
         private static const TYPE_PRISM:int = 1;
 
-        public var uniqueId:int;
+        public var uniqueId:Number;
         public var typeId:int;
         public var fightTime:int;
         public var allyCharactersInformations:Array;
@@ -20,7 +24,7 @@
         public var nbPositionPerTeam:uint;
 
 
-        public static function create(pType:int, pId:int, pAllies:Array=null, pEnemies:Array=null, fightTime:int=2147483647, waitTimeForPlacement:Number=0, nbPositionPerTeam:uint=5):SocialEntityInFightWrapper
+        public static function create(pType:int, pId:Number, pAllies:Array=null, pEnemies:Array=null, fightTime:int=2147483647, waitTimeForPlacement:Number=0, nbPositionPerTeam:uint=5):SocialEntityInFightWrapper
         {
             var item:SocialEntityInFightWrapper;
             var ally:CharacterMinimalPlusLookInformations;
@@ -45,7 +49,7 @@
         }
 
 
-        public function update(pType:int, pId:int, pAllies:Array, pEnemies:Array, pFightTime:int=2147483647, pWaitTimeForPlacement:Number=0, pNbPositionPerTeam:uint=5):void
+        public function update(pType:int, pId:Number, pAllies:Array, pEnemies:Array, pFightTime:int=2147483647, pWaitTimeForPlacement:Number=0, pNbPositionPerTeam:uint=5):void
         {
             var ally:CharacterMinimalPlusLookInformations;
             var enemy:CharacterMinimalPlusLookInformations;
@@ -79,18 +83,25 @@
             {
                 this.allyCharactersInformations = new Array();
             };
-            if ((((((this.allyCharactersInformations.length == 0)) || (!(this.allyCharactersInformations[0])))) || (!((this.allyCharactersInformations[0].playerCharactersInformations.entityLook == info.entityLook)))))
+            if ((((this.allyCharactersInformations.length == 0) || (!(this.allyCharactersInformations[0]))) || (!(this.allyCharactersInformations[0].playerCharactersInformations.entityLook == info.entityLook))))
             {
                 tcFighter = new CharacterMinimalPlusLookInformations();
                 tcFighter.entityLook = info.entityLook;
                 tcFighter.id = info.uniqueId;
-                if (Kernel.getWorker().getFrame(SocialFrame) != null)
+                if (info.guild)
                 {
-                    tcFighter.level = (Kernel.getWorker().getFrame(SocialFrame) as SocialFrame).guild.level;
+                    tcFighter.level = info.guild.guildLevel;
                 }
                 else
                 {
-                    tcFighter.level = 0;
+                    if (Kernel.getWorker().getFrame(SocialFrame) != null)
+                    {
+                        tcFighter.level = (Kernel.getWorker().getFrame(SocialFrame) as SocialFrame).guild.level;
+                    }
+                    else
+                    {
+                        tcFighter.level = 0;
+                    };
                 };
                 tcFighter.name = ((info.lastName + " ") + info.firstName);
                 this.allyCharactersInformations.splice(0, 0, SocialFightersWrapper.create(0, tcFighter));
@@ -99,5 +110,5 @@
 
 
     }
-}//package com.ankamagames.dofus.internalDatacenter.guild
+} com.ankamagames.dofus.internalDatacenter.guild
 

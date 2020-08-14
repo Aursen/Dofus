@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.datacenter.interactives
+package com.ankamagames.dofus.datacenter.interactives
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.jerakine.data.GameData;
@@ -16,13 +16,13 @@
 
         public static function getSkillNameById(id:int):SkillName
         {
-            return ((GameData.getObject(MODULE, id) as SkillName));
+            return (GameData.getObject(MODULE, id) as SkillName);
         }
 
 
         public function get name():String
         {
-            if (!(this._name))
+            if (!this._name)
             {
                 this._name = I18n.getText(this.nameId);
             };
@@ -31,5 +31,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.interactives
+} com.ankamagames.dofus.datacenter.interactives
 

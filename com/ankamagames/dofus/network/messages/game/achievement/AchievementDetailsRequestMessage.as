@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.achievement
+package com.ankamagames.dofus.network.messages.game.achievement
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class AchievementDetailsRequestMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -52,6 +52,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_AchievementDetailsRequestMessage(output);
@@ -73,6 +81,21 @@
 
         public function deserializeAs_AchievementDetailsRequestMessage(input:ICustomDataInput):void
         {
+            this._achievementIdFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_AchievementDetailsRequestMessage(tree);
+        }
+
+        public function deserializeAsyncAs_AchievementDetailsRequestMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._achievementIdFunc);
+        }
+
+        private function _achievementIdFunc(input:ICustomDataInput):void
+        {
             this.achievementId = input.readVarUhShort();
             if (this.achievementId < 0)
             {
@@ -82,5 +105,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.achievement
+} com.ankamagames.dofus.network.messages.game.achievement
 

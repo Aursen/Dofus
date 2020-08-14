@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.actions
+package com.ankamagames.dofus.network.messages.game.actions
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class GameActionAcknowledgementMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -55,6 +55,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_GameActionAcknowledgementMessage(output);
@@ -73,11 +81,32 @@
 
         public function deserializeAs_GameActionAcknowledgementMessage(input:ICustomDataInput):void
         {
+            this._validFunc(input);
+            this._actionIdFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GameActionAcknowledgementMessage(tree);
+        }
+
+        public function deserializeAsyncAs_GameActionAcknowledgementMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._validFunc);
+            tree.addChild(this._actionIdFunc);
+        }
+
+        private function _validFunc(input:ICustomDataInput):void
+        {
             this.valid = input.readBoolean();
+        }
+
+        private function _actionIdFunc(input:ICustomDataInput):void
+        {
             this.actionId = input.readByte();
         }
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.actions
+} com.ankamagames.dofus.network.messages.game.actions
 

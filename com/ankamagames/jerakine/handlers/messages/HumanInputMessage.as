@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.handlers.messages
+package com.ankamagames.jerakine.handlers.messages
 {
     import com.ankamagames.jerakine.messages.Message;
     import com.ankamagames.jerakine.messages.DiscardableMessage;
@@ -21,7 +21,7 @@
 
         public static function create(target:InteractiveObject, nativeEvent:Event, instance:HumanInputMessage=null):HumanInputMessage
         {
-            if (!(instance))
+            if (!instance)
             {
                 instance = new (HumanInputMessage)();
             };
@@ -82,5 +82,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.handlers.messages
+} com.ankamagames.jerakine.handlers.messages
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.common.misc
+package com.ankamagames.dofus.logic.game.common.misc
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
@@ -8,6 +8,7 @@
     import com.ankamagames.dofus.internalDatacenter.items.ItemWrapper;
     import __AS3__.vec.Vector;
     import com.ankamagames.dofus.network.types.game.data.items.ObjectItem;
+    import com.ankamagames.dofus.internalDatacenter.DataEnum;
     import com.ankamagames.dofus.network.enums.CharacterInventoryPositionEnum;
     import com.ankamagames.dofus.logic.game.common.managers.PlayedCharacterManager;
     import __AS3__.vec.*;
@@ -16,21 +17,15 @@
     {
 
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(Inventory));
-        public static const HIDDEN_TYPE_ID:uint = 118;
-        public static const PETSMOUNT_TYPE_ID:uint = 121;
-        public static const COMPANION_TYPE_ID:uint = 169;
 
-        private var _itemsDict:Dictionary;
+        private var _itemsDict:Dictionary = new Dictionary();
         private var _views:Dictionary;
-        private var _hookLock:HookLock;
-        private var _kamas:int;
-        private var _hiddedKamas:int;
+        private var _hookLock:HookLock = new HookLock();
+        private var _kamas:Number = 0;
+        private var _hiddedKamas:Number = 0;
 
         public function Inventory()
         {
-            this._itemsDict = new Dictionary();
-            this._hookLock = new HookLock();
-            super();
             this._views = new Dictionary();
         }
 
@@ -39,23 +34,23 @@
             return (this._hookLock);
         }
 
-        public function get localKamas():int
+        public function get localKamas():Number
         {
             return (this._kamas);
         }
 
-        public function get kamas():int
+        public function get kamas():Number
         {
             return (this._kamas);
         }
 
-        public function set kamas(value:int):void
+        public function set kamas(value:Number):void
         {
             this._kamas = value;
             StorageOptionManager.getInstance().updateStorageView();
         }
 
-        public function set hiddedKamas(kamas:int):void
+        public function set hiddedKamas(kamas:Number):void
         {
             StorageOptionManager.getInstance().updateStorageView();
         }
@@ -88,10 +83,26 @@
             return (null);
         }
 
+        public function getItemWithGID(gid:int):Array
+        {
+            var objectUid:String;
+            var currentItemWrapper:ItemWrapper;
+            var itemWrappers:Array = [];
+            for (objectUid in this._itemsDict)
+            {
+                currentItemWrapper = this._itemsDict[objectUid].item;
+                if (((!(currentItemWrapper === null)) && (currentItemWrapper.objectGID === gid)))
+                {
+                    itemWrappers.push(currentItemWrapper);
+                };
+            };
+            return (itemWrappers);
+        }
+
         public function getItemMaskCount(uid:int, mask:String):int
         {
             var itemSet:ItemSet = this._itemsDict[uid];
-            if (!(itemSet))
+            if (!itemSet)
             {
                 _log.error("Suppression d'un item qui n'existe pas");
                 return (0);
@@ -164,14 +175,14 @@
 
         public function removeItem(itemUID:int, quantity:int=-1):void
         {
-            var _local_4:ItemWrapper;
+            var oldItem:ItemWrapper;
             var itemSet:ItemSet = this._itemsDict[itemUID];
-            if (!(itemSet))
+            if (!itemSet)
             {
                 _log.error("Suppression d'un item qui n'existe pas");
                 return;
             };
-            if ((((quantity == -1)) || ((quantity == itemSet.item.quantity))))
+            if (((quantity == -1) || (quantity == itemSet.item.quantity)))
             {
                 delete this._itemsDict[itemUID];
                 this.removeItemFromViews(itemSet);
@@ -183,22 +194,21 @@
                     _log.error("On essaye de supprimer de l'inventaire plus d'objet qu'il n'en existe");
                     return;
                 };
-                _local_4 = itemSet.item.clone();
+                oldItem = itemSet.item.clone();
                 itemSet.item.quantity = (itemSet.item.quantity - quantity);
-                this.modifyItemFromViews(itemSet, _local_4);
+                this.modifyItemFromViews(itemSet, oldItem);
             };
         }
 
         public function modifyItemQuantity(itemUID:int, quantity:int):void
         {
-            var iw:ItemWrapper;
             var itemSet:ItemSet = this._itemsDict[itemUID];
-            if (!(itemSet))
+            if (!itemSet)
             {
                 _log.error("On essaye de modifier la quantité d'un objet qui n'existe pas");
                 return;
             };
-            iw = itemSet.item.clone();
+            var iw:ItemWrapper = itemSet.item.clone();
             iw.quantity = quantity;
             this.modifyItem(iw);
         }
@@ -206,14 +216,14 @@
         public function modifyItemPosition(itemUID:int, position:int):void
         {
             var itemSet:ItemSet = this._itemsDict[itemUID];
-            if (!(itemSet))
+            if (!itemSet)
             {
                 _log.error("On essaye de modifier la position d'un objet qui n'existe pas");
                 return;
             };
             var iw:ItemWrapper = itemSet.item.clone();
             iw.position = position;
-            if (iw.typeId == PETSMOUNT_TYPE_ID)
+            if (iw.typeId == DataEnum.ITEM_TYPE_PETSMOUNT)
             {
                 if (position == CharacterInventoryPositionEnum.ACCESSORY_POSITION_PETS)
                 {
@@ -226,9 +236,9 @@
             }
             else
             {
-                if (iw.typeId == COMPANION_TYPE_ID)
+                if (iw.typeId == DataEnum.ITEM_TYPE_COMPANION)
                 {
-                    if (position == CharacterInventoryPositionEnum.INVENTORY_POSITION_COMPANION)
+                    if (position == CharacterInventoryPositionEnum.INVENTORY_POSITION_ENTITY)
                     {
                         PlayedCharacterManager.getInstance().hasCompanion = true;
                     }
@@ -241,10 +251,11 @@
             this.modifyItem(iw);
         }
 
-        public function modifyObjectItem(item:ObjectItem):void
+        public function modifyObjectItem(item:ObjectItem):ItemWrapper
         {
             var iw:ItemWrapper = ItemWrapper.create(item.position, item.objectUID, item.objectGID, item.quantity, item.effects, false);
             this.modifyItem(iw);
+            return (iw);
         }
 
         public function modifyItem(item:ItemWrapper):void
@@ -266,7 +277,7 @@
         public function addItemMask(objectUID:int, name:String, size:int):void
         {
             var itemSet:ItemSet = this._itemsDict[objectUID];
-            if (!(itemSet))
+            if (!itemSet)
             {
                 _log.error("On essaye de masquer un item qui n'existe pas dans l'inventaire");
                 return;
@@ -278,9 +289,8 @@
         public function removeItemMask(objectUID:int, name:String):void
         {
             var itemSet:ItemSet = this._itemsDict[objectUID];
-            if (!(itemSet))
+            if (!itemSet)
             {
-                _log.error("On essaye de retirer le masque d'un item qui n'existe pas dans l'inventaire");
                 return;
             };
             delete itemSet.masks[name];
@@ -318,10 +328,10 @@
             this._hookLock.release();
         }
 
-        public function refillView(from:String, to:String):void
+        public function refillView(from:String, _arg_2:String):void
         {
             var fromView:IInventoryView = this.getView(from);
-            var toView:IInventoryView = this.getView(to);
+            var toView:IInventoryView = this.getView(_arg_2);
             if (((!(fromView)) || (!(toView))))
             {
                 return;
@@ -401,7 +411,7 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.misc
+} com.ankamagames.dofus.logic.game.common.misc
 
 import com.ankamagames.dofus.internalDatacenter.items.ItemWrapper;
 import flash.utils.Dictionary;
@@ -419,7 +429,7 @@ class ItemSet
 
     public function get masks():Dictionary
     {
-        if (!(this._masks))
+        if (!this._masks)
         {
             this._masks = new Dictionary();
         };
@@ -433,4 +443,5 @@ class ItemSet
 
 
 }
+
 

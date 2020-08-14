@@ -1,9 +1,10 @@
-﻿package com.ankamagames.dofus.datacenter.houses
+package com.ankamagames.dofus.datacenter.houses
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
+    import com.ankamagames.dofus.types.IdAccessors;
     import com.ankamagames.jerakine.data.GameData;
     import com.ankamagames.jerakine.data.I18n;
 
@@ -12,6 +13,7 @@
 
         public static const MODULE:String = "Houses";
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(House));
+        public static var idAccessors:IdAccessors = new IdAccessors(getGuildHouseById, null);
 
         public var typeId:int;
         public var defaultPrice:uint;
@@ -24,13 +26,13 @@
 
         public static function getGuildHouseById(id:int):House
         {
-            return ((GameData.getObject(MODULE, id) as House));
+            return (GameData.getObject(MODULE, id) as House);
         }
 
 
         public function get name():String
         {
-            if (!(this._name))
+            if (!this._name)
             {
                 this._name = I18n.getText(this.nameId);
             };
@@ -39,7 +41,7 @@
 
         public function get description():String
         {
-            if (!(this._description))
+            if (!this._description)
             {
                 this._description = I18n.getText(this.descriptionId);
             };
@@ -48,5 +50,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.houses
+} com.ankamagames.dofus.datacenter.houses
 

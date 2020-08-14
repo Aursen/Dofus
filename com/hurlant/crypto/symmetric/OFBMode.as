@@ -1,4 +1,4 @@
-﻿package com.hurlant.crypto.symmetric
+package com.hurlant.crypto.symmetric
 {
     import flash.utils.ByteArray;
 
@@ -34,7 +34,7 @@
                 key.encrypt(iv);
                 tmp.position = 0;
                 tmp.writeBytes(iv);
-                chunk = ((((i + blockSize))<l) ? blockSize : (l - i));
+                chunk = (((i + blockSize) < l) ? blockSize : (l - i));
                 j = 0;
                 while (j < chunk)
                 {
@@ -49,10 +49,10 @@
 
         public function toString():String
         {
-            return ((key.toString() + "-ofb"));
+            return (key.toString() + "-ofb");
         }
 
 
     }
-}//package com.hurlant.crypto.symmetric
+} com.hurlant.crypto.symmetric
 

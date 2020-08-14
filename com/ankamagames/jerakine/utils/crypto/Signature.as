@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.utils.crypto
+package com.ankamagames.jerakine.utils.crypto
 {
     import com.hurlant.crypto.rsa.RSAKey;
     import flash.utils.ByteArray;
@@ -6,10 +6,10 @@
     import by.blooddy.crypto.MD5;
     import flash.utils.IDataInput;
     import com.ankamagames.jerakine.utils.errors.SignatureError;
+    import by.blooddy.crypto.SHA256;
     import flash.filesystem.File;
     import flash.filesystem.FileStream;
     import flash.filesystem.FileMode;
-    import by.blooddy.crypto.SHA256;
 
     public class Signature 
     {
@@ -20,25 +20,30 @@
         private var _key:SignatureKey;
         private var _keyV2:RSAKey;
 
-        public function Signature(key:*)
+        public function Signature(... keys)
         {
-            if (!(key))
+            var key:*;
+            super();
+            if (keys.length == 0)
             {
-                throw (new ArgumentError("Key must be not null"));
+                throw (new ArgumentError("You must provide at least one key"));
             };
-            if ((key is SignatureKey))
+            for each (key in keys)
             {
-                this._key = key;
-            }
-            else
-            {
-                if ((key is RSAKey))
+                if ((key is SignatureKey))
                 {
-                    this._keyV2 = key;
+                    this._key = key;
                 }
                 else
                 {
-                    throw (new ArgumentError("Invalid key type"));
+                    if ((key is RSAKey))
+                    {
+                        this._keyV2 = key;
+                    }
+                    else
+                    {
+                        throw (new ArgumentError("Invalid key type"));
+                    };
                 };
             };
         }
@@ -46,7 +51,7 @@
         public function sign(data:IDataInput, includeData:Boolean=true):ByteArray
         {
             var adaptedData:ByteArray;
-            if (!(this._key.canSign))
+            if (!this._key.canSign)
             {
                 throw (new Error("La clef fournit ne permet pas de signer des données"));
             };
@@ -62,12 +67,11 @@
             };
             var startPos:uint = adaptedData["position"];
             var hash:ByteArray = new ByteArray();
-            var random:uint = (Math.random() * 0xFF);
+            var random:uint = uint((Math.random() * 0xFF));
             hash.writeByte(random);
             hash.writeUnsignedInt(adaptedData.bytesAvailable);
             var tH:Number = getTimer();
             hash.writeUTFBytes(MD5.hash(adaptedData.readUTFBytes(adaptedData.bytesAvailable)));
-            trace((("Temps de hash pour signature : " + (getTimer() - tH)) + " ms"));
             var i:uint = 2;
             while (i < hash.length)
             {
@@ -93,15 +97,16 @@
 
         public function verify(input:IDataInput, output:ByteArray):Boolean
         {
+            var headerSize:uint;
             var header:String;
             var headerPosition:int;
-            header = input.readUTF();
-            if (header != ANKAMA_SIGNED_FILE_HEADER)
+            headerSize = input.readUnsignedShort();
+            if (headerSize != ANKAMA_SIGNED_FILE_HEADER.length)
             {
                 input["position"] = 0;
                 headerPosition = (input.bytesAvailable - ANKAMA_SIGNED_FILE_HEADER.length);
                 input["position"] = headerPosition;
-                header = input.readUTFBytes(4);
+                header = input.readUTFBytes(ANKAMA_SIGNED_FILE_HEADER.length);
                 if (header == ANKAMA_SIGNED_FILE_HEADER)
                 {
                     return (this.verifyV2Signature(input, output, headerPosition));
@@ -109,7 +114,11 @@
             }
             else
             {
-                return (this.verifyV1Signature(input, output));
+                header = input.readUTFBytes(ANKAMA_SIGNED_FILE_HEADER.length);
+                if (header == ANKAMA_SIGNED_FILE_HEADER)
+                {
+                    return (this.verifyV1Signature(input, output));
+                };
             };
             throw (new SignatureError("Invalid header", SignatureError.INVALID_HEADER));
         }
@@ -152,9 +161,8 @@
             input.readBytes(output);
             var tH:Number = getTimer();
             var contentHash:String = MD5.hash(output.readUTFBytes(output.bytesAvailable)).substr(1);
-            trace((("Temps de hash pour validation de signature : " + (getTimer() - tH)) + " ms"));
             output.position = 0;
-            var result:Boolean = ((((signHash) && ((signHash == contentHash)))) && ((contentLen == testedContentLen)));
+            var result:Boolean = (((signHash) && (signHash == contentHash)) && (contentLen == testedContentLen));
             return (result);
         }
 
@@ -164,8 +172,6 @@
             var cryptedData:ByteArray;
             var sigData:ByteArray;
             var tsDecrypt:uint;
-            var f:File;
-            var fs:FileStream;
             var sigHeader:String;
             var sigVersion:uint;
             var sigFileLenght:uint;
@@ -174,7 +180,7 @@
             var tsHash:uint;
             var contentHash:String;
             var sigDate:Date;
-            if (!(this._keyV2))
+            if (!this._keyV2)
             {
                 throw (new SignatureError("No key for this signature version"));
             };
@@ -188,17 +194,10 @@
                 sigData = new ByteArray();
                 tsDecrypt = getTimer();
                 this._keyV2.verify(cryptedData, sigData, cryptedData.length);
-                trace((("Décryptage en " + (getTimer() - tsDecrypt)) + " ms"));
-                f = new File(File.applicationDirectory.resolvePath("log.bin").nativePath);
-                fs = new FileStream();
-                fs.open(f, FileMode.WRITE);
-                fs.writeBytes(sigData);
-                fs.close();
                 sigData.position = 0;
                 sigHeader = sigData.readUTF();
                 if (sigHeader != SIGNATURE_HEADER)
                 {
-                    trace(((("Header crypté de signature incorrect, " + SIGNATURE_HEADER) + " attendu, lu :") + sigHeader));
                     return (false);
                 };
                 sigVersion = sigData.readByte();
@@ -207,7 +206,6 @@
                 sigFileLenght = sigData.readInt();
                 if (sigFileLenght != ((headerPosition - 4) - signedDataLenght))
                 {
-                    trace(((("Longueur de fichier incorrect, " + sigFileLenght) + " attendu, lu :") + ((headerPosition - 4) - signedDataLenght)));
                     return (false);
                 };
                 hashType = sigData.readByte();
@@ -227,19 +225,15 @@
                         return (false);
                 };
                 output.position = 0;
-                trace((("Hash en " + (getTimer() - tsHash)) + " ms"));
                 sigDate = new Date();
                 sigDate.setTime(sigData.readDouble());
-                trace(sigDate);
                 if (sigHash != contentHash)
                 {
-                    trace(((("Hash incorrect, " + sigHash) + " attendu, lu :") + contentHash));
                     return (false);
                 };
             }
             catch(e:Error)
             {
-                trace(e.getStackTrace());
                 return (false);
             };
             return (true);
@@ -263,7 +257,7 @@
             var tsHash:uint;
             var contentHash:String;
             var sigDate:Date;
-            if (!(this._keyV2))
+            if (!this._keyV2)
             {
                 throw (new SignatureError("No key for this signature version"));
             };
@@ -284,7 +278,6 @@
                 sigData = new ByteArray();
                 tsDecrypt = getTimer();
                 this._keyV2.verify(cryptedData, sigData, cryptedData.length);
-                trace((("Décryptage en " + (getTimer() - tsDecrypt)) + " ms"));
                 f = new File(File.applicationDirectory.resolvePath("log.bin").nativePath);
                 fs = new FileStream();
                 fs.open(f, FileMode.WRITE);
@@ -294,7 +287,6 @@
                 sigHeader = sigData.readUTF();
                 if (sigHeader != SIGNATURE_HEADER)
                 {
-                    trace(((("Header crypté de signature incorrect, " + SIGNATURE_HEADER) + " attendu, lu :") + sigHeader));
                     return (false);
                 };
                 sigVersion = sigData.readByte();
@@ -303,7 +295,6 @@
                 sigFileLenght = sigData.readInt();
                 if (sigFileLenght != (swfContent as ByteArray).length)
                 {
-                    trace(((("Longueur de fichier incorrect, " + sigFileLenght) + " attendu, lu :") + (swfContent as ByteArray).length));
                     return (false);
                 };
                 hashType = sigData.readByte();
@@ -323,19 +314,15 @@
                         return (false);
                 };
                 output.position = 0;
-                trace((("Hash en " + (getTimer() - tsHash)) + " ms"));
                 sigDate = new Date();
                 sigDate.setTime(sigData.readDouble());
-                trace(sigDate);
                 if (sigHash != contentHash)
                 {
-                    trace(((("Hash incorrect, " + sigHash) + " attendu, lu :") + contentHash));
                     return (false);
                 };
             }
             catch(e:Error)
             {
-                trace(e.getStackTrace());
                 return (false);
             };
             return (true);
@@ -350,10 +337,9 @@
                 tmp[i] = d[i];
                 i++;
             };
-            trace(tmp.join(","));
         }
 
 
     }
-}//package com.ankamagames.jerakine.utils.crypto
+} com.ankamagames.jerakine.utils.crypto
 

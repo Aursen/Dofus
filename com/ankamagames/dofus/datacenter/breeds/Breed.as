@@ -1,11 +1,13 @@
-﻿package com.ankamagames.dofus.datacenter.breeds
+package com.ankamagames.dofus.datacenter.breeds
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
+    import com.ankamagames.dofus.types.IdAccessors;
     import __AS3__.vec.Vector;
     import com.ankamagames.dofus.datacenter.spells.Spell;
+    import com.ankamagames.dofus.datacenter.spells.SpellVariant;
     import com.ankamagames.jerakine.data.GameData;
     import com.ankamagames.dofus.datacenter.appearance.SkinMapping;
     import com.ankamagames.jerakine.data.I18n;
@@ -18,12 +20,14 @@
         public static const MODULE:String = "Breeds";
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(Breed));
         private static var _skinsForBreed:Array = new Array();
+        public static var idAccessors:IdAccessors = new IdAccessors(getBreedById, getBreeds);
 
         public var id:int;
         public var shortNameId:uint;
         public var longNameId:uint;
         public var descriptionId:uint;
         public var gameplayDescriptionId:uint;
+        public var gameplayClassDescriptionId:uint;
         public var maleLook:String;
         public var femaleLook:String;
         public var creatureBonesId:uint;
@@ -40,16 +44,21 @@
         public var maleColors:Vector.<uint>;
         public var femaleColors:Vector.<uint>;
         public var spawnMap:uint;
+        public var complexity:uint;
+        public var sortIndex:uint;
         private var _shortName:String;
         private var _longName:String;
         private var _description:String;
         private var _gameplayDescription:String;
-        private var _breedSpells:Vector.<Spell>;
+        private var _gameplayClassDescription:String;
+        private var _allSpellsId:Array;
+        private var _breedSpellsVariants:Vector.<Spell>;
+        private var _breedSpellVariants:Vector.<SpellVariant>;
 
 
         public static function getBreedById(id:int):Breed
         {
-            return ((GameData.getObject(MODULE, id) as Breed));
+            return (GameData.getObject(MODULE, id) as Breed);
         }
 
         public static function getBreeds():Array
@@ -63,7 +72,7 @@
             var breed:Breed;
             var look:String;
             var id:int;
-            if (!(_skinsForBreed.length))
+            if (!_skinsForBreed.length)
             {
                 for each (breed in getBreeds())
                 {
@@ -84,13 +93,18 @@
                     id = _skinsForBreed[skinKnown];
                 };
             };
-            return ((GameData.getObject(MODULE, id) as Breed));
+            return (GameData.getObject(MODULE, id) as Breed);
         }
 
 
+        public function get name():String
+        {
+            return (this.shortName);
+        }
+
         public function get shortName():String
         {
-            if (!(this._shortName))
+            if (!this._shortName)
             {
                 this._shortName = I18n.getText(this.shortNameId);
             };
@@ -99,7 +113,7 @@
 
         public function get longName():String
         {
-            if (!(this._longName))
+            if (!this._longName)
             {
                 this._longName = I18n.getText(this.longNameId);
             };
@@ -108,7 +122,7 @@
 
         public function get description():String
         {
-            if (!(this._description))
+            if (!this._description)
             {
                 this._description = I18n.getText(this.descriptionId);
             };
@@ -117,25 +131,57 @@
 
         public function get gameplayDescription():String
         {
-            if (!(this._gameplayDescription))
+            if (!this._gameplayDescription)
             {
                 this._gameplayDescription = I18n.getText(this.gameplayDescriptionId);
             };
             return (this._gameplayDescription);
         }
 
-        public function get breedSpells():Vector.<Spell>
+        public function get gameplayClassDescription():String
         {
-            var spellId:uint;
-            if (((!(this._breedSpells)) && (!((Spell.getSpellById(1) == null)))))
+            if (!this._gameplayClassDescription)
             {
-                this._breedSpells = new Vector.<Spell>();
-                for each (spellId in this.breedSpellsId)
+                this._gameplayClassDescription = I18n.getText(this.gameplayClassDescriptionId);
+            };
+            return (this._gameplayClassDescription);
+        }
+
+        public function get allSpellsId():Array
+        {
+            var variant:SpellVariant;
+            var spellId:int;
+            if (!this._allSpellsId)
+            {
+                this._allSpellsId = new Array();
+                for each (variant in this.breedSpellVariants)
                 {
-                    this._breedSpells.push(Spell.getSpellById(spellId));
+                    for each (spellId in variant.spellIds)
+                    {
+                        this._allSpellsId.push(spellId);
+                    };
                 };
             };
-            return (this._breedSpells);
+            return (this._allSpellsId);
+        }
+
+        public function get breedSpellVariants():Vector.<SpellVariant>
+        {
+            var spellVariants:Array;
+            var variant:SpellVariant;
+            if (!this._breedSpellVariants)
+            {
+                this._breedSpellVariants = new Vector.<SpellVariant>();
+                spellVariants = SpellVariant.getSpellVariants();
+                for each (variant in spellVariants)
+                {
+                    if (variant.breedId == this.id)
+                    {
+                        this._breedSpellVariants.push(variant);
+                    };
+                };
+            };
+            return (this._breedSpellVariants);
         }
 
         public function get femaleLookWithColors():TiphonEntityLook
@@ -244,5 +290,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.breeds
+} com.ankamagames.dofus.datacenter.breeds
 

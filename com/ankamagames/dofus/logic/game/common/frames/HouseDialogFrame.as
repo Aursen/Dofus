@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.common.frames
+package com.ankamagames.dofus.logic.game.common.frames
 {
     import com.ankamagames.jerakine.messages.Frame;
     import com.ankamagames.jerakine.logger.Logger;
@@ -34,20 +34,20 @@
 
         public function process(msg:Message):Boolean
         {
-            var _local_2:LockableUseCodeAction;
-            var _local_3:LockableUseCodeMessage;
-            var _local_4:LeaveDialogMessage;
+            var luca:LockableUseCodeAction;
+            var lucmsg:LockableUseCodeMessage;
+            var ldm:LeaveDialogMessage;
             switch (true)
             {
                 case (msg is LockableUseCodeAction):
-                    _local_2 = (msg as LockableUseCodeAction);
-                    _local_3 = new LockableUseCodeMessage();
-                    _local_3.initLockableUseCodeMessage(_local_2.code);
-                    ConnectionsHandler.getConnection().send(_local_3);
+                    luca = (msg as LockableUseCodeAction);
+                    lucmsg = new LockableUseCodeMessage();
+                    lucmsg.initLockableUseCodeMessage(luca.code);
+                    ConnectionsHandler.getConnection().send(lucmsg);
                     return (true);
                 case (msg is LeaveDialogMessage):
-                    _local_4 = (msg as LeaveDialogMessage);
-                    if ((((_local_4.dialogType == DialogTypeEnum.DIALOG_PURCHASABLE)) || ((_local_4.dialogType == DialogTypeEnum.DIALOG_LOCKABLE))))
+                    ldm = (msg as LeaveDialogMessage);
+                    if (((ldm.dialogType == DialogTypeEnum.DIALOG_PURCHASABLE) || (ldm.dialogType == DialogTypeEnum.DIALOG_LOCKABLE)))
                     {
                         Kernel.getWorker().process(ChangeWorldInteractionAction.create(true));
                         Kernel.getWorker().removeFrame(this);
@@ -65,5 +65,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.frames
+} com.ankamagames.dofus.logic.game.common.frames
 

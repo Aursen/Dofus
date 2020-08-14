@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.scripts.api
+package com.ankamagames.dofus.scripts.api
 {
     import com.ankamagames.dofus.scripts.SpellFxRunner;
     import com.ankamagames.dofus.logic.game.fight.types.CastingSpell;
@@ -42,14 +42,14 @@
             return (spell.isCriticalFail);
         }
 
-        public static function GetSpellParam(spell:CastingSpell, name:String)
+        public static function GetSpellParam(spell:CastingSpell, name:String):*
         {
             var r:* = spell.spell.getParamByName(name, IsCriticalHit(spell));
             if ((r is String))
             {
                 return (r);
             };
-            return (((isNaN(r)) ? 0 : r));
+            return ((isNaN(r)) ? 0 : r);
         }
 
         public static function HasSpellParam(spell:CastingSpell, name:String):Boolean
@@ -59,7 +59,7 @@
                 return (false);
             };
             var v:* = spell.spell.getParamByName(name, IsCriticalHit(spell));
-            return (((!(isNaN(v))) || (!((v == null)))));
+            return ((!(isNaN(v))) || (!(v == null)));
         }
 
         public static function GetPortalCells(runner:SpellFxRunner):Vector.<MapPoint>
@@ -86,20 +86,20 @@
             return ("other");
         }
 
-        public static function GetStepsFromType(runner:SpellFxRunner, type:String):Vector.<IFightStep>
+        public static function GetStepsFromType(runner:SpellFxRunner, _arg_2:String):Vector.<IFightStep>
         {
             var stepInside:ISequencable;
             var fightStepInside:IFightStep;
             var steps:Vector.<IFightStep> = new Vector.<IFightStep>(0, false);
             for each (stepInside in runner.stepsBuffer)
             {
-                if (!((stepInside is IFightStep)))
+                if (!(stepInside is IFightStep))
                 {
                 }
                 else
                 {
                     fightStepInside = (stepInside as IFightStep);
-                    if (fightStepInside.stepType == type)
+                    if (fightStepInside.stepType == _arg_2)
                     {
                         steps.push(fightStepInside);
                     };
@@ -120,46 +120,28 @@
 
         public static function AddStepBefore(runner:SpellFxRunner, referenceStep:ISequencable, stepToAdd:ISequencable):void
         {
-            var stepInside:ISequencable;
-            var index:int = -1;
-            var currentIndex:uint;
-            for each (stepInside in runner.stepsBuffer)
+            var index:int = runner.stepsBuffer.indexOf(referenceStep);
+            if (index >= 0)
             {
-                if (stepInside == referenceStep)
-                {
-                    index = currentIndex;
-                    break;
-                };
-                currentIndex++;
-            };
-            if (index < 0)
+                runner.stepsBuffer.insertAt(index, stepToAdd);
+            }
+            else
             {
                 _log.warn((("Cannot add a step before " + referenceStep) + "; step not found."));
-                return;
             };
-            runner.stepsBuffer.splice(index, 0, stepToAdd);
         }
 
         public static function AddStepAfter(runner:SpellFxRunner, referenceStep:ISequencable, stepToAdd:ISequencable):void
         {
-            var stepInside:ISequencable;
-            var index:int = -1;
-            var currentIndex:uint;
-            for each (stepInside in runner.stepsBuffer)
+            var index:int = runner.stepsBuffer.indexOf(referenceStep);
+            if (index >= 0)
             {
-                if (stepInside == referenceStep)
-                {
-                    index = currentIndex;
-                    break;
-                };
-                currentIndex++;
-            };
-            if (index < 0)
+                runner.stepsBuffer.insertAt((index + 1), stepToAdd);
+            }
+            else
             {
-                _log.warn((("Cannot add a step after " + referenceStep) + "; step not found."));
-                return;
+                _log.warn((("Cannot add a step before " + referenceStep) + "; step not found."));
             };
-            runner.stepsBuffer.splice((index + 1), 0, stepToAdd);
         }
 
         public static function CreateExplosionEntity(runner:SpellFxRunner, gfxId:uint, startColors:String, particleCount:uint, levelChange:Boolean, subExplo:Boolean, exploType:uint):ExplosionEntity
@@ -171,6 +153,7 @@
             if (startColors)
             {
                 tmp = startColors.split(";");
+                i = 0;
                 while (i < tmp.length)
                 {
                     tmp[i] = parseInt(tmp[i], 16);
@@ -182,7 +165,7 @@
                 spellRank = runner.castingSpell.spellRank.spell.spellLevels.indexOf(runner.castingSpell.spellRank.id);
                 if (spellRank != -1)
                 {
-                    particleCount = (((particleCount * runner.castingSpell.spellRank.spell.spellLevels.length) / 10) + ((particleCount * (spellRank + 1)) / 10));
+                    particleCount = uint((((particleCount * runner.castingSpell.spellRank.spell.spellLevels.length) / 10) + ((particleCount * (spellRank + 1)) / 10)));
                 };
             };
             return (new ExplosionEntity(uri, tmp, particleCount, subExplo, exploType));
@@ -190,5 +173,5 @@
 
 
     }
-}//package com.ankamagames.dofus.scripts.api
+} com.ankamagames.dofus.scripts.api
 

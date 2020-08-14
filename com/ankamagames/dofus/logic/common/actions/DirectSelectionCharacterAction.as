@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.common.actions
+package com.ankamagames.dofus.logic.common.actions
 {
     import com.ankamagames.jerakine.handlers.messages.Action;
 
@@ -6,10 +6,10 @@
     {
 
         public var serverId:uint;
-        public var characterId:uint;
+        public var characterId:Number;
 
 
-        public static function create(serverId:uint, characterId:uint):DirectSelectionCharacterAction
+        public static function create(serverId:uint, characterId:Number):DirectSelectionCharacterAction
         {
             var a:DirectSelectionCharacterAction = new (DirectSelectionCharacterAction)();
             a.serverId = serverId;
@@ -19,5 +19,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.common.actions
+} com.ankamagames.dofus.logic.common.actions
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.datacenter.items.criterion
+package com.ankamagames.dofus.datacenter.items.criterion
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.dofus.datacenter.servers.Server;
@@ -17,7 +17,7 @@
         {
             var readableCriterionValue:String = Server.getServerById(_criterionValue).name;
             var readableCriterionRef:String = I18n.getUiText("ui.header.server");
-            return (((((readableCriterionRef + " ") + _operator.text) + " ") + readableCriterionValue));
+            return ((((readableCriterionRef + " ") + _operator.text) + " ") + readableCriterionValue);
         }
 
         override public function clone():IItemCriterion
@@ -33,5 +33,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.items.criterion
+} com.ankamagames.dofus.datacenter.items.criterion
 

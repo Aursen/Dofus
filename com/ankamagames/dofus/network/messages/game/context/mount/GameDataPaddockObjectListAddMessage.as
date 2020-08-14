@@ -1,29 +1,25 @@
-﻿package com.ankamagames.dofus.network.messages.game.context.mount
+package com.ankamagames.dofus.network.messages.game.context.mount
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
     import __AS3__.vec.Vector;
     import com.ankamagames.dofus.network.types.game.paddock.PaddockItem;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
     import __AS3__.vec.*;
 
-    [Trusted]
     public class GameDataPaddockObjectListAddMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 5992;
 
         private var _isInitialized:Boolean = false;
-        public var paddockItemDescription:Vector.<PaddockItem>;
+        public var paddockItemDescription:Vector.<PaddockItem> = new Vector.<PaddockItem>();
+        private var _paddockItemDescriptiontree:FuncTree;
 
-        public function GameDataPaddockObjectListAddMessage()
-        {
-            this.paddockItemDescription = new Vector.<PaddockItem>();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
@@ -58,6 +54,14 @@
         override public function unpack(input:ICustomDataInput, length:uint):void
         {
             this.deserialize(input);
+        }
+
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
         }
 
         public function serialize(output:ICustomDataOutput):void
@@ -95,7 +99,35 @@
             };
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GameDataPaddockObjectListAddMessage(tree);
+        }
+
+        public function deserializeAsyncAs_GameDataPaddockObjectListAddMessage(tree:FuncTree):void
+        {
+            this._paddockItemDescriptiontree = tree.addChild(this._paddockItemDescriptiontreeFunc);
+        }
+
+        private function _paddockItemDescriptiontreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._paddockItemDescriptiontree.addChild(this._paddockItemDescriptionFunc);
+                i++;
+            };
+        }
+
+        private function _paddockItemDescriptionFunc(input:ICustomDataInput):void
+        {
+            var _item:PaddockItem = new PaddockItem();
+            _item.deserialize(input);
+            this.paddockItemDescription.push(_item);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.context.mount
+} com.ankamagames.dofus.network.messages.game.context.mount
 

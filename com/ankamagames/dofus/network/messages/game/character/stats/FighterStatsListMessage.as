@@ -1,27 +1,23 @@
-﻿package com.ankamagames.dofus.network.messages.game.character.stats
+package com.ankamagames.dofus.network.messages.game.character.stats
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
     import com.ankamagames.dofus.network.types.game.character.characteristic.CharacterCharacteristicsInformations;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
 
-    [Trusted]
     public class FighterStatsListMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 6322;
 
         private var _isInitialized:Boolean = false;
-        public var stats:CharacterCharacteristicsInformations;
+        public var stats:CharacterCharacteristicsInformations = new CharacterCharacteristicsInformations();
+        private var _statstree:FuncTree;
 
-        public function FighterStatsListMessage()
-        {
-            this.stats = new CharacterCharacteristicsInformations();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
@@ -58,6 +54,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_FighterStatsListMessage(output);
@@ -79,7 +83,23 @@
             this.stats.deserialize(input);
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_FighterStatsListMessage(tree);
+        }
+
+        public function deserializeAsyncAs_FighterStatsListMessage(tree:FuncTree):void
+        {
+            this._statstree = tree.addChild(this._statstreeFunc);
+        }
+
+        private function _statstreeFunc(input:ICustomDataInput):void
+        {
+            this.stats = new CharacterCharacteristicsInformations();
+            this.stats.deserializeAsync(this._statstree);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.character.stats
+} com.ankamagames.dofus.network.messages.game.character.stats
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.dialog
+package com.ankamagames.dofus.network.messages.game.dialog
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class PauseDialogMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -52,6 +52,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_PauseDialogMessage(output);
@@ -69,6 +77,21 @@
 
         public function deserializeAs_PauseDialogMessage(input:ICustomDataInput):void
         {
+            this._dialogTypeFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_PauseDialogMessage(tree);
+        }
+
+        public function deserializeAsyncAs_PauseDialogMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._dialogTypeFunc);
+        }
+
+        private function _dialogTypeFunc(input:ICustomDataInput):void
+        {
             this.dialogType = input.readByte();
             if (this.dialogType < 0)
             {
@@ -78,5 +101,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.dialog
+} com.ankamagames.dofus.network.messages.game.dialog
 

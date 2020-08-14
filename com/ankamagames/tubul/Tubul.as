@@ -1,4 +1,4 @@
-﻿package com.ankamagames.tubul
+package com.ankamagames.tubul
 {
     import flash.events.EventDispatcher;
     import com.ankamagames.jerakine.logger.Logger;
@@ -34,6 +34,7 @@
     {
 
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(Tubul));
+        public static var errorOnMissingFile:Boolean = false;
         private static var _self:Tubul;
 
         private var _resourceLoader:IResourceLoader;
@@ -44,6 +45,7 @@
         private var _earPosition:Point;
         private var _localizedSoundListeners:Array;
         private var _soundMerger:SoundMerger;
+        private var _globaVolume:Number;
         private var _loadedSoundsInformations:Dictionary;
         public var playedCharacterId:int;
         private var _tuOptions:TubulOptions;
@@ -59,7 +61,7 @@
 
         public static function getInstance():Tubul
         {
-            if (!(_self))
+            if (!_self)
             {
                 _self = new (Tubul)();
             };
@@ -206,7 +208,7 @@
             var bus:IAudioBus;
             var size:int;
             var i:int;
-            if (!(this.isActive))
+            if (!this.isActive)
             {
                 return;
             };
@@ -237,7 +239,7 @@
         public function clearBuses():void
         {
             var key:IAudioBus;
-            if (!(this.isActive))
+            if (!this.isActive)
             {
                 return;
             };
@@ -260,18 +262,13 @@
         {
             if (this._loadedSoundsInformations[pSoundUri])
             {
-                trace("Existe déjà");
             };
             return (null);
         }
 
         public function setLoadedSoundInformations(pSoundUri:Uri, pInfo:LoadedSoundInformations):void
         {
-            if (this._loadedSoundsInformations[pSoundUri])
-            {
-                trace("Existe déjà");
-            }
-            else
+            if (!this._loadedSoundsInformations[pSoundUri])
             {
                 this._loadedSoundsInformations[pSoundUri] = pInfo;
             };
@@ -279,7 +276,7 @@
 
         public function addListener(pListener:ILocalizedSoundListener):void
         {
-            if (!(this.isActive))
+            if (!this.isActive)
             {
                 return;
             };
@@ -287,7 +284,7 @@
             {
                 this._localizedSoundListeners = new Array();
             };
-            if (!(this._localizedSoundListeners.indexOf(pListener)))
+            if (!this._localizedSoundListeners.indexOf(pListener))
             {
                 return;
             };
@@ -366,12 +363,19 @@
             this._soundMerger = new SoundMerger();
         }
 
-        private function setVolumeToBus(pBusId:int, pVolume:uint):void
+        private function setVolumeToBus(pBusId:int, pVolume:uint=404):void
         {
             var audioBus:IAudioBus = Tubul.getInstance().getBus(pBusId);
             if (audioBus != null)
             {
-                audioBus.volume = (pVolume / 100);
+                if (pVolume != 404)
+                {
+                    audioBus.volume = ((pVolume * this._globaVolume) / 100);
+                }
+                else
+                {
+                    audioBus.volume = ((audioBus.volume * this._globaVolume) / 100);
+                };
             };
         }
 
@@ -389,7 +393,7 @@
             }
             else
             {
-                if (!(this._XMLSoundFilesDictionary[fileName]))
+                if (!this._XMLSoundFilesDictionary[fileName])
                 {
                     this._XMLSoundFilesDictionary[fileName] = pEvent.resource;
                 };
@@ -412,33 +416,33 @@
             switch (e.propertyName)
             {
                 case "muteMusic":
-                    this.setVolumeToBus(0, ((e.propertyValue) ? 0 : this._tuOptions.volumeMusic));
-                    return;
+                    this.setVolumeToBus(0, ((e.propertyValue) ? 0 : this._tuOptions.getOption("volumeMusic")));
+                    break;
                 case "muteSound":
-                    this.setVolumeToBus(4, ((e.propertyValue) ? 0 : this._tuOptions.volumeSound));
-                    return;
+                    this.setVolumeToBus(4, ((e.propertyValue) ? 0 : this._tuOptions.getOption("volumeSound")));
+                    break;
                 case "muteAmbientSound":
-                    this.setVolumeToBus(1, ((e.propertyValue) ? 0 : this._tuOptions.volumeAmbientSound));
-                    this.setVolumeToBus(2, ((e.propertyValue) ? 0 : this._tuOptions.volumeAmbientSound));
-                    this.setVolumeToBus(3, ((e.propertyValue) ? 0 : this._tuOptions.volumeAmbientSound));
-                    this.setVolumeToBus(5, ((e.propertyValue) ? 0 : this._tuOptions.volumeAmbientSound));
-                    this.setVolumeToBus(6, ((e.propertyValue) ? 0 : this._tuOptions.volumeAmbientSound));
-                    this.setVolumeToBus(7, ((e.propertyValue) ? 0 : this._tuOptions.volumeAmbientSound));
-                    return;
+                    this.setVolumeToBus(1, ((e.propertyValue) ? 0 : this._tuOptions.getOption("volumeAmbientSound")));
+                    this.setVolumeToBus(2, ((e.propertyValue) ? 0 : this._tuOptions.getOption("volumeAmbientSound")));
+                    this.setVolumeToBus(3, ((e.propertyValue) ? 0 : this._tuOptions.getOption("volumeAmbientSound")));
+                    this.setVolumeToBus(5, ((e.propertyValue) ? 0 : this._tuOptions.getOption("volumeAmbientSound")));
+                    this.setVolumeToBus(6, ((e.propertyValue) ? 0 : this._tuOptions.getOption("volumeAmbientSound")));
+                    this.setVolumeToBus(7, ((e.propertyValue) ? 0 : this._tuOptions.getOption("volumeAmbientSound")));
+                    break;
                 case "volumeMusic":
-                    if (this._tuOptions.muteMusic == false)
+                    if (this._tuOptions.getOption("muteMusic") == false)
                     {
                         this.setVolumeToBus(0, e.propertyValue);
                     };
-                    return;
+                    break;
                 case "volumeSound":
-                    if (this._tuOptions.muteSound == false)
+                    if (this._tuOptions.getOption("muteSound") == false)
                     {
                         this.setVolumeToBus(4, e.propertyValue);
                     };
-                    return;
+                    break;
                 case "volumeAmbientSound":
-                    if (this._tuOptions.muteAmbientSound == false)
+                    if (this._tuOptions.getOption("muteAmbientSound") == false)
                     {
                         this.setVolumeToBus(1, e.propertyValue);
                         this.setVolumeToBus(2, e.propertyValue);
@@ -447,11 +451,22 @@
                         this.setVolumeToBus(6, e.propertyValue);
                         this.setVolumeToBus(7, e.propertyValue);
                     };
-                    return;
+                    break;
+                case "globalVolume":
+                    this._globaVolume = e.propertyValue;
+                    this.setVolumeToBus(0);
+                    this.setVolumeToBus(1);
+                    this.setVolumeToBus(2);
+                    this.setVolumeToBus(3);
+                    this.setVolumeToBus(4);
+                    this.setVolumeToBus(5);
+                    this.setVolumeToBus(6);
+                    this.setVolumeToBus(7);
+                    break;
             };
         }
 
 
     }
-}//package com.ankamagames.tubul
+} com.ankamagames.tubul
 

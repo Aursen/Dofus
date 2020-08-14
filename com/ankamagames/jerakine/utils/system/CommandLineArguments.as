@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.utils.system
+package com.ankamagames.jerakine.utils.system
 {
     import flash.utils.Dictionary;
 
@@ -7,17 +7,12 @@
 
         private static var _self:CommandLineArguments;
 
-        private var _arguments:Dictionary;
+        private var _arguments:Dictionary = new Dictionary();
 
-        public function CommandLineArguments()
-        {
-            this._arguments = new Dictionary();
-            super();
-        }
 
         public static function getInstance():CommandLineArguments
         {
-            if (!(_self))
+            if (!_self)
             {
                 _self = new (CommandLineArguments)();
             };
@@ -64,5 +59,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.utils.system
+} com.ankamagames.jerakine.utils.system
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.datacenter.items.criterion
+package com.ankamagames.dofus.datacenter.items.criterion
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.jerakine.data.I18n;
@@ -18,7 +18,7 @@
         {
             var readableCriterionValue:String = _criterionValue.toString();
             var readableCriterionRef:String = I18n.getUiText("ui.guild.guildLevel");
-            return (((((readableCriterionRef + " ") + _operator.text) + " ") + readableCriterionValue));
+            return ((((readableCriterionRef + " ") + _operator.text) + " ") + readableCriterionValue);
         }
 
         override public function clone():IItemCriterion
@@ -39,5 +39,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.items.criterion
+} com.ankamagames.dofus.datacenter.items.criterion
 

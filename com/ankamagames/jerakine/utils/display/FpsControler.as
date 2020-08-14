@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.utils.display
+package com.ankamagames.jerakine.utils.display
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
@@ -18,13 +18,12 @@
         private static var ScriptedAnimation:Class;
         private static var _clipList:Vector.<MovieClip> = new Vector.<MovieClip>();
         private static var _garbageTimer:Timer;
-        private static var _groupId:int = 0;
 
 
         public static function Init(scriptedAnimation:Class):void
         {
             ScriptedAnimation = scriptedAnimation;
-            if (!(_garbageTimer))
+            if (!_garbageTimer)
             {
                 _garbageTimer = new Timer(10000);
                 _garbageTimer.addEventListener(TimerEvent.TIMER, onGarbageTimer);
@@ -39,7 +38,7 @@
             while (i < _clipList.length)
             {
                 movieClip = _clipList[i];
-                if (!(movieClip.stage))
+                if (!movieClip.stage)
                 {
                     uncontrolFps(movieClip, false);
                 };
@@ -49,22 +48,18 @@
 
         public static function controlFps(clip:MovieClip, framerate:uint, forbidRecursivity:Boolean=false):MovieClip
         {
-            if (!(MovieClipUtils.isSingleFrame(clip)))
+            if (!MovieClipUtils.isSingleFrame(clip))
             {
-                _groupId++;
-                controlSingleClip(clip, _groupId, framerate, forbidRecursivity);
+                controlSingleClip(clip, framerate, forbidRecursivity);
             };
             return (clip);
         }
 
         public static function uncontrolFps(displayObject:DisplayObjectContainer, group:Boolean=true):void
         {
-            var groupId:int;
-            var buffer:Vector.<MovieClip>;
-            var num:int;
             var i:int;
-            var mc:MovieClip;
-            if (!(displayObject))
+            var child:MovieClip;
+            if (!displayObject)
             {
                 return;
             };
@@ -72,26 +67,30 @@
             var movieClip:MovieClip = (displayObject as MovieClip);
             if (((group) && (movieClip)))
             {
-                groupId = movieClip.groupId;
-                if (groupId)
+                if (_clipList.indexOf(movieClip) != -1)
                 {
-                    buffer = new Vector.<MovieClip>();
-                    num = _clipList.length;
-                    i = -1;
-                    while (++i < num)
+                    i = 0;
+                    while (i < movieClip.numChildren)
                     {
-                        mc = _clipList[i];
-                        if (mc.groupId == groupId)
+                        child = (movieClip.getChildAt(i) as MovieClip);
+                        if (child)
                         {
-                            mc.isControled = null;
-                            _clipList.splice(i, 1);
-                            i--;
-                            num--;
+                            uncontrolFps(child, group);
                         };
+                        i++;
                     };
                 };
             };
             removeClip(movieClip);
+        }
+
+        public static function containsFps(clip:DisplayObjectContainer):Boolean
+        {
+            if ((clip is MovieClip))
+            {
+                return (!(_clipList.indexOf(clip) == -1));
+            };
+            return (false);
         }
 
         private static function removeClip(mc:MovieClip):void
@@ -103,7 +102,7 @@
             };
         }
 
-        private static function controlSingleClip(clip:DisplayObjectContainer, id:int, framerate:uint, forbidRecursivity:Boolean=false, recursive:Boolean=false):void
+        private static function controlSingleClip(clip:DisplayObjectContainer, framerate:uint, forbidRecursivity:Boolean=false, recursive:Boolean=false):void
         {
             var i:int;
             var numChildren:int;
@@ -117,29 +116,26 @@
                     child = (clip.getChildAt(i) as DisplayObjectContainer);
                     if (child)
                     {
-                        controlSingleClip(child, id, framerate, true, true);
+                        controlSingleClip(child, framerate, true, true);
                     };
                 };
             };
-            if (((recursive) && ((clip is ScriptedAnimation))))
+            if (((recursive) && (clip is ScriptedAnimation)))
             {
                 return;
             };
             var movieClip:MovieClip = (clip as MovieClip);
-            if (((((!(movieClip)) || ((movieClip.totalFrames == 1)))) || (!((_clipList.indexOf(movieClip) == -1)))))
+            if ((((!(movieClip)) || (movieClip.totalFrames == 1)) || (!(_clipList.indexOf(movieClip) == -1))))
             {
                 return;
             };
-            movieClip.groupId = id;
-            var startFrame:int = (((movieClip.currentFrame > 0)) ? movieClip.currentFrame : 1);
+            var startFrame:int = ((movieClip.currentFrame > 0) ? movieClip.currentFrame : 1);
             movieClip.gotoAndStop(startFrame);
             if ((movieClip is ScriptedAnimation))
             {
                 movieClip.playEventAtFrame(startFrame);
             };
             _clipList.push(movieClip);
-            movieClip.groupId = id;
-            movieClip.isControled = true;
         }
 
         public static function nextFrame():void
@@ -177,5 +173,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.utils.display
+} com.ankamagames.jerakine.utils.display
 

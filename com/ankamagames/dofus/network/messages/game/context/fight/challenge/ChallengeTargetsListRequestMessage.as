@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.context.fight.challenge
+package com.ankamagames.dofus.network.messages.game.context.fight.challenge
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class ChallengeTargetsListRequestMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -52,6 +52,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_ChallengeTargetsListRequestMessage(output);
@@ -73,6 +81,21 @@
 
         public function deserializeAs_ChallengeTargetsListRequestMessage(input:ICustomDataInput):void
         {
+            this._challengeIdFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_ChallengeTargetsListRequestMessage(tree);
+        }
+
+        public function deserializeAsyncAs_ChallengeTargetsListRequestMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._challengeIdFunc);
+        }
+
+        private function _challengeIdFunc(input:ICustomDataInput):void
+        {
             this.challengeId = input.readVarUhShort();
             if (this.challengeId < 0)
             {
@@ -82,5 +105,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.context.fight.challenge
+} com.ankamagames.dofus.network.messages.game.context.fight.challenge
 

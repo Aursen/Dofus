@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.prism
+package com.ankamagames.dofus.network.messages.game.prism
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class PrismSettingsRequestMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -55,6 +55,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_PrismSettingsRequestMessage(output);
@@ -81,11 +89,32 @@
 
         public function deserializeAs_PrismSettingsRequestMessage(input:ICustomDataInput):void
         {
+            this._subAreaIdFunc(input);
+            this._startDefenseTimeFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_PrismSettingsRequestMessage(tree);
+        }
+
+        public function deserializeAsyncAs_PrismSettingsRequestMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._subAreaIdFunc);
+            tree.addChild(this._startDefenseTimeFunc);
+        }
+
+        private function _subAreaIdFunc(input:ICustomDataInput):void
+        {
             this.subAreaId = input.readVarUhShort();
             if (this.subAreaId < 0)
             {
                 throw (new Error((("Forbidden value (" + this.subAreaId) + ") on element of PrismSettingsRequestMessage.subAreaId.")));
             };
+        }
+
+        private function _startDefenseTimeFunc(input:ICustomDataInput):void
+        {
             this.startDefenseTime = input.readByte();
             if (this.startDefenseTime < 0)
             {
@@ -95,5 +124,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.prism
+} com.ankamagames.dofus.network.messages.game.prism
 

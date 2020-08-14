@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.datacenter.items.criterion
+package com.ankamagames.dofus.datacenter.items.criterion
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.jerakine.utils.pattern.PatternDecoder;
@@ -15,9 +15,9 @@
 
         override public function get text():String
         {
-            var readableCriterionValue:String = PatternDecoder.combine(I18n.getUiText("ui.social.daysSinceLastConnection", [_criterionValue]), "n", (_criterionValue <= 1));
+            var readableCriterionValue:String = PatternDecoder.combine(I18n.getUiText("ui.social.daysSinceLastConnection", [_criterionValue]), "n", (_criterionValue <= 1), (_criterionValue == 0));
             var readableCriterionRef:String = I18n.getUiText("ui.veteran.totalSubscriptionDuration");
-            return (((((readableCriterionRef + " ") + _operator.text) + " ") + readableCriterionValue));
+            return ((((readableCriterionRef + " ") + _operator.text) + " ") + readableCriterionValue);
         }
 
         override public function clone():IItemCriterion
@@ -33,5 +33,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.items.criterion
+} com.ankamagames.dofus.datacenter.items.criterion
 

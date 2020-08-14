@@ -1,10 +1,17 @@
-﻿package com.ankamagames.dofus.uiApi
+package com.ankamagames.dofus.uiApi
 {
     import com.ankamagames.berilia.interfaces.IApi;
     import com.ankamagames.jerakine.logger.Logger;
-    import com.ankamagames.berilia.types.data.UiModule;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
+    import flash.utils.Dictionary;
+    import com.ankamagames.berilia.types.data.UiModule;
+    import __AS3__.vec.Vector;
+    import com.ankamagames.dofus.datacenter.world.SubArea;
+    import com.ankamagames.dofus.datacenter.monsters.Monster;
+    import com.ankamagames.dofus.datacenter.world.Hint;
+    import com.ankamagames.dofus.datacenter.items.Item;
+    import com.ankamagames.dofus.datacenter.world.Dungeon;
     import com.ankamagames.dofus.kernel.Kernel;
     import com.ankamagames.dofus.logic.game.roleplay.frames.RoleplayEntitiesFrame;
     import com.ankamagames.dofus.datacenter.notifications.Notification;
@@ -13,10 +20,15 @@
     import com.ankamagames.dofus.datacenter.breeds.Breed;
     import com.ankamagames.dofus.datacenter.breeds.BreedRole;
     import com.ankamagames.dofus.datacenter.breeds.Head;
+    import com.ankamagames.dofus.datacenter.characteristics.Characteristic;
+    import com.ankamagames.dofus.datacenter.characteristics.CharacteristicCategory;
     import com.ankamagames.dofus.datacenter.spells.Spell;
+    import com.ankamagames.dofus.datacenter.spells.SpellConversion;
     import com.ankamagames.dofus.internalDatacenter.spells.SpellWrapper;
+    import com.ankamagames.dofus.datacenter.spells.SpellVariant;
     import com.ankamagames.dofus.internalDatacenter.communication.EmoteWrapper;
     import com.ankamagames.dofus.internalDatacenter.userInterface.ButtonWrapper;
+    import com.ankamagames.dofus.internalDatacenter.items.ShortcutWrapper;
     import com.ankamagames.dofus.datacenter.jobs.Job;
     import com.ankamagames.dofus.internalDatacenter.jobs.JobWrapper;
     import com.ankamagames.dofus.internalDatacenter.appearance.TitleWrapper;
@@ -25,11 +37,9 @@
     import com.ankamagames.dofus.datacenter.spells.SpellType;
     import com.ankamagames.dofus.datacenter.spells.SpellState;
     import com.ankamagames.dofus.datacenter.communication.ChatChannel;
-    import com.ankamagames.dofus.datacenter.world.SubArea;
     import com.ankamagames.dofus.datacenter.world.Area;
     import com.ankamagames.dofus.datacenter.world.SuperArea;
     import com.ankamagames.jerakine.types.positions.WorldPoint;
-    import com.ankamagames.dofus.datacenter.items.Item;
     import com.ankamagames.dofus.datacenter.items.IncarnationLevel;
     import com.ankamagames.dofus.datacenter.items.Incarnation;
     import com.ankamagames.dofus.types.data.GenericSlotData;
@@ -37,13 +47,13 @@
     import com.ankamagames.jerakine.data.XmlConfig;
     import com.ankamagames.dofus.datacenter.items.ItemType;
     import com.ankamagames.dofus.datacenter.items.ItemSet;
-    import com.ankamagames.dofus.datacenter.livingObjects.Pet;
     import com.ankamagames.dofus.datacenter.effects.EffectInstance;
-    import flash.utils.Dictionary;
     import com.ankamagames.dofus.logic.game.common.managers.PlayedCharacterManager;
+    import com.ankamagames.dofus.network.enums.CharacterInventoryPositionEnum;
     import com.ankamagames.dofus.datacenter.effects.Effect;
-    import com.ankamagames.berilia.managers.SecureCenter;
-    import com.ankamagames.dofus.datacenter.monsters.Monster;
+    import com.ankamagames.dofus.datacenter.arena.ArenaLeague;
+    import com.ankamagames.dofus.datacenter.arena.ArenaLeagueSeason;
+    import com.ankamagames.dofus.datacenter.arena.ArenaLeagueReward;
     import com.ankamagames.dofus.datacenter.monsters.MonsterMiniBoss;
     import com.ankamagames.dofus.datacenter.monsters.MonsterRace;
     import com.ankamagames.dofus.datacenter.monsters.MonsterSuperRace;
@@ -59,10 +69,14 @@
     import com.ankamagames.dofus.internalDatacenter.items.ItemWrapper;
     import com.ankamagames.dofus.datacenter.jobs.Skill;
     import com.ankamagames.dofus.datacenter.communication.InfoMessage;
-    import com.ankamagames.dofus.datacenter.communication.Smiley;
-    import com.ankamagames.dofus.internalDatacenter.communication.SmileyWrapper;
     import com.ankamagames.dofus.logic.game.common.frames.ChatFrame;
+    import com.ankamagames.dofus.datacenter.communication.Smiley;
+    import com.ankamagames.dofus.datacenter.communication.SmileyCategory;
+    import com.ankamagames.dofus.datacenter.communication.SmileyPack;
     import com.ankamagames.dofus.datacenter.communication.Emoticon;
+    import com.ankamagames.dofus.datacenter.challenges.Challenge;
+    import com.ankamagames.dofus.internalDatacenter.fight.ChallengeWrapper;
+    import com.ankamagames.dofus.datacenter.dare.DareCriteria;
     import com.ankamagames.dofus.datacenter.npcs.TaxCollectorName;
     import com.ankamagames.dofus.datacenter.npcs.TaxCollectorFirstname;
     import com.ankamagames.dofus.datacenter.guild.EmblemSymbol;
@@ -76,14 +90,19 @@
     import com.ankamagames.dofus.datacenter.quest.Achievement;
     import com.ankamagames.dofus.datacenter.quest.AchievementCategory;
     import com.ankamagames.dofus.datacenter.quest.AchievementReward;
+    import com.ankamagames.dofus.datacenter.temporis.AchievementProgressStep;
+    import com.ankamagames.dofus.network.types.game.achievement.AchievementAchievedRewardable;
+    import com.ankamagames.dofus.datacenter.servers.ServerTemporisSeason;
+    import com.ankamagames.dofus.datacenter.temporis.AchievementProgress;
     import com.ankamagames.dofus.datacenter.quest.AchievementObjective;
     import com.ankamagames.dofus.datacenter.houses.House;
     import com.ankamagames.dofus.internalDatacenter.items.LivingObjectSkinWrapper;
     import com.ankamagames.dofus.datacenter.abuse.AbuseReasons;
     import com.ankamagames.dofus.datacenter.items.PresetIcon;
-    import com.ankamagames.dofus.datacenter.world.Dungeon;
+    import com.ankamagames.dofus.datacenter.idols.IdolsPresetIcon;
     import com.ankamagames.dofus.datacenter.world.MapPosition;
     import com.ankamagames.dofus.datacenter.world.WorldMap;
+    import com.ankamagames.dofus.datacenter.world.Waypoint;
     import com.ankamagames.dofus.datacenter.world.HintCategory;
     import com.ankamagames.dofus.internalDatacenter.house.HouseWrapper;
     import com.ankamagames.dofus.datacenter.spells.SpellPair;
@@ -93,41 +112,144 @@
     import com.ankamagames.dofus.datacenter.appearance.Title;
     import com.ankamagames.dofus.datacenter.appearance.TitleCategory;
     import com.ankamagames.dofus.datacenter.appearance.Ornament;
-    import com.ankamagames.dofus.datacenter.misc.OptionalFeature;
+    import com.ankamagames.dofus.datacenter.feature.OptionalFeature;
+    import com.ankamagames.dofus.datacenter.items.EvolutiveItemType;
+    import com.ankamagames.dofus.datacenter.effects.EvolutiveEffect;
+    import com.ankamagames.dofus.datacenter.effects.instances.EffectInstanceInteger;
     import com.ankamagames.dofus.logic.game.common.managers.AlmanaxManager;
     import com.ankamagames.dofus.internalDatacenter.almanax.AlmanaxEvent;
     import com.ankamagames.dofus.internalDatacenter.almanax.AlmanaxZodiac;
     import com.ankamagames.dofus.internalDatacenter.almanax.AlmanaxMonth;
     import com.ankamagames.dofus.datacenter.almanax.AlmanaxCalendar;
     import com.ankamagames.dofus.datacenter.externalnotifications.ExternalNotification;
-    import com.ankamagames.dofus.datacenter.misc.ActionDescription;
     import com.ankamagames.dofus.misc.utils.GameDataQuery;
-    import __AS3__.vec.Vector;
-    import com.ankamagames.dofus.datacenter.world.Waypoint;
     import com.ankamagames.dofus.internalDatacenter.taxi.TeleportDestinationWrapper;
     import com.ankamagames.dofus.datacenter.items.VeteranReward;
-    import com.ankamagames.dofus.datacenter.documents.Comic;
+    import com.ankamagames.dofus.datacenter.misc.BreachPrize;
+    import com.ankamagames.dofus.datacenter.idols.Idol;
+    import com.ankamagames.dofus.datacenter.houses.HavenbagFurniture;
+    import com.ankamagames.dofus.internalDatacenter.house.HavenbagFurnitureWrapper;
+    import com.ankamagames.dofus.datacenter.houses.HavenbagTheme;
+    import com.ankamagames.dofus.datacenter.interactives.Interactive;
+    import com.ankamagames.dofus.datacenter.bonus.Bonus;
+    import com.ankamagames.dofus.datacenter.mounts.MountBehavior;
+    import com.ankamagames.dofus.datacenter.mounts.MountFamily;
+    import com.ankamagames.dofus.datacenter.mounts.Mount;
+    import com.ankamagames.dofus.datacenter.servers.ServerGameType;
+    import com.ankamagames.dofus.datacenter.servers.ServerCommunity;
+    import com.ankamagames.dofus.datacenter.servers.ServerLang;
+    import com.ankamagames.dofus.datacenter.spells.FinishMove;
     import flash.net.registerClassAlias;
-    import flash.utils.getDefinitionByName;
     import flash.utils.ByteArray;
+    import com.ankamagames.dofus.datacenter.misc.BreachBoss;
+    import com.ankamagames.dofus.datacenter.breach.BreachWorldMapCoordinate;
+    import com.ankamagames.tiphon.types.look.TiphonEntityLook;
+    import com.ankamagames.dofus.logic.game.common.types.DofusShopArticle;
+    import com.ankamagames.dofus.datacenter.breach.BreachDungeonModificator;
+    import com.ankamagames.dofus.datacenter.breach.BreachWorldMapSector;
+    import com.ankamagames.dofus.datacenter.breach.BreachInfinityLevel;
+    import com.ankamagames.dofus.datacenter.items.RandomDropGroup;
+    import com.ankamagames.dofus.logic.game.common.managers.InventoryManager;
+    import com.ankamagames.dofus.logic.game.common.misc.IInventoryView;
     import __AS3__.vec.*;
 
     [InstanciedApi]
     public class DataApi implements IApi 
     {
 
-        protected var _log:Logger;
+        protected static var _log:Logger = Log.getLogger(getQualifiedClassName(DataApi));
+        public static var isStaticCartographyInit:Boolean = false;
+        public static var dungeonsBySubArea:Dictionary = new Dictionary(true);
+        public static var hintsBySubArea:Dictionary = new Dictionary(true);
+        public static var allSubAreas:Dictionary = new Dictionary(true);
+        public static var allHints:Dictionary = new Dictionary(true);
+        public static var allItems:Dictionary = new Dictionary(true);
+        public static var allMonsters:Dictionary = new Dictionary(true);
+        public static var allDungeons:Dictionary = new Dictionary(true);
+
         private var _module:UiModule;
 
-        public function DataApi()
+
+        public function initStaticCartographyData():void
         {
-            this._log = Log.getLogger(getQualifiedClassName(DataApi));
-            super();
+            var element:*;
+            var itemIds:Vector.<uint>;
+            var subArea:*;
+            var monster:*;
+            var harvestableId:*;
+            var drop:*;
+            var dungeon:*;
+            var hint:*;
+            if (DataApi.isStaticCartographyInit)
+            {
+                return;
+            };
+            for each (element in SubArea.getAllSubArea())
+            {
+                DataApi.allSubAreas[element.id] = element;
+            };
+            for each (element in Monster.getMonsters())
+            {
+                DataApi.allMonsters[element.id] = element;
+            };
+            for each (element in Hint.getHints())
+            {
+                DataApi.allHints[element.id] = element;
+            };
+            itemIds = new Vector.<uint>();
+            for each (subArea in DataApi.allSubAreas)
+            {
+                for each (harvestableId in subArea.harvestables)
+                {
+                    if (itemIds.indexOf(harvestableId) == -1)
+                    {
+                        itemIds.push(harvestableId);
+                    };
+                };
+            };
+            for each (monster in DataApi.allMonsters)
+            {
+                for each (drop in monster.drops)
+                {
+                    if (itemIds.indexOf(drop.objectId) == -1)
+                    {
+                        itemIds.push(drop.objectId);
+                    };
+                };
+            };
+            for each (element in Item.getItemsByIds(itemIds))
+            {
+                DataApi.allItems[element.id] = element;
+            };
+            for each (element in Dungeon.getAllDungeons())
+            {
+                DataApi.allDungeons[element.id] = element;
+            };
+            for each (subArea in DataApi.allSubAreas)
+            {
+                for each (dungeon in DataApi.allDungeons)
+                {
+                    if (dungeon.undiatricalName.indexOf(subArea.undiatricalName) != -1)
+                    {
+                        DataApi.dungeonsBySubArea[subArea.id] = [subArea, dungeon];
+                        break;
+                    };
+                };
+                for each (hint in DataApi.allHints)
+                {
+                    if (hint.undiatricalName.indexOf(subArea.undiatricalName) != -1)
+                    {
+                        DataApi.hintsBySubArea[subArea.id] = [subArea, hint];
+                        break;
+                    };
+                };
+            };
+            DataApi.isStaticCartographyInit = true;
         }
 
         private function get entitiesFrame():RoleplayEntitiesFrame
         {
-            return ((Kernel.getWorker().getFrame(RoleplayEntitiesFrame) as RoleplayEntitiesFrame));
+            return (Kernel.getWorker().getFrame(RoleplayEntitiesFrame) as RoleplayEntitiesFrame);
         }
 
         [ApiData(name="module")]
@@ -136,195 +258,204 @@
             this._module = value;
         }
 
-        [Trusted]
         public function destroy():void
         {
             this._module = null;
         }
 
-        [Untrusted]
         public function getNotifications():Array
         {
             return (Notification.getNotifications());
         }
 
-        [Trusted]
         public function getServer(id:int):Server
         {
             return (Server.getServerById(id));
         }
 
-        [Trusted]
         public function getServerPopulation(id:int):ServerPopulation
         {
             return (ServerPopulation.getServerPopulationById(id));
         }
 
-        [Untrusted]
         public function getBreed(id:int):Breed
         {
             return (Breed.getBreedById(id));
         }
 
-        [Untrusted]
         public function getBreeds():Array
         {
             return (Breed.getBreeds());
         }
 
-        [Untrusted]
         public function getBreedRole(id:int):BreedRole
         {
             return (BreedRole.getBreedRoleById(id));
         }
 
-        [Untrusted]
         public function getBreedRoles():Array
         {
             return (BreedRole.getBreedRoles());
         }
 
-        [Untrusted]
         public function getHead(id:int):Head
         {
             return (Head.getHeadById(id));
         }
 
-        [Untrusted]
         public function getHeads():Array
         {
             return (Head.getHeads());
         }
 
-        [Untrusted]
+        public function getCharacteristic(id:int):Characteristic
+        {
+            return (Characteristic.getCharacteristicById(id));
+        }
+
+        public function getCharacteristics():Array
+        {
+            return (Characteristic.getCharacteristics());
+        }
+
+        public function getCharacteristicCategory(id:int):CharacteristicCategory
+        {
+            return (CharacteristicCategory.getCharacteristicCategoryById(id));
+        }
+
+        public function getCharacteristicCategories():Array
+        {
+            return (CharacteristicCategory.getCharacteristicCategories());
+        }
+
         public function getSpell(id:int):Spell
         {
             return (Spell.getSpellById(id));
         }
 
-        [Untrusted]
+        public function getSpellConversion(id:int):SpellConversion
+        {
+            return (SpellConversion.getSpellConversionById(id));
+        }
+
         public function getSpells():Array
         {
             return (Spell.getSpells());
         }
 
-        [Untrusted]
-        public function getSpellWrapper(id:uint, level:uint=1):SpellWrapper
+        public function getSpellWrapper(id:uint, level:uint=1, useCache:Boolean=false, playerId:Number=0, variantActivated:Boolean=false):SpellWrapper
         {
-            var sw:SpellWrapper = SpellWrapper.create(-1, id, level, false);
+            var sw:SpellWrapper = SpellWrapper.create(id, level, useCache, playerId, variantActivated);
             return (sw);
         }
 
-        [Untrusted]
+        public function getSpellVariant(id:int):SpellVariant
+        {
+            return (SpellVariant.getSpellVariantById(id));
+        }
+
+        public function getSpellVariants():Array
+        {
+            return (SpellVariant.getSpellVariants());
+        }
+
         public function getEmoteWrapper(id:uint, position:uint=0):EmoteWrapper
         {
             return (EmoteWrapper.create(id, position));
         }
 
-        [Untrusted]
-        public function getButtonWrapper(buttonId:uint, position:int, uriName:String, callback:Function, name:String, shortcut:String=""):ButtonWrapper
+        public function getButtonWrapper(buttonId:uint, position:int, uriName:String, callback:Function, name:String, shortcutName:String="", description:String=""):ButtonWrapper
         {
-            return (ButtonWrapper.create(buttonId, position, uriName, callback, name, shortcut));
+            return (ButtonWrapper.create(buttonId, position, uriName, callback, name, shortcutName, description));
         }
 
-        [Untrusted]
+        public function getShortcutWrapper(slot:uint, id:int, shortcutType:uint=0, gid:int=0):ShortcutWrapper
+        {
+            return (ShortcutWrapper.create(slot, id, shortcutType, gid));
+        }
+
         public function getJobs():Array
         {
             return (Job.getJobs());
         }
 
-        [Untrusted]
         public function getJobWrapper(id:uint):JobWrapper
         {
             return (JobWrapper.create(id));
         }
 
-        [Untrusted]
         public function getTitleWrapper(id:uint):TitleWrapper
         {
             return (TitleWrapper.create(id));
         }
 
-        [Untrusted]
         public function getOrnamentWrapper(id:uint):OrnamentWrapper
         {
             return (OrnamentWrapper.create(id));
         }
 
-        [Untrusted]
         public function getSpellLevel(id:int):SpellLevel
         {
             return (SpellLevel.getLevelById(id));
         }
 
-        [Untrusted]
         public function getSpellLevelBySpell(spell:Spell, level:int):SpellLevel
         {
             return (spell.getSpellLevel(level));
         }
 
-        [Untrusted]
         public function getSpellType(id:int):SpellType
         {
             return (SpellType.getSpellTypeById(id));
         }
 
-        [Untrusted]
         public function getSpellState(id:int):SpellState
         {
             return (SpellState.getSpellStateById(id));
         }
 
-        [Untrusted]
         public function getChatChannel(id:int):ChatChannel
         {
             return (ChatChannel.getChannelById(id));
         }
 
-        [Untrusted]
         public function getAllChatChannels():Array
         {
             return (ChatChannel.getChannels());
         }
 
-        [Untrusted]
         public function getSubArea(id:int):SubArea
         {
             return (SubArea.getSubAreaById(id));
         }
 
-        [Untrusted]
-        public function getSubAreaFromMap(mapId:int):SubArea
+        public function getSubAreaFromMap(mapId:Number):SubArea
         {
             return (SubArea.getSubAreaByMapId(mapId));
         }
 
-        [Untrusted]
         public function getAllSubAreas():Array
         {
             return (SubArea.getAllSubArea());
         }
 
-        [Untrusted]
         public function getArea(id:int):Area
         {
             return (Area.getAreaById(id));
         }
 
-        [Untrusted]
         public function getSuperArea(id:int):SuperArea
         {
             return (SuperArea.getSuperAreaById(id));
         }
 
-        [Untrusted]
         public function getAllArea(withHouses:Boolean=false, withPaddocks:Boolean=false):Array
         {
             var area:Area;
             var results:Array = new Array();
             for each (area in Area.getAllArea())
             {
-                if (((((((withHouses) && (area.containHouses))) || (((withPaddocks) && (area.containPaddocks))))) || (((!(withHouses)) && (!(withPaddocks))))))
+                if (((((withHouses) && (area.containHouses)) || ((withPaddocks) && (area.containPaddocks))) || ((!(withHouses)) && (!(withPaddocks)))))
                 {
                     results.push(area);
                 };
@@ -332,50 +463,47 @@
             return (results);
         }
 
-        [Untrusted]
         public function getWorldPoint(id:int):WorldPoint
         {
             return (WorldPoint.fromMapId(id));
         }
 
-        [Untrusted]
         public function getItem(id:int, returnDefaultItemIfNull:Boolean=true):Item
         {
             return (Item.getItemById(id, returnDefaultItemIfNull));
         }
 
-        [Untrusted]
         public function getItems():Array
         {
             return (Item.getItems());
         }
 
-        [Untrusted]
+        public function getItemsByIds(ids:Vector.<uint>):Vector.<Item>
+        {
+            return (Item.getItemsByIds(ids));
+        }
+
         public function getIncarnationLevel(incarnationId:int, level:int):IncarnationLevel
         {
             return (IncarnationLevel.getIncarnationLevelByIdAndLevel(incarnationId, level));
         }
 
-        [Untrusted]
         public function getIncarnation(incarnationId:int):Incarnation
         {
             return (Incarnation.getIncarnationById(incarnationId));
         }
 
-        [Untrusted]
         [NoBoxing]
         public function getNewGenericSlotData():GenericSlotData
         {
             return (new GenericSlotData());
         }
 
-        [Untrusted]
         public function getItemIconUri(iconId:uint):Uri
         {
             return (new Uri(XmlConfig.getInstance().getEntry("config.gfx.path.item.bitmap").concat(iconId).concat(".png")));
         }
 
-        [Untrusted]
         public function getItemName(id:int):String
         {
             var i:Item = Item.getItemById(id);
@@ -386,26 +514,22 @@
             return (null);
         }
 
-        [Untrusted]
         public function getItemType(id:int):ItemType
         {
             var it:ItemType = ItemType.getItemTypeById(id);
             return (it);
         }
 
-        [Untrusted]
+        public function getItemTypes():Array
+        {
+            return (ItemType.getItemTypes());
+        }
+
         public function getItemSet(id:int):ItemSet
         {
             return (ItemSet.getItemSetById(id));
         }
 
-        [Untrusted]
-        public function getPet(id:int):Pet
-        {
-            return (Pet.getPetById(id));
-        }
-
-        [Untrusted]
         public function getSetEffects(GIDList:Array, aSetBonus:Array=null):Array
         {
             var item:*;
@@ -416,15 +540,15 @@
             var iGID:*;
             var effect:EffectInstance;
             var effectEquip:*;
+            var setBonusLineTemp:*;
             var setBonusLine:*;
-            var setBonus:Array = this.deepClone(aSetBonus);
             var effectsDice:Dictionary = new Dictionary();
             var effects:Array = new Array();
             var effectsNonAddable:Array = new Array();
             var GIDEquippedList:Array = new Array();
             for each (item in PlayedCharacterManager.getInstance().inventory)
             {
-                if (item.position <= 15)
+                if (item.position <= CharacterInventoryPositionEnum.ACCESSORY_POSITION_SHIELD)
                 {
                     for (iGID in GIDList)
                     {
@@ -481,13 +605,14 @@
                     };
                 };
             };
-            if (((setBonus) && (setBonus.length)))
+            if (((aSetBonus) && (aSetBonus.length)))
             {
-                for each (setBonusLine in setBonus)
+                for each (setBonusLineTemp in aSetBonus)
                 {
+                    setBonusLine = this.deepClone(setBonusLineTemp);
                     if ((setBonusLine is String))
                     {
-                        this._log.debug("Bonus en texte, on ne peut pas l'ajouter");
+                        _log.debug((("Bonus en texte, on ne peut pas l'ajouter '" + setBonusLine) + "'"));
                     }
                     else
                     {
@@ -495,16 +620,16 @@
                         {
                             if (effectsDice[setBonusLine.effectId])
                             {
-                                effectsDice[setBonusLine.effectId].add(SecureCenter.unsecure(setBonusLine));
+                                effectsDice[setBonusLine.effectId].add(setBonusLine);
                             }
                             else
                             {
-                                effectsDice[setBonusLine.effectId] = SecureCenter.unsecure(setBonusLine).clone();
+                                effectsDice[setBonusLine.effectId] = setBonusLine.clone();
                             };
                         }
                         else
                         {
-                            effectsNonAddable.push(this.deepClone(SecureCenter.unsecure(setBonusLine)));
+                            effectsNonAddable.push(this.deepClone(setBonusLine));
                         };
                     };
                 };
@@ -523,95 +648,103 @@
                     effects.push(lineNA);
                 };
             };
-            effects.sortOn("category", Array.NUMERIC);
             return (effects);
         }
 
-        [Untrusted]
+        public function getArenaLeagueById(leagueId:uint):ArenaLeague
+        {
+            return (ArenaLeague.getArenaLeagueById(leagueId));
+        }
+
+        public function getArenaLeagueSeasonById(seasonId:uint):ArenaLeagueSeason
+        {
+            return (ArenaLeagueSeason.getArenaLeagueSeasonById(seasonId));
+        }
+
+        public function getArenaLeagueRewardsForCurrentRankAndSeason(league:int, season:int, endSeason:Boolean):ArenaLeagueReward
+        {
+            var reward:ArenaLeagueReward;
+            var rewards:Array = ArenaLeagueReward.getArenaLeagueRewards();
+            for each (reward in rewards)
+            {
+                if ((((reward.leagueId == league) && (reward.seasonId == season)) && (reward.endSeasonRewards == endSeason)))
+                {
+                    return (reward);
+                };
+            };
+            return (null);
+        }
+
         public function getMonsterFromId(monsterId:uint):Monster
         {
             return (Monster.getMonsterById(monsterId));
         }
 
-        [Untrusted]
         public function getMonsters():Array
         {
             return (Monster.getMonsters());
         }
 
-        [Untrusted]
         public function getMonsterMiniBossFromId(monsterId:uint):MonsterMiniBoss
         {
             return (MonsterMiniBoss.getMonsterById(monsterId));
         }
 
-        [Untrusted]
         public function getMonsterRaceFromId(raceId:uint):MonsterRace
         {
             return (MonsterRace.getMonsterRaceById(raceId));
         }
 
-        [Untrusted]
         public function getMonsterRaces():Array
         {
             return (MonsterRace.getMonsterRaces());
         }
 
-        [Untrusted]
         public function getMonsterSuperRaceFromId(raceId:uint):MonsterSuperRace
         {
             return (MonsterSuperRace.getMonsterSuperRaceById(raceId));
         }
 
-        [Untrusted]
         public function getMonsterSuperRaces():Array
         {
             return (MonsterSuperRace.getMonsterSuperRaces());
         }
 
-        [Untrusted]
         public function getCompanion(companionId:uint):Companion
         {
             return (Companion.getCompanionById(companionId));
         }
 
-        [Untrusted]
         public function getAllCompanions():Array
         {
             return (Companion.getCompanions());
         }
 
-        [Untrusted]
         public function getCompanionCharacteristic(companionCharacteristicId:uint):CompanionCharacteristic
         {
             return (CompanionCharacteristic.getCompanionCharacteristicById(companionCharacteristicId));
         }
 
-        [Untrusted]
         public function getCompanionSpell(companionSpellId:uint):CompanionSpell
         {
             return (CompanionSpell.getCompanionSpellById(companionSpellId));
         }
 
-        [Untrusted]
         public function getNpc(npcId:uint):Npc
         {
             return (Npc.getNpcById(npcId));
         }
 
-        [Untrusted]
         public function getNpcAction(actionId:uint):NpcAction
         {
             return (NpcAction.getNpcActionById(actionId));
         }
 
-        [Untrusted]
         public function getAlignmentSide(sideId:uint):AlignmentSide
         {
             return (AlignmentSide.getAlignmentSideById(sideId));
         }
 
-        [Untrusted]
         public function getAlignmentBalance(percent:uint):AlignmentBalance
         {
             var balance:uint;
@@ -675,7 +808,7 @@
                                                 }
                                                 else
                                                 {
-                                                    balance = Math.ceil((percent / 10));
+                                                    balance = uint(Math.ceil((percent / 10)));
                                                 };
                                             };
                                         };
@@ -689,19 +822,16 @@
             return (AlignmentBalance.getAlignmentBalanceById(balance));
         }
 
-        [Untrusted]
         public function getRankName(rankId:uint):RankName
         {
             return (RankName.getRankNameById(rankId));
         }
 
-        [Untrusted]
         public function getAllRankNames():Array
         {
             return (RankName.getRankNames());
         }
 
-        [Untrusted]
         public function getItemWrapper(itemGID:uint, itemPosition:int=0, itemUID:uint=0, itemQuantity:uint=0, itemEffects:*=null):ItemWrapper
         {
             if (itemEffects == null)
@@ -711,19 +841,21 @@
             return (ItemWrapper.create(itemPosition, itemUID, itemGID, itemQuantity, itemEffects, false));
         }
 
-        [Untrusted]
         public function getItemFromUId(objectUID:uint):ItemWrapper
         {
             return (ItemWrapper.getItemFromUId(objectUID));
         }
 
-        [Untrusted]
         public function getSkill(skillId:uint):Skill
         {
             return (Skill.getSkillById(skillId));
         }
 
-        [Untrusted]
+        public function getSkills():Array
+        {
+            return (Skill.getSkills());
+        }
+
         public function getHouseSkills():Array
         {
             var skill:Skill;
@@ -738,72 +870,98 @@
             return (houseSkills);
         }
 
-        [Untrusted]
         public function getInfoMessage(infoMsgId:uint):InfoMessage
         {
             return (InfoMessage.getInfoMessageById(infoMsgId));
         }
 
-        [Untrusted]
         public function getAllInfoMessages():Array
         {
             return (InfoMessage.getInfoMessages());
         }
 
-        [Untrusted]
-        public function getSmiliesWrapperForPlayers():Array
+        public function getSmileyWrappers():Array
         {
-            var smiley:Smiley;
-            var smileyW:SmileyWrapper;
             var chatFrame:ChatFrame = (Kernel.getWorker().getFrame(ChatFrame) as ChatFrame);
-            if (((((chatFrame) && (chatFrame.smilies))) && ((chatFrame.smilies.length > 0))))
+            if ((((chatFrame) && (chatFrame.smilies)) && (chatFrame.smilies.length > 0)))
             {
                 return (chatFrame.smilies);
             };
-            var a:Array = new Array();
-            for each (smiley in Smiley.getSmileys())
-            {
-                if (smiley.forPlayers)
-                {
-                    smileyW = SmileyWrapper.create(smiley.id, smiley.gfxId, smiley.order);
-                    a.push(smileyW);
-                };
-            };
-            a.sortOn("order", Array.NUMERIC);
-            return (a);
+            return (new Array());
         }
 
-        [Untrusted]
         public function getSmiley(id:uint):Smiley
         {
             return (Smiley.getSmileyById(id));
         }
 
-        [Untrusted]
         public function getAllSmiley():Array
         {
             return (Smiley.getSmileys());
         }
 
-        [Untrusted]
+        public function getSmileyCategory(id:uint):SmileyCategory
+        {
+            return (SmileyCategory.getSmileyCategoryById(id));
+        }
+
+        public function getAllSmileyCategory():Array
+        {
+            return (SmileyCategory.getSmileyCategories());
+        }
+
+        public function getSmileyPack(id:uint):SmileyPack
+        {
+            return (SmileyPack.getSmileyPackById(id));
+        }
+
+        public function getAllSmileyPack():Array
+        {
+            return (SmileyPack.getSmileyPacks());
+        }
+
         public function getEmoticon(id:uint):Emoticon
         {
             return (Emoticon.getEmoticonById(id));
         }
 
-        [Untrusted]
+        public function getChallenge(id:uint):Challenge
+        {
+            return (Challenge.getChallengeById(id));
+        }
+
+        public function getChallengeWrapper(id:uint):ChallengeWrapper
+        {
+            var c:ChallengeWrapper = ChallengeWrapper.create();
+            c.id = id;
+            return (c);
+        }
+
+        public function getChallenges():Array
+        {
+            return (Challenge.getChallenges());
+        }
+
+        public function getDareCriteria(id:uint):DareCriteria
+        {
+            return (DareCriteria.getDareCriteriaById(id));
+        }
+
+        public function getAllDareCriteria():Array
+        {
+            return (DareCriteria.getDareCriterias());
+        }
+
         public function getTaxCollectorName(id:uint):TaxCollectorName
         {
             return (TaxCollectorName.getTaxCollectorNameById(id));
         }
 
-        [Untrusted]
         public function getTaxCollectorFirstname(id:uint):TaxCollectorFirstname
         {
             return (TaxCollectorFirstname.getTaxCollectorFirstnameById(id));
         }
 
-        [Untrusted]
         public function getEmblems():Array
         {
             var upEmblem:EmblemSymbol;
@@ -827,100 +985,127 @@
             return (returnValue);
         }
 
-        [Untrusted]
         public function getEmblemSymbol(symbolId:int):EmblemSymbol
         {
             return (EmblemSymbol.getEmblemSymbolById(symbolId));
         }
 
-        [Untrusted]
         public function getAllEmblemSymbolCategories():Array
         {
             return (EmblemSymbolCategory.getEmblemSymbolCategories());
         }
 
-        [Untrusted]
         public function getQuest(questId:int):Quest
         {
             return (Quest.getQuestById(questId));
         }
 
-        [Untrusted]
         public function getQuestCategory(questCatId:int):QuestCategory
         {
             return (QuestCategory.getQuestCategoryById(questCatId));
         }
 
-        [Untrusted]
         public function getQuestObjective(questObjectiveId:int):QuestObjective
         {
             return (QuestObjective.getQuestObjectiveById(questObjectiveId));
         }
 
-        [Untrusted]
         public function getQuestStep(questStepId:int):QuestStep
         {
             return (QuestStep.getQuestStepById(questStepId));
         }
 
-        [Untrusted]
         public function getAchievement(achievementId:int):Achievement
         {
             return (Achievement.getAchievementById(achievementId));
         }
 
-        [Untrusted]
         public function getAchievements():Array
         {
             return (Achievement.getAchievements());
         }
 
-        [Untrusted]
         public function getAchievementCategory(achievementCatId:int):AchievementCategory
         {
             return (AchievementCategory.getAchievementCategoryById(achievementCatId));
         }
 
-        [Untrusted]
         public function getAchievementCategories():Array
         {
             return (AchievementCategory.getAchievementCategories());
         }
 
-        [Untrusted]
         public function getAchievementReward(rewardId:int):AchievementReward
         {
             return (AchievementReward.getAchievementRewardById(rewardId));
         }
 
-        [Untrusted]
         public function getAchievementRewards():Array
         {
             return (AchievementReward.getAchievementRewards());
         }
 
-        [Untrusted]
+        public function areTemporisRewardsAvailable():Boolean
+        {
+            var achievementProgressStep:AchievementProgressStep;
+            var achievementAchievedRewardable:AchievementAchievedRewardable;
+            if (!this.isTemporisSpellsUi())
+            {
+                return (false);
+            };
+            var currentSeason:ServerTemporisSeason = this.getCurrentSeason();
+            var achievementProgress:AchievementProgress = this.getAchievementProgressWithSeasonId(currentSeason.uid);
+            if (achievementProgress === null)
+            {
+                return (false);
+            };
+            var achievementProgressSteps:Array = this.getAchievementProgressStepsWithProgressId(achievementProgress.id);
+            var currentAchievement:Achievement;
+            var questApi:QuestApi = QuestApi.getInstance();
+            if (questApi === null)
+            {
+                return (false);
+            };
+            var rewardableAchievementsObject:Object = questApi.getRewardableAchievements();
+            for each (achievementProgressStep in achievementProgressSteps)
+            {
+                currentAchievement = this.getAchievementById(achievementProgressStep.achievementId);
+                if (currentAchievement === null)
+                {
+                }
+                else
+                {
+                    for each (achievementAchievedRewardable in rewardableAchievementsObject)
+                    {
+                        if (achievementAchievedRewardable.id === currentAchievement.id)
+                        {
+                            return (true);
+                        };
+                    };
+                };
+            };
+            return (false);
+        }
+
         public function getAchievementObjective(objectiveId:int):AchievementObjective
         {
             return (AchievementObjective.getAchievementObjectiveById(objectiveId));
         }
 
-        [Untrusted]
         public function getAchievementObjectives():Array
         {
             return (AchievementObjective.getAchievementObjectives());
         }
 
-        [Untrusted]
         public function getHouse(houseId:int):House
         {
             return (House.getGuildHouseById(houseId));
         }
 
-        [Untrusted]
         public function getLivingObjectSkins(item:ItemWrapper):Array
         {
-            if (!(item.isLivingObject))
+            var skin:LivingObjectSkinWrapper;
+            if (!item.isLivingObject)
             {
                 return ([]);
             };
@@ -928,79 +1113,86 @@
             var i:int = 1;
             while (i <= item.livingObjectLevel)
             {
-                array.push(LivingObjectSkinWrapper.create(((item.livingObjectId) ? item.livingObjectId : item.id), item.livingObjectMood, i));
+                skin = LivingObjectSkinWrapper.create(((item.livingObjectId) ? item.livingObjectId : item.id), item.livingObjectMood, i);
+                if (skin.iconUri)
+                {
+                    array.push(skin);
+                };
                 i++;
             };
             return (array);
         }
 
-        [Untrusted]
         public function getAbuseReasonName(abuseReasonId:uint):AbuseReasons
         {
             return (AbuseReasons.getReasonNameById(abuseReasonId));
         }
 
-        [Untrusted]
         public function getAllAbuseReasons():Array
         {
             return (AbuseReasons.getReasonNames());
         }
 
-        [Untrusted]
         public function getPresetIcons():Array
         {
             return (PresetIcon.getPresetIcons());
         }
 
-        [Untrusted]
         public function getPresetIcon(iconId:uint):PresetIcon
         {
             return (PresetIcon.getPresetIconById(iconId));
         }
 
-        [Untrusted]
+        public function getIdolsPresetIcons():Array
+        {
+            return (IdolsPresetIcon.getIdolsPresetIcons());
+        }
+
+        public function getIdolsPresetIcon(iconId:uint):IdolsPresetIcon
+        {
+            return (IdolsPresetIcon.getIdolsPresetIconById(iconId));
+        }
+
         public function getDungeons():Array
         {
             return (Dungeon.getAllDungeons());
         }
 
-        [Untrusted]
         public function getDungeon(dungeonId:uint):Dungeon
         {
             return (Dungeon.getDungeonById(dungeonId));
         }
 
-        [Untrusted]
-        public function getMapInfo(mapId:uint):MapPosition
+        public function getMapInfo(mapId:Number):MapPosition
         {
             return (MapPosition.getMapPositionById(mapId));
         }
 
-        [Untrusted]
-        public function getWorldMap(mapId:uint):WorldMap
+        public function getWorldMap(mapId:Number):WorldMap
         {
             return (WorldMap.getWorldMapById(mapId));
         }
 
-        [Untrusted]
         public function getAllWorldMaps():Array
         {
             return (WorldMap.getAllWorldMaps());
         }
 
-        [Untrusted]
+        public function getAllWaypoints():Array
+        {
+            return (Waypoint.getAllWaypoints());
+        }
+
         public function getHintCategory(hintId:uint):HintCategory
         {
             return (HintCategory.getHintCategoryById(hintId));
         }
 
-        [Untrusted]
         public function getHintCategories():Array
         {
             return (HintCategory.getHintCategories());
         }
 
-        [Untrusted]
         public function getHousesInformations():Dictionary
         {
             if (this.entitiesFrame)
@@ -1010,191 +1202,201 @@
             return (null);
         }
 
-        [Untrusted]
         public function getHouseInformations(doorId:uint):HouseWrapper
         {
-            if (this.entitiesFrame)
+            if (((this.entitiesFrame) && (this.entitiesFrame.housesInformations)))
             {
                 return (this.entitiesFrame.housesInformations[doorId]);
             };
             return (null);
         }
 
-        [Untrusted]
         public function getSpellPair(pairId:uint):SpellPair
         {
             return (SpellPair.getSpellPairById(pairId));
         }
 
-        [Untrusted]
         public function getBomb(bombId:uint):SpellBomb
         {
             return (SpellBomb.getSpellBombById(bombId));
         }
 
-        [Untrusted]
         public function getPack(packId:uint):Pack
         {
             return (Pack.getPackById(packId));
         }
 
-        [Untrusted]
         public function getLegendaryTreasureHunt(huntId:uint):LegendaryTreasureHunt
         {
             return (LegendaryTreasureHunt.getLegendaryTreasureHuntById(huntId));
         }
 
-        [Untrusted]
         public function getLegendaryTreasureHunts():Array
         {
             return (LegendaryTreasureHunt.getLegendaryTreasureHunts());
         }
 
-        [Untrusted]
         public function getTitle(titleId:uint):Title
         {
             return (Title.getTitleById(titleId));
         }
 
-        [Untrusted]
         public function getTitles():Array
         {
             return (Title.getAllTitle());
         }
 
-        [Untrusted]
         public function getTitleCategory(titleCatId:uint):TitleCategory
         {
             return (TitleCategory.getTitleCategoryById(titleCatId));
         }
 
-        [Untrusted]
         public function getTitleCategories():Array
         {
             return (TitleCategory.getTitleCategories());
         }
 
-        [Untrusted]
         public function getOrnament(oId:uint):Ornament
         {
             return (Ornament.getOrnamentById(oId));
         }
 
-        [Untrusted]
         public function getOrnaments():Array
         {
             return (Ornament.getAllOrnaments());
         }
 
-        [Untrusted]
         public function getOptionalFeatureByKeyword(key:String):OptionalFeature
         {
             return (OptionalFeature.getOptionalFeatureByKeyword(key));
         }
 
-        [Untrusted]
         public function getEffect(effectId:uint):Effect
         {
             return (Effect.getEffectById(effectId));
         }
 
-        [Untrusted]
+        public function getEvolutiveEffectInstancesByExperienceBoost(item:ItemWrapper, experienceBoost:int):Array
+        {
+            var evolutiveEffectId:int;
+            var effect:EffectInstance;
+            if ((((((experienceBoost == 0) || (!(item))) || (!(item.isEvolutive()))) || (!(item.type))) || (!(item.type.evolutiveType))))
+            {
+                return ([]);
+            };
+            var newTotalExperience:int = (experienceBoost + item.experiencePoints);
+            var evolutiveItemType:EvolutiveItemType = item.type.evolutiveType;
+            if (evolutiveItemType.maxLevel == item.evolutiveLevel)
+            {
+                return ([]);
+            };
+            var newLevel:int = evolutiveItemType.getLevelFromExperiencePoints(newTotalExperience);
+            if (newLevel == item.evolutiveLevel)
+            {
+                return ([]);
+            };
+            var evolutiveEffectInstances:Array = [];
+            for each (evolutiveEffectId in item.evolutiveEffectIds)
+            {
+                effect = EvolutiveEffect.getEvolutiveEffectInstanceByLevelRange(evolutiveEffectId, item.evolutiveLevel, newLevel);
+                if (((effect is EffectInstanceInteger) && (!((effect as EffectInstanceInteger).value == 0))))
+                {
+                    evolutiveEffectInstances.push(effect);
+                };
+            };
+            return (evolutiveEffectInstances);
+        }
+
+        public function getEvolutiveItemLevelByExperiencePoints(item:ItemWrapper, experiencePoints:int):int
+        {
+            if (((((experiencePoints == 0) || (!(item))) || (!(item.type))) || (!(item.type.evolutiveType))))
+            {
+                return (0);
+            };
+            var evolutiveItemType:EvolutiveItemType = item.type.evolutiveType;
+            if (!evolutiveItemType)
+            {
+                return (0);
+            };
+            var level:int = evolutiveItemType.getLevelFromExperiencePoints(experiencePoints);
+            return (level);
+        }
+
         public function getAlmanaxEvent():AlmanaxEvent
         {
             return (AlmanaxManager.getInstance().event);
         }
 
-        [Untrusted]
         public function getAlmanaxZodiac():AlmanaxZodiac
         {
             return (AlmanaxManager.getInstance().zodiac);
         }
 
-        [Untrusted]
         public function getAlmanaxMonth():AlmanaxMonth
         {
             return (AlmanaxManager.getInstance().month);
         }
 
-        [Untrusted]
         public function getAlmanaxCalendar(calendarId:uint):AlmanaxCalendar
         {
             return (AlmanaxCalendar.getAlmanaxCalendarById(calendarId));
         }
 
-        [Untrusted]
         public function getExternalNotification(pExtNotifId:int):ExternalNotification
         {
             return (ExternalNotification.getExternalNotificationById(pExtNotifId));
         }
 
-        [Untrusted]
         public function getExternalNotifications():Array
         {
             return (ExternalNotification.getExternalNotifications());
         }
 
-        [Untrusted]
-        public function getActionDescriptionByName(name:String):ActionDescription
-        {
-            return (ActionDescription.getActionDescriptionByName(name));
-        }
-
-        [Untrusted]
         public function queryString(dataClass:Class, field:String, pattern:String):Vector.<uint>
         {
             return (GameDataQuery.queryString(dataClass, field, pattern));
         }
 
-        [Untrusted]
         public function queryEquals(dataClass:Class, field:String, value:*):Vector.<uint>
         {
             return (GameDataQuery.queryEquals(dataClass, field, value));
         }
 
-        [Untrusted]
         public function queryUnion(... ids):Vector.<uint>
         {
             return (GameDataQuery.union.apply(null, ids));
         }
 
-        [Untrusted]
         public function queryIntersection(... ids):Vector.<uint>
         {
             return (GameDataQuery.intersection.apply(null, ids));
         }
 
-        [Untrusted]
         public function queryGreaterThan(dataClass:Class, field:String, value:*):Vector.<uint>
         {
             return (GameDataQuery.queryGreaterThan(dataClass, field, value));
         }
 
-        [Untrusted]
         public function querySmallerThan(dataClass:Class, field:String, value:*):Vector.<uint>
         {
             return (GameDataQuery.querySmallerThan(dataClass, field, value));
         }
 
-        [Untrusted]
         public function queryReturnInstance(dataClass:Class, ids:Vector.<uint>):Vector.<Object>
         {
             return (GameDataQuery.returnInstance(dataClass, ids));
         }
 
-        [Untrusted]
         public function querySort(dataClass:Class, ids:Vector.<uint>, fields:*, ascending:*=true):Vector.<uint>
         {
             return (GameDataQuery.sort(dataClass, ids, fields, ascending));
         }
 
-        [Untrusted]
-        public function querySortI18nId(data:*, fields:*, ascending:*=true)
+        public function querySortI18nId(data:*, fields:*, ascending:*=true):*
         {
             return (GameDataQuery.sortI18n(data, fields, ascending));
         }
 
-        [Untrusted]
         public function getAllZaaps():Array
         {
             var waypoint:Waypoint;
@@ -1202,12 +1404,14 @@
             var allWaypoints:Array = Waypoint.getAllWaypoints();
             for each (waypoint in allWaypoints)
             {
-                allZapList.push(new TeleportDestinationWrapper(0, waypoint.mapId, waypoint.subAreaId, 0, 0, false, null, false));
+                if (waypoint.activated)
+                {
+                    allZapList.push(new TeleportDestinationWrapper(0, waypoint.mapId, waypoint.subAreaId, 0, SubArea.getSubAreaById(waypoint.subAreaId).level, 0, false, null, false));
+                };
             };
             return (allZapList);
         }
 
-        [Untrusted]
         public function getUnknowZaaps(knwonZaapList:Array):Array
         {
             var tpd:TeleportDestinationWrapper;
@@ -1232,33 +1436,321 @@
             return (unknowZaaps);
         }
 
-        [Untrusted]
         public function getAllVeteranRewards():Array
         {
             return (VeteranReward.getAllVeteranRewards());
         }
 
-        [Untrusted]
-        public function getComicReaderUrl(pComicRemoteId:String):String
+        public function getBreachPrizeById(id:int):BreachPrize
         {
-            var comicId:uint = GameDataQuery.queryEquals(Comic, "remoteId", pComicRemoteId)[0];
-            var comic:Comic = Comic.getComicById(comicId);
-            return (comic.readerUrl);
+            return (BreachPrize.getBreachPrizeById(id));
         }
 
-        [Trusted]
-        private function deepClone(source:*)
+        public function getIdol(pIdolId:uint):Idol
+        {
+            return (Idol.getIdolById(pIdolId));
+        }
+
+        public function getIdolByItemId(pItemId:int):Idol
+        {
+            return (Idol.getIdolByItemId(pItemId));
+        }
+
+        public function getAllIdols():Array
+        {
+            return (Idol.getIdols());
+        }
+
+        public function getHintById(pHintId:int):Hint
+        {
+            return (Hint.getHintById(pHintId));
+        }
+
+        public function getHints():Array
+        {
+            return (Hint.getHints());
+        }
+
+        public function getHavenbagFurnitures():Array
+        {
+            return (HavenbagFurniture.getAllFurnitures());
+        }
+
+        public function getHavenbagFurnitureWrapper(furnitureTypeId:int):HavenbagFurnitureWrapper
+        {
+            return (HavenbagFurnitureWrapper.create(furnitureTypeId));
+        }
+
+        public function getHavenbagTheme(themeId:int):HavenbagTheme
+        {
+            return (HavenbagTheme.getTheme(themeId));
+        }
+
+        public function getInteractive(interactiveId:int):Interactive
+        {
+            return (Interactive.getInteractiveById(interactiveId));
+        }
+
+        public function getNullEffectInstance(e:*):*
+        {
+            var nullEffect:* = this.deepClone(e);
+            nullEffect.setParameter(0, 0);
+            nullEffect.setParameter(1, 0);
+            nullEffect.setParameter(2, 0);
+            return (nullEffect);
+        }
+
+        public function setEffectInstanceParameters(e:*, paramIndex:uint, value:*):void
+        {
+            e.setParameter(paramIndex, value);
+        }
+
+        public function getBonusById(pBonusId:int):Bonus
+        {
+            return (Bonus.getBonusById(pBonusId));
+        }
+
+        public function getMountBehaviorById(id:int):MountBehavior
+        {
+            return (MountBehavior.getMountBehaviorById(id));
+        }
+
+        public function getMountFamilyNameById(mountFamilyId:int):String
+        {
+            return (MountFamily.getMountFamilyById(mountFamilyId).name);
+        }
+
+        public function getMountById(mountId:int):Mount
+        {
+            return (Mount.getMountById(mountId));
+        }
+
+        public function getServerGameTypes():Array
+        {
+            return (ServerGameType.getServerGameTypes());
+        }
+
+        public function getServerGameType(id:int):ServerGameType
+        {
+            return (ServerGameType.getServerGameTypeById(id));
+        }
+
+        public function getServerCommunities():Array
+        {
+            return (ServerCommunity.getServerCommunities());
+        }
+
+        public function getServerCommunity(id:int):ServerCommunity
+        {
+            return (ServerCommunity.getServerCommunityById(id));
+        }
+
+        public function getServerLang(langId:int):ServerLang
+        {
+            return (ServerLang.getServerLangById(langId));
+        }
+
+        public function getFinishMoves():Array
+        {
+            return (FinishMove.getFinishMoves());
+        }
+
+        private function deepClone(source:*):*
         {
             var className:String = getQualifiedClassName(source);
-            registerClassAlias(className, (getDefinitionByName(className) as Class));
+            var classToClone:Class = source.constructor;
+            registerClassAlias(className, classToClone);
             var b:ByteArray = new ByteArray();
             b.writeObject(source);
             b.position = 0;
-            var temp:* = b.readObject();
-            return (temp);
+            return (b.readObject() as classToClone);
+        }
+
+        public function getBreachBossById(id:int):BreachBoss
+        {
+            return (BreachBoss.getBreachBossById(id));
+        }
+
+        public function getBreachBossByMonsterId(id:int):BreachBoss
+        {
+            var boss:BreachBoss;
+            var temp:Array = BreachBoss.getBreachBosses();
+            for each (boss in temp)
+            {
+                if (boss.monsterId == id)
+                {
+                    return (boss);
+                };
+            };
+            return (null);
+        }
+
+        public function getBreachBossByRewardId(id:int):BreachBoss
+        {
+            var boss:BreachBoss;
+            var temp:Array = BreachBoss.getBreachBosses();
+            for each (boss in temp)
+            {
+                if (boss.rewardId == id)
+                {
+                    return (boss);
+                };
+            };
+            return (null);
+        }
+
+        public function getCurrentSeason():ServerTemporisSeason
+        {
+            return (ServerTemporisSeason.getCurrentSeason());
+        }
+
+        public function getBreachWorldMapCoordinate(stage:uint):BreachWorldMapCoordinate
+        {
+            return (BreachWorldMapCoordinate.getBreachWorldMapCoordinatesByMapStage(stage));
+        }
+
+        public function getBreachMinStageWorldMapCoordinate():BreachWorldMapCoordinate
+        {
+            var coordinate:BreachWorldMapCoordinate;
+            var allCoordinate:Array = BreachWorldMapCoordinate.getAllBreachWorldMapCoordinates();
+            var minCoordinate:BreachWorldMapCoordinate = (allCoordinate[0] as BreachWorldMapCoordinate);
+            for each (coordinate in allCoordinate)
+            {
+                if (coordinate.mapStage < minCoordinate.mapStage)
+                {
+                    minCoordinate = coordinate;
+                };
+            };
+            return (minCoordinate);
+        }
+
+        public function getBreachMaxStageWorldMapCoordinate():BreachWorldMapCoordinate
+        {
+            var coordinate:BreachWorldMapCoordinate;
+            var allCoordinate:Array = BreachWorldMapCoordinate.getAllBreachWorldMapCoordinates();
+            var maxCoordinate:BreachWorldMapCoordinate = (allCoordinate[(allCoordinate.length - 1)] as BreachWorldMapCoordinate);
+            for each (coordinate in allCoordinate)
+            {
+                if (coordinate.mapStage > maxCoordinate.mapStage)
+                {
+                    maxCoordinate = coordinate;
+                };
+            };
+            return (maxCoordinate);
+        }
+
+        public function getEmoteAnimName(emoteId:int, look:TiphonEntityLook):String
+        {
+            return (Emoticon.getEmoticonById(emoteId).getAnimName(look));
+        }
+
+        public function createDofusShopArticle(data:Object):DofusShopArticle
+        {
+            return (new DofusShopArticle(data));
+        }
+
+        public function getAllBreachWorldMapCoordinate():Array
+        {
+            return (BreachWorldMapCoordinate.getAllBreachWorldMapCoordinates());
+        }
+
+        public function updateItemWrapperEffects(itemWrapper:ItemWrapper, effects:Vector.<ObjectEffect>):void
+        {
+            itemWrapper.updateEffects(effects);
+        }
+
+        public function getBreachDungeonModificator(modificatorId:uint):BreachDungeonModificator
+        {
+            return (BreachDungeonModificator.getBreachDungeonModificatorByModificatorId(modificatorId));
+        }
+
+        public function getBreachWorldMapSector(id:uint):BreachWorldMapSector
+        {
+            return (BreachWorldMapSector.getBreachWorldMapSectorById(id));
+        }
+
+        public function getBreachWorldMapSectorByFloor(floor:uint):BreachWorldMapSector
+        {
+            var sector:BreachWorldMapSector;
+            for each (sector in BreachWorldMapSector.getAllBreachWorldMapSectors())
+            {
+                if (((floor >= sector.minStage) && (floor <= ((sector.maxStage > 0) ? sector.maxStage : sector.minStage))))
+                {
+                    return (sector);
+                };
+            };
+            return (null);
+        }
+
+        public function getAllBreachWorldMapSector():Array
+        {
+            return (BreachWorldMapSector.getAllBreachWorldMapSectors());
+        }
+
+        public function getBreachInfinityLevel(id:uint):BreachInfinityLevel
+        {
+            return (BreachInfinityLevel.getBreachInfinityLevelById(id));
+        }
+
+        public function getBreachInfinityLevelByLevel(level:uint):BreachInfinityLevel
+        {
+            var infinityLevel:BreachInfinityLevel;
+            for each (infinityLevel in BreachInfinityLevel.getAllBreachInfinityLevel())
+            {
+                if (infinityLevel.level == level)
+                {
+                    return (infinityLevel);
+                };
+            };
+            return (null);
+        }
+
+        public function getAllBreachInfinityLevel():Array
+        {
+            return (BreachInfinityLevel.getAllBreachInfinityLevel());
+        }
+
+        public function getRandomDropGroup(id:uint):RandomDropGroup
+        {
+            return (RandomDropGroup.getRandomDropGroupById(id));
+        }
+
+        public function getAllRandomDropGroup():Array
+        {
+            return (RandomDropGroup.getAllRandomDropGroup());
+        }
+
+        public function isTemporisSpellsUi():Boolean
+        {
+            return (ServerTemporisSeason.isTemporisSpellsUi);
+        }
+
+        public function getInventoryViewContent(viewName:String):Vector.<ItemWrapper>
+        {
+            var view:IInventoryView = InventoryManager.getInstance().inventory.getView(viewName);
+            if (view === null)
+            {
+                return (null);
+            };
+            return (view.content);
+        }
+
+        public function getAchievementProgressWithSeasonId(seasonId:int):AchievementProgress
+        {
+            return (AchievementProgress.getAchievementProgressBySeasonId(seasonId));
+        }
+
+        public function getAchievementProgressStepsWithProgressId(progressId:int):Array
+        {
+            return (AchievementProgressStep.getAchievementProgressStepsByProgressId(progressId));
+        }
+
+        public function getAchievementById(achievementId:int):Achievement
+        {
+            return (Achievement.getAchievementById(achievementId));
         }
 
 
     }
-}//package com.ankamagames.dofus.uiApi
+} com.ankamagames.dofus.uiApi
 

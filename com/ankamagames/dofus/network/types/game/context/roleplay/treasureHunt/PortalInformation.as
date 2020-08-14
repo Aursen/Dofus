@@ -1,15 +1,16 @@
-﻿package com.ankamagames.dofus.network.types.game.context.roleplay.treasureHunt
+package com.ankamagames.dofus.network.types.game.context.roleplay.treasureHunt
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
     public class PortalInformation implements INetworkType 
     {
 
         public static const protocolId:uint = 466;
 
-        public var portalId:uint = 0;
+        public var portalId:int = 0;
         public var areaId:int = 0;
 
 
@@ -18,7 +19,7 @@
             return (466);
         }
 
-        public function initPortalInformation(portalId:uint=0, areaId:int=0):PortalInformation
+        public function initPortalInformation(portalId:int=0, areaId:int=0):PortalInformation
         {
             this.portalId = portalId;
             this.areaId = areaId;
@@ -38,11 +39,7 @@
 
         public function serializeAs_PortalInformation(output:ICustomDataOutput):void
         {
-            if (this.portalId < 0)
-            {
-                throw (new Error((("Forbidden value (" + this.portalId) + ") on element portalId.")));
-            };
-            output.writeVarShort(this.portalId);
+            output.writeInt(this.portalId);
             output.writeShort(this.areaId);
         }
 
@@ -53,15 +50,32 @@
 
         public function deserializeAs_PortalInformation(input:ICustomDataInput):void
         {
-            this.portalId = input.readVarUhShort();
-            if (this.portalId < 0)
-            {
-                throw (new Error((("Forbidden value (" + this.portalId) + ") on element of PortalInformation.portalId.")));
-            };
+            this._portalIdFunc(input);
+            this._areaIdFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_PortalInformation(tree);
+        }
+
+        public function deserializeAsyncAs_PortalInformation(tree:FuncTree):void
+        {
+            tree.addChild(this._portalIdFunc);
+            tree.addChild(this._areaIdFunc);
+        }
+
+        private function _portalIdFunc(input:ICustomDataInput):void
+        {
+            this.portalId = input.readInt();
+        }
+
+        private function _areaIdFunc(input:ICustomDataInput):void
+        {
             this.areaId = input.readShort();
         }
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.context.roleplay.treasureHunt
+} com.ankamagames.dofus.network.types.game.context.roleplay.treasureHunt
 

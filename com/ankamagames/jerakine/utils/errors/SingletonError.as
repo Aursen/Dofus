@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.utils.errors
+package com.ankamagames.jerakine.utils.errors
 {
     public class SingletonError extends Error 
     {
@@ -9,5 +9,5 @@
         }
 
     }
-}//package com.ankamagames.jerakine.utils.errors
+} com.ankamagames.jerakine.utils.errors
 

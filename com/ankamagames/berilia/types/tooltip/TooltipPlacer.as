@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.types.tooltip
+package com.ankamagames.berilia.types.tooltip
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
@@ -6,16 +6,23 @@
     import __AS3__.vec.Vector;
     import flash.utils.Dictionary;
     import com.ankamagames.berilia.types.LocationEnum;
-    import flash.geom.Point;
     import com.ankamagames.jerakine.utils.display.Rectangle2;
+    import flash.geom.Point;
+    import flash.display.Sprite;
+    import com.ankamagames.berilia.types.graphic.GraphicContainer;
     import flash.geom.Rectangle;
     import com.ankamagames.jerakine.utils.display.StageShareManager;
+    import com.ankamagames.jerakine.pools.PoolsManager;
+    import com.ankamagames.jerakine.pools.PoolablePoint;
+    import com.ankamagames.berilia.types.graphic.UiRootContainer;
+    import com.ankamagames.jerakine.data.XmlConfig;
     import flash.display.DisplayObject;
     import com.ankamagames.jerakine.interfaces.IRectangle;
     import com.ankamagames.berilia.managers.TooltipManager;
-    import com.ankamagames.berilia.types.graphic.UiRootContainer;
     import com.ankamagames.berilia.types.event.UiRenderEvent;
     import flash.events.Event;
+    import com.ankamagames.berilia.Berilia;
+    import com.ankamagames.berilia.types.tooltip.event.TooltipEvent;
     import __AS3__.vec.*;
 
     public class TooltipPlacer 
@@ -25,6 +32,8 @@
         private static var _tooltips:Vector.<TooltipPosition> = new Vector.<TooltipPosition>(0);
         private static var _tooltipsRows:Dictionary = new Dictionary();
         private static var _tooltipsToWait:Vector.<String> = new Vector.<String>(0);
+        public static var isMapZoomed:Boolean = false;
+        public static var isInFight:Boolean = false;
         private static const _anchors:Array = [];
         private static var _init:Boolean;
 
@@ -57,10 +66,9 @@
             return (_anchors.concat());
         }
 
-        public static function place(tooltip:DisplayObject, target:IRectangle, point:uint=6, relativePoint:uint=0, offset:int=3, alwaysDisplayed:Boolean=true):void
+        public static function place(tooltip:DisplayObject, target:IRectangle, showDirectionalArrowInfo:Object, point:uint=6, relativePoint:uint=0, offset:*=3, alwaysDisplayed:Boolean=true):void
         {
-            var pTarget:Point;
-            var pTooltip:Point;
+            var showDirectionalArrow:Boolean;
             var hackIRectangle:Rectangle2;
             var offsetPt:Point;
             var tooltipZone:Rectangle2;
@@ -68,51 +76,68 @@
             var newPt:Object;
             var smallerZone:Object;
             var obj:Object;
+            var arrowInfos:Object;
+            var arrow:Sprite;
+            if ((tooltip as GraphicContainer).getChildByName("tooltipArrow"))
+            {
+                (tooltip as GraphicContainer).removeChild((tooltip as GraphicContainer).getChildByName("tooltipArrow"));
+            };
             var ok:Boolean;
             var ttBounds:Rectangle = tooltip.getBounds(tooltip);
             var truePoint:uint = point;
             var trueRelativePoint:uint = relativePoint;
             var lastTurn:Boolean;
+            if (showDirectionalArrowInfo.hasOwnProperty("showDirectionalArrow"))
+            {
+                showDirectionalArrow = showDirectionalArrowInfo.showDirectionalArrow;
+            }
+            else
+            {
+                showDirectionalArrow = showDirectionalArrowInfo;
+            };
             var anchors:Array = getAnchors();
             var hitZones:Array = new Array();
-            while (!(ok))
+            var screenBounds:Rectangle = StageShareManager.stageVisibleBounds;
+            var pTarget:PoolablePoint = (PoolsManager.getInstance().getPointPool().checkOut() as PoolablePoint);
+            var pTooltip:PoolablePoint = (PoolsManager.getInstance().getPointPool().checkOut() as PoolablePoint);
+            while ((!(ok)))
             {
-                pTarget = new Point(target.x, target.y);
-                pTooltip = new Point(tooltip.x, tooltip.y);
-                hackIRectangle = new Rectangle2(tooltip.x, tooltip.y, tooltip.width, tooltip.height);
+                pTarget.renew(target.x, target.y);
+                pTooltip.renew(tooltip.x, tooltip.y);
+                hackIRectangle = new Rectangle2(tooltip.x, tooltip.y, (tooltip as UiRootContainer).contentWidth, (tooltip as UiRootContainer).contentHeight);
                 processAnchor(pTooltip, hackIRectangle, point);
                 processAnchor(pTarget, target, relativePoint);
                 offsetPt = makeOffset(point, offset);
-                pTarget.x = (pTarget.x - ((pTooltip.x - offsetPt.x) + ttBounds.left));
+                pTarget.x = (pTarget.x - ((pTooltip.x - offsetPt.x) + (ttBounds.left * (tooltip as UiRootContainer).scale)));
                 pTarget.y = (pTarget.y - (pTooltip.y - offsetPt.y));
                 tooltipZone = new Rectangle2(pTarget.x, pTarget.y, hackIRectangle.width, hackIRectangle.height);
                 if (alwaysDisplayed)
                 {
-                    if (tooltipZone.y < 0)
+                    if (tooltipZone.y < screenBounds.top)
                     {
-                        tooltipZone.y = 0;
+                        tooltipZone.y = screenBounds.top;
                     };
-                    if (tooltipZone.x < 0)
+                    if (tooltipZone.x < screenBounds.left)
                     {
-                        tooltipZone.x = 0;
+                        tooltipZone.x = screenBounds.left;
                     };
-                    if ((tooltipZone.y + tooltipZone.height) > StageShareManager.startHeight)
+                    if ((tooltipZone.y + tooltipZone.height) > screenBounds.bottom)
                     {
-                        tooltipZone.y = (tooltipZone.y - ((tooltipZone.height + tooltipZone.y) - StageShareManager.startHeight));
+                        tooltipZone.y = (tooltipZone.y - ((tooltipZone.height + tooltipZone.y) - screenBounds.bottom));
                     };
-                    if ((tooltipZone.x + tooltipZone.width) > StageShareManager.startWidth)
+                    if ((tooltipZone.x + tooltipZone.width) > screenBounds.right)
                     {
-                        tooltipZone.x = (tooltipZone.x - ((tooltipZone.width + tooltipZone.x) - StageShareManager.startWidth));
+                        tooltipZone.x = (tooltipZone.x - ((tooltipZone.width + tooltipZone.x) - screenBounds.right));
                     };
                 };
-                if (!(lastTurn))
+                if (!lastTurn)
                 {
                     hitZoneSize = hitTest(tooltipZone, target);
                     ok = (hitZoneSize == 0);
-                    if (!(ok))
+                    if (!ok)
                     {
                         newPt = anchors.shift();
-                        if (!(newPt))
+                        if (!newPt)
                         {
                             smallerZone = {
                                 "size":(target.width * target.height),
@@ -151,8 +176,80 @@
                     ok = true;
                 };
             };
+            PoolsManager.getInstance().getPointPool().checkIn(pTarget);
+            PoolsManager.getInstance().getPointPool().checkIn(pTooltip);
             tooltip.x = tooltipZone.x;
             tooltip.y = tooltipZone.y;
+            if (showDirectionalArrow)
+            {
+                arrowInfos = DrawArrow(tooltip, target, showDirectionalArrowInfo, relativePoint, offset);
+                arrow = new Sprite();
+                arrow.name = "tooltipArrow";
+                arrow.graphics.clear();
+                arrow.graphics.lineStyle(0.1, 0xFFFFFF, 0);
+                arrow.graphics.beginFill(XmlConfig.getInstance().getEntry("colors.tooltip.bg"), XmlConfig.getInstance().getEntry("colors.tooltip.bg.alpha"));
+                arrow.graphics.drawTriangles(Vector.<Number>([arrowInfos.firstPoint.x, arrowInfos.firstPoint.y, arrowInfos.secondPoint.x, arrowInfos.secondPoint.y, arrowInfos.thirdPoint.x, arrowInfos.thirdPoint.y]));
+                arrow.graphics.endFill();
+                (tooltip as GraphicContainer).addChild(arrow);
+            };
+        }
+
+        public static function DrawArrow(tooltip:DisplayObject, target:IRectangle, showDirectionalArrowInfo:Object, relativePoint:uint, offset:*):Object
+        {
+            var tooltipOffset:Point = new Point();
+            var backgroundAnchors:Point = new Point();
+            if (showDirectionalArrowInfo.hasOwnProperty("anchors"))
+            {
+                backgroundAnchors = showDirectionalArrowInfo.anchors;
+            };
+            if ((offset is int))
+            {
+                tooltipOffset = new Point(offset, offset);
+            }
+            else
+            {
+                tooltipOffset = offset;
+            };
+            var infos:Object = {
+                "firstPoint":new Point(),
+                "secondPoint":new Point(),
+                "thirdPoint":new Point()
+            };
+            var diffX:int = int(((target.x + (target.width / 2)) - tooltip.x));
+            if (tooltip.x < (target.x + (target.width / 2)))
+            {
+                if (diffX >= tooltip.width)
+                {
+                    infos.firstPoint = new Point(((tooltip.width - 3) - backgroundAnchors.x), Math.max(0, Math.min((((target.y + (target.height / 2)) - tooltip.y) - 10), (tooltip.height - 10))));
+                    infos.secondPoint = new Point(((tooltip.width + Math.max(10, Math.min(tooltipOffset.x, 20))) - backgroundAnchors.x), Math.max(-10, Math.min(((target.y + (target.height / 2)) - tooltip.y), (tooltip.height + 10))));
+                    infos.thirdPoint = new Point(((tooltip.width - 3) - backgroundAnchors.x), Math.max(10, Math.min((((target.y + (target.height / 2)) - tooltip.y) + 10), tooltip.height)));
+                }
+                else
+                {
+                    if (tooltip.y < target.y)
+                    {
+                        infos.firstPoint = new Point(Math.max(0, Math.min((((target.x + (target.width / 2)) - tooltip.x) - 10), (tooltip.width - 10))), ((tooltip.height - 3) + backgroundAnchors.y));
+                        infos.secondPoint = new Point(Math.max(0, Math.min(((target.x + (target.width / 2)) - tooltip.x), (tooltip.width + 10))), ((tooltip.height + Math.max(10, Math.min(tooltipOffset.y, 20))) + backgroundAnchors.y));
+                        infos.thirdPoint = new Point(Math.max(10, Math.min((((target.x + (target.width / 2)) - tooltip.x) + 10), tooltip.width)), ((tooltip.height - 3) + backgroundAnchors.y));
+                    }
+                    else
+                    {
+                        infos.firstPoint = new Point(Math.max(0, Math.min((((target.x + (target.width / 2)) - tooltip.x) - 10), (tooltip.width - 10))), (3 + backgroundAnchors.y));
+                        infos.secondPoint = new Point(Math.max(0, Math.min(((target.x + (target.width / 2)) - tooltip.x), (tooltip.width + 10))), (-(Math.max(10, Math.min(tooltipOffset.y, 20))) + backgroundAnchors.y));
+                        infos.thirdPoint = new Point(Math.max(10, Math.min((((target.x + (target.width / 2)) - tooltip.x) + 10), tooltip.width)), (3 + backgroundAnchors.y));
+                    };
+                };
+            }
+            else
+            {
+                if (tooltip.x >= target.x)
+                {
+                    infos.firstPoint = new Point((3 + backgroundAnchors.x), Math.max(0, Math.min((((target.y + (target.height / 2)) - tooltip.y) - 10), (tooltip.height - 10))));
+                    infos.secondPoint = new Point((-(Math.max(10, Math.min(tooltipOffset.x, 20))) + backgroundAnchors.x), Math.max(-10, Math.min((((target.y + (target.height / 2)) - tooltip.y) + backgroundAnchors.y), (tooltip.height + 10))));
+                    infos.thirdPoint = new Point((3 + backgroundAnchors.x), Math.max(10, Math.min((((target.y + (target.height / 2)) - tooltip.y) + 10), tooltip.height)));
+                };
+            };
+            return (infos);
         }
 
         public static function placeWithArrow(tooltip:DisplayObject, target:IRectangle):Object
@@ -187,13 +284,13 @@
             };
         }
 
-        public static function addTooltipPosition(pTooltip:UiRootContainer, pTarget:IRectangle, pCellId:uint):void
+        public static function addTooltipPosition(pTooltip:*, pTarget:IRectangle, pCellId:uint, pOffsetRect:IRectangle=null):void
         {
             var i:int;
             var nbTooltips:int = _tooltips.length;
             var exists:Boolean;
             var tooltipName:String = TooltipManager.getTooltipName(pTooltip);
-            if (!(tooltipName))
+            if (!tooltipName)
             {
                 tooltipName = pTooltip.customUnicName;
             };
@@ -203,14 +300,14 @@
                 if (_tooltips[i].tooltip == pTooltip)
                 {
                     exists = true;
-                    _tooltips.splice(i, 1, new TooltipPosition(pTooltip, pTarget, pCellId));
+                    _tooltips.splice(i, 1, new TooltipPosition(pTooltip, pTarget, pCellId, pOffsetRect));
                     break;
                 };
                 i++;
             };
-            if (!(exists))
+            if (!exists)
             {
-                _tooltips.push(new TooltipPosition(pTooltip, pTarget, pCellId));
+                _tooltips.push(new TooltipPosition(pTooltip, pTarget, pCellId, pOffsetRect));
             };
             var tIndex:int = _tooltipsToWait.indexOf(tooltipName);
             if (tIndex != -1)
@@ -232,7 +329,7 @@
             };
             for each (tp in _tooltips)
             {
-                if (!(tp.tooltip.ready))
+                if (!tp.tooltip.ready)
                 {
                     tp.tooltip.addEventListener(UiRenderEvent.UIRenderComplete, checkRender);
                     return;
@@ -294,18 +391,19 @@
         {
             var i:int;
             var j:int;
-            var ttp:TooltipPosition;
-            var ttps:Vector.<TooltipPosition>;
+            var tooltipPosition:TooltipPosition;
+            var tooltipPositions:Vector.<TooltipPosition>;
             var centerX:Number;
             var rowWidth:Number;
             var rowLen:int;
             var currentTooltipRow:int;
-            var ttpRow:int;
             var ok:Boolean;
             var newY:Number;
             var addToRow:Boolean;
             var prevX:Number;
             var offScreenX:Boolean;
+            var tooltipHeight:Number;
+            var tooltipY:Number;
             var row:Object;
             var len:int = _tooltips.length;
             var minX:Number = 0;
@@ -316,15 +414,15 @@
             while (i >= 0)
             {
                 currentTooltipRow = _tooltips[i].mapRow;
-                if (!(_tooltipsRows[currentTooltipRow]))
+                if (!_tooltipsRows[currentTooltipRow])
                 {
                     _tooltipsRows[currentTooltipRow] = new Vector.<TooltipPosition>(0);
                 };
-                ttps = isTooltipSuperposed(_tooltips[i]);
+                tooltipPositions = isTooltipSuperposed(_tooltips[i]);
                 addToRow = false;
-                for each (ttp in ttps)
+                for each (tooltipPosition in tooltipPositions)
                 {
-                    if ((((ttp.mapRow == currentTooltipRow)) && (!((ttp.tooltip.customUnicName == _tooltips[i].tooltip.customUnicName)))))
+                    if (((tooltipPosition.mapRow == currentTooltipRow) && (!(tooltipPosition.tooltip.customUnicName == _tooltips[i].tooltip.customUnicName))))
                     {
                         addToRow = true;
                         break;
@@ -343,60 +441,58 @@
                         minX = 0;
                         maxX = 0;
                         minTooltipY = 0;
-                        for each (ttp in _tooltipsRows[currentTooltipRow])
+                        for each (tooltipPosition in _tooltipsRows[currentTooltipRow])
                         {
-                            minTooltipY = (((minTooltipY == 0)) ? ttp.tooltip.y : (((ttp.tooltip.y < minTooltipY)) ? ttp.tooltip.y : minTooltipY));
+                            tooltipY = ((tooltipPosition.offsetRect) ? (tooltipPosition.y - tooltipPosition.offsetRect.y) : tooltipPosition.y);
+                            if (((minTooltipY == 0) || (tooltipY < minTooltipY)))
+                            {
+                                minTooltipY = tooltipY;
+                            };
                         };
                         j = (i + 1);
                         while (j < len)
                         {
-                            if (((!((_tooltips[j].mapRow == currentTooltipRow))) && ((minTooltipY > ((_tooltips[j].tooltip.y - _tooltips[i].tooltip.height) - 2)))))
+                            tooltipY = ((_tooltips[j].offsetRect) ? (_tooltips[j].y - _tooltips[j].offsetRect.y) : _tooltips[j].y);
+                            tooltipHeight = ((_tooltips[i].offsetRect) ? (_tooltips[i].height - _tooltips[i].offsetRect.height) : _tooltips[i].height);
+                            if (((!(_tooltips[j].mapRow == currentTooltipRow)) && (minTooltipY > ((tooltipY - tooltipHeight) - 2))))
                             {
-                                minTooltipY = ((_tooltips[j].tooltip.y - _tooltips[i].tooltip.height) - 2);
+                                minTooltipY = ((tooltipY - tooltipHeight) - 2);
                                 break;
                             };
                             j++;
                         };
-                        for each (ttp in _tooltipsRows[currentTooltipRow])
+                        minX = (maxX = _tooltips[i].target.x);
+                        for each (tooltipPosition in _tooltipsRows[currentTooltipRow])
                         {
-                            ttp.tooltip.y = minTooltipY;
-                        };
-                        maxX = _tooltips[i].target.x;
-                        minX = maxX;
-                        for each (ttp in _tooltipsRows[currentTooltipRow])
-                        {
-                            if (ttp.target.x < minX)
+                            tooltipPosition.y = Math.max(0, minTooltipY);
+                            if (tooltipPosition.target.x < minX)
                             {
-                                minX = ttp.target.x;
+                                minX = tooltipPosition.target.x;
                             }
                             else
                             {
-                                if (ttp.target.x > maxX)
+                                if (tooltipPosition.target.x > maxX)
                                 {
-                                    maxX = ttp.target.x;
+                                    maxX = tooltipPosition.target.x;
                                 };
                             };
-                            rowWidth = (rowWidth + ttp.tooltip.width);
+                            rowWidth = (rowWidth + tooltipPosition.width);
                         };
                         _tooltipsRows[currentTooltipRow].sort(compareHorizontalPos);
-                        rowLen = _tooltipsRows[currentTooltipRow].length;
-                        if (rowLen > 0)
+                        rowWidth = (rowWidth + (2 * (rowLen - 1)));
+                        centerX = ((maxX + minX) / 2);
+                        _tooltipsRows[currentTooltipRow][0].tooltip.x = ((centerX + 43) - (rowWidth / 2));
+                        j = 1;
+                        while (j < rowLen)
                         {
-                            rowWidth = (rowWidth + (2 * (rowLen - 1)));
-                            centerX = (maxX - ((maxX - minX) / 2));
-                            _tooltipsRows[currentTooltipRow][0].tooltip.x = ((centerX + 43) - (rowWidth / 2));
-                            j = 1;
-                            while (j < rowLen)
-                            {
-                                _tooltipsRows[currentTooltipRow][j].tooltip.x = ((_tooltipsRows[currentTooltipRow][(j - 1)].tooltip.x + _tooltipsRows[currentTooltipRow][(j - 1)].tooltip.width) + 2);
-                                j++;
-                            };
+                            _tooltipsRows[currentTooltipRow][j].tooltip.x = ((_tooltipsRows[currentTooltipRow][(j - 1)].tooltip.x + _tooltipsRows[currentTooltipRow][(j - 1)].tooltip.width) + 2);
+                            j++;
                         };
                     }
                     else
                     {
                         ok = false;
-                        while (!(ok))
+                        while ((!(ok)))
                         {
                             j = (i + 1);
                             while (j < len)
@@ -404,32 +500,52 @@
                                 ok = true;
                                 if (hitTest(_tooltips[i].rect, _tooltips[j].rect) != 0)
                                 {
-                                    newY = ((_tooltips[j].tooltip.y - _tooltips[i].tooltip.height) - 2);
+                                    ok = false;
+                                    tooltipHeight = ((_tooltips[i].offsetRect) ? (_tooltips[i].height - _tooltips[i].offsetRect.height) : _tooltips[i].height);
+                                    newY = ((_tooltips[j].y - tooltipHeight) - 2);
                                     if (newY < 0)
                                     {
-                                        _tooltips[i].tooltip.y = 0;
-                                        ttp = _tooltips[j];
-                                        prevX = _tooltips[i].tooltip.x;
-                                        if (_tooltips[i].originalX < ttp.originalX)
+                                        _tooltips[i].y = 0;
+                                        tooltipPosition = _tooltips[j];
+                                        prevX = _tooltips[i].x;
+                                        if (_tooltips[i].originalX < tooltipPosition.originalX)
                                         {
-                                            _tooltips[i].tooltip.x = ((ttp.tooltip.x - _tooltips[i].tooltip.width) - 2);
+                                            _tooltips[i].x = ((tooltipPosition.x - _tooltips[i].width) - 2);
                                         }
                                         else
                                         {
-                                            _tooltips[i].tooltip.x = ((ttp.tooltip.x + ttp.tooltip.width) + 2);
+                                            _tooltips[i].x = ((tooltipPosition.x + tooltipPosition.width) + 2);
                                         };
-                                        offScreenX = (((_tooltips[i].tooltip.x < 0)) || ((((_tooltips[i].tooltip.x + _tooltips[i].tooltip.width) + 2) > StageShareManager.stage.stageWidth)));
-                                        if (((offScreenX) || (isTooltipSuperposed(_tooltips[i]))))
+                                        offScreenX = ((_tooltips[i].x < 0) || (((_tooltips[i].x + _tooltips[i].width) + 2) > StageShareManager.stage.stageWidth));
+                                        if (!isInFight)
                                         {
-                                            _tooltips[i].tooltip.x = prevX;
-                                            _tooltips[i].tooltip.y = newY;
+                                            if (((!(isMapZoomed)) && ((offScreenX) || (isTooltipSuperposed(_tooltips[i])))))
+                                            {
+                                                _tooltips[i].x = prevX;
+                                                ok = true;
+                                            }
+                                            else
+                                            {
+                                                if (((offScreenX) || (isTooltipSuperposed(_tooltips[i]))))
+                                                {
+                                                    _tooltips[i].x = prevX;
+                                                    _tooltips[i].y = newY;
+                                                };
+                                            };
+                                        }
+                                        else
+                                        {
+                                            if (((offScreenX) || (isTooltipSuperposed(_tooltips[i]))))
+                                            {
+                                                _tooltips[i].x = prevX;
+                                                _tooltips[i].y = newY;
+                                            };
                                         };
                                     }
                                     else
                                     {
-                                        _tooltips[i].tooltip.y = newY;
+                                        _tooltips[i].y = newY;
                                     };
-                                    ok = false;
                                     break;
                                 };
                                 j++;
@@ -443,24 +559,25 @@
             {
                 delete _tooltipsRows[row];
             };
+            Berilia.getInstance().dispatchEvent(new TooltipEvent(TooltipEvent.TOOLTIPS_ORDERED));
         }
 
         private static function isTooltipSuperposed(pTooltipPosition:TooltipPosition):Vector.<TooltipPosition>
         {
-            var tp:TooltipPosition;
-            var ttpsInCollision:Vector.<TooltipPosition>;
-            for each (tp in _tooltips)
+            var tooltipPosition:TooltipPosition;
+            var tooltipPositionsInCollision:Vector.<TooltipPosition>;
+            for each (tooltipPosition in _tooltips)
             {
-                if (((!((tp == pTooltipPosition))) && (!((hitTest(tp.rect, pTooltipPosition.rect) == 0)))))
+                if (((!(tooltipPosition == pTooltipPosition)) && (!(hitTest(tooltipPosition.rect, pTooltipPosition.rect) == 0))))
                 {
-                    if (!(ttpsInCollision))
+                    if (!tooltipPositionsInCollision)
                     {
-                        ttpsInCollision = new Vector.<TooltipPosition>(0);
+                        tooltipPositionsInCollision = new Vector.<TooltipPosition>(0);
                     };
-                    ttpsInCollision.push(tp);
+                    tooltipPositionsInCollision.push(tooltipPosition);
                 };
             };
-            return (ttpsInCollision);
+            return (tooltipPositionsInCollision);
         }
 
         private static function compareVerticalPos(pTooltipPosA:TooltipPosition, pTooltipPosB:TooltipPosition):int
@@ -510,7 +627,7 @@
             var r1:Rectangle = new Rectangle(item.x, item.y, item.width, item.height);
             var r2:Rectangle = new Rectangle(zone.x, zone.y, zone.width, zone.height);
             var r3:Rectangle = r1.intersection(r2);
-            return ((r3.width * r3.height));
+            return (r3.width * r3.height);
         }
 
         private static function processAnchor(p:Point, target:IRectangle, location:uint):Point
@@ -551,7 +668,7 @@
             return (p);
         }
 
-        private static function makeOffset(point:uint, offset:uint):Point
+        private static function makeOffset(point:uint, offset:*):Point
         {
             var offsetPt:Point = new Point();
             switch (point)
@@ -559,14 +676,32 @@
                 case LocationEnum.POINT_TOPLEFT:
                 case LocationEnum.POINT_BOTTOMLEFT:
                 case LocationEnum.POINT_LEFT:
-                    offsetPt.x = offset;
-                    break;
-                case LocationEnum.POINT_TOP:
+                    if ((offset is int))
+                    {
+                        offsetPt.x = offset;
+                    }
+                    else
+                    {
+                        if ((offset is Point))
+                        {
+                            offsetPt.x = offset.x;
+                        };
+                    };
                     break;
                 case LocationEnum.POINT_BOTTOMRIGHT:
                 case LocationEnum.POINT_TOPRIGHT:
                 case LocationEnum.POINT_RIGHT:
-                    offsetPt.x = -(offset);
+                    if ((offset is int))
+                    {
+                        offsetPt.x = -(offset);
+                    }
+                    else
+                    {
+                        if ((offset is Point))
+                        {
+                            offsetPt.x = -(offset.x);
+                        };
+                    };
                     break;
             };
             switch (point)
@@ -574,12 +709,32 @@
                 case LocationEnum.POINT_TOPLEFT:
                 case LocationEnum.POINT_TOP:
                 case LocationEnum.POINT_TOPRIGHT:
-                    offsetPt.y = offset;
+                    if ((offset is int))
+                    {
+                        offsetPt.y = offset;
+                    }
+                    else
+                    {
+                        if ((offset is Point))
+                        {
+                            offsetPt.y = offset.y;
+                        };
+                    };
                     break;
                 case LocationEnum.POINT_BOTTOMLEFT:
                 case LocationEnum.POINT_BOTTOMRIGHT:
                 case LocationEnum.POINT_BOTTOM:
-                    offsetPt.y = -(offset);
+                    if ((offset is int))
+                    {
+                        offsetPt.y = -(offset);
+                    }
+                    else
+                    {
+                        if ((offset is Point))
+                        {
+                            offsetPt.y = -(offset.y);
+                        };
+                    };
                     break;
             };
             return (offsetPt);
@@ -587,5 +742,5 @@
 
 
     }
-}//package com.ankamagames.berilia.types.tooltip
+} com.ankamagames.berilia.types.tooltip
 

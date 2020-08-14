@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.types
+package com.ankamagames.jerakine.types
 {
     public class Callback 
     {
@@ -12,20 +12,20 @@
             this.args = aArgs;
         }
 
-        public static function argFromArray(fMethod:Function, args:Array):Callback
+        public static function argFromArray(fMethod:Function, args:Array=null):Callback
         {
-            var cb:Callback = new (Callback)(fMethod);
+            var cb:Callback = new Callback(fMethod);
             cb.args = args;
             return (cb);
         }
 
 
-        public function exec()
+        public function exec():*
         {
             return (this.method.apply(null, this.args));
         }
 
 
     }
-}//package com.ankamagames.jerakine.types
+} com.ankamagames.jerakine.types
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.types.entities
+package com.ankamagames.dofus.types.entities
 {
     import flash.display.Sprite;
     import com.ankamagames.jerakine.entities.interfaces.IEntity;
@@ -10,7 +10,7 @@
     public class CheckPointEntity extends Sprite implements IEntity, IDisplayable 
     {
 
-        private var _id:int;
+        private var _id:Number;
         private var _position:MapPoint;
         private var _displayed:Boolean;
         private var _displayedObject:Sprite;
@@ -25,12 +25,12 @@
             };
         }
 
-        public function get id():int
+        public function get id():Number
         {
             return (this._id);
         }
 
-        public function set id(nValue:int):void
+        public function set id(nValue:Number):void
         {
             this._id = nValue;
         }
@@ -81,5 +81,5 @@
 
 
     }
-}//package com.ankamagames.dofus.types.entities
+} com.ankamagames.dofus.types.entities
 

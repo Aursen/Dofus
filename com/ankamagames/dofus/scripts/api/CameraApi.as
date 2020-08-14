@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.scripts.api
+package com.ankamagames.dofus.scripts.api
 {
     import com.ankamagames.jerakine.lua.LuaPackage;
     import com.ankamagames.dofus.misc.utils.Camera;
@@ -63,5 +63,5 @@
 
 
     }
-}//package com.ankamagames.dofus.scripts.api
+} com.ankamagames.dofus.scripts.api
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.inventory.items
+package com.ankamagames.dofus.network.messages.game.inventory.items
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class WrapperObjectDissociateRequestMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -55,6 +55,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_WrapperObjectDissociateRequestMessage(output);
@@ -67,7 +75,7 @@
                 throw (new Error((("Forbidden value (" + this.hostUID) + ") on element hostUID.")));
             };
             output.writeVarInt(this.hostUID);
-            if ((((this.hostPos < 0)) || ((this.hostPos > 0xFF))))
+            if (((this.hostPos < 0) || (this.hostPos > 0xFF)))
             {
                 throw (new Error((("Forbidden value (" + this.hostPos) + ") on element hostPos.")));
             };
@@ -81,13 +89,34 @@
 
         public function deserializeAs_WrapperObjectDissociateRequestMessage(input:ICustomDataInput):void
         {
+            this._hostUIDFunc(input);
+            this._hostPosFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_WrapperObjectDissociateRequestMessage(tree);
+        }
+
+        public function deserializeAsyncAs_WrapperObjectDissociateRequestMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._hostUIDFunc);
+            tree.addChild(this._hostPosFunc);
+        }
+
+        private function _hostUIDFunc(input:ICustomDataInput):void
+        {
             this.hostUID = input.readVarUhInt();
             if (this.hostUID < 0)
             {
                 throw (new Error((("Forbidden value (" + this.hostUID) + ") on element of WrapperObjectDissociateRequestMessage.hostUID.")));
             };
+        }
+
+        private function _hostPosFunc(input:ICustomDataInput):void
+        {
             this.hostPos = input.readUnsignedByte();
-            if ((((this.hostPos < 0)) || ((this.hostPos > 0xFF))))
+            if (((this.hostPos < 0) || (this.hostPos > 0xFF)))
             {
                 throw (new Error((("Forbidden value (" + this.hostPos) + ") on element of WrapperObjectDissociateRequestMessage.hostPos.")));
             };
@@ -95,5 +124,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.inventory.items
+} com.ankamagames.dofus.network.messages.game.inventory.items
 

@@ -1,12 +1,12 @@
-﻿package com.ankamagames.dofus.network.messages.game.inventory.items
+package com.ankamagames.dofus.network.messages.game.inventory.items
 {
     import com.ankamagames.jerakine.network.INetworkMessage;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class MimicryObjectFeedAndAssociateRequestMessage extends SymbioticObjectAssociateRequestMessage implements INetworkMessage 
     {
 
@@ -20,7 +20,7 @@
 
         override public function get isInitialized():Boolean
         {
-            return (((super.isInitialized) && (this._isInitialized)));
+            return ((super.isInitialized) && (this._isInitialized));
         }
 
         override public function getMessageId():uint
@@ -59,6 +59,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         override public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_MimicryObjectFeedAndAssociateRequestMessage(output);
@@ -72,7 +80,7 @@
                 throw (new Error((("Forbidden value (" + this.foodUID) + ") on element foodUID.")));
             };
             output.writeVarInt(this.foodUID);
-            if ((((this.foodPos < 0)) || ((this.foodPos > 0xFF))))
+            if (((this.foodPos < 0) || (this.foodPos > 0xFF)))
             {
                 throw (new Error((("Forbidden value (" + this.foodPos) + ") on element foodPos.")));
             };
@@ -88,20 +96,48 @@
         public function deserializeAs_MimicryObjectFeedAndAssociateRequestMessage(input:ICustomDataInput):void
         {
             super.deserialize(input);
+            this._foodUIDFunc(input);
+            this._foodPosFunc(input);
+            this._previewFunc(input);
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_MimicryObjectFeedAndAssociateRequestMessage(tree);
+        }
+
+        public function deserializeAsyncAs_MimicryObjectFeedAndAssociateRequestMessage(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._foodUIDFunc);
+            tree.addChild(this._foodPosFunc);
+            tree.addChild(this._previewFunc);
+        }
+
+        private function _foodUIDFunc(input:ICustomDataInput):void
+        {
             this.foodUID = input.readVarUhInt();
             if (this.foodUID < 0)
             {
                 throw (new Error((("Forbidden value (" + this.foodUID) + ") on element of MimicryObjectFeedAndAssociateRequestMessage.foodUID.")));
             };
+        }
+
+        private function _foodPosFunc(input:ICustomDataInput):void
+        {
             this.foodPos = input.readUnsignedByte();
-            if ((((this.foodPos < 0)) || ((this.foodPos > 0xFF))))
+            if (((this.foodPos < 0) || (this.foodPos > 0xFF)))
             {
                 throw (new Error((("Forbidden value (" + this.foodPos) + ") on element of MimicryObjectFeedAndAssociateRequestMessage.foodPos.")));
             };
+        }
+
+        private function _previewFunc(input:ICustomDataInput):void
+        {
             this.preview = input.readBoolean();
         }
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.inventory.items
+} com.ankamagames.dofus.network.messages.game.inventory.items
 

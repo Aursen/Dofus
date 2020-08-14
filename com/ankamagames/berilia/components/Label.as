@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.components
+package com.ankamagames.berilia.components
 {
     import com.ankamagames.berilia.types.graphic.GraphicContainer;
     import com.ankamagames.berilia.UIComponent;
@@ -16,24 +16,32 @@
     import flash.text.TextFieldType;
     import com.ankamagames.berilia.factories.HyperlinkFactory;
     import flash.events.MouseEvent;
+    import flash.geom.Rectangle;
     import flash.text.TextFieldAutoSize;
+    import com.ankamagames.jerakine.managers.FontManager;
+    import flash.events.Event;
     import com.ankamagames.berilia.managers.CssManager;
     import com.ankamagames.jerakine.types.Callback;
     import com.ankamagames.berilia.managers.TooltipManager;
-    import flash.events.TextEvent;
-    import flash.filters.DropShadowFilter;
-    import flash.text.GridFitType;
-    import com.ankamagames.jerakine.managers.FontManager;
     import flash.text.AntiAliasType;
+    import flash.events.TextEvent;
+    import flash.filters.BitmapFilter;
+    import flash.filters.DropShadowFilter;
+    import flash.filters.GlowFilter;
+    import flash.text.GridFitType;
+    import com.ankamagames.jerakine.types.UserFont;
+    import com.ankamagames.jerakine.utils.misc.DescribeTypeCache;
     import flash.display.DisplayObjectContainer;
     import com.ankamagames.berilia.types.graphic.ButtonContainer;
     import com.ankamagames.berilia.Berilia;
     import com.ankamagames.berilia.components.messages.TextClickMessage;
     import flash.text.TextLineMetrics;
     import flash.display.Sprite;
+    import mx.utils.UIDUtil;
     import com.ankamagames.berilia.types.data.TextTooltipInfo;
     import com.ankamagames.berilia.managers.UiModuleManager;
     import com.ankamagames.berilia.types.LocationEnum;
+    import com.ankamagames.jerakine.data.XmlConfig;
     import com.ankamagames.berilia.types.graphic.UiRootContainer;
     import flash.geom.Matrix;
     import flash.display.BitmapData;
@@ -53,15 +61,17 @@
         private static const VALIGN_CENTER:String = "CENTER";
         private static const VALIGN_BOTTOM:String = "BOTTOM";
         private static const VALIGN_FIXEDHEIGHT:String = "FIXEDHEIGHT";
+        private static const _filterIndex:Dictionary = new Dictionary();
 
-        private var _finalized:Boolean;
         protected var _tText:TextField;
         private var _cssApplied:Boolean = false;
         protected var _sText:String = "";
         protected var _sType:String = "default";
+        protected var _parseText:Boolean = true;
         private var _binded:Boolean = false;
         private var _needToFinalize:Boolean = false;
         private var _lastWidth:Number = -1;
+        private var _uid:String = null;
         protected var _sCssUrl:Uri;
         protected var _nWidth:uint = 100;
         protected var _nHeight:uint = 20;
@@ -75,8 +85,12 @@
         protected var _ssSheet:ExtendedStyleSheet;
         protected var _tfFormatter:TextFormat;
         protected var _useEmbedFonts:Boolean = true;
+        protected var _useDefaultFont:Boolean = false;
+        protected var _useFontResize:Boolean = true;
         protected var _nPaddingLeft:int = 0;
+        protected var _nPaddingRight:int = 0;
         protected var _nTextIndent:int = 0;
+        protected var _verticalOffset:Number = 0;
         protected var _bDisabled:Boolean;
         protected var _nTextHeight:int;
         protected var _sVerticalAlign:String = "none";
@@ -87,6 +101,8 @@
         protected var _useCustomFormat:Boolean = false;
         protected var _neverIndent:Boolean = false;
         protected var _hasHandCursor:Boolean = false;
+        protected var _shiftClickActivated:Boolean = true;
+        protected var _forceUppercase:Boolean = false;
         private var _useTooltipExtension:Boolean = true;
         private var _textFieldTooltipExtension:TextField;
         private var _textTooltipExtensionColor:uint;
@@ -102,6 +118,7 @@
             this._tText.type = TextFieldType.DYNAMIC;
             this._tText.selectable = false;
             this._tText.mouseEnabled = false;
+            this.useFontResize = this._useFontResize;
             MEMORY_LOG[this] = 1;
         }
 
@@ -116,6 +133,10 @@
             {
                 sValue = "";
             };
+            if (this._forceUppercase)
+            {
+                sValue = sValue.toLocaleUpperCase();
+            };
             this._sText = sValue;
             if (this._bHtmlAllowed)
             {
@@ -124,9 +145,9 @@
                     this._tText.styleSheet = null;
                 };
                 this._tText.htmlText = sValue;
-                if (!(this._useCustomFormat))
+                if (!this._useCustomFormat)
                 {
-                    if (((!((this._sCssUrl == null))) && (!(this._cssApplied))))
+                    if (((!(this._sCssUrl == null)) && (!(this._cssApplied))))
                     {
                         this.applyCSS(this._sCssUrl);
                         this._cssApplied = true;
@@ -145,12 +166,9 @@
             {
                 this._tText.text = sValue;
             };
-            if (!(this._useCustomFormat))
+            if (((!(this._useCustomFormat)) && (!(this._sCssClass))))
             {
-                if (!(this._sCssClass))
-                {
-                    this.cssClass = "p";
-                };
+                this.cssClass = "p";
             };
             if (this._hyperlinkEnabled)
             {
@@ -160,10 +178,15 @@
             };
             if (this._currentStyleSheet)
             {
+                if (this._hyperlinkEnabled)
+                {
+                    sValue = HyperlinkFactory.decode(sValue);
+                    this.parseLinks();
+                };
                 this._tText.styleSheet = this._currentStyleSheet;
                 this._tText.htmlText = sValue;
             };
-            if (((this._finalized) && (this._autoResize)))
+            if (((_finalized) && (this._autoResize)))
             {
                 this.resizeText();
             };
@@ -176,16 +199,37 @@
 
         public function set htmlText(val:String):void
         {
+            if (this._forceUppercase)
+            {
+                val = val.toLocaleUpperCase();
+            };
             this._tText.htmlText = val;
             if (this._hyperlinkEnabled)
             {
+                HyperlinkFactory.createTextClickHandler(this._tText);
+                HyperlinkFactory.createRollOverHandler(this._tText);
                 this.parseLinks();
             };
+        }
+
+        public function get parseText():Boolean
+        {
+            return (this._parseText);
+        }
+
+        public function set parseText(value:Boolean):void
+        {
+            this._parseText = value;
         }
 
         public function get hyperlinkEnabled():Boolean
         {
             return (this._hyperlinkEnabled);
+        }
+
+        public function get mouseOverHyperLink():Boolean
+        {
+            return (this._mouseOverHyperLink);
         }
 
         public function set hyperlinkEnabled(bValue:Boolean):void
@@ -225,6 +269,16 @@
         public function set useCustomFormat(bValue:Boolean):void
         {
             this._useCustomFormat = bValue;
+        }
+
+        public function get shiftClickActivated():Boolean
+        {
+            return (this._shiftClickActivated);
+        }
+
+        public function set shiftClickActivated(bValue:Boolean):void
+        {
+            this._shiftClickActivated = bValue;
         }
 
         public function get neverIndent():Boolean
@@ -271,6 +325,11 @@
             this._tText.setSelection(0, this._tText.length);
         }
 
+        public function getCharBoundaries(charPos:Number):Rectangle
+        {
+            return (this._tText.getCharBoundaries(charPos));
+        }
+
         public function get type():String
         {
             return (this._sType);
@@ -281,11 +340,13 @@
             this._sType = sValue;
         }
 
+        [Uri]
         public function get css():Uri
         {
             return (this._sCssUrl);
         }
 
+        [Uri]
         public function set css(sFile:Uri):void
         {
             this._cssApplied = false;
@@ -294,7 +355,7 @@
 
         public function set cssClass(c:String):void
         {
-            this._sCssClass = (((c == "")) ? "p" : c);
+            this._sCssClass = ((c == "") ? "p" : c);
             this.bindCss();
         }
 
@@ -324,6 +385,18 @@
             this._tText.thickness = value;
         }
 
+        public function get forceUppercase():Boolean
+        {
+            return (this._forceUppercase);
+        }
+
+        public function set forceUppercase(value:Boolean):void
+        {
+            this._forceUppercase = value;
+            var currentText:String = this.text;
+            this.text = currentText;
+        }
+
         public function set aStyleObj(value:Object):void
         {
             this._aStyleObj = (value as Array);
@@ -336,20 +409,25 @@
 
         override public function get width():Number
         {
-            return (((((this._useExtendWidth) && ((this._tText.numLines < 2)))) ? (this._tText.textWidth + 7) : this._nWidth));
+            return (((this._useExtendWidth) && (this._tText.numLines < 2)) ? (this._tText.textWidth + 7) : this._nWidth);
         }
 
         override public function set width(nValue:Number):void
         {
+            if (nValue == 0)
+            {
+                return;
+            };
             this._nWidth = nValue;
             this._tText.width = this._nWidth;
-            if (_bgColor != -1)
-            {
-                this.bgColor = _bgColor;
-            };
-            if (!(this._bFixedHeight))
+            super.width = nValue;
+            if (!this._bFixedHeight)
             {
                 this.bindCss();
+            };
+            if (((_finalized) && (this._autoResize)))
+            {
+                this.resizeText();
             };
         }
 
@@ -361,7 +439,7 @@
         override public function set height(nValue:Number):void
         {
             var valMin:Number;
-            if (!(this._tText.multiline))
+            if (!this._tText.multiline)
             {
                 valMin = this._tText.textHeight;
                 if (nValue < valMin)
@@ -387,16 +465,6 @@
         public function get textHeight():Number
         {
             return (this._tText.textHeight);
-        }
-
-        public function get finalized():Boolean
-        {
-            return (this._finalized);
-        }
-
-        public function set finalized(value:Boolean):void
-        {
-            this._finalized = value;
         }
 
         public function get html():Boolean
@@ -467,6 +535,11 @@
             this._useExtendWidth = v;
         }
 
+        public function get hasTooltipExtension():Boolean
+        {
+            return ((this._textFieldTooltipExtension) && (!(this._textFieldTooltipExtension.text == "")));
+        }
+
         public function get fixedHeight():Boolean
         {
             return (this._bFixedHeight);
@@ -475,7 +548,11 @@
         public function set fixedHeight(bValue:Boolean):void
         {
             this._bFixedHeight = bValue;
-            this._tText.wordWrap = !(this._bFixedHeight);
+            if (((this._tText.wordWrap) && (bValue)))
+            {
+                _log.warn("Setting wordWrap to false as fixedHeight has been set to true!");
+            };
+            this._tText.wordWrap = (!(this._bFixedHeight));
         }
 
         public function get fixedHeightForMultiline():Boolean
@@ -488,11 +565,11 @@
             this._bFixedHeightForMultiline = bValue;
         }
 
-        override public function set bgColor(nColor:int):void
+        override public function set bgColor(nColor:*):void
         {
-            _bgColor = nColor;
+            setColorVar(nColor);
             graphics.clear();
-            if ((((((bgColor == -1)) || (!(this.width)))) || (!(this.height))))
+            if ((((bgColor == -1) || (!(this.width))) || (!(this.height))))
             {
                 return;
             };
@@ -500,14 +577,14 @@
             {
                 graphics.lineStyle(1, _borderColor);
             };
-            graphics.beginFill(nColor, _bgAlpha);
-            if (!(_bgCornerRadius))
+            graphics.beginFill(_bgColor, _bgAlpha);
+            if (!_bgCornerRadius)
             {
-                graphics.drawRect(x, y, this.width, (this.height + 2));
+                graphics.drawRect((x - _bgMargin), y, (this.width + (_bgMargin * 2)), (this.height + 2));
             }
             else
             {
-                graphics.drawRoundRect(this._tText.x, this._tText.y, this._tText.width, (this._tText.height + 2), _bgCornerRadius, _bgCornerRadius);
+                graphics.drawRoundRect((this._tText.x - _bgMargin), this._tText.y, (this._tText.width + (_bgMargin * 2)), (this._tText.height + 2), _bgCornerRadius, _bgCornerRadius);
             };
             graphics.endFill();
         }
@@ -579,7 +656,7 @@
             }
             else
             {
-                if (!(handCursor))
+                if (!handCursor)
                 {
                     handCursor = this._hasHandCursor;
                 };
@@ -623,7 +700,7 @@
 
         public function set colorText(color:uint):void
         {
-            if (!(this._tfFormatter))
+            if (!this._tfFormatter)
             {
                 _log.error("Error. Try to change the size before formatter was initialized.");
                 return;
@@ -631,6 +708,34 @@
             this._tfFormatter.color = color;
             this._tText.setTextFormat(this._tfFormatter);
             this._tText.defaultTextFormat = this._tfFormatter;
+        }
+
+        public function get useDefaultFont():Boolean
+        {
+            return (this._useDefaultFont);
+        }
+
+        public function set useDefaultFont(value:Boolean):void
+        {
+            this._useDefaultFont = value;
+        }
+
+        public function get useFontResize():Boolean
+        {
+            return (this._useFontResize);
+        }
+
+        public function set useFontResize(value:Boolean):void
+        {
+            this._useFontResize = value;
+            if (this._useFontResize)
+            {
+                FontManager.getInstance().addEventListener(Event.CHANGE, this.onFontConfigChange, false, 0, true);
+            }
+            else
+            {
+                FontManager.getInstance().removeEventListener(Event.CHANGE, this.onFontConfigChange, false);
+            };
         }
 
         public function setCssColor(color:String, style:String=null):void
@@ -652,6 +757,12 @@
         {
             this._useStyleSheet = true;
             this._currentStyleSheet = styles;
+            this._tText.styleSheet = this._currentStyleSheet;
+        }
+
+        protected function onFontConfigChange(event:Event):void
+        {
+            this.bindCss();
         }
 
         public function applyCSS(sFile:Uri):void
@@ -660,7 +771,7 @@
             {
                 return;
             };
-            if ((((sFile == this._sCssUrl)) && (this._tfFormatter)))
+            if (((sFile == this._sCssUrl) && (this._tfFormatter)))
             {
                 this.updateCss();
             }
@@ -689,9 +800,13 @@
             {
                 removeChild(this._tText);
             };
-            TooltipManager.hide("TextExtension");
+            if (this._uid)
+            {
+                TooltipManager.hide(("TextExtension" + this._uid));
+            };
             this._tText.removeEventListener(MouseEvent.MOUSE_MOVE, this.onMouseMove);
             this._tText.removeEventListener(MouseEvent.ROLL_OUT, this.hyperlinkRollOut);
+            FontManager.getInstance().removeEventListener(Event.CHANGE, this.onFontConfigChange, false);
         }
 
         override public function free():void
@@ -701,13 +816,14 @@
             this._nWidth = 100;
             this._nHeight = 20;
             this._bHtmlAllowed = true;
-            this._sAntialiasType = "normal";
+            this._sAntialiasType = AntiAliasType.NORMAL;
             this._bFixedWidth = true;
             this._bFixedHeight = true;
             this._bFixedHeightForMultiline = false;
             this._ssSheet = null;
             this._useEmbedFonts = true;
             this._nPaddingLeft = 0;
+            this._nPaddingRight = 0;
             this._nTextIndent = 0;
             this._bDisabled = false;
             this._nTextHeight = 0;
@@ -727,46 +843,63 @@
 
         private function changeCssClassColor(color:String, style:String=null):void
         {
-            var _local_3:*;
-            if (style)
-            {
-                this.aStyleObj[style].color = color;
-                this._tfFormatter = this._ssSheet.transform(this.aStyleObj[style]);
-                this._tText.setTextFormat(this._tfFormatter);
-                this._tText.defaultTextFormat = this._tfFormatter;
-            }
-            else
-            {
-                for each (_local_3 in this.aStyleObj)
-                {
-                    _local_3.color = color;
-                };
-            };
-        }
-
-        private function changeCssClassSize(size:uint, style:String=null):void
-        {
-            var _local_3:*;
+            var i:*;
             if (style)
             {
                 if (this.aStyleObj[style] == null)
                 {
                     this.aStyleObj[style] = new Object();
                 };
-                this.aStyleObj[style].fontSize = (size + "px");
+                this.aStyleObj[style].color = color;
+                if (this._ssSheet)
+                {
+                    this._tfFormatter = this._ssSheet.transform(this.aStyleObj[style]);
+                    this._tText.setTextFormat(this._tfFormatter);
+                    this._tText.defaultTextFormat = this._tfFormatter;
+                };
             }
             else
             {
-                for each (_local_3 in this.aStyleObj)
+                for each (i in this.aStyleObj)
                 {
-                    _local_3.fontSize = (size + "px");
+                    i.color = color;
+                };
+            };
+        }
+
+        private function changeCssClassSize(size:uint, style:String=null):void
+        {
+            var currentStyleSheet:StyleSheet;
+            var i:*;
+            if (style)
+            {
+                if (this.aStyleObj[style] == null)
+                {
+                    this.aStyleObj[style] = new Object();
+                };
+                this.aStyleObj[style].fontSize = size;
+                if (this._ssSheet)
+                {
+                    currentStyleSheet = this._tText.styleSheet;
+                    this._tText.styleSheet = null;
+                    this._tfFormatter = this._ssSheet.transform(this.aStyleObj[style]);
+                    this._tText.setTextFormat(this._tfFormatter);
+                    this._tText.defaultTextFormat = this._tfFormatter;
+                    this._tText.styleSheet = currentStyleSheet;
+                };
+            }
+            else
+            {
+                for each (i in this.aStyleObj)
+                {
+                    i.fontSize = size;
                 };
             };
         }
 
         private function changeCssClassFont(font:String, style:String=null):void
         {
-            var _local_3:*;
+            var i:*;
             if (style)
             {
                 if (this.aStyleObj[style] == null)
@@ -777,9 +910,9 @@
             }
             else
             {
-                for each (_local_3 in this.aStyleObj)
+                for each (i in this.aStyleObj)
                 {
-                    _local_3.fontFamily = font;
+                    i.fontFamily = font;
                 };
             };
         }
@@ -787,14 +920,21 @@
         public function appendText(sTxt:String, style:String=null):void
         {
             var textFormat:TextFormat;
-            if (((style) && (this.aStyleObj[style])))
+            if (this._forceUppercase)
+            {
+                sTxt = sTxt.toLocaleUpperCase();
+            };
+            if ((((style) && (this.aStyleObj[style])) && (this._ssSheet)))
             {
                 if (this._tText.filters.length)
                 {
                     this._tText.filters = new Array();
                 };
                 textFormat = this._ssSheet.transform(this.aStyleObj[style]);
-                textFormat.bold = false;
+                if (!textFormat.bold)
+                {
+                    textFormat.bold = false;
+                };
                 this._tText.defaultTextFormat = textFormat;
             };
             if (this._hyperlinkEnabled)
@@ -817,11 +957,17 @@
         {
             var styleToDisplay:String;
             var s:String;
-            var sc:uint;
-            var ss:uint;
-            var fontClass:String;
-            var _local_8:String;
-            if (!(this._sCssUrl))
+            var effectName:String;
+            var filtersTmp:Array;
+            var filterRef:Dictionary;
+            var cssKey:String;
+            var oldCssUrl:Uri;
+            var filter:BitmapFilter;
+            var valueString:String;
+            var value:* = undefined;
+            var oldSize:Number;
+            var font:String;
+            if (!this._sCssUrl)
             {
                 if (this._needToFinalize)
                 {
@@ -831,38 +977,87 @@
             };
             var oldCss:ExtendedStyleSheet = this._ssSheet;
             this._ssSheet = CssManager.getInstance().getCss(this._sCssUrl.uri);
-            if (!(this._ssSheet))
+            if (!this._ssSheet)
             {
-                if (this._needToFinalize)
+                if (oldCss != null)
                 {
-                    this.finalize();
+                    this._ssSheet = oldCss;
+                    oldCssUrl = this._sCssUrl;
+                    this._sCssUrl = null;
+                    this.applyCSS(oldCssUrl);
+                }
+                else
+                {
+                    if (this._needToFinalize)
+                    {
+                        this.finalize();
+                    };
+                    return;
                 };
-                return;
             };
             var currentStyleSheet:StyleSheet = this._tText.styleSheet;
             this._tText.styleSheet = null;
             this.aStyleObj = new Array();
             for each (s in this._ssSheet.styleNames)
             {
-                if (((((!(styleToDisplay)) || ((s == this._sCssClass)))) || (((!((this._sCssClass == styleToDisplay))) && ((s == "p"))))))
+                if ((((!(styleToDisplay)) || (s == this._sCssClass)) || ((!(this._sCssClass == styleToDisplay)) && (s == "p"))))
                 {
                     styleToDisplay = s;
                 };
-                if (((!((this._ssSheet == oldCss))) || (!(this.aStyleObj[s]))))
+                if (((!(this._ssSheet == oldCss)) || (!(this.aStyleObj[s]))))
                 {
                     this.aStyleObj[s] = this._ssSheet.getStyle(s);
                 };
             };
-            if (((this.aStyleObj[styleToDisplay]["shadowSize"]) || (this.aStyleObj[styleToDisplay]["shadowColor"])))
+            filtersTmp = [];
+            filterRef = new Dictionary();
+            for (cssKey in this.aStyleObj[styleToDisplay])
             {
-                sc = ((this.aStyleObj[styleToDisplay]["shadowColor"]) ? parseInt(this.aStyleObj[styleToDisplay]["shadowColor"].substr(1)) : 0);
-                ss = ((this.aStyleObj[styleToDisplay]["shadowSize"]) ? parseInt(this.aStyleObj[styleToDisplay]["shadowSize"]) : 5);
-                this._tText.filters = [new DropShadowFilter(0, 0, sc, 0.5, ss, ss, 3)];
-            }
-            else
-            {
-                this._tText.filters = [];
+                effectName = ((cssKey.indexOf("shadow") != -1) ? "shadow" : null);
+                effectName = (((!(effectName)) && (!(cssKey.indexOf("glow") == -1))) ? "glow" : effectName);
+                if (effectName)
+                {
+                    if (!filterRef[effectName])
+                    {
+                        if (effectName == "shadow")
+                        {
+                            filter = new DropShadowFilter();
+                        }
+                        else
+                        {
+                            if (effectName == "glow")
+                            {
+                                filter = new GlowFilter();
+                            };
+                        };
+                        this.buildFilterIndex(filter);
+                        filtersTmp.push(filter);
+                        filterRef[effectName] = filter;
+                    }
+                    else
+                    {
+                        filter = filterRef[effectName];
+                    };
+                    try
+                    {
+                        valueString = this.aStyleObj[styleToDisplay][cssKey];
+                        if (valueString.charAt(0) == "#")
+                        {
+                            value = parseInt(valueString.substr(1), 16);
+                        }
+                        else
+                        {
+                            value = parseFloat(valueString);
+                        };
+                        filter[_filterIndex[getQualifiedClassName(filter)][cssKey.substr(effectName.length).toLowerCase()]] = value;
+                    }
+                    catch(e:Error)
+                    {
+                        _log.error(e);
+                    };
+                };
             };
+            filters = filtersTmp;
             if (this.aStyleObj[styleToDisplay]["useEmbedFonts"])
             {
                 this._useEmbedFonts = (this.aStyleObj[styleToDisplay]["useEmbedFonts"] == "true");
@@ -870,6 +1065,10 @@
             if (this.aStyleObj[styleToDisplay]["paddingLeft"])
             {
                 this._nPaddingLeft = parseInt(this.aStyleObj[styleToDisplay]["paddingLeft"]);
+            };
+            if (this.aStyleObj[styleToDisplay]["paddingRight"])
+            {
+                this._nPaddingRight = parseInt(this.aStyleObj[styleToDisplay]["paddingRight"]);
             };
             if (this.aStyleObj[styleToDisplay]["verticalHeight"])
             {
@@ -884,7 +1083,7 @@
                 this._tText.thickness = this.aStyleObj[styleToDisplay]["thickness"];
             };
             this._tText.gridFitType = GridFitType.PIXEL;
-            this._tText.htmlText = ((this._sText) ? this._sText : this.text);
+            this._tText.htmlText = ((this._sText) ? this._sText : this.htmlText);
             this._tfFormatter = this._ssSheet.transform(this.aStyleObj[styleToDisplay]);
             if (this.aStyleObj[styleToDisplay]["leading"])
             {
@@ -898,21 +1097,36 @@
             {
                 this._tfFormatter.kerning = (this.aStyleObj[styleToDisplay]["kerning"] == "true");
             };
-            if (!(this._neverIndent))
+            if (!this._neverIndent)
             {
                 this._tfFormatter.indent = this._nTextIndent;
             };
             this._tfFormatter.leftMargin = this._nPaddingLeft;
+            this._tfFormatter.rightMargin = this._nPaddingRight;
+            var fontInfo:UserFont = FontManager.getInstance().getFontInfo(this._tfFormatter.font, this._useDefaultFont);
             if (this._useEmbedFonts)
             {
-                fontClass = FontManager.getInstance().getFontClassName(this._tfFormatter.font);
-                if (fontClass)
+                if (fontInfo)
                 {
-                    this._tfFormatter.size = Math.round((int(this._tfFormatter.size) * FontManager.getInstance().getSizeMultipicator(this._tfFormatter.font)));
-                    this._tfFormatter.font = fontClass;
-                    this._tText.defaultTextFormat.font = fontClass;
+                    oldSize = ((this._tfFormatter.size != null) ? Number(this._tfFormatter.size) : 12);
+                    if (((!(fontInfo.maxSize == UserFont.FONT_SIZE_NO_MAX)) && (this._tfFormatter.size < fontInfo.maxSize)))
+                    {
+                        this._tfFormatter.size = Math.min(Math.round((int(this._tfFormatter.size) * fontInfo.sizeMultiplicator)), ((fontInfo.maxSize != UserFont.FONT_SIZE_NO_MAX) ? fontInfo.maxSize : 1000));
+                        this._verticalOffset = ((((this._tfFormatter.size != null) ? Number(this._tfFormatter.size) : 12) - oldSize) * fontInfo.verticalOffset);
+                    };
+                    this._tfFormatter.font = fontInfo.className;
+                    this._tText.defaultTextFormat.font = fontInfo.className;
                     this._tText.embedFonts = true;
                     this._tText.antiAliasType = AntiAliasType.ADVANCED;
+                    this._tText.sharpness = fontInfo.sharpness;
+                    if (this._tfFormatter.letterSpacing < fontInfo.letterSpacing)
+                    {
+                        this._tfFormatter.letterSpacing = fontInfo.letterSpacing;
+                    };
+                    if (this._tfFormatter.letterSpacing == null)
+                    {
+                        this._tfFormatter.letterSpacing = 0.0001;
+                    };
                 }
                 else
                 {
@@ -928,8 +1142,8 @@
             }
             else
             {
-                _local_8 = FontManager.getInstance().getRealFontName(this._tfFormatter.font);
-                this._tfFormatter.font = ((!((_local_8 == ""))) ? _local_8 : this._tfFormatter.font);
+                font = ((fontInfo) ? fontInfo.realName : "");
+                this._tfFormatter.font = ((font != "") ? font : this._tfFormatter.font);
                 this._tText.embedFonts = false;
             };
             this._tText.setTextFormat(this._tfFormatter);
@@ -940,6 +1154,7 @@
                 HyperlinkFactory.createRollOverHandler(this._tText);
                 this.parseLinks();
             };
+            this._tText.styleSheet = currentStyleSheet;
             if (this._nTextHeight)
             {
                 this._tText.height = this._nTextHeight;
@@ -947,7 +1162,7 @@
             }
             else
             {
-                if (!(this._bFixedHeight))
+                if (!this._bFixedHeight)
                 {
                     this._tText.height = (this._tText.textHeight + 5);
                     this._nHeight = this._tText.height;
@@ -981,14 +1196,14 @@
 
         public function updateCss():void
         {
-            if (!(this._tfFormatter))
+            if (!this._tfFormatter)
             {
                 return;
             };
             this._tText.setTextFormat(this._tfFormatter);
             this._tText.defaultTextFormat = this._tfFormatter;
             this.updateTooltipExtensionStyle();
-            if (!(this._bFixedHeight))
+            if (!this._bFixedHeight)
             {
                 this._tText.height = (this._tText.textHeight + 5);
                 this._nHeight = this._tText.height;
@@ -1013,6 +1228,12 @@
             };
         }
 
+        public function updateTextFormatProperty(pPropertyName:String, pPropertyValue:*):void
+        {
+            this._tfFormatter[pPropertyName] = pPropertyValue;
+            this.updateCss();
+        }
+
         public function fullSize(width:int):void
         {
             this.removeTooltipExtension();
@@ -1023,9 +1244,9 @@
             this._nHeight = tHeight;
         }
 
-        public function fullWidth(maxWidth:uint=0):void
+        public function fullWidthAndHeight(maxWidth:uint=0, offsetWidth:uint=5):void
         {
-            this._nWidth = int((this._tText.textWidth + 5));
+            this._nWidth = int((this._tText.textWidth + offsetWidth));
             this._tText.width = this._nWidth;
             if (maxWidth > 0)
             {
@@ -1040,58 +1261,42 @@
             this._tText.height = this._nHeight;
         }
 
-        public function resizeText(useSizeMin:Boolean=true):void
+        public function fullWidth(maxWidth:uint=0, offsetWidth:uint=5):void
         {
-            var currentSize:int;
-            var sizeMin:int;
+            this._nWidth = int((this._tText.textWidth + offsetWidth));
+            this._tText.width = this._nWidth;
+            if (maxWidth > 0)
+            {
+                this._nWidth = maxWidth;
+                this._tText.width = maxWidth;
+                if (this._tText.textWidth < maxWidth)
+                {
+                    this._tText.width = (this._tText.textWidth + 10);
+                };
+            };
+        }
+
+        public function resizeText():void
+        {
             var needTooltipExtension:Boolean;
             var currentTextFieldWidth:int;
-            var textWidth:Number;
             this.removeTooltipExtension();
-            if (((((((((this._bFixedHeight) && (!(this._tText.multiline)))) || (this._bFixedHeightForMultiline))) && ((this._tText.autoSize == "none")))) && (this._tfFormatter)))
+            if ((((((this._bFixedHeight) && (!(this._tText.multiline))) || (this._bFixedHeightForMultiline)) && (this._tText.autoSize == "none")) && (this._tfFormatter)))
             {
-                currentSize = int(this._tfFormatter.size);
-                sizeMin = currentSize;
-                if (useSizeMin)
-                {
-                    if (sizeMin < 12)
-                    {
-                        sizeMin = 12;
-                    };
-                }
-                else
-                {
-                    sizeMin = 0;
-                };
                 needTooltipExtension = false;
                 currentTextFieldWidth = this._tText.width;
-                while (true)
+                if ((((this._tText.textWidth > (currentTextFieldWidth + 1)) || (this._tText.textHeight > this._tText.height)) || ((this._bFixedHeightForMultiline) && (this._tText.textHeight > this.height))))
                 {
-                    textWidth = this._tText.textWidth;
-                    if ((((((textWidth > (currentTextFieldWidth + 1))) || ((this._tText.textHeight > this._tText.height)))) || (((this._bFixedHeightForMultiline) && ((this._tText.textHeight > this.height))))))
+                    if (this._useTooltipExtension)
                     {
-                        currentSize--;
-                        if (currentSize < sizeMin)
-                        {
-                            if (this._useTooltipExtension)
-                            {
-                                needTooltipExtension = true;
-                            }
-                            else
-                            {
-                                _log.warn((("Attention : Ce texte est beaucoup trop long pour entrer dans ce TextField (Texte : " + this._tText.text) + ")"));
-                            };
-                            break;
-                        };
-                        this._tfFormatter.size = currentSize;
-                        this._tText.setTextFormat(this._tfFormatter);
+                        needTooltipExtension = true;
                     }
                     else
                     {
-                        break;
+                        _log.warn((("Attention : Ce texte est beaucoup trop long pour entrer dans ce TextField (Texte : " + this._tText.text) + ")"));
                     };
                 };
-                if (((needTooltipExtension) && (((((!(this.multiline)) && (this._bFixedHeight))) || (this._bFixedHeightForMultiline)))))
+                if (((needTooltipExtension) && (((!(this.multiline)) && (this._bFixedHeight)) || (this._bFixedHeightForMultiline))))
                 {
                     this.addTooltipExtension();
                 }
@@ -1099,8 +1304,7 @@
                 {
                     if (this._lastWidth != this._tText.width)
                     {
-                        this._lastWidth = (this._tText.width + 4);
-                        this._tText.width = this._lastWidth;
+                        this._lastWidth = this._tText.width;
                     };
                 };
             };
@@ -1117,7 +1321,7 @@
             var lineBreakIndex:int;
             var periodIndex:int;
             this._nHeight = (__height = (this._tText.height = pMaxHeight));
-            if (((this._tText.wordWrap) && ((this._tText.numLines > 0))))
+            if (((this._tText.wordWrap) && (this._tText.numLines > 0)))
             {
                 numLines = this._tText.numLines;
                 h = 4;
@@ -1142,10 +1346,10 @@
                 {
                     lineBreakIndex = this._tText.text.lastIndexOf(String.fromCharCode(10));
                     periodIndex = this._tText.text.lastIndexOf(".");
-                    if (((!((lineBreakIndex == -1))) || (!((periodIndex == -1)))))
+                    if (((!(lineBreakIndex == -1)) || (!(periodIndex == -1))))
                     {
                         this._tText.text = this._tText.text.substring(0, Math.max(lineBreakIndex, periodIndex));
-                        this._tText.appendText("...");
+                        this._tText.appendText(((" (" + String.fromCharCode(8230)) + ")"));
                         this._nHeight = (__height = (this._tText.height = (this._tText.height - ((nbVisibleLines - this._tText.numLines) * lineHeight))));
                     }
                     else
@@ -1173,6 +1377,22 @@
             };
         }
 
+        private function buildFilterIndex(target:BitmapFilter):void
+        {
+            var field:String;
+            var className:String = getQualifiedClassName(target);
+            if (_filterIndex[className])
+            {
+                return;
+            };
+            var index:Dictionary = new Dictionary();
+            for each (field in DescribeTypeCache.getVariables(target))
+            {
+                index[field.toLowerCase()] = field;
+            };
+            _filterIndex[className] = index;
+        }
+
         private function addEllipsis():void
         {
             var i:int;
@@ -1181,7 +1401,7 @@
             {
                 this._tText.text = this._tText.text.substr(0, (this._tText.text.length - 3));
                 i = (this._tText.text.length - 1);
-                while ((((i >= 0)) && ((this._tText.text.charAt(i) == " "))))
+                while (((i >= 0) && (this._tText.text.charAt(i) == " ")))
                 {
                     nbSpaces++;
                     i--;
@@ -1190,11 +1410,11 @@
                 {
                     this._tText.text = this._tText.text.substr(0, (this._tText.text.length - nbSpaces));
                 };
-                this._tText.appendText("...");
+                this._tText.appendText(String.fromCharCode(8230));
             };
         }
 
-        private function addTooltipExtension():void
+        public function addTooltipExtension():void
         {
             this._textFieldTooltipExtension = new TextField();
             this._textFieldTooltipExtension.selectable = false;
@@ -1210,7 +1430,7 @@
             __width = this._tText.width;
             this._textFieldTooltipExtension.x = this._tText.width;
             this._textFieldTooltipExtension.y = (((this._tText.y + this._tText.height) - this._textFieldTooltipExtension.textHeight) - 10);
-            if (!(this._tText.wordWrap))
+            if (!this._tText.wordWrap)
             {
                 this._textFieldTooltipExtension.y = this._tText.y;
                 this._tText.height = (this._tText.textHeight + 3);
@@ -1233,7 +1453,7 @@
                         default:
                             this._tText.y = 0;
                     };
-                    this._textFieldTooltipExtension.y = (((this._tText.y + this._tText.height) - this._textFieldTooltipExtension.textHeight) - 5);
+                    this._textFieldTooltipExtension.y = ((this._tText.y + this.height) - this._textFieldTooltipExtension.textHeight);
                 };
             };
             var target:DisplayObjectContainer = this;
@@ -1246,7 +1466,7 @@
                     break;
                 };
                 target = target.parent;
-                if (!(target))
+                if (!target)
                 {
                     break;
                 };
@@ -1259,7 +1479,7 @@
 
         private function updateTooltipExtensionStyle():void
         {
-            if (!(this._textFieldTooltipExtension))
+            if (!this._textFieldTooltipExtension)
             {
                 return;
             };
@@ -1278,7 +1498,7 @@
 
         protected function updateAlign():void
         {
-            if (!(this._tText.textHeight))
+            if (!this._tText.textHeight)
             {
                 return;
             };
@@ -1289,51 +1509,60 @@
                 h = (h + ((TextLineMetrics(this._tText.getLineMetrics(i)).height + TextLineMetrics(this._tText.getLineMetrics(i)).leading) + TextLineMetrics(this._tText.getLineMetrics(i)).descent));
                 i++;
             };
+            this._tText.y = 0;
             switch (this._sVerticalAlign.toUpperCase())
             {
                 case VALIGN_CENTER:
                     this._tText.height = h;
                     this._tText.y = ((this.height - this._tText.height) / 2);
-                    return;
+                    break;
                 case VALIGN_BOTTOM:
                     this._tText.height = this.height;
                     this._tText.y = (this.height - h);
-                    return;
+                    break;
                 case VALIGN_TOP:
                     this._tText.height = h;
                     this._tText.y = 0;
-                    return;
+                    break;
                 case VALIGN_FIXEDHEIGHT:
                     if (((!(this._tText.wordWrap)) || (this._tText.multiline)))
                     {
                         this._tText.height = (this._tText.textHeight + HEIGHT_OFFSET);
                     };
                     this._tText.y = 0;
-                    return;
+                    break;
                 case VALIGN_NONE:
                     if (((!(this._tText.wordWrap)) || (this._tText.multiline)))
                     {
                         this._tText.height = ((this._tText.textHeight + 4) + HEIGHT_OFFSET);
                     };
                     this._tText.y = 0;
-                    return;
+                    break;
+            };
+            if (((this._tfFormatter) && (FontManager.getInstance().getFontInfo(this._tfFormatter.font))))
+            {
+                this._tText.y = (this._tText.y + this._verticalOffset);
             };
         }
 
         private function onTooltipExtensionOver(e:MouseEvent):void
         {
             var docMain:Sprite = Berilia.getInstance().docMain;
-            TooltipManager.show(new TextTooltipInfo(this._tText.text), this, UiModuleManager.getInstance().getModule("Ankama_Tooltips"), false, "TextExtension", LocationEnum.POINT_TOP, LocationEnum.POINT_BOTTOM, 20, true, null, TooltipManager.defaultTooltipUiScript, null, "TextInfo");
-            this._textFieldTooltipExtension.textColor = 16765814;
+            if (this._uid == null)
+            {
+                this._uid = UIDUtil.createUID();
+            };
+            TooltipManager.show(new TextTooltipInfo(this._tText.text), this, UiModuleManager.getInstance().getModule("Ankama_Tooltips"), false, ("TextExtension" + this._uid), LocationEnum.POINT_TOP, LocationEnum.POINT_BOTTOM, 20, true, null, TooltipManager.defaultTooltipUiScript, null, ("TextInfo" + this._uid));
+            this._textFieldTooltipExtension.textColor = XmlConfig.getInstance().getEntry("colors.hyperlink.link");
         }
 
         private function onTooltipExtensionOut(e:MouseEvent=null):void
         {
-            TooltipManager.hide("TextExtension");
+            TooltipManager.hide(("TextExtension" + this._uid));
             this._textFieldTooltipExtension.textColor = this._textTooltipExtensionColor;
         }
 
-        public function finalize():void
+        override public function finalize():void
         {
             var ui:UiRootContainer;
             if (this._binded)
@@ -1348,7 +1577,8 @@
                     HyperlinkFactory.createRollOverHandler(this._tText);
                     this.parseLinks();
                 };
-                this._finalized = true;
+                _finalized = true;
+                super.finalize();
                 ui = getUi();
                 if (ui)
                 {
@@ -1386,12 +1616,12 @@
             while (i < nbRuns)
             {
                 textrun = textruns[i];
-                if (((textrun.textFormat) && ((textrun.textFormat.url.length > 0))))
+                if (((textrun.textFormat) && (textrun.textFormat.url.length > 0)))
                 {
                     textrunText = this._tText.text.substring(textrun.beginIndex, textrun.endIndex);
                     openSquareBrackets = StringUtils.getAllIndexOf("[", textrunText);
                     closeSquareBrackets = StringUtils.getAllIndexOf("]", textrunText);
-                    if ((((openSquareBrackets.length > 1)) && ((openSquareBrackets.length == closeSquareBrackets.length))))
+                    if (((openSquareBrackets.length > 1) && (openSquareBrackets.length == closeSquareBrackets.length)))
                     {
                         nbBrackets = openSquareBrackets.length;
                         j = 0;
@@ -1416,13 +1646,12 @@
 
         private function getHyperLinkId(pCharIndex:int):int
         {
-            var hyperLinkId:int;
             var i:int;
             var nbLinks:int = this._hyperLinks.length;
             i = 0;
             while (i < nbLinks)
             {
-                if ((((pCharIndex >= this._hyperLinks[i].beginIndex)) && ((pCharIndex <= this._hyperLinks[i].endIndex))))
+                if (((pCharIndex >= this._hyperLinks[i].beginIndex) && (pCharIndex <= this._hyperLinks[i].endIndex)))
                 {
                     return (i);
                 };
@@ -1445,8 +1674,8 @@
             var hyperLinkId:int;
             var url:String;
             var params:Array;
-            var type:String;
-            var pos:Point;
+            var _local_14:String;
+            var posY:int;
             var data:String;
             if (this._tText.length > 0)
             {
@@ -1469,25 +1698,25 @@
                     i++;
                 };
                 bottomMargin = (this._tText.height - (nbVisibleLines * lineHeight));
-                labelGlobalPos = parent.localToGlobal(new Point(x, y));
-                mouseOverText = (((pEvent.stageY > ((labelGlobalPos.y + this._tText.height) - bottomMargin))) ? false : true);
-                if (((mouseOverText) && (!((charIndex == -1)))))
+                labelGlobalPos = localToGlobal(new Point(x, y));
+                mouseOverText = ((pEvent.stageY > ((labelGlobalPos.y + this._tText.height) - bottomMargin)) ? false : true);
+                if (((mouseOverText) && (!(charIndex == -1))))
                 {
                     hyperLinkId = this.getHyperLinkId(charIndex);
-                    url = (((hyperLinkId >= 0)) ? this._hyperLinks[hyperLinkId].textFormat.url : null);
+                    url = ((hyperLinkId >= 0) ? this._hyperLinks[hyperLinkId].textFormat.url : null);
                     if (url)
                     {
-                        if (((this._mouseOverHyperLink) && ((((this._lastHyperLinkId >= 0)) && (!((hyperLinkId == this._lastHyperLinkId)))))))
+                        if (((this._mouseOverHyperLink) && ((this._lastHyperLinkId >= 0) && (!(hyperLinkId == this._lastHyperLinkId)))))
                         {
                             this._mouseOverHyperLink = true;
                             this.hyperlinkRollOut();
                         };
-                        if (!(this._mouseOverHyperLink))
+                        if (!this._mouseOverHyperLink)
                         {
                             params = url.replace("event:", "").split(",");
-                            type = params.shift();
-                            pos = new Point(pEvent.stageX, (labelGlobalPos.y + this._tText.getCharBoundaries(charIndex).y));
-                            data = ((((((type + ",") + Math.round(pos.x)) + ",") + Math.round(pos.y)) + ",") + params.join(","));
+                            _local_14 = params.shift();
+                            posY = (labelGlobalPos.y + this._tText.getCharBoundaries(charIndex).y);
+                            data = ((((((_local_14 + ",") + Math.round(pEvent.stageX)) + ",") + Math.round(posY)) + ",") + params.join(","));
                             this._tText.dispatchEvent(new LinkInteractionEvent(LinkInteractionEvent.ROLL_OVER, data));
                             this._mouseOverHyperLink = true;
                             this._lastHyperLinkId = hyperLinkId;
@@ -1517,5 +1746,5 @@
 
 
     }
-}//package com.ankamagames.berilia.components
+} com.ankamagames.berilia.components
 

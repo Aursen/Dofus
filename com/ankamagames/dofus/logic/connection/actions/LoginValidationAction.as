@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.connection.actions
+package com.ankamagames.dofus.logic.connection.actions
 {
     import com.ankamagames.jerakine.handlers.messages.Action;
     import com.ankamagames.jerakine.messages.IDontLogThisMessage;
@@ -24,5 +24,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.connection.actions
+} com.ankamagames.dofus.logic.connection.actions
 

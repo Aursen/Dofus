@@ -1,4 +1,4 @@
-﻿package com.ankamagames.tubul.types
+package com.ankamagames.tubul.types
 {
     import flash.events.EventDispatcher;
     import com.ankamagames.jerakine.logger.Logger;
@@ -51,7 +51,7 @@
             };
             var silenceRandom:uint = ((((Math.random() * (this._silenceMax - this._silenceMin)) + this._silenceMin) * 1000) * 60);
             this._timer = new Timer(silenceRandom, 1);
-            if (!(this._timer.hasEventListener(TimerEvent.TIMER)))
+            if (!this._timer.hasEventListener(TimerEvent.TIMER))
             {
                 this._timer.addEventListener(TimerEvent.TIMER, this.onTimerEnd);
             };
@@ -62,7 +62,7 @@
 
         public function stop():void
         {
-            if (!(this.running))
+            if (!this.running)
             {
                 return;
             };
@@ -95,5 +95,5 @@
 
 
     }
-}//package com.ankamagames.tubul.types
+} com.ankamagames.tubul.types
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.kernel.sound.type
+package com.ankamagames.dofus.kernel.sound.type
 {
     import com.ankamagames.tubul.interfaces.ISound;
     import com.ankamagames.tubul.interfaces.ILocalizedSound;
@@ -322,7 +322,7 @@
             RegConnectionManager.getInstance().send(ProtocolEnum.PLAY_SOUND, this._id, this._soundId, pLoop, pLoops, fadeInBeg, fadeInEnd, fadeInTime, fadeOutBeg, fadeOutEnd, fadeOutTime);
         }
 
-        public function stop(pFadeOut:VolumeFadeEffect=null):void
+        public function stop(pFadeOut:VolumeFadeEffect=null, mustStopCompletly:Boolean=false):void
         {
             var fadeOutB:Number = -1;
             var fadeOutE:Number = -1;
@@ -333,7 +333,7 @@
                 fadeOutE = pFadeOut.endingValue;
                 fadeOutT = pFadeOut.timeFade;
             };
-            RegConnectionManager.getInstance().send(ProtocolEnum.STOP_SOUND, this._id, fadeOutB, fadeOutE, fadeOutT);
+            RegConnectionManager.getInstance().send(ProtocolEnum.STOP_SOUND, this._id, fadeOutB, fadeOutE, fadeOutT, mustStopCompletly);
         }
 
         public function loadSound(cache:ICache):void
@@ -360,5 +360,5 @@
 
 
     }
-}//package com.ankamagames.dofus.kernel.sound.type
+} com.ankamagames.dofus.kernel.sound.type
 

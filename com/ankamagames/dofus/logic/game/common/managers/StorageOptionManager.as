@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.common.managers
+package com.ankamagames.dofus.logic.game.common.managers
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
@@ -15,7 +15,9 @@
     import com.ankamagames.dofus.datacenter.jobs.Skill;
     import com.ankamagames.dofus.logic.game.common.misc.inventoryView.StorageSmithMagicFilterView;
     import com.ankamagames.dofus.logic.game.common.misc.inventoryView.StorageCraftFilterView;
+    import com.ankamagames.dofus.types.enums.ItemCategoryEnum;
     import flash.utils.Dictionary;
+    import com.ankamagames.dofus.logic.game.common.misc.inventoryView.temporis.TemporisSpellsFilterView;
     import com.ankamagames.dofus.logic.game.common.misc.IInventoryView;
     import __AS3__.vec.*;
 
@@ -23,12 +25,6 @@
     {
 
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(StorageOptionManager));
-        public static const ALL_CATEGORY:int = -1;
-        public static const EQUIPMENT_CATEGORY:int = 0;
-        public static const CONSUMABLES_CATEGORY:int = 1;
-        public static const RESOURCES_CATEGORY:int = 2;
-        public static const QUEST_CATEGORY:int = 3;
-        public static const OTHER_CATEGORY:int = 4;
         public static const SORT_FIELD_NONE:int = -1;
         public static const SORT_FIELD_DEFAULT:int = 0;
         public static const SORT_FIELD_NAME:int = 1;
@@ -47,22 +43,16 @@
         private var _bankCategoryFilter:int = -1;
         private var _filterType:int = -1;
         private var _bankFilterType:int = -1;
-        private var _sortFields:Array;
+        private var _sortFields:Array = [-1];
         private var _sortRevert:Boolean;
-        private var _sortBankFields:Array;
+        private var _sortBankFields:Array = [-1];
         private var _sortBankRevert:Boolean;
         private var _newSort:Boolean;
 
-        public function StorageOptionManager()
-        {
-            this._sortFields = [-1];
-            this._sortBankFields = [-1];
-            super();
-        }
 
         public static function getInstance():StorageOptionManager
         {
-            if (!(_singleton))
+            if (!_singleton)
             {
                 _singleton = new (StorageOptionManager)();
             };
@@ -109,7 +99,7 @@
 
         public function hasFilter():Boolean
         {
-            return (!((this._filterType == -1)));
+            return (!(this._filterType == -1));
         }
 
         public function set bankFilter(bankFilterType:int):void
@@ -129,7 +119,7 @@
 
         public function hasBankFilter():Boolean
         {
-            return (!((this._bankFilterType == -1)));
+            return (!(this._bankFilterType == -1));
         }
 
         public function get newSort():Boolean
@@ -141,7 +131,7 @@
         {
             if (this._sortFields.indexOf(fieldName) == -1)
             {
-                if (((!((fieldName == SORT_FIELD_NONE))) && ((this._sortFields.length > 0))))
+                if (((!(fieldName == SORT_FIELD_NONE)) && (this._sortFields.length > 0)))
                 {
                     this._newSort = false;
                 };
@@ -169,7 +159,7 @@
 
         public function hasSort():Boolean
         {
-            return (!((this._sortFields[0] == SORT_FIELD_NONE)));
+            return (!(this._sortFields[0] == SORT_FIELD_NONE));
         }
 
         public function resetSort():void
@@ -195,7 +185,7 @@
             var iw:ItemWrapper;
             if (this._sortBankFields.indexOf(fieldName) == -1)
             {
-                if (((!((fieldName == SORT_FIELD_NONE))) && ((this._sortBankFields.length > 0))))
+                if (((!(fieldName == SORT_FIELD_NONE)) && (this._sortBankFields.length > 0)))
                 {
                     this._newSort = false;
                 };
@@ -236,7 +226,7 @@
 
         public function hasBankSort():Boolean
         {
-            return (!((this._sortBankFields[0] == SORT_FIELD_NONE)));
+            return (!(this._sortBankFields[0] == SORT_FIELD_NONE));
         }
 
         public function resetBankSort():void
@@ -273,6 +263,11 @@
             {
                 return (view);
             };
+            view = (this.inventory.getView("temporisSpellsFilter") as IStorageView);
+            if (view)
+            {
+                return (view);
+            };
             return (this.getStorageViewOrFilter());
         }
 
@@ -280,7 +275,7 @@
         {
             if (this.hasFilter())
             {
-                return ((this.inventory.getView("storageFiltered") as IStorageView));
+                return (this.inventory.getView("storageFiltered") as IStorageView);
             };
             return (this.getStorageView(this.category));
         }
@@ -308,17 +303,17 @@
 
         public function getIsBidHouseFilterEnabled():Boolean
         {
-            return (!((this.inventory.getView("storageBidHouseFilter") == null)));
+            return (!(this.inventory.getView("storageBidHouseFilter") == null));
         }
 
         public function enableSmithMagicFilter(skill:Skill):void
         {
             var craftFrame:CraftFrame;
             this.disableSmithMagicFilter();
-            if (!(skill))
+            if (!skill)
             {
                 craftFrame = (Kernel.getWorker().getFrame(CraftFrame) as CraftFrame);
-                if (!(craftFrame))
+                if (!craftFrame)
                 {
                     _log.error("Activation des filtres de forgemagie alors que la craftFrame n'est pas active");
                     return;
@@ -338,14 +333,14 @@
             };
         }
 
-        public function enableCraftFilter(skill:Skill, slotCount:int):void
+        public function enableCraftFilter(skill:Skill, jobLevel:int):void
         {
             var craftFrame:CraftFrame;
             this.disableCraftFilter();
-            if (!(skill))
+            if (!skill)
             {
                 craftFrame = (Kernel.getWorker().getFrame(CraftFrame) as CraftFrame);
-                if (!(craftFrame))
+                if (!craftFrame)
                 {
                     _log.error("Activation des filtres de forgemagie alors que la craftFrame n'est pas active");
                     return;
@@ -353,7 +348,7 @@
                 skill = Skill.getSkillById(craftFrame.skillId);
             };
             var name:String = this.currentStorageView.name;
-            this.inventory.addView(new StorageCraftFilterView(this.inventory.hookLock, this.currentStorageView, skill.id, slotCount));
+            this.inventory.addView(new StorageCraftFilterView(this.inventory.hookLock, this.currentStorageView, skill.id, jobLevel));
             InventoryManager.getInstance().inventory.refillView(name, "storageCraftFilter");
         }
 
@@ -367,29 +362,29 @@
 
         public function getIsSmithMagicFilterEnabled():Boolean
         {
-            return (!((this.inventory.getView("storageSmithMagicFilter") == null)));
+            return (!(this.inventory.getView("storageSmithMagicFilter") == null));
         }
 
         public function getIsCraftFilterEnabled():Boolean
         {
-            return (!((this.inventory.getView("storageCraftFilter") == null)));
+            return (!(this.inventory.getView("storageCraftFilter") == null));
         }
 
         public function getStorageView(category:int):IStorageView
         {
             switch (category)
             {
-                case EQUIPMENT_CATEGORY:
-                    return ((this.inventory.getView("storageEquipment") as IStorageView));
-                case CONSUMABLES_CATEGORY:
-                    return ((this.inventory.getView("storageConsumables") as IStorageView));
-                case RESOURCES_CATEGORY:
-                    return ((this.inventory.getView("storageResources") as IStorageView));
-                case QUEST_CATEGORY:
-                    return ((this.inventory.getView("storageQuest") as IStorageView));
-                case ALL_CATEGORY:
+                case ItemCategoryEnum.EQUIPMENT_CATEGORY:
+                    return (this.inventory.getView("storageEquipment") as IStorageView);
+                case ItemCategoryEnum.CONSUMABLES_CATEGORY:
+                    return (this.inventory.getView("storageConsumables") as IStorageView);
+                case ItemCategoryEnum.RESOURCES_CATEGORY:
+                    return (this.inventory.getView("storageResources") as IStorageView);
+                case ItemCategoryEnum.QUEST_CATEGORY:
+                    return (this.inventory.getView("storageQuest") as IStorageView);
+                case ItemCategoryEnum.ALL_CATEGORY:
                 default:
-                    return ((this.inventory.getView("storage") as IStorageView));
+                    return (this.inventory.getView("storage") as IStorageView);
             };
         }
 
@@ -397,17 +392,17 @@
         {
             switch (category)
             {
-                case EQUIPMENT_CATEGORY:
-                    return ((InventoryManager.getInstance().bankInventory.getView("bankEquipement") as IStorageView));
-                case CONSUMABLES_CATEGORY:
-                    return ((InventoryManager.getInstance().bankInventory.getView("bankConsumables") as IStorageView));
-                case RESOURCES_CATEGORY:
-                    return ((InventoryManager.getInstance().bankInventory.getView("bankRessources") as IStorageView));
-                case QUEST_CATEGORY:
-                    return ((InventoryManager.getInstance().bankInventory.getView("bankQuest") as IStorageView));
-                case ALL_CATEGORY:
+                case ItemCategoryEnum.EQUIPMENT_CATEGORY:
+                    return (InventoryManager.getInstance().bankInventory.getView("bankEquipement") as IStorageView);
+                case ItemCategoryEnum.CONSUMABLES_CATEGORY:
+                    return (InventoryManager.getInstance().bankInventory.getView("bankConsumables") as IStorageView);
+                case ItemCategoryEnum.RESOURCES_CATEGORY:
+                    return (InventoryManager.getInstance().bankInventory.getView("bankRessources") as IStorageView);
+                case ItemCategoryEnum.QUEST_CATEGORY:
+                    return (InventoryManager.getInstance().bankInventory.getView("bankQuest") as IStorageView);
+                case ItemCategoryEnum.ALL_CATEGORY:
                 default:
-                    return ((InventoryManager.getInstance().bankInventory.getView("bank") as IStorageView));
+                    return (InventoryManager.getInstance().bankInventory.getView("bank") as IStorageView);
             };
         }
 
@@ -436,7 +431,7 @@
 
         private function get inventory():Inventory
         {
-            if (!(this._inventory))
+            if (!this._inventory)
             {
                 this._inventory = InventoryManager.getInstance().inventory;
             };
@@ -448,6 +443,7 @@
             var bidHouseFilterView:StorageBidHouseFilterView;
             var smithMagicFilterView:StorageSmithMagicFilterView;
             var craftFilterView:StorageCraftFilterView;
+            var temporisSpellsFilterView:TemporisSpellsFilterView;
             var parentView:IStorageView = this.getStorageViewOrFilter();
             if (this.getIsBidHouseFilterEnabled())
             {
@@ -467,6 +463,12 @@
                 craftFilterView.parent = parentView;
                 this.refreshView("storageCraftFilter");
             };
+            if (this.getIsTemporisSpellsFilterEnabled())
+            {
+                temporisSpellsFilterView = (this.inventory.getView("temporisSpellsFilter") as TemporisSpellsFilterView);
+                temporisSpellsFilterView.parent = parentView;
+                this.refreshView("temporisSpellsFilter");
+            };
         }
 
         private function refreshView(viewName:String):void
@@ -478,7 +480,27 @@
             InventoryManager.getInstance().inventory.refillView(name, viewName);
         }
 
+        public function getIsTemporisSpellsFilterEnabled():Boolean
+        {
+            return (!(this.inventory.getView("temporisSpellsFilter") === null));
+        }
+
+        public function enableTemporisSpellsFilter(allowedTypes:Vector.<uint>, isHideLearnedSpells:Boolean):void
+        {
+            this.disableBidHouseFilter();
+            this.inventory.addView(new TemporisSpellsFilterView(this.inventory.hookLock, this.currentStorageView, allowedTypes, isHideLearnedSpells));
+            InventoryManager.getInstance().inventory.refillView("storageResources", "temporisSpellsFilter");
+        }
+
+        public function disableTemporisSpellsFilter():void
+        {
+            if (this.inventory.getView("temporisSpellsFilter"))
+            {
+                this.inventory.removeView("temporisSpellsFilter");
+            };
+        }
+
 
     }
-}//package com.ankamagames.dofus.logic.game.common.managers
+} com.ankamagames.dofus.logic.game.common.managers
 

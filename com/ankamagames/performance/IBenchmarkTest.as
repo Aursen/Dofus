@@ -1,4 +1,4 @@
-﻿package com.ankamagames.performance
+package com.ankamagames.performance
 {
     public interface IBenchmarkTest 
     {
@@ -8,5 +8,5 @@
         function getResults():String;
 
     }
-}//package com.ankamagames.performance
+} com.ankamagames.performance
 

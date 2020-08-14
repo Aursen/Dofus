@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.misc.interClient
+package com.ankamagames.dofus.misc.interClient
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
@@ -16,13 +16,10 @@
 
         private var _sending_lc:LocalConnection;
         private var _lastPingTs:uint;
-        private var _lastClientPing:Array;
+        private var _lastClientPing:Array = new Array();
 
         public function InterClientMaster()
         {
-            this._lastClientPing = new Array();
-            super();
-            InterClientManager.getInstance().identifyFromFlashKey();
             this._sending_lc = new LocalConnection();
             this._sending_lc.allowDomain("*");
             this._sending_lc.allowInsecureDomain("*");
@@ -33,7 +30,6 @@
             _receiving_lc.allowInsecureDomain("*");
             _receiving_lc.addEventListener(AsyncErrorEvent.ASYNC_ERROR, this.onError);
             _receiving_lc.addEventListener(StatusEvent.STATUS, this.onStatusEvent);
-            _receiving_lc.client.getUid = this.getUid;
             _receiving_lc.client.ping = this.ping;
             _receiving_lc.client.clientGainFocus = this.clientGainFocus;
             _receiving_lc.client.updateFocusMessage = this.updateFocusMessage;
@@ -44,7 +40,7 @@
         {
             try
             {
-                if (!(_receiving_lc))
+                if (!_receiving_lc)
                 {
                     _receiving_lc = new LocalConnection();
                 };
@@ -60,7 +56,7 @@
 
         public function get isAlone():Boolean
         {
-            return (((getTimer() - this._lastPingTs) > 20000));
+            return ((getTimer() - this._lastPingTs) > 20000);
         }
 
         public function destroy():void
@@ -124,11 +120,6 @@
             InterClientManager.getInstance().updateFocusList();
         }
 
-        private function getUid(connId:String):void
-        {
-            this._sending_lc.send(connId, "setUId", InterClientManager.getInstance().flashKey);
-        }
-
         private function ping(connId:String):void
         {
             var clientId:String;
@@ -166,5 +157,5 @@
 
 
     }
-}//package com.ankamagames.dofus.misc.interClient
+} com.ankamagames.dofus.misc.interClient
 

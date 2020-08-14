@@ -1,8 +1,8 @@
-﻿package com.hurlant.math
+package com.hurlant.math
 {
     import com.hurlant.math.BigInteger;
 
-    interface IReduction 
+    internal interface IReduction 
     {
 
         function convert(_arg_1:BigInteger):BigInteger;
@@ -12,5 +12,5 @@
         function sqrTo(_arg_1:BigInteger, _arg_2:BigInteger):void;
 
     }
-}//package com.hurlant.math
+} com.hurlant.math
 

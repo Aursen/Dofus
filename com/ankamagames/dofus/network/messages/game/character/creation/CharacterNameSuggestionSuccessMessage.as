@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.character.creation
+package com.ankamagames.dofus.network.messages.game.character.creation
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class CharacterNameSuggestionSuccessMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -52,6 +52,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_CharacterNameSuggestionSuccessMessage(output);
@@ -69,10 +77,25 @@
 
         public function deserializeAs_CharacterNameSuggestionSuccessMessage(input:ICustomDataInput):void
         {
+            this._suggestionFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_CharacterNameSuggestionSuccessMessage(tree);
+        }
+
+        public function deserializeAsyncAs_CharacterNameSuggestionSuccessMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._suggestionFunc);
+        }
+
+        private function _suggestionFunc(input:ICustomDataInput):void
+        {
             this.suggestion = input.readUTF();
         }
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.character.creation
+} com.ankamagames.dofus.network.messages.game.character.creation
 

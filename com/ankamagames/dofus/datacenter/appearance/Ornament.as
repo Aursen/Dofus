@@ -1,6 +1,7 @@
-﻿package com.ankamagames.dofus.datacenter.appearance
+package com.ankamagames.dofus.datacenter.appearance
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
+    import com.ankamagames.dofus.types.IdAccessors;
     import com.ankamagames.jerakine.data.GameData;
     import com.ankamagames.jerakine.data.I18n;
 
@@ -8,6 +9,7 @@
     {
 
         public static const MODULE:String = "Ornaments";
+        public static var idAccessors:IdAccessors = new IdAccessors(getOrnamentById, getAllOrnaments);
 
         public var id:int;
         public var nameId:uint;
@@ -21,7 +23,7 @@
 
         public static function getOrnamentById(id:int):Ornament
         {
-            return ((GameData.getObject(MODULE, id) as Ornament));
+            return (GameData.getObject(MODULE, id) as Ornament);
         }
 
         public static function getAllOrnaments():Array
@@ -32,7 +34,7 @@
 
         public function get name():String
         {
-            if (!(this._name))
+            if (!this._name)
             {
                 this._name = I18n.getText(this.nameId);
             };
@@ -41,5 +43,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.appearance
+} com.ankamagames.dofus.datacenter.appearance
 

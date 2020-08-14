@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.common.frames
+package com.ankamagames.dofus.logic.game.common.frames
 {
     import com.ankamagames.jerakine.messages.Frame;
     import com.ankamagames.jerakine.logger.Logger;
@@ -16,16 +16,20 @@
     import com.ankamagames.dofus.network.enums.ExchangeTypeEnum;
     import com.ankamagames.dofus.logic.game.common.managers.PlayedCharacterManager;
     import com.ankamagames.dofus.misc.lists.ExchangeHookList;
+    import com.ankamagames.dofus.logic.game.roleplay.managers.MountAutoTripManager;
     import com.ankamagames.dofus.network.messages.game.inventory.exchanges.ExchangeRequestedTradeMessage;
     import com.ankamagames.dofus.datacenter.npcs.Npc;
     import com.ankamagames.dofus.network.types.game.context.roleplay.GameRolePlayNpcInformations;
     import com.ankamagames.dofus.misc.EntityLookAdapter;
     import com.ankamagames.tiphon.types.look.TiphonEntityLook;
     import com.ankamagames.dofus.network.messages.game.inventory.exchanges.ExchangeStartOkNpcTradeMessage;
+    import com.ankamagames.dofus.network.messages.game.inventory.exchanges.ExchangeStartOkRunesTradeMessage;
+    import com.ankamagames.dofus.misc.lists.CraftHookList;
+    import com.ankamagames.dofus.network.messages.game.inventory.exchanges.ExchangeStartOkRecycleTradeMessage;
     import com.ankamagames.dofus.network.messages.game.inventory.exchanges.ExchangeStartedWithStorageMessage;
     import com.ankamagames.dofus.network.messages.game.inventory.exchanges.ExchangeStartedMessage;
+    import com.ankamagames.dofus.network.messages.game.inventory.exchanges.ExchangeStartedTaxCollectorShopMessage;
     import com.ankamagames.dofus.network.messages.game.inventory.storage.StorageInventoryContentMessage;
-    import com.ankamagames.dofus.network.messages.game.inventory.exchanges.ExchangeStartOkTaxCollectorMessage;
     import com.ankamagames.dofus.network.messages.game.inventory.storage.StorageObjectUpdateMessage;
     import com.ankamagames.dofus.internalDatacenter.items.ItemWrapper;
     import com.ankamagames.dofus.network.messages.game.inventory.storage.StorageObjectRemoveMessage;
@@ -47,12 +51,14 @@
     import com.ankamagames.dofus.network.messages.game.inventory.exchanges.ExchangeObjectTransfertExistingFromInvMessage;
     import com.ankamagames.dofus.network.messages.game.inventory.exchanges.ExchangeStartOkNpcShopMessage;
     import com.ankamagames.dofus.network.types.game.context.GameContextActorInformations;
+    import com.ankamagames.dofus.network.messages.game.inventory.exchanges.RecycleResultMessage;
     import com.ankamagames.dofus.network.messages.game.inventory.exchanges.ExchangeLeaveMessage;
     import com.ankamagames.dofus.network.messages.game.inventory.exchanges.ExchangeStartedWithPodsMessage;
     import com.ankamagames.dofus.network.messages.game.inventory.exchanges.ExchangeObjectTransfertListToInvMessage;
     import com.ankamagames.dofus.network.messages.game.inventory.exchanges.ExchangeObjectTransfertListWithQuantityToInvMessage;
     import com.ankamagames.dofus.network.messages.game.inventory.exchanges.ExchangeObjectTransfertListFromInvMessage;
     import com.ankamagames.dofus.network.types.game.data.items.ObjectItemToSellInNpcShop;
+    import com.ankamagames.dofus.internalDatacenter.items.TradeStockItemWrapper;
     import com.ankamagames.berilia.managers.KernelEventsManager;
     import com.ankamagames.dofus.misc.lists.InventoryHookList;
     import com.ankamagames.dofus.kernel.net.ConnectionsHandler;
@@ -63,6 +69,7 @@
     import com.ankamagames.dofus.logic.game.common.managers.TimeManager;
     import com.ankamagames.dofus.logic.common.actions.ChangeWorldInteractionAction;
     import com.ankamagames.dofus.datacenter.items.criterion.GroupItemCriterion;
+    import com.ankamagames.dofus.internalDatacenter.DataEnum;
     import com.ankamagames.dofus.network.messages.game.dialog.LeaveDialogRequestMessage;
     import com.ankamagames.dofus.logic.game.roleplay.actions.LeaveDialogRequestAction;
     import com.ankamagames.dofus.network.enums.DialogTypeEnum;
@@ -94,20 +101,20 @@
 
         private function get roleplayContextFrame():RoleplayContextFrame
         {
-            return ((Kernel.getWorker().getFrame(RoleplayContextFrame) as RoleplayContextFrame));
+            return (Kernel.getWorker().getFrame(RoleplayContextFrame) as RoleplayContextFrame);
         }
 
         private function get roleplayEntitiesFrame():RoleplayEntitiesFrame
         {
-            return ((Kernel.getWorker().getFrame(RoleplayEntitiesFrame) as RoleplayEntitiesFrame));
+            return (Kernel.getWorker().getFrame(RoleplayEntitiesFrame) as RoleplayEntitiesFrame);
         }
 
         private function get roleplayMovementFrame():RoleplayMovementFrame
         {
-            return ((Kernel.getWorker().getFrame(RoleplayMovementFrame) as RoleplayMovementFrame));
+            return (Kernel.getWorker().getFrame(RoleplayMovementFrame) as RoleplayMovementFrame);
         }
 
-        public function initMountStock(objectsInfos:Vector.<ObjectItem>):void
+        public function initBankStock(objectsInfos:Vector.<ObjectItem>):void
         {
             InventoryManager.getInstance().bankInventory.initializeFromObjectItems(objectsInfos);
             InventoryManager.getInstance().bankInventory.releaseHooks();
@@ -115,7 +122,7 @@
 
         public function processExchangeRequestedTradeMessage(msg:ExchangeRequestedTradeMessage):void
         {
-            var _local_4:SocialFrame;
+            var socialFrame:SocialFrame;
             var lda:LeaveDialogAction;
             if (msg.exchangeType != ExchangeTypeEnum.PLAYER_TRADE)
             {
@@ -131,8 +138,8 @@
             }
             else
             {
-                _local_4 = (Kernel.getWorker().getFrame(SocialFrame) as SocialFrame);
-                if (((_local_4) && (_local_4.isIgnored(sourceName))))
+                socialFrame = (Kernel.getWorker().getFrame(SocialFrame) as SocialFrame);
+                if ((((socialFrame) && (socialFrame.isIgnored(sourceName))) || (MountAutoTripManager.getInstance().isTravelling)))
                 {
                     lda = new LeaveDialogAction();
                     Kernel.getWorker().process(lda);
@@ -156,52 +163,71 @@
             this._kernelEventsManager.processCallback(ExchangeHookList.ExchangeStartedType, ExchangeTypeEnum.NPC_TRADE);
         }
 
+        public function processExchangeStartOkRunesTradeMessage(msg:ExchangeStartOkRunesTradeMessage):void
+        {
+            var esortmsg:ExchangeStartOkRunesTradeMessage = (msg as ExchangeStartOkRunesTradeMessage);
+            PlayedCharacterManager.getInstance().isInExchange = true;
+            this._kernelEventsManager.processCallback(CraftHookList.ExchangeStartOkRunesTrade);
+            this._kernelEventsManager.processCallback(ExchangeHookList.ExchangeStartedType, ExchangeTypeEnum.RUNES_TRADE);
+        }
+
+        public function processExchangeStartOkRecycleTradeMessage(msg:ExchangeStartOkRecycleTradeMessage):void
+        {
+            var esorctmsg:ExchangeStartOkRecycleTradeMessage = (msg as ExchangeStartOkRecycleTradeMessage);
+            PlayedCharacterManager.getInstance().isInExchange = true;
+            this._kernelEventsManager.processCallback(CraftHookList.ExchangeStartOkRecycleTrade, esorctmsg.percentToPlayer, esorctmsg.percentToPrism);
+            this._kernelEventsManager.processCallback(ExchangeHookList.ExchangeStartedType, ExchangeTypeEnum.RECYCLE_TRADE);
+        }
+
         public function process(msg:Message):Boolean
         {
             var i:int;
             var inventorySize:int;
-            var _local_4:ExchangeStartedWithStorageMessage;
-            var _local_5:CommonExchangeManagementFrame;
-            var _local_6:int;
-            var _local_7:ExchangeStartedMessage;
-            var _local_8:CommonExchangeManagementFrame;
-            var _local_9:StorageInventoryContentMessage;
-            var _local_10:ExchangeStartOkTaxCollectorMessage;
-            var _local_11:StorageObjectUpdateMessage;
-            var _local_12:ObjectItem;
-            var _local_13:ItemWrapper;
-            var _local_14:StorageObjectRemoveMessage;
-            var _local_15:StorageObjectsUpdateMessage;
-            var _local_16:StorageObjectsRemoveMessage;
-            var _local_17:StorageKamasUpdateMessage;
-            var _local_18:ExchangeObjectMoveKamaAction;
-            var _local_19:ExchangeObjectMoveKamaMessage;
-            var _local_20:ExchangeObjectTransfertAllToInvAction;
-            var _local_21:ExchangeObjectTransfertAllToInvMessage;
-            var _local_22:ExchangeObjectTransfertListToInvAction;
-            var _local_23:ExchangeObjectTransfertListWithQuantityToInvAction;
-            var _local_24:ExchangeObjectTransfertExistingToInvAction;
-            var _local_25:ExchangeObjectTransfertExistingToInvMessage;
-            var _local_26:ExchangeObjectTransfertAllFromInvAction;
-            var _local_27:ExchangeObjectTransfertAllFromInvMessage;
-            var _local_28:ExchangeObjectTransfertListFromInvAction;
-            var _local_29:ExchangeObjectTransfertExistingFromInvAction;
-            var _local_30:ExchangeObjectTransfertExistingFromInvMessage;
-            var _local_31:ExchangeStartOkNpcShopMessage;
-            var _local_32:GameContextActorInformations;
-            var _local_33:TiphonEntityLook;
-            var _local_34:Array;
-            var _local_35:ExchangeLeaveMessage;
-            var _local_36:String;
-            var _local_37:String;
-            var _local_38:TiphonEntityLook;
-            var _local_39:TiphonEntityLook;
-            var _local_40:ExchangeStartedWithPodsMessage;
-            var _local_41:int;
-            var _local_42:int;
-            var _local_43:int;
-            var _local_44:int;
-            var _local_45:int;
+            var exwsmsg:ExchangeStartedWithStorageMessage;
+            var commonExchangeFrame:CommonExchangeManagementFrame;
+            var pods:int;
+            var esmsg:ExchangeStartedMessage;
+            var commonExchangeFrame2:CommonExchangeManagementFrame;
+            var estcsm:ExchangeStartedTaxCollectorShopMessage;
+            var sicmsg:StorageInventoryContentMessage;
+            var soumsg:StorageObjectUpdateMessage;
+            var object:ObjectItem;
+            var itemChanged:ItemWrapper;
+            var sormsg:StorageObjectRemoveMessage;
+            var sosumsg:StorageObjectsUpdateMessage;
+            var sosrmsg:StorageObjectsRemoveMessage;
+            var skumsg:StorageKamasUpdateMessage;
+            var eomka:ExchangeObjectMoveKamaAction;
+            var eomkmsg:ExchangeObjectMoveKamaMessage;
+            var eotatia:ExchangeObjectTransfertAllToInvAction;
+            var eotatimsg:ExchangeObjectTransfertAllToInvMessage;
+            var eotltia:ExchangeObjectTransfertListToInvAction;
+            var eotlwqtoia:ExchangeObjectTransfertListWithQuantityToInvAction;
+            var eotetia:ExchangeObjectTransfertExistingToInvAction;
+            var eotetimsg:ExchangeObjectTransfertExistingToInvMessage;
+            var eotafia:ExchangeObjectTransfertAllFromInvAction;
+            var eotafimsg:ExchangeObjectTransfertAllFromInvMessage;
+            var eotlfia:ExchangeObjectTransfertListFromInvAction;
+            var eotefia:ExchangeObjectTransfertExistingFromInvAction;
+            var eotefimsg:ExchangeObjectTransfertExistingFromInvMessage;
+            var esonmsg:ExchangeStartOkNpcShopMessage;
+            var merchant:GameContextActorInformations;
+            var merchantLook:TiphonEntityLook;
+            var NPCShopItems:Array;
+            var esortmsg:ExchangeStartOkRunesTradeMessage;
+            var esorctmsg:ExchangeStartOkRecycleTradeMessage;
+            var rrmsg:RecycleResultMessage;
+            var elm:ExchangeLeaveMessage;
+            var sourceName:String;
+            var targetName:String;
+            var sourceLook:TiphonEntityLook;
+            var targetLook:TiphonEntityLook;
+            var eswpmsg:ExchangeStartedWithPodsMessage;
+            var sourceCurrentPods:int;
+            var targetCurrentPods:int;
+            var sourceMaxPods:int;
+            var targetMaxPods:int;
+            var exchangeOtherCharacterId:Number;
             var sosuit:ObjectItem;
             var sosuobj:ObjectItem;
             var sosuic:ItemWrapper;
@@ -211,105 +237,103 @@
             var eotlfimsg:ExchangeObjectTransfertListFromInvMessage;
             var oitsins:ObjectItemToSellInNpcShop;
             var itemwra:ItemWrapper;
+            var stockItem:TradeStockItemWrapper;
             switch (true)
             {
                 case (msg is ExchangeStartedWithStorageMessage):
-                    _local_4 = (msg as ExchangeStartedWithStorageMessage);
+                    exwsmsg = (msg as ExchangeStartedWithStorageMessage);
                     PlayedCharacterManager.getInstance().isInExchange = true;
-                    _local_5 = (Kernel.getWorker().getFrame(CommonExchangeManagementFrame) as CommonExchangeManagementFrame);
-                    if (_local_5)
+                    commonExchangeFrame = (Kernel.getWorker().getFrame(CommonExchangeManagementFrame) as CommonExchangeManagementFrame);
+                    if (commonExchangeFrame)
                     {
-                        _local_5.resetEchangeSequence();
+                        commonExchangeFrame.resetEchangeSequence();
                     };
-                    _local_6 = _local_4.storageMaxSlot;
-                    this._kernelEventsManager.processCallback(ExchangeHookList.ExchangeBankStartedWithStorage, ExchangeTypeEnum.STORAGE, _local_6);
+                    pods = exwsmsg.storageMaxSlot;
+                    this._kernelEventsManager.processCallback(ExchangeHookList.ExchangeBankStartedWithStorage, exwsmsg.exchangeType, pods);
                     return (false);
                 case (msg is ExchangeStartedMessage):
-                    _local_7 = (msg as ExchangeStartedMessage);
+                    esmsg = (msg as ExchangeStartedMessage);
                     PlayedCharacterManager.getInstance().isInExchange = true;
-                    _local_8 = (Kernel.getWorker().getFrame(CommonExchangeManagementFrame) as CommonExchangeManagementFrame);
-                    if (_local_8)
+                    commonExchangeFrame2 = (Kernel.getWorker().getFrame(CommonExchangeManagementFrame) as CommonExchangeManagementFrame);
+                    if (commonExchangeFrame2)
                     {
-                        _local_8.resetEchangeSequence();
+                        commonExchangeFrame2.resetEchangeSequence();
                     };
-                    switch (_local_7.exchangeType)
+                    switch (esmsg.exchangeType)
                     {
                         case ExchangeTypeEnum.PLAYER_TRADE:
-                            _local_36 = this._sourceInformations.name;
-                            _local_37 = this._targetInformations.name;
-                            _local_38 = EntityLookAdapter.getRiderLook(this._sourceInformations.look);
-                            _local_39 = EntityLookAdapter.getRiderLook(this._targetInformations.look);
-                            if (_local_7.getMessageId() == ExchangeStartedWithPodsMessage.protocolId)
+                            sourceName = this._sourceInformations.name;
+                            targetName = this._targetInformations.name;
+                            sourceLook = EntityLookAdapter.getRiderLook(this._sourceInformations.look);
+                            targetLook = EntityLookAdapter.getRiderLook(this._targetInformations.look);
+                            if (esmsg.getMessageId() == ExchangeStartedWithPodsMessage.protocolId)
                             {
-                                _local_40 = (msg as ExchangeStartedWithPodsMessage);
+                                eswpmsg = (msg as ExchangeStartedWithPodsMessage);
                             };
-                            _local_41 = -1;
-                            _local_42 = -1;
-                            _local_43 = -1;
-                            _local_44 = -1;
-                            if (_local_40 != null)
+                            sourceCurrentPods = -1;
+                            targetCurrentPods = -1;
+                            sourceMaxPods = -1;
+                            targetMaxPods = -1;
+                            if (eswpmsg != null)
                             {
-                                if (_local_40.firstCharacterId == this._sourceInformations.contextualId)
+                                if (eswpmsg.firstCharacterId == this._sourceInformations.contextualId)
                                 {
-                                    _local_41 = _local_40.firstCharacterCurrentWeight;
-                                    _local_42 = _local_40.secondCharacterCurrentWeight;
-                                    _local_43 = _local_40.firstCharacterMaxWeight;
-                                    _local_44 = _local_40.secondCharacterMaxWeight;
+                                    sourceCurrentPods = eswpmsg.firstCharacterCurrentWeight;
+                                    targetCurrentPods = eswpmsg.secondCharacterCurrentWeight;
+                                    sourceMaxPods = eswpmsg.firstCharacterMaxWeight;
+                                    targetMaxPods = eswpmsg.secondCharacterMaxWeight;
                                 }
                                 else
                                 {
-                                    _local_42 = _local_40.firstCharacterCurrentWeight;
-                                    _local_41 = _local_40.secondCharacterCurrentWeight;
-                                    _local_44 = _local_40.firstCharacterMaxWeight;
-                                    _local_43 = _local_40.secondCharacterMaxWeight;
+                                    targetCurrentPods = eswpmsg.firstCharacterCurrentWeight;
+                                    sourceCurrentPods = eswpmsg.secondCharacterCurrentWeight;
+                                    targetMaxPods = eswpmsg.firstCharacterMaxWeight;
+                                    sourceMaxPods = eswpmsg.secondCharacterMaxWeight;
                                 };
                             };
-                            if (PlayedCharacterManager.getInstance().id == _local_40.firstCharacterId)
+                            if (PlayedCharacterManager.getInstance().id == eswpmsg.firstCharacterId)
                             {
-                                _local_45 = _local_40.secondCharacterId;
+                                exchangeOtherCharacterId = eswpmsg.secondCharacterId;
                             }
                             else
                             {
-                                _local_45 = _local_40.firstCharacterId;
+                                exchangeOtherCharacterId = eswpmsg.firstCharacterId;
                             };
-                            this._kernelEventsManager.processCallback(ExchangeHookList.ExchangeStarted, _local_36, _local_37, _local_38, _local_39, _local_41, _local_42, _local_43, _local_44, _local_45);
-                            this._kernelEventsManager.processCallback(ExchangeHookList.ExchangeStartedType, _local_7.exchangeType);
+                            this._kernelEventsManager.processCallback(ExchangeHookList.ExchangeStarted, sourceName, targetName, sourceLook, targetLook, sourceCurrentPods, targetCurrentPods, sourceMaxPods, targetMaxPods, exchangeOtherCharacterId);
+                            this._kernelEventsManager.processCallback(ExchangeHookList.ExchangeStartedType, esmsg.exchangeType);
                             return (true);
                         case ExchangeTypeEnum.STORAGE:
-                            this._kernelEventsManager.processCallback(ExchangeHookList.ExchangeStartedType, _local_7.exchangeType);
-                            return (true);
-                        case ExchangeTypeEnum.TAXCOLLECTOR:
-                            this._kernelEventsManager.processCallback(ExchangeHookList.ExchangeStartedType, _local_7.exchangeType);
+                            this._kernelEventsManager.processCallback(ExchangeHookList.ExchangeStartedType, esmsg.exchangeType);
                             return (true);
                     };
                     return (true);
-                case (msg is StorageInventoryContentMessage):
-                    _local_9 = (msg as StorageInventoryContentMessage);
-                    InventoryManager.getInstance().bankInventory.kamas = _local_9.kamas;
-                    InventoryManager.getInstance().bankInventory.initializeFromObjectItems(_local_9.objects);
-                    InventoryManager.getInstance().bankInventory.releaseHooks();
+                case (msg is ExchangeStartedTaxCollectorShopMessage):
+                    estcsm = (msg as ExchangeStartedTaxCollectorShopMessage);
+                    PlayedCharacterManager.getInstance().isInExchange = true;
+                    InventoryManager.getInstance().bankInventory.kamas = estcsm.kamas;
+                    KernelEventsManager.getInstance().processCallback(ExchangeHookList.ExchangeBankStarted, ExchangeTypeEnum.MOUNT, estcsm.objects, estcsm.kamas);
                     return (true);
-                case (msg is ExchangeStartOkTaxCollectorMessage):
-                    _local_10 = (msg as ExchangeStartOkTaxCollectorMessage);
-                    InventoryManager.getInstance().bankInventory.kamas = _local_10.goldInfo;
-                    InventoryManager.getInstance().bankInventory.initializeFromObjectItems(_local_10.objectsInfos);
+                case (msg is StorageInventoryContentMessage):
+                    sicmsg = (msg as StorageInventoryContentMessage);
+                    InventoryManager.getInstance().bankInventory.kamas = sicmsg.kamas;
+                    InventoryManager.getInstance().bankInventory.initializeFromObjectItems(sicmsg.objects);
                     InventoryManager.getInstance().bankInventory.releaseHooks();
                     return (true);
                 case (msg is StorageObjectUpdateMessage):
-                    _local_11 = (msg as StorageObjectUpdateMessage);
-                    _local_12 = _local_11.object;
-                    _local_13 = ItemWrapper.create(_local_12.position, _local_12.objectUID, _local_12.objectGID, _local_12.quantity, _local_12.effects);
-                    InventoryManager.getInstance().bankInventory.modifyItem(_local_13);
+                    soumsg = (msg as StorageObjectUpdateMessage);
+                    object = soumsg.object;
+                    itemChanged = ItemWrapper.create(object.position, object.objectUID, object.objectGID, object.quantity, object.effects);
+                    InventoryManager.getInstance().bankInventory.modifyItem(itemChanged);
                     InventoryManager.getInstance().bankInventory.releaseHooks();
                     return (true);
                 case (msg is StorageObjectRemoveMessage):
-                    _local_14 = (msg as StorageObjectRemoveMessage);
-                    InventoryManager.getInstance().bankInventory.removeItem(_local_14.objectUID);
+                    sormsg = (msg as StorageObjectRemoveMessage);
+                    InventoryManager.getInstance().bankInventory.removeItem(sormsg.objectUID);
                     InventoryManager.getInstance().bankInventory.releaseHooks();
                     return (true);
                 case (msg is StorageObjectsUpdateMessage):
-                    _local_15 = (msg as StorageObjectsUpdateMessage);
-                    for each (sosuit in _local_15.objectList)
+                    sosumsg = (msg as StorageObjectsUpdateMessage);
+                    for each (sosuit in sosumsg.objectList)
                     {
                         sosuobj = sosuit;
                         sosuic = ItemWrapper.create(sosuobj.position, sosuobj.objectUID, sosuobj.objectGID, sosuobj.quantity, sosuobj.effects);
@@ -318,114 +342,126 @@
                     InventoryManager.getInstance().bankInventory.releaseHooks();
                     return (true);
                 case (msg is StorageObjectsRemoveMessage):
-                    _local_16 = (msg as StorageObjectsRemoveMessage);
-                    for each (sosruid in _local_16.objectUIDList)
+                    sosrmsg = (msg as StorageObjectsRemoveMessage);
+                    for each (sosruid in sosrmsg.objectUIDList)
                     {
                         InventoryManager.getInstance().bankInventory.removeItem(sosruid);
                     };
                     InventoryManager.getInstance().bankInventory.releaseHooks();
                     return (true);
                 case (msg is StorageKamasUpdateMessage):
-                    _local_17 = (msg as StorageKamasUpdateMessage);
-                    InventoryManager.getInstance().bankInventory.kamas = _local_17.kamasTotal;
-                    KernelEventsManager.getInstance().processCallback(InventoryHookList.StorageKamasUpdate, _local_17.kamasTotal);
+                    skumsg = (msg as StorageKamasUpdateMessage);
+                    InventoryManager.getInstance().bankInventory.kamas = skumsg.kamasTotal;
+                    KernelEventsManager.getInstance().processCallback(InventoryHookList.StorageKamasUpdate, skumsg.kamasTotal);
                     return (true);
                 case (msg is ExchangeObjectMoveKamaAction):
-                    _local_18 = (msg as ExchangeObjectMoveKamaAction);
-                    _local_19 = new ExchangeObjectMoveKamaMessage();
-                    _local_19.initExchangeObjectMoveKamaMessage(_local_18.kamas);
-                    ConnectionsHandler.getConnection().send(_local_19);
+                    eomka = (msg as ExchangeObjectMoveKamaAction);
+                    eomkmsg = new ExchangeObjectMoveKamaMessage();
+                    eomkmsg.initExchangeObjectMoveKamaMessage(eomka.kamas);
+                    ConnectionsHandler.getConnection().send(eomkmsg);
                     return (true);
                 case (msg is ExchangeObjectTransfertAllToInvAction):
-                    _local_20 = (msg as ExchangeObjectTransfertAllToInvAction);
-                    _local_21 = new ExchangeObjectTransfertAllToInvMessage();
-                    _local_21.initExchangeObjectTransfertAllToInvMessage();
-                    ConnectionsHandler.getConnection().send(_local_21);
+                    eotatia = (msg as ExchangeObjectTransfertAllToInvAction);
+                    eotatimsg = new ExchangeObjectTransfertAllToInvMessage();
+                    eotatimsg.initExchangeObjectTransfertAllToInvMessage();
+                    ConnectionsHandler.getConnection().send(eotatimsg);
                     return (true);
                 case (msg is ExchangeObjectTransfertListToInvAction):
-                    _local_22 = (msg as ExchangeObjectTransfertListToInvAction);
-                    if (_local_22.ids.length > ProtocolConstantsEnum.MAX_OBJ_COUNT_BY_XFERT)
+                    eotltia = (msg as ExchangeObjectTransfertListToInvAction);
+                    if (eotltia.ids.length > ProtocolConstantsEnum.MAX_OBJ_COUNT_BY_XFERT)
                     {
                         KernelEventsManager.getInstance().processCallback(ChatHookList.TextInformation, I18n.getUiText("ui.exchange.partialTransfert"), ChatActivableChannelsEnum.PSEUDO_CHANNEL_INFO, TimeManager.getInstance().getTimestamp());
                     };
-                    if (_local_22.ids.length >= ProtocolConstantsEnum.MIN_OBJ_COUNT_BY_XFERT)
+                    if (eotltia.ids.length >= ProtocolConstantsEnum.MIN_OBJ_COUNT_BY_XFERT)
                     {
                         eotltimsg = new ExchangeObjectTransfertListToInvMessage();
-                        eotltimsg.initExchangeObjectTransfertListToInvMessage(_local_22.ids.slice(0, ProtocolConstantsEnum.MAX_OBJ_COUNT_BY_XFERT));
+                        eotltimsg.initExchangeObjectTransfertListToInvMessage(eotltia.ids.slice(0, ProtocolConstantsEnum.MAX_OBJ_COUNT_BY_XFERT));
                         ConnectionsHandler.getConnection().send(eotltimsg);
                     };
                     return (true);
                 case (msg is ExchangeObjectTransfertListWithQuantityToInvAction):
-                    _local_23 = (msg as ExchangeObjectTransfertListWithQuantityToInvAction);
-                    if (_local_23.ids.length > (ProtocolConstantsEnum.MAX_OBJ_COUNT_BY_XFERT / 2))
+                    eotlwqtoia = (msg as ExchangeObjectTransfertListWithQuantityToInvAction);
+                    if (eotlwqtoia.ids.length > (ProtocolConstantsEnum.MAX_OBJ_COUNT_BY_XFERT / 2))
                     {
                         KernelEventsManager.getInstance().processCallback(ChatHookList.TextInformation, I18n.getUiText("ui.exchange.partialTransfert"), ChatActivableChannelsEnum.PSEUDO_CHANNEL_INFO, TimeManager.getInstance().getTimestamp());
                     };
-                    if ((((_local_23.ids.length >= ProtocolConstantsEnum.MIN_OBJ_COUNT_BY_XFERT)) && ((_local_23.ids.length == _local_23.qtys.length))))
+                    if (((eotlwqtoia.ids.length >= ProtocolConstantsEnum.MIN_OBJ_COUNT_BY_XFERT) && (eotlwqtoia.ids.length == eotlwqtoia.qtys.length)))
                     {
                         eotlwqtoimsg = new ExchangeObjectTransfertListWithQuantityToInvMessage();
-                        eotlwqtoimsg.initExchangeObjectTransfertListWithQuantityToInvMessage(_local_23.ids.slice(0, (ProtocolConstantsEnum.MAX_OBJ_COUNT_BY_XFERT / 2)), _local_23.qtys.slice(0, (ProtocolConstantsEnum.MAX_OBJ_COUNT_BY_XFERT / 2)));
+                        eotlwqtoimsg.initExchangeObjectTransfertListWithQuantityToInvMessage(eotlwqtoia.ids.slice(0, (ProtocolConstantsEnum.MAX_OBJ_COUNT_BY_XFERT / 2)), eotlwqtoia.qtys.slice(0, (ProtocolConstantsEnum.MAX_OBJ_COUNT_BY_XFERT / 2)));
                         ConnectionsHandler.getConnection().send(eotlwqtoimsg);
                     };
                     return (true);
                 case (msg is ExchangeObjectTransfertExistingToInvAction):
-                    _local_24 = (msg as ExchangeObjectTransfertExistingToInvAction);
-                    _local_25 = new ExchangeObjectTransfertExistingToInvMessage();
-                    _local_25.initExchangeObjectTransfertExistingToInvMessage();
-                    ConnectionsHandler.getConnection().send(_local_25);
+                    eotetia = (msg as ExchangeObjectTransfertExistingToInvAction);
+                    eotetimsg = new ExchangeObjectTransfertExistingToInvMessage();
+                    eotetimsg.initExchangeObjectTransfertExistingToInvMessage();
+                    ConnectionsHandler.getConnection().send(eotetimsg);
                     return (true);
                 case (msg is ExchangeObjectTransfertAllFromInvAction):
-                    _local_26 = (msg as ExchangeObjectTransfertAllFromInvAction);
-                    _local_27 = new ExchangeObjectTransfertAllFromInvMessage();
-                    _local_27.initExchangeObjectTransfertAllFromInvMessage();
-                    ConnectionsHandler.getConnection().send(_local_27);
+                    eotafia = (msg as ExchangeObjectTransfertAllFromInvAction);
+                    eotafimsg = new ExchangeObjectTransfertAllFromInvMessage();
+                    eotafimsg.initExchangeObjectTransfertAllFromInvMessage();
+                    ConnectionsHandler.getConnection().send(eotafimsg);
                     return (true);
                 case (msg is ExchangeObjectTransfertListFromInvAction):
-                    _local_28 = (msg as ExchangeObjectTransfertListFromInvAction);
-                    if (_local_28.ids.length > ProtocolConstantsEnum.MAX_OBJ_COUNT_BY_XFERT)
+                    eotlfia = (msg as ExchangeObjectTransfertListFromInvAction);
+                    if (eotlfia.ids.length > ProtocolConstantsEnum.MAX_OBJ_COUNT_BY_XFERT)
                     {
                         KernelEventsManager.getInstance().processCallback(ChatHookList.TextInformation, I18n.getUiText("ui.exchange.partialTransfert"), ChatActivableChannelsEnum.PSEUDO_CHANNEL_INFO, TimeManager.getInstance().getTimestamp());
                     };
-                    if (_local_28.ids.length >= ProtocolConstantsEnum.MIN_OBJ_COUNT_BY_XFERT)
+                    if (eotlfia.ids.length >= ProtocolConstantsEnum.MIN_OBJ_COUNT_BY_XFERT)
                     {
                         eotlfimsg = new ExchangeObjectTransfertListFromInvMessage();
-                        eotlfimsg.initExchangeObjectTransfertListFromInvMessage(_local_28.ids.slice(0, ProtocolConstantsEnum.MAX_OBJ_COUNT_BY_XFERT));
+                        eotlfimsg.initExchangeObjectTransfertListFromInvMessage(eotlfia.ids.slice(0, ProtocolConstantsEnum.MAX_OBJ_COUNT_BY_XFERT));
                         ConnectionsHandler.getConnection().send(eotlfimsg);
                     };
                     return (true);
                 case (msg is ExchangeObjectTransfertExistingFromInvAction):
-                    _local_29 = (msg as ExchangeObjectTransfertExistingFromInvAction);
-                    _local_30 = new ExchangeObjectTransfertExistingFromInvMessage();
-                    _local_30.initExchangeObjectTransfertExistingFromInvMessage();
-                    ConnectionsHandler.getConnection().send(_local_30);
+                    eotefia = (msg as ExchangeObjectTransfertExistingFromInvAction);
+                    eotefimsg = new ExchangeObjectTransfertExistingFromInvMessage();
+                    eotefimsg.initExchangeObjectTransfertExistingFromInvMessage();
+                    ConnectionsHandler.getConnection().send(eotefimsg);
                     return (true);
                 case (msg is ExchangeStartOkNpcShopMessage):
-                    _local_31 = (msg as ExchangeStartOkNpcShopMessage);
+                    esonmsg = (msg as ExchangeStartOkNpcShopMessage);
                     PlayedCharacterManager.getInstance().isInExchange = true;
                     Kernel.getWorker().process(ChangeWorldInteractionAction.create(false, true));
-                    _local_32 = this.roleplayContextFrame.entitiesFrame.getEntityInfos(_local_31.npcSellerId);
-                    _local_33 = EntityLookAdapter.getRiderLook(_local_32.look);
-                    _local_34 = new Array();
-                    for each (oitsins in _local_31.objectsInfos)
+                    merchant = this.roleplayContextFrame.entitiesFrame.getEntityInfos(esonmsg.npcSellerId);
+                    merchantLook = EntityLookAdapter.getRiderLook(merchant.look);
+                    NPCShopItems = new Array();
+                    for each (oitsins in esonmsg.objectsInfos)
                     {
                         itemwra = ItemWrapper.create(63, 0, oitsins.objectGID, 0, oitsins.effects, false);
-                        _local_34.push({
-                            "item":itemwra,
-                            "price":oitsins.objectPrice,
-                            "criterion":new GroupItemCriterion(oitsins.buyCriterion)
-                        });
+                        stockItem = TradeStockItemWrapper.create(itemwra, oitsins.objectPrice, new GroupItemCriterion(oitsins.buyCriterion));
+                        NPCShopItems.push(stockItem);
                     };
-                    this._kernelEventsManager.processCallback(ExchangeHookList.ExchangeStartOkNpcShop, _local_31.npcSellerId, _local_34, _local_33, _local_31.tokenId);
+                    this._kernelEventsManager.processCallback(ExchangeHookList.ExchangeStartOkNpcShop, esonmsg.npcSellerId, NPCShopItems, merchantLook, esonmsg.tokenId);
+                    return (true);
+                case (msg is ExchangeStartOkRunesTradeMessage):
+                    esortmsg = (msg as ExchangeStartOkRunesTradeMessage);
+                    PlayedCharacterManager.getInstance().isInExchange = true;
+                    KernelEventsManager.getInstance().processCallback(CraftHookList.ExchangeStartOkRunesTrade);
+                    return (true);
+                case (msg is ExchangeStartOkRecycleTradeMessage):
+                    esorctmsg = (msg as ExchangeStartOkRecycleTradeMessage);
+                    PlayedCharacterManager.getInstance().isInExchange = true;
+                    KernelEventsManager.getInstance().processCallback(CraftHookList.ExchangeStartOkRecycleTrade, esorctmsg.percentToPlayer, esorctmsg.percentToPrism);
+                    return (true);
+                case (msg is RecycleResultMessage):
+                    rrmsg = (msg as RecycleResultMessage);
+                    KernelEventsManager.getInstance().processCallback(CraftHookList.RecycleResult, rrmsg.nuggetsForPlayer, rrmsg.nuggetsForPrism);
+                    KernelEventsManager.getInstance().processCallback(ChatHookList.TextInformation, I18n.getUiText("ui.recycle.resultDetailed", [rrmsg.nuggetsForPlayer, rrmsg.nuggetsForPrism, (("{item," + DataEnum.ITEM_GID_NUGGET) + "}")]), ChatActivableChannelsEnum.PSEUDO_CHANNEL_INFO, TimeManager.getInstance().getTimestamp());
                     return (true);
                 case (msg is LeaveDialogRequestAction):
                     ConnectionsHandler.getConnection().send(new LeaveDialogRequestMessage());
                     return (true);
                 case (msg is ExchangeLeaveMessage):
-                    _local_35 = (msg as ExchangeLeaveMessage);
-                    if (_local_35.dialogType == DialogTypeEnum.DIALOG_EXCHANGE)
+                    elm = (msg as ExchangeLeaveMessage);
+                    if (elm.dialogType == DialogTypeEnum.DIALOG_EXCHANGE)
                     {
                         PlayedCharacterManager.getInstance().isInExchange = false;
-                        this._success = _local_35.success;
+                        this._success = elm.success;
                         Kernel.getWorker().removeFrame(this);
                     };
                     return (true);
@@ -461,5 +497,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.frames
+} com.ankamagames.dofus.logic.game.common.frames
 

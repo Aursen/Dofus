@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.managers
+package com.ankamagames.jerakine.managers
 {
     import com.ankamagames.jerakine.utils.display.StageShareManager;
     import flash.events.Event;
@@ -40,7 +40,7 @@
         private static function onEnterFrame(e:Event):void
         {
             var optimalCondition:int;
-            var _local_5:int;
+            var currentFrameDuration:int;
             var LAST:int = performance;
             var time:int = getTimer();
             if ((_totalFrames % 21) == 0)
@@ -65,13 +65,13 @@
             }
             else
             {
-                _local_5 = (time - _lastTime);
-                if (_local_5 < frameDuration)
+                currentFrameDuration = (time - _lastTime);
+                if (currentFrameDuration < frameDuration)
                 {
-                    _local_5 = frameDuration;
+                    currentFrameDuration = frameDuration;
                 };
-                _framesTime = (_framesTime + _local_5);
-                if (_local_5 > (2 * frameDuration))
+                _framesTime = (_framesTime + currentFrameDuration);
+                if (currentFrameDuration > (2 * frameDuration))
                 {
                     performance = CRITICAL;
                 };
@@ -82,5 +82,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.managers
+} com.ankamagames.jerakine.managers
 

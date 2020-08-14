@@ -1,17 +1,15 @@
-﻿package com.ankamagames.berilia.managers
+package com.ankamagames.berilia.managers
 {
     import flash.events.EventDispatcher;
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
     import com.ankamagames.jerakine.resources.loaders.IResourceLoader;
-    import com.ankamagames.jerakine.newCache.impl.Cache;
     import com.ankamagames.berilia.utils.errors.BeriliaError;
     import com.ankamagames.jerakine.resources.loaders.ResourceLoaderFactory;
     import com.ankamagames.jerakine.resources.loaders.ResourceLoaderType;
     import com.ankamagames.jerakine.resources.events.ResourceLoadedEvent;
     import com.ankamagames.jerakine.resources.events.ResourceErrorEvent;
-    import com.ankamagames.jerakine.newCache.garbage.LruGarbageCollector;
     import com.ankamagames.berilia.types.template.XmlTemplate;
     import com.ankamagames.berilia.types.event.TemplateLoadedEvent;
     import com.ankamagames.jerakine.types.Uri;
@@ -24,7 +22,6 @@
 
         private var _aTemplates:Array;
         private var _loader:IResourceLoader;
-        private var _cache:Cache;
 
         public function TemplateManager()
         {
@@ -51,7 +48,6 @@
         public function init():void
         {
             this._aTemplates = new Array();
-            this._cache = Cache.create(30, new LruGarbageCollector(), getQualifiedClassName(this));
         }
 
         public function getTemplate(sName:String):XmlTemplate
@@ -69,14 +65,14 @@
         {
             var aTmp:Array = sPath.split("/");
             var sFileName:String = aTmp[(aTmp.length - 1)];
-            return (!((this._aTemplates[sFileName] == null)));
+            return (!(this._aTemplates[sFileName] == null));
         }
 
         public function isLoaded(sPath:String):Boolean
         {
             var aTmp:Array = sPath.split("/");
             var sFileName:String = aTmp[(aTmp.length - 1)];
-            return ((this._aTemplates[sFileName] is XmlTemplate));
+            return (this._aTemplates[sFileName] is XmlTemplate);
         }
 
         public function areLoaded(aPath:Array):Boolean
@@ -84,13 +80,13 @@
             var i:uint;
             while (i < aPath.length)
             {
-                if (!(this.isLoaded(aPath[i])))
+                if (!this.isLoaded(aPath[i]))
                 {
                     return (false);
                 };
                 i++;
             };
-            return (!((aPath.length == 0)));
+            return (!(aPath.length == 0));
         }
 
         public function register(sPath:String):void
@@ -122,5 +118,5 @@
 
 
     }
-}//package com.ankamagames.berilia.managers
+} com.ankamagames.berilia.managers
 

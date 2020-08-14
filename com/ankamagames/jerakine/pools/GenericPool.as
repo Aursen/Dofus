@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.pools
+package com.ankamagames.jerakine.pools
 {
     import flash.utils.Dictionary;
 
@@ -8,27 +8,27 @@
         private static var _pools:Dictionary = new Dictionary();
 
 
-        public static function get(type:Class, ... args)
+        public static function get(_arg_1:Class, ... args):*
         {
-            if (((_pools[type]) && (_pools[type].length)))
+            if (((_pools[_arg_1]) && (_pools[_arg_1].length)))
             {
-                return (type["create"].apply(null, args.concat(_pools[type].pop())));
+                return (_arg_1["create"].apply(null, args.concat(_pools[_arg_1].pop())));
             };
-            return (type["create"].apply(null, args));
+            return (_arg_1["create"].apply(null, args));
         }
 
         public static function free(target:Poolable):void
         {
             target.free();
-            var type:Class = Object(target).constructor;
-            if (!(_pools[type]))
+            var _local_2:Class = Object(target).constructor;
+            if (!_pools[_local_2])
             {
-                _pools[type] = new Array();
+                _pools[_local_2] = new Array();
             };
-            (_pools[type] as Array).push(target);
+            (_pools[_local_2] as Array).push(target);
         }
 
 
     }
-}//package com.ankamagames.jerakine.pools
+} com.ankamagames.jerakine.pools
 

@@ -1,17 +1,18 @@
-﻿package com.ankamagames.dofus.logic.game.fight.steps
+package com.ankamagames.dofus.logic.game.fight.steps
 {
     import com.ankamagames.jerakine.sequencer.AbstractSequencable;
     import com.ankamagames.dofus.logic.game.fight.fightEvents.FightEventsHelper;
     import com.ankamagames.dofus.logic.game.fight.types.FightEventEnum;
+    import __AS3__.vec.Vector;
 
     public class FightStealingKamasStep extends AbstractSequencable implements IFightStep 
     {
 
-        private var _robberId:int;
-        private var _victimId:int;
-        private var _amount:uint;
+        private var _robberId:Number;
+        private var _victimId:Number;
+        private var _amount:Number = 0;
 
-        public function FightStealingKamasStep(robberId:int, victimId:int, amount:uint)
+        public function FightStealingKamasStep(robberId:Number, victimId:Number, amount:Number)
         {
             this._robberId = robberId;
             this._victimId = victimId;
@@ -29,7 +30,12 @@
             executeCallbacks();
         }
 
+        public function get targets():Vector.<Number>
+        {
+            return (new <Number>[this._victimId]);
+        }
+
 
     }
-}//package com.ankamagames.dofus.logic.game.fight.steps
+} com.ankamagames.dofus.logic.game.fight.steps
 

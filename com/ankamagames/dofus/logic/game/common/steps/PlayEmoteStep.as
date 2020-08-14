@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.common.steps
+package com.ankamagames.dofus.logic.game.common.steps
 {
     import com.ankamagames.jerakine.sequencer.AbstractSequencable;
     import com.ankamagames.dofus.types.entities.AnimatedCharacter;
@@ -37,7 +37,7 @@
                 anim = emote.getAnimName(this._entity.look);
                 rpef = (Kernel.getWorker().getFrame(RoleplayEntitiesFrame) as RoleplayEntitiesFrame);
                 rpef.currentEmoticon = this._emoteId;
-                rpef.process(new GameRolePlaySetAnimationMessage(rpef.getEntityInfos(this._entity.id), anim, 0, !(emote.persistancy), emote.eight_directions));
+                rpef.process(new GameRolePlaySetAnimationMessage(rpef.getEntityInfos(this._entity.id), anim, emote.spellLevelId, 0, (!(emote.persistancy)), emote.eight_directions));
             };
             if (((!(emote)) || (!(this._waitForEnd))))
             {
@@ -53,5 +53,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.steps
+} com.ankamagames.dofus.logic.game.common.steps
 

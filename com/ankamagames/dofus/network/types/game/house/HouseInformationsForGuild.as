@@ -1,41 +1,39 @@
-﻿package com.ankamagames.dofus.network.types.game.house
+package com.ankamagames.dofus.network.types.game.house
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import __AS3__.vec.Vector;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
     import __AS3__.vec.*;
 
-    public class HouseInformationsForGuild implements INetworkType 
+    public class HouseInformationsForGuild extends HouseInformations implements INetworkType 
     {
 
         public static const protocolId:uint = 170;
 
-        public var houseId:uint = 0;
-        public var modelId:uint = 0;
+        public var instanceId:uint = 0;
+        public var secondHand:Boolean = false;
         public var ownerName:String = "";
         public var worldX:int = 0;
         public var worldY:int = 0;
-        public var mapId:int = 0;
+        public var mapId:Number = 0;
         public var subAreaId:uint = 0;
-        public var skillListIds:Vector.<int>;
+        public var skillListIds:Vector.<int> = new Vector.<int>();
         public var guildshareParams:uint = 0;
+        private var _skillListIdstree:FuncTree;
 
-        public function HouseInformationsForGuild()
-        {
-            this.skillListIds = new Vector.<int>();
-            super();
-        }
 
-        public function getTypeId():uint
+        override public function getTypeId():uint
         {
             return (170);
         }
 
-        public function initHouseInformationsForGuild(houseId:uint=0, modelId:uint=0, ownerName:String="", worldX:int=0, worldY:int=0, mapId:int=0, subAreaId:uint=0, skillListIds:Vector.<int>=null, guildshareParams:uint=0):HouseInformationsForGuild
+        public function initHouseInformationsForGuild(houseId:uint=0, modelId:uint=0, instanceId:uint=0, secondHand:Boolean=false, ownerName:String="", worldX:int=0, worldY:int=0, mapId:Number=0, subAreaId:uint=0, skillListIds:Vector.<int>=null, guildshareParams:uint=0):HouseInformationsForGuild
         {
-            this.houseId = houseId;
-            this.modelId = modelId;
+            super.initHouseInformations(houseId, modelId);
+            this.instanceId = instanceId;
+            this.secondHand = secondHand;
             this.ownerName = ownerName;
             this.worldX = worldX;
             this.worldY = worldY;
@@ -46,10 +44,11 @@
             return (this);
         }
 
-        public function reset():void
+        override public function reset():void
         {
-            this.houseId = 0;
-            this.modelId = 0;
+            super.reset();
+            this.instanceId = 0;
+            this.secondHand = false;
             this.ownerName = "";
             this.worldX = 0;
             this.worldY = 0;
@@ -59,35 +58,36 @@
             this.guildshareParams = 0;
         }
 
-        public function serialize(output:ICustomDataOutput):void
+        override public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_HouseInformationsForGuild(output);
         }
 
         public function serializeAs_HouseInformationsForGuild(output:ICustomDataOutput):void
         {
-            if (this.houseId < 0)
+            super.serializeAs_HouseInformations(output);
+            if (this.instanceId < 0)
             {
-                throw (new Error((("Forbidden value (" + this.houseId) + ") on element houseId.")));
+                throw (new Error((("Forbidden value (" + this.instanceId) + ") on element instanceId.")));
             };
-            output.writeInt(this.houseId);
-            if (this.modelId < 0)
-            {
-                throw (new Error((("Forbidden value (" + this.modelId) + ") on element modelId.")));
-            };
-            output.writeVarInt(this.modelId);
+            output.writeInt(this.instanceId);
+            output.writeBoolean(this.secondHand);
             output.writeUTF(this.ownerName);
-            if ((((this.worldX < -255)) || ((this.worldX > 0xFF))))
+            if (((this.worldX < -255) || (this.worldX > 0xFF)))
             {
                 throw (new Error((("Forbidden value (" + this.worldX) + ") on element worldX.")));
             };
             output.writeShort(this.worldX);
-            if ((((this.worldY < -255)) || ((this.worldY > 0xFF))))
+            if (((this.worldY < -255) || (this.worldY > 0xFF)))
             {
                 throw (new Error((("Forbidden value (" + this.worldY) + ") on element worldY.")));
             };
             output.writeShort(this.worldY);
-            output.writeInt(this.mapId);
+            if (((this.mapId < 0) || (this.mapId > 9007199254740992)))
+            {
+                throw (new Error((("Forbidden value (" + this.mapId) + ") on element mapId.")));
+            };
+            output.writeDouble(this.mapId);
             if (this.subAreaId < 0)
             {
                 throw (new Error((("Forbidden value (" + this.subAreaId) + ") on element subAreaId.")));
@@ -107,7 +107,7 @@
             output.writeVarInt(this.guildshareParams);
         }
 
-        public function deserialize(input:ICustomDataInput):void
+        override public function deserialize(input:ICustomDataInput):void
         {
             this.deserializeAs_HouseInformationsForGuild(input);
         }
@@ -115,33 +115,14 @@
         public function deserializeAs_HouseInformationsForGuild(input:ICustomDataInput):void
         {
             var _val8:int;
-            this.houseId = input.readInt();
-            if (this.houseId < 0)
-            {
-                throw (new Error((("Forbidden value (" + this.houseId) + ") on element of HouseInformationsForGuild.houseId.")));
-            };
-            this.modelId = input.readVarUhInt();
-            if (this.modelId < 0)
-            {
-                throw (new Error((("Forbidden value (" + this.modelId) + ") on element of HouseInformationsForGuild.modelId.")));
-            };
-            this.ownerName = input.readUTF();
-            this.worldX = input.readShort();
-            if ((((this.worldX < -255)) || ((this.worldX > 0xFF))))
-            {
-                throw (new Error((("Forbidden value (" + this.worldX) + ") on element of HouseInformationsForGuild.worldX.")));
-            };
-            this.worldY = input.readShort();
-            if ((((this.worldY < -255)) || ((this.worldY > 0xFF))))
-            {
-                throw (new Error((("Forbidden value (" + this.worldY) + ") on element of HouseInformationsForGuild.worldY.")));
-            };
-            this.mapId = input.readInt();
-            this.subAreaId = input.readVarUhShort();
-            if (this.subAreaId < 0)
-            {
-                throw (new Error((("Forbidden value (" + this.subAreaId) + ") on element of HouseInformationsForGuild.subAreaId.")));
-            };
+            super.deserialize(input);
+            this._instanceIdFunc(input);
+            this._secondHandFunc(input);
+            this._ownerNameFunc(input);
+            this._worldXFunc(input);
+            this._worldYFunc(input);
+            this._mapIdFunc(input);
+            this._subAreaIdFunc(input);
             var _skillListIdsLen:uint = input.readUnsignedShort();
             var _i8:uint;
             while (_i8 < _skillListIdsLen)
@@ -150,6 +131,102 @@
                 this.skillListIds.push(_val8);
                 _i8++;
             };
+            this._guildshareParamsFunc(input);
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_HouseInformationsForGuild(tree);
+        }
+
+        public function deserializeAsyncAs_HouseInformationsForGuild(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._instanceIdFunc);
+            tree.addChild(this._secondHandFunc);
+            tree.addChild(this._ownerNameFunc);
+            tree.addChild(this._worldXFunc);
+            tree.addChild(this._worldYFunc);
+            tree.addChild(this._mapIdFunc);
+            tree.addChild(this._subAreaIdFunc);
+            this._skillListIdstree = tree.addChild(this._skillListIdstreeFunc);
+            tree.addChild(this._guildshareParamsFunc);
+        }
+
+        private function _instanceIdFunc(input:ICustomDataInput):void
+        {
+            this.instanceId = input.readInt();
+            if (this.instanceId < 0)
+            {
+                throw (new Error((("Forbidden value (" + this.instanceId) + ") on element of HouseInformationsForGuild.instanceId.")));
+            };
+        }
+
+        private function _secondHandFunc(input:ICustomDataInput):void
+        {
+            this.secondHand = input.readBoolean();
+        }
+
+        private function _ownerNameFunc(input:ICustomDataInput):void
+        {
+            this.ownerName = input.readUTF();
+        }
+
+        private function _worldXFunc(input:ICustomDataInput):void
+        {
+            this.worldX = input.readShort();
+            if (((this.worldX < -255) || (this.worldX > 0xFF)))
+            {
+                throw (new Error((("Forbidden value (" + this.worldX) + ") on element of HouseInformationsForGuild.worldX.")));
+            };
+        }
+
+        private function _worldYFunc(input:ICustomDataInput):void
+        {
+            this.worldY = input.readShort();
+            if (((this.worldY < -255) || (this.worldY > 0xFF)))
+            {
+                throw (new Error((("Forbidden value (" + this.worldY) + ") on element of HouseInformationsForGuild.worldY.")));
+            };
+        }
+
+        private function _mapIdFunc(input:ICustomDataInput):void
+        {
+            this.mapId = input.readDouble();
+            if (((this.mapId < 0) || (this.mapId > 9007199254740992)))
+            {
+                throw (new Error((("Forbidden value (" + this.mapId) + ") on element of HouseInformationsForGuild.mapId.")));
+            };
+        }
+
+        private function _subAreaIdFunc(input:ICustomDataInput):void
+        {
+            this.subAreaId = input.readVarUhShort();
+            if (this.subAreaId < 0)
+            {
+                throw (new Error((("Forbidden value (" + this.subAreaId) + ") on element of HouseInformationsForGuild.subAreaId.")));
+            };
+        }
+
+        private function _skillListIdstreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._skillListIdstree.addChild(this._skillListIdsFunc);
+                i++;
+            };
+        }
+
+        private function _skillListIdsFunc(input:ICustomDataInput):void
+        {
+            var _val:int = input.readInt();
+            this.skillListIds.push(_val);
+        }
+
+        private function _guildshareParamsFunc(input:ICustomDataInput):void
+        {
             this.guildshareParams = input.readVarUhInt();
             if (this.guildshareParams < 0)
             {
@@ -159,5 +236,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.house
+} com.ankamagames.dofus.network.types.game.house
 

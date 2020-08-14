@@ -1,12 +1,12 @@
-﻿package com.ankamagames.dofus.network.messages.game.inventory.exchanges
+package com.ankamagames.dofus.network.messages.game.inventory.exchanges
 {
     import com.ankamagames.jerakine.network.INetworkMessage;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class ExchangeObjectModifyPricedMessage extends ExchangeObjectMovePricedMessage implements INetworkMessage 
     {
 
@@ -17,7 +17,7 @@
 
         override public function get isInitialized():Boolean
         {
-            return (((super.isInitialized) && (this._isInitialized)));
+            return ((super.isInitialized) && (this._isInitialized));
         }
 
         override public function getMessageId():uint
@@ -25,7 +25,7 @@
             return (6238);
         }
 
-        public function initExchangeObjectModifyPricedMessage(objectUID:uint=0, quantity:int=0, price:uint=0):ExchangeObjectModifyPricedMessage
+        public function initExchangeObjectModifyPricedMessage(objectUID:uint=0, quantity:int=0, price:Number=0):ExchangeObjectModifyPricedMessage
         {
             super.initExchangeObjectMovePricedMessage(objectUID, quantity, price);
             this._isInitialized = true;
@@ -42,12 +42,24 @@
         {
             var data:ByteArray = new ByteArray();
             this.serialize(new CustomDataWrapper(data));
+            if (HASH_FUNCTION != null)
+            {
+                HASH_FUNCTION(data);
+            };
             writePacket(output, this.getMessageId(), data);
         }
 
         override public function unpack(input:ICustomDataInput, length:uint):void
         {
             this.deserialize(input);
+        }
+
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
         }
 
         override public function serialize(output:ICustomDataOutput):void
@@ -70,7 +82,17 @@
             super.deserialize(input);
         }
 
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_ExchangeObjectModifyPricedMessage(tree);
+        }
+
+        public function deserializeAsyncAs_ExchangeObjectModifyPricedMessage(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.inventory.exchanges
+} com.ankamagames.dofus.network.messages.game.inventory.exchanges
 

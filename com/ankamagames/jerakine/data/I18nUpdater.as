@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.data
+package com.ankamagames.jerakine.data
 {
     import com.ankamagames.jerakine.types.Uri;
     import com.ankamagames.jerakine.utils.errors.SingletonError;
@@ -28,7 +28,7 @@
 
         public static function getInstance():I18nUpdater
         {
-            if (!(_self))
+            if (!_self)
             {
                 _self = new (I18nUpdater)();
             };
@@ -55,9 +55,9 @@
 
         override protected function onLoaded(e:ResourceLoadedEvent):void
         {
-            var _local_2:LangMetaData;
-            var _local_3:Uri;
-            var _local_4:uint;
+            var meta:LangMetaData;
+            var uri:Uri;
+            var realCount:uint;
             var file:String;
             switch (e.uri.fileType)
             {
@@ -72,27 +72,27 @@
                     dispatchEvent(new LangFileEvent(LangFileEvent.COMPLETE, false, false, e.uri.tag.file));
                     _dataFilesLoaded = true;
                     _loadedFileCount++;
-                    return;
+                    break;
                 case "meta":
-                    _local_2 = LangMetaData.fromXml(e.resource, e.uri.uri, this.checkFileVersion);
-                    _local_4 = 0;
-                    for (file in _local_2.clearFile)
+                    meta = LangMetaData.fromXml(e.resource, e.uri.uri, this.checkFileVersion);
+                    realCount = 0;
+                    for (file in meta.clearFile)
                     {
                         if (file.indexOf(("_" + this._language)) == -1)
                         {
                         }
                         else
                         {
-                            _local_3 = new Uri(((FileUtils.getFilePath(e.uri.path) + "/") + file));
-                            _local_3.tag = {
-                                "version":_local_2.clearFile[file],
+                            uri = new Uri(((FileUtils.getFilePath(e.uri.path) + "/") + file));
+                            uri.tag = {
+                                "version":meta.clearFile[file],
                                 "file":((FileUtils.getFileStartName(e.uri.uri) + ".") + file)
                             };
-                            _files.push(_local_3);
-                            _local_4++;
+                            _files.push(uri);
+                            realCount++;
                         };
                     };
-                    if (_local_4)
+                    if (realCount)
                     {
                         _loader.load(_files);
                     }
@@ -100,7 +100,7 @@
                     {
                         dispatchEvent(new Event(Event.COMPLETE));
                     };
-                    return;
+                    break;
                 default:
                     super.onLoaded(e);
             };
@@ -108,5 +108,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.data
+} com.ankamagames.jerakine.data
 

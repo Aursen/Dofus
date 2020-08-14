@@ -1,27 +1,23 @@
-﻿package com.ankamagames.dofus.network.messages.game.context
+package com.ankamagames.dofus.network.messages.game.context
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
     import com.ankamagames.dofus.network.types.game.context.EntityMovementInformations;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
 
-    [Trusted]
     public class GameContextMoveElementMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 253;
 
         private var _isInitialized:Boolean = false;
-        public var movement:EntityMovementInformations;
+        public var movement:EntityMovementInformations = new EntityMovementInformations();
+        private var _movementtree:FuncTree;
 
-        public function GameContextMoveElementMessage()
-        {
-            this.movement = new EntityMovementInformations();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
@@ -58,6 +54,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_GameContextMoveElementMessage(output);
@@ -79,7 +83,23 @@
             this.movement.deserialize(input);
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GameContextMoveElementMessage(tree);
+        }
+
+        public function deserializeAsyncAs_GameContextMoveElementMessage(tree:FuncTree):void
+        {
+            this._movementtree = tree.addChild(this._movementtreeFunc);
+        }
+
+        private function _movementtreeFunc(input:ICustomDataInput):void
+        {
+            this.movement = new EntityMovementInformations();
+            this.movement.deserializeAsync(this._movementtree);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.context
+} com.ankamagames.dofus.network.messages.game.context
 

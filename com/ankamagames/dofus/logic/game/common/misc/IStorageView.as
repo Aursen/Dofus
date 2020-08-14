@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.common.misc
+package com.ankamagames.dofus.logic.game.common.misc
 {
     import flash.utils.Dictionary;
 
@@ -8,5 +8,5 @@
         function get types():Dictionary;
 
     }
-}//package com.ankamagames.dofus.logic.game.common.misc
+} com.ankamagames.dofus.logic.game.common.misc
 

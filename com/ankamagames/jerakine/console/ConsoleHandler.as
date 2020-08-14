@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.console
+package com.ankamagames.jerakine.console
 {
     import com.ankamagames.jerakine.messages.MessageHandler;
     import com.ankamagames.jerakine.logger.Logger;
@@ -59,9 +59,9 @@
             return (false);
         }
 
-        public function output(text:String, type:uint=0):void
+        public function output(text:String, _arg_2:uint=0):void
         {
-            this._outputHandler.process(new ConsoleOutputMessage(this._name, text, type));
+            this._outputHandler.process(new ConsoleOutputMessage(this._name, text, _arg_2));
         }
 
         public function addHandler(cmd:*, handler:ConsoleInstructionHandler):void
@@ -98,7 +98,7 @@
 
         public function isHandled(cmd:String):Boolean
         {
-            return (!((this._handlers[cmd] == null)));
+            return (!(this._handlers[cmd] == null));
         }
 
         public function handle(console:ConsoleHandler, cmd:String, args:Array):void
@@ -106,7 +106,7 @@
             var commands:Array;
             var sCmd:String;
             var cmdHelp:String;
-            var _local_7:ConsoleInstructionHandler;
+            var handler:ConsoleInstructionHandler;
             switch (cmd)
             {
                 case "help":
@@ -124,23 +124,23 @@
                             cmdHelp = (this._handlers[sCmd] as ConsoleInstructionHandler).getHelp(sCmd);
                             if (((cmdHelp) || (!(this._hideCommandsWithoutHelp))))
                             {
-                                console.output(((("  - <b>" + sCmd) + "</b>: ") + cmdHelp));
+                                console.output((((("  - <b>" + sCmd) + "</b>") + I18n.getUiText("ui.common.colon")) + cmdHelp));
                             };
                         };
                     }
                     else
                     {
-                        _local_7 = this._handlers[args[0]];
-                        if (_local_7)
+                        handler = this._handlers[args[0]];
+                        if (handler)
                         {
-                            console.output(((("<b>" + sCmd) + "</b>: ") + _local_7.getHelp(args[0])));
+                            console.output(((("<b>" + args[0]) + "</b>: ") + handler.getHelp(args[0])));
                         }
                         else
                         {
                             console.output(I18n.getUiText("ui.console.unknownCommand", [args[0]]));
                         };
                     };
-                    return;
+                    break;
             };
         }
 
@@ -207,8 +207,8 @@
                     };
                     for each (sCmd in aMatch)
                     {
-                        bMatch = ((bMatch) && ((sCmd.indexOf(aMatch[0].substr(0, i)) == 0)));
-                        if (!(bMatch))
+                        bMatch = ((bMatch) && (sCmd.indexOf(aMatch[0].substr(0, i)) == 0));
+                        if (!bMatch)
                         {
                             break;
                         };
@@ -223,11 +223,11 @@
                     };
                     i++;
                 };
-                return ((startCmd + newCmd));
+                return (startCmd + newCmd);
             };
             if (aMatch.length == 1)
             {
-                return ((startCmd + aMatch[0]));
+                return (startCmd + aMatch[0]);
             };
             return (cmd);
         }
@@ -289,5 +289,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.console
+} com.ankamagames.jerakine.console
 

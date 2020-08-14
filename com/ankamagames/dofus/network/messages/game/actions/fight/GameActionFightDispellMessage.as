@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.actions.fight
+package com.ankamagames.dofus.network.messages.game.actions.fight
 {
     import com.ankamagames.dofus.network.messages.game.actions.AbstractGameActionMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,20 +6,21 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class GameActionFightDispellMessage extends AbstractGameActionMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 5533;
 
         private var _isInitialized:Boolean = false;
-        public var targetId:int = 0;
+        public var targetId:Number = 0;
+        public var verboseCast:Boolean = false;
 
 
         override public function get isInitialized():Boolean
         {
-            return (((super.isInitialized) && (this._isInitialized)));
+            return ((super.isInitialized) && (this._isInitialized));
         }
 
         override public function getMessageId():uint
@@ -27,10 +28,11 @@
             return (5533);
         }
 
-        public function initGameActionFightDispellMessage(actionId:uint=0, sourceId:int=0, targetId:int=0):GameActionFightDispellMessage
+        public function initGameActionFightDispellMessage(actionId:uint=0, sourceId:Number=0, targetId:Number=0, verboseCast:Boolean=false):GameActionFightDispellMessage
         {
             super.initAbstractGameActionMessage(actionId, sourceId);
             this.targetId = targetId;
+            this.verboseCast = verboseCast;
             this._isInitialized = true;
             return (this);
         }
@@ -39,6 +41,7 @@
         {
             super.reset();
             this.targetId = 0;
+            this.verboseCast = false;
             this._isInitialized = false;
         }
 
@@ -54,6 +57,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         override public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_GameActionFightDispellMessage(output);
@@ -62,7 +73,12 @@
         public function serializeAs_GameActionFightDispellMessage(output:ICustomDataOutput):void
         {
             super.serializeAs_AbstractGameActionMessage(output);
-            output.writeInt(this.targetId);
+            if (((this.targetId < -9007199254740992) || (this.targetId > 9007199254740992)))
+            {
+                throw (new Error((("Forbidden value (" + this.targetId) + ") on element targetId.")));
+            };
+            output.writeDouble(this.targetId);
+            output.writeBoolean(this.verboseCast);
         }
 
         override public function deserialize(input:ICustomDataInput):void
@@ -73,10 +89,37 @@
         public function deserializeAs_GameActionFightDispellMessage(input:ICustomDataInput):void
         {
             super.deserialize(input);
-            this.targetId = input.readInt();
+            this._targetIdFunc(input);
+            this._verboseCastFunc(input);
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GameActionFightDispellMessage(tree);
+        }
+
+        public function deserializeAsyncAs_GameActionFightDispellMessage(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._targetIdFunc);
+            tree.addChild(this._verboseCastFunc);
+        }
+
+        private function _targetIdFunc(input:ICustomDataInput):void
+        {
+            this.targetId = input.readDouble();
+            if (((this.targetId < -9007199254740992) || (this.targetId > 9007199254740992)))
+            {
+                throw (new Error((("Forbidden value (" + this.targetId) + ") on element of GameActionFightDispellMessage.targetId.")));
+            };
+        }
+
+        private function _verboseCastFunc(input:ICustomDataInput):void
+        {
+            this.verboseCast = input.readBoolean();
         }
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.actions.fight
+} com.ankamagames.dofus.network.messages.game.actions.fight
 

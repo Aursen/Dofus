@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.inventory.exchanges
+package com.ankamagames.dofus.network.messages.game.inventory.exchanges
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,15 +6,15 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class ExchangeObjectMoveKamaMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 5520;
 
         private var _isInitialized:Boolean = false;
-        public var quantity:int = 0;
+        public var quantity:Number = 0;
 
 
         override public function get isInitialized():Boolean
@@ -27,7 +27,7 @@
             return (5520);
         }
 
-        public function initExchangeObjectMoveKamaMessage(quantity:int=0):ExchangeObjectMoveKamaMessage
+        public function initExchangeObjectMoveKamaMessage(quantity:Number=0):ExchangeObjectMoveKamaMessage
         {
             this.quantity = quantity;
             this._isInitialized = true;
@@ -52,6 +52,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_ExchangeObjectMoveKamaMessage(output);
@@ -59,7 +67,11 @@
 
         public function serializeAs_ExchangeObjectMoveKamaMessage(output:ICustomDataOutput):void
         {
-            output.writeVarInt(this.quantity);
+            if (((this.quantity < -9007199254740992) || (this.quantity > 9007199254740992)))
+            {
+                throw (new Error((("Forbidden value (" + this.quantity) + ") on element quantity.")));
+            };
+            output.writeVarLong(this.quantity);
         }
 
         public function deserialize(input:ICustomDataInput):void
@@ -69,10 +81,29 @@
 
         public function deserializeAs_ExchangeObjectMoveKamaMessage(input:ICustomDataInput):void
         {
-            this.quantity = input.readVarInt();
+            this._quantityFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_ExchangeObjectMoveKamaMessage(tree);
+        }
+
+        public function deserializeAsyncAs_ExchangeObjectMoveKamaMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._quantityFunc);
+        }
+
+        private function _quantityFunc(input:ICustomDataInput):void
+        {
+            this.quantity = input.readVarLong();
+            if (((this.quantity < -9007199254740992) || (this.quantity > 9007199254740992)))
+            {
+                throw (new Error((("Forbidden value (" + this.quantity) + ") on element of ExchangeObjectMoveKamaMessage.quantity.")));
+            };
         }
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.inventory.exchanges
+} com.ankamagames.dofus.network.messages.game.inventory.exchanges
 

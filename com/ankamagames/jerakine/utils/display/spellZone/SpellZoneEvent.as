@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.utils.display.spellZone
+package com.ankamagames.jerakine.utils.display.spellZone
 {
     import flash.events.Event;
 
@@ -10,11 +10,11 @@
 
         public var cell:SpellZoneCell;
 
-        public function SpellZoneEvent(type:String, bubbles:Boolean=false, cancelable:Boolean=false)
+        public function SpellZoneEvent(_arg_1:String, bubbles:Boolean=false, cancelable:Boolean=false)
         {
-            super(type, bubbles, cancelable);
+            super(_arg_1, bubbles, cancelable);
         }
 
     }
-}//package com.ankamagames.jerakine.utils.display.spellZone
+} com.ankamagames.jerakine.utils.display.spellZone
 

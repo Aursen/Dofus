@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.connection.managers
+package com.ankamagames.dofus.logic.connection.managers
 {
     import com.ankamagames.jerakine.interfaces.IDestroyable;
     import com.ankamagames.jerakine.logger.Logger;
@@ -6,26 +6,26 @@
     import flash.utils.getQualifiedClassName;
     import com.ankamagames.dofus.logic.connection.actions.LoginValidationAction;
     import com.ankamagames.dofus.network.types.secure.TrustCertificate;
-    import com.ankamagames.berilia.managers.UiModuleManager;
-    import com.ankamagames.jerakine.utils.errors.SingletonError;
     import flash.utils.ByteArray;
+    import com.ankamagames.jerakine.utils.errors.SingletonError;
+    import com.hurlant.crypto.Crypto;
+    import com.hurlant.crypto.symmetric.NullPad;
+    import com.hurlant.crypto.symmetric.ICipher;
     import com.hurlant.crypto.rsa.RSAKey;
     import com.hurlant.util.der.PEM;
+    import com.ankamagames.berilia.managers.UiModuleManager;
     import com.ankamagames.jerakine.data.I18n;
     import com.ankamagames.jerakine.utils.crypto.Base64;
     import __AS3__.vec.Vector;
     import com.ankamagames.dofus.logic.shield.SecureModeManager;
     import com.ankamagames.dofus.logic.game.common.frames.ProtectPishingFrame;
     import by.blooddy.crypto.MD5;
-    import com.ankamagames.dofus.logic.connection.actions.LoginValidationWithTicketAction;
     import com.ankamagames.dofus.network.messages.connection.IdentificationMessage;
     import com.ankamagames.dofus.network.messages.connection.IdentificationAccountForceMessage;
     import com.ankamagames.dofus.BuildInfos;
-    import com.ankamagames.dofus.network.enums.BuildTypeEnum;
-    import com.ankamagames.jerakine.utils.system.AirScanner;
+    import com.ankamagames.dofus.logic.connection.actions.LoginValidationWithTicketAction;
     import com.ankamagames.jerakine.data.XmlConfig;
-    import com.ankamagames.dofus.network.enums.ClientInstallTypeEnum;
-    import com.ankamagames.dofus.network.enums.ClientTechnologyEnum;
+    import flash.filesystem.File;
     import com.ankamagames.jerakine.utils.crypto.RSA;
     import __AS3__.vec.*;
 
@@ -34,24 +34,22 @@
 
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(AuthentificationManager));
         private static var _self:AuthentificationManager;
+        private static const AES_KEY_LENGTH:uint = 32;
+        private static const PUBLIC_KEY_V2:Class = AuthentificationManager_PUBLIC_KEY_V2;
 
-        private var commonMod:Object;
         private var _publicKey:String;
         private var _salt:String;
         private var _lva:LoginValidationAction;
         private var _certificate:TrustCertificate;
-        private var _verifyKey:Class;
+        private var _AESKey:ByteArray;
+        private var _verifyKey:Class = AuthentificationManager__verifyKey;
         private var _gameServerTicket:String;
-        public var ankamaPortalKey:String;
         public var username:String;
         public var nextToken:String;
         public var tokenMode:Boolean = false;
 
         public function AuthentificationManager()
         {
-            this.commonMod = UiModuleManager.getInstance().getModule("Ankama_Common").mainClass;
-            this._verifyKey = AuthentificationManager__verifyKey;
-            super();
             if (_self != null)
             {
                 throw (new SingletonError("AuthentificationManager is a singleton and should not be instanciated directly."));
@@ -83,6 +81,42 @@
             return (this._salt);
         }
 
+        public function initAESKey():void
+        {
+            this._AESKey = this.generateRandomAESKey();
+        }
+
+        public function decodeWithAES(byteArrayOrVector:*):ByteArray
+        {
+            var i:int;
+            var aesCipher:ICipher = Crypto.getCipher("simple-aes256-cbc", this._AESKey, new NullPad());
+            this._AESKey.position = 0;
+            var result:ByteArray = new ByteArray();
+            result.writeBytes(this._AESKey, 0, 16);
+            if (((byteArrayOrVector is Vector.<int>) || (byteArrayOrVector is Vector.<uint>)))
+            {
+                i = 0;
+                while (i < byteArrayOrVector.length)
+                {
+                    result.writeByte(byteArrayOrVector[i]);
+                    i++;
+                };
+            }
+            else
+            {
+                if ((byteArrayOrVector is ByteArray))
+                {
+                    result.writeBytes((byteArrayOrVector as ByteArray));
+                }
+                else
+                {
+                    throw (new ArgumentError("Argument must be a bytearray or a vector of int/uint"));
+                };
+            };
+            aesCipher.decrypt(result);
+            return (result);
+        }
+
         public function setSalt(salt:String):void
         {
             this._salt = salt;
@@ -98,6 +132,7 @@
 
         public function setPublicKey(publicKey:Vector.<int>):void
         {
+            var commonMod:Object;
             var baSignedKey:ByteArray = new ByteArray();
             var i:int;
             while (i < publicKey.length)
@@ -114,7 +149,8 @@
             }
             catch(e:Error)
             {
-                commonMod.openPopup(I18n.getUiText("ui.common.error"), "Il est impossible d'authentifier le serveur (ted)", [I18n.getUiText("ui.common.ok")]);
+                commonMod = UiModuleManager.getInstance().getModule("Ankama_Common").mainClass;
+                commonMod.openPopup(I18n.getUiText("ui.common.error"), I18n.getUiText("ui.server.authentificationImpossible"), [I18n.getUiText("ui.common.ok")]);
                 return;
             };
             this._publicKey = (("-----BEGIN PUBLIC KEY-----\n" + Base64.encodeByteArray(key)) + "-----END PUBLIC KEY-----");
@@ -135,49 +171,37 @@
 
         public function get canAutoConnectWithToken():Boolean
         {
-            return (!((this.nextToken == null)));
-        }
-
-        public function get isLoggingWithTicket():Boolean
-        {
-            return ((this._lva is LoginValidationWithTicketAction));
+            return (!(this.nextToken == null));
         }
 
         public function getIdentificationMessage():IdentificationMessage
         {
             var imsg:IdentificationMessage;
             var token:String;
-            var _local_4:Array;
-            var _local_5:IdentificationAccountForceMessage;
-            var buildType:uint = BuildInfos.BUILD_VERSION.buildType;
-            if (((AirScanner.isStreamingVersion()) && ((BuildInfos.BUILD_VERSION.buildType == BuildTypeEnum.BETA))))
-            {
-                buildType = BuildTypeEnum.RELEASE;
-            };
+            var login:Array;
+            var iafmsg:IdentificationAccountForceMessage;
+            var buildType:uint = BuildInfos.BUILD_TYPE;
             if (this._lva.username.indexOf("|") == -1)
             {
                 imsg = new IdentificationMessage();
-                if ((((this._lva is LoginValidationWithTicketAction)) || (this.nextToken)))
+                if (((this._lva is LoginValidationWithTicketAction) || (this.nextToken)))
                 {
                     token = ((this.nextToken) ? this.nextToken : LoginValidationWithTicketAction(this._lva).ticket);
                     this.nextToken = null;
-                    this.ankamaPortalKey = this.cipherMd5String(token);
-                    imsg.initIdentificationMessage(imsg.version, XmlConfig.getInstance().getEntry("config.lang.current"), this.cipherRsa("   ", token, this._certificate), this._lva.serverId, this._lva.autoSelectServer, !((this._certificate == null)), true);
+                    imsg.initIdentificationMessage(imsg.version, XmlConfig.getInstance().getEntry("config.lang.current"), this.cipherRsa("   ", token, this._certificate), this._lva.serverId, this._lva.autoSelectServer, (!(this._certificate == null)), true);
                 }
                 else
                 {
-                    this.ankamaPortalKey = this.cipherMd5String(this._lva.password);
-                    imsg.initIdentificationMessage(imsg.version, XmlConfig.getInstance().getEntry("config.lang.current"), this.cipherRsa(this._lva.username, this._lva.password, this._certificate), this._lva.serverId, this._lva.autoSelectServer, !((this._certificate == null)), false);
+                    imsg.initIdentificationMessage(imsg.version, XmlConfig.getInstance().getEntry("config.lang.current"), this.cipherRsa(this._lva.username, this._lva.password, this._certificate), this._lva.serverId, this._lva.autoSelectServer, (!(this._certificate == null)), false);
                 };
-                imsg.version.initVersionExtended(BuildInfos.BUILD_VERSION.major, BuildInfos.BUILD_VERSION.minor, BuildInfos.BUILD_VERSION.release, BuildInfos.BUILD_REVISION, BuildInfos.BUILD_PATCH, buildType, ((AirScanner.isStreamingVersion()) ? ClientInstallTypeEnum.CLIENT_STREAMING : (ClientInstallTypeEnum.CLIENT_BUNDLE)), ((AirScanner.hasAir()) ? ClientTechnologyEnum.CLIENT_AIR : ClientTechnologyEnum.CLIENT_FLASH));
+                imsg.version.initVersion(BuildInfos.VERSION.major, BuildInfos.VERSION.minor, BuildInfos.VERSION.code, BuildInfos.VERSION.build, buildType);
                 return (imsg);
             };
-            this.ankamaPortalKey = this.cipherMd5String(this._lva.password);
-            _local_4 = this._lva.username.split("|");
-            _local_5 = new IdentificationAccountForceMessage();
-            _local_5.initIdentificationAccountForceMessage(_local_5.version, XmlConfig.getInstance().getEntry("config.lang.current"), this.cipherRsa(_local_4[0], this._lva.password, this._certificate), this._lva.serverId, this._lva.autoSelectServer, !((this._certificate == null)), false, 0, _local_4[1]);
-            _local_5.version.initVersionExtended(BuildInfos.BUILD_VERSION.major, BuildInfos.BUILD_VERSION.minor, BuildInfos.BUILD_VERSION.release, BuildInfos.BUILD_REVISION, BuildInfos.BUILD_PATCH, buildType, ((AirScanner.isStreamingVersion()) ? ClientInstallTypeEnum.CLIENT_STREAMING : (ClientInstallTypeEnum.CLIENT_BUNDLE)), ((AirScanner.hasAir()) ? ClientTechnologyEnum.CLIENT_AIR : ClientTechnologyEnum.CLIENT_FLASH));
-            return (_local_5);
+            login = this._lva.username.split("|");
+            iafmsg = new IdentificationAccountForceMessage();
+            iafmsg.initIdentificationAccountForceMessage(iafmsg.version, XmlConfig.getInstance().getEntry("config.lang.current"), this.cipherRsa(login[0], this._lva.password, this._certificate), this._lva.serverId, this._lva.autoSelectServer, (!(this._certificate == null)), false, 0, null, login[1]);
+            iafmsg.version.initVersion(BuildInfos.VERSION.major, BuildInfos.VERSION.minor, BuildInfos.VERSION.code, BuildInfos.VERSION.build, buildType);
+            return (iafmsg);
         }
 
         public function destroy():void
@@ -193,109 +217,60 @@
         private function cipherRsa(login:String, pwd:String, certificate:TrustCertificate):Vector.<int>
         {
             var baOut:ByteArray;
+            var debugOutput:ByteArray;
             var n:int;
-            while (true)
-            {
-                goto _label_2;
-                
-            _label_1: 
-                goto _label_3;
-            };
-            var _local_9 = _local_9;
-            
-        _label_2: 
-            goto _label_1;
-            
-        _label_3: 
             var baIn:ByteArray = new ByteArray();
+            baIn.writeUTFBytes(this._salt);
+            baIn.writeBytes(this._AESKey);
             if (certificate)
             {
-                baIn.writeUTFBytes(this._salt);
-                for (;;)
-                {
-                    baIn.writeUTFBytes(pwd);
-                    //unresolved jump
-                    
-                _label_4: 
-                    baIn.writeByte(login.length);
-                    //unresolved jump
-                    
-                _label_5: 
-                    baIn.writeUnsignedInt(certificate.id);
-                    goto _label_6;
-                    goto _label_5;
-                    var _local_10 = _local_10;
-                    
-                _label_6: 
-                    goto _label_8;
-                    
-                _label_7: 
-                    baIn.writeUTFBytes(login);
-                    continue;
-                };
-                
-            _label_8: 
+                baIn.writeUnsignedInt(certificate.id);
                 baIn.writeUTFBytes(certificate.hash);
-                goto _label_4;
-            }
-            else
-            {
-                baIn.writeUTFBytes(this._salt);
-                goto _label_12;
-                
-            _label_9: 
-                goto _label_11;
-                
-            _label_10: 
-                baIn.writeByte(login.length);
-                goto _label_13;
             };
-            
-        _label_11: 
-            baOut = RSA.publicEncrypt(this._publicKey, baIn);
-            goto _label_14;
-            
-        _label_12: 
-            goto _label_10;
-            
-        _label_13: 
+            baIn.writeByte(login.length);
             baIn.writeUTFBytes(login);
-            while (true)
+            baIn.writeUTFBytes(pwd);
+            try
             {
-                baIn.writeUTFBytes(pwd);
-                goto _label_9;
+                if (((File.applicationDirectory.resolvePath("debug-login.txt")) || (File.applicationDirectory.resolvePath("debuglogin.txt"))))
+                {
+                    _log.debug("login with certificate");
+                    debugOutput = new ByteArray();
+                    baIn.position = 0;
+                    debugOutput.position = 0;
+                    debugOutput = RSA.publicEncrypt((new PUBLIC_KEY_V2() as ByteArray).readUTFBytes((new PUBLIC_KEY_V2() as ByteArray).length), baIn);
+                };
+            }
+            catch(e:Error)
+            {
+                _log.error(("Erreur lors du log des informations de login " + e.getStackTrace()));
             };
-            
-        _label_14: 
+            baOut = RSA.publicEncrypt(this._publicKey, baIn);
             var ret:Vector.<int> = new Vector.<int>();
             baOut.position = 0;
             var i:int;
             while (baOut.bytesAvailable != 0)
             {
-                goto _label_18;
-                
-            _label_15: 
-                continue;
-                
-            _label_16: 
+                n = baOut.readByte();
                 ret[i] = n;
-                //unresolved jump
-                while ((n = baOut.readByte()), goto _label_17, (_local_9 = _local_9), true)
-                {
-                    i++;
-                    goto _label_15;
-                    
-                _label_17: 
-                    goto _label_16;
-                    
-                _label_18: 
-                    continue;
-                };
+                i = (i + 1);
             };
             return (ret);
         }
 
+        private function generateRandomAESKey():ByteArray
+        {
+            var ba:ByteArray = new ByteArray();
+            var i:int;
+            while (i < AES_KEY_LENGTH)
+            {
+                ba[i] = Math.floor((Math.random() * 0x0100));
+                i++;
+            };
+            return (ba);
+        }
+
 
     }
-}//package com.ankamagames.dofus.logic.connection.managers
+} com.ankamagames.dofus.logic.connection.managers
 

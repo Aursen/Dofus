@@ -1,10 +1,10 @@
-﻿package com.ankamagames.dofus.network.types.game.social
+package com.ankamagames.dofus.network.types.game.social
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class AllianceVersatileInformations implements INetworkType 
     {
 
@@ -74,21 +74,54 @@
 
         public function deserializeAs_AllianceVersatileInformations(input:ICustomDataInput):void
         {
+            this._allianceIdFunc(input);
+            this._nbGuildsFunc(input);
+            this._nbMembersFunc(input);
+            this._nbSubareaFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_AllianceVersatileInformations(tree);
+        }
+
+        public function deserializeAsyncAs_AllianceVersatileInformations(tree:FuncTree):void
+        {
+            tree.addChild(this._allianceIdFunc);
+            tree.addChild(this._nbGuildsFunc);
+            tree.addChild(this._nbMembersFunc);
+            tree.addChild(this._nbSubareaFunc);
+        }
+
+        private function _allianceIdFunc(input:ICustomDataInput):void
+        {
             this.allianceId = input.readVarUhInt();
             if (this.allianceId < 0)
             {
                 throw (new Error((("Forbidden value (" + this.allianceId) + ") on element of AllianceVersatileInformations.allianceId.")));
             };
+        }
+
+        private function _nbGuildsFunc(input:ICustomDataInput):void
+        {
             this.nbGuilds = input.readVarUhShort();
             if (this.nbGuilds < 0)
             {
                 throw (new Error((("Forbidden value (" + this.nbGuilds) + ") on element of AllianceVersatileInformations.nbGuilds.")));
             };
+        }
+
+        private function _nbMembersFunc(input:ICustomDataInput):void
+        {
             this.nbMembers = input.readVarUhShort();
             if (this.nbMembers < 0)
             {
                 throw (new Error((("Forbidden value (" + this.nbMembers) + ") on element of AllianceVersatileInformations.nbMembers.")));
             };
+        }
+
+        private function _nbSubareaFunc(input:ICustomDataInput):void
+        {
             this.nbSubarea = input.readVarUhShort();
             if (this.nbSubarea < 0)
             {
@@ -98,5 +131,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.social
+} com.ankamagames.dofus.network.types.game.social
 

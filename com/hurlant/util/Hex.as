@@ -1,4 +1,4 @@
-﻿package com.hurlant.util
+package com.hurlant.util
 {
     import flash.utils.ByteArray;
 
@@ -57,5 +57,5 @@
 
 
     }
-}//package com.hurlant.util
+} com.hurlant.util
 

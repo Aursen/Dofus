@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.types.template
+package com.ankamagames.berilia.types.template
 {
     public class TemplateParam 
     {
@@ -14,5 +14,5 @@
         }
 
     }
-}//package com.ankamagames.berilia.types.template
+} com.ankamagames.berilia.types.template
 

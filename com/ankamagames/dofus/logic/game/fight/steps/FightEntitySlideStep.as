@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.fight.steps
+package com.ankamagames.dofus.logic.game.fight.steps
 {
     import com.ankamagames.jerakine.sequencer.AbstractSequencable;
     import com.ankamagames.jerakine.types.positions.MapPoint;
@@ -13,6 +13,7 @@
     import com.ankamagames.dofus.network.types.game.context.fight.GameFightCharacterInformations;
     import com.ankamagames.jerakine.utils.display.EnterFrameDispatcher;
     import com.ankamagames.atouin.entities.behaviours.movements.SlideMovementBehavior;
+    import __AS3__.vec.Vector;
     import com.ankamagames.berilia.managers.TooltipManager;
     import com.ankamagames.berilia.types.LocationEnum;
     import com.ankamagames.dofus.logic.game.fight.frames.FightSpellCastFrame;
@@ -23,7 +24,7 @@
     public class FightEntitySlideStep extends AbstractSequencable implements IFightStep 
     {
 
-        private var _fighterId:int;
+        private var _fighterId:Number;
         private var _startCell:MapPoint;
         private var _endCell:MapPoint;
         private var _entity:AnimatedCharacter;
@@ -31,7 +32,7 @@
         private var _ttCacheName:String;
         private var _ttName:String;
 
-        public function FightEntitySlideStep(fighterId:int, startCell:MapPoint, endCell:MapPoint)
+        public function FightEntitySlideStep(fighterId:Number, startCell:MapPoint, endCell:MapPoint)
         {
             this._fighterId = fighterId;
             this._startCell = startCell;
@@ -42,6 +43,8 @@
             if (this._entity)
             {
                 this._entity.slideOnNextMove = true;
+                this._entity.setDirection(this._startCell.advancedOrientationTo(this._endCell));
+                this._entity.position.cellId = startCell.cellId;
             };
             this._fightContextFrame = (Kernel.getWorker().getFrame(FightContextFrame) as FightContextFrame);
         }
@@ -57,9 +60,10 @@
             var path:MovementPath;
             if (this._entity)
             {
-                if (!(this._entity.position.equals(this._startCell)))
+                if (!this._entity.position.equals(this._startCell))
                 {
                     _log.warn((((((("We were ordered to slide " + this._fighterId) + " from ") + this._startCell.cellId) + ", but this fighter is on ") + this._entity.position.cellId) + "."));
+                    this._entity.jump(this._startCell);
                 };
                 fighterInfos = (FightEntitiesFrame.getCurrentInstance().getEntityInfos(this._fighterId) as GameFightFighterInformations);
                 fighterInfos.disposition.cellId = this._endCell.cellId;
@@ -68,7 +72,7 @@
                 path.end = this._endCell;
                 path.addPoint(new PathElement(this._entity.position, path.start.orientationTo(path.end)));
                 path.fill();
-                this._ttCacheName = (((fighterInfos is GameFightCharacterInformations)) ? ("PlayerShortInfos" + this._fighterId) : ("EntityShortInfos" + this._fighterId));
+                this._ttCacheName = ((fighterInfos is GameFightCharacterInformations) ? ("PlayerShortInfos" + this._fighterId) : ("EntityShortInfos" + this._fighterId));
                 this._ttName = ("tooltipOverEntity_" + this._fighterId);
                 EnterFrameDispatcher.addEventListener(this.onEnterFrame, "slideStep");
                 this._entity.move(path, this.slideFinished, SlideMovementBehavior.getInstance());
@@ -81,12 +85,21 @@
             };
         }
 
+        public function get targets():Vector.<Number>
+        {
+            return (new <Number>[this._fighterId]);
+        }
+
         private function slideFinished():void
         {
             EnterFrameDispatcher.removeEventListener(this.onEnterFrame);
-            if (this._fightContextFrame.timelineOverEntity)
+            if (((this._fightContextFrame.timelineOverEntity) || ((this._fightContextFrame.showPermanentTooltips) && (!(this._fightContextFrame.battleFrame.targetedEntities.indexOf(this._entity.id) == -1)))))
             {
                 TooltipManager.updatePosition(this._ttCacheName, this._ttName, this._entity.absoluteBounds, LocationEnum.POINT_BOTTOM, LocationEnum.POINT_TOP, 0, true, true, this._entity.position.cellId);
+            };
+            if (this._fightContextFrame.entitiesFrame.hasIcon(this._entity.id))
+            {
+                this._fightContextFrame.entitiesFrame.forceIconUpdate(this._entity.id);
             };
             FightSpellCastFrame.updateRangeAndTarget();
             FightEventsHelper.sendFightEvent(FightEventEnum.FIGHTER_SLIDE, [this._fighterId], this._fighterId, castingSpellId);
@@ -95,13 +108,20 @@
 
         private function onEnterFrame(pEvent:Event):void
         {
-            if (this._fightContextFrame.timelineOverEntity)
+            if (!Kernel.getWorker().terminated)
             {
-                TooltipManager.updatePosition(this._ttCacheName, this._ttName, this._entity.absoluteBounds, LocationEnum.POINT_BOTTOM, LocationEnum.POINT_TOP, 0, true, true, this._entity.position.cellId);
+                if (!((this._fightContextFrame) && (this._fightContextFrame.battleFrame)))
+                {
+                    return;
+                };
+                if (((this._fightContextFrame.timelineOverEntity) || ((this._fightContextFrame.showPermanentTooltips) && (!(this._fightContextFrame.battleFrame.targetedEntities.indexOf(this._entity.id) == -1)))))
+                {
+                    TooltipManager.updatePosition(this._ttCacheName, this._ttName, this._entity.absoluteBounds, LocationEnum.POINT_BOTTOM, LocationEnum.POINT_TOP, 0, true, true, this._entity.position.cellId);
+                };
             };
         }
 
 
     }
-}//package com.ankamagames.dofus.logic.game.fight.steps
+} com.ankamagames.dofus.logic.game.fight.steps
 

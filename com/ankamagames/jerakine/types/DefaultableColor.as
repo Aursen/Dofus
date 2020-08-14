@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.types
+package com.ankamagames.jerakine.types
 {
     import flash.utils.IExternalizable;
     import flash.utils.IDataOutput;
@@ -28,5 +28,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.types
+} com.ankamagames.jerakine.types
 

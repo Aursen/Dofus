@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.utils
+package com.ankamagames.berilia.utils
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
@@ -40,5 +40,5 @@
 
 
     }
-}//package com.ankamagames.berilia.utils
+} com.ankamagames.berilia.utils
 

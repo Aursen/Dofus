@@ -1,7 +1,6 @@
-﻿package com.ankamagames.berilia.factories
+package com.ankamagames.berilia.factories
 {
     import flash.utils.getQualifiedClassName;
-    import com.ankamagames.berilia.managers.SecureCenter;
     import com.ankamagames.berilia.types.data.ContextMenuData;
 
     public class MenusFactory 
@@ -34,7 +33,7 @@
             var td:MenuData;
             var maker:*;
             var tt:Array;
-            if (!(makerName))
+            if (!makerName)
             {
                 makerName = _makerAssoc[getQualifiedClassName(data)];
             };
@@ -45,7 +44,7 @@
             if (td)
             {
                 maker = new (td.maker)();
-                tt = maker.createMenu(SecureCenter.secure(data), SecureCenter.secure(makerParam));
+                tt = maker.createMenu(data, makerParam);
                 return (new ContextMenuData(data, makerName, tt));
             };
             if ((makerParam is Array))
@@ -62,12 +61,12 @@
 
         public static function existMakerAssoc(dataClass:*):Boolean
         {
-            return (((_makerAssoc[getQualifiedClassName(dataClass)]) ? true : false));
+            return ((_makerAssoc[getQualifiedClassName(dataClass)]) ? true : false);
         }
 
 
     }
-}//package com.ankamagames.berilia.factories
+} com.ankamagames.berilia.factories
 
 class MenuData 
 {
@@ -82,4 +81,5 @@ class MenuData
     }
 
 }
+
 

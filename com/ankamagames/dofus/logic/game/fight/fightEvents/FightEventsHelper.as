@@ -1,22 +1,26 @@
-﻿package com.ankamagames.dofus.logic.game.fight.fightEvents
+package com.ankamagames.dofus.logic.game.fight.fightEvents
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
-    import avmplus.getQualifiedClassName;
+    import flash.utils.getQualifiedClassName;
     import __AS3__.vec.Vector;
     import com.ankamagames.dofus.uiApi.SystemApi;
     import com.ankamagames.dofus.logic.game.fight.types.FightEventEnum;
     import com.ankamagames.berilia.managers.KernelEventsManager;
     import com.ankamagames.dofus.misc.lists.HookList;
+    import com.ankamagames.dofus.logic.game.fight.types.BasicBuff;
+    import com.ankamagames.dofus.misc.utils.GameDebugManager;
     import com.ankamagames.jerakine.utils.display.StageShareManager;
     import flash.events.Event;
     import com.ankamagames.dofus.kernel.Kernel;
     import com.ankamagames.dofus.logic.game.fight.frames.FightEntitiesFrame;
     import flash.utils.Dictionary;
     import com.ankamagames.dofus.logic.game.common.managers.PlayedCharacterManager;
+    import tools.enumeration.ElementEnum;
     import com.ankamagames.dofus.datacenter.effects.EffectInstance;
+    import com.ankamagames.dofus.logic.game.fight.types.StatBuff;
+    import com.ankamagames.dofus.datacenter.effects.instances.EffectInstanceDice;
     import com.ankamagames.dofus.network.types.game.context.fight.GameFightFighterInformations;
-    import com.ankamagames.dofus.datacenter.misc.TypeAction;
     import com.ankamagames.jerakine.data.XmlConfig;
     import com.ankamagames.berilia.managers.HtmlManager;
     import __AS3__.vec.*;
@@ -43,11 +47,11 @@
             _lastSpellId = -1;
         }
 
-        public static function sendFightEvent(name:String, params:Array, fighterId:int, pCastingSpellId:int, sendNow:Boolean=false, checkParams:int=0, pFirstParamToCheck:int=1):void
+        public static function sendFightEvent(name:String, params:Array, fighterId:Number, pCastingSpellId:int, sendNow:Boolean=false, checkParams:int=0, pFirstParamToCheck:int=1, buff:BasicBuff=null):void
         {
-            var _local_9:FightEvent;
-            var _local_10:FightEvent;
-            var fightEvent:FightEvent = new FightEvent(name, params, fighterId, checkParams, pCastingSpellId, _fightEvents.length, pFirstParamToCheck);
+            var feTackle:FightEvent;
+            var fe:FightEvent;
+            var fightEvent:FightEvent = new FightEvent(name, params, fighterId, checkParams, pCastingSpellId, _fightEvents.length, pFirstParamToCheck, buff);
             if (sendNow)
             {
                 KernelEventsManager.getInstance().processCallback(HookList.FightEvent, fightEvent.name, fightEvent.params, [fightEvent.targetId]);
@@ -59,30 +63,30 @@
                 {
                     _fightEvents.splice(0, 0, fightEvent);
                 };
-                if (((_joinedEvents) && ((_joinedEvents.length > 0))))
+                if (((_joinedEvents) && (_joinedEvents.length > 0)))
                 {
                     if (_joinedEvents[0].name == FightEventEnum.FIGHTER_GOT_TACKLED)
                     {
-                        if ((((name == FightEventEnum.FIGHTER_MP_LOST)) || ((name == FightEventEnum.FIGHTER_AP_LOST))))
+                        if (((name == FightEventEnum.FIGHTER_MP_LOST) || (name == FightEventEnum.FIGHTER_AP_LOST)))
                         {
                             _joinedEvents.splice(0, 0, fightEvent);
                             return;
                         };
                         if (name != FightEventEnum.FIGHTER_VISIBILITY_CHANGED)
                         {
-                            _local_9 = _joinedEvents.shift();
-                            for each (_local_10 in _joinedEvents)
+                            feTackle = _joinedEvents.shift();
+                            for each (fe in _joinedEvents)
                             {
-                                if (_local_10.name == FightEventEnum.FIGHTER_AP_LOST)
+                                if (fe.name == FightEventEnum.FIGHTER_AP_LOST)
                                 {
-                                    _local_9.params[1] = _local_10.params[1];
+                                    feTackle.params[1] = fe.params[1];
                                 }
                                 else
                                 {
-                                    _local_9.params[2] = _local_10.params[1];
+                                    feTackle.params[2] = fe.params[1];
                                 };
                             };
-                            addFightText(_local_9);
+                            addFightText(feTackle);
                             _joinedEvents = null;
                         };
                     };
@@ -110,12 +114,16 @@
             var eventList:Vector.<FightEvent>;
             var event:FightEvent;
             var num:int = _events.length;
-            var groupByType:Boolean = (((NOT_GROUPABLE_BY_TYPE_EVENTS.indexOf(fightEvent.name) == -1)) ? true : false);
+            var groupByType:* = (NOT_GROUPABLE_BY_TYPE_EVENTS.indexOf(fightEvent.name) == -1);
+            if (GameDebugManager.getInstance().detailedFightLog_unGroupEffects)
+            {
+                groupByType = false;
+            };
             if (fightEvent.name == FightEventEnum.FIGHTER_CASTED_SPELL)
             {
                 _lastSpellId = fightEvent.params[3];
             };
-            if ((((((fightEvent.name == FightEventEnum.FIGHTER_LIFE_LOSS)) || ((fightEvent.name == FightEventEnum.FIGHTER_LIFE_GAIN)))) || ((fightEvent.name == FightEventEnum.FIGHTER_SHIELD_LOSS))))
+            if ((((fightEvent.name == FightEventEnum.FIGHTER_LIFE_LOSS) || (fightEvent.name == FightEventEnum.FIGHTER_LIFE_GAIN)) || (fightEvent.name == FightEventEnum.FIGHTER_SHIELD_LOSS)))
             {
                 fightEvent.params.push(_lastSpellId);
             };
@@ -125,7 +133,7 @@
                 while (i < num)
                 {
                     event = _events[i][0];
-                    if ((((((event.name == FightEventEnum.FIGHTER_REDUCED_DAMAGES)) && ((event.castingSpellId == fightEvent.castingSpellId)))) && ((event.targetId == fightEvent.targetId))))
+                    if ((((event.name == FightEventEnum.FIGHTER_REDUCED_DAMAGES) && (event.castingSpellId == fightEvent.castingSpellId)) && (event.targetId == fightEvent.targetId)))
                     {
                         groupByType = false;
                         break;
@@ -140,9 +148,9 @@
                 {
                     eventList = _events[i];
                     event = eventList[0];
-                    if ((((event.name == fightEvent.name)) && ((((event.castingSpellId == fightEvent.castingSpellId)) || ((fightEvent.castingSpellId == -1))))))
+                    if (((event.name == fightEvent.name) && ((event.castingSpellId == fightEvent.castingSpellId) || (fightEvent.castingSpellId == -1))))
                     {
-                        if ((((((((event.name == FightEventEnum.FIGHTER_LIFE_LOSS)) || ((fightEvent.name == FightEventEnum.FIGHTER_LIFE_GAIN)))) || ((fightEvent.name == FightEventEnum.FIGHTER_SHIELD_LOSS)))) && (!((event.params[(event.params.length - 1)] == fightEvent.params[(fightEvent.params.length - 1)])))))
+                        if (((((event.name == FightEventEnum.FIGHTER_LIFE_LOSS) || (fightEvent.name == FightEventEnum.FIGHTER_LIFE_GAIN)) || (fightEvent.name == FightEventEnum.FIGHTER_SHIELD_LOSS)) && (!(event.params[(event.params.length - 1)] == fightEvent.params[(fightEvent.params.length - 1)]))))
                         {
                             break;
                         };
@@ -187,18 +195,24 @@
         {
             var eventList:Vector.<FightEvent>;
             var eventBase:FightEvent;
-            var targetsId:Vector.<int>;
+            var fightEvent:FightEvent;
+            var groupedByElementsEventList:Vector.<FightEvent>;
+            var targetsId:Vector.<Number>;
+            var eventsGroupedTargets:Vector.<String>;
             var targetEvents:String;
-            var type:int;
+            var numTargets:uint;
+            var i:int;
+            var typeEvent:int;
             var tmpevt:FightEvent;
-            var _local_11:Vector.<FightEvent>;
+            var copy:Vector.<FightEvent>;
+            var containsHisDeath:* = undefined;
             var playerTeamId:int = PlayedCharacterManager.getInstance().teamId;
-            var groupPvLostAndDeath:Vector.<int> = getTargetsWhoDiesAfterALifeLoss();
+            var groupPvLostAndDeath:Vector.<Number> = getTargetsWhoDiesAfterALifeLoss();
             var eventsGroupedByTarget:Dictionary = new Dictionary();
             while (_events.length > 0)
             {
                 eventList = _events[0];
-                if ((((eventList == null)) || ((eventList.length == 0))))
+                if (((eventList == null) || (eventList.length == 0)))
                 {
                     _events.splice(0, 1);
                 }
@@ -207,22 +221,42 @@
                     eventBase = eventList[0];
                     targetsId = extractTargetsId(eventList);
                     eventsGroupedByTarget = groupFightEventsByTarget(eventList);
+                    eventsGroupedTargets = new Vector.<String>(0);
                     for (targetEvents in eventsGroupedByTarget)
                     {
+                        if (eventsGroupedByTarget[targetEvents].length > 1)
+                        {
+                            eventsGroupedTargets.unshift(targetEvents);
+                        }
+                        else
+                        {
+                            eventsGroupedTargets.push(targetEvents);
+                        };
+                    };
+                    numTargets = eventsGroupedTargets.length;
+                    i = 0;
+                    while (i < numTargets)
+                    {
+                        targetEvents = eventsGroupedTargets[i];
                         eventBase = eventsGroupedByTarget[targetEvents][0];
-                        if ((((eventsGroupedByTarget[targetEvents].length > 1)) && ((((((eventBase.name == FightEventEnum.FIGHTER_LIFE_LOSS)) || ((eventBase.name == FightEventEnum.FIGHTER_LIFE_GAIN)))) || ((eventBase.name == FightEventEnum.FIGHTER_SHIELD_LOSS))))))
+                        if (((eventsGroupedByTarget[targetEvents].length > 1) && (((eventBase.name == FightEventEnum.FIGHTER_LIFE_LOSS) || (eventBase.name == FightEventEnum.FIGHTER_LIFE_GAIN)) || (eventBase.name == FightEventEnum.FIGHTER_SHIELD_LOSS))))
                         {
                             switch (eventBase.name)
                             {
                                 case FightEventEnum.FIGHTER_LIFE_LOSS:
                                 case FightEventEnum.FIGHTER_SHIELD_LOSS:
-                                    type = -1;
+                                    typeEvent = -1;
                                     break;
                                 case FightEventEnum.FIGHTER_LIFE_GAIN:
                                 default:
-                                    type = 1;
+                                    typeEvent = 1;
                             };
-                            groupByElements(eventsGroupedByTarget[targetEvents], type, _detailsActive, !((groupPvLostAndDeath.indexOf(eventBase.targetId) == -1)), eventBase.castingSpellId);
+                            fightEvent = groupByElements(eventsGroupedByTarget[targetEvents], typeEvent, _detailsActive, (!(groupPvLostAndDeath.indexOf(eventBase.targetId) == -1)), eventBase.castingSpellId);
+                            if (!groupedByElementsEventList)
+                            {
+                                groupedByElementsEventList = new Vector.<FightEvent>();
+                            };
+                            groupedByElementsEventList.push(fightEvent);
                             for each (tmpevt in eventsGroupedByTarget[targetEvents])
                             {
                                 eventList.splice(eventList.indexOf(tmpevt), 1);
@@ -230,32 +264,56 @@
                         }
                         else
                         {
-                            _local_11 = eventList.concat();
-                            for each (eventBase in _local_11)
+                            copy = eventList.concat();
+                            for each (eventBase in copy)
                             {
-                                if ((((eventBase.name == FightEventEnum.FIGHTER_DEATH)) && (!((groupPvLostAndDeath.indexOf(eventBase.targetId) == -1)))))
+                                if (((eventBase.name == FightEventEnum.FIGHTER_DEATH) && (!(groupPvLostAndDeath.indexOf(eventBase.targetId) == -1))))
                                 {
                                     eventList.splice(eventList.indexOf(eventBase), 1);
                                 };
                             };
                             groupByTeam(playerTeamId, targetsId, eventList, entitiesList, groupPvLostAndDeath);
-                            _local_11 = eventList.concat();
-                            for each (eventBase in _local_11)
+                            copy = eventList.concat();
+                            containsHisDeath = function (events:Vector.<FightEvent>, targetId:int):Boolean
                             {
-                                sendFightLogToChat(eventBase, "", null, _detailsActive, (((eventBase.name == FightEventEnum.FIGHTER_LIFE_LOSS)) && (!((groupPvLostAndDeath.indexOf(eventBase.targetId) == -1)))));
+                                for each (eventBase in events)
+                                {
+                                    if (((eventBase.name == FightEventEnum.FIGHTER_DEATH) && (eventBase.targetId == targetId)))
+                                    {
+                                        return (true);
+                                    };
+                                };
+                                return (false);
+                            };
+                            for each (eventBase in copy)
+                            {
+                                sendFightLogToChat(eventBase, "", null, _detailsActive, (((eventBase.name == FightEventEnum.FIGHTER_LIFE_LOSS) && (!(groupPvLostAndDeath.indexOf(eventBase.targetId) == -1))) && ((_events.length > 1) && (containsHisDeath(_events[1], eventBase.targetId)))));
                                 eventList.splice(eventList.indexOf(eventBase), 1);
                             };
-                            _local_11 = null;
+                            copy = null;
                         };
+                        i = (i + 1);
+                    };
+                    if (((groupedByElementsEventList) && (groupedByElementsEventList.length > 0)))
+                    {
+                        groupByTeam(playerTeamId, targetsId, groupedByElementsEventList, entitiesList, groupPvLostAndDeath, false);
+                        if (groupedByElementsEventList.length > 0)
+                        {
+                            for each (fightEvent in groupedByElementsEventList)
+                            {
+                                sendFightLogToChat(fightEvent, "", null, false, ((fightEvent.name == FightEventEnum.FIGHTER_LIFE_LOSS) && (!(groupPvLostAndDeath.indexOf(fightEvent.targetId) == -1))));
+                            };
+                        };
+                        groupedByElementsEventList = null;
                     };
                 };
             };
         }
 
-        public static function extractTargetsId(eventList:Vector.<FightEvent>):Vector.<int>
+        public static function extractTargetsId(eventList:Vector.<FightEvent>):Vector.<Number>
         {
             var event:FightEvent;
-            var targetList:Vector.<int> = new Vector.<int>();
+            var targetList:Vector.<Number> = new Vector.<Number>();
             for each (event in eventList)
             {
                 if (targetList.indexOf(event.targetId) == -1)
@@ -312,12 +370,12 @@
             pEventsList.push(new Array(pFightEvent));
         }
 
-        public static function getTargetsWhoDiesAfterALifeLoss():Vector.<int>
+        public static function getTargetsWhoDiesAfterALifeLoss():Vector.<Number>
         {
             var fightEvent:FightEvent;
             var eventList:Vector.<FightEvent>;
-            var targets:Vector.<int> = new Vector.<int>();
-            var targetsDead:Vector.<int> = new Vector.<int>();
+            var targets:Vector.<Number> = new Vector.<Number>();
+            var targetsDead:Vector.<Number> = new Vector.<Number>();
             var events:Vector.<Vector.<FightEvent>> = _events.concat();
             for each (eventList in events)
             {
@@ -329,7 +387,7 @@
                     }
                     else
                     {
-                        if ((((fightEvent.name == FightEventEnum.FIGHTER_DEATH)) && (!((targets.indexOf(fightEvent.targetId) == -1)))))
+                        if (((fightEvent.name == FightEventEnum.FIGHTER_DEATH) && (!(targets.indexOf(fightEvent.targetId) == -1))))
                         {
                             targetsDead.push(fightEvent.targetId);
                         };
@@ -339,7 +397,7 @@
             return (targetsDead);
         }
 
-        private static function groupByElements(pvgroup:Array, pType:int, activeDetails:Boolean=true, pAddDeathInTheSameMsg:Boolean=false, pCastingSpellId:int=-1):void
+        private static function groupByElements(pvgroup:Array, pType:int, activeDetails:Boolean=true, pAddDeathInTheSameMsg:Boolean=false, pCastingSpellId:int=-1):FightEvent
         {
             var previousElement:int;
             var fe:FightEvent;
@@ -350,12 +408,12 @@
             var isSameElement:Boolean = true;
             for each (fe in pvgroup)
             {
-                if (((!((pCastingSpellId == -1))) && (!((pCastingSpellId == fe.castingSpellId)))))
+                if (((!(pCastingSpellId == -1)) && (!(pCastingSpellId == fe.castingSpellId))))
                 {
                 }
                 else
                 {
-                    if (((previousElement) && (!((fe.params[2] == previousElement)))))
+                    if (((previousElement) && (!(fe.params[2] == previousElement))))
                     {
                         isSameElement = false;
                     };
@@ -376,28 +434,31 @@
             newparams[0] = pvgroup[0].params[0];
             if (pType == -1)
             {
-                fightEventText = formateColorsForFightDamages(("-" + ttpts.toString()), ((isSameElement) ? previousElement : -1));
+                fightEventText = formateColorsForFightDamages(("-" + ttpts.toString()), ((isSameElement) ? previousElement : ElementEnum.ELEMENT_MULTI));
             }
             else
             {
                 fightEventText = ttpts.toString();
             };
-            if (((activeDetails) && ((pvgroup.length > 1))))
+            if (((activeDetails) && (pvgroup.length > 1)))
             {
                 fightEventText = (fightEventText + (("</b> (" + ttptsStr.substr(0, (ttptsStr.length - 3))) + ")<b>"));
             };
             newparams[1] = fightEventText;
-            KernelEventsManager.getInstance().processCallback(HookList.FightText, fightEventName, newparams, [newparams[0]]);
+            return (new FightEvent(fightEventName, newparams, newparams[0], 2, pvgroup[0].castingSpellId, pvgroup.length, 1));
         }
 
-        private static function groupByTeam(playerTeamId:int, targets:Vector.<int>, pEventList:Vector.<FightEvent>, pEntitiesList:Dictionary, groupPvLostAndDeath:Vector.<int>):Boolean
+        private static function groupByTeam(playerTeamId:int, targets:Vector.<Number>, pEventList:Vector.<FightEvent>, pEntitiesList:Dictionary, groupPvLostAndDeath:Vector.<Number>, pEnableColoration:Boolean=true):Boolean
         {
             var event:FightEvent;
-            var list:Vector.<int>;
+            var list:Vector.<Number>;
             var listToConcat:Vector.<FightEvent>;
             var evt:FightEvent;
             var team:String;
+            var tmpEffect:EffectInstance;
+            var tmpDiceNum:int;
             var t:Object;
+            var teamId:int;
             if (pEventList.length == 0)
             {
                 return (false);
@@ -408,12 +469,33 @@
                 listToConcat = getGroupedListEvent(tmpEventList);
                 if (listToConcat.length > 1)
                 {
-                    list = new Vector.<int>();
+                    list = new Vector.<Number>();
                     for each (event in listToConcat)
                     {
                         list.push(event.targetId);
+                        if ((((!(event == listToConcat[0])) && (event.targetId == listToConcat[0].targetId)) && (listToConcat[0] is StatBuff)))
+                        {
+                            listToConcat[0].params[1] = (listToConcat[0].params[1] + event.params[1]);
+                        };
                     };
                     evt = listToConcat[0];
+                    if ((evt.buff is StatBuff))
+                    {
+                        tmpEffect = evt.buff.effect.clone();
+                        if ((tmpEffect is EffectInstanceDice))
+                        {
+                            tmpDiceNum = 0;
+                            for each (event in listToConcat)
+                            {
+                                if (event.targetId == evt.targetId)
+                                {
+                                    tmpDiceNum = (tmpDiceNum + int(event.buff.rawParam1));
+                                };
+                            };
+                            EffectInstanceDice(tmpEffect).diceNum = tmpDiceNum;
+                        };
+                        evt.params[1] = tmpEffect.description;
+                    };
                     team = groupEntitiesByTeam(playerTeamId, list, pEntitiesList, (SKIP_ENTITY_ALIVE_CHECK_EVENTS.indexOf(pEventList[0].name) == -1));
                     switch (team)
                     {
@@ -421,30 +503,24 @@
                         case "allies":
                         case "enemies":
                             removeEventFromEventsList(pEventList, listToConcat);
-                            if ((((evt.name == "fighterLifeLoss")) && (!((groupPvLostAndDeath.indexOf(listToConcat[0].targetId) == -1)))))
+                            if (((evt.name == "fighterLifeLoss") && (!(groupPvLostAndDeath.indexOf(listToConcat[0].targetId) == -1))))
                             {
-                                sendFightLogToChat(evt, team, null, true, true);
+                                sendFightLogToChat(evt, team, null, pEnableColoration, true);
                             }
                             else
                             {
-                                sendFightLogToChat(evt, team);
+                                sendFightLogToChat(evt, team, null, pEnableColoration);
                             };
                             break;
                         case "other":
                             removeEventFromEventsList(pEventList, listToConcat);
-                            if ((((((evt.name == FightEventEnum.FIGHTER_TEMPORARY_BOOSTED)) && (evt.params[4]))) && ((evt.params[4] is EffectInstance))))
+                            if (((evt.name == "fighterLifeLoss") && (!(groupPvLostAndDeath.indexOf(listToConcat[0].targetId) == -1))))
                             {
-                                evt.params[1] = EffectInstance(evt.params[4]).description;
-                                evt.params[2] = EffectInstance(evt.params[4]).duration;
-                                evt.params[3] = EffectInstance(evt.params[4]).durationString;
-                            };
-                            if ((((evt.name == "fighterLifeLoss")) && (!((groupPvLostAndDeath.indexOf(listToConcat[0].targetId) == -1)))))
-                            {
-                                sendFightLogToChat(evt, "", list, true, true);
+                                sendFightLogToChat(evt, "", list, pEnableColoration, true);
                             }
                             else
                             {
-                                sendFightLogToChat(evt, "", list);
+                                sendFightLogToChat(evt, "", list, pEnableColoration);
                             };
                             break;
                         case "none":
@@ -453,19 +529,27 @@
                         default:
                             for each (t in pEntitiesList)
                             {
-                                if (((((!((team.indexOf("allies") == -1))) && ((t.teamId == playerTeamId)))) || (((!((team.indexOf("enemies") == -1))) && (!((t.teamId == playerTeamId)))))))
+                                if ((t is GameFightFighterInformations))
+                                {
+                                    teamId = (t as GameFightFighterInformations).spawnInfo.teamId;
+                                }
+                                else
+                                {
+                                    teamId = t.teamId;
+                                };
+                                if ((((!(team.indexOf("allies") == -1)) && (teamId == playerTeamId)) || ((!(team.indexOf("enemies") == -1)) && (!(teamId == playerTeamId)))))
                                 {
                                     list.splice(list.indexOf(t.contextualId), 1);
                                 };
                             };
                             removeEventFromEventsList(pEventList, listToConcat);
-                            if ((((evt.name == "fighterLifeLoss")) && (!((groupPvLostAndDeath.indexOf(listToConcat[0].targetId) == -1)))))
+                            if (((evt.name == "fighterLifeLoss") && (!(groupPvLostAndDeath.indexOf(listToConcat[0].targetId) == -1))))
                             {
-                                sendFightLogToChat(evt, team, list, true, true);
+                                sendFightLogToChat(evt, team, list, pEnableColoration, true);
                             }
                             else
                             {
-                                sendFightLogToChat(evt, team, list);
+                                sendFightLogToChat(evt, team, list, pEnableColoration);
                             };
                     };
                 };
@@ -481,7 +565,7 @@
             listToConcat.push(baseEvent);
             for each (event in pInEventList)
             {
-                if ((((listToConcat.indexOf(event) == -1)) && (needToGroupFightEventsData(getNumberOfParametersToCheck(baseEvent), event, baseEvent))))
+                if (((listToConcat.indexOf(event) == -1) && (needToGroupFightEventsData(getNumberOfParametersToCheck(baseEvent), event, baseEvent))))
                 {
                     listToConcat.push(event);
                 };
@@ -499,7 +583,7 @@
             };
         }
 
-        public static function groupEntitiesByTeam(playerTeamId:int, targetList:Vector.<int>, entitiesList:Dictionary, checkAlive:Boolean=true):String
+        public static function groupEntitiesByTeam(playerTeamId:int, targetList:Vector.<Number>, entitiesList:Dictionary, checkAlive:Boolean=true):String
         {
             var fighterInfos:GameFightFighterInformations;
             var returnData:String;
@@ -511,7 +595,7 @@
             {
                 if (fighterInfos != null)
                 {
-                    if (fighterInfos.teamId == playerTeamId)
+                    if (fighterInfos.spawnInfo.teamId == playerTeamId)
                     {
                         nbTotalAllies++;
                     }
@@ -519,9 +603,9 @@
                     {
                         nbTotalEnemies++;
                     };
-                    if (((((!(checkAlive)) || (((checkAlive) && (fighterInfos.alive))))) && (!((targetList.indexOf(fighterInfos.contextualId) == -1)))))
+                    if ((((!(checkAlive)) || ((checkAlive) && (fighterInfos.spawnInfo.alive))) && (!(targetList.indexOf(fighterInfos.contextualId) == -1))))
                     {
-                        if (fighterInfos.teamId == playerTeamId)
+                        if (fighterInfos.spawnInfo.teamId == playerTeamId)
                         {
                             alliesCount++;
                         }
@@ -533,31 +617,31 @@
                 };
             };
             returnData = "";
-            if ((((nbTotalAllies == alliesCount)) && ((nbTotalEnemies == enemiesCount))))
+            if (((nbTotalAllies == alliesCount) && (nbTotalEnemies == enemiesCount)))
             {
                 return ("all");
             };
-            if ((((alliesCount > 1)) && ((alliesCount == nbTotalAllies))))
+            if (((alliesCount > 1) && (alliesCount == nbTotalAllies)))
             {
-                returnData = (returnData + (((!((returnData == ""))) ? "," : "") + "allies"));
-                if ((((enemiesCount > 0)) && ((enemiesCount < nbTotalEnemies))))
+                returnData = (returnData + (((returnData != "") ? "," : "") + "allies"));
+                if (((enemiesCount > 0) && (enemiesCount < nbTotalEnemies)))
                 {
                     returnData = (returnData + ",other");
                 };
             };
-            if ((((enemiesCount > 1)) && ((enemiesCount == nbTotalEnemies))))
+            if (((enemiesCount > 1) && (enemiesCount == nbTotalEnemies)))
             {
-                returnData = (returnData + (((!((returnData == ""))) ? "," : "") + "enemies"));
-                if ((((alliesCount > 0)) && ((alliesCount < nbTotalAllies))))
+                returnData = (returnData + (((returnData != "") ? "," : "") + "enemies"));
+                if (((alliesCount > 0) && (alliesCount < nbTotalAllies)))
                 {
                     returnData = (returnData + ",other");
                 };
             };
-            if ((((returnData == "")) && ((targetList.length > 1))))
+            if (((returnData == "") && (targetList.length > 1)))
             {
-                returnData = (returnData + (((!((returnData == ""))) ? "," : "") + "other"));
+                returnData = (returnData + (((returnData != "") ? "," : "") + "other"));
             };
-            return ((((returnData == "")) ? "none" : returnData));
+            return ((returnData == "") ? "none" : returnData);
         }
 
         private static function getNumberOfParametersToCheck(baseEvent:FightEvent):int
@@ -573,7 +657,7 @@
         private static function needToGroupFightEventsData(pNbParams:int, pFightEvent:FightEvent, pBaseEvent:FightEvent):Boolean
         {
             var paramId:int;
-            if (pFightEvent.castingSpellId != pBaseEvent.castingSpellId)
+            if (((!(pFightEvent.castingSpellId == pBaseEvent.castingSpellId)) || (GameDebugManager.getInstance().detailedFightLog_unGroupEffects)))
             {
                 return (false);
             };
@@ -608,59 +692,52 @@
             _fightEvents = new Vector.<FightEvent>();
         }
 
-        private static function sendFightLogToChat(pFightEvent:FightEvent, pTargetsTeam:String="", pTargetsList:Vector.<int>=null, pActiveColoration:Boolean=true, pAddDeathInTheSameMsg:Boolean=false):void
+        private static function sendFightLogToChat(pFightEvent:FightEvent, pTargetsTeam:String="", pTargetsList:Vector.<Number>=null, pActiveColoration:Boolean=true, pAddDeathInTheSameMsg:Boolean=false):void
         {
-            var name:String = (((((pFightEvent.name == FightEventEnum.FIGHTER_LIFE_LOSS)) && (pAddDeathInTheSameMsg))) ? ("fightLifeLossAndDeath") : pFightEvent.name);
+            var name:String = (((pFightEvent.name == FightEventEnum.FIGHTER_LIFE_LOSS) && (pAddDeathInTheSameMsg)) ? ("fightLifeLossAndDeath") : pFightEvent.name);
             var params:Array = pFightEvent.params.concat();
             if (pActiveColoration)
             {
-                if ((((pFightEvent.name == FightEventEnum.FIGHTER_LIFE_LOSS)) || ((pFightEvent.name == FightEventEnum.FIGHTER_SHIELD_LOSS))))
+                if (((pFightEvent.name == FightEventEnum.FIGHTER_LIFE_LOSS) || (pFightEvent.name == FightEventEnum.FIGHTER_SHIELD_LOSS)))
                 {
                     params[1] = formateColorsForFightDamages(("-" + params[1]), params[2]);
                 };
             };
-            KernelEventsManager.getInstance().processCallback(HookList.FightText, name, params, pTargetsList, pTargetsTeam);
+            KernelEventsManager.getInstance().processCallback(HookList.FightText, name, params, pTargetsList, pTargetsTeam, GameDebugManager.getInstance().detailedFightLog_showIds);
         }
 
-        private static function formateColorsForFightDamages(inText:String, actionId:int):String
+        private static function formateColorsForFightDamages(inText:String, elementId:int):String
         {
-            var newText:String;
-            var color:String = "";
-            var typeAction:TypeAction = TypeAction.getTypeActionById(actionId);
-            var elementId:int = (((typeAction)==null) ? -1 : typeAction.elementId);
+            var color:String;
             switch (elementId)
             {
-                case -1:
+                case ElementEnum.ELEMENT_MULTI:
                     color = XmlConfig.getInstance().getEntry("colors.fight.text.multi");
                     break;
-                case 0:
+                case ElementEnum.ELEMENT_NEUTRAL:
                     color = XmlConfig.getInstance().getEntry("colors.fight.text.neutral");
                     break;
-                case 1:
+                case ElementEnum.ELEMENT_EARTH:
                     color = XmlConfig.getInstance().getEntry("colors.fight.text.earth");
                     break;
-                case 2:
+                case ElementEnum.ELEMENT_FIRE:
                     color = XmlConfig.getInstance().getEntry("colors.fight.text.fire");
                     break;
-                case 3:
+                case ElementEnum.ELEMENT_WATER:
                     color = XmlConfig.getInstance().getEntry("colors.fight.text.water");
                     break;
-                case 4:
+                case ElementEnum.ELEMENT_AIR:
                     color = XmlConfig.getInstance().getEntry("colors.fight.text.air");
                     break;
-                case 5:
+                case ElementEnum.ELEMENT_NONE:
                 default:
                     color = "";
             };
             if (color != "")
             {
-                newText = HtmlManager.addTag(inText, HtmlManager.SPAN, {"color":color});
-            }
-            else
-            {
-                newText = inText;
+                return (HtmlManager.addTag(inText, HtmlManager.SPAN, {"color":color}));
             };
-            return (newText);
+            return (inText);
         }
 
         public static function get fightEvents():Vector.<FightEvent>
@@ -680,5 +757,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.fight.fightEvents
+} com.ankamagames.dofus.logic.game.fight.fightEvents
 

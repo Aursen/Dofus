@@ -1,27 +1,23 @@
-﻿package com.ankamagames.dofus.network.messages.connection
+package com.ankamagames.dofus.network.messages.connection
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
     import com.ankamagames.dofus.network.types.connection.GameServerInformations;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
 
-    [Trusted]
     public class ServerStatusUpdateMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 50;
 
         private var _isInitialized:Boolean = false;
-        public var server:GameServerInformations;
+        public var server:GameServerInformations = new GameServerInformations();
+        private var _servertree:FuncTree;
 
-        public function ServerStatusUpdateMessage()
-        {
-            this.server = new GameServerInformations();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
@@ -58,6 +54,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_ServerStatusUpdateMessage(output);
@@ -79,7 +83,23 @@
             this.server.deserialize(input);
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_ServerStatusUpdateMessage(tree);
+        }
+
+        public function deserializeAsyncAs_ServerStatusUpdateMessage(tree:FuncTree):void
+        {
+            this._servertree = tree.addChild(this._servertreeFunc);
+        }
+
+        private function _servertreeFunc(input:ICustomDataInput):void
+        {
+            this.server = new GameServerInformations();
+            this.server.deserializeAsync(this._servertree);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.connection
+} com.ankamagames.dofus.network.messages.connection
 

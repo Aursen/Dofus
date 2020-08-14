@@ -1,5 +1,9 @@
-﻿package com.ankamagames.jerakine.logger
+package com.ankamagames.jerakine.logger
 {
+    import __AS3__.vec.Vector;
+    import mx.utils.StringUtil;
+    import __AS3__.vec.*;
+
     public class LogLogger implements Logger 
     {
 
@@ -7,6 +11,7 @@
         private static var _useModuleLoggerHasOutputLog:Boolean = false;
 
         private var _category:String;
+        private var _deactivatedTarget:Vector.<int> = new Vector.<int>();
 
         public function LogLogger(category:String)
         {
@@ -76,11 +81,30 @@
         {
             var message:String;
             var formatedMessage:String;
-            if (_enabled)
+            var event:TextLogEvent;
+            var sentryLog:Boolean = ((!(_enabled)) && ((level == LogLevel.ERROR) || (level == LogLevel.FATAL)));
+            var broadcastLog:Boolean = ((_enabled) && (this._deactivatedTarget.indexOf(level) == -1));
+            if (((broadcastLog) || (sentryLog)))
             {
-                message = object.toString();
-                formatedMessage = this.getFormatedMessage(message);
-                Log.broadcastToTargets(new TextLogEvent(this._category, ((!((level == LogLevel.COMMANDS))) ? formatedMessage : message), level));
+                if (object)
+                {
+                    message = object.toString();
+                    formatedMessage = this.getFormatedMessage(message);
+                }
+                else
+                {
+                    message = "null";
+                    formatedMessage = "null";
+                };
+                event = new TextLogEvent(this._category, ((level != LogLevel.COMMANDS) ? formatedMessage : message), level);
+                if (broadcastLog)
+                {
+                    Log.broadcastToTargets(event);
+                }
+                else
+                {
+                    Log.broadcastToSentryTarget(event);
+                };
                 if (_useModuleLoggerHasOutputLog)
                 {
                     ModuleLogger.log(formatedMessage, level);
@@ -88,23 +112,36 @@
             };
         }
 
+        public function setLevelDectivation(level:uint, deactivate:Boolean):void
+        {
+            if (((deactivate) && (this._deactivatedTarget.indexOf(level) == -1)))
+            {
+                this._deactivatedTarget.push(level);
+            }
+            else
+            {
+                if (this._deactivatedTarget.indexOf(level) != -1)
+                {
+                    this._deactivatedTarget.splice(this._deactivatedTarget.indexOf(level), 1);
+                };
+            };
+        }
+
         private function getFormatedMessage(message:String):String
         {
-            if (!(message))
+            if (!message)
             {
                 message = "";
             };
-            var catSplit:Array = this._category.split("::");
-            var head:String = (("[" + catSplit[(catSplit.length - 1)]) + "] ");
-            var indent:String = "";
-            var i:uint;
-            while (i < head.length)
+            var catName:String = this._category;
+            if (this._category.indexOf("::") != -1)
             {
-                indent = (indent + " ");
-                i++;
+                catName = this._category.substring((this._category.indexOf("::") + 2));
             };
+            var head:* = (((((Log.PREFIX != "") ? (("[" + Log.PREFIX) + "] ") : "") + "[") + catName) + "] ");
+            var indent:String = StringUtil.repeat(" ", head.length);
             message = message.replace("\n", ("\n" + indent));
-            return ((head + message));
+            return (head + message);
         }
 
         public function clear():void
@@ -114,5 +151,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.logger
+} com.ankamagames.jerakine.logger
 

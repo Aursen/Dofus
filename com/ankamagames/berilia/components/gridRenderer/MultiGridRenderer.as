@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.components.gridRenderer
+package com.ankamagames.berilia.components.gridRenderer
 {
     import com.ankamagames.berilia.interfaces.IGridRenderer;
     import com.ankamagames.berilia.components.Grid;
@@ -17,8 +17,6 @@
     import com.ankamagames.berilia.UIComponent;
     import com.ankamagames.berilia.types.uiDefinition.BasicElement;
     import com.ankamagames.berilia.types.uiDefinition.StateContainerElement;
-    import flash.utils.getDefinitionByName;
-    import flash.utils.getQualifiedClassName;
     import com.ankamagames.berilia.types.uiDefinition.ButtonElement;
 
     public class MultiGridRenderer implements IGridRenderer 
@@ -34,9 +32,6 @@
         protected var _containerDefinition:Dictionary;
         protected var _bgColor1:ColorTransform;
         protected var _bgColor2:ColorTransform;
-        protected var _color1:Number = -1;
-        protected var _color2:Number = -1;
-        protected var _bgAlpha:Number = 1;
         protected var _updateFunctionName:String;
         protected var _getLineTypeFunctionName:String;
         protected var _defaultLineType:String;
@@ -55,18 +50,25 @@
                 if (params[3])
                 {
                     this._bgColor1 = new ColorTransform();
-                    this._color1 = parseInt(params[3], 16);
-                    this._bgColor1.color = this._color1;
+                    this._bgColor1.color = (parseInt(params[3], 16) & 0xFFFFFF);
+                    if (params[3].length > 8)
+                    {
+                        this._bgColor1.alphaMultiplier = (((parseInt(params[3], 16) & 0xFF000000) >> 24) / 0xFF);
+                    };
                 };
                 if (params[4])
                 {
                     this._bgColor2 = new ColorTransform();
-                    this._color2 = parseInt(params[4], 16);
-                    this._bgColor2.color = this._color2;
+                    this._bgColor2.color = (parseInt(params[4], 16) & 0xFFFFFF);
+                    if (params[4].length > 8)
+                    {
+                        this._bgColor2.alphaMultiplier = (((parseInt(params[4], 16) & 0xFF000000) >> 24) / 0xFF);
+                    };
                 };
                 if (params[5])
                 {
-                    this._bgAlpha = parseInt(params[5]);
+                    this._bgColor1.alphaMultiplier = parseFloat(params[5]);
+                    this._bgColor2.alphaMultiplier = parseFloat(params[5]);
                 };
             };
             this._cptNameReferences = new Dictionary();
@@ -79,7 +81,7 @@
 
         public function set grid(g:Grid):void
         {
-            if (!(this._grid))
+            if (!this._grid)
             {
                 this._grid = g;
             };
@@ -100,11 +102,11 @@
         {
             var s:Sprite;
             var ui:UiRootContainer = this._grid.getUi();
-            if (((((!(ui.uiClass.hasOwnProperty(this._getLineTypeFunctionName))) && (!(this._defaultLineType)))) || (!(ui.uiClass.hasOwnProperty(this._updateFunctionName)))))
+            if ((((!(ui.uiClass.hasOwnProperty(this._getLineTypeFunctionName))) && (!(this._defaultLineType))) || (!(ui.uiClass.hasOwnProperty(this._updateFunctionName)))))
             {
                 throw (new BeriliaError("GetLineType function or update function is not define."));
             };
-            var containerName:String = ((this._defaultLineType) ? this._defaultLineType : ui.uiClass[this._getLineTypeFunctionName](SecureCenter.secure(data), subIndex));
+            var containerName:String = ((this._defaultLineType) ? this._defaultLineType : ui.uiClass[this._getLineTypeFunctionName](data, subIndex));
             if (target.name != containerName)
             {
                 this.buildLine((target as Sprite), containerName);
@@ -115,9 +117,9 @@
                 if ((index % 2) == 0)
                 {
                     s.graphics.clear();
-                    if (this._color1)
+                    if (this._bgColor1)
                     {
-                        s.graphics.beginFill(this._color1, this._bgAlpha);
+                        s.graphics.beginFill(this._bgColor1.color, this._bgColor1.alphaMultiplier);
                         s.graphics.drawRect(0, 0, this._grid.slotWidth, this._grid.slotHeight);
                         s.graphics.endFill();
                     };
@@ -125,29 +127,32 @@
                 if ((index % 2) == 1)
                 {
                     s.graphics.clear();
-                    if (this._color2)
+                    if (this._bgColor2)
                     {
-                        s.graphics.beginFill(this._color2, this._bgAlpha);
+                        s.graphics.beginFill(this._bgColor2.color, this._bgColor2.alphaMultiplier);
                         s.graphics.drawRect(0, 0, this._grid.slotWidth, this._grid.slotHeight);
                         s.graphics.endFill();
                     };
                 };
             };
-            this.uiUpdate(ui, target, data, selected, subIndex);
+            this.uiUpdate(ui, target, data, selected, index);
         }
 
         protected function uiUpdate(ui:UiRootContainer, target:DisplayObject, data:*, selected:Boolean, subIndex:uint):void
         {
             if (DisplayObjectContainer(target).numChildren)
             {
-                var _local_6 = ui.uiClass;
-                (_local_6[this._updateFunctionName](SecureCenter.secure(data), this._cptNameReferences[DisplayObjectContainer(target).getChildAt(0)], selected, subIndex));
+                var _local_6:* = ui.uiClass;
+                (_local_6[this._updateFunctionName](data, this._cptNameReferences[DisplayObjectContainer(target).getChildAt((DisplayObjectContainer(target).numChildren - 1))], selected, subIndex));
             };
         }
 
         public function remove(dispObj:DisplayObject):void
         {
-            dispObj.visible = false;
+            if (dispObj)
+            {
+                dispObj.visible = false;
+            };
         }
 
         public function destroy():void
@@ -157,7 +162,7 @@
             var o3:Object;
             for each (o in this._componentReferences)
             {
-                o2 = SecureCenter.unsecure(o);
+                o2 = o;
                 for each (o3 in o2)
                 {
                     if ((o3 is GraphicContainer))
@@ -196,8 +201,29 @@
             return (functionName);
         }
 
+        public function getItemIndex(target:*):int
+        {
+            var elemContainer:*;
+            var component:GraphicContainer;
+            if (this._grid)
+            {
+                for (elemContainer in this._cptNameReferences)
+                {
+                    for each (component in this._cptNameReferences[elemContainer])
+                    {
+                        if (component === target)
+                        {
+                            return (this._grid.getItemIndex(elemContainer));
+                        };
+                    };
+                };
+            };
+            return (-1);
+        }
+
         protected function buildLine(container:Sprite, name:String):void
         {
+            var elemContainer:GraphicContainer;
             var key:String;
             var multiGridMarkerIndex:int;
             var realElemName:String;
@@ -205,13 +231,13 @@
             {
                 return;
             };
-            if (!(this._containerCache[name]))
+            if (!this._containerCache[name])
             {
                 this._containerCache[name] = [];
             };
             if (this._containerDefinition[container.name])
             {
-                if (!(this._containerCache[container.name]))
+                if (!this._containerCache[container.name])
                 {
                     this._containerCache[container.name] = [];
                 };
@@ -222,7 +248,7 @@
                 };
             };
             container.name = ((name) ? name : "#########EMPTY");
-            if (!(name))
+            if (!name)
             {
                 return;
             };
@@ -231,15 +257,15 @@
                 container.addChild(this._containerCache[name].pop());
                 return;
             };
-            var elemContainer:GraphicContainer = new GraphicContainer();
-            elemContainer.setUi(this._grid.getUi(), SecureCenter.ACCESS_KEY);
+            var ui:UiRootContainer = this._grid.getUi();
+            elemContainer = new GraphicContainer();
+            elemContainer.setUi(ui, SecureCenter.ACCESS_KEY);
             elemContainer.mouseEnabled = false;
             container.addChild(elemContainer);
             var cptNames:Array = [];
             this._uiRenderer.makeChilds([this.copyElement(this._containerDefinition[name], cptNames)], elemContainer, true);
-            this._grid.getUi().render();
+            ui.render();
             var components:Object = {};
-            var ui:UiRootContainer = this._grid.getUi();
             for (key in cptNames)
             {
                 multiGridMarkerIndex = key.indexOf("_m_");
@@ -248,7 +274,7 @@
                 {
                     realElemName = realElemName.substr(0, multiGridMarkerIndex);
                 };
-                components[realElemName] = SecureCenter.secure(ui.getElement(cptNames[key]), SecureCenter.ACCESS_KEY);
+                components[realElemName] = ui.getElement(cptNames[key]);
             };
             this._cptNameReferences[elemContainer] = components;
             this._elemID++;
@@ -264,16 +290,18 @@
             var state:uint;
             var stateStr:String;
             var elemName:String;
-            var newElement:BasicElement = new ((getDefinitionByName(getQualifiedClassName(basicElement)) as Class))();
+            var m_gridName:* = (("_m_" + this._grid.name) + "_");
+            var newElement:BasicElement = new (Object(basicElement).constructor)();
             basicElement.copy(newElement);
+            newElement.properties["isInstance"] = true;
             if (newElement.name)
             {
-                newElement.setName(((((newElement.name + "_m_") + this._grid.name) + "_") + this._elemID));
+                newElement.setName(((newElement.name + m_gridName) + this._elemID));
                 names[basicElement.name] = newElement.name;
             }
             else
             {
-                newElement.setName(((("elem_m_" + this._grid.name) + "_") + BasicElement.ID++));
+                newElement.setName((("elem" + m_gridName) + BasicElement.ID++));
             };
             if ((newElement is ContainerElement))
             {
@@ -289,25 +317,26 @@
                 nsce = (newElement as StateContainerElement);
                 sce = (basicElement as StateContainerElement);
                 stateChangingProperties = new Array();
+                m_gridName = (m_gridName + this._elemID);
                 for (stateStr in sce.stateChangingProperties)
                 {
                     state = parseInt(stateStr);
                     for (elemName in sce.stateChangingProperties[state])
                     {
-                        if (!(stateChangingProperties[state]))
+                        if (!stateChangingProperties[state])
                         {
                             stateChangingProperties[state] = [];
                         };
-                        stateChangingProperties[state][((((elemName + "_m_") + this._grid.name) + "_") + this._elemID)] = sce.stateChangingProperties[state][elemName];
+                        stateChangingProperties[state][(elemName + m_gridName)] = sce.stateChangingProperties[state][elemName];
                     };
                 };
                 nsce.stateChangingProperties = stateChangingProperties;
-            };
-            if ((newElement is ButtonElement))
-            {
-                if (newElement.properties["linkedTo"])
+                if ((newElement is ButtonElement))
                 {
-                    newElement.properties["linkedTo"] = ((((newElement.properties["linkedTo"] + "_m_") + this._grid.name) + "_") + this._elemID);
+                    if (newElement.properties["linkedTo"])
+                    {
+                        newElement.properties["linkedTo"] = (newElement.properties["linkedTo"] + m_gridName);
+                    };
                 };
             };
             return (newElement);
@@ -315,5 +344,5 @@
 
 
     }
-}//package com.ankamagames.berilia.components.gridRenderer
+} com.ankamagames.berilia.components.gridRenderer
 

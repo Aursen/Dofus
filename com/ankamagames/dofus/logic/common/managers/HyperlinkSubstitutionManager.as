@@ -1,9 +1,9 @@
-﻿package com.ankamagames.dofus.logic.common.managers
+package com.ankamagames.dofus.logic.common.managers
 {
     import com.ankamagames.jerakine.data.I18n;
     import com.ankamagames.berilia.managers.KernelEventsManager;
     import com.ankamagames.dofus.misc.lists.HookList;
-    import com.ankamagames.dofusModuleLibrary.enum.WebLocationEnum;
+    import com.ankamagames.dofus.types.enums.WebLocationEnum;
     import flash.geom.Rectangle;
     import com.ankamagames.berilia.types.data.TextTooltipInfo;
     import com.ankamagames.berilia.managers.TooltipManager;
@@ -39,5 +39,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.common.managers
+} com.ankamagames.dofus.logic.common.managers
 

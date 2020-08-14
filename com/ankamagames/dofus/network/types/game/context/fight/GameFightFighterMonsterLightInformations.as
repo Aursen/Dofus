@@ -1,8 +1,9 @@
-﻿package com.ankamagames.dofus.network.types.game.context.fight
+package com.ankamagames.dofus.network.types.game.context.fight
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
     public class GameFightFighterMonsterLightInformations extends GameFightFighterLightInformations implements INetworkType 
     {
@@ -17,7 +18,7 @@
             return (455);
         }
 
-        public function initGameFightFighterMonsterLightInformations(id:int=0, wave:uint=0, level:uint=0, breed:int=0, sex:Boolean=false, alive:Boolean=false, creatureGenericId:uint=0):GameFightFighterMonsterLightInformations
+        public function initGameFightFighterMonsterLightInformations(id:Number=0, wave:uint=0, level:uint=0, breed:int=0, sex:Boolean=false, alive:Boolean=false, creatureGenericId:uint=0):GameFightFighterMonsterLightInformations
         {
             super.initGameFightFighterLightInformations(id, wave, level, breed, sex, alive);
             this.creatureGenericId = creatureGenericId;
@@ -53,6 +54,22 @@
         public function deserializeAs_GameFightFighterMonsterLightInformations(input:ICustomDataInput):void
         {
             super.deserialize(input);
+            this._creatureGenericIdFunc(input);
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GameFightFighterMonsterLightInformations(tree);
+        }
+
+        public function deserializeAsyncAs_GameFightFighterMonsterLightInformations(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._creatureGenericIdFunc);
+        }
+
+        private function _creatureGenericIdFunc(input:ICustomDataInput):void
+        {
             this.creatureGenericId = input.readVarUhShort();
             if (this.creatureGenericId < 0)
             {
@@ -62,5 +79,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.context.fight
+} com.ankamagames.dofus.network.types.game.context.fight
 

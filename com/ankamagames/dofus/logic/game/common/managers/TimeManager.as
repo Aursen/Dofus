@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.common.managers
+package com.ankamagames.dofus.logic.game.common.managers
 {
     import com.ankamagames.jerakine.interfaces.IDestroyable;
     import com.ankamagames.jerakine.logger.Logger;
@@ -6,6 +6,12 @@
     import flash.utils.getQualifiedClassName;
     import com.ankamagames.jerakine.utils.errors.SingletonError;
     import com.ankamagames.jerakine.data.I18n;
+    import com.ankamagames.jerakine.managers.LangManager;
+    import flash.globalization.DateTimeFormatter;
+    import flash.globalization.DateTimeNameStyle;
+    import flash.globalization.DateTimeNameContext;
+    import __AS3__.vec.Vector;
+    import com.ankamagames.jerakine.utils.misc.StringUtils;
     import com.ankamagames.dofus.datacenter.misc.Month;
     import com.ankamagames.jerakine.utils.pattern.PatternDecoder;
 
@@ -14,7 +20,7 @@
 
         private static var _self:TimeManager;
 
-        protected var _log:Logger;
+        protected var _log:Logger = Log.getLogger(getQualifiedClassName(TimeManager));
         private var _bTextInit:Boolean = false;
         private var _nameYears:String;
         private var _nameMonths:String;
@@ -22,6 +28,10 @@
         private var _nameHours:String;
         private var _nameMinutes:String;
         private var _nameSeconds:String;
+        private var _nameYearsShort:String;
+        private var _nameMonthsShort:String;
+        private var _nameDaysShort:String;
+        private var _nameHoursShort:String;
         private var _nameAnd:String;
         public var serverTimeLag:Number = 0;
         public var serverUtcTimeLag:Number = 0;
@@ -30,8 +40,6 @@
 
         public function TimeManager()
         {
-            this._log = Log.getLogger(getQualifiedClassName(TimeManager));
-            super();
             if (_self != null)
             {
                 throw (new SingletonError("TimeManager is a singleton and should not be instanciated directly."));
@@ -63,39 +71,103 @@
         public function getTimestamp():Number
         {
             var date:Date = new Date();
-            return ((date.getTime() + this.serverTimeLag));
+            return (date.getTime() + this.serverTimeLag);
         }
 
         public function getUtcTimestamp():Number
         {
             var date:Date = new Date();
-            return ((date.getTime() + this.serverUtcTimeLag));
+            return (date.getTime() + this.serverUtcTimeLag);
         }
 
         public function formatClock(time:Number, unchanged:Boolean=false, useTimezoneOffset:Boolean=false):String
         {
             var timeToUse:Number = time;
-            if (((unchanged) && ((timeToUse > 0))))
+            if (((unchanged) && (timeToUse > 0)))
             {
                 timeToUse = (timeToUse - this.serverTimeLag);
             };
             var date:Array = this.getDateFromTime(timeToUse, useTimezoneOffset);
-            var hour:String = (((date[1] >= 10)) ? date[1].toString() : ("0" + date[1]));
-            var minute:String = (((date[0] >= 10)) ? date[0].toString() : ("0" + date[0]));
-            return (((hour + ":") + minute));
+            var hour:String = ((date[1] >= 10) ? date[1].toString() : ("0" + date[1]));
+            var minute:String = ((date[0] >= 10) ? date[0].toString() : ("0" + date[0]));
+            return ((hour + ":") + minute);
         }
 
         public function formatDateIRL(time:Number, useTimezoneOffset:Boolean=false, unchanged:Boolean=false):String
         {
             var timeToUse:Number = time;
-            if (((unchanged) && ((timeToUse > 0))))
+            if (((unchanged) && (timeToUse > 0)))
             {
                 timeToUse = (timeToUse - this.serverTimeLag);
             };
             var date:Array = this.getDateFromTime(timeToUse, useTimezoneOffset);
-            var day:String = (((date[2] > 9)) ? date[2].toString() : ("0" + date[2]));
-            var month:String = (((date[3] > 9)) ? date[3].toString() : ("0" + date[3]));
+            var day:String = ((date[2] > 9) ? date[2].toString() : ("0" + date[2]));
+            var month:String = ((date[3] > 9) ? date[3].toString() : ("0" + date[3]));
             return (I18n.getUiText("ui.time.dateNumbers", [day, month, date[4]]));
+        }
+
+        public function getLocaleIDName():String
+        {
+            var currentLanguage:String = LangManager.getInstance().lang;
+            switch (currentLanguage)
+            {
+                case "deDe":
+                    return ("de-DE");
+                case "enUk":
+                    return ("en-GB");
+                case "enUs":
+                    return ("en-US");
+                case "esEs":
+                    return ("es-ES");
+                case "frBe":
+                    return ("fr-BE");
+                case "frCa":
+                    return ("fr-CA");
+                case "frCh":
+                    return ("fr-CH");
+                case "frFr":
+                    return ("fr-FR");
+                case "itIt":
+                    return ("it-IT");
+                case "jaJp":
+                    return ("ja");
+                case "nlNl":
+                    return ("nl-NL");
+                case "ptBr":
+                    return ("pt-BR");
+                case "ptPt":
+                    return ("pt-PT");
+                case "ruRu":
+                    return ("ru");
+                default:
+                    return ("en-US");
+            };
+        }
+
+        public function getMonthIRL(month:uint):String
+        {
+            if (month > 11)
+            {
+                return (null);
+            };
+            var dateTimeFormatter:DateTimeFormatter = new DateTimeFormatter(this.getLocaleIDName());
+            var months:Vector.<String> = dateTimeFormatter.getMonthNames(DateTimeNameStyle.FULL, DateTimeNameContext.STANDALONE);
+            return (months[month]);
+        }
+
+        public function formatEndOfSeasonDate(time:Number, useTimezoneOffset:Boolean=false, unchanged:Boolean=false):String
+        {
+            var timeToUse:Number = time;
+            if (((unchanged) && (timeToUse > 0)))
+            {
+                timeToUse = (timeToUse - this.serverTimeLag);
+            };
+            var date:Array = this.getDateFromTime(timeToUse, useTimezoneOffset);
+            var day:String = ((date[2] > 9) ? date[2].toString() : ("0" + date[2]));
+            var month:String = this.getMonthIRL((date[3] - 1));
+            var hours:String = date[1];
+            var minutes:String = StringUtils.padNumber(date[0], 2);
+            return (I18n.getUiText("ui.time.endSeasonDate", [day, month, hours, minutes]));
         }
 
         public function formatDateIG(time:Number):String
@@ -114,50 +186,99 @@
             return ([date[2], month, nyear]);
         }
 
-        public function getDuration(time:Number, short:Boolean=false, addSeconds:Boolean=false):String
+        public function getDuration(time:Number, _arg_2:Boolean=false, addSeconds:Boolean=false):String
         {
             var result:String;
             var hour:String;
             var minute:String;
             var second:String;
-            var nsecond:Number;
             var day:String;
             var month:String;
             var year:String;
-            if (!(this._bTextInit))
+            var nsecond:Number;
+            if (!this._bTextInit)
             {
                 this.initText();
             };
+            var showSeconds:Boolean;
             var date:Date = new Date(time);
-            if (addSeconds)
+            var nyear:Number = (date.getUTCFullYear() - 1970);
+            var nmonth:Number = date.getUTCMonth();
+            var nday:Number = (date.getUTCDate() - 1);
+            var nhour:Number = date.getUTCHours();
+            var nminute:Number = date.getUTCMinutes();
+            if (((addSeconds) || (((((nyear == 0) && (nmonth == 0)) && (nday == 0)) && (nhour == 0)) && (nminute == 0))))
             {
                 nsecond = date.getUTCSeconds();
-            };
-            var nminute:Number = date.getUTCMinutes();
-            var nhour:Number = date.getUTCHours();
-            var nday:Number = (date.getUTCDate() - 1);
-            var nmonth:Number = date.getUTCMonth();
-            var nyear:Number = (date.getUTCFullYear() - 1970);
-            if (!(short))
-            {
-                if (addSeconds)
+                if (((nsecond > 0) || (addSeconds)))
                 {
-                    second = (((nsecond > 1)) ? (((nsecond + " ") + PatternDecoder.combine(this._nameSeconds, "f", false))) : ((nsecond + " ") + PatternDecoder.combine(this._nameSeconds, "f", true)));
+                    showSeconds = true;
                 };
-                minute = (((nminute > 1)) ? (((nminute + " ") + PatternDecoder.combine(this._nameMinutes, "f", false))) : ((nminute + " ") + PatternDecoder.combine(this._nameMinutes, "f", true)));
-                hour = (((nhour > 1)) ? (((nhour + " ") + PatternDecoder.combine(this._nameHours, "f", false))) : ((nhour + " ") + PatternDecoder.combine(this._nameHours, "f", true)));
-                day = (((nday > 1)) ? (((nday + " ") + PatternDecoder.combine(this._nameDays, "f", false))) : ((nday + " ") + PatternDecoder.combine(this._nameDays, "f", true)));
-                month = (((nmonth > 1)) ? (((nmonth + " ") + PatternDecoder.combine(this._nameMonths, "f", false))) : ((nmonth + " ") + PatternDecoder.combine(this._nameMonths, "f", true)));
-                year = (((nyear > 1)) ? (((nyear + " ") + PatternDecoder.combine(this._nameYears, "f", false))) : ((nyear + " ") + PatternDecoder.combine(this._nameYears, "f", true)));
-                if (nyear == 0)
+            };
+            if (!_arg_2)
+            {
+                if (showSeconds)
                 {
-                    if (nmonth == 0)
+                    second = ((nsecond + " ") + PatternDecoder.combine(this._nameSeconds, "f", (nsecond <= 1), (nsecond == 0)));
+                };
+                minute = ((nminute + " ") + PatternDecoder.combine(this._nameMinutes, "f", (nminute <= 1), (nminute == 0)));
+                hour = ((nhour + " ") + PatternDecoder.combine(this._nameHours, "f", (nhour <= 1), (nhour == 0)));
+                day = ((nday + " ") + PatternDecoder.combine(this._nameDays, "f", (nday <= 1), (nday == 0)));
+                month = ((nmonth + " ") + PatternDecoder.combine(this._nameMonths, "f", (nmonth <= 1), (nmonth == 0)));
+                year = ((nyear + " ") + PatternDecoder.combine(this._nameYears, "f", (nyear <= 1), (nyear == 0)));
+                if (nyear != 0)
+                {
+                    if (nmonth != 0)
                     {
-                        if (nday == 0)
+                        result = ((((year + " ") + this._nameAnd) + " ") + month);
+                    }
+                    else
+                    {
+                        result = year;
+                    };
+                }
+                else
+                {
+                    if (nmonth != 0)
+                    {
+                        if (nday != 0)
                         {
-                            if (nhour == 0)
+                            result = ((((month + " ") + this._nameAnd) + " ") + day);
+                        }
+                        else
+                        {
+                            result = month;
+                        };
+                    }
+                    else
+                    {
+                        if (nday != 0)
+                        {
+                            if (nhour != 0)
                             {
-                                if (addSeconds)
+                                result = ((((day + " ") + this._nameAnd) + " ") + hour);
+                            }
+                            else
+                            {
+                                result = day;
+                            };
+                        }
+                        else
+                        {
+                            if (nhour != 0)
+                            {
+                                if (nminute != 0)
+                                {
+                                    result = ((((hour + " ") + this._nameAnd) + " ") + minute);
+                                }
+                                else
+                                {
+                                    result = hour;
+                                };
+                            }
+                            else
+                            {
+                                if (((showSeconds) && (!(nsecond == 0))))
                                 {
                                     if (nminute == 0)
                                     {
@@ -172,36 +293,66 @@
                                 {
                                     result = minute;
                                 };
-                            }
-                            else
-                            {
-                                result = ((((hour + " ") + this._nameAnd) + " ") + minute);
                             };
-                        }
-                        else
-                        {
-                            result = ((((day + " ") + this._nameAnd) + " ") + hour);
                         };
+                    };
+                };
+                return (result);
+            };
+            if (nyear != 0)
+            {
+                if (nmonth != 0)
+                {
+                    result = ((((nyear + this._nameYearsShort) + " ") + nmonth) + this._nameMonthsShort);
+                }
+                else
+                {
+                    result = (nyear + this._nameYearsShort);
+                };
+            }
+            else
+            {
+                if (nmonth != 0)
+                {
+                    if (nday != 0)
+                    {
+                        result = ((((nmonth + this._nameMonthsShort) + " ") + nday) + this._nameDaysShort);
                     }
                     else
                     {
-                        result = ((((month + " ") + this._nameAnd) + " ") + day);
+                        result = (nmonth + this._nameMonthsShort);
                     };
                 }
                 else
                 {
-                    result = ((((year + " ") + this._nameAnd) + " ") + month);
+                    if (nday != 0)
+                    {
+                        if (nhour != 0)
+                        {
+                            result = ((((nday + this._nameDaysShort) + " ") + nhour) + this._nameHoursShort);
+                        }
+                        else
+                        {
+                            result = (nday + this._nameDaysShort);
+                        };
+                    }
+                    else
+                    {
+                        hour = ((nhour >= 10) ? nhour.toString() : ("0" + nhour));
+                        minute = ((nminute >= 10) ? nminute.toString() : ("0" + nminute));
+                        if (showSeconds)
+                        {
+                            second = ((nsecond >= 10) ? nsecond.toString() : ("0" + nsecond));
+                            result = ((((hour + ":") + minute) + ":") + second);
+                        }
+                        else
+                        {
+                            result = ((hour + ":") + minute);
+                        };
+                    };
                 };
-                return (result);
             };
-            hour = (((nhour >= 10)) ? nhour.toString() : ("0" + nhour));
-            minute = (((nminute >= 10)) ? nminute.toString() : ("0" + nminute));
-            if (addSeconds)
-            {
-                second = (((nsecond >= 10)) ? nsecond.toString() : ("0" + nsecond));
-                return (((((hour + ":") + minute) + ":") + second));
-            };
-            return (((hour + ":") + minute));
+            return (result);
         }
 
         public function getDateFromTime(timeUTC:Number, useTimezoneOffset:Boolean=false):Array
@@ -249,11 +400,15 @@
             this._nameHours = I18n.getUiText("ui.time.hours");
             this._nameMinutes = I18n.getUiText("ui.time.minutes");
             this._nameSeconds = I18n.getUiText("ui.time.seconds");
+            this._nameYearsShort = I18n.getUiText("ui.time.short.year");
+            this._nameMonthsShort = I18n.getUiText("ui.time.short.month");
+            this._nameDaysShort = I18n.getUiText("ui.time.short.day");
+            this._nameHoursShort = I18n.getUiText("ui.time.short.hour");
             this._nameAnd = I18n.getUiText("ui.common.and").toLowerCase();
             this._bTextInit = true;
         }
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.managers
+} com.ankamagames.dofus.logic.game.common.managers
 

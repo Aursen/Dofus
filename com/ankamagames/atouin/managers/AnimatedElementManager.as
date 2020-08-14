@@ -1,4 +1,4 @@
-﻿package com.ankamagames.atouin.managers
+package com.ankamagames.atouin.managers
 {
     import __AS3__.vec.Vector;
     import com.ankamagames.atouin.types.AnimatedElementInfo;
@@ -21,13 +21,8 @@
         private static const SEQUENCE_TYPE_NAME:String = "AnimatedElementManager_sequence";
         private static const MAX_ANIMATION_LENGTH:int = 20000;
 
-        private var _sequenceRef:Dictionary;
+        private var _sequenceRef:Dictionary = new Dictionary(true);
 
-        public function AnimatedElementManager()
-        {
-            this._sequenceRef = new Dictionary(true);
-            super();
-        }
 
         public static function reset():void
         {
@@ -114,5 +109,5 @@
 
 
     }
-}//package com.ankamagames.atouin.managers
+} com.ankamagames.atouin.managers
 

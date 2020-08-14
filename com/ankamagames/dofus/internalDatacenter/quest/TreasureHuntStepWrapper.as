@@ -1,9 +1,9 @@
-﻿package com.ankamagames.dofus.internalDatacenter.quest
+package com.ankamagames.dofus.internalDatacenter.quest
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
-    import avmplus.getQualifiedClassName;
+    import flash.utils.getQualifiedClassName;
     import com.ankamagames.dofus.internalDatacenter.world.WorldPointWrapper;
     import com.ankamagames.dofus.datacenter.world.MapPosition;
     import com.ankamagames.dofus.datacenter.world.WorldMap;
@@ -24,7 +24,7 @@
         public var index:uint;
         public var type:uint;
         public var direction:int = -1;
-        public var mapId:int = -1;
+        public var mapId:Number = -1;
         public var poiLabel:uint = 0;
         public var flagState:int = -1;
         public var count:uint = 0;
@@ -32,10 +32,10 @@
         private var _stepRolloverText:String;
 
 
-        public static function create(type:uint, index:uint, direction:int, mapId:int, poiLabel:uint, flagState:int=-1, count:uint=0):TreasureHuntStepWrapper
+        public static function create(_arg_1:uint, index:uint, direction:int, mapId:Number, poiLabel:uint, flagState:int=-1, count:uint=0):TreasureHuntStepWrapper
         {
             var item:TreasureHuntStepWrapper = new (TreasureHuntStepWrapper)();
-            item.type = type;
+            item.type = _arg_1;
             item.index = index;
             item.direction = direction;
             item.mapId = mapId;
@@ -53,14 +53,14 @@
             var wm:WorldMap;
             var poi:PointOfInterest;
             var npc:Npc;
-            if (!(this._stepText))
+            if (!this._stepText)
             {
                 if (this.type == TreasureHuntStepTypeEnum.START)
                 {
                     map = new WorldPointWrapper(this.mapId);
                     this._stepText = (((((I18n.getUiText("ui.common.start") + " [") + map.outdoorX) + ",") + map.outdoorY) + "]");
                     p = MapPosition.getMapPositionById(this.mapId);
-                    if (((p) && ((p.worldMap > 1))))
+                    if (((p) && (p.worldMap > 1)))
                     {
                         wm = WorldMap.getWorldMapById(p.worldMap);
                         this._stepText = (this._stepText + ((wm) ? (" " + wm.name) : ""));
@@ -119,7 +119,7 @@
             var directionName:String;
             var subArea:SubArea;
             var area:Area;
-            if (!(this._stepRolloverText))
+            if (!this._stepRolloverText)
             {
                 if (this.type == TreasureHuntStepTypeEnum.START)
                 {
@@ -135,7 +135,7 @@
                 }
                 else
                 {
-                    if ((((this.type == TreasureHuntStepTypeEnum.DIRECTION_TO_POI)) || ((this.type == TreasureHuntStepTypeEnum.DIRECTION_TO_HINT))))
+                    if (((this.type == TreasureHuntStepTypeEnum.DIRECTION_TO_POI) || (this.type == TreasureHuntStepTypeEnum.DIRECTION_TO_HINT)))
                     {
                         if (this.direction == DirectionsEnum.RIGHT)
                         {
@@ -257,9 +257,9 @@
             return (this._stepRolloverText);
         }
 
-        public function update(type:uint, index:uint, direction:int, mapId:int, poiLabel:uint, flagState:int=-1, count:uint=0):void
+        public function update(_arg_1:uint, index:uint, direction:int, mapId:Number, poiLabel:uint, flagState:int=-1, count:uint=0):void
         {
-            this.type = type;
+            this.type = _arg_1;
             this.index = index;
             this.direction = direction;
             this.mapId = mapId;
@@ -270,5 +270,5 @@
 
 
     }
-}//package com.ankamagames.dofus.internalDatacenter.quest
+} com.ankamagames.dofus.internalDatacenter.quest
 

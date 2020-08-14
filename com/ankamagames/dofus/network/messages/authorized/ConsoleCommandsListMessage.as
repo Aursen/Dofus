@@ -1,32 +1,28 @@
-﻿package com.ankamagames.dofus.network.messages.authorized
+package com.ankamagames.dofus.network.messages.authorized
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
     import __AS3__.vec.Vector;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
     import __AS3__.vec.*;
 
-    [Trusted]
     public class ConsoleCommandsListMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 6127;
 
         private var _isInitialized:Boolean = false;
-        public var aliases:Vector.<String>;
-        public var args:Vector.<String>;
-        public var descriptions:Vector.<String>;
+        public var aliases:Vector.<String> = new Vector.<String>();
+        public var args:Vector.<String> = new Vector.<String>();
+        public var descriptions:Vector.<String> = new Vector.<String>();
+        private var _aliasestree:FuncTree;
+        private var _argstree:FuncTree;
+        private var _descriptionstree:FuncTree;
 
-        public function ConsoleCommandsListMessage()
-        {
-            this.aliases = new Vector.<String>();
-            this.args = new Vector.<String>();
-            this.descriptions = new Vector.<String>();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
@@ -65,6 +61,14 @@
         override public function unpack(input:ICustomDataInput, length:uint):void
         {
             this.deserialize(input);
+        }
+
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
         }
 
         public function serialize(output:ICustomDataOutput):void
@@ -133,7 +137,70 @@
             };
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_ConsoleCommandsListMessage(tree);
+        }
+
+        public function deserializeAsyncAs_ConsoleCommandsListMessage(tree:FuncTree):void
+        {
+            this._aliasestree = tree.addChild(this._aliasestreeFunc);
+            this._argstree = tree.addChild(this._argstreeFunc);
+            this._descriptionstree = tree.addChild(this._descriptionstreeFunc);
+        }
+
+        private function _aliasestreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._aliasestree.addChild(this._aliasesFunc);
+                i++;
+            };
+        }
+
+        private function _aliasesFunc(input:ICustomDataInput):void
+        {
+            var _val:String = input.readUTF();
+            this.aliases.push(_val);
+        }
+
+        private function _argstreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._argstree.addChild(this._argsFunc);
+                i++;
+            };
+        }
+
+        private function _argsFunc(input:ICustomDataInput):void
+        {
+            var _val:String = input.readUTF();
+            this.args.push(_val);
+        }
+
+        private function _descriptionstreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._descriptionstree.addChild(this._descriptionsFunc);
+                i++;
+            };
+        }
+
+        private function _descriptionsFunc(input:ICustomDataInput):void
+        {
+            var _val:String = input.readUTF();
+            this.descriptions.push(_val);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.authorized
+} com.ankamagames.dofus.network.messages.authorized
 

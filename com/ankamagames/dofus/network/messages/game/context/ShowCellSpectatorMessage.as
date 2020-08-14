@@ -1,12 +1,12 @@
-﻿package com.ankamagames.dofus.network.messages.game.context
+package com.ankamagames.dofus.network.messages.game.context
 {
     import com.ankamagames.jerakine.network.INetworkMessage;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class ShowCellSpectatorMessage extends ShowCellMessage implements INetworkMessage 
     {
 
@@ -18,7 +18,7 @@
 
         override public function get isInitialized():Boolean
         {
-            return (((super.isInitialized) && (this._isInitialized)));
+            return ((super.isInitialized) && (this._isInitialized));
         }
 
         override public function getMessageId():uint
@@ -26,7 +26,7 @@
             return (6158);
         }
 
-        public function initShowCellSpectatorMessage(sourceId:int=0, cellId:uint=0, playerName:String=""):ShowCellSpectatorMessage
+        public function initShowCellSpectatorMessage(sourceId:Number=0, cellId:uint=0, playerName:String=""):ShowCellSpectatorMessage
         {
             super.initShowCellMessage(sourceId, cellId);
             this.playerName = playerName;
@@ -53,6 +53,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         override public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_ShowCellSpectatorMessage(output);
@@ -72,10 +80,26 @@
         public function deserializeAs_ShowCellSpectatorMessage(input:ICustomDataInput):void
         {
             super.deserialize(input);
+            this._playerNameFunc(input);
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_ShowCellSpectatorMessage(tree);
+        }
+
+        public function deserializeAsyncAs_ShowCellSpectatorMessage(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._playerNameFunc);
+        }
+
+        private function _playerNameFunc(input:ICustomDataInput):void
+        {
             this.playerName = input.readUTF();
         }
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.context
+} com.ankamagames.dofus.network.messages.game.context
 

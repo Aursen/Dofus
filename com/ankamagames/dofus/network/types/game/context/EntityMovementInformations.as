@@ -1,25 +1,21 @@
-﻿package com.ankamagames.dofus.network.types.game.context
+package com.ankamagames.dofus.network.types.game.context
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import __AS3__.vec.Vector;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
     import __AS3__.vec.*;
 
-    [Trusted]
     public class EntityMovementInformations implements INetworkType 
     {
 
         public static const protocolId:uint = 63;
 
         public var id:int = 0;
-        public var steps:Vector.<int>;
+        public var steps:Vector.<int> = new Vector.<int>();
+        private var _stepstree:FuncTree;
 
-        public function EntityMovementInformations()
-        {
-            this.steps = new Vector.<int>();
-            super();
-        }
 
         public function getTypeId():uint
         {
@@ -64,7 +60,7 @@
         public function deserializeAs_EntityMovementInformations(input:ICustomDataInput):void
         {
             var _val2:int;
-            this.id = input.readInt();
+            this._idFunc(input);
             var _stepsLen:uint = input.readUnsignedShort();
             var _i2:uint;
             while (_i2 < _stepsLen)
@@ -75,7 +71,40 @@
             };
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_EntityMovementInformations(tree);
+        }
+
+        public function deserializeAsyncAs_EntityMovementInformations(tree:FuncTree):void
+        {
+            tree.addChild(this._idFunc);
+            this._stepstree = tree.addChild(this._stepstreeFunc);
+        }
+
+        private function _idFunc(input:ICustomDataInput):void
+        {
+            this.id = input.readInt();
+        }
+
+        private function _stepstreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._stepstree.addChild(this._stepsFunc);
+                i++;
+            };
+        }
+
+        private function _stepsFunc(input:ICustomDataInput):void
+        {
+            var _val:int = input.readByte();
+            this.steps.push(_val);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.types.game.context
+} com.ankamagames.dofus.network.types.game.context
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.common.steps
+package com.ankamagames.dofus.logic.game.common.steps
 {
     import com.ankamagames.jerakine.sequencer.AbstractSequencable;
     import com.ankamagames.dofus.scripts.api.EntityApi;
@@ -10,9 +10,9 @@
     public class RemoveEntityStep extends AbstractSequencable 
     {
 
-        private var _id:int;
+        private var _id:Number;
 
-        public function RemoveEntityStep(pEntityId:int)
+        public function RemoveEntityStep(pEntityId:Number)
         {
             this._id = pEntityId;
         }
@@ -37,5 +37,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.steps
+} com.ankamagames.dofus.logic.game.common.steps
 

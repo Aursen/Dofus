@@ -1,4 +1,4 @@
-﻿package com.ankamagames.tiphon.types
+package com.ankamagames.tiphon.types
 {
     import flash.display.MovieClip;
     import flash.events.Event;
@@ -21,7 +21,7 @@
         {
             removeEventListener(Event.ADDED_TO_STAGE, this.onAdded);
             var currentDo:DisplayObject = (e.target as DisplayObject);
-            while (((!((currentDo is TiphonSprite))) && (currentDo.parent)))
+            while (((!(currentDo is TiphonSprite)) && (currentDo.parent)))
             {
                 currentDo = currentDo.parent;
             };
@@ -38,7 +38,7 @@
             {
                 if ((current is ScriptedAnimation))
                 {
-                    return ((current as ScriptedAnimation));
+                    return (current as ScriptedAnimation);
                 };
                 current = current.parent;
             };
@@ -47,5 +47,5 @@
 
 
     }
-}//package com.ankamagames.tiphon.types
+} com.ankamagames.tiphon.types
 

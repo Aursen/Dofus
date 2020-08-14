@@ -1,16 +1,15 @@
-﻿package com.ankamagames.dofus.network.types.game.interactive.skill
+package com.ankamagames.dofus.network.types.game.interactive.skill
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class SkillActionDescriptionCraft extends SkillActionDescription implements INetworkType 
     {
 
         public static const protocolId:uint = 100;
 
-        public var maxSlots:uint = 0;
         public var probability:uint = 0;
 
 
@@ -19,10 +18,9 @@
             return (100);
         }
 
-        public function initSkillActionDescriptionCraft(skillId:uint=0, maxSlots:uint=0, probability:uint=0):SkillActionDescriptionCraft
+        public function initSkillActionDescriptionCraft(skillId:uint=0, probability:uint=0):SkillActionDescriptionCraft
         {
             super.initSkillActionDescription(skillId);
-            this.maxSlots = maxSlots;
             this.probability = probability;
             return (this);
         }
@@ -30,7 +28,6 @@
         override public function reset():void
         {
             super.reset();
-            this.maxSlots = 0;
             this.probability = 0;
         }
 
@@ -42,11 +39,6 @@
         public function serializeAs_SkillActionDescriptionCraft(output:ICustomDataOutput):void
         {
             super.serializeAs_SkillActionDescription(output);
-            if (this.maxSlots < 0)
-            {
-                throw (new Error((("Forbidden value (" + this.maxSlots) + ") on element maxSlots.")));
-            };
-            output.writeByte(this.maxSlots);
             if (this.probability < 0)
             {
                 throw (new Error((("Forbidden value (" + this.probability) + ") on element probability.")));
@@ -62,11 +54,22 @@
         public function deserializeAs_SkillActionDescriptionCraft(input:ICustomDataInput):void
         {
             super.deserialize(input);
-            this.maxSlots = input.readByte();
-            if (this.maxSlots < 0)
-            {
-                throw (new Error((("Forbidden value (" + this.maxSlots) + ") on element of SkillActionDescriptionCraft.maxSlots.")));
-            };
+            this._probabilityFunc(input);
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_SkillActionDescriptionCraft(tree);
+        }
+
+        public function deserializeAsyncAs_SkillActionDescriptionCraft(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._probabilityFunc);
+        }
+
+        private function _probabilityFunc(input:ICustomDataInput):void
+        {
             this.probability = input.readByte();
             if (this.probability < 0)
             {
@@ -76,5 +79,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.interactive.skill
+} com.ankamagames.dofus.network.types.game.interactive.skill
 

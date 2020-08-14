@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.handlers.messages
+package com.ankamagames.jerakine.handlers.messages
 {
     public class InvalidCancelError extends Error 
     {
@@ -9,5 +9,5 @@
         }
 
     }
-}//package com.ankamagames.jerakine.handlers.messages
+} com.ankamagames.jerakine.handlers.messages
 

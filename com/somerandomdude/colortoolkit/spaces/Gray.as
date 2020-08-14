@@ -1,4 +1,4 @@
-﻿package com.somerandomdude.colortoolkit.spaces
+package com.somerandomdude.colortoolkit.spaces
 {
     import com.somerandomdude.colortoolkit.CoreColor;
 
@@ -47,15 +47,15 @@
             var gray:Number = (((0.3 * r) + (0.59 * g)) + (0.11 * b));
             this._gray = gray;
             this._grayscale = (((gray << 16) ^ (gray << 8)) ^ gray);
-            return ((((gray << 16) ^ (gray << 8)) ^ gray));
+            return (((gray << 16) ^ (gray << 8)) ^ gray);
         }
 
         private function convertGrayValuetoHex(gray:Number):int
         {
-            return ((((gray << 16) ^ (gray << 8)) ^ gray));
+            return (((gray << 16) ^ (gray << 8)) ^ gray);
         }
 
 
     }
-}//package com.somerandomdude.colortoolkit.spaces
+} com.somerandomdude.colortoolkit.spaces
 

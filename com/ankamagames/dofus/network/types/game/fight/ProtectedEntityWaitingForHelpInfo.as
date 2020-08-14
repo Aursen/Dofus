@@ -1,8 +1,9 @@
-﻿package com.ankamagames.dofus.network.types.game.fight
+package com.ankamagames.dofus.network.types.game.fight
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
     public class ProtectedEntityWaitingForHelpInfo implements INetworkType 
     {
@@ -57,8 +58,35 @@
 
         public function deserializeAs_ProtectedEntityWaitingForHelpInfo(input:ICustomDataInput):void
         {
+            this._timeLeftBeforeFightFunc(input);
+            this._waitTimeForPlacementFunc(input);
+            this._nbPositionForDefensorsFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_ProtectedEntityWaitingForHelpInfo(tree);
+        }
+
+        public function deserializeAsyncAs_ProtectedEntityWaitingForHelpInfo(tree:FuncTree):void
+        {
+            tree.addChild(this._timeLeftBeforeFightFunc);
+            tree.addChild(this._waitTimeForPlacementFunc);
+            tree.addChild(this._nbPositionForDefensorsFunc);
+        }
+
+        private function _timeLeftBeforeFightFunc(input:ICustomDataInput):void
+        {
             this.timeLeftBeforeFight = input.readInt();
+        }
+
+        private function _waitTimeForPlacementFunc(input:ICustomDataInput):void
+        {
             this.waitTimeForPlacement = input.readInt();
+        }
+
+        private function _nbPositionForDefensorsFunc(input:ICustomDataInput):void
+        {
             this.nbPositionForDefensors = input.readByte();
             if (this.nbPositionForDefensors < 0)
             {
@@ -68,5 +96,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.fight
+} com.ankamagames.dofus.network.types.game.fight
 

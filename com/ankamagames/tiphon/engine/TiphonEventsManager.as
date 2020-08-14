@@ -1,4 +1,4 @@
-﻿package com.ankamagames.tiphon.engine
+package com.ankamagames.tiphon.engine
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
@@ -59,7 +59,7 @@
             while (++i < num)
             {
                 el = _listeners[i];
-                if ((((el.listener == pListener)) && ((el.typesEvents == pTypes))))
+                if (((el.listener == pListener) && (el.typesEvents == pTypes)))
                 {
                     return;
                 };
@@ -101,7 +101,7 @@
             var numListener:int;
             var k:int;
             var eListener:EventListener;
-            if (!(this._weakTiphonSprite))
+            if (!this._weakTiphonSprite)
             {
                 return;
             };
@@ -137,7 +137,7 @@
                     while (++k < numListener)
                     {
                         eListener = _listeners[k];
-                        if ((((((eListener.typesEvents == event.type)) && ((event.animationType == spriteAnimation)))) && ((event.direction == spriteDirection))))
+                        if ((((eListener.typesEvents == event.type) && (event.animationType == spriteAnimation)) && (event.direction == spriteDirection)))
                         {
                             eListener.listener.handleFLAEvent(event.animationName, event.type, event.params, ts);
                         };
@@ -185,15 +185,16 @@
         {
             var event:TiphonEventInfo;
             var newEvent:TiphonEventInfo;
-            var _local_6:TiphonEventInfo;
+            var labelEvent:TiphonEventInfo;
             var ts:TiphonSprite;
             if (this._events[pFrame] == null)
             {
                 this._events[pFrame] = new Vector.<TiphonEventInfo>();
             };
+            pAnimationName = TiphonEventInfo.parseAnimationName(pAnimationName);
             for each (event in this._events[pFrame])
             {
-                if ((((event.animationName == pAnimationName)) && ((event.label == pLabelName))))
+                if (((event.animationName == pAnimationName) && (event.label == pLabelName)))
                 {
                     return;
                 };
@@ -207,13 +208,13 @@
             }
             else
             {
-                _local_6 = this.parseLabel(pLabelName);
-                if (_local_6)
+                labelEvent = this.parseLabel(pLabelName);
+                if (labelEvent)
                 {
-                    _eventsDic[pLabelName] = _local_6;
-                    _local_6.animationName = pAnimationName;
-                    _local_6.label = pLabelName;
-                    this._events[pFrame].push(_local_6);
+                    _eventsDic[pLabelName] = labelEvent;
+                    labelEvent.animationName = pAnimationName;
+                    labelEvent.label = pLabelName;
+                    this._events[pFrame].push(labelEvent);
                 }
                 else
                 {
@@ -232,13 +233,14 @@
             var events:Vector.<TiphonEventInfo>;
             var newEvents:Vector.<TiphonEventInfo>;
             var tei:TiphonEventInfo;
+            pAnimation = TiphonEventInfo.parseAnimationName(pAnimation);
             for (frame in this._events)
             {
                 events = this._events[frame];
                 newEvents = new Vector.<TiphonEventInfo>();
                 for each (tei in events)
                 {
-                    if (((!((tei.animationName == pAnimation))) || (!((tei.type == pTypeName)))))
+                    if (((!(tei.animationName == pAnimation)) || (!(tei.type == pTypeName))))
                     {
                         newEvents.push(tei);
                     };
@@ -275,7 +277,6 @@
                     returnEvent = new TiphonEventInfo(TiphonEvent.PLAYANIM_EVENT, param);
                     break;
                 case BALISE_EVT.toUpperCase():
-                    trace(("BALISE_EVT : " + pLabelName));
                     param = pLabelName.split(BALISE_PARAM_BEGIN)[1];
                     param = param.split(BALISE_PARAM_END)[0];
                     returnEvent = new TiphonEventInfo(TiphonEvent.EVT_EVENT, param);
@@ -306,5 +307,5 @@
 
 
     }
-}//package com.ankamagames.tiphon.engine
+} com.ankamagames.tiphon.engine
 

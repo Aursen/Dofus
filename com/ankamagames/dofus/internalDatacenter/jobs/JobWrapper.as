@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.internalDatacenter.jobs
+package com.ankamagames.dofus.internalDatacenter.jobs
 {
     import flash.utils.Proxy;
     import com.ankamagames.jerakine.interfaces.IDataCenter;
@@ -45,7 +45,7 @@
 
         public function get iconUri():Uri
         {
-            if (!(this._uri))
+            if (!this._uri)
             {
                 this._uri = new Uri(XmlConfig.getInstance().getEntry("config.content.path").concat("gfx/jobs/").concat(this._id).concat(".png"));
             };
@@ -124,7 +124,7 @@
             return (Job.getJobById(this._id));
         }
 
-        override flash_proxy function getProperty(name:*)
+        override flash_proxy function getProperty(name:*):*
         {
             var l:* = undefined;
             var r:* = undefined;
@@ -133,7 +133,7 @@
                 return (this[name]);
             };
             l = this.job;
-            if (!(l))
+            if (!l)
             {
                 r = "";
             };
@@ -143,7 +143,7 @@
             }
             catch(e:Error)
             {
-                return (("Error_on_job_" + name));
+                return ("Error_on_job_" + name);
             };
         }
 
@@ -154,5 +154,5 @@
 
 
     }
-}//package com.ankamagames.dofus.internalDatacenter.jobs
+} com.ankamagames.dofus.internalDatacenter.jobs
 

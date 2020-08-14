@@ -1,10 +1,10 @@
-﻿package com.ankamagames.dofus.network.types.game.data.items.effects
+package com.ankamagames.dofus.network.types.game.data.items.effects
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class ObjectEffectDuration extends ObjectEffect implements INetworkType 
     {
 
@@ -70,16 +70,44 @@
         public function deserializeAs_ObjectEffectDuration(input:ICustomDataInput):void
         {
             super.deserialize(input);
+            this._daysFunc(input);
+            this._hoursFunc(input);
+            this._minutesFunc(input);
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_ObjectEffectDuration(tree);
+        }
+
+        public function deserializeAsyncAs_ObjectEffectDuration(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._daysFunc);
+            tree.addChild(this._hoursFunc);
+            tree.addChild(this._minutesFunc);
+        }
+
+        private function _daysFunc(input:ICustomDataInput):void
+        {
             this.days = input.readVarUhShort();
             if (this.days < 0)
             {
                 throw (new Error((("Forbidden value (" + this.days) + ") on element of ObjectEffectDuration.days.")));
             };
+        }
+
+        private function _hoursFunc(input:ICustomDataInput):void
+        {
             this.hours = input.readByte();
             if (this.hours < 0)
             {
                 throw (new Error((("Forbidden value (" + this.hours) + ") on element of ObjectEffectDuration.hours.")));
             };
+        }
+
+        private function _minutesFunc(input:ICustomDataInput):void
+        {
             this.minutes = input.readByte();
             if (this.minutes < 0)
             {
@@ -89,5 +117,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.data.items.effects
+} com.ankamagames.dofus.network.types.game.data.items.effects
 

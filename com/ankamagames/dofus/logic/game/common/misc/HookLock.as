@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.common.misc
+package com.ankamagames.dofus.logic.game.common.misc
 {
     import __AS3__.vec.Vector;
     import com.ankamagames.berilia.types.data.Hook;
@@ -40,7 +40,7 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.misc
+} com.ankamagames.dofus.logic.game.common.misc
 
 import com.ankamagames.berilia.types.data.Hook;
 import com.ankamagames.berilia.managers.KernelEventsManager;
@@ -95,37 +95,38 @@ class HookDef
         {
             case 0:
                 KernelEventsManager.getInstance().processCallback(this.hook);
-                return;
+                break;
             case 1:
                 KernelEventsManager.getInstance().processCallback(this.hook, this.args[0]);
-                return;
+                break;
             case 2:
                 KernelEventsManager.getInstance().processCallback(this.hook, this.args[0], this.args[1]);
-                return;
+                break;
             case 3:
                 KernelEventsManager.getInstance().processCallback(this.hook, this.args[0], this.args[1], this.args[2]);
-                return;
+                break;
             case 4:
                 KernelEventsManager.getInstance().processCallback(this.hook, this.args[0], this.args[1], this.args[2], this.args[3]);
-                return;
+                break;
             case 5:
                 KernelEventsManager.getInstance().processCallback(this.hook, this.args[0], this.args[1], this.args[2], this.args[3], this.args[4]);
-                return;
+                break;
             case 6:
                 KernelEventsManager.getInstance().processCallback(this.hook, this.args[0], this.args[1], this.args[2], this.args[3], this.args[4], this.args[5]);
-                return;
+                break;
             case 7:
                 KernelEventsManager.getInstance().processCallback(this.hook, this.args[0], this.args[1], this.args[2], this.args[3], this.args[4], this.args[5], this.args[6]);
-                return;
+                break;
             case 8:
                 KernelEventsManager.getInstance().processCallback(this.hook, this.args[0], this.args[1], this.args[2], this.args[3], this.args[4], this.args[5], this.args[6], this.args[7]);
-                return;
+                break;
             case 9:
                 KernelEventsManager.getInstance().processCallback(this.hook, this.args[0], this.args[1], this.args[2], this.args[3], this.args[4], this.args[5], this.args[6], this.args[7], this.args[8]);
-                return;
+                break;
         };
     }
 
 
 }
+
 

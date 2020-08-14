@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.utils.benchmark.monitoring
+package com.ankamagames.jerakine.utils.benchmark.monitoring
 {
     public class List 
     {
@@ -13,5 +13,5 @@
         }
 
     }
-}//package com.ankamagames.jerakine.utils.benchmark.monitoring
+} com.ankamagames.jerakine.utils.benchmark.monitoring
 

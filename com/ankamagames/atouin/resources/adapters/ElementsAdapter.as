@@ -1,4 +1,4 @@
-﻿package com.ankamagames.atouin.resources.adapters
+package com.ankamagames.atouin.resources.adapters
 {
     import com.ankamagames.jerakine.resources.adapters.AbstractUrlLoaderAdapter;
     import com.ankamagames.jerakine.resources.adapters.IAdapter;
@@ -14,7 +14,7 @@
     {
 
 
-        override protected function getResource(dataFormat:String, data:*)
+        override protected function getResource(dataFormat:String, data:*):*
         {
             var ba:ByteArray = (data as ByteArray);
             ba.endian = Endian.BIG_ENDIAN;
@@ -37,7 +37,6 @@
                     dispatchFailure("Wrong header file.", ResourceErrorCode.MALFORMED_ELE_FILE);
                     return (null);
                 };
-                trace("Using a compressed ELE file !!");
             };
             ba.position = 0;
             var ele:Elements = Elements.getInstance();
@@ -57,5 +56,5 @@
 
 
     }
-}//package com.ankamagames.atouin.resources.adapters
+} com.ankamagames.atouin.resources.adapters
 

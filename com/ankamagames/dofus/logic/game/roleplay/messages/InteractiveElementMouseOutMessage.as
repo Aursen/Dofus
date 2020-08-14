@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.roleplay.messages
+package com.ankamagames.dofus.logic.game.roleplay.messages
 {
     import com.ankamagames.jerakine.messages.Message;
     import com.ankamagames.dofus.network.types.game.interactive.InteractiveElement;
@@ -20,5 +20,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.roleplay.messages
+} com.ankamagames.dofus.logic.game.roleplay.messages
 

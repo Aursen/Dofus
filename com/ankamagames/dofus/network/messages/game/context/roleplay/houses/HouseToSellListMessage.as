@@ -1,16 +1,16 @@
-﻿package com.ankamagames.dofus.network.messages.game.context.roleplay.houses
+package com.ankamagames.dofus.network.messages.game.context.roleplay.houses
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
     import __AS3__.vec.Vector;
     import com.ankamagames.dofus.network.types.game.house.HouseInformationsForSell;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
     import __AS3__.vec.*;
 
-    [Trusted]
     public class HouseToSellListMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -19,13 +19,9 @@
         private var _isInitialized:Boolean = false;
         public var pageIndex:uint = 0;
         public var totalPage:uint = 0;
-        public var houseList:Vector.<HouseInformationsForSell>;
+        public var houseList:Vector.<HouseInformationsForSell> = new Vector.<HouseInformationsForSell>();
+        private var _houseListtree:FuncTree;
 
-        public function HouseToSellListMessage()
-        {
-            this.houseList = new Vector.<HouseInformationsForSell>();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
@@ -66,6 +62,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_HouseToSellListMessage(output);
@@ -100,16 +104,8 @@
         public function deserializeAs_HouseToSellListMessage(input:ICustomDataInput):void
         {
             var _item3:HouseInformationsForSell;
-            this.pageIndex = input.readVarUhShort();
-            if (this.pageIndex < 0)
-            {
-                throw (new Error((("Forbidden value (" + this.pageIndex) + ") on element of HouseToSellListMessage.pageIndex.")));
-            };
-            this.totalPage = input.readVarUhShort();
-            if (this.totalPage < 0)
-            {
-                throw (new Error((("Forbidden value (" + this.totalPage) + ") on element of HouseToSellListMessage.totalPage.")));
-            };
+            this._pageIndexFunc(input);
+            this._totalPageFunc(input);
             var _houseListLen:uint = input.readUnsignedShort();
             var _i3:uint;
             while (_i3 < _houseListLen)
@@ -121,7 +117,55 @@
             };
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_HouseToSellListMessage(tree);
+        }
+
+        public function deserializeAsyncAs_HouseToSellListMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._pageIndexFunc);
+            tree.addChild(this._totalPageFunc);
+            this._houseListtree = tree.addChild(this._houseListtreeFunc);
+        }
+
+        private function _pageIndexFunc(input:ICustomDataInput):void
+        {
+            this.pageIndex = input.readVarUhShort();
+            if (this.pageIndex < 0)
+            {
+                throw (new Error((("Forbidden value (" + this.pageIndex) + ") on element of HouseToSellListMessage.pageIndex.")));
+            };
+        }
+
+        private function _totalPageFunc(input:ICustomDataInput):void
+        {
+            this.totalPage = input.readVarUhShort();
+            if (this.totalPage < 0)
+            {
+                throw (new Error((("Forbidden value (" + this.totalPage) + ") on element of HouseToSellListMessage.totalPage.")));
+            };
+        }
+
+        private function _houseListtreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._houseListtree.addChild(this._houseListFunc);
+                i++;
+            };
+        }
+
+        private function _houseListFunc(input:ICustomDataInput):void
+        {
+            var _item:HouseInformationsForSell = new HouseInformationsForSell();
+            _item.deserialize(input);
+            this.houseList.push(_item);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.context.roleplay.houses
+} com.ankamagames.dofus.network.messages.game.context.roleplay.houses
 

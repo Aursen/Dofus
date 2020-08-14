@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.queues
+package com.ankamagames.dofus.network.messages.queues
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class QueueStatusMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -55,6 +55,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_QueueStatusMessage(output);
@@ -62,12 +70,12 @@
 
         public function serializeAs_QueueStatusMessage(output:ICustomDataOutput):void
         {
-            if ((((this.position < 0)) || ((this.position > 0xFFFF))))
+            if (((this.position < 0) || (this.position > 0xFFFF)))
             {
                 throw (new Error((("Forbidden value (" + this.position) + ") on element position.")));
             };
             output.writeShort(this.position);
-            if ((((this.total < 0)) || ((this.total > 0xFFFF))))
+            if (((this.total < 0) || (this.total > 0xFFFF)))
             {
                 throw (new Error((("Forbidden value (" + this.total) + ") on element total.")));
             };
@@ -81,13 +89,34 @@
 
         public function deserializeAs_QueueStatusMessage(input:ICustomDataInput):void
         {
+            this._positionFunc(input);
+            this._totalFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_QueueStatusMessage(tree);
+        }
+
+        public function deserializeAsyncAs_QueueStatusMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._positionFunc);
+            tree.addChild(this._totalFunc);
+        }
+
+        private function _positionFunc(input:ICustomDataInput):void
+        {
             this.position = input.readUnsignedShort();
-            if ((((this.position < 0)) || ((this.position > 0xFFFF))))
+            if (((this.position < 0) || (this.position > 0xFFFF)))
             {
                 throw (new Error((("Forbidden value (" + this.position) + ") on element of QueueStatusMessage.position.")));
             };
+        }
+
+        private function _totalFunc(input:ICustomDataInput):void
+        {
             this.total = input.readUnsignedShort();
-            if ((((this.total < 0)) || ((this.total > 0xFFFF))))
+            if (((this.total < 0) || (this.total > 0xFFFF)))
             {
                 throw (new Error((("Forbidden value (" + this.total) + ") on element of QueueStatusMessage.total.")));
             };
@@ -95,5 +124,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.queues
+} com.ankamagames.dofus.network.messages.queues
 

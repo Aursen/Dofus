@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.authorized
+package com.ankamagames.dofus.network.messages.authorized
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class ConsoleMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -28,9 +28,9 @@
             return (75);
         }
 
-        public function initConsoleMessage(type:uint=0, content:String=""):ConsoleMessage
+        public function initConsoleMessage(_arg_1:uint=0, content:String=""):ConsoleMessage
         {
-            this.type = type;
+            this.type = _arg_1;
             this.content = content;
             this._isInitialized = true;
             return (this);
@@ -55,6 +55,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_ConsoleMessage(output);
@@ -73,15 +81,36 @@
 
         public function deserializeAs_ConsoleMessage(input:ICustomDataInput):void
         {
+            this._typeFunc(input);
+            this._contentFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_ConsoleMessage(tree);
+        }
+
+        public function deserializeAsyncAs_ConsoleMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._typeFunc);
+            tree.addChild(this._contentFunc);
+        }
+
+        private function _typeFunc(input:ICustomDataInput):void
+        {
             this.type = input.readByte();
             if (this.type < 0)
             {
                 throw (new Error((("Forbidden value (" + this.type) + ") on element of ConsoleMessage.type.")));
             };
+        }
+
+        private function _contentFunc(input:ICustomDataInput):void
+        {
             this.content = input.readUTF();
         }
 
 
     }
-}//package com.ankamagames.dofus.network.messages.authorized
+} com.ankamagames.dofus.network.messages.authorized
 

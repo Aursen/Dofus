@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.internalDatacenter.spells
+package com.ankamagames.dofus.internalDatacenter.spells
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.dofus.datacenter.spells.Spell;
@@ -9,14 +9,16 @@
         public var effects:Array;
         public var spellName:String = "";
         public var casterName:String = "";
+        public var fromBuff:Boolean = false;
 
-        public function EffectsWrapper(effect:Array, spell:Spell, name:String)
+        public function EffectsWrapper(aeffects:Array, spell:Spell, name:String, buff:Boolean)
         {
-            this.effects = effect;
+            this.effects = aeffects;
             this.spellName = spell.name;
             this.casterName = name;
+            this.fromBuff = buff;
         }
 
     }
-}//package com.ankamagames.dofus.internalDatacenter.spells
+} com.ankamagames.dofus.internalDatacenter.spells
 

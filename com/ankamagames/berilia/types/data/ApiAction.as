@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.types.data
+package com.ankamagames.berilia.types.data
 {
     import flash.utils.Dictionary;
     import com.ankamagames.berilia.utils.errors.BeriliaError;
@@ -9,7 +9,6 @@
         public static var MEMORY_LOG:Dictionary = new Dictionary(true);
         protected static var _apiActionNameList:Array = new Array();
 
-        protected var _trusted:Boolean;
         protected var _name:String;
         protected var _actionClass:Class;
         protected var _maxUsePerFrame:uint = 1;
@@ -17,9 +16,9 @@
         protected var _minimalUseInterval:uint = 0;
         protected var _needConfirmation:Boolean;
 
-        public function ApiAction(name:String, actionClass:Class, trusted:Boolean, needInteraction:Boolean, maxUsePerFrame:uint, minimalUseInterval:uint, needConfirmation:Boolean)
+        public function ApiAction(name:String, actionClass:Class, needInteraction:Boolean, maxUsePerFrame:uint, minimalUseInterval:uint, needConfirmation:Boolean)
         {
-            if (!(_apiActionNameList))
+            if (!_apiActionNameList)
             {
                 _apiActionNameList = new Array();
             };
@@ -30,7 +29,6 @@
             _apiActionNameList[name] = this;
             this._name = name;
             this._actionClass = actionClass;
-            this._trusted = trusted;
             this._needInteraction = needInteraction;
             this._maxUsePerFrame = maxUsePerFrame;
             this._minimalUseInterval = minimalUseInterval;
@@ -48,11 +46,6 @@
             return (_apiActionNameList);
         }
 
-
-        public function get trusted():Boolean
-        {
-            return (this._trusted);
-        }
 
         public function get name():String
         {
@@ -86,5 +79,5 @@
 
 
     }
-}//package com.ankamagames.berilia.types.data
+} com.ankamagames.berilia.types.data
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.inventory.exchanges
+package com.ankamagames.dofus.network.messages.game.inventory.exchanges
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class ExchangeBidHouseGenericItemAddedMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -52,6 +52,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_ExchangeBidHouseGenericItemAddedMessage(output);
@@ -73,6 +81,21 @@
 
         public function deserializeAs_ExchangeBidHouseGenericItemAddedMessage(input:ICustomDataInput):void
         {
+            this._objGenericIdFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_ExchangeBidHouseGenericItemAddedMessage(tree);
+        }
+
+        public function deserializeAsyncAs_ExchangeBidHouseGenericItemAddedMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._objGenericIdFunc);
+        }
+
+        private function _objGenericIdFunc(input:ICustomDataInput):void
+        {
             this.objGenericId = input.readVarUhShort();
             if (this.objGenericId < 0)
             {
@@ -82,5 +105,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.inventory.exchanges
+} com.ankamagames.dofus.network.messages.game.inventory.exchanges
 

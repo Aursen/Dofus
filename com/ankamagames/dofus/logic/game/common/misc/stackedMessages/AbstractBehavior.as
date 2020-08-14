@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.common.misc.stackedMessages
+package com.ankamagames.dofus.logic.game.common.misc.stackedMessages
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
@@ -26,13 +26,14 @@
         public var error:Boolean = false;
         public var actionStarted:Boolean = false;
         public var sprite:Sprite;
-        public var pendingMessage:Message;
+        private var _pendingMessage:Message;
+        private var _processedMessage:Message;
 
 
-        public static function createFake(type:String, params:Array=null):AbstractBehavior
+        public static function createFake(_arg_1:String, params:Array=null):AbstractBehavior
         {
             var behavior:AbstractBehavior;
-            switch (type)
+            switch (_arg_1)
             {
                 case StackActionEnum.MOVE:
                     behavior = new MoveBehavior();
@@ -42,6 +43,25 @@
             return (behavior);
         }
 
+
+        public function get pendingMessage():Message
+        {
+            return (this._pendingMessage);
+        }
+
+        public function set pendingMessage(msg:Message):void
+        {
+            this._pendingMessage = msg;
+            if (((this._pendingMessage) && (Object(this._pendingMessage).hasOwnProperty("fromStack"))))
+            {
+                this._pendingMessage["fromStack"] = true;
+            };
+        }
+
+        public function get processedMessage():Message
+        {
+            return (this._processedMessage);
+        }
 
         public function processInputMessage(pMsgToProcess:Message, pMode:String):Boolean
         {
@@ -56,6 +76,7 @@
         public function processMessageToWorker():void
         {
             Kernel.getWorker().process(this.pendingMessage);
+            this._processedMessage = this.pendingMessage;
             this.pendingMessage = null;
         }
 
@@ -119,5 +140,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.misc.stackedMessages
+} com.ankamagames.dofus.logic.game.common.misc.stackedMessages
 

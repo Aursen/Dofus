@@ -1,9 +1,10 @@
-﻿package com.ankamagames.dofus.network.types.game.context.fight
+package com.ankamagames.dofus.network.types.game.context.fight
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.dofus.network.types.game.character.alignment.ActorAlignmentInformations;
-    import com.ankamagames.dofus.network.types.game.look.EntityLook;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import com.ankamagames.dofus.network.types.game.context.EntityDispositionInformations;
+    import com.ankamagames.dofus.network.types.game.look.EntityLook;
     import __AS3__.vec.Vector;
     import com.ankamagames.dofus.network.types.game.character.status.PlayerStatus;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
@@ -15,24 +16,20 @@
         public static const protocolId:uint = 46;
 
         public var level:uint = 0;
-        public var alignmentInfos:ActorAlignmentInformations;
+        public var alignmentInfos:ActorAlignmentInformations = new ActorAlignmentInformations();
         public var breed:int = 0;
         public var sex:Boolean = false;
+        private var _alignmentInfostree:FuncTree;
 
-        public function GameFightCharacterInformations()
-        {
-            this.alignmentInfos = new ActorAlignmentInformations();
-            super();
-        }
 
         override public function getTypeId():uint
         {
             return (46);
         }
 
-        public function initGameFightCharacterInformations(contextualId:int=0, look:EntityLook=null, disposition:EntityDispositionInformations=null, teamId:uint=2, wave:uint=0, alive:Boolean=false, stats:GameFightMinimalStats=null, previousPositions:Vector.<uint>=null, name:String="", status:PlayerStatus=null, level:uint=0, alignmentInfos:ActorAlignmentInformations=null, breed:int=0, sex:Boolean=false):GameFightCharacterInformations
+        public function initGameFightCharacterInformations(contextualId:Number=0, disposition:EntityDispositionInformations=null, look:EntityLook=null, spawnInfo:GameContextBasicSpawnInformation=null, wave:uint=0, stats:GameFightMinimalStats=null, previousPositions:Vector.<uint>=null, name:String="", status:PlayerStatus=null, leagueId:int=0, ladderPosition:int=0, hiddenInPrefight:Boolean=false, level:uint=0, alignmentInfos:ActorAlignmentInformations=null, breed:int=0, sex:Boolean=false):GameFightCharacterInformations
         {
-            super.initGameFightFighterNamedInformations(contextualId, look, disposition, teamId, wave, alive, stats, previousPositions, name, status);
+            super.initGameFightFighterNamedInformations(contextualId, disposition, look, spawnInfo, wave, stats, previousPositions, name, status, leagueId, ladderPosition, hiddenInPrefight);
             this.level = level;
             this.alignmentInfos = alignmentInfos;
             this.breed = breed;
@@ -56,11 +53,11 @@
         public function serializeAs_GameFightCharacterInformations(output:ICustomDataOutput):void
         {
             super.serializeAs_GameFightFighterNamedInformations(output);
-            if ((((this.level < 0)) || ((this.level > 0xFF))))
+            if (this.level < 0)
             {
                 throw (new Error((("Forbidden value (" + this.level) + ") on element level.")));
             };
-            output.writeByte(this.level);
+            output.writeVarShort(this.level);
             this.alignmentInfos.serializeAs_ActorAlignmentInformations(output);
             output.writeByte(this.breed);
             output.writeBoolean(this.sex);
@@ -74,18 +71,53 @@
         public function deserializeAs_GameFightCharacterInformations(input:ICustomDataInput):void
         {
             super.deserialize(input);
-            this.level = input.readUnsignedByte();
-            if ((((this.level < 0)) || ((this.level > 0xFF))))
+            this._levelFunc(input);
+            this.alignmentInfos = new ActorAlignmentInformations();
+            this.alignmentInfos.deserialize(input);
+            this._breedFunc(input);
+            this._sexFunc(input);
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GameFightCharacterInformations(tree);
+        }
+
+        public function deserializeAsyncAs_GameFightCharacterInformations(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._levelFunc);
+            this._alignmentInfostree = tree.addChild(this._alignmentInfostreeFunc);
+            tree.addChild(this._breedFunc);
+            tree.addChild(this._sexFunc);
+        }
+
+        private function _levelFunc(input:ICustomDataInput):void
+        {
+            this.level = input.readVarUhShort();
+            if (this.level < 0)
             {
                 throw (new Error((("Forbidden value (" + this.level) + ") on element of GameFightCharacterInformations.level.")));
             };
+        }
+
+        private function _alignmentInfostreeFunc(input:ICustomDataInput):void
+        {
             this.alignmentInfos = new ActorAlignmentInformations();
-            this.alignmentInfos.deserialize(input);
+            this.alignmentInfos.deserializeAsync(this._alignmentInfostree);
+        }
+
+        private function _breedFunc(input:ICustomDataInput):void
+        {
             this.breed = input.readByte();
+        }
+
+        private function _sexFunc(input:ICustomDataInput):void
+        {
             this.sex = input.readBoolean();
         }
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.context.fight
+} com.ankamagames.dofus.network.types.game.context.fight
 

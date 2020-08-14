@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.json
+package com.ankamagames.jerakine.json
 {
     public class JSONToken 
     {
@@ -6,9 +6,9 @@
         private var _type:int;
         private var _value:Object;
 
-        public function JSONToken(type:int=-1, value:Object=null)
+        public function JSONToken(_arg_1:int=-1, value:Object=null)
         {
-            this._type = type;
+            this._type = _arg_1;
             this._value = value;
         }
 
@@ -34,5 +34,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.json
+} com.ankamagames.jerakine.json
 

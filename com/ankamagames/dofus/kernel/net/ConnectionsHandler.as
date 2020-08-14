@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.kernel.net
+package com.ankamagames.dofus.kernel.net
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
@@ -9,8 +9,11 @@
     import com.ankamagames.dofus.kernel.Kernel;
     import com.ankamagames.dofus.network.MessageReceiver;
     import flash.events.TimerEvent;
+    import com.ankamagames.berilia.frames.UiStatsFrame;
+    import com.ankamagames.dofus.logic.common.managers.PlayerManager;
     import com.ankamagames.dofus.network.messages.common.basic.BasicPingMessage;
     import com.ankamagames.dofus.logic.connection.frames.HandshakeFrame;
+    import com.ankamagames.dofus.logic.game.spin2.chat.ChatServiceManager;
     import com.ankamagames.jerakine.messages.ConnectionResumedMessage;
     import com.ankamagames.jerakine.network.IServerConnection;
     import com.ankamagames.jerakine.network.SnifferServerConnection;
@@ -31,6 +34,7 @@
         private static var _wantedSocketLost:Boolean;
         private static var _wantedSocketLostReason:uint;
         private static var _hasReceivedMsg:Boolean = false;
+        private static var _hasReceivedNetworkMsg:Boolean = false;
         private static var _connectionTimeout:Timer;
         private static var _currentHttpConnection:HttpServerConnection = new HttpServerConnection();
 
@@ -60,18 +64,28 @@
             _hasReceivedMsg = value;
         }
 
+        public static function get hasReceivedNetworkMsg():Boolean
+        {
+            return (_hasReceivedNetworkMsg);
+        }
+
+        public static function set hasReceivedNetworkMsg(value:Boolean):void
+        {
+            _hasReceivedNetworkMsg = value;
+        }
+
         public static function getConnection():MultiConnection
         {
-            if (!(_currentConnection))
+            if (!_currentConnection)
             {
-                _currentConnection = new MultiConnection();
+                createConnection();
             };
             return (_currentConnection);
         }
 
         public static function getHttpConnection():HttpServerConnection
         {
-            if (!(_currentHttpConnection.handler))
+            if (!_currentHttpConnection.handler)
             {
                 _currentHttpConnection.handler = Kernel.getWorker();
                 _currentHttpConnection.rawParser = new MessageReceiver();
@@ -91,7 +105,7 @@
 
         public static function connectToGameServer(gameServerHost:String, gameServerPort:uint):void
         {
-            if (!(_connectionTimeout))
+            if (!_connectionTimeout)
             {
                 _connectionTimeout = new Timer(4000, 1);
                 _connectionTimeout.addEventListener(TimerEvent.TIMER, onConnectionTimeout);
@@ -106,12 +120,14 @@
                 closeConnection();
             };
             etablishConnection(gameServerHost, gameServerPort, ConnectionType.TO_GAME_SERVER, _useSniffer);
+            UiStatsFrame.setStat("gameServerPort", gameServerPort);
             _currentConnectionType = ConnectionType.TO_GAME_SERVER;
+            PlayerManager.getInstance().gameServerPort = gameServerPort;
         }
 
         public static function connectToKoliServer(gameServerHost:String, gameServerPort:uint):void
         {
-            if (!(_connectionTimeout))
+            if (!_connectionTimeout)
             {
                 _connectionTimeout = new Timer(4000, 1);
                 _connectionTimeout.addEventListener(TimerEvent.TIMER, onConnectionTimeout);
@@ -121,12 +137,13 @@
                 _connectionTimeout.reset();
             };
             _connectionTimeout.start();
-            if (((!((_currentConnection == null))) && (_currentConnection.getSubConnection(ConnectionType.TO_KOLI_SERVER))))
+            if (((!(_currentConnection == null)) && (_currentConnection.getSubConnection(ConnectionType.TO_KOLI_SERVER))))
             {
                 _currentConnection.close(ConnectionType.TO_KOLI_SERVER);
             };
             etablishConnection(gameServerHost, gameServerPort, ConnectionType.TO_KOLI_SERVER, _useSniffer);
-            _currentConnectionType = ConnectionType.TO_GAME_SERVER;
+            _currentConnectionType = ConnectionType.TO_KOLI_SERVER;
+            PlayerManager.getInstance().kisServerPort = gameServerPort;
         }
 
         public static function confirmGameServerConnection():void
@@ -145,7 +162,7 @@
                 msg = new BasicPingMessage();
                 msg.initBasicPingMessage(true);
                 _log.warn("La connection au serveur de jeu semble longue. On envoit un BasicPingMessage pour essayer de débloquer la situation.");
-                _currentConnection.send(msg);
+                _currentConnection.send(msg, _currentConnectionType);
                 if (_connectionTimeout)
                 {
                     _connectionTimeout.stop();
@@ -173,6 +190,10 @@
             var reason:DisconnectionReason = new DisconnectionReason(_wantedSocketLost, _wantedSocketLostReason);
             _wantedSocketLost = false;
             _wantedSocketLostReason = DisconnectionReasonEnum.UNEXPECTED;
+            if (!reason.expected)
+            {
+                ChatServiceManager.destroy();
+            };
             return (reason);
         }
 
@@ -207,22 +228,22 @@
                 {
                     throw (new ArgumentError("Can't etablish a connection using a proxy and the sniffer."));
                 };
-                conn = new SnifferServerConnection();
+                conn = new SnifferServerConnection(null, 0, id);
             }
             else
             {
                 if (proxy != null)
                 {
-                    conn = new ProxyedServerConnection(proxy);
+                    conn = new ProxyedServerConnection(proxy, null, 0, id);
                 }
                 else
                 {
-                    conn = new ServerConnection();
+                    conn = new ServerConnection(null, 0, id);
                 };
             };
-            if (!(_currentConnection))
+            if (!_currentConnection)
             {
-                _currentConnection = new MultiConnection();
+                createConnection();
             };
             conn.lagometer = new LagometerAck();
             conn.handler = Kernel.getWorker();
@@ -233,7 +254,12 @@
             conn.connect(host, port);
         }
 
+        private static function createConnection():void
+        {
+            _currentConnection = new MultiConnection();
+        }
+
 
     }
-}//package com.ankamagames.dofus.kernel.net
+} com.ankamagames.dofus.kernel.net
 

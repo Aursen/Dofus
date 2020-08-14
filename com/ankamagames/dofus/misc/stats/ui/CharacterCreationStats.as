@@ -1,93 +1,178 @@
-﻿package com.ankamagames.dofus.misc.stats.ui
+package com.ankamagames.dofus.misc.stats.ui
 {
+    import com.ankamagames.dofus.misc.stats.IHookStats;
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
     import com.ankamagames.dofus.misc.stats.StatsAction;
     import com.ankamagames.berilia.types.graphic.UiRootContainer;
-    import com.ankamagames.dofus.network.enums.StatisticTypeEnum;
+    import com.ankamagames.dofus.logic.common.managers.PlayerManager;
+    import com.ankamagames.dofus.network.messages.game.character.creation.CharacterCreationResultMessage;
     import com.ankamagames.berilia.components.messages.EntityReadyMessage;
     import com.ankamagames.berilia.components.EntityDisplayer;
-    import com.ankamagames.jerakine.handlers.messages.mouse.MouseClickMessage;
-    import com.ankamagames.berilia.components.messages.SelectItemMessage;
-    import com.ankamagames.berilia.types.graphic.ButtonContainer;
+    import com.ankamagames.berilia.types.graphic.GraphicContainer;
     import com.ankamagames.dofus.logic.game.approach.actions.CharacterCreationAction;
+    import com.ankamagames.jerakine.data.I18n;
+    import com.ankamagames.dofus.network.enums.CharacterCreationResultEnum;
+    import com.ankamagames.dofus.misc.stats.StatisticsManager;
+    import com.ankamagames.dofus.misc.utils.GameDataQuery;
+    import com.ankamagames.dofus.datacenter.breeds.Head;
     import com.ankamagames.dofus.logic.game.approach.actions.CharacterNameSuggestionRequestAction;
-    import com.ankamagames.berilia.enums.SelectMethodEnum;
-    import com.ankamagames.berilia.components.messages.ColorChangeMessage;
+    import com.ankamagames.jerakine.handlers.messages.mouse.MouseClickMessage;
+    import flash.utils.setTimeout;
+    import com.ankamagames.jerakine.handlers.messages.mouse.MouseOverMessage;
+    import flash.utils.clearTimeout;
+    import com.ankamagames.jerakine.handlers.messages.mouse.MouseOutMessage;
     import com.ankamagames.jerakine.messages.Message;
     import com.ankamagames.berilia.types.data.Hook;
 
-    public class CharacterCreationStats implements IUiStats 
+    public class CharacterCreationStats implements IUiStats, IHookStats 
     {
 
         private static const _log:Logger = Log.getLogger(getQualifiedClassName(CharacterCreationStats));
+        private static const EVENT_ID:uint = 4;
+        private static const EVENT2_ID:uint = 5;
 
         private var _action:StatsAction;
+        private var _action2:StatsAction;
         private var _ui:UiRootContainer;
+        private var _timeoutId:uint;
+        private var _createAttempts:uint = 1;
 
         public function CharacterCreationStats(pUi:UiRootContainer)
         {
             this._ui = pUi;
-            this._action = StatsAction.get(StatisticTypeEnum.STEP0200_CREATE_FIRST_CHARACTER);
-            this._action.addParam("Used_Name_Generator", false);
-            this._action.addParam("Used_Style_Generator", false);
-            this._action.addParam("Used_Proposed_Style", false);
+            var exists:Boolean = StatsAction.exists(EVENT_ID);
+            this._action = StatsAction.get(EVENT_ID, false, false, true);
+            if (!exists)
+            {
+                this._action.setParam("account_id", PlayerManager.getInstance().accountId);
+                this._action.setParam("step_id", 100);
+                this._action.setParam("automatic_choice", true);
+                this._action.setParam("seek_a_friend", false);
+                this._action.setParam("server_id", PlayerManager.getInstance().server.id);
+            };
+            this._action.setParam("seek_informations", false);
             this._action.start();
+            this._action2 = StatsAction.get(EVENT2_ID, false, false, true);
+            this._action2.setParam("account_id", this._action.params["account_id"]);
+            this._action2.setParam("server_id", this._action.params["server_id"]);
+            this._action2.setParam("gender", this._action.params["gender"]);
+            this._action2.setParam("used_style_generator", false);
+            this._action2.setParam("used_name_generator", false);
+            this._action2.setParam("show_hover", false);
+            this._action2.setParam("create_success", false);
+            this._action2.setParam("create_error", null);
+            this._action2.setParam("create_attempts", this._createAttempts);
+            this._action2.setParam("create_name", null);
+            this._action2.setParam("step_id", 200);
+            this._action2.start();
         }
 
-        public function process(pMessage:Message):void
+        public function process(pMessage:Message, pArgs:Array=null):void
         {
-            var _local_2:EntityReadyMessage;
-            var _local_3:EntityDisplayer;
-            var _local_4:MouseClickMessage;
-            var _local_5:SelectItemMessage;
+            var ccmsg:CharacterCreationResultMessage;
+            var ermsg:EntityReadyMessage;
+            var entityDisplay:EntityDisplayer;
+            var errorMsg:String;
+            var target:GraphicContainer = ((pArgs) ? pArgs[1] : null);
             switch (true)
             {
                 case (pMessage is CharacterCreationAction):
-                    if (!(this._action.hasParam("Gender")))
+                    this._action2.setParam("create_name", (pMessage as CharacterCreationAction).name);
+                    break;
+                case (pMessage is CharacterCreationResultMessage):
+                    ccmsg = (pMessage as CharacterCreationResultMessage);
+                    if (ccmsg.result > 0)
                     {
-                        this._action.addParam("Gender", (((this._ui.getElement("btn_sex0") as ButtonContainer).selected) ? "M" : "F"));
+                        switch (ccmsg.result)
+                        {
+                            case CharacterCreationResultEnum.ERR_INVALID_NAME:
+                                errorMsg = I18n.getUiText("ui.popup.charcrea.invalidName");
+                                break;
+                            case CharacterCreationResultEnum.ERR_NAME_ALREADY_EXISTS:
+                                errorMsg = I18n.getUiText("ui.popup.charcrea.nameAlreadyExist");
+                                break;
+                            case CharacterCreationResultEnum.ERR_NOT_ALLOWED:
+                                errorMsg = I18n.getUiText("ui.popup.charcrea.notSubscriber");
+                                break;
+                            case CharacterCreationResultEnum.ERR_TOO_MANY_CHARACTERS:
+                                errorMsg = I18n.getUiText("ui.popup.charcrea.tooManyCharacters");
+                                break;
+                            case CharacterCreationResultEnum.ERR_NO_REASON:
+                                errorMsg = I18n.getUiText("ui.popup.charcrea.noReason");
+                                break;
+                            case CharacterCreationResultEnum.ERR_RESTRICED_ZONE:
+                                errorMsg = I18n.getUiText("ui.charSel.deletionErrorUnsecureMode");
+                                break;
+                            case CharacterCreationResultEnum.ERR_INCONSISTENT_COMMUNITY:
+                                errorMsg = I18n.getUiText("ui.popup.charcrea.wrongCommunity");
+                                break;
+                        };
+                        this._action2.setParam("create_error", errorMsg.substr(0, 100));
+                    }
+                    else
+                    {
+                        this._action2.setParam("create_success", true);
+                        StatisticsManager.getInstance().setFirstTimeUserExperience("serverListSelection", false);
+                        StatisticsManager.getInstance().setFirstTimeUserExperience(this._ui.name, false);
                     };
-                    this._action.send();
-                    return;
+                    this._action2.send();
+                    this._createAttempts++;
+                    this._action2.setParam("create_attempts", this._createAttempts);
+                    break;
                 case (pMessage is EntityReadyMessage):
-                    _local_2 = (pMessage as EntityReadyMessage);
-                    _local_3 = (_local_2.target as EntityDisplayer);
-                    this._action.addParam("Breed_ID", _local_3.look.skins[0]);
-                    this._action.addParam("Face_Chosen", _local_3.look.skins[1]);
-                    return;
+                    ermsg = (pMessage as EntityReadyMessage);
+                    entityDisplay = (ermsg.target as EntityDisplayer);
+                    this._action.setParam("breed_id", entityDisplay.look.skins[0]);
+                    this._action.setParam("gender", (((this._ui.uiClass.btn_breedSex0.selected) || (this._ui.uiClass.btn_customSex0.selected)) ? "m" : "f"));
+                    this._action.setParam("change_gender", (!(this._action.params["gender"] == "m")));
+                    this._action2.setParam("breed_id", entityDisplay.look.skins[0]);
+                    this._action2.setParam("face_chosen", GameDataQuery.queryString(Head, "skins", String(entityDisplay.look.skins[1]))[0]);
+                    break;
                 case (pMessage is CharacterNameSuggestionRequestAction):
-                    this._action.addParam("Used_Name_Generator", true);
-                    return;
+                    this._action2.setParam("used_name_generator", true);
+                    break;
                 case (pMessage is MouseClickMessage):
-                    _local_4 = (pMessage as MouseClickMessage);
-                    switch (_local_4.target.name)
+                    switch (target.name)
                     {
                         case "btn_generateColor":
-                            this._action.addParam("Used_Style_Generator", true);
+                            this._action2.setParam("used_style_generator", true);
                             break;
-                        case "btn_reinitColor":
-                            this._action.addParam("Used_Proposed_Style", false);
+                        case "btn_breedSex0":
+                        case "btn_customSex0":
+                            this._action.setParam("gender", "m");
+                            this._action2.setParam("gender", "m");
                             break;
-                        case "btn_sex0":
-                            this._action.addParam("Gender", "M");
+                        case "btn_breedSex1":
+                        case "btn_customSex1":
+                            this._action.setParam("gender", "f");
+                            this._action.setParam("change_gender", true);
+                            this._action2.setParam("gender", "f");
                             break;
-                        case "btn_sex1":
-                            this._action.addParam("Gender", "F");
+                        case "btn_breedInfo":
+                            this._action.setParam("seek_informations", true);
+                            break;
+                        case "btn_next":
+                            if (this._ui.uiClass.btn_lbl_btn_next.text == I18n.getUiText("ui.charcrea.selectClass").toLocaleUpperCase())
+                            {
+                                this._action.send();
+                            };
                             break;
                     };
-                    return;
-                case (pMessage is SelectItemMessage):
-                    _local_5 = (pMessage as SelectItemMessage);
-                    if ((((_local_5.target.name == "gd_randomColorPrevisualisation")) && (!((_local_5.selectMethod == SelectMethodEnum.AUTO)))))
+                    break;
+                case (pMessage is MouseOverMessage):
+                    if (target.name == "tx_nameRules")
                     {
-                        this._action.addParam("Used_Proposed_Style", true);
+                        this._timeoutId = setTimeout(this.showNamesRulesTooltip, 1000);
                     };
-                    return;
-                case (pMessage is ColorChangeMessage):
-                    this._action.addParam("Used_Proposed_Style", false);
-                    return;
+                    break;
+                case (pMessage is MouseOutMessage):
+                    if (target.name == "tx_nameRules")
+                    {
+                        clearTimeout(this._timeoutId);
+                    };
+                    break;
             };
         }
 
@@ -99,7 +184,12 @@
         {
         }
 
+        private function showNamesRulesTooltip():void
+        {
+            this._action2.setParam("show_hover", true);
+        }
+
 
     }
-}//package com.ankamagames.dofus.misc.stats.ui
+} com.ankamagames.dofus.misc.stats.ui
 

@@ -1,9 +1,10 @@
-﻿package com.ankamagames.dofus.datacenter.items
+package com.ankamagames.dofus.datacenter.items
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
+    import com.ankamagames.dofus.types.IdAccessors;
     import com.ankamagames.jerakine.data.GameData;
     import com.ankamagames.jerakine.data.I18n;
 
@@ -12,6 +13,7 @@
 
         public static const MODULE:String = "ItemTypes";
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(ItemType));
+        public static var idAccessors:IdAccessors = new IdAccessors(getItemTypeById, getItemTypes);
 
         private var _zoneSize:uint = 0xFFFFFFFF;
         private var _zoneShape:uint = 0xFFFFFFFF;
@@ -19,17 +21,21 @@
         public var id:int;
         public var nameId:uint;
         public var superTypeId:uint;
+        public var categoryId:uint;
+        public var isInEncyclopedia:Boolean;
         public var plural:Boolean;
         public var gender:uint;
         public var rawZone:String;
-        public var needUseConfirm:Boolean;
         public var mimickable:Boolean;
+        public var craftXpRatio:int;
+        public var evolutiveTypeId:int;
         private var _name:String;
+        private var _evolutiveType:EvolutiveItemType;
 
 
         public static function getItemTypeById(id:uint):ItemType
         {
-            return ((GameData.getObject(MODULE, id) as ItemType));
+            return (GameData.getObject(MODULE, id) as ItemType);
         }
 
         public static function getItemTypes():Array
@@ -40,11 +46,24 @@
 
         public function get name():String
         {
-            if (!(this._name))
+            if (!this._name)
             {
                 this._name = I18n.getText(this.nameId);
             };
             return (this._name);
+        }
+
+        public function get evolutiveType():EvolutiveItemType
+        {
+            if (!this._evolutiveType)
+            {
+                if (this.evolutiveTypeId == 0)
+                {
+                    return (null);
+                };
+                this._evolutiveType = EvolutiveItemType.getEvolutiveItemTypeById(this.evolutiveTypeId);
+            };
+            return (this._evolutiveType);
         }
 
         public function get zoneSize():uint
@@ -106,5 +125,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.items
+} com.ankamagames.dofus.datacenter.items
 

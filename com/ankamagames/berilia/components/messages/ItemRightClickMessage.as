@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.components.messages
+package com.ankamagames.berilia.components.messages
 {
     import com.ankamagames.berilia.types.data.GridItem;
     import com.ankamagames.berilia.components.Grid;
@@ -21,5 +21,5 @@
 
 
     }
-}//package com.ankamagames.berilia.components.messages
+} com.ankamagames.berilia.components.messages
 

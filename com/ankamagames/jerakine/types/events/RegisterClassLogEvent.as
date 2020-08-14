@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.types.events
+package com.ankamagames.jerakine.types.events
 {
     import com.ankamagames.jerakine.logger.LogEvent;
     import flash.events.Event;
@@ -26,5 +26,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.types.events
+} com.ankamagames.jerakine.types.events
 

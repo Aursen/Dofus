@@ -1,28 +1,24 @@
-﻿package com.ankamagames.dofus.network.messages.game.inventory.storage
+package com.ankamagames.dofus.network.messages.game.inventory.storage
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
     import __AS3__.vec.Vector;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
     import __AS3__.vec.*;
 
-    [Trusted]
     public class StorageObjectsRemoveMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 6035;
 
         private var _isInitialized:Boolean = false;
-        public var objectUIDList:Vector.<uint>;
+        public var objectUIDList:Vector.<uint> = new Vector.<uint>();
+        private var _objectUIDListtree:FuncTree;
 
-        public function StorageObjectsRemoveMessage()
-        {
-            this.objectUIDList = new Vector.<uint>();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
@@ -57,6 +53,14 @@
         override public function unpack(input:ICustomDataInput, length:uint):void
         {
             this.deserialize(input);
+        }
+
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
         }
 
         public function serialize(output:ICustomDataOutput):void
@@ -101,7 +105,38 @@
             };
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_StorageObjectsRemoveMessage(tree);
+        }
+
+        public function deserializeAsyncAs_StorageObjectsRemoveMessage(tree:FuncTree):void
+        {
+            this._objectUIDListtree = tree.addChild(this._objectUIDListtreeFunc);
+        }
+
+        private function _objectUIDListtreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._objectUIDListtree.addChild(this._objectUIDListFunc);
+                i++;
+            };
+        }
+
+        private function _objectUIDListFunc(input:ICustomDataInput):void
+        {
+            var _val:uint = input.readVarUhInt();
+            if (_val < 0)
+            {
+                throw (new Error((("Forbidden value (" + _val) + ") on elements of objectUIDList.")));
+            };
+            this.objectUIDList.push(_val);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.inventory.storage
+} com.ankamagames.dofus.network.messages.game.inventory.storage
 

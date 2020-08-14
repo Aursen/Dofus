@@ -1,4 +1,4 @@
-﻿package com.somerandomdude.colortoolkit.schemes
+package com.somerandomdude.colortoolkit.schemes
 {
     public class ColorScheme 
     {
@@ -16,7 +16,7 @@
 
         public function addColor(colortest:int):void
         {
-            if (!(this._colors))
+            if (!this._colors)
             {
                 this._colors = new ColorList();
             };
@@ -28,5 +28,5 @@
 
 
     }
-}//package com.somerandomdude.colortoolkit.schemes
+} com.somerandomdude.colortoolkit.schemes
 

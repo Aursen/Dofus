@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.types.event
+package com.ankamagames.berilia.types.event
 {
     import flash.events.Event;
     import com.ankamagames.berilia.types.graphic.UiRootContainer;
@@ -8,14 +8,15 @@
     {
 
         public static var UIRenderComplete:String = "UIRenderComplete";
+        public static var UIRenderScriptLaunching:String = "UIRenderScriptLaunching";
         public static var UIRenderFailed:String = "UIRenderFailed";
 
         private var _secUiTarget:UiRootContainer;
         private var _uiRenderer:UiRenderer;
 
-        public function UiRenderEvent(type:String, bubbles:Boolean=false, cancelable:Boolean=false, uiTarget:UiRootContainer=null, uiRenderer:UiRenderer=null)
+        public function UiRenderEvent(_arg_1:String, bubbles:Boolean=false, cancelable:Boolean=false, uiTarget:UiRootContainer=null, uiRenderer:UiRenderer=null)
         {
-            super(type, bubbles, cancelable);
+            super(_arg_1, bubbles, cancelable);
             this._secUiTarget = uiTarget;
             this._uiRenderer = uiRenderer;
         }
@@ -37,5 +38,5 @@
 
 
     }
-}//package com.ankamagames.berilia.types.event
+} com.ankamagames.berilia.types.event
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.common.actions.spectator
+package com.ankamagames.dofus.logic.game.common.actions.spectator
 {
     import com.ankamagames.jerakine.handlers.messages.Action;
 
@@ -13,5 +13,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.actions.spectator
+} com.ankamagames.dofus.logic.game.common.actions.spectator
 

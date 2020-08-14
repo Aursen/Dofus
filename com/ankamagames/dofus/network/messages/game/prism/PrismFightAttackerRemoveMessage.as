@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.prism
+package com.ankamagames.dofus.network.messages.game.prism
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class PrismFightAttackerRemoveMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -16,7 +16,7 @@
         private var _isInitialized:Boolean = false;
         public var subAreaId:uint = 0;
         public var fightId:uint = 0;
-        public var fighterToRemoveId:uint = 0;
+        public var fighterToRemoveId:Number = 0;
 
 
         override public function get isInitialized():Boolean
@@ -29,7 +29,7 @@
             return (5897);
         }
 
-        public function initPrismFightAttackerRemoveMessage(subAreaId:uint=0, fightId:uint=0, fighterToRemoveId:uint=0):PrismFightAttackerRemoveMessage
+        public function initPrismFightAttackerRemoveMessage(subAreaId:uint=0, fightId:uint=0, fighterToRemoveId:Number=0):PrismFightAttackerRemoveMessage
         {
             this.subAreaId = subAreaId;
             this.fightId = fightId;
@@ -58,6 +58,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_PrismFightAttackerRemoveMessage(output);
@@ -75,11 +83,11 @@
                 throw (new Error((("Forbidden value (" + this.fightId) + ") on element fightId.")));
             };
             output.writeVarShort(this.fightId);
-            if (this.fighterToRemoveId < 0)
+            if (((this.fighterToRemoveId < 0) || (this.fighterToRemoveId > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.fighterToRemoveId) + ") on element fighterToRemoveId.")));
             };
-            output.writeVarInt(this.fighterToRemoveId);
+            output.writeVarLong(this.fighterToRemoveId);
         }
 
         public function deserialize(input:ICustomDataInput):void
@@ -89,18 +97,45 @@
 
         public function deserializeAs_PrismFightAttackerRemoveMessage(input:ICustomDataInput):void
         {
+            this._subAreaIdFunc(input);
+            this._fightIdFunc(input);
+            this._fighterToRemoveIdFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_PrismFightAttackerRemoveMessage(tree);
+        }
+
+        public function deserializeAsyncAs_PrismFightAttackerRemoveMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._subAreaIdFunc);
+            tree.addChild(this._fightIdFunc);
+            tree.addChild(this._fighterToRemoveIdFunc);
+        }
+
+        private function _subAreaIdFunc(input:ICustomDataInput):void
+        {
             this.subAreaId = input.readVarUhShort();
             if (this.subAreaId < 0)
             {
                 throw (new Error((("Forbidden value (" + this.subAreaId) + ") on element of PrismFightAttackerRemoveMessage.subAreaId.")));
             };
+        }
+
+        private function _fightIdFunc(input:ICustomDataInput):void
+        {
             this.fightId = input.readVarUhShort();
             if (this.fightId < 0)
             {
                 throw (new Error((("Forbidden value (" + this.fightId) + ") on element of PrismFightAttackerRemoveMessage.fightId.")));
             };
-            this.fighterToRemoveId = input.readVarUhInt();
-            if (this.fighterToRemoveId < 0)
+        }
+
+        private function _fighterToRemoveIdFunc(input:ICustomDataInput):void
+        {
+            this.fighterToRemoveId = input.readVarUhLong();
+            if (((this.fighterToRemoveId < 0) || (this.fighterToRemoveId > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.fighterToRemoveId) + ") on element of PrismFightAttackerRemoveMessage.fighterToRemoveId.")));
             };
@@ -108,5 +143,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.prism
+} com.ankamagames.dofus.network.messages.game.prism
 

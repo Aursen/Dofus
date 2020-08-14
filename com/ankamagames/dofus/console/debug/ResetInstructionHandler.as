@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.console.debug
+package com.ankamagames.dofus.console.debug
 {
     import com.ankamagames.jerakine.console.ConsoleInstructionHandler;
     import com.ankamagames.dofus.kernel.Kernel;
@@ -15,7 +15,7 @@
             {
                 case "reset":
                     Kernel.getWorker().process(new ResetGameAction());
-                    return;
+                    break;
             };
         }
 
@@ -26,7 +26,7 @@
                 case "reset":
                     return ("Resets the Kernel and restart the game.");
             };
-            return ((("Unknown command '" + cmd) + "'."));
+            return (("Unknown command '" + cmd) + "'.");
         }
 
         public function getParamPossibilities(cmd:String, paramIndex:uint=0, currentParams:Array=null):Array
@@ -36,5 +36,5 @@
 
 
     }
-}//package com.ankamagames.dofus.console.debug
+} com.ankamagames.dofus.console.debug
 

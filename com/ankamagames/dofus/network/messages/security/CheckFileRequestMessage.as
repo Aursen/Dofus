@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.security
+package com.ankamagames.dofus.network.messages.security
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class CheckFileRequestMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -28,10 +28,10 @@
             return (6154);
         }
 
-        public function initCheckFileRequestMessage(filename:String="", type:uint=0):CheckFileRequestMessage
+        public function initCheckFileRequestMessage(filename:String="", _arg_2:uint=0):CheckFileRequestMessage
         {
             this.filename = filename;
-            this.type = type;
+            this.type = _arg_2;
             this._isInitialized = true;
             return (this);
         }
@@ -55,6 +55,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_CheckFileRequestMessage(output);
@@ -73,7 +81,28 @@
 
         public function deserializeAs_CheckFileRequestMessage(input:ICustomDataInput):void
         {
+            this._filenameFunc(input);
+            this._typeFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_CheckFileRequestMessage(tree);
+        }
+
+        public function deserializeAsyncAs_CheckFileRequestMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._filenameFunc);
+            tree.addChild(this._typeFunc);
+        }
+
+        private function _filenameFunc(input:ICustomDataInput):void
+        {
             this.filename = input.readUTF();
+        }
+
+        private function _typeFunc(input:ICustomDataInput):void
+        {
             this.type = input.readByte();
             if (this.type < 0)
             {
@@ -83,5 +112,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.security
+} com.ankamagames.dofus.network.messages.security
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.common.frames
+package com.ankamagames.dofus.logic.game.common.frames
 {
     import com.ankamagames.jerakine.messages.Frame;
     import com.ankamagames.jerakine.logger.Logger;
@@ -34,20 +34,20 @@
 
         public function process(msg:Message):Boolean
         {
-            var _local_2:TeleportBuddiesAnswerAction;
-            var _local_3:TeleportBuddiesAnswerMessage;
-            var _local_4:LeaveDialogMessage;
+            var tbaa:TeleportBuddiesAnswerAction;
+            var tbamsg:TeleportBuddiesAnswerMessage;
+            var ldm:LeaveDialogMessage;
             switch (true)
             {
                 case (msg is TeleportBuddiesAnswerAction):
-                    _local_2 = (msg as TeleportBuddiesAnswerAction);
-                    _local_3 = new TeleportBuddiesAnswerMessage();
-                    _local_3.initTeleportBuddiesAnswerMessage(_local_2.accept);
-                    ConnectionsHandler.getConnection().send(_local_3);
+                    tbaa = (msg as TeleportBuddiesAnswerAction);
+                    tbamsg = new TeleportBuddiesAnswerMessage();
+                    tbamsg.initTeleportBuddiesAnswerMessage(tbaa.accept);
+                    ConnectionsHandler.getConnection().send(tbamsg);
                     return (true);
                 case (msg is LeaveDialogMessage):
-                    _local_4 = (msg as LeaveDialogMessage);
-                    if (_local_4.dialogType == DialogTypeEnum.DIALOG_DUNGEON_MEETING)
+                    ldm = (msg as LeaveDialogMessage);
+                    if (ldm.dialogType == DialogTypeEnum.DIALOG_DUNGEON_MEETING)
                     {
                         Kernel.getWorker().process(ChangeWorldInteractionAction.create(true));
                         Kernel.getWorker().removeFrame(this);
@@ -65,5 +65,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.frames
+} com.ankamagames.dofus.logic.game.common.frames
 

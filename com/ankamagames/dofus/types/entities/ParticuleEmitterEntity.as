@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.types.entities
+package com.ankamagames.dofus.types.entities
 {
     import flash.display.Sprite;
     import com.ankamagames.jerakine.entities.interfaces.IDisplayable;
@@ -24,7 +24,7 @@
         public static const BITMAP_RENDERER_TYPE:uint = 1;
         public static const PIXEL_RENDERER_TYPE:uint = 2;
 
-        private var _id:int;
+        private var _id:Number;
         private var _position:MapPoint;
         private var _renderer:Renderer;
         private var _displayed:Boolean;
@@ -59,12 +59,12 @@
             this._displayBehavior = oValue;
         }
 
-        public function get id():int
+        public function get id():Number
         {
             return (this._id);
         }
 
-        public function set id(nValue:int):void
+        public function set id(nValue:Number):void
         {
             this._id = nValue;
         }
@@ -102,5 +102,5 @@
 
 
     }
-}//package com.ankamagames.dofus.types.entities
+} com.ankamagames.dofus.types.entities
 

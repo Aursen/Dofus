@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.components
+package com.ankamagames.berilia.components
 {
     import com.ankamagames.berilia.types.graphic.GraphicContainer;
     import com.ankamagames.berilia.FinalizableUIComponent;
@@ -63,7 +63,7 @@
         override public function set width(nW:Number):void
         {
             this._nWidth = nW;
-            if (this.finalized)
+            if (finalized)
             {
                 this.updatePicker();
             };
@@ -73,12 +73,13 @@
         {
             this._nHeight = nH;
             this._nSliderY = int((this._nHeight / 2));
-            if (this.finalized)
+            if (finalized)
             {
                 this.updatePicker();
             };
         }
 
+        [Uri]
         public function set sliderTexture(uri:Uri):void
         {
             this._texCursorSlider = new Texture();
@@ -89,11 +90,13 @@
             this._texCursorSlider.uri = uri;
         }
 
+        [Uri]
         public function get sliderTexture():Uri
         {
             return (this._texCursorSlider.uri);
         }
 
+        [Uri]
         public function set gradientTexture(uri:Uri):void
         {
             this._texCursorGradient = new Texture();
@@ -104,6 +107,7 @@
             this._texCursorGradient.uri = uri;
         }
 
+        [Uri]
         public function get gradientTexture():Uri
         {
             return (this._texCursorGradient.uri);
@@ -121,17 +125,7 @@
             this.getCurrentPos();
         }
 
-        public function get finalized():Boolean
-        {
-            return (this._bFinalized);
-        }
-
-        public function set finalized(b:Boolean):void
-        {
-            this._bFinalized = b;
-        }
-
-        public function finalize():void
+        override public function finalize():void
         {
             this._sprGradient = new Sprite();
             this._sprSliderInf = new Sprite();
@@ -173,6 +167,7 @@
             this._texCursorSlider.finalize();
             this._texCursorGradient.addEventListener(Event.COMPLETE, this.onTextureGradientLoaded);
             this._texCursorGradient.finalize();
+            super.finalize();
             this._bFinalized = true;
             getUi().iAmFinalized(this);
         }
@@ -193,7 +188,7 @@
 
         override public function remove():void
         {
-            if (!(__removed))
+            if (!__removed)
             {
                 this._texCursorSlider.remove();
                 this._texCursorGradient.remove();
@@ -236,7 +231,7 @@
             b2 = (c2 & 0xFF);
             if (r1 != r2)
             {
-                r = Math.round((((r1)>r2) ? (0xFF - colorPoint2) : colorPoint2));
+                r = Math.round(((r1 > r2) ? (0xFF - colorPoint2) : colorPoint2));
             }
             else
             {
@@ -244,7 +239,7 @@
             };
             if (g1 != g2)
             {
-                g = Math.round((((g1)>g2) ? (0xFF - colorPoint2) : colorPoint2));
+                g = Math.round(((g1 > g2) ? (0xFF - colorPoint2) : colorPoint2));
             }
             else
             {
@@ -252,7 +247,7 @@
             };
             if (b1 != b2)
             {
-                b = Math.round((((b1)>b2) ? (0xFF - colorPoint2) : colorPoint2));
+                b = Math.round(((b1 > b2) ? (0xFF - colorPoint2) : colorPoint2));
             }
             else
             {
@@ -297,7 +292,7 @@
             var g2:Number;
             var b2:Number;
             var tempColor:Number = 0;
-            if (!(this._bFixedColor))
+            if (!this._bFixedColor)
             {
                 this.getGradientColor();
                 colorPoint = (0xFF - ((this._nSliderY / this._nHeight) * 510));
@@ -331,7 +326,6 @@
             return (this._nColor);
         }
 
-        [HideInFakeClass]
         override public function process(msg:Message):Boolean
         {
             switch (true)
@@ -415,7 +409,7 @@
 
         private function onMoveGradientCursor(e:Event):void
         {
-            if (((!((this._nGradientX == mouseX))) || (!((this._nGradientY == mouseY)))))
+            if (((!(this._nGradientX == mouseX)) || (!(this._nGradientY == mouseY))))
             {
                 this._nGradientX = mouseX;
                 if (this._nGradientX < 0)
@@ -479,5 +473,5 @@
 
 
     }
-}//package com.ankamagames.berilia.components
+} com.ankamagames.berilia.components
 

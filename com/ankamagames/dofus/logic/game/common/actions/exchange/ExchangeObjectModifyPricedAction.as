@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.common.actions.exchange
+package com.ankamagames.dofus.logic.game.common.actions.exchange
 {
     import com.ankamagames.jerakine.handlers.messages.Action;
 
@@ -7,10 +7,10 @@
 
         public var objectUID:uint;
         public var quantity:int;
-        public var price:int;
+        public var price:Number = 0;
 
 
-        public static function create(pObjectUID:uint, pQuantity:int, pPrice:int):ExchangeObjectModifyPricedAction
+        public static function create(pObjectUID:uint, pQuantity:int, pPrice:Number):ExchangeObjectModifyPricedAction
         {
             var a:ExchangeObjectModifyPricedAction = new (ExchangeObjectModifyPricedAction)();
             a.objectUID = pObjectUID;
@@ -21,5 +21,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.actions.exchange
+} com.ankamagames.dofus.logic.game.common.actions.exchange
 

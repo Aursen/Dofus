@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.guild.tax
+package com.ankamagames.dofus.network.messages.game.guild.tax
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,16 +6,16 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class GuildFightPlayersHelpersLeaveMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 5719;
 
         private var _isInitialized:Boolean = false;
-        public var fightId:uint = 0;
-        public var playerId:uint = 0;
+        public var fightId:Number = 0;
+        public var playerId:Number = 0;
 
 
         override public function get isInitialized():Boolean
@@ -28,7 +28,7 @@
             return (5719);
         }
 
-        public function initGuildFightPlayersHelpersLeaveMessage(fightId:uint=0, playerId:uint=0):GuildFightPlayersHelpersLeaveMessage
+        public function initGuildFightPlayersHelpersLeaveMessage(fightId:Number=0, playerId:Number=0):GuildFightPlayersHelpersLeaveMessage
         {
             this.fightId = fightId;
             this.playerId = playerId;
@@ -55,6 +55,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_GuildFightPlayersHelpersLeaveMessage(output);
@@ -62,16 +70,16 @@
 
         public function serializeAs_GuildFightPlayersHelpersLeaveMessage(output:ICustomDataOutput):void
         {
-            if (this.fightId < 0)
+            if (((this.fightId < 0) || (this.fightId > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.fightId) + ") on element fightId.")));
             };
-            output.writeInt(this.fightId);
-            if (this.playerId < 0)
+            output.writeDouble(this.fightId);
+            if (((this.playerId < 0) || (this.playerId > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.playerId) + ") on element playerId.")));
             };
-            output.writeVarInt(this.playerId);
+            output.writeVarLong(this.playerId);
         }
 
         public function deserialize(input:ICustomDataInput):void
@@ -81,13 +89,34 @@
 
         public function deserializeAs_GuildFightPlayersHelpersLeaveMessage(input:ICustomDataInput):void
         {
-            this.fightId = input.readInt();
-            if (this.fightId < 0)
+            this._fightIdFunc(input);
+            this._playerIdFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GuildFightPlayersHelpersLeaveMessage(tree);
+        }
+
+        public function deserializeAsyncAs_GuildFightPlayersHelpersLeaveMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._fightIdFunc);
+            tree.addChild(this._playerIdFunc);
+        }
+
+        private function _fightIdFunc(input:ICustomDataInput):void
+        {
+            this.fightId = input.readDouble();
+            if (((this.fightId < 0) || (this.fightId > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.fightId) + ") on element of GuildFightPlayersHelpersLeaveMessage.fightId.")));
             };
-            this.playerId = input.readVarUhInt();
-            if (this.playerId < 0)
+        }
+
+        private function _playerIdFunc(input:ICustomDataInput):void
+        {
+            this.playerId = input.readVarUhLong();
+            if (((this.playerId < 0) || (this.playerId > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.playerId) + ") on element of GuildFightPlayersHelpersLeaveMessage.playerId.")));
             };
@@ -95,5 +124,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.guild.tax
+} com.ankamagames.dofus.network.messages.game.guild.tax
 

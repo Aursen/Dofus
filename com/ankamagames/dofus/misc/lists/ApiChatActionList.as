@@ -1,7 +1,8 @@
-﻿package com.ankamagames.dofus.misc.lists
+package com.ankamagames.dofus.misc.lists
 {
     import com.ankamagames.dofus.misc.utils.DofusApiAction;
     import com.ankamagames.dofus.logic.game.common.actions.chat.ChannelEnablingAction;
+    import com.ankamagames.dofus.logic.game.common.actions.chat.ChatCommunityChannelSetCommunityAction;
     import com.ankamagames.dofus.logic.game.common.actions.chat.TabsUpdateAction;
     import com.ankamagames.dofus.logic.game.common.actions.chat.ChatSmileyRequestAction;
     import com.ankamagames.dofus.logic.game.common.actions.chat.MoodSmileyRequestAction;
@@ -16,6 +17,7 @@
     {
 
         public static const ChannelEnabling:DofusApiAction = new DofusApiAction("ChannelEnabling", ChannelEnablingAction);
+        public static const ChatCommunityChannelSetCommunity:DofusApiAction = new DofusApiAction("ChatCommunityChannelSetCommunity", ChatCommunityChannelSetCommunityAction);
         public static const TabsUpdate:DofusApiAction = new DofusApiAction("TabsUpdate", TabsUpdateAction);
         public static const ChatSmileyRequest:DofusApiAction = new DofusApiAction("ChatSmileyRequest", ChatSmileyRequestAction);
         public static const MoodSmileyRequest:DofusApiAction = new DofusApiAction("MoodSmileyRequest", MoodSmileyRequestAction);
@@ -28,5 +30,5 @@
 
 
     }
-}//package com.ankamagames.dofus.misc.lists
+} com.ankamagames.dofus.misc.lists
 

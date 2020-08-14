@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.internalDatacenter.people
+package com.ankamagames.dofus.internalDatacenter.people
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.dofus.network.types.game.look.EntityLook;
@@ -6,7 +6,7 @@
     public class PartyMemberWrapper implements IDataCenter 
     {
 
-        public var id:int;
+        public var id:Number;
         public var name:String;
         public var isMember:Boolean;
         public var isLeader:Boolean;
@@ -20,19 +20,18 @@
         public var rank:int;
         public var alignmentSide:int;
         public var regenRate:int;
-        public var hostId:int;
+        public var hostId:Number;
         public var hostName:String;
         public var worldX:int = 0;
         public var worldY:int = 0;
-        public var mapId:int = 0;
+        public var mapId:Number = 0;
         public var subAreaId:uint = 0;
         public var status:uint = 1;
-        public var companions:Array;
+        public var companions:Array = new Array();
+        public var isInArenaParty:Boolean = false;
 
-        public function PartyMemberWrapper(id:int, name:String, status:uint, isMember:Boolean, isLeader:Boolean=false, level:int=0, entityLook:EntityLook=null, lifePoints:int=0, maxLifePoints:int=0, maxInitiative:int=0, prospecting:int=0, alignmentSide:int=0, regenRate:int=0, rank:int=0, worldX:int=0, worldY:int=0, mapId:int=0, subAreaId:int=0, breedId:int=0, companions:Array=null)
+        public function PartyMemberWrapper(id:Number, name:String, status:uint, isMember:Boolean, isLeader:Boolean=false, level:int=0, entityLook:EntityLook=null, lifePoints:int=0, maxLifePoints:int=0, maxInitiative:int=0, prospecting:int=0, alignmentSide:int=0, regenRate:int=0, rank:int=0, worldX:int=0, worldY:int=0, mapId:Number=0, subAreaId:int=0, breedId:int=0, companions:Array=null)
         {
-            this.companions = new Array();
-            super();
             this.id = id;
             this.name = name;
             this.isMember = isMember;
@@ -52,7 +51,7 @@
             this.mapId = mapId;
             this.subAreaId = subAreaId;
             this.status = status;
-            if (!(companions))
+            if (!companions)
             {
                 this.companions = new Array();
             }
@@ -64,10 +63,10 @@
 
         public function get initiative():int
         {
-            return (((this.maxInitiative * this.lifePoints) / this.maxLifePoints));
+            return ((this.maxInitiative * this.lifePoints) / this.maxLifePoints);
         }
 
 
     }
-}//package com.ankamagames.dofus.internalDatacenter.people
+} com.ankamagames.dofus.internalDatacenter.people
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.fight.steps
+package com.ankamagames.dofus.logic.game.fight.steps
 {
     import com.ankamagames.jerakine.sequencer.AbstractSequencable;
     import com.ankamagames.dofus.types.entities.AnimatedCharacter;
@@ -9,6 +9,7 @@
     import flash.geom.ColorTransform;
     import com.ankamagames.atouin.managers.EntitiesDisplayManager;
     import com.ankamagames.jerakine.types.positions.MapPoint;
+    import __AS3__.vec.Vector;
     import flash.events.Event;
 
     public class FightInvisibleTemporarilyDetectedStep extends AbstractSequencable implements IFightStep 
@@ -17,10 +18,12 @@
         private var _duplicateSprite:AnimatedCharacter;
         private var _cellId:int;
         private var _fadeTimer:Timer;
+        private var _targetId:Number;
 
         public function FightInvisibleTemporarilyDetectedStep(target:AnimatedCharacter, cellId:int)
         {
-            var id:int = EntitiesManager.getInstance().getFreeEntityId();
+            this._targetId = target.id;
+            var id:Number = EntitiesManager.getInstance().getFreeEntityId();
             this._duplicateSprite = new AnimatedCharacter(id, target.look.clone());
             this._cellId = cellId;
             this._fadeTimer = new Timer(25, 40);
@@ -53,9 +56,14 @@
             };
         }
 
+        public function get targets():Vector.<Number>
+        {
+            return (new <Number>[this._targetId]);
+        }
+
         private function onFade(e:Event):void
         {
-            if (!(this._duplicateSprite))
+            if (!this._duplicateSprite)
             {
                 return;
             };
@@ -68,5 +76,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.fight.steps
+} com.ankamagames.dofus.logic.game.fight.steps
 

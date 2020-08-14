@@ -1,8 +1,9 @@
-﻿package com.ankamagames.dofus.network.types.game.interactive.skill
+package com.ankamagames.dofus.network.types.game.interactive.skill
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
     public class SkillActionDescription implements INetworkType 
     {
@@ -49,6 +50,21 @@
 
         public function deserializeAs_SkillActionDescription(input:ICustomDataInput):void
         {
+            this._skillIdFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_SkillActionDescription(tree);
+        }
+
+        public function deserializeAsyncAs_SkillActionDescription(tree:FuncTree):void
+        {
+            tree.addChild(this._skillIdFunc);
+        }
+
+        private function _skillIdFunc(input:ICustomDataInput):void
+        {
             this.skillId = input.readVarUhShort();
             if (this.skillId < 0)
             {
@@ -58,5 +74,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.interactive.skill
+} com.ankamagames.dofus.network.types.game.interactive.skill
 

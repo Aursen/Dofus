@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.data
+package com.ankamagames.jerakine.data
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
@@ -36,7 +36,7 @@
 
         public static function getInstance():GameDataFileAccessor
         {
-            if (!(_self))
+            if (!_self)
             {
                 _self = new (GameDataFileAccessor)();
             };
@@ -52,16 +52,16 @@
                 throw (new Error((("Game data file '" + nativeFile) + "' not readable.")));
             };
             var moduleName:String = fileUri.fileName.substr(0, fileUri.fileName.indexOf(".d2o"));
-            if (!(this._streams))
+            if (!this._streams)
             {
                 this._streams = new Dictionary();
             };
-            if (!(this._streamStartIndex))
+            if (!this._streamStartIndex)
             {
                 this._streamStartIndex = new Dictionary();
             };
             var stream:FileStream = this._streams[moduleName];
-            if (!(stream))
+            if (!stream)
             {
                 stream = new FileStream();
                 stream.endian = Endian.BIG_ENDIAN;
@@ -84,32 +84,32 @@
             var classIdentifier:int;
             var formatVersion:uint;
             var len:uint;
-            if (!(this._streams))
+            if (!this._streams)
             {
                 this._streams = new Dictionary();
             };
-            if (!(this._indexes))
+            if (!this._indexes)
             {
                 this._indexes = new Dictionary();
             };
-            if (!(this._classes))
+            if (!this._classes)
             {
                 this._classes = new Dictionary();
             };
-            if (!(this._counter))
+            if (!this._counter)
             {
                 this._counter = new Dictionary();
             };
-            if (!(this._streamStartIndex))
+            if (!this._streamStartIndex)
             {
                 this._streamStartIndex = new Dictionary();
             };
-            if (!(this._gameDataProcessor))
+            if (!this._gameDataProcessor)
             {
                 this._gameDataProcessor = new Dictionary();
             };
             this._streams[moduleName] = stream;
-            if (!(this._streamStartIndex[moduleName]))
+            if (!this._streamStartIndex[moduleName])
             {
                 this._streamStartIndex[moduleName] = 7;
             };
@@ -129,7 +129,7 @@
                 };
                 if (headers != Signature.ANKAMA_SIGNED_FILE_HEADER)
                 {
-                    throw (new Error("Malformated game data file."));
+                    throw (new Error("Malformated game data file. (AKSF)"));
                 };
                 formatVersion = stream.readShort();
                 len = stream.readInt();
@@ -139,7 +139,7 @@
                 headers = stream.readMultiByte(3, "ASCII");
                 if (headers != "D2O")
                 {
-                    throw (new Error("Malformated game data file."));
+                    throw (new Error("Malformated game data file. (D2O)"));
                 };
             };
             var indexesPointer:int = stream.readInt();
@@ -186,14 +186,14 @@
             return (this._counter[moduleName]);
         }
 
-        public function getObject(moduleName:String, objectId:int)
+        public function getObject(moduleName:String, objectId:*):*
         {
             if (((!(this._indexes)) || (!(this._indexes[moduleName]))))
             {
                 return (null);
             };
             var pointer:int = this._indexes[moduleName][objectId];
-            if (!(pointer))
+            if (!pointer)
             {
                 return (null);
             };
@@ -263,5 +263,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.data
+} com.ankamagames.jerakine.data
 

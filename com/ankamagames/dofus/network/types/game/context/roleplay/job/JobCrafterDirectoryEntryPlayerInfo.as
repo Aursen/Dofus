@@ -1,18 +1,19 @@
-﻿package com.ankamagames.dofus.network.types.game.context.roleplay.job
+package com.ankamagames.dofus.network.types.game.context.roleplay.job
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.dofus.network.types.game.character.status.PlayerStatus;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
-    import com.ankamagames.dofus.network.enums.PlayableBreedEnum;
     import com.ankamagames.dofus.network.ProtocolTypeManager;
+    import com.ankamagames.dofus.network.enums.PlayableBreedEnum;
 
     public class JobCrafterDirectoryEntryPlayerInfo implements INetworkType 
     {
 
         public static const protocolId:uint = 194;
 
-        public var playerId:uint = 0;
+        public var playerId:Number = 0;
         public var playerName:String = "";
         public var alignmentSide:int = 0;
         public var breed:int = 0;
@@ -20,22 +21,18 @@
         public var isInWorkshop:Boolean = false;
         public var worldX:int = 0;
         public var worldY:int = 0;
-        public var mapId:int = 0;
+        public var mapId:Number = 0;
         public var subAreaId:uint = 0;
-        public var status:PlayerStatus;
+        public var status:PlayerStatus = new PlayerStatus();
+        private var _statustree:FuncTree;
 
-        public function JobCrafterDirectoryEntryPlayerInfo()
-        {
-            this.status = new PlayerStatus();
-            super();
-        }
 
         public function getTypeId():uint
         {
             return (194);
         }
 
-        public function initJobCrafterDirectoryEntryPlayerInfo(playerId:uint=0, playerName:String="", alignmentSide:int=0, breed:int=0, sex:Boolean=false, isInWorkshop:Boolean=false, worldX:int=0, worldY:int=0, mapId:int=0, subAreaId:uint=0, status:PlayerStatus=null):JobCrafterDirectoryEntryPlayerInfo
+        public function initJobCrafterDirectoryEntryPlayerInfo(playerId:Number=0, playerName:String="", alignmentSide:int=0, breed:int=0, sex:Boolean=false, isInWorkshop:Boolean=false, worldX:int=0, worldY:int=0, mapId:Number=0, subAreaId:uint=0, status:PlayerStatus=null):JobCrafterDirectoryEntryPlayerInfo
         {
             this.playerId = playerId;
             this.playerName = playerName;
@@ -73,27 +70,31 @@
 
         public function serializeAs_JobCrafterDirectoryEntryPlayerInfo(output:ICustomDataOutput):void
         {
-            if (this.playerId < 0)
+            if (((this.playerId < 0) || (this.playerId > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.playerId) + ") on element playerId.")));
             };
-            output.writeVarInt(this.playerId);
+            output.writeVarLong(this.playerId);
             output.writeUTF(this.playerName);
             output.writeByte(this.alignmentSide);
             output.writeByte(this.breed);
             output.writeBoolean(this.sex);
             output.writeBoolean(this.isInWorkshop);
-            if ((((this.worldX < -255)) || ((this.worldX > 0xFF))))
+            if (((this.worldX < -255) || (this.worldX > 0xFF)))
             {
                 throw (new Error((("Forbidden value (" + this.worldX) + ") on element worldX.")));
             };
             output.writeShort(this.worldX);
-            if ((((this.worldY < -255)) || ((this.worldY > 0xFF))))
+            if (((this.worldY < -255) || (this.worldY > 0xFF)))
             {
                 throw (new Error((("Forbidden value (" + this.worldY) + ") on element worldY.")));
             };
             output.writeShort(this.worldY);
-            output.writeInt(this.mapId);
+            if (((this.mapId < 0) || (this.mapId > 9007199254740992)))
+            {
+                throw (new Error((("Forbidden value (" + this.mapId) + ") on element mapId.")));
+            };
+            output.writeDouble(this.mapId);
             if (this.subAreaId < 0)
             {
                 throw (new Error((("Forbidden value (" + this.subAreaId) + ") on element subAreaId.")));
@@ -110,42 +111,123 @@
 
         public function deserializeAs_JobCrafterDirectoryEntryPlayerInfo(input:ICustomDataInput):void
         {
-            this.playerId = input.readVarUhInt();
-            if (this.playerId < 0)
-            {
-                throw (new Error((("Forbidden value (" + this.playerId) + ") on element of JobCrafterDirectoryEntryPlayerInfo.playerId.")));
-            };
-            this.playerName = input.readUTF();
-            this.alignmentSide = input.readByte();
-            this.breed = input.readByte();
-            if ((((this.breed < PlayableBreedEnum.Feca)) || ((this.breed > PlayableBreedEnum.Eliatrope))))
-            {
-                throw (new Error((("Forbidden value (" + this.breed) + ") on element of JobCrafterDirectoryEntryPlayerInfo.breed.")));
-            };
-            this.sex = input.readBoolean();
-            this.isInWorkshop = input.readBoolean();
-            this.worldX = input.readShort();
-            if ((((this.worldX < -255)) || ((this.worldX > 0xFF))))
-            {
-                throw (new Error((("Forbidden value (" + this.worldX) + ") on element of JobCrafterDirectoryEntryPlayerInfo.worldX.")));
-            };
-            this.worldY = input.readShort();
-            if ((((this.worldY < -255)) || ((this.worldY > 0xFF))))
-            {
-                throw (new Error((("Forbidden value (" + this.worldY) + ") on element of JobCrafterDirectoryEntryPlayerInfo.worldY.")));
-            };
-            this.mapId = input.readInt();
-            this.subAreaId = input.readVarUhShort();
-            if (this.subAreaId < 0)
-            {
-                throw (new Error((("Forbidden value (" + this.subAreaId) + ") on element of JobCrafterDirectoryEntryPlayerInfo.subAreaId.")));
-            };
+            this._playerIdFunc(input);
+            this._playerNameFunc(input);
+            this._alignmentSideFunc(input);
+            this._breedFunc(input);
+            this._sexFunc(input);
+            this._isInWorkshopFunc(input);
+            this._worldXFunc(input);
+            this._worldYFunc(input);
+            this._mapIdFunc(input);
+            this._subAreaIdFunc(input);
             var _id11:uint = input.readUnsignedShort();
             this.status = ProtocolTypeManager.getInstance(PlayerStatus, _id11);
             this.status.deserialize(input);
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_JobCrafterDirectoryEntryPlayerInfo(tree);
+        }
+
+        public function deserializeAsyncAs_JobCrafterDirectoryEntryPlayerInfo(tree:FuncTree):void
+        {
+            tree.addChild(this._playerIdFunc);
+            tree.addChild(this._playerNameFunc);
+            tree.addChild(this._alignmentSideFunc);
+            tree.addChild(this._breedFunc);
+            tree.addChild(this._sexFunc);
+            tree.addChild(this._isInWorkshopFunc);
+            tree.addChild(this._worldXFunc);
+            tree.addChild(this._worldYFunc);
+            tree.addChild(this._mapIdFunc);
+            tree.addChild(this._subAreaIdFunc);
+            this._statustree = tree.addChild(this._statustreeFunc);
+        }
+
+        private function _playerIdFunc(input:ICustomDataInput):void
+        {
+            this.playerId = input.readVarUhLong();
+            if (((this.playerId < 0) || (this.playerId > 9007199254740992)))
+            {
+                throw (new Error((("Forbidden value (" + this.playerId) + ") on element of JobCrafterDirectoryEntryPlayerInfo.playerId.")));
+            };
+        }
+
+        private function _playerNameFunc(input:ICustomDataInput):void
+        {
+            this.playerName = input.readUTF();
+        }
+
+        private function _alignmentSideFunc(input:ICustomDataInput):void
+        {
+            this.alignmentSide = input.readByte();
+        }
+
+        private function _breedFunc(input:ICustomDataInput):void
+        {
+            this.breed = input.readByte();
+            if (((this.breed < PlayableBreedEnum.Feca) || (this.breed > PlayableBreedEnum.Ouginak)))
+            {
+                throw (new Error((("Forbidden value (" + this.breed) + ") on element of JobCrafterDirectoryEntryPlayerInfo.breed.")));
+            };
+        }
+
+        private function _sexFunc(input:ICustomDataInput):void
+        {
+            this.sex = input.readBoolean();
+        }
+
+        private function _isInWorkshopFunc(input:ICustomDataInput):void
+        {
+            this.isInWorkshop = input.readBoolean();
+        }
+
+        private function _worldXFunc(input:ICustomDataInput):void
+        {
+            this.worldX = input.readShort();
+            if (((this.worldX < -255) || (this.worldX > 0xFF)))
+            {
+                throw (new Error((("Forbidden value (" + this.worldX) + ") on element of JobCrafterDirectoryEntryPlayerInfo.worldX.")));
+            };
+        }
+
+        private function _worldYFunc(input:ICustomDataInput):void
+        {
+            this.worldY = input.readShort();
+            if (((this.worldY < -255) || (this.worldY > 0xFF)))
+            {
+                throw (new Error((("Forbidden value (" + this.worldY) + ") on element of JobCrafterDirectoryEntryPlayerInfo.worldY.")));
+            };
+        }
+
+        private function _mapIdFunc(input:ICustomDataInput):void
+        {
+            this.mapId = input.readDouble();
+            if (((this.mapId < 0) || (this.mapId > 9007199254740992)))
+            {
+                throw (new Error((("Forbidden value (" + this.mapId) + ") on element of JobCrafterDirectoryEntryPlayerInfo.mapId.")));
+            };
+        }
+
+        private function _subAreaIdFunc(input:ICustomDataInput):void
+        {
+            this.subAreaId = input.readVarUhShort();
+            if (this.subAreaId < 0)
+            {
+                throw (new Error((("Forbidden value (" + this.subAreaId) + ") on element of JobCrafterDirectoryEntryPlayerInfo.subAreaId.")));
+            };
+        }
+
+        private function _statustreeFunc(input:ICustomDataInput):void
+        {
+            var _id:uint = input.readUnsignedShort();
+            this.status = ProtocolTypeManager.getInstance(PlayerStatus, _id);
+            this.status.deserializeAsync(this._statustree);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.types.game.context.roleplay.job
+} com.ankamagames.dofus.network.types.game.context.roleplay.job
 

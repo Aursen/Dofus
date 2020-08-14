@@ -1,6 +1,7 @@
-﻿package com.ankamagames.dofus.datacenter.sounds
+package com.ankamagames.dofus.datacenter.sounds
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
+    import com.ankamagames.dofus.types.IdAccessors;
     import __AS3__.vec.Vector;
     import com.ankamagames.jerakine.data.GameData;
 
@@ -8,6 +9,7 @@
     {
 
         public static var MODULE:String = "SoundUi";
+        public static var idAccessors:IdAccessors = new IdAccessors(getSoundUiById, getSoundUis);
 
         public var id:uint;
         public var uiName:String;
@@ -29,5 +31,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.sounds
+} com.ankamagames.dofus.datacenter.sounds
 

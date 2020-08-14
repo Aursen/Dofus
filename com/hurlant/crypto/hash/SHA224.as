@@ -1,4 +1,4 @@
-﻿package com.hurlant.crypto.hash
+package com.hurlant.crypto.hash
 {
     public class SHA224 extends SHA256 
     {
@@ -20,5 +20,5 @@
 
 
     }
-}//package com.hurlant.crypto.hash
+} com.hurlant.crypto.hash
 

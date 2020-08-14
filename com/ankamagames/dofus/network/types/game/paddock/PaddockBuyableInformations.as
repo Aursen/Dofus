@@ -1,71 +1,89 @@
-﻿package com.ankamagames.dofus.network.types.game.paddock
+package com.ankamagames.dofus.network.types.game.paddock
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    public class PaddockBuyableInformations extends PaddockInformations implements INetworkType 
+    public class PaddockBuyableInformations implements INetworkType 
     {
 
         public static const protocolId:uint = 130;
 
-        public var price:uint = 0;
+        public var price:Number = 0;
         public var locked:Boolean = false;
 
 
-        override public function getTypeId():uint
+        public function getTypeId():uint
         {
             return (130);
         }
 
-        public function initPaddockBuyableInformations(maxOutdoorMount:uint=0, maxItems:uint=0, price:uint=0, locked:Boolean=false):PaddockBuyableInformations
+        public function initPaddockBuyableInformations(price:Number=0, locked:Boolean=false):PaddockBuyableInformations
         {
-            super.initPaddockInformations(maxOutdoorMount, maxItems);
             this.price = price;
             this.locked = locked;
             return (this);
         }
 
-        override public function reset():void
+        public function reset():void
         {
-            super.reset();
             this.price = 0;
             this.locked = false;
         }
 
-        override public function serialize(output:ICustomDataOutput):void
+        public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_PaddockBuyableInformations(output);
         }
 
         public function serializeAs_PaddockBuyableInformations(output:ICustomDataOutput):void
         {
-            super.serializeAs_PaddockInformations(output);
-            if (this.price < 0)
+            if (((this.price < 0) || (this.price > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.price) + ") on element price.")));
             };
-            output.writeVarInt(this.price);
+            output.writeVarLong(this.price);
             output.writeBoolean(this.locked);
         }
 
-        override public function deserialize(input:ICustomDataInput):void
+        public function deserialize(input:ICustomDataInput):void
         {
             this.deserializeAs_PaddockBuyableInformations(input);
         }
 
         public function deserializeAs_PaddockBuyableInformations(input:ICustomDataInput):void
         {
-            super.deserialize(input);
-            this.price = input.readVarUhInt();
-            if (this.price < 0)
+            this._priceFunc(input);
+            this._lockedFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_PaddockBuyableInformations(tree);
+        }
+
+        public function deserializeAsyncAs_PaddockBuyableInformations(tree:FuncTree):void
+        {
+            tree.addChild(this._priceFunc);
+            tree.addChild(this._lockedFunc);
+        }
+
+        private function _priceFunc(input:ICustomDataInput):void
+        {
+            this.price = input.readVarUhLong();
+            if (((this.price < 0) || (this.price > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.price) + ") on element of PaddockBuyableInformations.price.")));
             };
+        }
+
+        private function _lockedFunc(input:ICustomDataInput):void
+        {
             this.locked = input.readBoolean();
         }
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.paddock
+} com.ankamagames.dofus.network.types.game.paddock
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.console.debug
+package com.ankamagames.dofus.console.debug
 {
     import com.ankamagames.jerakine.console.ConsoleInstructionHandler;
     import com.ankamagames.jerakine.lua.LuaPlayer;
@@ -25,10 +25,10 @@
                         luaPlayer.addEventListener(LuaPlayerEvent.PLAY_ERROR, this.onScriptError);
                         luaPlayer.playFile(args[0]);
                     };
-                    return;
+                    break;
                 case "luarecorder":
                     ConsoleLUA.getInstance().toggleDisplay();
-                    return;
+                    break;
             };
         }
 
@@ -41,7 +41,7 @@
                 case "luarecorder":
                     return ("Open a separate window to record in game actions and generate a LUA script file.");
             };
-            return ((("Unknown command '" + cmd) + "'."));
+            return (("Unknown command '" + cmd) + "'.");
         }
 
         public function getParamPossibilities(cmd:String, paramIndex:uint=0, currentParams:Array=null):Array
@@ -63,5 +63,5 @@
 
 
     }
-}//package com.ankamagames.dofus.console.debug
+} com.ankamagames.dofus.console.debug
 

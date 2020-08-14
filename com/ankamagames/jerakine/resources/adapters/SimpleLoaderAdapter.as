@@ -1,6 +1,6 @@
-﻿package com.ankamagames.jerakine.resources.adapters
+package com.ankamagames.jerakine.resources.adapters
 {
-    import flash.display.Loader;
+    import com.ankamagames.jerakine.pools.PoolableLoader;
     import com.ankamagames.jerakine.resources.IResourceObserver;
     import com.ankamagames.jerakine.types.Uri;
     import com.ankamagames.jerakine.resources.adapters.impl.SignedFileAdapter;
@@ -10,6 +10,7 @@
     import flash.utils.ByteArray;
     import flash.display.LoaderInfo;
     import com.ankamagames.jerakine.resources.ResourceType;
+    import com.ankamagames.jerakine.pools.PoolsManager;
     import flash.events.Event;
     import flash.events.IOErrorEvent;
     import flash.events.ProgressEvent;
@@ -19,7 +20,7 @@
     public class SimpleLoaderAdapter implements IAdapter 
     {
 
-        private var _ldr:Loader;
+        private var _ldr:PoolableLoader;
         private var _observer:IResourceObserver;
         private var _uri:Uri;
         private var _dispatchProgress:Boolean;
@@ -66,7 +67,7 @@
             this._uri = null;
         }
 
-        protected function getResource(ldr:LoaderInfo)
+        protected function getResource(ldr:LoaderInfo):*
         {
             return (this._ldr);
         }
@@ -78,7 +79,7 @@
 
         private function prepareLoader():void
         {
-            this._ldr = new Loader();
+            this._ldr = (PoolsManager.getInstance().getLoadersPool().checkOut() as PoolableLoader);
             this._ldr.contentLoaderInfo.addEventListener(Event.INIT, this.onInit, false, 0, true);
             this._ldr.contentLoaderInfo.addEventListener(IOErrorEvent.IO_ERROR, this.onError, false, 0, true);
             if (this._dispatchProgress)
@@ -101,8 +102,9 @@
                 this._ldr.contentLoaderInfo.removeEventListener(Event.INIT, this.onInit);
                 this._ldr.contentLoaderInfo.removeEventListener(IOErrorEvent.IO_ERROR, this.onError);
                 this._ldr.contentLoaderInfo.removeEventListener(ProgressEvent.PROGRESS, this.onProgress);
+                PoolsManager.getInstance().getLoadersPool().checkIn(this._ldr);
+                this._ldr = null;
             };
-            this._ldr = null;
         }
 
         protected function onInit(e:Event):void
@@ -136,5 +138,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.resources.adapters
+} com.ankamagames.jerakine.resources.adapters
 

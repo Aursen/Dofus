@@ -1,14 +1,14 @@
-﻿package com.ankamagames.dofus.logic.game.common.actions.chat
+package com.ankamagames.dofus.logic.game.common.actions.chat
 {
     import com.ankamagames.jerakine.handlers.messages.Action;
 
     public class MoodSmileyRequestAction implements Action 
     {
 
-        public var smileyId:int;
+        public var smileyId:uint;
 
 
-        public static function create(id:int):MoodSmileyRequestAction
+        public static function create(id:uint):MoodSmileyRequestAction
         {
             var a:MoodSmileyRequestAction = new (MoodSmileyRequestAction)();
             a.smileyId = id;
@@ -17,5 +17,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.actions.chat
+} com.ankamagames.dofus.logic.game.common.actions.chat
 

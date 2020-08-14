@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.internalDatacenter.userInterface
+package com.ankamagames.dofus.internalDatacenter.userInterface
 {
     import flash.utils.Proxy;
     import com.ankamagames.jerakine.interfaces.IDataCenter;
@@ -25,10 +25,11 @@
         public var uriName:String;
         public var callback:Function;
         public var name:String;
-        public var shortcut:String;
+        public var shortcutName:String;
+        public var description:String;
 
 
-        public static function create(buttonId:uint, position:int, uriName:String, callback:Function, name:String, shortcut:String=""):ButtonWrapper
+        public static function create(buttonId:uint, position:int, uriName:String, callback:Function, name:String, shortcutName:String="", description:String=""):ButtonWrapper
         {
             var button:ButtonWrapper = new (ButtonWrapper)();
             button.id = buttonId;
@@ -36,7 +37,8 @@
             button.callback = callback;
             button.uriName = uriName;
             button.name = name;
-            button.shortcut = shortcut;
+            button.shortcutName = shortcutName;
+            button.description = description;
             return (button);
         }
 
@@ -48,7 +50,7 @@
 
         public function get iconUri():Uri
         {
-            if (!(this._uri))
+            if (!this._uri)
             {
                 this._uri = new Uri(XmlConfig.getInstance().getEntry("config.ui.skin").concat("assets.swf|").concat(this.uriName));
             };
@@ -57,7 +59,7 @@
 
         public function get fullSizeIconUri():Uri
         {
-            if (!(this._uri))
+            if (!this._uri)
             {
                 this._uri = new Uri(XmlConfig.getInstance().getEntry("config.ui.skin").concat("assets.swf|").concat(this.uriName));
             };
@@ -108,13 +110,13 @@
             this._active = active;
         }
 
-        override flash_proxy function getProperty(name:*)
+        override flash_proxy function getProperty(name:*):*
         {
             if (isAttribute(name))
             {
                 return (this[name]);
             };
-            return (("Error_on_buttonWrapper_" + name));
+            return ("Error_on_buttonWrapper_" + name);
         }
 
         override flash_proxy function hasProperty(name:*):Boolean
@@ -124,7 +126,7 @@
 
         public function toString():String
         {
-            return ((("[ButtonWrapper#" + this.id) + "]"));
+            return (("[ButtonWrapper#" + this.id) + "]");
         }
 
         public function setPosition(value:int):void
@@ -147,5 +149,5 @@
 
 
     }
-}//package com.ankamagames.dofus.internalDatacenter.userInterface
+} com.ankamagames.dofus.internalDatacenter.userInterface
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.types.entities
+package com.ankamagames.dofus.types.entities
 {
     import com.ankamagames.atouin.entities.behaviours.display.AtouinDisplayBehavior;
     import com.ankamagames.dofus.misc.BenchmarkMovementBehavior;
@@ -11,7 +11,7 @@
     public class BenchmarkCharacter extends AnimatedCharacter 
     {
 
-        public function BenchmarkCharacter(nId:int, look:TiphonEntityLook)
+        public function BenchmarkCharacter(nId:Number, look:TiphonEntityLook)
         {
             super(nId, look);
             _displayBehavior = AtouinDisplayBehavior.getInstance();
@@ -22,7 +22,7 @@
 
         override public function move(path:MovementPath, callback:Function=null, movementBehavior:IMovementBehavior=null):void
         {
-            if (!(path.start.equals(position)))
+            if (!path.start.equals(position))
             {
                 _log.warn((((((("Unsynchronized position for entity " + id) + ", jumping from ") + position) + " to ") + path.start) + "."));
                 jump(path.start);
@@ -33,5 +33,5 @@
 
 
     }
-}//package com.ankamagames.dofus.types.entities
+} com.ankamagames.dofus.types.entities
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.atouin.data.elements
+package com.ankamagames.atouin.data.elements
 {
     import com.ankamagames.atouin.data.elements.subtypes.NormalGraphicalElementData;
     import com.ankamagames.atouin.data.elements.subtypes.BoundingBoxGraphicalElementData;
@@ -29,11 +29,11 @@
                 case GraphicalElementTypes.BLENDED:
                     return (new BlendedGraphicalElementData(elementId, elementType));
             };
-            ErrorManager.addError((((("Unknown graphical element data type " + elementType) + " for element ") + elementId) + "!"), false);
+            ErrorManager.addError((((("Unknown graphical element data type " + elementType) + " for element ") + elementId) + "!"), null, false);
             return (null);
         }
 
 
     }
-}//package com.ankamagames.atouin.data.elements
+} com.ankamagames.atouin.data.elements
 

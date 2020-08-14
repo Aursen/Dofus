@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.network
+package com.ankamagames.jerakine.network
 {
     import flash.events.Event;
 
@@ -11,10 +11,10 @@
         private var _targetHost:String;
         private var _targetPort:int;
 
-        public function SnifferServerConnection(host:String=null, port:int=0)
+        public function SnifferServerConnection(host:String=null, port:int=0, id:String="")
         {
-            super(null, 0);
-            if (((!((host == null))) && (!((port == 0)))))
+            super(null, 0, id);
+            if (((!(host == null)) && (!(port == 0))))
             {
                 this.connect(host, port);
             };
@@ -43,7 +43,7 @@
 
         override public function connect(host:String, port:int):void
         {
-            if ((((_snifferHost == null)) || ((_snifferPort == 0))))
+            if (((_snifferHost == null) || (_snifferPort == 0)))
             {
                 throw (new NetworkError("Can't connect using an analyzer-proxy without host and port for this proxy."));
             };
@@ -61,5 +61,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.network
+} com.ankamagames.jerakine.network
 

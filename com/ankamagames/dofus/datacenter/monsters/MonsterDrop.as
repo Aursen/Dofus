@@ -1,6 +1,8 @@
-﻿package com.ankamagames.dofus.datacenter.monsters
+package com.ankamagames.dofus.datacenter.monsters
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
+    import __AS3__.vec.Vector;
+    import com.ankamagames.dofus.datacenter.items.criterion.GroupItemCriterion;
 
     public class MonsterDrop implements IDataCenter 
     {
@@ -14,21 +16,49 @@
         public var percentDropForGrade4:Number;
         public var percentDropForGrade5:Number;
         public var count:int;
-        public var findCeil:int;
+        public var criteria:String;
         public var hasCriteria:Boolean;
+        public var specificDropCoefficient:Vector.<MonsterDropCoefficient>;
         private var _monster:Monster;
+        private var _conditions:GroupItemCriterion;
 
 
         public function get monster():Monster
         {
-            if (!(this._monster))
+            if (!this._monster)
             {
                 this._monster = Monster.getMonsterById(this.monsterId);
             };
             return (this._monster);
         }
 
+        public function get conditions():GroupItemCriterion
+        {
+            if (!this.criteria)
+            {
+                return (null);
+            };
+            if (!this._conditions)
+            {
+                this._conditions = new GroupItemCriterion(this.criteria);
+            };
+            return (this._conditions);
+        }
+
+        public function getSpecificDropCoeffByGrade(grade:uint):MonsterDropCoefficient
+        {
+            var dropCoeff:MonsterDropCoefficient;
+            for each (dropCoeff in this.specificDropCoefficient)
+            {
+                if (grade == dropCoeff.monsterGrade)
+                {
+                    return (dropCoeff);
+                };
+            };
+            return (null);
+        }
+
 
     }
-}//package com.ankamagames.dofus.datacenter.monsters
+} com.ankamagames.dofus.datacenter.monsters
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.common.types
+package com.ankamagames.dofus.logic.game.common.types
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
@@ -45,7 +45,7 @@
 
         private function getTimerValue():int
         {
-            return ((getTimer() % int.MAX_VALUE));
+            return (getTimer() % int.MAX_VALUE);
         }
 
         private function tick(pEvent:Event):void
@@ -65,5 +65,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.types
+} com.ankamagames.dofus.logic.game.common.types
 

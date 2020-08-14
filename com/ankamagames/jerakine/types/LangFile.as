@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.types
+package com.ankamagames.jerakine.types
 {
     public class LangFile 
     {
@@ -17,5 +17,5 @@
         }
 
     }
-}//package com.ankamagames.jerakine.types
+} com.ankamagames.jerakine.types
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.tiphon.types
+package com.ankamagames.tiphon.types
 {
     import flash.utils.Dictionary;
     import flash.utils.getQualifiedClassName;
@@ -30,7 +30,7 @@
             var c:DisplayObject = this.makeChild(handler);
             if (((c) && (enableLiveReference)))
             {
-                if (!(liveReference[getQualifiedClassName(c)]))
+                if (!liveReference[getQualifiedClassName(c)])
                 {
                     liveReference[getQualifiedClassName(c)] = new Dictionary(true);
                 };
@@ -43,10 +43,10 @@
         {
             var lastNumChild:uint;
             var c:Sprite = handler.getSkinSprite(this);
-            if (((c) && (!((c == this)))))
+            if (((c) && (!(c == this))))
             {
                 lastNumChild = 0;
-                while (((numChildren) && (!((lastNumChild == numChildren)))))
+                while (((numChildren) && (!(lastNumChild == numChildren))))
                 {
                     lastNumChild = numChildren;
                     removeChildAt(0);
@@ -58,5 +58,5 @@
 
 
     }
-}//package com.ankamagames.tiphon.types
+} com.ankamagames.tiphon.types
 

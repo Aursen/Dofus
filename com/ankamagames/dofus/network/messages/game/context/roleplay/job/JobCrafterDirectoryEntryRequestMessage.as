@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.context.roleplay.job
+package com.ankamagames.dofus.network.messages.game.context.roleplay.job
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,15 +6,15 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class JobCrafterDirectoryEntryRequestMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 6043;
 
         private var _isInitialized:Boolean = false;
-        public var playerId:uint = 0;
+        public var playerId:Number = 0;
 
 
         override public function get isInitialized():Boolean
@@ -27,7 +27,7 @@
             return (6043);
         }
 
-        public function initJobCrafterDirectoryEntryRequestMessage(playerId:uint=0):JobCrafterDirectoryEntryRequestMessage
+        public function initJobCrafterDirectoryEntryRequestMessage(playerId:Number=0):JobCrafterDirectoryEntryRequestMessage
         {
             this.playerId = playerId;
             this._isInitialized = true;
@@ -52,6 +52,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_JobCrafterDirectoryEntryRequestMessage(output);
@@ -59,11 +67,11 @@
 
         public function serializeAs_JobCrafterDirectoryEntryRequestMessage(output:ICustomDataOutput):void
         {
-            if (this.playerId < 0)
+            if (((this.playerId < 0) || (this.playerId > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.playerId) + ") on element playerId.")));
             };
-            output.writeVarInt(this.playerId);
+            output.writeVarLong(this.playerId);
         }
 
         public function deserialize(input:ICustomDataInput):void
@@ -73,8 +81,23 @@
 
         public function deserializeAs_JobCrafterDirectoryEntryRequestMessage(input:ICustomDataInput):void
         {
-            this.playerId = input.readVarUhInt();
-            if (this.playerId < 0)
+            this._playerIdFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_JobCrafterDirectoryEntryRequestMessage(tree);
+        }
+
+        public function deserializeAsyncAs_JobCrafterDirectoryEntryRequestMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._playerIdFunc);
+        }
+
+        private function _playerIdFunc(input:ICustomDataInput):void
+        {
+            this.playerId = input.readVarUhLong();
+            if (((this.playerId < 0) || (this.playerId > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.playerId) + ") on element of JobCrafterDirectoryEntryRequestMessage.playerId.")));
             };
@@ -82,5 +105,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.context.roleplay.job
+} com.ankamagames.dofus.network.messages.game.context.roleplay.job
 

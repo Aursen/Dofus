@@ -1,20 +1,25 @@
-﻿package com.ankamagames.jerakine.utils.display
+package com.ankamagames.jerakine.utils.display
 {
-    import src.flash.MapTools;
-    import __AS3__.vec.Vector;
-    import flash.geom.Point;
+    import mapTools.MapTools;
+    import mapTools.MapToolsConfig;
 
     public class Dofus2Line 
     {
 
+        public static var hasInitMapTools:Boolean = false;
 
-        public static function getLine(startCellId:uint, endCellId:uint):Vector.<Point>
+
+        public static function getLine(startCellId:uint, endCellId:uint):Array
         {
-            var points:Vector.<Point> = MapTools.getLOSCellsVector(startCellId, endCellId).reverse();
-            return (points);
+            if (!hasInitMapTools)
+            {
+                MapTools.init(MapToolsConfig.DOFUS2_CONFIG);
+                hasInitMapTools = true;
+            };
+            return (MapTools.getCellsCoordBetween(startCellId, endCellId));
         }
 
 
     }
-}//package com.ankamagames.jerakine.utils.display
+} com.ankamagames.jerakine.utils.display
 

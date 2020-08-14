@@ -1,28 +1,41 @@
-﻿package com.ankamagames.dofus.console.debug
+package com.ankamagames.dofus.console.debug
 {
     import com.ankamagames.jerakine.console.ConsoleInstructionHandler;
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
-    import avmplus.getQualifiedClassName;
+    import flash.utils.getQualifiedClassName;
     import com.ankamagames.dofus.misc.utils.Inspector;
+    import flash.filesystem.File;
+    import __AS3__.vec.Vector;
+    import com.ankamagames.jerakine.utils.misc.DescribeTypeCache;
+    import com.ankamagames.berilia.types.graphic.GraphicContainer;
+    import com.ankamagames.jerakine.console.ConsoleHandler;
     import flash.utils.Dictionary;
+    import flash.display.BitmapData;
     import com.ankamagames.berilia.types.data.UiModule;
     import com.ankamagames.berilia.types.graphic.UiRootContainer;
-    import com.ankamagames.berilia.types.graphic.GraphicContainer;
     import com.ankamagames.berilia.types.data.UiData;
-    import com.ankamagames.berilia.utils.ModuleScriptAnalyzer;
+    import com.ankamagames.berilia.managers.UiModuleManager;
     import com.ankamagames.berilia.Berilia;
+    import com.ankamagames.dofus.logic.common.managers.HyperlinkDisplayArrowManager;
+    import com.ankamagames.berilia.components.TextureBase;
+    import com.ankamagames.jerakine.utils.benchmark.monitoring.FpsManagerUtils;
     import com.ankamagames.berilia.managers.UiRenderManager;
+    import com.ankamagames.berilia.managers.ThemeManager;
+    import com.ankamagames.berilia.managers.CssManager;
+    import com.ankamagames.berilia.managers.TooltipManager;
+    import com.ankamagames.berilia.types.tooltip.TooltipBlock;
     import com.ankamagames.jerakine.managers.StoreDataManager;
     import com.ankamagames.berilia.BeriliaConstants;
     import com.ankamagames.jerakine.utils.misc.StringUtils;
-    import com.ankamagames.berilia.managers.UiModuleManager;
-    import com.ankamagames.dofus.console.moduleLogger.Console;
-    import com.ankamagames.berilia.managers.KernelEventsManager;
-    import com.ankamagames.dofus.misc.lists.ChatHookList;
-    import com.ankamagames.jerakine.managers.OptionManager;
-    import com.ankamagames.jerakine.console.ConsoleHandler;
-    import com.ankamagames.jerakine.utils.misc.DescribeTypeCache;
+    import com.ankamagames.berilia.enums.StrataEnum;
+    import com.ankamagames.jerakine.managers.LangManager;
+    import com.ankamagames.jerakine.managers.FontManager;
+    import flash.utils.setTimeout;
+    import by.blooddy.crypto.MD5;
+    import com.ankamagames.jerakine.types.Uri;
+    import com.ankamagames.dofus.BuildInfos;
+    import com.ankamagames.dofus.network.enums.BuildTypeEnum;
 
     public class UiHandlerInstructionHandler implements ConsoleInstructionHandler 
     {
@@ -32,32 +45,153 @@
         private var _uiInspector:Inspector;
 
 
+        private static function getFilesFingerPrints(target:File):String
+        {
+            var f:File;
+            var result:String = "";
+            var files:Array = target.getDirectoryListing();
+            files.sortOn("name");
+            for each (f in files)
+            {
+                if (f.isDirectory)
+                {
+                    result = (result + getFilesFingerPrints(f));
+                }
+                else
+                {
+                    result = (result + f.size);
+                };
+            };
+            return (result);
+        }
+
+        private static function inspectUiElement(target:GraphicContainer, console:ConsoleHandler):void
+        {
+            var txt:String;
+            var property:String;
+            var type:String;
+            var properties:Vector.<String> = DescribeTypeCache.getVariables(target);
+            properties.sort(function (a:String, b:String):int
+            {
+                if (a > b)
+                {
+                    return (1);
+                };
+                if (a < b)
+                {
+                    return (-1);
+                };
+                return (0);
+            });
+            for each (property in properties)
+            {
+                try
+                {
+                    type = ((target[property] != null) ? getQualifiedClassName(target[property]).split("::").pop() : "?");
+                    if (type == "Array")
+                    {
+                        type = (type + (", len: " + target[property].length));
+                    };
+                    txt = ((((property + " (") + type) + ") : ") + target[property]);
+                }
+                catch(e:Error)
+                {
+                    txt = (property + " (?) : <Exception throw by getter>");
+                };
+                if (!console)
+                {
+                    _log.info(txt);
+                }
+                else
+                {
+                    console.output(txt);
+                };
+            };
+        }
+
+
         public function handle(console:ConsoleHandler, cmd:String, args:Array):void
         {
-            var _local_4:Dictionary;
-            var _local_5:Array;
-            var _local_6:Array;
-            var _local_7:UiModule;
-            var _local_8:Array;
-            var _local_9:UiModule;
-            var _local_10:Boolean;
-            var _local_11:Boolean;
-            var _local_12:UiRootContainer;
-            var _local_13:GraphicContainer;
-            var count:uint;
+            var uiName:String;
+            var instanceName:String;
+            var c:Dictionary;
+            var totalBitmapsInCache:uint;
+            var ramFromBitmapInCache:uint;
+            var tmpArr:Array;
+            var bd:BitmapData;
+            var bdSize:uint;
+            var currentUiList:Dictionary;
+            var uiOutput:Array;
+            var ml:Array;
+            var mod:UiModule;
+            var m:Dictionary;
+            var disabledModules:Dictionary;
+            var um:UiModule;
+            var uiTarget:UiRootContainer;
+            var elemTarget:GraphicContainer;
+            var xmlName:String;
+            var uiData:UiData;
+            var _aFiles:Array;
+            var fingerPrint:String;
+            var strata:int;
+            var module:UiModule;
+            var uriPath:String;
+            var tmpOjb:* = undefined;
             var uiList:Array;
             var i:String;
-            var uiName:String;
             var ui:UiData;
-            var ma:ModuleScriptAnalyzer;
+            var modul:UiModule;
+            var oldUiData:UiData;
+            var j:uint;
+            var uimodule:UiModule;
             switch (cmd)
             {
                 case "loadui":
-                    return;
+                    uiName = args[0];
+                    instanceName = "";
+                    if (args[1])
+                    {
+                        instanceName = args[1];
+                    };
+                    for each (module in UiModuleManager.getInstance().getModules())
+                    {
+                        if (module.getUi(uiName))
+                        {
+                            Berilia.getInstance().loadUi(module, module.getUi(uiName), instanceName, null, true);
+                            break;
+                        };
+                    };
+                    break;
+                case "showarrow":
+                    HyperlinkDisplayArrowManager.showArrow.apply(null, args);
+                    break;
+                case "texturebitmapcache":
+                    c = TextureBase.getBitmapCache();
+                    totalBitmapsInCache = 0;
+                    ramFromBitmapInCache = 0;
+                    tmpArr = [];
+                    for (uriPath in c)
+                    {
+                        bd = c[uriPath];
+                        bdSize = ((bd.width * bd.height) * 4);
+                        tmpArr.push({
+                            "uri":uriPath,
+                            "bitmapData":bd,
+                            "size":bdSize
+                        });
+                        totalBitmapsInCache++;
+                        ramFromBitmapInCache = (ramFromBitmapInCache + bdSize);
+                    };
+                    tmpArr.sortOn(["size", "uri"], [(Array.DESCENDING | Array.NUMERIC), Array.CASEINSENSITIVE]);
+                    for each (tmpOjb in tmpArr)
+                    {
+                        console.output((((((((tmpOjb.uri + ", ") + tmpOjb.bitmapData.width) + "x") + tmpOjb.bitmapData.height) + ", size: ") + FpsManagerUtils.calculateMB(tmpOjb.size)) + "MB"));
+                    };
+                    console.output(((((">> " + totalBitmapsInCache) + " BitmapData in cache for a total of ") + FpsManagerUtils.calculateMB(ramFromBitmapInCache)) + "MB"));
+                    break;
                 case "unloadui":
                     if (args.length == 0)
                     {
-                        count = 0;
                         uiList = [];
                         for (i in Berilia.getInstance().uiList)
                         {
@@ -71,7 +205,7 @@
                             Berilia.getInstance().unloadUi(i);
                         };
                         console.output((uiList.length + " UI were unload"));
-                        return;
+                        break;
                     };
                     if (Berilia.getInstance().unloadUi(args[0]))
                     {
@@ -81,7 +215,10 @@
                     {
                         console.output((args[0] + " does not exist or an error occured while unloading UI"));
                     };
-                    return;
+                    break;
+                case "autoreloadui":
+                    Berilia.getInstance().autoReloadUiOnChange = (!(Berilia.getInstance().autoReloadUiOnChange));
+                    break;
                 case "clearuicache":
                     if (((args) && (args[0])))
                     {
@@ -91,24 +228,36 @@
                     {
                         UiRenderManager.getInstance().clearCache();
                     };
-                    return;
+                    ThemeManager.getInstance().loadThemeData();
+                    break;
+                case "clearcsscache":
+                    CssManager.clear(true);
+                    break;
+                case "cleartooltipcache":
+                    TooltipManager.clearCache();
+                    TooltipBlock.clearCache();
+                    break;
+                case "clearthemedata":
+                    ThemeManager.getInstance().clearThemeData();
+                    ThemeManager.getInstance().loadThemeData();
+                    break;
                 case "setuiscale":
                     Berilia.getInstance().scale = Number(args[0]);
-                    return;
+                    break;
                 case "useuicache":
                     StoreDataManager.getInstance().setData(BeriliaConstants.DATASTORE_UI_DEFINITION, "useCache", (args[0] == "true"));
                     BeriliaConstants.USE_UI_CACHE = (args[0] == "true");
-                    return;
+                    break;
                 case "uilist":
-                    _local_4 = Berilia.getInstance().uiList;
-                    _local_5 = [];
-                    for (uiName in _local_4)
+                    currentUiList = Berilia.getInstance().uiList;
+                    uiOutput = [];
+                    for (uiName in currentUiList)
                     {
-                        ui = UiRootContainer(_local_4[uiName]).uiData;
-                        _local_5.push([uiName, ui.name, ui.uiClassName, ui.module.id, ui.module.trusted]);
+                        ui = UiRootContainer(currentUiList[uiName]).uiData;
+                        uiOutput.push([uiName, ui.name, ui.uiClassName, ui.module.id]);
                     };
-                    console.output(StringUtils.formatArray(_local_5, ["Instance ID", "Ui name", "Class", "Module", "Trusted"]));
-                    return;
+                    console.output(StringUtils.formatArray(uiOutput, ["Instance ID", "Ui name", "Class", "Module"]));
+                    break;
                 case "reloadui":
                     if (args[0])
                     {
@@ -118,62 +267,36 @@
                     {
                         console.output("Failed to reload ui, no id found in command arguments");
                     };
-                    return;
-                case "fps":
-                    Dofus.getInstance().toggleFPS();
-                    return;
+                    break;
                 case "modulelist":
-                    _local_6 = [];
-                    _local_8 = UiModuleManager.getInstance().getModules();
-                    for each (_local_7 in _local_8)
+                    ml = [];
+                    m = UiModuleManager.getInstance().getModules();
+                    for each (mod in m)
                     {
-                        _local_6.push([_local_7.id, _local_7.author, _local_7.trusted, true]);
+                        ml.push([mod.id, mod.author, true]);
                     };
-                    _local_8 = UiModuleManager.getInstance().disabledModules;
-                    if (_local_8.length)
+                    disabledModules = UiModuleManager.getInstance().disabledModules;
+                    for each (mod in disabledModules)
                     {
-                        for each (_local_7 in _local_8)
-                        {
-                            _local_6.push([_local_7.id, _local_7.author, _local_7.trusted, false]);
-                        };
+                        ml.push([mod.id, mod.author, false]);
                     };
-                    console.output(StringUtils.formatArray(_local_6, ["ID", "Author", "Trusted", "Active"]));
-                    return;
+                    console.output(StringUtils.formatArray(ml, ["ID", "Author", "Active"]));
+                    break;
                 case "getmoduleinfo":
-                    _local_9 = UiModuleManager.getInstance().getModule(args[0]);
-                    if (_local_9)
-                    {
-                        ma = new ModuleScriptAnalyzer(_local_9, null);
-                    }
-                    else
+                    um = UiModuleManager.getInstance().getModule(args[0]);
+                    if (!um)
                     {
                         console.output((("Module " + args[0]) + " does not exists"));
                     };
-                    return;
-                case "chatoutput":
-                    _local_10 = ((((!(args.length)) || ((String(args[0]).toLowerCase() == "true")))) || ((String(args[0]).toLowerCase() == "on")));
-                    Console.getInstance().chatMode = _local_10;
-                    Console.getInstance().display();
-                    Console.getInstance().disableLogEvent();
-                    KernelEventsManager.getInstance().processCallback(ChatHookList.ToggleChatLog, _local_10);
-                    _local_11 = OptionManager.getOptionManager("chat")["chatoutput"];
-                    OptionManager.getOptionManager("chat")["chatoutput"] = _local_10;
-                    if (_local_10)
-                    {
-                        console.output("Chatoutput is on.");
-                    }
-                    else
-                    {
-                        console.output("Chatoutput is off.");
-                    };
-                    return;
+                    break;
                 case "uiinspector":
                 case "inspector":
-                    if (!(this._uiInspector))
+                    if (!this._uiInspector)
                     {
                         this._uiInspector = new Inspector();
                     };
-                    this._uiInspector.enable = !(this._uiInspector.enable);
+                    this._uiInspector.enable = (!(this._uiInspector.enable));
+                    this._uiInspector.hierachicalMode = ((args.length == 0) ? true : (args[1] == "false"));
                     if (this._uiInspector.enable)
                     {
                         console.output("Inspector is ON.\n Use Ctrl-C to save the last hovered element informations.");
@@ -182,66 +305,119 @@
                     {
                         console.output("Inspector is OFF.");
                     };
-                    return;
+                    break;
                 case "inspectuielementsos":
                 case "inspectuielement":
                     if (args.length == 0)
                     {
                         console.output((((cmd + " need at least one argument (") + cmd) + " uiName [uiElementName])"));
-                        return;
+                        break;
                     };
-                    _local_12 = Berilia.getInstance().getUi(args[0]);
-                    if (!(_local_12))
+                    uiTarget = Berilia.getInstance().getUi(args[0]);
+                    if (!uiTarget)
                     {
                         console.output((("UI " + args[0]) + " not found (use /uilist to grab current displayed UI list)"));
-                        return;
+                        break;
                     };
                     if (args.length == 1)
                     {
-                        this.inspectUiElement(_local_12, (((cmd == "inspectuielementsos")) ? null : console));
-                        return;
+                        inspectUiElement(uiTarget, ((cmd == "inspectuielementsos") ? null : console));
+                        break;
                     };
-                    _local_13 = _local_12.getElement(args[1]);
-                    if (!(_local_13))
+                    elemTarget = uiTarget.getElement(args[1]);
+                    if (!elemTarget)
                     {
                         console.output((((("UI Element " + args[0]) + " not found on UI ") + args[0]) + "(use /uiinspector to view elements names)"));
-                        return;
+                        break;
                     };
-                    this.inspectUiElement(_local_13, (((cmd == "inspectuielementsos")) ? null : console));
-                    return;
-            };
-        }
-
-        private function inspectUiElement(target:GraphicContainer, console:ConsoleHandler):void
-        {
-            var txt:String;
-            var property:String;
-            var type:String;
-            var properties:Array = DescribeTypeCache.getVariables(target).concat();
-            properties.sort();
-            for each (property in properties)
-            {
-                try
-                {
-                    type = ((!((target[property] == null))) ? getQualifiedClassName(target[property]).split("::").pop() : "?");
-                    if (type == "Array")
+                    inspectUiElement(elemTarget, ((cmd == "inspectuielementsos") ? null : console));
+                    break;
+                case "loadprotoxml":
+                    xmlName = args[0];
+                    UiRenderManager.getInstance().clearCacheFromUiName("proto");
+                    if (Berilia.getInstance().unloadUi("prototype"))
                     {
-                        type = (type + (", len: " + target[property].length));
+                        console.output("Déchargement de l'interface de prototype");
                     };
-                    txt = ((((property + " (") + type) + ") : ") + target[property]);
-                }
-                catch(e:Error)
-                {
-                    txt = (property + " (?) : <Exception throw by getter>");
-                };
-                if (!(console))
-                {
-                    _log.info(txt);
-                }
-                else
-                {
-                    console.output(txt);
-                };
+                    for each (modul in UiModuleManager.getInstance().getModules())
+                    {
+                        if (modul.getUi("prototype"))
+                        {
+                            oldUiData = modul.getUi("prototype");
+                            if (xmlName.indexOf(".xml") == -1)
+                            {
+                                xmlName = (xmlName + ".xml");
+                            };
+                            uiData = new UiData(oldUiData.module, oldUiData.name, xmlName, oldUiData.uiClassName, oldUiData.uiGroupName);
+                            uiData.uiClass = oldUiData.uiClass;
+                            Berilia.getInstance().loadUi(modul, uiData, "prototype", null, true, StrataEnum.STRATA_TOP, false, null, false, false);
+                            console.output("Chargement de l'interface de prototype");
+                            break;
+                        };
+                    };
+                    break;
+                case "changefonttype":
+                    _aFiles = [];
+                    _aFiles.push(LangManager.getInstance().getEntry("config.ui.asset.fontsList"));
+                    j = 0;
+                    while (j < _aFiles.length)
+                    {
+                        FontManager.getInstance().loadFile(_aFiles[j]);
+                        j++;
+                    };
+                    setTimeout(function ():void
+                    {
+                        FontManager.getInstance().activeType = ((args.length == 0) ? FontManager.DEFAULT_FONT_TYPE : args[0]);
+                    }, 500);
+                    break;
+                case "resetuisavedusermodification":
+                    Berilia.getInstance().resetUiSavedUserModification(args[0]);
+                    break;
+                case "getthemefingerprint":
+                    fingerPrint = MD5.hash(getFilesFingerPrints(new Uri(LangManager.getInstance().getEntry("config.ui.skin")).toFile()));
+                    console.output(("Finger print du theme actif : " + fingerPrint));
+                    break;
+                case "subhint":
+                    if (BuildInfos.BUILD_TYPE < BuildTypeEnum.INTERNAL)
+                    {
+                        break;
+                    };
+                    if (args.length > 1)
+                    {
+                        console.output((((("Too many arguments given, " + cmd) + " takes 0 or 1 argument only (") + cmd) + " [display_strata])"));
+                        break;
+                    };
+                    strata = 3;
+                    if (args[0])
+                    {
+                        strata = args[0];
+                    };
+                    if (strata > 3)
+                    {
+                        strata = 3;
+                    }
+                    else
+                    {
+                        if (strata < 0)
+                        {
+                            strata = 0;
+                        };
+                    };
+                    if (!Berilia.getInstance().getUi("SubhintEditorUi"))
+                    {
+                        for each (uimodule in UiModuleManager.getInstance().getModules())
+                        {
+                            if (uimodule.getUi("SubhintEditorUi"))
+                            {
+                                Berilia.getInstance().loadUi(uimodule, uimodule.getUi("SubhintEditorUi"), "SubhintEditorUi", null, false, strata);
+                            };
+                        };
+                    }
+                    else
+                    {
+                        Berilia.getInstance().unloadUi("SubhintEditorUi");
+                    };
+                    break;
             };
         }
 
@@ -263,10 +439,6 @@
                     return ("Get current UI list");
                 case "reloadui":
                     return ("Unload and reload an UI/all UIs (if no paramter))");
-                case "fps":
-                    return ("Toggle FPS");
-                case "chatoutput":
-                    return ("Display the chat content in a separated window.");
                 case "modulelist":
                     return ("Display activated modules.");
                 case "inspector":
@@ -276,13 +448,28 @@
                     return ("Display the property list of an UI element (UI or Component), usage /inspectuielement uiName (elementName)");
                 case "inspectuielementsos":
                     return ("Display the property list of an UI element (UI or Component) to SOS, usage /inspectuielement uiName (elementName)");
+                case "autoreloadui":
+                    return ("Reload ui when XML definition file change");
+                case "changefonttype":
+                    return ("Change the current font type. @see fonts.xml");
+                case "resetuisavedusermodification":
+                    return ("Reset ui user modification (like resize, move). If an instanceId is provided, then the the reset is applyed only on this one");
+                case "getthemefingerprint":
+                    return ("Finger print du theme actuel se basant sur le poid des fichiers");
+                case "subhint":
+                    return ("Opens the editor window for the UI tutorials 'strata' (optional)");
             };
-            return ((("No help for command '" + cmd) + "'"));
+            return (("No help for command '" + cmd) + "'");
         }
 
         public function getParamPossibilities(cmd:String, paramIndex:uint=0, currentParams:Array=null):Array
         {
+            var uiName:String;
+            var uiList:Array;
             var i:String;
+            var module:UiModule;
+            var uiData:UiData;
+            var uiInstanceName:String;
             var possibilities:Array = [];
             switch (cmd)
             {
@@ -295,11 +482,35 @@
                         };
                     };
                     break;
+                case "loadui":
+                    uiName = currentParams[0];
+                    for each (module in UiModuleManager.getInstance().getModules())
+                    {
+                        for each (uiData in module.uis)
+                        {
+                            if (uiData.name.indexOf(uiName) != -1)
+                            {
+                                possibilities.push(uiData.name);
+                            };
+                        };
+                    };
+                    break;
+                case "":
+                case "resetuisavedusermodification":
+                    uiList = StoreDataManager.getInstance().getKeys(BeriliaConstants.DATASTORE_UI_POSITIONS);
+                    for each (uiInstanceName in uiList)
+                    {
+                        if (StoreDataManager.getInstance().getData(BeriliaConstants.DATASTORE_UI_POSITIONS, uiInstanceName))
+                        {
+                            possibilities.push(uiInstanceName);
+                        };
+                    };
+                    break;
             };
             return (possibilities);
         }
 
 
     }
-}//package com.ankamagames.dofus.console.debug
+} com.ankamagames.dofus.console.debug
 

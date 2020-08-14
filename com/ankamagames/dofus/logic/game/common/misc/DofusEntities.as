@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.common.misc
+package com.ankamagames.dofus.logic.game.common.misc
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
@@ -17,7 +17,7 @@
         private static var _localizers:Vector.<IEntityLocalizer> = new Vector.<IEntityLocalizer>();
 
 
-        public static function getEntity(entityId:int):IEntity
+        public static function getEntity(entityId:Number):IEntity
         {
             var localizer:IEntityLocalizer;
             var foundEntity:IEntity;
@@ -63,5 +63,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.misc
+} com.ankamagames.dofus.logic.game.common.misc
 

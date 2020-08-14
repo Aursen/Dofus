@@ -1,14 +1,14 @@
-﻿package com.ankamagames.dofus.logic.game.fight.actions
+package com.ankamagames.dofus.logic.game.fight.actions
 {
     import com.ankamagames.jerakine.handlers.messages.Action;
 
     public class TimelineEntityClickAction implements Action 
     {
 
-        public var fighterId:int;
+        public var fighterId:Number;
 
 
-        public static function create(id:int):TimelineEntityClickAction
+        public static function create(id:Number):TimelineEntityClickAction
         {
             var a:TimelineEntityClickAction = new (TimelineEntityClickAction)();
             a.fighterId = id;
@@ -17,5 +17,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.fight.actions
+} com.ankamagames.dofus.logic.game.fight.actions
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.components
+package com.ankamagames.berilia.components
 {
     import com.ankamagames.jerakine.handlers.messages.mouse.MouseMessage;
     import com.ankamagames.berilia.types.data.GridItem;
@@ -19,8 +19,8 @@
 
         override public function process(msg:Message):Boolean
         {
-            var _local_2:MouseMessage;
-            var _local_3:GridItem;
+            var mmsg:MouseMessage;
+            var currentItem:GridItem;
             switch (true)
             {
                 case (msg is MouseDoubleClickMessage):
@@ -31,11 +31,11 @@
                     };
                 case (msg is MouseUpMessage):
                     this._lastMouseUpFrameId = FrameIdManager.frameId;
-                    _local_2 = MouseMessage(msg);
-                    _local_3 = super.getGridItem(_local_2.target);
-                    if (_local_3)
+                    mmsg = MouseMessage(msg);
+                    currentItem = super.getGridItem(mmsg.target);
+                    if (currentItem)
                     {
-                        if (!(_local_3.data))
+                        if (!currentItem.data)
                         {
                             if (UIEventManager.getInstance().isRegisteredInstance(this, SelectEmptyItemMessage))
                             {
@@ -43,16 +43,16 @@
                             };
                             setSelectedIndex(-1, SelectMethodEnum.CLICK);
                         };
-                        setSelectedIndex(_local_3.index, SelectMethodEnum.CLICK);
+                        setSelectedIndex(currentItem.index, SelectMethodEnum.CLICK);
                     };
                     return (true);
                 default:
-                    super.process(msg);
+                    return (super.process(msg));
             };
             return (false);
         }
 
 
     }
-}//package com.ankamagames.berilia.components
+} com.ankamagames.berilia.components
 

@@ -1,10 +1,10 @@
-﻿package com.ankamagames.dofus.network.types.game.context.roleplay
+package com.ankamagames.dofus.network.types.game.context.roleplay
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class HumanOptionEmote extends HumanOption implements INetworkType 
     {
 
@@ -40,12 +40,12 @@
         public function serializeAs_HumanOptionEmote(output:ICustomDataOutput):void
         {
             super.serializeAs_HumanOption(output);
-            if ((((this.emoteId < 0)) || ((this.emoteId > 0xFF))))
+            if (((this.emoteId < 0) || (this.emoteId > 0xFF)))
             {
                 throw (new Error((("Forbidden value (" + this.emoteId) + ") on element emoteId.")));
             };
             output.writeByte(this.emoteId);
-            if ((((this.emoteStartTime < -9007199254740992)) || ((this.emoteStartTime > 9007199254740992))))
+            if (((this.emoteStartTime < -9007199254740992) || (this.emoteStartTime > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.emoteStartTime) + ") on element emoteStartTime.")));
             };
@@ -60,13 +60,35 @@
         public function deserializeAs_HumanOptionEmote(input:ICustomDataInput):void
         {
             super.deserialize(input);
+            this._emoteIdFunc(input);
+            this._emoteStartTimeFunc(input);
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_HumanOptionEmote(tree);
+        }
+
+        public function deserializeAsyncAs_HumanOptionEmote(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._emoteIdFunc);
+            tree.addChild(this._emoteStartTimeFunc);
+        }
+
+        private function _emoteIdFunc(input:ICustomDataInput):void
+        {
             this.emoteId = input.readUnsignedByte();
-            if ((((this.emoteId < 0)) || ((this.emoteId > 0xFF))))
+            if (((this.emoteId < 0) || (this.emoteId > 0xFF)))
             {
                 throw (new Error((("Forbidden value (" + this.emoteId) + ") on element of HumanOptionEmote.emoteId.")));
             };
+        }
+
+        private function _emoteStartTimeFunc(input:ICustomDataInput):void
+        {
             this.emoteStartTime = input.readDouble();
-            if ((((this.emoteStartTime < -9007199254740992)) || ((this.emoteStartTime > 9007199254740992))))
+            if (((this.emoteStartTime < -9007199254740992) || (this.emoteStartTime > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.emoteStartTime) + ") on element of HumanOptionEmote.emoteStartTime.")));
             };
@@ -74,5 +96,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.context.roleplay
+} com.ankamagames.dofus.network.types.game.context.roleplay
 

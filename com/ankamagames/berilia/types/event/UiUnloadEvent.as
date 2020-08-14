@@ -1,4 +1,4 @@
-﻿package com.ankamagames.berilia.types.event
+package com.ankamagames.berilia.types.event
 {
     import flash.events.Event;
 
@@ -10,9 +10,9 @@
 
         private var _name:String;
 
-        public function UiUnloadEvent(type:String, name:String)
+        public function UiUnloadEvent(_arg_1:String, name:String)
         {
-            super(type, false, false);
+            super(_arg_1, false, false);
             this._name = name;
         }
 
@@ -23,5 +23,5 @@
 
 
     }
-}//package com.ankamagames.berilia.types.event
+} com.ankamagames.berilia.types.event
 

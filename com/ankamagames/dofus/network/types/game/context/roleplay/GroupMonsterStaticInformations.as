@@ -1,7 +1,8 @@
-﻿package com.ankamagames.dofus.network.types.game.context.roleplay
+package com.ankamagames.dofus.network.types.game.context.roleplay
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import __AS3__.vec.Vector;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
     import __AS3__.vec.*;
@@ -11,15 +12,11 @@
 
         public static const protocolId:uint = 140;
 
-        public var mainCreatureLightInfos:MonsterInGroupLightInformations;
-        public var underlings:Vector.<MonsterInGroupInformations>;
+        public var mainCreatureLightInfos:MonsterInGroupLightInformations = new MonsterInGroupLightInformations();
+        public var underlings:Vector.<MonsterInGroupInformations> = new Vector.<MonsterInGroupInformations>();
+        private var _mainCreatureLightInfostree:FuncTree;
+        private var _underlingstree:FuncTree;
 
-        public function GroupMonsterStaticInformations()
-        {
-            this.mainCreatureLightInfos = new MonsterInGroupLightInformations();
-            this.underlings = new Vector.<MonsterInGroupInformations>();
-            super();
-        }
 
         public function getTypeId():uint
         {
@@ -76,7 +73,42 @@
             };
         }
 
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GroupMonsterStaticInformations(tree);
+        }
+
+        public function deserializeAsyncAs_GroupMonsterStaticInformations(tree:FuncTree):void
+        {
+            this._mainCreatureLightInfostree = tree.addChild(this._mainCreatureLightInfostreeFunc);
+            this._underlingstree = tree.addChild(this._underlingstreeFunc);
+        }
+
+        private function _mainCreatureLightInfostreeFunc(input:ICustomDataInput):void
+        {
+            this.mainCreatureLightInfos = new MonsterInGroupLightInformations();
+            this.mainCreatureLightInfos.deserializeAsync(this._mainCreatureLightInfostree);
+        }
+
+        private function _underlingstreeFunc(input:ICustomDataInput):void
+        {
+            var length:uint = input.readUnsignedShort();
+            var i:uint;
+            while (i < length)
+            {
+                this._underlingstree.addChild(this._underlingsFunc);
+                i++;
+            };
+        }
+
+        private function _underlingsFunc(input:ICustomDataInput):void
+        {
+            var _item:MonsterInGroupInformations = new MonsterInGroupInformations();
+            _item.deserialize(input);
+            this.underlings.push(_item);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.types.game.context.roleplay
+} com.ankamagames.dofus.network.types.game.context.roleplay
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.types.positions
+package com.ankamagames.jerakine.types.positions
 {
     import __AS3__.vec.Vector;
     import com.ankamagames.jerakine.types.enums.DirectionsEnum;
@@ -12,13 +12,13 @@
 
         protected var _oStart:MapPoint;
         protected var _oEnd:MapPoint;
-        protected var _aPath:Array;
+        protected var _aPath:Vector.<PathElement>;
 
         public function MovementPath()
         {
             this._oEnd = new MapPoint();
             this._oStart = new MapPoint();
-            this._aPath = new Array();
+            this._aPath = new Vector.<PathElement>();
         }
 
         public function get start():MapPoint
@@ -41,12 +41,12 @@
             this._oEnd = nValue;
         }
 
-        public function get path():Array
+        public function get path():Vector.<PathElement>
         {
             return (this._aPath);
         }
 
-        public function set path(value:Array):void
+        public function set path(value:Vector.<PathElement>):void
         {
             this._aPath = value;
         }
@@ -91,7 +91,7 @@
         {
             if (deleteCount == 0)
             {
-                this._aPath.splice(index);
+                this._aPath.splice(index, (this._aPath.length - index));
             }
             else
             {
@@ -101,7 +101,7 @@
 
         public function toString():String
         {
-            var str:String = (((("\ndepart : [" + this._oStart.x) + ", ") + this._oStart.y) + "]");
+            var str:* = (((("\ndepart : [" + this._oStart.x) + ", ") + this._oStart.y) + "]");
             str = (str + (((("\narrivée : [" + this._oEnd.x) + ", ") + this._oEnd.y) + "]\nchemin :"));
             var i:uint;
             while (i < this._aPath.length)
@@ -147,7 +147,7 @@
                 this._aPath.push(pFinal);
                 while (elem < (this._aPath.length - 1))
                 {
-                    if ((((Math.abs((this._aPath[elem].step.x - this._aPath[(elem + 1)].step.x)) > 1)) || ((Math.abs((this._aPath[elem].step.y - this._aPath[(elem + 1)].step.y)) > 1))))
+                    if (((Math.abs((this._aPath[elem].step.x - this._aPath[(elem + 1)].step.x)) > 1) || (Math.abs((this._aPath[elem].step.y - this._aPath[(elem + 1)].step.y)) > 1)))
                     {
                         pe = new PathElement();
                         pe.orientation = this._aPath[elem].orientation;
@@ -214,7 +214,16 @@
             this._oEnd = newEnd;
         }
 
+        public function clone():MovementPath
+        {
+            var clonePath:MovementPath = new MovementPath();
+            clonePath.start = this._oStart;
+            clonePath.end = this._oEnd;
+            clonePath.path = this._aPath.concat();
+            return (clonePath);
+        }
+
 
     }
-}//package com.ankamagames.jerakine.types.positions
+} com.ankamagames.jerakine.types.positions
 

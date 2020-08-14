@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.common.frames
+package com.ankamagames.dofus.logic.game.common.frames
 {
     import com.ankamagames.jerakine.messages.Frame;
     import com.ankamagames.jerakine.logger.Logger;
@@ -7,6 +7,7 @@
     import com.ankamagames.jerakine.types.enums.Priority;
     import com.ankamagames.dofus.kernel.Kernel;
     import com.ankamagames.dofus.logic.game.roleplay.frames.RoleplayContextFrame;
+    import com.ankamagames.dofus.internalDatacenter.items.TradeStockItemWrapper;
     import com.ankamagames.dofus.network.messages.game.inventory.exchanges.ExchangeStartOkHumanVendorMessage;
     import com.ankamagames.dofus.network.messages.game.inventory.exchanges.ExchangeShopStockStartedMessage;
     import com.ankamagames.dofus.logic.game.common.actions.exchange.ExchangeObjectModifyPricedAction;
@@ -14,8 +15,6 @@
     import com.ankamagames.dofus.network.messages.game.inventory.exchanges.ExchangeShopStockMovementUpdatedMessage;
     import com.ankamagames.dofus.internalDatacenter.items.ItemWrapper;
     import com.ankamagames.dofus.network.messages.game.inventory.exchanges.ExchangeShopStockMovementRemovedMessage;
-    import com.ankamagames.dofus.network.messages.game.inventory.exchanges.ExchangeShopStockMultiMovementUpdatedMessage;
-    import com.ankamagames.dofus.network.messages.game.inventory.exchanges.ExchangeShopStockMultiMovementRemovedMessage;
     import com.ankamagames.dofus.network.messages.game.inventory.exchanges.ExchangeLeaveMessage;
     import com.ankamagames.dofus.network.types.game.data.items.ObjectItemToSellInHumanVendorShop;
     import com.ankamagames.dofus.network.types.game.data.items.ObjectItemToSell;
@@ -23,7 +22,7 @@
     import com.ankamagames.dofus.network.types.game.context.roleplay.GameRolePlayMerchantInformations;
     import com.ankamagames.berilia.managers.KernelEventsManager;
     import com.ankamagames.dofus.misc.lists.ExchangeHookList;
-    import com.ankamagames.dofus.datacenter.items.Item;
+    import com.ankamagames.dofus.logic.game.common.managers.EntitiesLooksManager;
     import com.ankamagames.dofus.kernel.net.ConnectionsHandler;
     import com.ankamagames.dofus.network.messages.game.dialog.LeaveDialogRequestMessage;
     import com.ankamagames.dofus.logic.game.roleplay.actions.LeaveDialogRequestAction;
@@ -50,12 +49,12 @@
 
         private function get roleplayContextFrame():RoleplayContextFrame
         {
-            return ((Kernel.getWorker().getFrame(RoleplayContextFrame) as RoleplayContextFrame));
+            return (Kernel.getWorker().getFrame(RoleplayContextFrame) as RoleplayContextFrame);
         }
 
         private function get commonExchangeManagementFrame():CommonExchangeManagementFrame
         {
-            return ((Kernel.getWorker().getFrame(CommonExchangeManagementFrame) as CommonExchangeManagementFrame));
+            return (Kernel.getWorker().getFrame(CommonExchangeManagementFrame) as CommonExchangeManagementFrame);
         }
 
         public function pushed():Boolean
@@ -66,86 +65,71 @@
 
         public function process(msg:Message):Boolean
         {
-            var _local_2:ExchangeStartOkHumanVendorMessage;
-            var _local_3:*;
-            var _local_4:String;
-            var _local_5:ExchangeShopStockStartedMessage;
-            var _local_6:ExchangeObjectModifyPricedAction;
-            var _local_7:ExchangeObjectModifyPricedMessage;
-            var _local_8:ExchangeShopStockMovementUpdatedMessage;
-            var _local_9:ItemWrapper;
-            var _local_10:uint;
-            var _local_11:Boolean;
-            var _local_12:ExchangeShopStockMovementRemovedMessage;
-            var _local_13:ExchangeShopStockMultiMovementUpdatedMessage;
-            var _local_14:ExchangeShopStockMultiMovementRemovedMessage;
-            var _local_15:ExchangeLeaveMessage;
+            var stockItem:TradeStockItemWrapper;
+            var esohvmsg:ExchangeStartOkHumanVendorMessage;
+            var player:*;
+            var playerName:String;
+            var esostmsg:ExchangeShopStockStartedMessage;
+            var eompa:ExchangeObjectModifyPricedAction;
+            var eomfpmsg:ExchangeObjectModifyPricedMessage;
+            var essmamsg:ExchangeShopStockMovementUpdatedMessage;
+            var itemWrapper:ItemWrapper;
+            var newPrice:Number;
+            var newItem:Boolean;
+            var essmrmsg:ExchangeShopStockMovementRemovedMessage;
+            var elm:ExchangeLeaveMessage;
             var objectToSell:ObjectItemToSellInHumanVendorShop;
-            var iwrapper:ItemWrapper;
             var object:ObjectItemToSell;
-            var iw:ItemWrapper;
-            var cat:Object;
             var i:int;
-            var cate:Object;
-            var objectInfo:ObjectItemToSell;
-            var newItem2:Boolean;
-            var objectId:uint;
             switch (true)
             {
                 case (msg is ExchangeStartOkHumanVendorMessage):
-                    _local_2 = (msg as ExchangeStartOkHumanVendorMessage);
-                    _local_3 = this.roleplayContextFrame.entitiesFrame.getEntityInfos(_local_2.sellerId);
+                    esohvmsg = (msg as ExchangeStartOkHumanVendorMessage);
+                    player = this.roleplayContextFrame.entitiesFrame.getEntityInfos(esohvmsg.sellerId);
                     PlayedCharacterManager.getInstance().isInExchange = true;
-                    if (_local_3 == null)
+                    if (player == null)
                     {
                         _log.error("Impossible de trouver le personnage vendeur dans l'entitiesFrame");
                         return (true);
                     };
-                    _local_4 = (_local_3 as GameRolePlayMerchantInformations).name;
+                    playerName = (player as GameRolePlayMerchantInformations).name;
                     this._shopStock = new Array();
-                    for each (objectToSell in _local_2.objectsInfos)
+                    for each (objectToSell in esohvmsg.objectsInfos)
                     {
-                        iwrapper = ItemWrapper.create(0, objectToSell.objectUID, objectToSell.objectGID, objectToSell.quantity, objectToSell.effects);
-                        this._shopStock.push({
-                            "itemWrapper":iwrapper,
-                            "price":objectToSell.objectPrice
-                        });
+                        stockItem = TradeStockItemWrapper.createFromObjectItemToSell(objectToSell);
+                        this._shopStock.push(stockItem);
                     };
-                    KernelEventsManager.getInstance().processCallback(ExchangeHookList.ExchangeStartOkHumanVendor, _local_4, this._shopStock);
+                    KernelEventsManager.getInstance().processCallback(ExchangeHookList.ExchangeStartOkHumanVendor, playerName, this._shopStock, EntitiesLooksManager.getInstance().getTiphonEntityLook(esohvmsg.sellerId));
                     return (true);
                 case (msg is ExchangeShopStockStartedMessage):
-                    _local_5 = (msg as ExchangeShopStockStartedMessage);
+                    esostmsg = (msg as ExchangeShopStockStartedMessage);
                     PlayedCharacterManager.getInstance().isInExchange = true;
                     this._shopStock = new Array();
-                    for each (object in _local_5.objectsInfos)
+                    for each (object in esostmsg.objectsInfos)
                     {
-                        iw = ItemWrapper.create(0, object.objectUID, object.objectGID, object.quantity, object.effects, false);
-                        cat = Item.getItemById(iw.objectGID).category;
-                        this._shopStock.push({
-                            "itemWrapper":iw,
-                            "price":object.objectPrice,
-                            "category":cat
-                        });
+                        stockItem = TradeStockItemWrapper.createFromObjectItemToSell(object);
+                        _log.debug((" - " + stockItem.itemWrapper.name));
+                        this._shopStock.push(stockItem);
                     };
                     KernelEventsManager.getInstance().processCallback(ExchangeHookList.ExchangeShopStockStarted, this._shopStock);
                     return (true);
                 case (msg is ExchangeObjectModifyPricedAction):
-                    _local_6 = (msg as ExchangeObjectModifyPricedAction);
-                    _local_7 = new ExchangeObjectModifyPricedMessage();
-                    _local_7.initExchangeObjectModifyPricedMessage(_local_6.objectUID, _local_6.quantity, _local_6.price);
-                    ConnectionsHandler.getConnection().send(_local_7);
+                    eompa = (msg as ExchangeObjectModifyPricedAction);
+                    eomfpmsg = new ExchangeObjectModifyPricedMessage();
+                    eomfpmsg.initExchangeObjectModifyPricedMessage(eompa.objectUID, eompa.quantity, eompa.price);
+                    ConnectionsHandler.getConnection().send(eomfpmsg);
                     return (true);
                 case (msg is ExchangeShopStockMovementUpdatedMessage):
-                    _local_8 = (msg as ExchangeShopStockMovementUpdatedMessage);
-                    _local_9 = ItemWrapper.create(0, _local_8.objectInfo.objectUID, _local_8.objectInfo.objectGID, _local_8.objectInfo.quantity, _local_8.objectInfo.effects, false);
-                    _local_10 = _local_8.objectInfo.objectPrice;
-                    _local_11 = true;
+                    essmamsg = (msg as ExchangeShopStockMovementUpdatedMessage);
+                    itemWrapper = ItemWrapper.create(0, essmamsg.objectInfo.objectUID, essmamsg.objectInfo.objectGID, essmamsg.objectInfo.quantity, essmamsg.objectInfo.effects, false);
+                    newPrice = essmamsg.objectInfo.objectPrice;
+                    newItem = true;
                     i = 0;
                     while (i < this._shopStock.length)
                     {
-                        if (this._shopStock[i].itemWrapper.objectUID == _local_9.objectUID)
+                        if (this._shopStock[i].itemWrapper.objectUID == itemWrapper.objectUID)
                         {
-                            if (_local_9.quantity > this._shopStock[i].itemWrapper.quantity)
+                            if (itemWrapper.quantity > this._shopStock[i].itemWrapper.quantity)
                             {
                                 KernelEventsManager.getInstance().processCallback(ExchangeHookList.ExchangeShopStockAddQuantity);
                             }
@@ -153,34 +137,26 @@
                             {
                                 KernelEventsManager.getInstance().processCallback(ExchangeHookList.ExchangeShopStockRemoveQuantity);
                             };
-                            cate = Item.getItemById(_local_9.objectGID).category;
-                            this._shopStock.splice(i, 1, {
-                                "itemWrapper":_local_9,
-                                "price":_local_10,
-                                "category":cate
-                            });
-                            _local_11 = false;
+                            stockItem = TradeStockItemWrapper.create(itemWrapper, newPrice);
+                            this._shopStock.splice(i, 1, stockItem);
+                            newItem = false;
                             break;
                         };
                         i++;
                     };
-                    if (_local_11)
+                    if (newItem)
                     {
-                        cat = Item.getItemById(_local_9.objectGID).category;
-                        this._shopStock.push({
-                            "itemWrapper":_local_9,
-                            "price":_local_8.objectInfo.objectPrice,
-                            "category":cat
-                        });
+                        stockItem = TradeStockItemWrapper.create(itemWrapper, essmamsg.objectInfo.objectPrice);
+                        this._shopStock.push(stockItem);
                     };
-                    KernelEventsManager.getInstance().processCallback(ExchangeHookList.ExchangeShopStockUpdate, this._shopStock, _local_9);
+                    KernelEventsManager.getInstance().processCallback(ExchangeHookList.ExchangeShopStockUpdate, this._shopStock, itemWrapper);
                     return (true);
                 case (msg is ExchangeShopStockMovementRemovedMessage):
-                    _local_12 = (msg as ExchangeShopStockMovementRemovedMessage);
+                    essmrmsg = (msg as ExchangeShopStockMovementRemovedMessage);
                     i = 0;
                     while (i < this._shopStock.length)
                     {
-                        if (this._shopStock[i].itemWrapper.objectUID == _local_12.objectId)
+                        if (this._shopStock[i].itemWrapper.objectUID == essmrmsg.objectId)
                         {
                             this._shopStock.splice(i, 1);
                             break;
@@ -188,66 +164,17 @@
                         i++;
                     };
                     KernelEventsManager.getInstance().processCallback(ExchangeHookList.ExchangeShopStockUpdate, this._shopStock, null);
-                    KernelEventsManager.getInstance().processCallback(ExchangeHookList.ExchangeShopStockMovementRemoved, _local_12.objectId);
-                    return (true);
-                case (msg is ExchangeShopStockMultiMovementUpdatedMessage):
-                    _local_13 = (msg as ExchangeShopStockMultiMovementUpdatedMessage);
-                    for each (objectInfo in _local_13.objectInfoList)
-                    {
-                        _local_9 = ItemWrapper.create(0, objectInfo.objectUID, _local_8.objectInfo.objectGID, objectInfo.quantity, objectInfo.effects, false);
-                        newItem2 = true;
-                        i = 0;
-                        while (i < this._shopStock.length)
-                        {
-                            if (this._shopStock[i].itemWrapper.objectUID == _local_9.objectUID)
-                            {
-                                cat = Item.getItemById(_local_9.objectGID).category;
-                                this._shopStock.splice(i, 1, {
-                                    "itemWrapper":_local_9,
-                                    "price":_local_8.objectInfo.objectPrice,
-                                    "category":cat
-                                });
-                                newItem2 = false;
-                                break;
-                            };
-                            i++;
-                        };
-                        if (newItem2)
-                        {
-                            this._shopStock.push({
-                                "itemWrapper":_local_9,
-                                "price":_local_8.objectInfo.objectPrice
-                            });
-                        };
-                    };
-                    KernelEventsManager.getInstance().processCallback(ExchangeHookList.ExchangeShopStockUpdate, this._shopStock);
-                    return (true);
-                case (msg is ExchangeShopStockMultiMovementRemovedMessage):
-                    _local_14 = (msg as ExchangeShopStockMultiMovementRemovedMessage);
-                    for each (objectId in _local_14.objectIdList)
-                    {
-                        i = 0;
-                        while (i < this._shopStock.length)
-                        {
-                            if (this._shopStock[i].itemWrapper.objectUID == objectId)
-                            {
-                                this._shopStock.splice(i, 1);
-                                break;
-                            };
-                            i++;
-                        };
-                    };
-                    KernelEventsManager.getInstance().processCallback(ExchangeHookList.ExchangeShopStockMouvmentRemoveOk, _local_12.objectId);
+                    KernelEventsManager.getInstance().processCallback(ExchangeHookList.ExchangeShopStockMovementRemoved, essmrmsg.objectId);
                     return (true);
                 case (msg is LeaveDialogRequestAction):
                     ConnectionsHandler.getConnection().send(new LeaveDialogRequestMessage());
                     return (true);
                 case (msg is ExchangeLeaveMessage):
-                    _local_15 = (msg as ExchangeLeaveMessage);
-                    if (_local_15.dialogType == DialogTypeEnum.DIALOG_EXCHANGE)
+                    elm = (msg as ExchangeLeaveMessage);
+                    if (elm.dialogType == DialogTypeEnum.DIALOG_EXCHANGE)
                     {
                         PlayedCharacterManager.getInstance().isInExchange = false;
-                        this._success = _local_15.success;
+                        this._success = elm.success;
                         Kernel.getWorker().removeFrame(this);
                     };
                     return (true);
@@ -268,5 +195,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.frames
+} com.ankamagames.dofus.logic.game.common.frames
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.data
+package com.ankamagames.jerakine.data
 {
     import flash.utils.Dictionary;
     import __AS3__.vec.Vector;
@@ -40,12 +40,12 @@
             var idsCount:Number;
             var j:uint;
             var result:Vector.<uint> = new Vector.<uint>();
-            if (!(this._searchFieldIndex[fieldName]))
+            if (!this._searchFieldIndex[fieldName])
             {
                 return (null);
             };
-            var type:int = this._searchFieldType[fieldName];
-            var readFct:Function = this.getReadFunction(type);
+            var _local_4:int = this._searchFieldType[fieldName];
+            var readFct:Function = this.getReadFunction(_local_4);
             var itemCount:uint = this._searchFieldCount[fieldName];
             Object(this._stream).position = this._searchFieldIndex[fieldName];
             if (readFct == null)
@@ -79,23 +79,23 @@
             var idsCount:Number;
             var j:uint;
             var result:Vector.<uint> = new Vector.<uint>();
-            if (!(this._searchFieldIndex[fieldName]))
+            if (!this._searchFieldIndex[fieldName])
             {
                 return (null);
             };
-            var iterable:Boolean = !((((((((((((value is uint)) || ((value is int)))) || ((value is Number)))) || ((value is String)))) || ((value is Boolean)))) || ((value == null))));
-            if (((iterable) && ((value.length == 0))))
+            var iterable:* = (!((((((value is uint) || (value is int)) || (value is Number)) || (value is String)) || (value is Boolean)) || (value == null)));
+            if (((iterable) && (value.length == 0)))
             {
                 return (result);
             };
-            if (!(iterable))
+            if (!iterable)
             {
                 value = [value];
             };
             var itemCount:uint = this._searchFieldCount[fieldName];
             Object(this._stream).position = this._searchFieldIndex[fieldName];
-            var type:int = this._searchFieldType[fieldName];
-            var readFct:Function = this.getReadFunction(type);
+            var _local_6:int = this._searchFieldType[fieldName];
+            var readFct:Function = this.getReadFunction(_local_6);
             if (readFct == null)
             {
                 return (null);
@@ -214,8 +214,8 @@
             Object(this._stream).position = this._searchFieldIndex[fieldName];
             var ref:Dictionary = new Dictionary();
             this._sortIndex[fieldName] = ref;
-            var type:int = this._searchFieldType[fieldName];
-            var readFct:Function = this.getReadFunction(type);
+            var _local_5:int = this._searchFieldType[fieldName];
+            var readFct:Function = this.getReadFunction(_local_5);
             if (readFct == null)
             {
                 return;
@@ -274,11 +274,11 @@
             return (I18nFileAccessor.getInstance().getUnDiacriticalText(this._currentStream.readInt()));
         }
 
-        private function getReadFunction(type:int):Function
+        private function getReadFunction(_arg_1:int):Function
         {
             var readFct:Function;
             var directBuffer:ByteArray;
-            switch (type)
+            switch (_arg_1)
             {
                 case GameDataTypeEnum.INT:
                     readFct = this._stream.readInt;
@@ -295,7 +295,7 @@
                 case GameDataTypeEnum.I18N:
                     I18nFileAccessor.getInstance().useDirectBuffer(true);
                     readFct = this.readI18n;
-                    if (!((this._stream is ByteArray)))
+                    if (!(this._stream is ByteArray))
                     {
                         directBuffer = new ByteArray();
                         Object(this._stream).position = 0;
@@ -336,5 +336,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.data
+} com.ankamagames.jerakine.data
 

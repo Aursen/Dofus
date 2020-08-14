@@ -1,4 +1,4 @@
-﻿package com.hurlant.crypto.hash
+package com.hurlant.crypto.hash
 {
     import flash.utils.ByteArray;
 
@@ -48,7 +48,7 @@
         {
             if (this.bits != 0)
             {
-                return ((this.bits / 8));
+                return (this.bits / 8);
             };
             return (this.hash.getHashSize());
         }
@@ -80,7 +80,7 @@
             this.outerKey.writeBytes(this.pad_2);
             this.outerKey.writeBytes(this.innerHash);
             this.outerHash = this.hash.hash(this.outerKey);
-            if ((((this.bits > 0)) && ((this.bits < (8 * this.outerHash.length)))))
+            if (((this.bits > 0) && (this.bits < (8 * this.outerHash.length))))
             {
                 this.outerHash.length = (this.bits / 8);
             };
@@ -95,10 +95,10 @@
 
         public function toString():String
         {
-            return ((("mac-" + (((this.bits > 0)) ? (this.bits + "-") : "")) + this.hash.toString()));
+            return (("mac-" + ((this.bits > 0) ? (this.bits + "-") : "")) + this.hash.toString());
         }
 
 
     }
-}//package com.hurlant.crypto.hash
+} com.hurlant.crypto.hash
 

@@ -1,17 +1,16 @@
-﻿package com.ankamagames.dofus.logic.shield
+package com.ankamagames.dofus.logic.shield
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
-    import avmplus.getQualifiedClassName;
+    import flash.utils.getQualifiedClassName;
     import flash.utils.IDataInput;
     import flash.utils.ByteArray;
     import com.ankamagames.dofus.network.types.secure.TrustCertificate;
     import by.blooddy.crypto.SHA256;
-    import com.ankamagames.jerakine.utils.crypto.Base64;
     import com.hurlant.crypto.symmetric.AESKey;
     import com.hurlant.crypto.symmetric.ECBMode;
+    import com.ankamagames.jerakine.utils.crypto.Base64;
     import flash.system.Capabilities;
-    import com.ankamagames.jerakine.utils.system.AirScanner;
     import flash.filesystem.File;
     import flash.system.ApplicationDomain;
     import by.blooddy.crypto.MD5;
@@ -24,6 +23,7 @@
         public static const HEADER_V1:String = (HEADER_BEGIN + "1");
         public static const HEADER_V2:String = (HEADER_BEGIN + "2");
         public static const HEADER_V3:String = (HEADER_BEGIN + "3");
+        public static const HEADER_V4:String = (HEADER_BEGIN + "4");
 
         public var version:uint;
         public var id:uint;
@@ -34,7 +34,7 @@
         public var useUserInfo:Boolean;
         public var filterVirtualNetwork:Boolean;
 
-        public function ShieldCertifcate(version:uint=3)
+        public function ShieldCertifcate(version:uint=4)
         {
             switch (version)
             {
@@ -44,27 +44,29 @@
                     this.useBasicInfo = false;
                     this.useUserInfo = false;
                     this.filterVirtualNetwork = false;
-                    return;
+                    break;
                 case 2:
                     this.useAdvancedNetworkInfo = true;
                     this.useBasicNetworkInfo = true;
                     this.useBasicInfo = true;
                     this.useUserInfo = true;
                     this.filterVirtualNetwork = false;
-                    return;
+                    break;
                 case 3:
+                case 4:
                     this.useAdvancedNetworkInfo = false;
                     this.useBasicNetworkInfo = true;
                     this.useBasicInfo = true;
                     this.useUserInfo = true;
                     this.filterVirtualNetwork = true;
-                    return;
+                    break;
             };
+            this.version = version;
         }
 
         public static function fromRaw(data:IDataInput, output:ShieldCertifcate=null):ShieldCertifcate
         {
-            var _local_5:uint;
+            var infoLen:uint;
             var i:uint;
             var result:ShieldCertifcate = ((output) ? output : new (ShieldCertifcate)());
             data["position"] = 0;
@@ -97,11 +99,12 @@
                     result.content = result.decrypt(data);
                     break;
                 case HEADER_V3:
-                    result.version = 3;
+                case HEADER_V4:
+                    result.version = ((header == HEADER_V4) ? 4 : 3);
                     result.id = data.readUnsignedInt();
-                    _local_5 = data.readShort();
+                    infoLen = data.readShort();
                     i = 0;
-                    while (i < _local_5)
+                    while (i < infoLen)
                     {
                         result[data.readUTF()] = data.readBoolean();
                         i++;
@@ -123,21 +126,21 @@
                     this.useBasicInfo = false;
                     this.useUserInfo = false;
                     this.filterVirtualNetwork = false;
-                    return;
+                    break;
                 case ShieldSecureLevel.MEDIUM:
                     this.useAdvancedNetworkInfo = false;
                     this.useBasicNetworkInfo = false;
                     this.useBasicInfo = true;
                     this.useUserInfo = true;
                     this.filterVirtualNetwork = false;
-                    return;
+                    break;
                 case ShieldSecureLevel.MAX:
                     this.useAdvancedNetworkInfo = true;
                     this.useBasicNetworkInfo = true;
                     this.useBasicInfo = true;
                     this.useUserInfo = true;
                     this.filterVirtualNetwork = true;
-                    return;
+                    break;
             };
         }
 
@@ -153,7 +156,7 @@
 
         public function serialize():ByteArray
         {
-            var _local_2:Array;
+            var info:Array;
             var i:uint;
             var result:ByteArray = new ByteArray();
             switch (this.version)
@@ -166,15 +169,16 @@
                     result.writeUTFBytes(this.content);
                     break;
                 case 3:
-                    result.writeUTFBytes(HEADER_V3);
+                case 4:
+                    result.writeUTFBytes(((this.version == 4) ? HEADER_V4 : HEADER_V3));
                     result.writeUnsignedInt(this.id);
-                    _local_2 = ["useBasicInfo", "useBasicNetworkInfo", "useAdvancedNetworkInfo", "useUserInfo"];
-                    result.writeShort(_local_2.length);
+                    info = ["useBasicInfo", "useBasicNetworkInfo", "useAdvancedNetworkInfo", "useUserInfo"];
+                    result.writeShort(info.length);
                     i = 0;
-                    while (i < _local_2.length)
+                    while (i < info.length)
                     {
-                        result.writeUTF(_local_2[i]);
-                        result.writeBoolean(this[_local_2[i]]);
+                        result.writeUTF(info[i]);
+                        result.writeBoolean(this[info[i]]);
                         i++;
                     };
                     result.writeUTFBytes(this.content);
@@ -193,61 +197,18 @@
 
         private function decrypt(data:IDataInput):String
         {
-            //unresolved jump
-            
-        _label_1: 
-            goto _label_9;
-            
-        _label_2: 
-            var cryptedData:ByteArray = Base64.decodeToByteArray(data.readUTFBytes(data.bytesAvailable));
-            goto _label_10;
-            
-        _label_3: 
-            goto _label_1;
-            var decrypt$0 = decrypt$0;
-            
-        _label_4: 
-            var aesKey:AESKey = new AESKey(key);
-            while (true)
-            {
-                var ecb:ECBMode = new ECBMode(aesKey);
-                goto _label_6;
-            };
-            var _local_3 = _local_3;
-            
-        _label_5: 
-            goto _label_4;
-            var _local_4 = _local_4;
-            
-        _label_6: 
-            goto _label_2;
-            
-        _label_7: 
-            goto _label_8;
-            goto _label_3;
-            var _local_0 = this;
-            
-        _label_8: 
-            key.writeUTFBytes(_local_0.getHash(true));
-            goto _label_5;
-            
-        _label_9: 
             var key:ByteArray = new ByteArray();
-            goto _label_7;
+            key.writeUTFBytes(this.getHash(true));
+            var aesKey:AESKey = new AESKey(key);
+            var ecb:ECBMode = new ECBMode(aesKey);
+            var cryptedData:ByteArray = Base64.decodeToByteArray(data.readUTFBytes(data.bytesAvailable));
             try
             {
-                
-            _label_10: 
                 ecb.decrypt(cryptedData);
             }
             catch(e:Error)
             {
-                while (_log.error("Certificat V2 non valide (clef invalide)"), true)
-                {
-                    goto _label_11;
-                };
-                
-            _label_11: 
+                _log.error("Certificat V2 non valide (clef invalide)");
                 return (null);
             };
             cryptedData.position = 0;
@@ -256,209 +217,106 @@
 
         private function getHash(reverse:Boolean=false):String
         {
-            goto _label_6;
-            
-        _label_1: 
-            goto _label_5;
-            goto _label_1;
-            var _local_6 = _local_6;
-            
-        _label_2: 
-            var orderInterfaces:Array;
-            while ((var netInterface:* = undefined), true)
-            {
-                var i:uint;
-                //unresolved jump
-                var _local_0 = this;
-            };
-            
-        _label_3: 
-            var data:Array = [];
-            goto _label_7;
-            
-        _label_4: 
+            var virtualNetworkRegExpr:RegExp;
             var networkInterface:Object;
             var interfaces:* = undefined;
-            goto _label_2;
-            _local_0 = this;
-            
-        _label_5: 
-            goto _label_3;
-            
-        _label_6: 
-            var virtualNetworkRegExpr:RegExp;
-            goto _label_4;
-            
-        _label_7: 
-            if (_local_0.useBasicInfo)
+            var orderInterfaces:Array;
+            var netInterface:* = undefined;
+            var i:uint;
+            var data:Array = [];
+            if (this.useBasicInfo)
             {
-                while (data.push(Capabilities.cpuArchitecture), true)
+                data.push(Capabilities.cpuArchitecture);
+                if (((Capabilities.os == "Windows 10") && (this.version < 4)))
                 {
-                    data.push(Capabilities.os);
-                    //unresolved jump
+                    data.push("Windows 8");
+                }
+                else
+                {
+                    if (((!(Capabilities.os.indexOf("Mac OS") == -1)) && (this.version > 3)))
+                    {
+                        data.push(Capabilities.os.split(/\./)[0]);
+                    }
+                    else
+                    {
+                        data.push(Capabilities.os);
+                    };
                 };
-                var _local_5 = _local_5;
-                
-            _label_8: 
-                goto _label_9;
-                while (data.push(Capabilities.language), goto _label_8, (_local_0 = _local_0), true)
+                data.push(Capabilities.maxLevelIDC);
+                data.push(Capabilities.language);
+            };
+            if (this.useUserInfo)
+            {
+                try
                 {
-                    data.push(Capabilities.maxLevelIDC);
-                    continue;
-                    var getHash$0 = getHash$0;
+                    data.push(File.documentsDirectory.nativePath.split(File.separator)[2]);
+                }
+                catch(e:Error)
+                {
+                    _log.error("User non disponible.");
                 };
             };
-            
-        _label_9: 
-            if (AirScanner.hasAir())
+            if (this.useBasicNetworkInfo)
             {
-                if (_local_0.useUserInfo)
+                virtualNetworkRegExpr = new RegExp("(6to4)|(adapter)|(teredo)|(tunneling)|(loopback)", "ig");
+                try
                 {
-                    try
+                    if (ApplicationDomain.currentDomain.hasDefinition("flash.net::NetworkInfo"))
                     {
-                        data.push(File.documentsDirectory.nativePath.split(File.separator)[2]);
-                    }
-                    catch(e:Error)
-                    {
-                        _log.error("User non disponible.");
-                    };
-                };
-                if (_local_0.useBasicNetworkInfo)
-                {
-                    virtualNetworkRegExpr = new RegExp("(6to4)|(adapter)|(teredo)|(tunneling)|(loopback)", "ig");
-                    try
-                    {
-                        if (ApplicationDomain.currentDomain.hasDefinition("flash.net::NetworkInfo"))
+                        networkInterface = ApplicationDomain.currentDomain.getDefinition("flash.net::NetworkInfo");
+                        interfaces = networkInterface.networkInfo.findInterfaces();
+                        orderInterfaces = [];
+                        for each (netInterface in interfaces)
                         {
-                            //unresolved jump
-                            
-                        _label_10: 
-                            interfaces = networkInterface.networkInfo.findInterfaces();
-                            while (goto _label_11, (networkInterface = ApplicationDomain.currentDomain.getDefinition("flash.net::NetworkInfo")), true)
-                            {
-                                goto _label_10;
-                            };
-                            
-                        _label_11: 
-                            orderInterfaces = [];
-                            for each (netInterface in interfaces)
-                            {
-                                //unresolved jump
-                                var _local_4 = _local_4;
-                            };
-                            while (orderInterfaces.sortOn("hardwareAddress"), true)
-                            {
-                                goto _label_12;
-                            };
-                            
-                        _label_12: 
-                            i = 0;
-                            while (i < orderInterfaces.length)
-                            {
-                                if (((_local_0.filterVirtualNetwork) && (!((String(orderInterfaces[i].displayName).search(virtualNetworkRegExpr) == -1)))))
-                                {
-                                }
-                                else
-                                {
-                                    data.push(orderInterfaces[i].hardwareAddress);
-                                    if (_local_0.useAdvancedNetworkInfo)
-                                    {
-                                        data.push(orderInterfaces[i].name);
-                                        data.push(orderInterfaces[i].displayName);
-                                        goto _label_14;
-                                    };
-                                };
-                                
-                            _label_13: 
-                                i++;
-                                continue;
-                                
-                            _label_14: 
-                                goto _label_13;
-                            };
+                            orderInterfaces.push(netInterface);
                         };
-                    }
-                    catch(e:Error)
-                    {
-                        _log.error("Donnée sur la carte réseau non disponible.");
+                        orderInterfaces.sortOn("hardwareAddress");
+                        i = 0;
+                        while (i < orderInterfaces.length)
+                        {
+                            if (((this.filterVirtualNetwork) && (!(String(orderInterfaces[i].displayName).search(virtualNetworkRegExpr) == -1))))
+                            {
+                            }
+                            else
+                            {
+                                data.push(orderInterfaces[i].hardwareAddress);
+                                if (this.useAdvancedNetworkInfo)
+                                {
+                                    data.push(orderInterfaces[i].name);
+                                    data.push(orderInterfaces[i].displayName);
+                                };
+                            };
+                            i++;
+                        };
                     };
+                }
+                catch(e:Error)
+                {
+                    _log.error("Donnée sur la carte réseau non disponible.");
                 };
             };
             if (reverse)
             {
-                while (data.reverse(), true)
-                {
-                    goto _label_15;
-                };
-                var _local_3 = _local_3;
+                data.reverse();
             };
-            
-        _label_15: 
             return (MD5.hash(data.toString()));
         }
 
         private function traceInfo(target:*, maxDepth:uint=5, inc:String=""):void
         {
-            _loop_1:
-            for (;;)
-            {
-                _log.info(("displayName : " + target.displayName));
-                goto _label_9;
-                
-            _label_1: 
-                goto _label_7;
-                
-            _label_2: 
-                _log.info("-----------");
-                goto _label_1;
-                var _local_0 = this;
-                
-            _label_3: 
-                _log.info(("parent : " + target.parent));
-                for (;;)
-                {
-                    
-                _label_4: 
-                    _log.info(("name : " + target.hardwareAddress));
-                    continue _loop_1;
-                    goto _label_8;
-                    
-                _label_5: 
-                    _log.info(("hardwareAddress : " + target.hardwareAddress));
-                    continue;
-                    goto _label_11;
-                };
-                var _local_5 = _local_5;
-                
-            _label_6: 
-                goto _label_2;
-                
-            _label_7: 
-                _log.info(("active : " + target.active));
-                goto _label_10;
-                
-            _label_8: 
-                goto _label_6;
-                
-            _label_9: 
-                goto _label_3;
-                
-            _label_10: 
-                goto _label_5;
-            };
-            
-        _label_11: 
+            _log.info("-----------");
+            _log.info(("active : " + target.active));
+            _log.info(("hardwareAddress : " + target.hardwareAddress));
+            _log.info(("name : " + target.hardwareAddress));
+            _log.info(("displayName : " + target.displayName));
+            _log.info(("parent : " + target.parent));
             if (((target.parent) && (maxDepth)))
             {
-                while (this.traceInfo(target.parent, maxDepth--, (inc + "...")), true)
-                {
-                    return;
-                };
+                this.traceInfo(target.parent, maxDepth--, (inc + "..."));
             };
-            return;
         }
 
 
     }
-}//package com.ankamagames.dofus.logic.shield
+} com.ankamagames.dofus.logic.shield
 

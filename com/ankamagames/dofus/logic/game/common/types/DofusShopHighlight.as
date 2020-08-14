@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.common.types
+package com.ankamagames.dofus.logic.game.common.types
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.dofus.types.enums.DofusShopEnum;
@@ -9,8 +9,8 @@
         private var _type:String;
         private var _mode:String;
         private var _link:String;
-        private var _image:String;
-        private var _external:Object;
+        private var _image:Array;
+        private var _external:*;
 
         public function DofusShopHighlight(data:Object)
         {
@@ -23,43 +23,27 @@
             this._type = data.type;
             this._mode = data.mode;
             this._link = data.link;
-            if (data.image)
+            this._image = data.image;
+            if (this._type == DofusShopEnum.HIGHLIGHT_TYPE_CATEGORY)
             {
-                if (this._mode == DofusShopEnum.HIGHLIGHT_MODE_CAROUSEL)
+                this._external = new DofusShopCategory(data.external_category);
+            }
+            else
+            {
+                if (this._type == DofusShopEnum.HIGHLIGHT_TYPE_ARTICLE)
                 {
-                    this._image = data.image["667_240"];
-                }
-                else
-                {
-                    if (this._mode == DofusShopEnum.HIGHLIGHT_MODE_IMAGE)
-                    {
-                        this._image = data.image["208_129"];
-                    };
+                    this._external = new DofusShopArticle(data.external_article);
                 };
             };
-            if (data.external)
+            if (((this._mode == DofusShopEnum.HIGHLIGHT_MODE_CAROUSEL) && (this._external is DofusShopObject)))
             {
-                if (this._type == DofusShopEnum.HIGHLIGHT_TYPE_CATEGORY)
+                if (!_name)
                 {
-                    this._external = new DofusShopCategory(data.external);
-                }
-                else
-                {
-                    if (this._type == DofusShopEnum.HIGHLIGHT_TYPE_ARTICLE)
-                    {
-                        this._external = new DofusShopArticle(data.external);
-                    };
+                    _name = DofusShopObject(this._external).name;
                 };
-                if ((((this._mode == DofusShopEnum.HIGHLIGHT_MODE_CAROUSEL)) && ((this._external is DofusShopObject))))
+                if (!_description)
                 {
-                    if (!(_name))
-                    {
-                        _name = DofusShopObject(this._external).name;
-                    };
-                    if (!(_description))
-                    {
-                        _description = DofusShopObject(this._external).description;
-                    };
+                    _description = DofusShopObject(this._external).description;
                 };
             };
         }
@@ -70,7 +54,7 @@
             this._mode = null;
             this._link = null;
             this._image = null;
-            if (((this._external) && ((this._external is DofusShopObject))))
+            if (((this._external) && (this._external is DofusShopObject)))
             {
                 this._external.free();
             };
@@ -93,7 +77,7 @@
             return (this._link);
         }
 
-        public function get image():String
+        public function get image():Array
         {
             return (this._image);
         }
@@ -105,5 +89,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.types
+} com.ankamagames.dofus.logic.game.common.types
 

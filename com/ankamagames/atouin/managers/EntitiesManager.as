@@ -1,8 +1,9 @@
-﻿package com.ankamagames.atouin.managers
+package com.ankamagames.atouin.managers
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
+    import flash.utils.Dictionary;
     import com.ankamagames.jerakine.utils.errors.SingletonError;
     import com.ankamagames.atouin.Atouin;
     import com.ankamagames.jerakine.types.events.PropertyChangeEvent;
@@ -12,32 +13,36 @@
     import com.ankamagames.jerakine.entities.interfaces.IEntity;
     import com.ankamagames.jerakine.entities.interfaces.IMovable;
     import com.ankamagames.tiphon.display.TiphonSprite;
+    import com.ankamagames.atouin.types.WorldEntitySprite;
     import com.ankamagames.jerakine.types.enums.InteractionsEnum;
     import flash.events.Event;
 
     public class EntitiesManager 
     {
 
-        private static const RANDOM_ENTITIES_ID_START:uint = 1000000;
+        public static const RANDOM_ENTITIES_ID_START:Number = -1000000;
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(EntitiesManager));
         private static var _self:EntitiesManager;
 
         private var _entities:Array;
-        private var _currentRandomEntity:uint = 1000000;
+        private var _lookPlayerDestroyed:Dictionary;
+        private var _entitiesScheduledForDestruction:Array;
+        private var _currentRandomEntity:Number = -1000000;
 
         public function EntitiesManager()
         {
             if (_self)
             {
-                throw (new SingletonError("Warning : MobilesManager is a singleton class and shoulnd't be instancied directly!"));
+                throw (new SingletonError("Warning : EntitiesManager is a singleton class and shoulnd't be instancied directly!"));
             };
-            this._entities = new Array();
+            this._entities = [];
+            this._entitiesScheduledForDestruction = [];
             Atouin.getInstance().options.addEventListener(PropertyChangeEvent.PROPERTY_CHANGED, this.onPropertyChanged);
         }
 
         public static function getInstance():EntitiesManager
         {
-            if (!(_self))
+            if (!_self)
             {
                 _self = new (EntitiesManager)();
             };
@@ -50,7 +55,7 @@
             Atouin.getInstance().options.addEventListener(PropertyChangeEvent.PROPERTY_CHANGED, this.onPropertyChanged);
         }
 
-        public function addAnimatedEntity(entityID:int, entity:IEntity, strata:uint):void
+        public function addAnimatedEntity(entityID:Number, entity:IEntity, strata:uint=0):void
         {
             if (this._entities[entityID] != null)
             {
@@ -68,26 +73,46 @@
             };
         }
 
-        public function getEntity(entityID:int):IEntity
+        public function getEntity(entityID:Number):IEntity
         {
             return (this._entities[entityID]);
         }
 
-        public function getEntityID(entity:IEntity):int
+        public function getDeadLook(entityID:Number):String
+        {
+            var look:String;
+            if (this._lookPlayerDestroyed)
+            {
+                look = this._lookPlayerDestroyed[entityID];
+                if (((look) && (!(look == ""))))
+                {
+                    return (look);
+                };
+            };
+            return (null);
+        }
+
+        public function cleanDeadLook():void
+        {
+            this._lookPlayerDestroyed = new Dictionary();
+        }
+
+        public function getEntityID(entity:IEntity):Number
         {
             var i:String;
             for (i in this._entities)
             {
                 if (entity === this._entities[i])
                 {
-                    return (parseInt(i));
+                    return (parseFloat(i));
                 };
             };
             return (0);
         }
 
-        public function removeEntity(entityID:int):void
+        public function removeEntity(entityID:Number):void
         {
+            var look:String;
             if (this._entities[entityID])
             {
                 if ((this._entities[entityID] is IDisplayable))
@@ -98,11 +123,27 @@
                 {
                     this.registerInteractions(IInteractive(this._entities[entityID]), false);
                 };
-                if ((((this._entities[entityID] is IMovable)) && (IMovable(this._entities[entityID]).isMoving)))
+                if (((this._entities[entityID] is IMovable) && (IMovable(this._entities[entityID]).isMoving)))
                 {
                     IMovable(this._entities[entityID]).stop(true);
                 };
+                if (entityID > 0)
+                {
+                    if (this._lookPlayerDestroyed == null)
+                    {
+                        this._lookPlayerDestroyed = new Dictionary();
+                    };
+                    if (this._entities[entityID].hasOwnProperty("look"))
+                    {
+                        look = this._entities[entityID].look;
+                        this._lookPlayerDestroyed[entityID] = look;
+                    };
+                };
                 delete this._entities[entityID];
+                if (this._entitiesScheduledForDestruction[entityID])
+                {
+                    delete this._entitiesScheduledForDestruction[entityID];
+                };
             };
         }
 
@@ -111,9 +152,9 @@
             var id:String;
             var i:int;
             var num:int;
-            var entityId:int;
+            var entityId:Number;
             var ts:TiphonSprite;
-            var entityBuffer:Array = new Array();
+            var entityBuffer:Array = [];
             for (id in this._entities)
             {
                 entityBuffer.push(id);
@@ -125,17 +166,44 @@
                 entityId = entityBuffer[i];
                 ts = (this._entities[entityId] as TiphonSprite);
                 this.removeEntity(entityId);
-                if (ts)
+                if (((ts) && (!(ts is WorldEntitySprite))))
                 {
                     ts.destroy();
                 };
             };
-            this._entities = new Array();
+            this._entities = [];
+        }
+
+        public function setEntitiesVisibility(visible:Boolean):void
+        {
+            var id:String;
+            var i:int;
+            var num:int;
+            var entityId:Number;
+            var ts:TiphonSprite;
+            var entityBuffer:Array = [];
+            for (id in this._entities)
+            {
+                entityBuffer.push(id);
+            };
+            i = -1;
+            num = entityBuffer.length;
+            while (++i < num)
+            {
+                entityId = entityBuffer[i];
+                ts = (this._entities[entityId] as TiphonSprite);
+                ts.visible = visible;
+            };
         }
 
         public function get entities():Array
         {
             return (this._entities);
+        }
+
+        public function get entitiesScheduledForDestruction():Array
+        {
+            return (this._entitiesScheduledForDestruction);
         }
 
         public function get entitiesCount():int
@@ -149,11 +217,11 @@
             return (count);
         }
 
-        public function getFreeEntityId():int
+        public function getFreeEntityId():Number
         {
-            while (this._entities[++this._currentRandomEntity] != null)
+            while (this._entities[--this._currentRandomEntity] != null)
             {
-                this._currentRandomEntity++;
+                this._currentRandomEntity--;
             };
             return (this._currentRandomEntity);
         }
@@ -192,30 +260,30 @@
         public function getEntityOnCell(cellId:uint, oClass:*=null):IEntity
         {
             var e:IEntity;
-            var _local_6:uint;
-            var useFilter:Boolean = !((oClass == null));
-            var isMultiFilter:Boolean = ((useFilter) && ((oClass is Array)));
+            var i:uint;
+            var useFilter:* = (!(oClass == null));
+            var isMultiFilter:Boolean = ((useFilter) && (oClass is Array));
             for each (e in this._entities)
             {
-                if (((((e) && (e.position))) && ((e.position.cellId == cellId))))
+                if ((((e) && (e.position)) && (e.position.cellId == cellId)))
                 {
-                    if (!(isMultiFilter))
+                    if (!isMultiFilter)
                     {
-                        if (((!(useFilter)) || (((!(isMultiFilter)) && ((e is oClass))))))
+                        if (((!(useFilter)) || ((!(isMultiFilter)) && (e is oClass))))
                         {
                             return (e);
                         };
                     }
                     else
                     {
-                        _local_6 = 0;
-                        while (_local_6 < (oClass as Array).length)
+                        i = 0;
+                        while (i < (oClass as Array).length)
                         {
-                            if ((e is oClass[_local_6]))
+                            if ((e is oClass[i]))
                             {
                                 return (e);
                             };
-                            _local_6++;
+                            i++;
                         };
                     };
                 };
@@ -226,31 +294,31 @@
         public function getEntitiesOnCell(cellId:uint, oClass:*=null):Array
         {
             var e:IEntity;
-            var _local_7:uint;
-            var useFilter:Boolean = !((oClass == null));
-            var isMultiFilter:Boolean = ((useFilter) && ((oClass is Array)));
+            var i:uint;
+            var useFilter:* = (!(oClass == null));
+            var isMultiFilter:Boolean = ((useFilter) && (oClass is Array));
             var result:Array = [];
             for each (e in this._entities)
             {
-                if (((((e) && (e.position))) && ((e.position.cellId == cellId))))
+                if ((((e) && (e.position)) && (e.position.cellId == cellId)))
                 {
-                    if (!(isMultiFilter))
+                    if (!isMultiFilter)
                     {
-                        if (((!(useFilter)) || (((!(isMultiFilter)) && ((e is oClass))))))
+                        if (((!(useFilter)) || ((!(isMultiFilter)) && (e is oClass))))
                         {
                             result.push(e);
                         };
                     }
                     else
                     {
-                        _local_7 = 0;
-                        while (_local_7 < (oClass as Array).length)
+                        i = 0;
+                        while (i < (oClass as Array).length)
                         {
-                            if ((e is oClass[_local_7]))
+                            if ((e is oClass[i]))
                             {
                                 result.push(e);
                             };
-                            _local_7++;
+                            i++;
                         };
                     };
                 };
@@ -262,7 +330,7 @@
         {
             var entity:IInteractive = IInteractive(e.target);
             var clazz:Class = InteractionsEnum.getMessage(e.type);
-            entity.handler.process(new (clazz)(entity));
+            entity.handler.process(new clazz(entity));
         }
 
         private function onPropertyChanged(e:PropertyChangeEvent):void
@@ -282,5 +350,5 @@
 
 
     }
-}//package com.ankamagames.atouin.managers
+} com.ankamagames.atouin.managers
 

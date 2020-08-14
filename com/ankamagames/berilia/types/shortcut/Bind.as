@@ -1,10 +1,15 @@
-﻿package com.ankamagames.berilia.types.shortcut
+package com.ankamagames.berilia.types.shortcut
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.jerakine.data.I18n;
 
     public class Bind implements IDataCenter 
     {
+
+        private static const codeForLowerA:int = 97;
+        private static const codeForLowerZ:int = 122;
+        private static const codeForUpperA:int = 65;
+        private static const codeForUpperZ:int = 90;
 
         public var key:String;
         public var targetedShortcut:String;
@@ -26,7 +31,6 @@
             };
         }
 
-        [NoReplaceInFakeClass]
         public function toString():String
         {
             var keyStr:String;
@@ -36,7 +40,7 @@
                 textValue = ((this.alt) ? "Alt+" : "");
                 textValue = (textValue + ((this.ctrl) ? "Ctrl+" : ""));
                 textValue = (textValue + ((this.shift) ? (I18n.getUiText("ui.keyboard.shift") + "+") : ""));
-                if ((((this.key.charAt(0) == "(")) && ((this.key.charAt((this.key.length - 1)) == ")"))))
+                if (((this.key.charAt(0) == "(") && (this.key.charAt((this.key.length - 1)) == ")")))
                 {
                     keyStr = this.key.substr(1, (this.key.length - 2));
                 }
@@ -56,13 +60,46 @@
             return (textValue);
         }
 
-        [NoReplaceInFakeClass]
         public function equals(s:Bind):Boolean
         {
-            return (((((((((s) && ((((((s.key == null)) && ((this.key == null)))) || (((((!((this.key == null))) && (!((s.key == null))))) && ((s.key.toLocaleUpperCase() == this.key.toLocaleUpperCase())))))))) && ((s.alt == this.alt)))) && ((s.ctrl == this.ctrl)))) && ((s.shift == this.shift))));
+            var charcode:int;
+            var sCharcode:int;
+            if (((((!(s)) || (!(s.alt == this.alt))) || (!(s.ctrl == this.ctrl))) || (!(s.shift == this.shift))))
+            {
+                return (false);
+            };
+            if (((s.key == null) && (this.key == null)))
+            {
+                return (true);
+            };
+            if (((s.key == null) || (this.key == null)))
+            {
+                return (false);
+            };
+            if (s.key.length != this.key.length)
+            {
+                return (false);
+            };
+            if (this.key.length == 1)
+            {
+                charcode = this.key.charCodeAt(0);
+                sCharcode = s.key.charCodeAt(0);
+                if (((charcode >= codeForLowerA) && (charcode <= codeForLowerZ)))
+                {
+                    charcode = (charcode - (codeForLowerA - codeForUpperA));
+                };
+                if (((sCharcode >= codeForLowerA) && (sCharcode <= codeForLowerZ)))
+                {
+                    sCharcode = (sCharcode - (codeForLowerA - codeForUpperA));
+                };
+                if (((charcode < 127) && (sCharcode < 127)))
+                {
+                    return (charcode == sCharcode);
+                };
+            };
+            return (this.key.toLocaleUpperCase() == s.key.toLocaleUpperCase());
         }
 
-        [NoReplaceInFakeClass]
         public function reset():void
         {
             this.key = null;
@@ -71,7 +108,6 @@
             this.shift = false;
         }
 
-        [NoReplaceInFakeClass]
         public function copy():Bind
         {
             var b:Bind = new Bind(this.key, this.targetedShortcut, this.alt, this.ctrl, this.shift);
@@ -81,5 +117,5 @@
 
 
     }
-}//package com.ankamagames.berilia.types.shortcut
+} com.ankamagames.berilia.types.shortcut
 

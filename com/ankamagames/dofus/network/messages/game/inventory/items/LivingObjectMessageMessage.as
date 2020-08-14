@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.inventory.items
+package com.ankamagames.dofus.network.messages.game.inventory.items
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class LivingObjectMessageMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -61,6 +61,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_LivingObjectMessageMessage(output);
@@ -93,17 +101,50 @@
 
         public function deserializeAs_LivingObjectMessageMessage(input:ICustomDataInput):void
         {
+            this._msgIdFunc(input);
+            this._timeStampFunc(input);
+            this._ownerFunc(input);
+            this._objectGenericIdFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_LivingObjectMessageMessage(tree);
+        }
+
+        public function deserializeAsyncAs_LivingObjectMessageMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._msgIdFunc);
+            tree.addChild(this._timeStampFunc);
+            tree.addChild(this._ownerFunc);
+            tree.addChild(this._objectGenericIdFunc);
+        }
+
+        private function _msgIdFunc(input:ICustomDataInput):void
+        {
             this.msgId = input.readVarUhShort();
             if (this.msgId < 0)
             {
                 throw (new Error((("Forbidden value (" + this.msgId) + ") on element of LivingObjectMessageMessage.msgId.")));
             };
+        }
+
+        private function _timeStampFunc(input:ICustomDataInput):void
+        {
             this.timeStamp = input.readInt();
             if (this.timeStamp < 0)
             {
                 throw (new Error((("Forbidden value (" + this.timeStamp) + ") on element of LivingObjectMessageMessage.timeStamp.")));
             };
+        }
+
+        private function _ownerFunc(input:ICustomDataInput):void
+        {
             this.owner = input.readUTF();
+        }
+
+        private function _objectGenericIdFunc(input:ICustomDataInput):void
+        {
             this.objectGenericId = input.readVarUhShort();
             if (this.objectGenericId < 0)
             {
@@ -113,5 +154,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.inventory.items
+} com.ankamagames.dofus.network.messages.game.inventory.items
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.common.frames
+package com.ankamagames.dofus.logic.game.common.frames
 {
     import com.ankamagames.jerakine.messages.Frame;
     import com.ankamagames.jerakine.logger.Logger;
@@ -45,6 +45,7 @@
     import com.ankamagames.dofus.logic.game.roleplay.messages.GameRolePlaySetAnimationMessage;
     import com.ankamagames.dofus.types.enums.AnimationEnum;
     import com.ankamagames.dofus.misc.EntityLookAdapter;
+    import com.ankamagames.dofus.network.enums.SubEntityBindingPointCategoryEnum;
     import com.ankamagames.tiphon.types.TiphonUtility;
     import flash.utils.setInterval;
     import com.ankamagames.dofus.misc.lists.HookList;
@@ -81,17 +82,17 @@
 
         private function get socialFrame():SocialFrame
         {
-            return ((Kernel.getWorker().getFrame(SocialFrame) as SocialFrame));
+            return (Kernel.getWorker().getFrame(SocialFrame) as SocialFrame);
         }
 
         private function get roleplayEntitiesFrame():RoleplayEntitiesFrame
         {
-            return ((Kernel.getWorker().getFrame(RoleplayEntitiesFrame) as RoleplayEntitiesFrame));
+            return (Kernel.getWorker().getFrame(RoleplayEntitiesFrame) as RoleplayEntitiesFrame);
         }
 
         private function get roleplayMovementFrame():RoleplayMovementFrame
         {
-            return ((Kernel.getWorker().getFrame(RoleplayMovementFrame) as RoleplayMovementFrame));
+            return (Kernel.getWorker().getFrame(RoleplayMovementFrame) as RoleplayMovementFrame);
         }
 
         public function pushed():Boolean
@@ -103,69 +104,72 @@
 
         public function isKnownEmote(id:int):Boolean
         {
-            return (!((this._emotes.indexOf(id) == -1)));
+            return (!(this._emotes.indexOf(id) == -1));
         }
 
         public function process(msg:Message):Boolean
         {
             var shortcut:ShortcutWrapper;
-            var _local_3:EmoteListMessage;
-            var _local_4:uint;
-            var _local_5:EmoteAddMessage;
-            var _local_6:EmoteWrapper;
-            var _local_7:Emoticon;
-            var _local_8:EmoteWrapper;
-            var _local_9:String;
-            var _local_10:EmoteRemoveMessage;
-            var _local_11:String;
-            var _local_12:EmotePlayRequestAction;
-            var _local_13:Emoticon;
-            var _local_14:EmoteWrapper;
-            var _local_15:EmotePlayRequestMessage;
-            var _local_16:IEntity;
-            var _local_17:EmotePlayMessage;
-            var _local_18:GameContextActorInformations;
-            var _local_19:EmotePlayMassiveMessage;
-            var _local_20:EmotePlayErrorMessage;
-            var _local_21:String;
-            var _local_22:LifePointsRegenBeginMessage;
-            var _local_23:LifePointsRegenEndMessage;
+            var elmsg:EmoteListMessage;
+            var pos:uint;
+            var eamsg:EmoteAddMessage;
+            var ew:EmoteWrapper;
+            var em:Emoticon;
+            var emoteWAdd:EmoteWrapper;
+            var addText:String;
+            var ermsg:EmoteRemoveMessage;
+            var removeText:String;
+            var epra:EmotePlayRequestAction;
+            var emoteObj:Emoticon;
+            var emote:EmoteWrapper;
+            var eprmsg:EmotePlayRequestMessage;
+            var playerEntity:IEntity;
+            var epmsg:EmotePlayMessage;
+            var entityInfo:GameContextActorInformations;
+            var epmmsg:EmotePlayMassiveMessage;
+            var epemsg:EmotePlayErrorMessage;
+            var errorText:String;
+            var lprbmsg:LifePointsRegenBeginMessage;
+            var lpremsg:LifePointsRegenEndMessage;
             var id:*;
             var emoteW:EmoteWrapper;
             var i:*;
             var eamsgNid:uint;
             var ire:int;
             var ire2:int;
-            var _local_30:Emoticon;
-            var _local_31:TiphonEntityLook;
-            var _local_32:String;
-            var _local_33:Boolean;
-            var _local_34:Boolean;
-            var _local_35:*;
+            var e:Emoticon;
+            var tiphonLook:TiphonEntityLook;
+            var riderLook:TiphonEntityLook;
+            var anim:String;
+            var persistancy:Boolean;
+            var directions8:Boolean;
+            var spellLevelId:uint;
+            var actor:*;
             var mEntityInfo:GameContextActorInformations;
-            var _local_37:TiphonEntityLook;
-            var _local_38:String;
-            var _local_39:Boolean;
-            var _local_40:Boolean;
+            var tiphonMassiveLook:TiphonEntityLook;
+            var emo:Emoticon;
+            var mAnim:String;
+            var mPersistancy:Boolean;
+            var mDirections8:Boolean;
             var regenText:String;
             switch (true)
             {
                 case (msg is EmoteListMessage):
-                    _local_3 = (msg as EmoteListMessage);
+                    elmsg = (msg as EmoteListMessage);
                     this._emotes = new Array();
                     this._emotesList.splice(0, this._emotesList.length);
-                    _local_4 = 0;
-                    for each (id in _local_3.emoteIds)
+                    pos = 0;
+                    for each (id in elmsg.emoteIds)
                     {
                         this._emotes.push(id);
-                        emoteW = EmoteWrapper.create(id, _local_4);
+                        emoteW = EmoteWrapper.create(id, pos);
                         this._emotesList.push(emoteW);
-                        _local_4++;
+                        pos++;
                     };
                     KernelEventsManager.getInstance().processCallback(RoleplayHookList.EmoteListUpdated);
                     for each (shortcut in InventoryManager.getInstance().shortcutBarItems)
                     {
-                        if (((shortcut) && ((shortcut.type == 4))))
+                        if (((shortcut) && (shortcut.type == 4)))
                         {
                             if (this._emotes.indexOf(shortcut.id) != -1)
                             {
@@ -180,42 +184,42 @@
                     KernelEventsManager.getInstance().processCallback(InventoryHookList.ShortcutBarViewContent, 0);
                     return (true);
                 case (msg is EmoteAddMessage):
-                    _local_5 = (msg as EmoteAddMessage);
+                    eamsg = (msg as EmoteAddMessage);
                     for (i in this._emotes)
                     {
-                        if (this._emotes[i] == _local_5.emoteId)
+                        if (this._emotes[i] == eamsg.emoteId)
                         {
                             return (true);
                         };
                     };
-                    for each (_local_6 in this._emotesList)
+                    for each (ew in this._emotesList)
                     {
-                        if (_local_6.id == _local_5.emoteId)
+                        if (ew.id == eamsg.emoteId)
                         {
                             return (true);
                         };
                     };
-                    _local_7 = Emoticon.getEmoticonById(_local_5.emoteId);
-                    if (!(_local_7))
+                    em = Emoticon.getEmoticonById(eamsg.emoteId);
+                    if (!em)
                     {
                         return (true);
                     };
-                    this._emotes.push(_local_5.emoteId);
-                    _local_8 = EmoteWrapper.create(_local_5.emoteId, this._emotes.length);
-                    this._emotesList.push(_local_8);
-                    if (!(StoreDataManager.getInstance().getData(Constants.DATASTORE_COMPUTER_OPTIONS, ("learnEmote" + _local_5.emoteId))))
+                    this._emotes.push(eamsg.emoteId);
+                    emoteWAdd = EmoteWrapper.create(eamsg.emoteId, this._emotes.length);
+                    this._emotesList.push(emoteWAdd);
+                    if (!StoreDataManager.getInstance().getData(Constants.DATASTORE_COMPUTER_OPTIONS, ("learnEmote" + eamsg.emoteId)))
                     {
-                        StoreDataManager.getInstance().setData(Constants.DATASTORE_COMPUTER_OPTIONS, ("learnEmote" + _local_5.emoteId), true);
-                        eamsgNid = NotificationManager.getInstance().prepareNotification(I18n.getUiText("ui.common.emotes"), I18n.getUiText("ui.common.emoteAdded", [_local_7.name]), NotificationTypeEnum.TUTORIAL, ("new_emote_" + _local_5.emoteId));
+                        StoreDataManager.getInstance().setData(Constants.DATASTORE_COMPUTER_OPTIONS, ("learnEmote" + eamsg.emoteId), true);
+                        eamsgNid = NotificationManager.getInstance().prepareNotification(I18n.getUiText("ui.common.emotes"), I18n.getUiText("ui.common.emoteAdded", [em.name]), NotificationTypeEnum.TUTORIAL, ("new_emote_" + eamsg.emoteId));
                         NotificationManager.getInstance().addButtonToNotification(eamsgNid, I18n.getUiText("ui.common.details"), "OpenSmileys", [1, true], true, 130);
                         NotificationManager.getInstance().sendNotification(eamsgNid);
                     };
-                    _local_9 = I18n.getUiText("ui.common.emoteAdded", [Emoticon.getEmoticonById(_local_5.emoteId).name]);
-                    KernelEventsManager.getInstance().processCallback(ChatHookList.TextInformation, _local_9, ChatActivableChannelsEnum.PSEUDO_CHANNEL_INFO, TimeManager.getInstance().getTimestamp());
+                    addText = I18n.getUiText("ui.common.emoteAdded", [Emoticon.getEmoticonById(eamsg.emoteId).name]);
+                    KernelEventsManager.getInstance().processCallback(ChatHookList.TextInformation, addText, ChatActivableChannelsEnum.PSEUDO_CHANNEL_INFO, TimeManager.getInstance().getTimestamp());
                     KernelEventsManager.getInstance().processCallback(RoleplayHookList.EmoteListUpdated);
                     for each (shortcut in InventoryManager.getInstance().shortcutBarItems)
                     {
-                        if (((((shortcut) && ((shortcut.type == 4)))) && ((shortcut.id == _local_5.emoteId))))
+                        if ((((shortcut) && (shortcut.type == 4)) && (shortcut.id == eamsg.emoteId)))
                         {
                             shortcut.active = true;
                             KernelEventsManager.getInstance().processCallback(InventoryHookList.ShortcutBarViewContent, 0);
@@ -223,11 +227,11 @@
                     };
                     return (true);
                 case (msg is EmoteRemoveMessage):
-                    _local_10 = (msg as EmoteRemoveMessage);
+                    ermsg = (msg as EmoteRemoveMessage);
                     ire = 0;
                     while (ire < this._emotes.length)
                     {
-                        if (this._emotes[ire] == _local_10.emoteId)
+                        if (this._emotes[ire] == ermsg.emoteId)
                         {
                             this._emotes[ire] = null;
                             this._emotes.splice(ire, 1);
@@ -238,7 +242,7 @@
                     ire2 = 0;
                     while (ire2 < this._emotesList.length)
                     {
-                        if (this._emotesList[ire2].id == _local_10.emoteId)
+                        if (this._emotesList[ire2].id == ermsg.emoteId)
                         {
                             this._emotesList[ire2] = null;
                             this._emotesList.splice(ire2, 1);
@@ -246,12 +250,12 @@
                         };
                         ire2++;
                     };
-                    _local_11 = I18n.getUiText("ui.common.emoteRemoved", [Emoticon.getEmoticonById(_local_10.emoteId).name]);
-                    KernelEventsManager.getInstance().processCallback(ChatHookList.TextInformation, _local_11, ChatActivableChannelsEnum.PSEUDO_CHANNEL_INFO, TimeManager.getInstance().getTimestamp());
+                    removeText = I18n.getUiText("ui.common.emoteRemoved", [Emoticon.getEmoticonById(ermsg.emoteId).name]);
+                    KernelEventsManager.getInstance().processCallback(ChatHookList.TextInformation, removeText, ChatActivableChannelsEnum.PSEUDO_CHANNEL_INFO, TimeManager.getInstance().getTimestamp());
                     KernelEventsManager.getInstance().processCallback(RoleplayHookList.EmoteListUpdated);
                     for each (shortcut in InventoryManager.getInstance().shortcutBarItems)
                     {
-                        if (((((shortcut) && ((shortcut.type == 4)))) && ((shortcut.id == _local_10.emoteId))))
+                        if ((((shortcut) && (shortcut.type == 4)) && (shortcut.id == ermsg.emoteId)))
                         {
                             shortcut.active = false;
                             KernelEventsManager.getInstance().processCallback(InventoryHookList.ShortcutBarViewContent, 0);
@@ -259,122 +263,128 @@
                     };
                     return (true);
                 case (msg is EmotePlayRequestAction):
-                    _local_12 = (msg as EmotePlayRequestAction);
-                    _local_13 = Emoticon.getEmoticonById(_local_12.emoteId);
-                    if (!(_local_13))
+                    epra = (msg as EmotePlayRequestAction);
+                    emoteObj = Emoticon.getEmoticonById(epra.emoteId);
+                    if (((!(emoteObj)) || (!(this.roleplayEntitiesFrame))))
                     {
                         return (true);
                     };
-                    _local_14 = EmoteWrapper.getEmoteWrapperById(_local_13.id);
-                    if (((!(_local_14)) || (((_local_14) && ((_local_14.timer > 0))))))
+                    emote = EmoteWrapper.getEmoteWrapperById(emoteObj.id);
+                    if (((!(emote)) || ((emote) && (emote.timer > 0))))
                     {
                         return (true);
                     };
-                    EmoteWrapper.getEmoteWrapperById(_local_13.id).timerToStart = _local_13.cooldown;
-                    _local_15 = new EmotePlayRequestMessage();
-                    _local_15.initEmotePlayRequestMessage(_local_12.emoteId);
-                    _local_16 = DofusEntities.getEntity(PlayedCharacterManager.getInstance().id);
-                    if (!(_local_16))
+                    if (this.roleplayEntitiesFrame.currentEmoticon != epra.emoteId)
+                    {
+                        EmoteWrapper.getEmoteWrapperById(emoteObj.id).timerToStart = emoteObj.cooldown;
+                    };
+                    eprmsg = new EmotePlayRequestMessage();
+                    eprmsg.initEmotePlayRequestMessage(epra.emoteId);
+                    playerEntity = DofusEntities.getEntity(PlayedCharacterManager.getInstance().id);
+                    if (!playerEntity)
                     {
                         return (true);
                     };
-                    if ((_local_16 as IMovable).isMoving)
+                    if ((playerEntity as IMovable).isMoving)
                     {
-                        this.roleplayMovementFrame.setFollowingMessage(_local_15);
-                        (_local_16 as IMovable).stop();
+                        this.roleplayMovementFrame.setFollowingMessage(eprmsg);
+                        (playerEntity as IMovable).stop();
                     }
                     else
                     {
-                        ConnectionsHandler.getConnection().send(_local_15);
+                        ConnectionsHandler.getConnection().send(eprmsg);
                     };
                     return (true);
                 case (msg is EmotePlayMessage):
-                    _local_17 = (msg as EmotePlayMessage);
+                    epmsg = (msg as EmotePlayMessage);
                     this._bEmoteOn = true;
                     if (this.roleplayEntitiesFrame == null)
                     {
                         return (true);
                     };
-                    delete this.roleplayEntitiesFrame.lastStaticAnimations[_local_17.actorId];
-                    _local_18 = this.roleplayEntitiesFrame.getEntityInfos(_local_17.actorId);
-                    AccountManager.getInstance().setAccountFromId(_local_17.actorId, _local_17.accountId);
-                    if ((((_local_18 is GameRolePlayCharacterInformations)) && (this.socialFrame.isIgnored(GameRolePlayCharacterInformations(_local_18).name, _local_17.accountId))))
+                    delete this.roleplayEntitiesFrame.lastStaticAnimations[epmsg.actorId];
+                    entityInfo = this.roleplayEntitiesFrame.getEntityInfos(epmsg.actorId);
+                    AccountManager.getInstance().setAccountFromId(epmsg.actorId, epmsg.accountId);
+                    if (((entityInfo is GameRolePlayCharacterInformations) && (this.socialFrame.isIgnored(GameRolePlayCharacterInformations(entityInfo).name, epmsg.accountId))))
                     {
                         return (true);
                     };
-                    if (_local_17.emoteId == 0)
+                    if (epmsg.emoteId == 0)
                     {
-                        this.roleplayEntitiesFrame.process(new GameRolePlaySetAnimationMessage(_local_18, AnimationEnum.ANIM_STATIQUE));
+                        this.roleplayEntitiesFrame.process(new GameRolePlaySetAnimationMessage(entityInfo, AnimationEnum.ANIM_STATIQUE));
                     }
                     else
                     {
-                        if (!(_local_18))
+                        if (!entityInfo)
                         {
                             return (true);
                         };
-                        _local_30 = Emoticon.getEmoticonById(_local_17.emoteId);
-                        if (!(_local_30))
+                        e = Emoticon.getEmoticonById(epmsg.emoteId);
+                        if (!e)
                         {
-                            _log.error((("ERREUR : Le client n'a pas de données pour l'emote [" + _local_17.emoteId) + "]."));
+                            _log.error((("ERREUR : Le client n'a pas de données pour l'emote [" + epmsg.emoteId) + "]."));
                             return (true);
                         };
-                        _local_31 = EntityLookAdapter.fromNetwork(_local_18.look);
-                        _local_32 = _local_30.getAnimName(TiphonUtility.getLookWithoutMount(_local_31));
-                        _local_33 = _local_30.persistancy;
-                        _local_34 = _local_30.eight_directions;
-                        this.roleplayEntitiesFrame.currentEmoticon = _local_17.emoteId;
-                        this.roleplayEntitiesFrame.process(new GameRolePlaySetAnimationMessage(_local_18, _local_32, _local_17.emoteStartTime, !(_local_33), _local_34));
+                        tiphonLook = EntityLookAdapter.fromNetwork(entityInfo.look);
+                        riderLook = tiphonLook.getSubEntity(SubEntityBindingPointCategoryEnum.HOOK_POINT_CATEGORY_MOUNT_DRIVER, 0);
+                        anim = e.getAnimName(((riderLook) ? riderLook : tiphonLook));
+                        persistancy = e.persistancy;
+                        directions8 = e.eight_directions;
+                        spellLevelId = e.spellLevelId;
+                        this.roleplayEntitiesFrame.currentEmoticon = epmsg.emoteId;
+                        this.roleplayEntitiesFrame.process(new GameRolePlaySetAnimationMessage(entityInfo, anim, spellLevelId, epmsg.emoteStartTime, (!(persistancy)), directions8));
                     };
                     return (true);
                 case (msg is EmotePlayMassiveMessage):
-                    _local_19 = (msg as EmotePlayMassiveMessage);
+                    epmmsg = (msg as EmotePlayMassiveMessage);
                     this._bEmoteOn = true;
                     if (this.roleplayEntitiesFrame == null)
                     {
                         return (true);
                     };
-                    for each (_local_35 in _local_19.actorIds)
+                    for each (actor in epmmsg.actorIds)
                     {
-                        mEntityInfo = this.roleplayEntitiesFrame.getEntityInfos(_local_35);
-                        if (_local_19.emoteId == 0)
+                        mEntityInfo = this.roleplayEntitiesFrame.getEntityInfos(actor);
+                        if (epmmsg.emoteId == 0)
                         {
                             this.roleplayEntitiesFrame.process(new GameRolePlaySetAnimationMessage(mEntityInfo, AnimationEnum.ANIM_STATIQUE));
                         }
                         else
                         {
-                            _local_37 = EntityLookAdapter.fromNetwork(mEntityInfo.look);
-                            _local_38 = Emoticon.getEmoticonById(_local_19.emoteId).getAnimName(TiphonUtility.getLookWithoutMount(_local_37));
-                            _local_39 = Emoticon.getEmoticonById(_local_19.emoteId).persistancy;
-                            _local_40 = Emoticon.getEmoticonById(_local_19.emoteId).eight_directions;
-                            this.roleplayEntitiesFrame.currentEmoticon = _local_19.emoteId;
-                            this.roleplayEntitiesFrame.process(new GameRolePlaySetAnimationMessage(mEntityInfo, _local_38, _local_19.emoteStartTime, !(_local_39), _local_40));
+                            tiphonMassiveLook = EntityLookAdapter.fromNetwork(mEntityInfo.look);
+                            emo = Emoticon.getEmoticonById(epmmsg.emoteId);
+                            mAnim = emo.getAnimName(TiphonUtility.getLookWithoutMount(tiphonMassiveLook));
+                            mPersistancy = Emoticon.getEmoticonById(epmmsg.emoteId).persistancy;
+                            mDirections8 = Emoticon.getEmoticonById(epmmsg.emoteId).eight_directions;
+                            this.roleplayEntitiesFrame.currentEmoticon = epmmsg.emoteId;
+                            this.roleplayEntitiesFrame.process(new GameRolePlaySetAnimationMessage(mEntityInfo, mAnim, emo.spellLevelId, epmmsg.emoteStartTime, (!(mPersistancy)), mDirections8));
                         };
                     };
                     return (true);
                 case (msg is EmotePlayErrorMessage):
-                    _local_20 = (msg as EmotePlayErrorMessage);
-                    _local_21 = I18n.getUiText("ui.common.cantUseEmote");
-                    KernelEventsManager.getInstance().processCallback(ChatHookList.TextInformation, _local_21, ChatFrame.RED_CHANNEL_ID, TimeManager.getInstance().getTimestamp());
+                    epemsg = (msg as EmotePlayErrorMessage);
+                    errorText = I18n.getUiText("ui.common.cantUseEmote");
+                    KernelEventsManager.getInstance().processCallback(ChatHookList.TextInformation, errorText, ChatFrame.RED_CHANNEL_ID, TimeManager.getInstance().getTimestamp());
                     return (true);
                 case (msg is LifePointsRegenBeginMessage):
-                    _local_22 = (msg as LifePointsRegenBeginMessage);
-                    this._interval = setInterval(this.interval, (_local_22.regenRate * 100));
+                    lprbmsg = (msg as LifePointsRegenBeginMessage);
+                    this._interval = setInterval(this.interval, (lprbmsg.regenRate * 100));
                     KernelEventsManager.getInstance().processCallback(HookList.LifePointsRegenBegin, null);
                     return (true);
                 case (msg is LifePointsRegenEndMessage):
-                    _local_23 = (msg as LifePointsRegenEndMessage);
+                    lpremsg = (msg as LifePointsRegenEndMessage);
                     if (this._bEmoteOn)
                     {
-                        if (_local_23.lifePointsGained != 0)
+                        if (lpremsg.lifePointsGained != 0)
                         {
-                            regenText = I18n.getUiText("ui.common.emoteRestoreLife", [_local_23.lifePointsGained]);
+                            regenText = I18n.getUiText("ui.common.emoteRestoreLife", [lpremsg.lifePointsGained]);
                             KernelEventsManager.getInstance().processCallback(ChatHookList.TextInformation, regenText, ChatActivableChannelsEnum.PSEUDO_CHANNEL_INFO, TimeManager.getInstance().getTimestamp());
                         };
                         this._bEmoteOn = false;
                     };
                     clearInterval(this._interval);
-                    PlayedCharacterManager.getInstance().characteristics.lifePoints = _local_23.lifePoints;
-                    PlayedCharacterManager.getInstance().characteristics.maxLifePoints = _local_23.maxLifePoints;
+                    PlayedCharacterManager.getInstance().characteristics.lifePoints = lpremsg.lifePoints;
+                    PlayedCharacterManager.getInstance().characteristics.maxLifePoints = lpremsg.maxLifePoints;
                     KernelEventsManager.getInstance().processCallback(HookList.CharacterStatsList);
                     return (true);
             };
@@ -406,5 +416,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.frames
+} com.ankamagames.dofus.logic.game.common.frames
 

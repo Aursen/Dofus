@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.datacenter.items.criterion
+package com.ankamagames.dofus.datacenter.items.criterion
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.jerakine.data.I18n;
@@ -14,7 +14,7 @@
 
         override public function get text():String
         {
-            if ((((((_criterionValue == 1)) && ((_operator.text == ItemCriterionOperator.EQUAL)))) || ((((_criterionValue == 0)) && ((_operator.text == ItemCriterionOperator.DIFFERENT))))))
+            if ((((_criterionValue == 1) && (_operator.text == ItemCriterionOperator.EQUAL)) || ((_criterionValue == 0) && (_operator.text == ItemCriterionOperator.DIFFERENT))))
             {
                 return (I18n.getUiText("ui.tooltip.beSubscirber"));
             };
@@ -30,7 +30,7 @@
         override protected function getCriterion():int
         {
             var timeRemaining:Number = PlayerManager.getInstance().subscriptionEndDate;
-            if ((((timeRemaining > 0)) || (PlayerManager.getInstance().hasRights)))
+            if (((timeRemaining > 0) || (PlayerManager.getInstance().hasRights)))
             {
                 return (1);
             };
@@ -39,5 +39,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.items.criterion
+} com.ankamagames.dofus.datacenter.items.criterion
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.fight.steps
+package com.ankamagames.dofus.logic.game.fight.steps
 {
     import com.ankamagames.jerakine.sequencer.AbstractSequencable;
     import com.ankamagames.jerakine.sequencer.ISequencableListener;
@@ -6,16 +6,17 @@
     import com.ankamagames.dofus.logic.game.fight.fightEvents.FightEventsHelper;
     import com.ankamagames.dofus.logic.game.fight.types.FightEventEnum;
     import com.ankamagames.jerakine.sequencer.ISequencable;
+    import __AS3__.vec.Vector;
 
     public class FightModifyEffectsDurationStep extends AbstractSequencable implements IFightStep, ISequencableListener 
     {
 
-        private var _sourceId:int;
-        private var _targetId:int;
+        private var _sourceId:Number;
+        private var _targetId:Number;
         private var _delta:int;
         private var _virtualStep:IFightStep;
 
-        public function FightModifyEffectsDurationStep(sourceId:int, targetId:int, delta:int)
+        public function FightModifyEffectsDurationStep(sourceId:Number, targetId:Number, delta:int)
         {
             this._sourceId = sourceId;
             this._targetId = targetId;
@@ -31,7 +32,7 @@
         {
             BuffManager.getInstance().incrementDuration(this._targetId, this._delta, true, BuffManager.INCREMENT_MODE_TARGET);
             FightEventsHelper.sendFightEvent(FightEventEnum.FIGHTER_EFFECTS_MODIFY_DURATION, [this._sourceId, this._targetId, this._delta], this._targetId, castingSpellId);
-            if (!(this._virtualStep))
+            if (!this._virtualStep)
             {
                 executeCallbacks();
             }
@@ -48,7 +49,12 @@
             executeCallbacks();
         }
 
+        public function get targets():Vector.<Number>
+        {
+            return (new <Number>[this._targetId]);
+        }
+
 
     }
-}//package com.ankamagames.dofus.logic.game.fight.steps
+} com.ankamagames.dofus.logic.game.fight.steps
 

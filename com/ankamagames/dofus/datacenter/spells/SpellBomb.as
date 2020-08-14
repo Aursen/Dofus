@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.datacenter.spells
+package com.ankamagames.dofus.datacenter.spells
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.jerakine.data.GameData;
@@ -18,10 +18,10 @@
 
         public static function getSpellBombById(id:int):SpellBomb
         {
-            return ((GameData.getObject(MODULE, id) as SpellBomb));
+            return (GameData.getObject(MODULE, id) as SpellBomb);
         }
 
 
     }
-}//package com.ankamagames.dofus.datacenter.spells
+} com.ankamagames.dofus.datacenter.spells
 

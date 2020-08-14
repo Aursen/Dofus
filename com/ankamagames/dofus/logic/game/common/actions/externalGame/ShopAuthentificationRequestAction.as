@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.logic.game.common.actions.externalGame
+package com.ankamagames.dofus.logic.game.common.actions.externalGame
 {
     import com.ankamagames.jerakine.handlers.messages.Action;
 
@@ -14,5 +14,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.common.actions.externalGame
+} com.ankamagames.dofus.logic.game.common.actions.externalGame
 

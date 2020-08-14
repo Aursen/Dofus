@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.scripts.spells
+package com.ankamagames.dofus.scripts.spells
 {
     import com.ankamagames.dofus.scripts.api.FxApi;
     import com.ankamagames.jerakine.types.positions.MapPoint;
@@ -21,7 +21,7 @@
                 animName = "AnimArmeEC";
             };
             var animationStep:ISequencable = SequenceApi.CreatePlayAnimationStep(caster, (animName + SpellFxApi.GetUsedWeaponType(spell)), true, true, "SHOT");
-            if (!(latestStep))
+            if (!latestStep)
             {
                 SpellFxApi.AddFrontStep(runner, animationStep);
             }
@@ -31,9 +31,10 @@
             };
             latestStep = animationStep;
             addAnimHitSteps();
+            addFBackgroundSteps();
             destroy();
         }
 
     }
-}//package com.ankamagames.dofus.scripts.spells
+} com.ankamagames.dofus.scripts.spells
 

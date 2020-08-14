@@ -1,8 +1,9 @@
-﻿package com.ankamagames.dofus.network.types.game.context
+package com.ankamagames.dofus.network.types.game.context
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
     public class MapCoordinatesExtended extends MapCoordinatesAndId implements INetworkType 
     {
@@ -17,7 +18,7 @@
             return (176);
         }
 
-        public function initMapCoordinatesExtended(worldX:int=0, worldY:int=0, mapId:int=0, subAreaId:uint=0):MapCoordinatesExtended
+        public function initMapCoordinatesExtended(worldX:int=0, worldY:int=0, mapId:Number=0, subAreaId:uint=0):MapCoordinatesExtended
         {
             super.initMapCoordinatesAndId(worldX, worldY, mapId);
             this.subAreaId = subAreaId;
@@ -53,6 +54,22 @@
         public function deserializeAs_MapCoordinatesExtended(input:ICustomDataInput):void
         {
             super.deserialize(input);
+            this._subAreaIdFunc(input);
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_MapCoordinatesExtended(tree);
+        }
+
+        public function deserializeAsyncAs_MapCoordinatesExtended(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._subAreaIdFunc);
+        }
+
+        private function _subAreaIdFunc(input:ICustomDataInput):void
+        {
             this.subAreaId = input.readVarUhShort();
             if (this.subAreaId < 0)
             {
@@ -62,5 +79,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.context
+} com.ankamagames.dofus.network.types.game.context
 

@@ -1,14 +1,22 @@
-﻿package com.ankamagames.dofus.logic.connection.frames
+package com.ankamagames.dofus.logic.connection.frames
 {
     import com.ankamagames.jerakine.messages.Frame;
+    import com.ankamagames.dofus.kernel.zaap.IZaapMessageHandler;
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
+    import com.ankamagames.jerakine.utils.crypto.FolderHashChecker;
     import com.ankamagames.dofus.misc.utils.LoadingScreen;
-    import com.ankamagames.jerakine.types.enums.Priority;
+    import com.ankamagames.jerakine.utils.system.SystemPopupUI;
+    import com.ankamagames.dofus.kernel.zaap.ZaapApi;
     import com.ankamagames.jerakine.managers.LangManager;
+    import com.ankamagames.dofus.logic.common.managers.FeatureManager;
+    import com.ankamagames.dofus.misc.utils.GameDataQuery;
+    import com.ankamagames.dofus.datacenter.feature.OptionalFeature;
+    import __AS3__.vec.Vector;
+    import com.ankamagames.jerakine.types.enums.Priority;
     import com.ankamagames.tiphon.engine.SubstituteAnimationManager;
-    import com.ankamagames.dofus.logic.connection.messages.UpdaterConnectionStatusMessage;
+    import com.ankamagames.dofus.kernel.zaap.ZaapConnectionHelper;
     import com.ankamagames.jerakine.messages.LangFileLoadedMessage;
     import com.ankamagames.jerakine.messages.LangAllFilesLoadedMessage;
     import com.ankamagames.berilia.types.messages.ModuleRessourceLoadFailedMessage;
@@ -16,8 +24,6 @@
     import com.ankamagames.dofus.kernel.Kernel;
     import com.ankamagames.dofus.kernel.PanicMessages;
     import com.ankamagames.berilia.utils.errors.BeriliaError;
-    import com.ankamagames.jerakine.utils.system.CommandLineArguments;
-    import flash.filesystem.File;
     import com.ankamagames.jerakine.data.XmlConfig;
     import com.ankamagames.jerakine.data.I18nUpdater;
     import flash.events.Event;
@@ -27,11 +33,13 @@
     import com.ankamagames.jerakine.managers.StoreDataManager;
     import com.ankamagames.dofus.Constants;
     import com.ankamagames.berilia.managers.UiRenderManager;
+    import com.ankamagames.dofus.BuildInfos;
+    import com.ankamagames.dofus.network.enums.BuildTypeEnum;
+    import com.ankamagames.berilia.managers.ThemeManager;
+    import flash.events.ErrorEvent;
     import com.ankamagames.berilia.types.messages.AllModulesLoadedMessage;
     import com.ankamagames.berilia.managers.UiModuleManager;
     import com.ankamagames.berilia.types.messages.ModuleLoadedMessage;
-    import com.ankamagames.berilia.types.messages.UiXmlParsedMessage;
-    import com.ankamagames.berilia.types.messages.UiXmlParsedErrorMessage;
     import com.ankamagames.berilia.types.messages.AllUiXmlParsedMessage;
     import com.ankamagames.berilia.types.messages.ModuleExecErrorMessage;
     import com.ankamagames.berilia.types.messages.ThemeLoadedMessage;
@@ -39,19 +47,24 @@
     import com.ankamagames.jerakine.data.I18n;
     import com.ankamagames.berilia.types.messages.NoThemeErrorMessage;
     import com.ankamagames.jerakine.messages.Message;
-    import com.ankamagames.jerakine.utils.system.AirScanner;
+    import com.ankamagames.dofus.kernel.zaap.messages.impl.LanguageMessage;
+    import com.ankamagames.dofus.kernel.zaap.messages.impl.ZaapSettingMessage;
+    import com.ankama.zaap.ErrorCode;
+    import com.ankamagames.dofus.kernel.zaap.messages.IZaapInputMessage;
+    import flash.filesystem.File;
     import com.ankamagames.jerakine.utils.display.StageShareManager;
     import com.ankamagames.berilia.managers.EmbedFontManager;
+    import com.ankamagames.berilia.Berilia;
+    import com.ankamagames.berilia.types.event.UiRenderEvent;
     import com.ankamagames.jerakine.managers.FontManager;
     import com.ankamagames.berilia.managers.KernelEventsManager;
     import com.ankamagames.dofus.misc.lists.HookList;
     import com.ankamagames.dofus.kernel.sound.SoundManager;
-    import com.ankamagames.dofus.kernel.sound.manager.ClassicSoundManager;
-    import com.ankamagames.berilia.Berilia;
     import com.ankamagames.tiphon.engine.TiphonEventsManager;
-    import com.ankamagames.berilia.managers.ThemeManager;
-    import com.ankamagames.jerakine.managers.OptionManager;
+    import com.ankamagames.jerakine.utils.system.CommandLineArguments;
     import com.ankamagames.dofus.misc.utils.CustomLoadingScreenManager;
+    import com.ankamagames.jerakine.types.CustomSharedObject;
+    import com.ankamagames.jerakine.managers.OptionManager;
     import com.ankamagames.dofus.logic.common.managers.DofusFpsManager;
     import com.ankamagames.jerakine.utils.display.FpsControler;
     import com.ankamagames.tiphon.types.ScriptedAnimation;
@@ -70,7 +83,10 @@
     import com.ankamagames.dofus.misc.lists.CustomUiHookList;
     import com.ankamagames.dofus.misc.lists.RoleplayHookList;
     import com.ankamagames.dofus.misc.lists.ExternalGameHookList;
+    import com.ankamagames.dofus.misc.lists.BreachHookList;
+    import com.ankamagames.dofus.misc.lists.ChatServiceHookList;
     import com.ankamagames.dofus.misc.lists.ApiActionList;
+    import com.ankamagames.dofus.misc.lists.ApiBreachActionList;
     import com.ankamagames.dofus.misc.lists.ApiChatActionList;
     import com.ankamagames.dofus.misc.lists.ApiCraftActionList;
     import com.ankamagames.dofus.misc.lists.ApiSocialActionList;
@@ -114,11 +130,19 @@
     import com.ankamagames.dofus.uiApi.ExternalNotificationApi;
     import com.ankamagames.dofus.uiApi.AveragePricesApi;
     import com.ankamagames.dofus.uiApi.ColorApi;
+    import com.ankamagames.dofus.uiApi.UiTutoApi;
+    import com.ankamagames.dofus.uiApi.AbstractItemFilterApi;
+    import com.ankamagames.dofus.uiApi.EncyclopediaItemFilterApi;
+    import com.ankamagames.dofus.uiApi.AuctionHouseItemFilterApi;
+    import com.ankamagames.dofus.uiApi.BreachApi;
+    import com.ankamagames.dofus.uiApi.LuaApi;
+    import com.ankamagames.dofus.uiApi.ChatServiceApi;
     import com.ankamagames.berilia.factories.TooltipsFactory;
     import com.ankamagames.berilia.types.data.TextTooltipInfo;
     import com.ankamagames.dofus.internalDatacenter.spells.SpellWrapper;
     import com.ankamagames.dofus.datacenter.spells.SpellPair;
     import com.ankamagames.dofus.types.data.SpellTooltipInfo;
+    import com.ankamagames.dofus.types.data.WeaponTooltipInfo;
     import com.ankamagames.dofus.internalDatacenter.items.ItemWrapper;
     import com.ankamagames.dofus.internalDatacenter.items.WeaponWrapper;
     import com.ankamagames.dofus.internalDatacenter.items.QuantifiedItemWrapper;
@@ -149,14 +173,17 @@
     import com.ankamagames.dofus.internalDatacenter.guild.PaddockWrapper;
     import com.ankamagames.dofus.network.types.game.context.fight.GameFightCharacterInformations;
     import com.ankamagames.dofus.network.types.game.context.fight.GameFightMonsterInformations;
-    import com.ankamagames.dofus.network.types.game.context.fight.GameFightCompanionInformations;
+    import com.ankamagames.dofus.network.types.game.context.fight.GameFightEntityInformation;
     import com.ankamagames.dofus.internalDatacenter.house.HouseWrapper;
+    import com.ankamagames.dofus.internalDatacenter.tutorial.SubhintWrapper;
     import com.ankamagames.berilia.factories.MenusFactory;
     import com.ankamagames.dofus.network.types.game.context.roleplay.GameRolePlayNpcWithQuestInformations;
     import com.ankamagames.dofus.network.types.game.context.GameRolePlayTaxCollectorInformations;
     import com.ankamagames.dofus.network.types.game.context.roleplay.GameRolePlayPrismInformations;
     import com.ankamagames.dofus.network.types.game.context.roleplay.GameRolePlayPortalInformations;
     import com.ankamagames.dofus.internalDatacenter.people.PartyCompanionWrapper;
+    import com.ankamagames.dofus.network.types.game.context.fight.GameFightFighterInformations;
+    import com.ankamagames.dofus.network.types.game.interactive.InteractiveElement;
     import com.ankamagames.berilia.factories.HyperlinkFactory;
     import com.ankamagames.dofus.logic.common.managers.HyperlinkDisplayArrowManager;
     import com.ankamagames.dofus.logic.common.managers.HyperlinkSpellManager;
@@ -180,29 +207,40 @@
     import com.ankamagames.dofus.logic.common.managers.HyperlinkShowTitleManager;
     import com.ankamagames.dofus.logic.common.managers.HyperlinkShowOrnamentManager;
     import com.ankamagames.dofus.logic.common.managers.HyperlinkShowMonsterChatManager;
+    import com.ankamagames.dofus.logic.common.managers.HyperlinkShowDareChatManager;
     import com.ankamagames.dofus.logic.common.managers.HyperlinkShowSubArea;
     import com.ankamagames.dofus.logic.common.managers.HyperlinkShowOfflineSales;
     import com.ankamagames.dofus.logic.common.managers.HyperlinkTaxCollectorPosition;
+    import com.ankamagames.dofus.logic.common.managers.HyperlinkTaxCollectorCollected;
+    import com.ankamagames.dofus.logic.common.managers.HyperlinkSwapPositionRequest;
+    import com.ankamagames.dofus.logic.common.managers.HyperlinkSystem;
+    import com.ankamagames.dofus.logic.common.managers.HyperlinkShowMonsterGroup;
+    import com.ankamagames.dofus.logic.common.managers.HyperlinkScreenshot;
+    import com.ankamagames.dofus.logic.common.managers.HyperlinkShowEstate;
+    import com.ankamagames.dofus.logic.common.managers.HyperlinkOptionManager;
+    import com.ankamagames.dofus.misc.utils.SubhintInspector;
+    import com.ankamagames.dofus.logic.common.managers.HyperlinkOpenBook;
+    import com.ankamagames.dofus.logic.common.managers.HyperlinkFightResultManager;
+    import com.ankamagames.dofus.logic.common.managers.HyperlinkBreachManager;
+    import com.ankamagames.dofus.logic.common.managers.HyperlinkPresetManager;
+    import com.ankamagames.dofus.logic.common.managers.HyperlinkShowEmoteManager;
+    import com.ankamagames.dofus.logic.common.managers.temporis.HyperlinkTemporisManager;
     import com.ankamagames.dofus.datacenter.appearance.SkinMapping;
+    import com.ankamagames.dofus.logic.connection.managers.StoreUserDataManager;
     import com.ankamagames.performance.Benchmark;
-    import flash.utils.describeType;
-    import com.ankamagames.dofus.misc.lists.GameDataList;
-    import flash.utils.getDefinitionByName;
-    import com.ankamagames.dofus.misc.utils.DofusApiAction;
     import com.ankamagames.jerakine.data.CensoredContentManager;
     import com.ankamagames.dofus.datacenter.misc.CensoredContent;
     import com.ankamagames.tiphon.types.Skin;
     import com.ankamagames.dofus.logic.common.frames.QueueFrame;
-    import com.ankamagames.dofus.BuildInfos;
-    import com.ankamagames.dofus.network.enums.BuildTypeEnum;
     import com.ankamagames.berilia.components.Input;
     import com.ankamagames.jerakine.utils.files.FileUtils;
     import __AS3__.vec.*;
 
-    public class InitializationFrame implements Frame 
+    public class InitializationFrame implements Frame, IZaapMessageHandler 
     {
 
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(InitializationFrame));
+        private static var _fhct:FolderHashChecker;
 
         private var _aFiles:Array;
         private var _aLoadedFiles:Array;
@@ -210,16 +248,109 @@
         private var _loadingScreen:LoadingScreen;
         private var _subConfigCount:uint;
         private var _percentPerModule:Number = 0;
-        private var _modPercents:Array;
-        private var _isSubLangConfig:Boolean;
-        private var _isSubCustomConfig:Boolean;
-        private var _updaterConnectionSuccess:Boolean;
+        private var _modPercents:Array = new Array();
+        private var _langRequested:Boolean = false;
+        private var _langObtained:Boolean = false;
+        private var _langObtainedFromZaap:Boolean = false;
+        private var _autoConnectTypeObtained:Boolean = false;
+        private var _autoConnectTypeValue:int = -1;
+        private var _skinChangePop:SystemPopupUI;
+        private var _api:ZaapApi;
 
-        public function InitializationFrame()
+
+        private static function enableFeaturesFromConf():void
         {
-            this._modPercents = new Array();
-            super();
+            var feature:XML;
+            var featureEntry:String = LangManager.getInstance().getEntry("config.features");
+            if (((!(featureEntry)) || (featureEntry === "!config.features")))
+            {
+                _log.info("No feature to enable");
+                return;
+            };
+            _log.info("Enabling feature(s)...");
+            var featureManager:FeatureManager = FeatureManager.getInstance();
+            if (featureManager === null)
+            {
+                _log.error("Could not load the feature manager. Why?");
+                return;
+            };
+            var rawFeatures:XML = new XML(featureEntry);
+            if (rawFeatures === null)
+            {
+                _log.error("Could not parse features");
+                return;
+            };
+            var features:XMLList = rawFeatures..value;
+            if (features === null)
+            {
+                _log.error("Could not parse features");
+                return;
+            };
+            if (features.length() <= 0)
+            {
+                _log.error("Badly formatted features given");
+                return;
+            };
+            var featureName:QName;
+            var featureKeyword:String;
+            var isFeatureEnabled:Boolean;
+            var index:int = -1;
+            _log.info("Enabling features set in configuration file...");
+            for each (feature in features)
+            {
+                index++;
+                if (feature === null)
+                {
+                    _log.error((("Badly formatted feature (#" + index.toString()) + ") provided. Ignoring"));
+                }
+                else
+                {
+                    featureName = feature.name();
+                    if (((featureName === null) || (!(featureName.localName === "value"))))
+                    {
+                        _log.error((((("Badly formatted feature (#" + index.toString()) + ") provided. The tag must be 'value', not '") + featureName.localName) + "'. Ignoring"));
+                    }
+                    else
+                    {
+                        featureKeyword = feature.text();
+                        if (featureKeyword === null)
+                        {
+                            _log.error((("Badly formatted feature (#" + index.toString()) + ") provided. No keyword could be parsed. Ignoring"));
+                        }
+                        else
+                        {
+                            isFeatureEnabled = featureManager.enableFeatureWithKeyword(featureKeyword, true);
+                            if (!isFeatureEnabled)
+                            {
+                                _log.error((((("Feature with keyword '" + featureKeyword) + "' (#") + index.toString()) + ") could not be enabled"));
+                            };
+                        };
+                    };
+                };
+            };
         }
+
+        private static function enableLaunchFeatures():void
+        {
+            var featureId:uint;
+            var featureManager:FeatureManager = FeatureManager.getInstance();
+            if (featureManager === null)
+            {
+                _log.error("Could not load the feature manager. Why?");
+                return;
+            };
+            _log.info("Enabling features set to be enabled at launch...");
+            var matchedFeatureIds:Vector.<uint> = GameDataQuery.queryEquals(OptionalFeature, "isActivationOnLaunch", true);
+            for each (featureId in matchedFeatureIds)
+            {
+                if (!featureManager.isFeatureWithIdEnabled(featureId))
+                {
+                    featureManager.enableFeatureWithId(featureId, true);
+                };
+            };
+            _log.info("Feature(s) enabled");
+        }
+
 
         public function get priority():int
         {
@@ -242,6 +373,7 @@
             this._aModuleInit["gameData"] = false;
             this._aModuleInit["modules"] = false;
             this._aModuleInit["uiXmlParsing"] = false;
+            this._aModuleInit["uiThemeCheck"] = false;
             for each (foo in this._aModuleInit)
             {
                 this._percentPerModule++;
@@ -253,19 +385,23 @@
             SubstituteAnimationManager.setDefaultAnimation("AnimAttaque", "AnimAttaque0");
             SubstituteAnimationManager.setDefaultAnimation("AnimArme", "AnimArme0");
             SubstituteAnimationManager.setDefaultAnimation("AnimThrow", "AnimStatique");
+            this._api = new ZaapApi(this);
+            if (ZaapConnectionHelper.hasZaapArguments())
+            {
+                this._api.getZaapSetting("autoConnectType");
+            }
+            else
+            {
+                this._autoConnectTypeObtained = true;
+            };
             return (true);
         }
 
         public function process(msg:Message):Boolean
         {
-            var ucsmsg:UpdaterConnectionStatusMessage;
             var langMsg:LangFileLoadedMessage;
             var langAllMsg:LangAllFilesLoadedMessage;
-            var ankamaModule:Boolean;
             var mrlfm:ModuleRessourceLoadFailedMessage;
-            var lang:String;
-            var subLangConfigFile:String;
-            var subCustomConfigFile:String;
             var xmlPos:int;
             var fileNamePos:int;
             var catName:String;
@@ -279,13 +415,10 @@
             var currentCommunity:String;
             switch (true)
             {
-                case (msg is UpdaterConnectionStatusMessage):
-                    ucsmsg = (msg as UpdaterConnectionStatusMessage);
-                    this._updaterConnectionSuccess = ucsmsg.success;
-                    return (true);
                 case (msg is LangFileLoadedMessage):
                     langMsg = LangFileLoadedMessage(msg);
-                    if (!(langMsg.success))
+                    _log.debug(("received langfileloadedmessage, file : " + langMsg.file));
+                    if (!langMsg.success)
                     {
                         if (langMsg.file.indexOf("i18n") > -1)
                         {
@@ -321,11 +454,12 @@
                     return (true);
                 case (msg is LangAllFilesLoadedMessage):
                     langAllMsg = LangAllFilesLoadedMessage(msg);
+                    _log.debug(("received langallfileloadedmessage, file loaded is : " + langAllMsg.file));
                     _log.debug(("file : " + langAllMsg.file));
                     switch (langAllMsg.file)
                     {
                         case "file://config.xml":
-                            if (!(langAllMsg.success))
+                            if (!langAllMsg.success)
                             {
                                 throw (new BeriliaError(("Impossible de charger " + langAllMsg.file)));
                             };
@@ -333,43 +467,21 @@
                             {
                                 LangManager.getInstance().setEntry("config.lang.current", Dofus.getInstance().forcedLang);
                             };
-                            lang = CommandLineArguments.getInstance().getArgument("lang");
-                            if (lang)
+                            if (((ZaapConnectionHelper.hasZaapArguments()) && (!(ZaapApi.isDisconnected()))))
                             {
-                                LangManager.getInstance().setEntry("config.lang.current", lang);
-                            };
-                            this._aFiles = new Array();
-                            this._aLoadedFiles = new Array();
-                            subLangConfigFile = (("config-" + LangManager.getInstance().getEntry("config.lang.current")) + ".xml");
-                            subCustomConfigFile = "config-custom.xml";
-                            this._isSubLangConfig = File.applicationDirectory.resolvePath(subLangConfigFile).exists;
-                            this._isSubCustomConfig = File.applicationDirectory.resolvePath(subCustomConfigFile).exists;
-                            this._subConfigCount = 0;
-                            if (((this._isSubLangConfig) || (this._isSubCustomConfig)))
-                            {
-                                if (this._isSubLangConfig)
-                                {
-                                    LangManager.getInstance().loadFile(subLangConfigFile);
-                                    this._subConfigCount++;
-                                };
-                                if (this._isSubCustomConfig)
-                                {
-                                    LangManager.getInstance().loadFile(subCustomConfigFile);
-                                    this._subConfigCount++;
-                                };
-                                this.setModulePercent("config", 50);
+                                this._langRequested = true;
+                                this._api.getLanguage();
                             }
                             else
                             {
-                                this._aModuleInit["config"] = true;
-                                this.setModulePercent("config", 100);
-                                this.initAfterLoadConfig();
+                                this._langObtained = true;
+                                this.completeConfigInit();
                             };
                             break;
                         default:
                             if (langAllMsg.file.indexOf("colors.xml") != -1)
                             {
-                                if (!(langAllMsg.success))
+                                if (!langAllMsg.success)
                                 {
                                     throw (new BeriliaError(("Impossible de charger " + langAllMsg.file)));
                                 };
@@ -401,7 +513,7 @@
                                     throw (e);
                                 };
                                 this._subConfigCount--;
-                                if (!(this._subConfigCount))
+                                if (!this._subConfigCount)
                                 {
                                     this.setModulePercent("config", 100);
                                     this._aModuleInit["config"] = true;
@@ -413,7 +525,7 @@
                             {
                                 this._aLoadedFiles.push(langAllMsg.file);
                             };
-                            this._aModuleInit["langFiles"] = (((this._aLoadedFiles.length == this._aFiles.length)) && (XmlConfig.getInstance().getEntry("config.data.path.i18n.list")));
+                            this._aModuleInit["langFiles"] = ((this._aLoadedFiles.length == this._aFiles.length) && (XmlConfig.getInstance().getEntry("config.data.path.i18n.list")));
                             if (this._aModuleInit["langFiles"])
                             {
                                 this.setModulePercent("langFiles", 100);
@@ -425,13 +537,13 @@
                                 GameDataUpdater.getInstance().addEventListener(FileEvent.ERROR, this.onDataFileError);
                                 GameDataUpdater.getInstance().addEventListener(LangFileEvent.COMPLETE, this.onGameDataPartialDataReady);
                                 lastLang = StoreDataManager.getInstance().getData(Constants.DATASTORE_LANG_VERSION, "lastLang");
-                                resetLang = !((lastLang == XmlConfig.getInstance().getEntry("config.lang.current")));
+                                resetLang = (!(lastLang == XmlConfig.getInstance().getEntry("config.lang.current")));
                                 if (resetLang)
                                 {
                                     UiRenderManager.getInstance().clearCache();
                                 };
                                 currentCommunity = XmlConfig.getInstance().getEntry("config.community.current");
-                                if (((currentCommunity) && (!((currentCommunity.charAt(0) == "!")))))
+                                if (((currentCommunity) && (!(currentCommunity.charAt(0) == "!"))))
                                 {
                                     overrideFile = new Uri((((XmlConfig.getInstance().getEntry("config.data.path.root") + "com/") + currentCommunity) + ".xml"));
                                 };
@@ -442,23 +554,29 @@
                     };
                     return (true);
                 case (msg is AllModulesLoadedMessage):
+                    _log.warn("InitializationFrame AllModulesLoaded");
                     this._aModuleInit["modules"] = true;
                     this._loadingScreen.log("Launch main modules scripts", LoadingScreen.IMPORTANT);
                     this.setModulePercent("modules", 100);
+                    if (((!(_fhct)) && (BuildInfos.BUILD_TYPE < BuildTypeEnum.INTERNAL)))
+                    {
+                        _fhct = new FolderHashChecker(new Uri((((ThemeManager.getInstance().themesRoot.nativePath + "/") + ThemeManager.OFFICIAL_THEME_NAME) + "/signature.xmls")), this.onFolderHashCheckInit);
+                        _fhct.addEventListener(ErrorEvent.ERROR, function (err:ErrorEvent):void
+                        {
+                            _loadingScreen.log(("Error with selected UI theme : " + err.text), LoadingScreen.ERROR);
+                            _log.error(("Error with selected UI theme : " + err.text));
+                        });
+                    }
+                    else
+                    {
+                        this._aModuleInit["uiThemeCheck"] = true;
+                        this.setModulePercent("uiThemeCheck", 100);
+                    };
                     this.checkInit();
                     return (true);
                 case (msg is ModuleLoadedMessage):
-                    this.setModulePercent("modules", ((this._percentPerModule * 1) / UiModuleManager.getInstance().moduleCount), true);
-                    ankamaModule = UiModuleManager.getInstance().getModule(ModuleLoadedMessage(msg).moduleName).trusted;
-                    this._loadingScreen.log(((ModuleLoadedMessage(msg).moduleName + " script loaded ") + ((ankamaModule) ? "" : "UNTRUSTED module")), ((ankamaModule) ? LoadingScreen.IMPORTANT : LoadingScreen.WARNING));
-                    return (true);
-                case (msg is UiXmlParsedMessage):
-                    this._loadingScreen.log(("Preparsing " + UiXmlParsedMessage(msg).url), LoadingScreen.INFO);
-                    this.setModulePercent("uiXmlParsing", ((this._percentPerModule * 1) / UiModuleManager.getInstance().unparsedXmlCount), true);
-                    return (true);
-                case (msg is UiXmlParsedErrorMessage):
-                    this._loadingScreen.log(((("Error while parsing  " + UiXmlParsedErrorMessage(msg).url) + " : ") + UiXmlParsedErrorMessage(msg).msg), LoadingScreen.ERROR);
-                    this.setModulePercent("uiXmlParsing", ((this._percentPerModule * 1) / UiModuleManager.getInstance().unparsedXmlCount), true);
+                    this.setModulePercent("modules", (this._percentPerModule / UiModuleManager.getInstance().moduleCount), true);
+                    this._loadingScreen.log((ModuleLoadedMessage(msg).moduleName + " script loaded"), LoadingScreen.IMPORTANT);
                     return (true);
                 case (msg is AllUiXmlParsedMessage):
                     this._aModuleInit["uiXmlParsing"] = true;
@@ -485,22 +603,203 @@
             return (false);
         }
 
+        public function handleMessage(msg:IZaapInputMessage):void
+        {
+            var lm:LanguageMessage;
+            var zsm:ZaapSettingMessage;
+            switch (true)
+            {
+                case (msg is LanguageMessage):
+                    lm = (msg as LanguageMessage);
+                    if (ErrorCode.VALID_VALUES.contains(lm.error))
+                    {
+                        _log.error(("Error getting language : " + ErrorCode.VALUES_TO_NAMES[lm.error]));
+                    }
+                    else
+                    {
+                        if (lm.getLanguage())
+                        {
+                            LangManager.getInstance().setEntry("config.lang.current", lm.getLanguage());
+                        };
+                    };
+                    this._langObtained = true;
+                    this._langObtainedFromZaap = true;
+                    this.completeConfigInit();
+                    break;
+                case (msg is ZaapSettingMessage):
+                    zsm = (msg as ZaapSettingMessage);
+                    if (zsm.name == "autoConnectType")
+                    {
+                        if (ErrorCode.VALID_VALUES.contains(zsm.error))
+                        {
+                            _log.error(((("Error getting Zaap setting " + zsm.name) + " : ") + ErrorCode.VALUES_TO_NAMES[zsm.error]));
+                        }
+                        else
+                        {
+                            if (zsm.value)
+                            {
+                                this._autoConnectTypeValue = int(zsm.value);
+                            };
+                        };
+                        this._autoConnectTypeObtained = true;
+                        this.completeConfigInit();
+                    };
+                    break;
+            };
+        }
+
+        private function completeConfigInit():void
+        {
+            var langConfigFile:String;
+            var langConfigFileRegExp:RegExp;
+            var fileList:Array;
+            var i:int;
+            if (((!(this._autoConnectTypeObtained)) || (!(this._langObtained))))
+            {
+                return;
+            };
+            this._aFiles = new Array();
+            this._aLoadedFiles = new Array();
+            this._langRequested = false;
+            var subLangConfigFile:* = (("config-" + LangManager.getInstance().getEntry("config.lang.current")) + ".xml");
+            var subCustomConfigFile:String = "config-custom.xml";
+            var tempSubCustomConfigFile:String = "temp-config-custom.xml";
+            var isSubLangConfig:Boolean = File.applicationDirectory.resolvePath(subLangConfigFile).exists;
+            var isSubCustomConfig:Boolean = File.applicationDirectory.resolvePath(subCustomConfigFile).exists;
+            var isTemporaryCustomConfig:Boolean = File.applicationDirectory.resolvePath(tempSubCustomConfigFile).exists;
+            if (this._langObtainedFromZaap)
+            {
+                this._subConfigCount = 0;
+            }
+            else
+            {
+                if (BuildInfos.BUILD_TYPE != BuildTypeEnum.DEBUG)
+                {
+                    langConfigFileRegExp = new RegExp("config-lang-(fr|en|es|de|it|pt)\\.xml");
+                    fileList = File.applicationDirectory.getDirectoryListing();
+                    i = 0;
+                    while (i < fileList.length)
+                    {
+                        if (((!(fileList[i].isDirectory)) && ((fileList[i].name as String).match(langConfigFileRegExp))))
+                        {
+                            break;
+                        };
+                        i++;
+                    };
+                    if (i < fileList.length)
+                    {
+                        langConfigFile = fileList[i].name;
+                        LangManager.getInstance().loadFile(langConfigFile);
+                        this._subConfigCount = 1;
+                    }
+                    else
+                    {
+                        _log.error("There is no lang config file, french is used by default in main config.xml");
+                        this._subConfigCount = 0;
+                    };
+                }
+                else
+                {
+                    langConfigFile = "config-lang-fr.xml";
+                    LangManager.getInstance().loadFile(langConfigFile);
+                    this._subConfigCount = 1;
+                };
+            };
+            _log.debug("checking if their is any custom config file");
+            if (((((isSubLangConfig) || (isSubCustomConfig)) || (isTemporaryCustomConfig)) || (this._subConfigCount > 0)))
+            {
+                _log.debug("there is some custom config files");
+                if (isSubLangConfig)
+                {
+                    LangManager.getInstance().loadFile(subLangConfigFile);
+                    this._subConfigCount++;
+                };
+                if (isSubCustomConfig)
+                {
+                    LangManager.getInstance().loadFile(subCustomConfigFile);
+                    this._subConfigCount++;
+                }
+                else
+                {
+                    if (isTemporaryCustomConfig)
+                    {
+                        _log.debug("using temporary custom config file");
+                        LangManager.getInstance().loadFile(tempSubCustomConfigFile);
+                        this._subConfigCount++;
+                    };
+                };
+                this.setModulePercent("config", 50);
+            }
+            else
+            {
+                this._aModuleInit["config"] = true;
+                this.setModulePercent("config", 100);
+                this.initAfterLoadConfig();
+            };
+        }
+
+        public function handleConnectionOpened():void
+        {
+        }
+
+        public function handleConnectionClosed():void
+        {
+            this._autoConnectTypeObtained = true;
+            this._langObtained = true;
+            if (this._langRequested)
+            {
+                this.completeConfigInit();
+            };
+        }
+
         public function pulled():Boolean
         {
-            if (AirScanner.isStreamingVersion())
+            if (this._skinChangePop)
             {
-                Dofus.getInstance().strLoaderComplete();
+                this._skinChangePop.destroy();
+                this._skinChangePop = null;
             };
             this._loadingScreen.parent.removeChild(this._loadingScreen);
             this._loadingScreen = null;
+            if (!StageShareManager.stage.nativeWindow.closed)
+            {
+                StageShareManager.stage.nativeWindow.visible = true;
+            };
+            if (this._api)
+            {
+                this._api.detach(this);
+                this._api = null;
+            };
             StageShareManager.testQuality();
             EmbedFontManager.getInstance().removeEventListener(Event.COMPLETE, this.onFontsManagerInit);
+            I18nUpdater.getInstance().removeEventListener(Event.COMPLETE, this.onI18nReady);
+            I18nUpdater.getInstance().removeEventListener(LangFileEvent.COMPLETE, this.onI18nPartialDataReady);
+            GameDataUpdater.getInstance().removeEventListener(Event.COMPLETE, this.onGameDataReady);
+            GameDataUpdater.getInstance().removeEventListener(LangFileEvent.COMPLETE, this.onGameDataPartialDataReady);
+            Berilia.getInstance().removeEventListener(UiRenderEvent.UIRenderComplete, this.onUiLoaded);
             return (true);
+        }
+
+        public function updateLoadingScreenSize():void
+        {
+            this._loadingScreen.refreshSize();
+        }
+
+        private function onFolderHashCheckInit():void
+        {
+            _log.debug("onFolderHashCheckInit");
+            this._aModuleInit["uiThemeCheck"] = true;
+            this.setModulePercent("uiThemeCheck", 100);
+            this.checkInit();
         }
 
         private function initAfterLoadConfig():void
         {
             Kernel.getInstance().postInit();
+            if (this._autoConnectTypeValue != -1)
+            {
+                Dofus.getInstance().options.setOption("autoConnectType", this._autoConnectTypeValue);
+            };
             this._aFiles.push(LangManager.getInstance().getEntry("config.ui.asset.fontsList"));
             var i:uint;
             while (i < this._aFiles.length)
@@ -511,17 +810,75 @@
             this._loadingScreen.value = (this._loadingScreen.value + this._percentPerModule);
             KernelEventsManager.getInstance().processCallback(HookList.ConfigStart);
             this.initTubul();
-            if (!((SoundManager.getInstance().manager is ClassicSoundManager)))
+            Berilia.getInstance().addUIListener(SoundManager.getInstance().manager);
+            TiphonEventsManager.addListener(SoundManager.getInstance().manager, "Sound");
+            TiphonEventsManager.addListener(SoundManager.getInstance().manager, "DataSound");
+            this.initTheme();
+            if (!CommandLineArguments.getInstance().hasArgument("functional-test"))
             {
-                Berilia.getInstance().addUIListener(SoundManager.getInstance().manager);
-                TiphonEventsManager.addListener(SoundManager.getInstance().manager, "Sound");
-                TiphonEventsManager.addListener(SoundManager.getInstance().manager, "DataSound");
+                CustomLoadingScreenManager.getInstance().loadCustomScreenList(StoreDataManager.getInstance().getData(Constants.DATASTORE_COMPUTER_OPTIONS, "lastNickname"));
             };
-            ThemeManager.getInstance().init();
-            ThemeManager.getInstance().applyTheme(OptionManager.getOptionManager("dofus").switchUiSkin);
-            if (!(CommandLineArguments.getInstance().hasArgument("functional-test")))
+        }
+
+        private function initTheme():void
+        {
+            var currentLang:String;
+            var titleText:String;
+            var contentText:String;
+            var btnText:String;
+            var customthemesPath:String = (((((CustomSharedObject.getCustomSharedObjectDirectory() + File.separator) + "ui") + File.separator) + "themes") + File.separator);
+            var officialthemesPath:String = ((File.applicationDirectory.nativePath + File.separator) + LangManager.getInstance().getEntry("config.ui.common.themes").replace("file://", ""));
+            ThemeManager.getInstance().init(officialthemesPath, customthemesPath, (BuildInfos.BUILD_TYPE == BuildTypeEnum.RELEASE));
+            ThemeManager.getInstance().applyTheme(OptionManager.getOptionManager("dofus").getOption("currentUiSkin"));
+            if (OptionManager.getOptionManager("dofus").getOption("currentUiSkin") != ThemeManager.OFFICIAL_THEME_NAME)
             {
-                CustomLoadingScreenManager.getInstance().loadCustomScreenList();
+                currentLang = XmlConfig.getInstance().getEntry("config.lang.current");
+                switch (currentLang)
+                {
+                    case "fr":
+                        titleText = "Thème d'interface personnalisé";
+                        contentText = "Vous n'utilisez pas le thème d'interface officiel. Utiliser un thème non mis à jour peut entrainer des soucis d'affichage voire la disparition de certaines interfaces. Si vous rencontrez un problème, rétablissez le thème par défaut et contacter le créateur de votre thème d'interface.";
+                        btnText = "Rétablir le thème par défaut";
+                        break;
+                    case "es":
+                        titleText = "Tema de interfaz personalizado";
+                        contentText = "No estás utilizando el tema de interfaz oficial. Utilizar un tema no actualizado, puede conllevar problemas de visualización o incluso la desaparición de ciertas interfaces. Si encuentras algún problema, restablece el tema por defecto y ponte en contacto con el creador de tu tema de interfaz.";
+                        btnText = "Restablecer el tema predeterminado";
+                        break;
+                    case "de":
+                        titleText = "Benutzerdefiniertes Design für die Benutzeroberfläche";
+                        contentText = "Ihr verwendet nicht das offizielle Design für die Benutzeroberfläche. Die Benutzung eines veralteten Designs kann zu Darstellungsproblemen bis hin zum Absturz der Benutzeroberfläche führen. Sollten bei euch Probleme auftreten, setzt das Design auf das Standarddesign zurück und wendet euch an den Hersteller eures Designs.";
+                        btnText = "Standarddesign wiederherstellen";
+                        break;
+                    case "it":
+                        titleText = "Tema di interfaccia personalizzato";
+                        contentText = "Non stai utilizzando il tema ufficiale per le interfacce. Utilizzare un tema non aggiornato può causare dei problemi di visualizzazione o persino la sparizione di alcune interfacce. Se riscontri un problema, ripristina il tema di base e contatta il creatore del tuo tema.";
+                        btnText = "Ripristina il tema di base";
+                        break;
+                    case "pt":
+                        titleText = "Tema de interface personalizado";
+                        contentText = "Você não está usando o tema de interface oficial. A utilização de um tema desatualizado pode ocasionar problemas na exibição e até mesmo o desaparecimento de algumas interfaces. Caso encontre um problema, restabeleça o tema padrão e contate o criador de seu tema de interface.";
+                        btnText = "Restaurar o tema padrão";
+                        break;
+                    case "en":
+                    default:
+                        titleText = "Personalized theme interface";
+                        contentText = "You're not using the official interface theme. Using a theme that is not up to date can lead to display issues, or even cause certain interfaces to disappear entirely. If you run into problems, restore the default theme and contact the creator of your interface theme.";
+                        btnText = "Restore the default theme";
+                };
+                this._skinChangePop = new SystemPopupUI("skinChangePopup");
+                this._skinChangePop.title = titleText;
+                this._skinChangePop.content = contentText;
+                this._skinChangePop.buttons = [{
+                    "label":btnText,
+                    "callback":function ():void
+                    {
+                        OptionManager.getOptionManager("dofus").setOption("currentUiSkin", ThemeManager.OFFICIAL_THEME_NAME);
+                        Dofus.getInstance().clearCache(true, true);
+                    }
+                }];
+                this._skinChangePop.y = -400;
+                this._skinChangePop.show();
             };
         }
 
@@ -537,7 +894,7 @@
             ChatHookList.ShowObjectLinked;
             PrismHookList.PrismsList;
             AlignmentHookList.AlignmentAreaUpdate;
-            CraftHookList.BagListUpdate;
+            CraftHookList.ExchangeStartOkCraft;
             ExchangeHookList.AskExchangeMoveObject;
             FightHookList.AfkModeChanged;
             InventoryHookList.BankViewContent;
@@ -547,13 +904,17 @@
             SocialHookList.AttackPlayer;
             TriggerHookList.CreaturesMode;
             CustomUiHookList.ActivateSound;
-            RoleplayHookList.SpellForgetUI;
+            RoleplayHookList.PlayerFightRequestSent;
             CraftHookList.DoNothing;
             ExternalGameHookList.DofusShopMoney;
+            BreachHookList.BreachBranchesList;
+            ChatServiceHookList.ChatServiceChannelMessage;
             ApiActionList.AuthorizedCommand;
+            ApiBreachActionList.BreachInvitationRequest;
             ApiChatActionList.ChannelEnabling;
             ApiCraftActionList.JobCrafterDirectoryDefineSettings;
             ApiSocialActionList.FriendsListRequest;
+            ApiSocialActionList.ContactsListRequest;
             ApiRolePlayActionList.PlayerFightFriendlyAnswer;
             ApiExchangeActionList.BidHouseStringSearch;
             ApiMountActionList.MountFeedRequest;
@@ -597,11 +958,19 @@
             ApiBinder.addApi("ExternalNotification", ExternalNotificationApi);
             ApiBinder.addApi("AveragePrices", AveragePricesApi);
             ApiBinder.addApi("Color", ColorApi);
+            ApiBinder.addApi("UiTuto", UiTutoApi);
+            ApiBinder.addApi("AbstractItemFilter", AbstractItemFilterApi);
+            ApiBinder.addApi("EncyclopediaItemFilter", EncyclopediaItemFilterApi);
+            ApiBinder.addApi("AuctionHouseItemFilter", AuctionHouseItemFilterApi);
+            ApiBinder.addApi("Breach", BreachApi);
+            ApiBinder.addApi("Lua", LuaApi);
+            ApiBinder.addApi("ChatServiceApi", ChatServiceApi);
             TooltipsFactory.registerAssoc(String, "text");
             TooltipsFactory.registerAssoc(TextTooltipInfo, "textInfo");
             TooltipsFactory.registerAssoc(SpellWrapper, "spell");
             TooltipsFactory.registerAssoc(SpellPair, "spell");
             TooltipsFactory.registerAssoc(SpellTooltipInfo, "spellBanner");
+            TooltipsFactory.registerAssoc(WeaponTooltipInfo, "weaponBanner");
             TooltipsFactory.registerAssoc(ItemWrapper, "item");
             TooltipsFactory.registerAssoc(WeaponWrapper, "item");
             TooltipsFactory.registerAssoc(QuantifiedItemWrapper, "item");
@@ -627,15 +996,16 @@
             TooltipsFactory.registerAssoc(PrismTooltipInformation, "prism");
             TooltipsFactory.registerAssoc(PortalTooltipInformation, "portal");
             TooltipsFactory.registerAssoc(Object, "mount");
-            TooltipsFactory.registerAssoc(MountWrapper, "mount");
+            TooltipsFactory.registerAssoc(MountWrapper, "item");
             TooltipsFactory.registerAssoc(GameContextPaddockItemInformations, "paddockItem");
             TooltipsFactory.registerAssoc(GameRolePlayMountInformations, "paddockMount");
             TooltipsFactory.registerAssoc(ChallengeWrapper, "challenge");
             TooltipsFactory.registerAssoc(PaddockWrapper, "paddock");
             TooltipsFactory.registerAssoc(GameFightCharacterInformations, "playerFighter");
             TooltipsFactory.registerAssoc(GameFightMonsterInformations, "monsterFighter");
-            TooltipsFactory.registerAssoc(GameFightCompanionInformations, "companionFighter");
+            TooltipsFactory.registerAssoc(GameFightEntityInformation, "companionFighter");
             TooltipsFactory.registerAssoc(HouseWrapper, "house");
+            TooltipsFactory.registerAssoc(SubhintWrapper, "simpleInterfaceTuto");
             MenusFactory.registerAssoc(GameRolePlayMerchantInformations, "humanVendor");
             MenusFactory.registerAssoc(ItemWrapper, "item");
             MenusFactory.registerAssoc(QuantifiedItemWrapper, "item");
@@ -652,17 +1022,20 @@
             MenusFactory.registerAssoc(GameRolePlayMountInformations, "mount");
             MenusFactory.registerAssoc(String, "player");
             MenusFactory.registerAssoc(GameRolePlayGroupMonsterInformations, "monsterGroup");
-            MenusFactory.registerAssoc(GameFightCompanionInformations, "companion");
+            MenusFactory.registerAssoc(GameFightEntityInformation, "companion");
             MenusFactory.registerAssoc(PartyCompanionWrapper, "companion");
+            MenusFactory.registerAssoc(GameFightFighterInformations, "fightAlly");
+            MenusFactory.registerAssoc(InteractiveElement, "interactiveElement");
             HyperlinkFactory.registerProtocol("ui", HyperlinkDisplayArrowManager.showArrow);
             HyperlinkFactory.registerProtocol("spell", HyperlinkSpellManager.showSpell, HyperlinkSpellManager.getSpellLevelName);
-            HyperlinkFactory.registerProtocol("spellNoLvl", HyperlinkSpellManager.showSpell, HyperlinkSpellManager.getSpellName);
+            HyperlinkFactory.registerProtocol("spellNoLvl", HyperlinkSpellManager.showSpellNoLevel, HyperlinkSpellManager.getSpellName);
+            HyperlinkFactory.registerProtocol("spellPair", HyperlinkSpellManager.showSpellPair);
             HyperlinkFactory.registerProtocol("cell", HyperlinkShowCellManager.showCell);
-            HyperlinkFactory.registerProtocol("entity", HyperlinkShowEntityManager.showEntity, null, null, true, HyperlinkShowEntityManager.rollOver);
+            HyperlinkFactory.registerProtocol("entity", HyperlinkShowEntityManager.showEntity, HyperlinkShowEntityManager.getEntityName, null, true, HyperlinkShowEntityManager.rollOver);
             HyperlinkFactory.registerProtocol("recipe", HyperlinkShowRecipeManager.showRecipe, HyperlinkShowRecipeManager.getRecipeName, null, true, HyperlinkShowRecipeManager.rollOver);
-            HyperlinkFactory.registerProtocol("player", HyperlinkShowPlayerMenuManager.showPlayerMenu, HyperlinkShowPlayerMenuManager.getPlayerName, null, false, HyperlinkShowPlayerMenuManager.rollOverPlayer);
-            HyperlinkFactory.registerProtocol("account", HyperlinkShowAccountMenuManager.showAccountMenu);
-            HyperlinkFactory.registerProtocol("item", HyperlinkItemManager.showItem, HyperlinkItemManager.getItemName);
+            HyperlinkFactory.registerProtocol("player", HyperlinkShowPlayerMenuManager.showPlayerMenu, HyperlinkShowPlayerMenuManager.getPlayerName, null, true, HyperlinkShowPlayerMenuManager.rollOverPlayer);
+            HyperlinkFactory.registerProtocol("account", HyperlinkShowAccountMenuManager.showAccountMenu, null, null, true);
+            HyperlinkFactory.registerProtocol("item", HyperlinkItemManager.showItem, HyperlinkItemManager.getItemName, HyperlinkItemManager.insertItem);
             HyperlinkFactory.registerProtocol("map", HyperlinkMapPosition.showPosition, HyperlinkMapPosition.getText, null, true, HyperlinkMapPosition.rollOver);
             HyperlinkFactory.registerProtocol("chatitem", HyperlinkItemManager.showChatItem, null, HyperlinkItemManager.duplicateChatHyperlink, true, HyperlinkItemManager.rollOver);
             HyperlinkFactory.registerProtocol("guild", HyperlinkShowGuildManager.showGuild, HyperlinkShowGuildManager.getGuildName, null, true, HyperlinkShowGuildManager.rollOver);
@@ -670,7 +1043,7 @@
             HyperlinkFactory.registerProtocol("openSocial", HyperlinkSocialManager.openSocial, null, null, true, HyperlinkSocialManager.rollOver);
             HyperlinkFactory.registerProtocol("chatLinkRelease", HyperlinkURLManager.chatLinkRelease, null, null, true, HyperlinkURLManager.rollOver);
             HyperlinkFactory.registerProtocol("chatWarning", HyperlinkURLManager.chatWarning);
-            HyperlinkFactory.registerProtocol("subst", HyperlinkSubstitutionManager.openAnkabox, HyperlinkSubstitutionManager.substitute, null, true, HyperlinkItemManager.rollOver);
+            HyperlinkFactory.registerProtocol("subst", HyperlinkSubstitutionManager.openAnkabox, HyperlinkSubstitutionManager.substitute, null, true, HyperlinkSubstitutionManager.rollOver);
             HyperlinkFactory.registerProtocol("npc", HyperlinkShowNpcManager.showNpc);
             HyperlinkFactory.registerProtocol("monster", HyperlinkShowMonsterManager.showMonster, HyperlinkShowMonsterManager.getMonsterName);
             HyperlinkFactory.registerProtocol("monsterFight", HyperlinkShowMonsterFightManager.showEntity, null, null, true, HyperlinkShowMonsterFightManager.rollOver);
@@ -680,15 +1053,60 @@
             HyperlinkFactory.registerProtocol("chattitle", HyperlinkShowTitleManager.showTitle, null, null, true, HyperlinkShowTitleManager.rollOver);
             HyperlinkFactory.registerProtocol("chatornament", HyperlinkShowOrnamentManager.showOrnament, null, null, true, HyperlinkShowOrnamentManager.rollOver);
             HyperlinkFactory.registerProtocol("chatmonster", HyperlinkShowMonsterChatManager.showMonster, HyperlinkShowMonsterChatManager.getMonsterName, null, true, HyperlinkShowMonsterChatManager.rollOver);
+            HyperlinkFactory.registerProtocol("bestiary", HyperlinkShowMonsterChatManager.showMonster, HyperlinkShowMonsterChatManager.getMonsterName, null, false, HyperlinkShowMonsterChatManager.rollOver);
+            HyperlinkFactory.registerProtocol("bestiaryItem", HyperlinkItemManager.showBestiaryItem, HyperlinkItemManager.getItemName, HyperlinkItemManager.insertItem);
+            HyperlinkFactory.registerProtocol("encyclopediaPinItem", HyperlinkItemManager.showPinnedItemTooltip, null, HyperlinkItemManager.insertItem, true);
+            HyperlinkFactory.registerProtocol("HDVItem", null, null, HyperlinkItemManager.insertItem, false);
+            HyperlinkFactory.registerProtocol("encyclopediaItem", HyperlinkItemManager.showResourceItem, HyperlinkItemManager.getItemName, HyperlinkItemManager.insertItem);
+            HyperlinkFactory.registerProtocol("chatdare", HyperlinkShowDareChatManager.showDare, HyperlinkShowDareChatManager.getDareName, null, true, HyperlinkShowDareChatManager.rollOver);
             HyperlinkFactory.registerProtocol("subArea", HyperlinkShowSubArea.showSubArea, HyperlinkShowSubArea.getSubAreaName);
             HyperlinkFactory.registerProtocol("offlineSales", HyperlinkShowOfflineSales.showOfflineSales, null, null, false);
             HyperlinkFactory.registerProtocol("taxcollectorPosition", HyperlinkTaxCollectorPosition.showPosition, null, null, false, HyperlinkTaxCollectorPosition.rollOver);
+            HyperlinkFactory.registerProtocol("taxcollectorCollected", HyperlinkTaxCollectorCollected.showCollectedTaxCollector, null, null, false, HyperlinkTaxCollectorCollected.rollOver);
+            HyperlinkFactory.registerProtocol("swapPositionRequest", HyperlinkSwapPositionRequest.showMenu, null, null, false);
+            HyperlinkFactory.registerProtocol("system", HyperlinkSystem.open, null, null, true);
+            HyperlinkFactory.registerProtocol("monsterGroup", HyperlinkShowMonsterGroup.showMonsterGroup, HyperlinkShowMonsterGroup.getText, null, true, HyperlinkShowMonsterGroup.rollOver);
+            HyperlinkFactory.registerProtocol("url", HyperlinkURLManager.openURL);
+            HyperlinkFactory.registerProtocol("screenshot", HyperlinkScreenshot.click, null, null, true);
+            HyperlinkFactory.registerProtocol("estate", HyperlinkShowEstate.click, null, null, true);
+            HyperlinkFactory.registerProtocol("openOption", HyperlinkOptionManager.openOption, null, null, true);
+            HyperlinkFactory.registerProtocol("highlightElement", SubhintInspector.selectElementInInspector, null, null, true, SubhintInspector.processRollOver);
+            HyperlinkFactory.registerProtocol("openBook", HyperlinkOpenBook.open, null, null, true);
+            HyperlinkFactory.registerProtocol("openFightResult", HyperlinkFightResultManager.open);
+            HyperlinkFactory.registerProtocol("leaveBreach", HyperlinkBreachManager.leaveBreach);
+            HyperlinkFactory.registerProtocol("invitGroup", HyperlinkBreachManager.invitGroup);
+            HyperlinkFactory.registerProtocol("showSpellsUI", HyperlinkSpellManager.showSpellsUI, null, null, true);
+            HyperlinkFactory.registerProtocol("openPresets", HyperlinkPresetManager.openPresets, null, null, true);
+            HyperlinkFactory.registerProtocol("showEmote", HyperlinkShowEmoteManager.showEmote);
+            HyperlinkFactory.registerProtocol("openTemporisSpellsUi", HyperlinkTemporisManager.openTemporisSpellsUi);
+            HyperlinkFactory.registerProtocol("openTemporisSuccesses", HyperlinkTemporisManager.openTemporisSuccesses);
+            HyperlinkFactory.registerProtocol("openTemporisQuestTab", HyperlinkTemporisManager.openTemporisQuestTab);
+            HyperlinkFactory.registerProtocol("locatePorisAssistant", HyperlinkTemporisManager.locatePorisAssistant);
         }
 
         private function displayLoadingScreen():void
         {
-            this._loadingScreen = new LoadingScreen(false, true);
+            this._loadingScreen = new LoadingScreen(false, true, ((!(Dofus.getInstance().initialized)) && (Dofus.getInstance().useMiniLoader)));
+            this._loadingScreen.closeMiniUiRequestHandler = this.closeMiniLoadingUi;
+            this._loadingScreen.logCallbackHandler = this.onLog;
             Dofus.getInstance().addChild(this._loadingScreen);
+        }
+
+        private function closeMiniLoadingUi():void
+        {
+            if (this._loadingScreen)
+            {
+                this._loadingScreen.hideMiniUi();
+                StageShareManager.stage.nativeWindow.activate();
+            };
+        }
+
+        private function onLog(text:String, level:uint):void
+        {
+            if (level == LoadingScreen.ERROR)
+            {
+                this.closeMiniLoadingUi();
+            };
         }
 
         private function initTubul():void
@@ -698,54 +1116,33 @@
 
         private function checkInit():void
         {
-            var reste:uint;
             var key:String;
-            var d:XML;
-            var testSequence:Array;
-            var type:XML;
-            var i:uint;
             var lowdefMappings:Array;
             var skin:SkinMapping;
-            var dataClassDesc:XML;
-            var fct:XML;
             var start:Boolean = true;
+            var reste:uint;
             for (key in this._aModuleInit)
             {
                 start = ((start) && (this._aModuleInit[key]));
-                if (!(this._aModuleInit[key]))
+                if (!this._aModuleInit[key])
                 {
                     reste++;
                 };
             };
-            if (reste == 2)
+            if (reste == 3)
             {
                 UiModuleManager.getInstance().init(Constants.COMMON_GAME_MODULE.concat(Constants.PRE_GAME_MODULE), true);
             };
-            if (((((start) && (!(Benchmark.hasCachedResults)))) && (!(Benchmark.isDone))))
+            if (((!(BuildInfos.BUILD_TYPE == BuildTypeEnum.DEBUG)) && (StoreUserDataManager.getInstance().statsEnabled)))
             {
-                Benchmark.run(StageShareManager.stage, this.checkInit);
-                return;
+                if ((((start) && (!(Benchmark.hasCachedResults))) && (!(Benchmark.isDone))))
+                {
+                    Benchmark.run(StageShareManager.stage, this.checkInit);
+                    return;
+                };
             };
             if (start)
             {
-                d = describeType(GameDataList);
-                testSequence = [];
-                for each (type in d..constant)
-                {
-                    dataClassDesc = describeType(getDefinitionByName(type.@type));
-                    for each (fct in dataClassDesc..method)
-                    {
-                        if ((((((fct.@returnType.toString() == type.@type.toString())) && ((fct.@name.toString().indexOf("get") == 0)))) && (!((fct.@name.toString().indexOf("ById") == -1)))))
-                        {
-                            testSequence.push({
-                                "fct":getDefinitionByName(type.@type)[fct.@name.toString()],
-                                "returnClass":getDefinitionByName(type.@type),
-                                "testIndex":[0, 1, 2, 3, 4, 100, 1000, 2000, 10000, 100000]
-                            });
-                        };
-                    };
-                };
-                DofusApiAction.updateInfo();
                 CensoredContentManager.getInstance().init(CensoredContent.getCensoredContents(), XmlConfig.getInstance().getEntry("config.lang.current"));
                 lowdefMappings = SkinMapping.getSkinMappings();
                 for each (skin in lowdefMappings)
@@ -757,33 +1154,42 @@
                 Constants.EVENT_MODE_PARAM = LangManager.getInstance().getEntry("config.eventModeParams");
                 Constants.CHARACTER_CREATION_ALLOWED = (LangManager.getInstance().getEntry("config.characterCreationAllowed") == "true");
                 Constants.FORCE_MAXIMIZED_WINDOW = (LangManager.getInstance().getEntry("config.autoMaximize") == "true");
-                if (((Constants.FORCE_MAXIMIZED_WINDOW) && (AirScanner.hasAir())))
+                if (Constants.FORCE_MAXIMIZED_WINDOW)
                 {
-                    StageShareManager.stage["nativeWindow"].maximize();
+                    StageShareManager.stage.nativeWindow.maximize();
                 };
-                Kernel.getWorker().removeFrame(this);
+                Berilia.getInstance().addEventListener(UiRenderEvent.UIRenderComplete, this.onUiLoaded);
                 Kernel.getWorker().addFrame(new AuthentificationFrame());
                 Kernel.getWorker().addFrame(new QueueFrame());
                 Kernel.getWorker().addFrame(new GameStartingFrame());
-                if (((((!(AirScanner.isStreamingVersion())) && (!(this._updaterConnectionSuccess)))) && (!((BuildInfos.BUILD_TYPE == BuildTypeEnum.DEBUG)))))
+                if (((!(ZaapApi.isConnected())) && (!(BuildInfos.BUILD_TYPE == BuildTypeEnum.DEBUG))))
                 {
-                    KernelEventsManager.getInstance().processCallback(HookList.UpdaterConnectionFailed);
+                    KernelEventsManager.getInstance().processCallback(HookList.ZaapConnectionFailed);
                 };
+                enableFeaturesFromConf();
+                enableLaunchFeatures();
+            };
+        }
+
+        private function onUiLoaded(e:UiRenderEvent):void
+        {
+            if (e.uiTarget.uiData.name == "login")
+            {
+                Kernel.getWorker().removeFrame(this);
             };
         }
 
         private function initFonts():void
         {
             EmbedFontManager.getInstance().addEventListener(Event.COMPLETE, this.onFontsManagerInit);
-            var fontList:Array = FontManager.getInstance().getFontsList();
+            var fontList:Array = FontManager.getInstance().getFontUrlList();
             EmbedFontManager.getInstance().initialize(fontList);
         }
 
         private function setModulePercent(moduleName:String, prc:Number, add:Boolean=false):void
         {
             var p:Number;
-            var id:uint;
-            if (!(this._modPercents[moduleName]))
+            if (!this._modPercents[moduleName])
             {
                 this._modPercents[moduleName] = 0;
             };
@@ -800,7 +1206,6 @@
             {
                 totalPrc = (totalPrc + ((p / 100) * this._percentPerModule));
             };
-            id = Dofus.getInstance().instanceId;
             if (this._modPercents[moduleName] == 100)
             {
                 this._loadingScreen.log((moduleName + " initialized"), LoadingScreen.IMPORTANT);
@@ -810,6 +1215,7 @@
 
         private function onFontsManagerInit(e:Event):void
         {
+            FontManager.getInstance().activeType = ((OptionManager.getOptionManager("dofus").getOption("smallScreenFont") == true) ? "smallScreen" : FontManager.DEFAULT_FONT_TYPE);
             this._aModuleInit["font"] = true;
             this.setModulePercent("font", 100);
             this.checkInit();
@@ -833,21 +1239,19 @@
 
         private function onGameDataPartialDataReady(e:LangFileEvent):void
         {
-            if (!(this._loadingScreen))
+            if (!this._loadingScreen)
             {
                 this._loadingScreen = new LoadingScreen();
                 Dofus.getInstance().addChild(this._loadingScreen);
             };
             this._loadingScreen.log((("[GameData] " + FileUtils.getFileName(e.url)) + " parsed"), LoadingScreen.INFO);
-            this.setModulePercent("gameData", ((this._percentPerModule * 1) / GameDataUpdater.getInstance().files.length), true);
-            KernelEventsManager.getInstance().processCallback(HookList.LangFileLoaded, e.url, true);
+            this.setModulePercent("gameData", (this._percentPerModule / GameDataUpdater.getInstance().files.length), true);
         }
 
         private function onI18nPartialDataReady(e:LangFileEvent):void
         {
             this._loadingScreen.log((("[i18n] " + FileUtils.getFileName(e.url)) + " parsed"), LoadingScreen.INFO);
-            this.setModulePercent("i18n", ((this._percentPerModule * 1) / I18nUpdater.getInstance().files.length), true);
-            KernelEventsManager.getInstance().processCallback(HookList.LangFileLoaded, e.url, true);
+            this.setModulePercent("i18n", (this._percentPerModule / I18nUpdater.getInstance().files.length), true);
         }
 
         private function onDataFileError(e:FileEvent):void
@@ -857,5 +1261,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.connection.frames
+} com.ankamagames.dofus.logic.connection.frames
 

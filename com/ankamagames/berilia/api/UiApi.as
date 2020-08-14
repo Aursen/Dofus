@@ -1,20 +1,18 @@
-﻿package com.ankamagames.berilia.api
+package com.ankamagames.berilia.api
 {
     import com.ankamagames.berilia.interfaces.IApi;
-    import flash.utils.Dictionary;
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
     import com.ankamagames.berilia.components.Label;
     import com.ankamagames.berilia.types.data.UiModule;
     import com.ankamagames.berilia.types.graphic.UiRootContainer;
+    import flash.utils.Dictionary;
     import flash.geom.Rectangle;
     import com.ankamagames.berilia.managers.UiModuleManager;
     import com.ankamagames.berilia.utils.errors.BeriliaError;
-    import com.ankamagames.berilia.utils.errors.ApiError;
     import com.ankamagames.berilia.Berilia;
     import com.ankamagames.jerakine.handlers.FocusHandler;
-    import com.ankamagames.berilia.managers.SecureCenter;
     import com.ankamagames.jerakine.utils.display.StageShareManager;
     import com.ankamagames.berilia.types.graphic.GraphicContainer;
     import __AS3__.vec.Vector;
@@ -22,6 +20,7 @@
     import com.ankamagames.berilia.BeriliaConstants;
     import com.ankamagames.berilia.managers.BindsManager;
     import com.ankamagames.berilia.types.shortcut.Shortcut;
+    import com.ankamagames.berilia.utils.errors.ApiError;
     import com.ankamagames.berilia.types.listener.GenericListener;
     import com.ankamagames.jerakine.utils.memory.WeakReference;
     import com.ankamagames.berilia.types.event.InstanceEvent;
@@ -34,6 +33,7 @@
     import com.ankamagames.berilia.enums.EventEnums;
     import com.ankamagames.jerakine.types.Uri;
     import com.ankamagames.berilia.types.tooltip.Tooltip;
+    import com.ankamagames.jerakine.handlers.HumanInputHandler;
     import com.ankamagames.berilia.managers.TooltipManager;
     import com.ankamagames.berilia.types.data.TextTooltipInfo;
     import com.ankamagames.berilia.types.data.RadioGroup;
@@ -47,10 +47,17 @@
     import com.ankamagames.berilia.managers.KernelEventsManager;
     import com.ankamagames.berilia.utils.BeriliaHookList;
     import com.ankamagames.berilia.managers.CssManager;
+    import flash.text.StyleSheet;
+    import flash.display.Stage;
     import flash.display.StageDisplayState;
     import flash.display.MovieClip;
     import flash.display.DisplayObjectContainer;
+    import com.ankamagames.jerakine.utils.display.Rectangle2;
+    import com.ankamagames.berilia.types.tooltip.TooltipPlacer;
+    import com.ankamagames.jerakine.managers.OptionManager;
     import com.ankamagames.berilia.types.graphic.GraphicSize;
+    import com.ankamagames.jerakine.types.ARGBColor;
+    import com.ankamagames.jerakine.types.Color;
     import com.ankamagames.jerakine.data.I18n;
     import com.ankamagames.jerakine.managers.LangManager;
     import com.ankamagames.jerakine.utils.pattern.PatternDecoder;
@@ -60,67 +67,51 @@
     public class UiApi implements IApi 
     {
 
-        public static var MEMORY_LOG:Dictionary = new Dictionary(true);
         public static const _log:Logger = Log.getLogger(getQualifiedClassName(UiApi));
         private static var _label:Label;
+        private static var _assetsDictionariesCount:int = 0;
 
         private var _module:UiModule;
         private var _currentUi:UiRootContainer;
+        private var _assetUris:Dictionary = new Dictionary();
+        private var _assetUrisCount:int = 0;
         private var oldTextureUri:String;
-        private var oldTextureBounds:Rectangle;
+        private var oldTextureBounds:Rectangle = new Rectangle();
 
-        public function UiApi()
-        {
-            this.oldTextureBounds = new Rectangle();
-            super();
-            MEMORY_LOG[this] = 1;
-        }
 
         [ApiData(name="module")]
         public function set module(value:UiModule):void
         {
-            if (!(this._module))
-            {
-                this._module = value;
-            };
+            this._module = value;
         }
 
         [ApiData(name="currentUi")]
         public function set currentUi(value:UiRootContainer):void
         {
-            if (!(this._currentUi))
-            {
-                this._currentUi = value;
-            };
+            this._currentUi = value;
         }
 
-        [Trusted]
         public function destroy():void
         {
             this._currentUi = null;
             this._module = null;
         }
 
-        [Untrusted]
-        public function loadUi(name:String, instanceName:String=null, params:*=null, strata:uint=1, cacheName:String=null, replace:Boolean=false):Object
+        public function loadUi(name:String, instanceName:String=null, params:*=null, strata:uint=1, cacheName:String=null, replace:Boolean=false, externalUi:Boolean=false, restoreSnapshot:Boolean=true):Object
         {
             var tmp:Array;
             var rootCtr:UiRootContainer;
             var mod:UiModule = this._module;
             var uiName:String = name;
-            if (!(this._module.uis[name]))
+            if (!this._module.uis[name])
             {
                 if (name.indexOf("::") != -1)
                 {
                     tmp = name.split("::");
                     mod = UiModuleManager.getInstance().getModule(tmp[0]);
-                    if (!(mod))
+                    if (!mod)
                     {
                         throw (new BeriliaError((("Module [" + tmp[0]) + "] does not exist")));
-                    };
-                    if (((mod.trusted) && (!(this._module.trusted))))
-                    {
-                        throw (new ApiError("You cannot load trusted UI"));
                     };
                     uiName = tmp[1];
                 }
@@ -129,42 +120,37 @@
                     throw (new BeriliaError(((name + " not found in module ") + this._module.name)));
                 };
             };
-            if (!(instanceName))
+            if (!instanceName)
             {
                 instanceName = uiName;
             };
             if (mod.uis[uiName])
             {
-                rootCtr = Berilia.getInstance().loadUi(mod, mod.uis[uiName], instanceName, params, replace, strata, false, cacheName);
-                if (((!((uiName == "tips"))) && (!((uiName == "buffUi")))))
+                rootCtr = Berilia.getInstance().loadUi(mod, mod.uis[uiName], instanceName, params, replace, strata, false, cacheName, externalUi, restoreSnapshot);
+                if (((!(uiName == "tips")) && (!(uiName == "buffUi"))))
                 {
                     FocusHandler.getInstance().setFocus(rootCtr);
                 };
-                return (SecureCenter.secure(rootCtr, mod.trusted));
+                return (rootCtr);
             };
             return (null);
         }
 
-        [Untrusted]
         public function loadUiInside(name:String, container:GraphicContainer, instanceName:String=null, params:*=null):Object
         {
             var tmp:Array;
             var newContainer:UiRootContainer;
             var mod:UiModule = this._module;
             var uiName:String = name;
-            if (!(this._module.uis[name]))
+            if (!this._module.uis[name])
             {
                 if (name.indexOf("::") != -1)
                 {
                     tmp = name.split("::");
                     mod = UiModuleManager.getInstance().getModule(tmp[0]);
-                    if (!(mod))
+                    if (!mod)
                     {
                         throw (new BeriliaError((("Module [" + tmp[0]) + "] does not exist")));
-                    };
-                    if (((mod.trusted) && (!(this._module.trusted))))
-                    {
-                        throw (new ApiError("You cannot load trusted UI"));
                     };
                     uiName = tmp[1];
                 }
@@ -173,7 +159,7 @@
                     throw (new BeriliaError(((name + " not found in module ") + this._module.name)));
                 };
             };
-            if (!(instanceName))
+            if (!instanceName)
             {
                 instanceName = uiName;
             };
@@ -182,36 +168,63 @@
                 newContainer = new UiRootContainer(StageShareManager.stage, mod.uis[uiName]);
                 newContainer.uiModule = mod;
                 newContainer.strata = container.getUi().strata;
+                newContainer.restoreSnapshotAfterLoading = container.getUi().restoreSnapshotAfterLoading;
                 newContainer.depth = (container.getUi().depth + 1);
-                Berilia.getInstance().loadUiInside(mod.uis[uiName], instanceName, newContainer, params, false);
+                Berilia.getInstance().loadUiInside(mod.uis[uiName], instanceName, newContainer, container.getUi(), params, false);
                 container.addChild(newContainer);
-                return (SecureCenter.secure(newContainer, mod.trusted));
+                return (newContainer);
             };
             return (null);
         }
 
-        [Untrusted]
         public function unloadUi(instanceName:String=null):void
         {
+            if (this._assetUrisCount > 0)
+            {
+                this._assetUris = new Dictionary();
+                this._assetUrisCount = 0;
+                _assetsDictionariesCount--;
+            };
             Berilia.getInstance().unloadUi(instanceName);
         }
 
-        [Untrusted]
-        public function getUi(instanceName:String)
+        public function getUi(instanceName:String):*
         {
             var sui:UiRootContainer = Berilia.getInstance().getUi(instanceName);
-            if (!(sui))
+            if (!sui)
             {
                 return (null);
             };
-            if (((!((sui.uiModule == this._module))) && (!(this._module.trusted))))
-            {
-                throw (new ArgumentError("Cannot get access to an UI owned by another module."));
-            };
-            return (SecureCenter.secure(sui, this._module.trusted));
+            return (sui);
         }
 
-        [Untrusted]
+        public function UiIsHiden(uiName:String):Boolean
+        {
+            if (Berilia.getInstance().hidenActiveUIs.indexOf(uiName) != -1)
+            {
+                return (true);
+            };
+            return (false);
+        }
+
+        public function getUiByName(uiName:String):*
+        {
+            var key:*;
+            for (key in Berilia.getInstance().uiList)
+            {
+                if ((Berilia.getInstance().uiList[key] as UiRootContainer).uiData.name == uiName)
+                {
+                    return (Berilia.getInstance().uiList[key]);
+                };
+            };
+            return (null);
+        }
+
+        public function setUiStrata(uiName:String, strata:int):void
+        {
+            Berilia.getInstance().setUiStrata(uiName, strata);
+        }
+
         public function getUiInstances():Vector.<UiRootContainer>
         {
             var ui:UiRootContainer;
@@ -227,106 +240,123 @@
             return (res);
         }
 
-        [Untrusted]
-        public function getModuleList():Array
+        public function getHud():Array
         {
-            var m:UiModule;
-            var dml:Array;
-            var l:Array = [];
-            var ml:Array = UiModuleManager.getInstance().getModules();
-            for each (m in ml)
-            {
-                l.push(m);
-            };
-            dml = UiModuleManager.getInstance().disabledModules;
-            for each (m in dml)
-            {
-                l.push(m);
-            };
-            l.sortOn(["trusted", "name"], [(Array.NUMERIC | Array.DESCENDING), 0]);
-            return (l);
+            var res:Array = [];
+            res.push(this.getUi("banner"));
+            res.push(this.getUi("bannerMenu"));
+            res.push(this.getUi("bannerMap"));
+            res.push(this.getUi("chat"));
+            res.push(this.getUi("mapInfo"));
+            res.push(this.getUi("questList"));
+            res.push(this.getUi("questListMinimized"));
+            return (res);
         }
 
-        [Untrusted]
-        public function getModule(moduleName:String, includeUnInitialized:Boolean=false):UiModule
+        public function getModule(moduleName:String):UiModule
         {
-            return (UiModuleManager.getInstance().getModule(moduleName, includeUnInitialized));
+            return (UiModuleManager.getInstance().getModule(moduleName));
         }
 
-        [Trusted]
+        public function handleComponentRestaureState(cpt:GraphicContainer, properties:Array=null, resistLightReset:Boolean=true):void
+        {
+        }
+
         public function setModuleEnable(id:String, b:Boolean):void
         {
-            var mods:Array;
             var mod:UiModule;
+            var moduleFound:Boolean;
             if (b)
             {
-                mods = UiModuleManager.getInstance().disabledModules;
+                moduleFound = false;
+                for each (mod in UiModuleManager.getInstance().disabledModules)
+                {
+                    if (((mod.id == id) && (mod.enable == (!(b)))))
+                    {
+                        mod.enable = true;
+                        moduleFound = true;
+                        break;
+                    };
+                };
+                if (!moduleFound)
+                {
+                    StoreDataManager.getInstance().setData(BeriliaConstants.DATASTORE_MOD, id, b);
+                };
             }
             else
             {
-                mods = UiModuleManager.getInstance().getModules();
-            };
-            var moduleFound:Boolean;
-            for each (mod in mods)
-            {
-                if ((((mod.id == id)) && ((mod.enable == !(b)))))
+                mod = UiModuleManager.getInstance().getModule(id);
+                if (mod)
                 {
-                    mod.enable = b;
-                    moduleFound = true;
-                    break;
+                    mod.enable = false;
+                }
+                else
+                {
+                    StoreDataManager.getInstance().setData(BeriliaConstants.DATASTORE_MOD, id, b);
                 };
             };
-            if (!(moduleFound))
+        }
+
+        public function addChild(target:Object, child:Object):void
+        {
+            target.addChild(child);
+        }
+
+        public function removeChild(target:Object, child:Object):void
+        {
+            if (target.getChildByName(child.name))
             {
-                StoreDataManager.getInstance().setData(BeriliaConstants.DATASTORE_MOD, id, b);
+                target.removeChild(child);
             };
         }
 
-        [Trusted]
-        public function addChild(target:Object, child:Object):void
+        public function addChildAt(target:Object, child:Object, index:int):void
         {
-            SecureCenter.unsecure(target).addChild(SecureCenter.unsecure(child));
+            target.addChildAt(child, index);
         }
 
-        [Untrusted]
-        public function me()
+        public function me():UiRootContainer
         {
-            return (SecureCenter.secure(this._currentUi, this._module.trusted));
+            return (this._currentUi);
         }
 
-        [Trusted]
         public function initDefaultBinds():void
         {
             BindsManager.getInstance();
         }
 
-        [Untrusted]
-        public function addShortcutHook(shortcutName:String, hook:Function, lowPriority:Boolean=false):void
+        public function addShortcutHook(shortcutName:String, hook:Function, pPriority:*=false):void
         {
+            var priority:int;
             var targetedShortcut:Shortcut = Shortcut.getShortcutByName(shortcutName);
-            if (((!(targetedShortcut)) && (!((shortcutName == "ALL")))))
+            if (((!(targetedShortcut)) && (!(shortcutName == "ALL"))))
             {
                 throw (new ApiError((("Shortcut [" + shortcutName) + "] does not exist")));
             };
-            var priority:int = ((this._currentUi) ? this._currentUi.depth : 0);
-            if (lowPriority)
+            if ((pPriority is Boolean))
             {
-                priority = 1;
+                priority = ((pPriority) ? 1 : ((this._currentUi) ? this._currentUi.depth : 0));
+            }
+            else
+            {
+                if ((pPriority is int))
+                {
+                    priority = pPriority;
+                };
             };
-            var listener:GenericListener = new GenericListener(shortcutName, ((this._currentUi) ? this._currentUi.name : (("__module_" + this._module.id))), hook, priority, ((this._currentUi) ? GenericListener.LISTENER_TYPE_UI : (GenericListener.LISTENER_TYPE_MODULE)), ((this._currentUi) ? new WeakReference(this._currentUi) : null));
+            var listener:GenericListener = new GenericListener(shortcutName, ((this._currentUi) ? this._currentUi.name : ("__module_" + this._module.id)), hook, priority, ((this._currentUi) ? GenericListener.LISTENER_TYPE_UI : GenericListener.LISTENER_TYPE_MODULE), ((this._currentUi) ? new WeakReference(this._currentUi) : null));
             BindsManager.getInstance().registerEvent(listener);
         }
 
-        [Untrusted]
         public function addComponentHook(target:GraphicContainer, hookName:String):void
         {
             var ie:InstanceEvent;
             var eventMsg:String = this.getEventClassName(hookName);
-            if (!(eventMsg))
+            if (!eventMsg)
             {
                 throw (new ApiError((("Hook [" + hookName) + "] does not exist")));
             };
-            if (!(UIEventManager.getInstance().instances[target]))
+            if (!UIEventManager.getInstance().instances[target])
             {
                 ie = new InstanceEvent(target, this._currentUi.uiClass);
                 UIEventManager.getInstance().registerInstance(ie);
@@ -338,26 +368,24 @@
             ie.events[eventMsg] = eventMsg;
         }
 
-        [Untrusted]
         public function removeComponentHook(target:GraphicContainer, hookName:String):void
         {
             var eventMsg:String = this.getEventClassName(hookName);
-            if (!(eventMsg))
+            if (!eventMsg)
             {
                 throw (new ApiError((("Hook [" + hookName) + "] does not exist")));
             };
             var ie:InstanceEvent = UIEventManager.getInstance().instances[target];
-            if (((((ie) && (ie.events))) && (ie.events[eventMsg])))
+            if ((((ie) && (ie.events)) && (ie.events[eventMsg])))
             {
                 delete ie.events[eventMsg];
             };
         }
 
-        [Trusted]
         public function bindApi(targetTexture:Texture, propertyName:String, value:*):Boolean
         {
             var internalContent:DisplayObject = ComponentInternalAccessor.access(targetTexture, "_child");
-            if (!(internalContent))
+            if (!internalContent)
             {
                 return (false);
             };
@@ -372,26 +400,26 @@
             return (true);
         }
 
-        [Untrusted]
-        public function createComponent(type:String, ... params):GraphicContainer
+        public function resetUiSavedUserModification(name:String=null):void
         {
-            return (CallWithParameters.callConstructor((getDefinitionByName(("com.ankamagames.berilia.components::" + type)) as Class), params));
+            Berilia.getInstance().resetUiSavedUserModification(name);
         }
 
-        [Untrusted]
-        public function createContainer(type:String, ... params)
+        public function createComponent(_arg_1:String, ... params):GraphicContainer
         {
-            return (CallWithParameters.callConstructor((getDefinitionByName(("com.ankamagames.berilia.types.graphic::" + type)) as Class), params));
+            return (CallWithParameters.callConstructor((getDefinitionByName(("com.ankamagames.berilia.components::" + _arg_1)) as Class), params));
         }
 
-        [Untrusted]
-        [Deprecated(help="use addComponentHook to add event")]
+        public function createContainer(_arg_1:String, ... params):*
+        {
+            return (CallWithParameters.callConstructor((getDefinitionByName(("com.ankamagames.berilia.types.graphic::" + _arg_1)) as Class), params));
+        }
+
         public function createInstanceEvent(target:DisplayObject, instance:*):InstanceEvent
         {
             return (new InstanceEvent(target, instance));
         }
 
-        [Untrusted]
         public function getEventClassName(event:String):String
         {
             switch (event)
@@ -448,6 +476,8 @@
                     return (EventEnums.EVENT_ONMAPMOVE_MSG);
                 case EventEnums.EVENT_ONMAPROLLOVER:
                     return (EventEnums.EVENT_ONMAPROLLOVER_MSG);
+                case EventEnums.EVENT_ONMAPROLLOUT:
+                    return (EventEnums.EVENT_ONMAPROLLOUT_MSG);
                 case EventEnums.EVENT_ONVIDEOCONNECTFAILED:
                     return (EventEnums.EVENT_ONVIDEOCONNECTFAILED_MSG);
                 case EventEnums.EVENT_ONVIDEOCONNECTSUCCESS:
@@ -466,90 +496,115 @@
                     return (EventEnums.EVENT_ONBROWSER_SESSION_TIMEOUT_MSG);
                 case EventEnums.EVENT_ONBROWSER_DOM_READY:
                     return (EventEnums.EVENT_ONBROWSER_DOM_READY_MSG);
+                case EventEnums.EVENT_ONBROWSER_DOM_CHANGE:
+                    return (EventEnums.EVENT_ONBROWSER_DOM_CHANGE_MSG);
                 case EventEnums.EVENT_MIDDLECLICK:
                     return (EventEnums.EVENT_MIDDLECLICK_MSG);
             };
             return (null);
         }
 
-        [Untrusted]
-        [Deprecated(help="use addComponentHook to add event")]
         public function addInstanceEvent(event:InstanceEvent):void
         {
             UIEventManager.getInstance().registerInstance(event);
         }
 
-        [Untrusted]
-        [NoBoxing]
-        public function createUri(uri:String):Uri
+        public function clearPositionCache(instanceName:String=null):void
         {
-            if (((((((uri) && ((uri.indexOf(":") == -1)))) && (!((uri.indexOf("./") == 0))))) && (!((uri.indexOf("\\\\") == 0)))))
+            if (instanceName == null)
             {
-                uri = ((("mod://" + this._module.id) + "/") + uri);
+                StoreDataManager.getInstance().clear(BeriliaConstants.DATASTORE_UI_POSITIONS);
+            }
+            else
+            {
+                StoreDataManager.getInstance().setData(BeriliaConstants.DATASTORE_UI_POSITIONS, instanceName, null);
             };
-            return (new Uri(uri));
         }
 
-        [Untrusted]
-        public function showTooltip(data:*, target:*, autoHide:Boolean=false, name:String="standard", point:uint=0, relativePoint:uint=2, offset:int=3, tooltipMaker:String=null, script:Class=null, makerParam:Object=null, cacheName:String=null, mouseEnabled:Boolean=false, strata:int=4, zoom:Number=1, uiModuleName:String=""):void
+        [NoBoxing]
+        public function createUri(uri:String, force:Boolean=false):Uri
+        {
+            if (((!(this._assetUris[uri])) || (force)))
+            {
+                if ((((((uri) && (uri.indexOf(":") == -1)) && (!(uri.indexOf("./") == 0))) && (!(uri.indexOf("\\\\") == 0))) && (!(uri.indexOf("//") == 0))))
+                {
+                    uri = ((("mod://" + this._module.id) + "/") + uri);
+                };
+                this._assetUris[uri] = new Uri(uri);
+                this._assetUrisCount++;
+                if (this._assetUrisCount == 1)
+                {
+                    _assetsDictionariesCount++;
+                };
+            };
+            return (this._assetUris[uri]);
+        }
+
+        public function showTooltip(data:*, target:*, autoHide:Boolean=false, name:String="standard", point:uint=0, relativePoint:uint=2, offset:*=3, tooltipMaker:String=null, script:Class=null, makerParam:Object=null, cacheName:String=null, mouseEnabled:Boolean=false, strata:int=4, zoom:Number=1, uiModuleName:String="", showDirectionalArrow:Boolean=false, container:UiRootContainer=null):void
         {
             var tt:Tooltip;
+            if ((((((!(makerParam)) || (!(makerParam.hasOwnProperty("pinnable")))) || (!(makerParam.pinnable))) && (((!(makerParam)) || (!(makerParam.hasOwnProperty("displayWhenMouseDown")))) || (!(makerParam.displayWhenMouseDown)))) && (HumanInputHandler.getInstance().isMouseDown)))
+            {
+                return;
+            };
             if (((uiModuleName) || (this._currentUi)))
             {
-                tt = TooltipManager.show(data, target, this._module, autoHide, name, point, relativePoint, offset, true, tooltipMaker, script, makerParam, cacheName, mouseEnabled, strata, zoom);
+                tt = TooltipManager.show(data, target, this._module, autoHide, name, point, relativePoint, offset, true, tooltipMaker, script, makerParam, cacheName, mouseEnabled, strata, zoom, true, showDirectionalArrow, container);
                 if (tt)
                 {
-                    tt.uiModuleName = ((uiModuleName) ? uiModuleName : this._currentUi.name);
+                    if (uiModuleName)
+                    {
+                        tt.uiModuleName = uiModuleName;
+                    }
+                    else
+                    {
+                        if (this._currentUi)
+                        {
+                            tt.uiModuleName = this._currentUi.name;
+                        };
+                    };
                 };
             };
         }
 
-        [Untrusted]
         public function hideTooltip(name:String=null):void
         {
             TooltipManager.hide(name);
         }
 
-        [Untrusted]
         public function textTooltipInfo(content:String, css:String=null, cssClass:String=null, maxWidth:int=400):Object
         {
             return (new TextTooltipInfo(content, css, cssClass, maxWidth));
         }
 
-        [Untrusted]
         public function getRadioGroupSelectedItem(rgName:String, me:UiRootContainer):IRadioItem
         {
             var rg:RadioGroup = me.getRadioGroup(rgName);
             return (rg.selectedItem);
         }
 
-        [Untrusted]
         public function setRadioGroupSelectedItem(rgName:String, item:IRadioItem, me:UiRootContainer):void
         {
             var rg:RadioGroup = me.getRadioGroup(rgName);
             rg.selectedItem = item;
         }
 
-        [Untrusted]
         public function keyIsDown(keyCode:uint):Boolean
         {
             return (KeyPoll.getInstance().isDown(keyCode));
         }
 
-        [Untrusted]
         public function keyIsUp(keyCode:uint):Boolean
         {
             return (KeyPoll.getInstance().isUp(keyCode));
         }
 
-        [Untrusted]
         [NoBoxing]
         public function convertToTreeData(array:*):Vector.<TreeData>
         {
             return (TreeData.fromArray(array));
         }
 
-        [Untrusted]
         public function setFollowCursorUri(uri:*, lockX:Boolean=false, lockY:Boolean=false, xOffset:int=0, yOffset:int=0, scale:Number=1):void
         {
             var cd:LinkedCursorData;
@@ -557,7 +612,7 @@
             {
                 cd = new LinkedCursorData();
                 cd.sprite = new Texture();
-                Texture(cd.sprite).uri = (((uri is String)) ? new Uri(uri) : uri);
+                Texture(cd.sprite).uri = ((uri is String) ? new Uri(uri) : uri);
                 cd.sprite.scaleX = scale;
                 cd.sprite.scaleY = scale;
                 Texture(cd.sprite).finalize();
@@ -572,101 +627,120 @@
             };
         }
 
-        [Untrusted]
         public function getFollowCursorUri():Object
         {
             return (LinkedCursorSpriteManager.getInstance().getItem("customUserCursor"));
         }
 
-        [Untrusted]
         public function endDrag():void
         {
             var linkCursor:LinkedCursorData = LinkedCursorSpriteManager.getInstance().getItem("DragAndDrop");
-            if (((linkCursor) && ((linkCursor.data is SlotDragAndDropData))))
+            if (((linkCursor) && (linkCursor.data is SlotDragAndDropData)))
             {
                 LinkedCursorSpriteManager.getInstance().removeItem("DragAndDrop");
-                KernelEventsManager.getInstance().processCallback(BeriliaHookList.DropEnd, SecureCenter.secure(SlotDragAndDropData(linkCursor.data).currentHolder));
+                KernelEventsManager.getInstance().processCallback(BeriliaHookList.DropEnd, SlotDragAndDropData(linkCursor.data).currentHolder, null);
             };
         }
 
-        [Untrusted]
         public function preloadCss(url:String):void
         {
             CssManager.getInstance().preloadCss(url);
         }
 
-        [Untrusted]
+        public function setLabelStyleSheet(label:Label, cssUrl:String):void
+        {
+            var styleSheet:StyleSheet = CssManager.getInstance().getCss(cssUrl);
+            if (styleSheet)
+            {
+                label.setStyleSheet(styleSheet);
+            }
+            else
+            {
+                _log.error((cssUrl + " is not loaded yet!"));
+            };
+        }
+
         public function getMouseX():int
         {
             return (StageShareManager.mouseX);
         }
 
-        [Untrusted]
         public function getMouseY():int
         {
             return (StageShareManager.mouseY);
         }
 
-        [Untrusted]
-        public function getStageWidth():int
+        public function getMouseDown():Boolean
+        {
+            return (HumanInputHandler.getInstance().isMouseDown);
+        }
+
+        public function getStartWidth():int
         {
             return (StageShareManager.startWidth);
         }
 
-        [Untrusted]
-        public function getStageHeight():int
+        public function getStartHeight():int
         {
             return (StageShareManager.startHeight);
         }
 
-        [Untrusted]
+        public function getStageWidth():int
+        {
+            return (StageShareManager.stageVisibleBounds.width);
+        }
+
+        public function getStageHeight():int
+        {
+            return (StageShareManager.stageVisibleBounds.height);
+        }
+
+        public function getVisibleStageBounds():Rectangle
+        {
+            return (StageShareManager.stageVisibleBounds);
+        }
+
         public function getWindowWidth():int
         {
             return (StageShareManager.stage.stageWidth);
         }
 
-        [Untrusted]
         public function getWindowHeight():int
         {
             return (StageShareManager.stage.stageHeight);
         }
 
-        [Untrusted]
+        public function getStage():Stage
+        {
+            return (StageShareManager.stage);
+        }
+
         public function getWindowScale():Number
         {
             return (StageShareManager.windowScale);
         }
 
-        [Trusted]
         public function setFullScreen(enabled:Boolean, onlyMaximize:Boolean=false):void
         {
             StageShareManager.setFullScreen(enabled, onlyMaximize);
         }
 
-        [Untrusted]
         public function isFullScreen():Boolean
         {
-            return (!((StageShareManager.stage.displayState == StageDisplayState.NORMAL)));
+            return (!(StageShareManager.stage.displayState == StageDisplayState.NORMAL));
         }
 
-        [Trusted]
-        public function setShortcutUsedToExitFullScreen(value:Boolean):void
+        public function isResetting():Boolean
         {
-            StageShareManager.shortcutUsedToExitFullScreen = value;
-        }
-
-        [Untrusted]
-        public function useIME():Boolean
-        {
-            return (Berilia.getInstance().useIME);
+            return (UiModuleManager.getInstance().resetting);
         }
 
         private function getInitBounds(pTx:Texture):Rectangle
         {
             var bg:MovieClip;
-            if ((((this.oldTextureUri == null)) || (((((pTx) && (pTx.uri))) && (!((this.oldTextureUri == pTx.uri.toString())))))))
+            if (((this.oldTextureUri == null) || (((pTx) && (pTx.uri)) && (!(this.oldTextureUri == pTx.uri.toString())))))
             {
-                if (!((pTx.child is DisplayObjectContainer)))
+                if (!(pTx.child is DisplayObjectContainer))
                 {
                     return (null);
                 };
@@ -681,19 +755,33 @@
             return (this.oldTextureBounds);
         }
 
-        [Trusted]
+        public function place(relativeTo:*, relativePoint:uint, point:uint, pOffset:int, showDirectionalArrow:Boolean=false, placedComponent:GraphicContainer=null):void
+        {
+            if (!relativeTo)
+            {
+                relativeTo = new Rectangle2(StageShareManager.mouseX, StageShareManager.mouseY, 0, 0);
+            };
+            if (!placedComponent)
+            {
+                placedComponent = this._currentUi;
+            };
+            TooltipPlacer.place(placedComponent, relativeTo, showDirectionalArrow, point, relativePoint, pOffset);
+        }
+
         public function buildOrnamentTooltipFrom(pTexture:Texture, pTarget:Rectangle):void
         {
+            var bg:MovieClip;
+            var omegaBottom:MovieClip;
             var bgBounds:Rectangle;
             var scaleX:Number;
             var scaleY:Number;
             var tmpPos:Rectangle = this.getInitBounds(pTexture);
-            if (!(tmpPos))
+            if (!tmpPos)
             {
                 tmpPos = new Rectangle();
             };
             var source:DisplayObjectContainer = (pTexture.child as DisplayObjectContainer);
-            var bg:MovieClip = (this.addPart("bg", source, pTarget, tmpPos.x, tmpPos.y) as MovieClip);
+            bg = (this.addPart("bg", source, pTarget, tmpPos.x, tmpPos.y) as MovieClip);
             if (bg)
             {
                 bgBounds = bg.getBounds(bg);
@@ -709,12 +797,23 @@
             this.addPart("picto", source, pTarget, (pTarget.width / 2), 0);
             this.addPart("right", source, pTarget, pTarget.width, (pTarget.height / 2));
             this.addPart("bottom", source, pTarget, (pTarget.width / 2), (pTarget.height - 1));
+            if (OptionManager.getOptionManager("dofus").getOption("showOmegaUnderOrnament"))
+            {
+                omegaBottom = (this.addPart("omega_bottom", source, pTarget, (pTarget.width / 2), (pTarget.height - 1)) as MovieClip);
+            };
+            if (omegaBottom)
+            {
+                omegaBottom.x = (omegaBottom.x - (omegaBottom.width / 2));
+                omegaBottom.y = (omegaBottom.y - (omegaBottom.height / 2));
+            };
             this.addPart("left", source, pTarget, 0, (pTarget.height / 2));
+            this.addPart("kolizeum_rank_picto", source, pTarget, (pTarget.width / 2), 0);
+            this.addPart("tx_kolizeum_rank", source, pTarget, (pTarget.width / 2), 0);
         }
 
         private function addPart(name:String, source:DisplayObjectContainer, target:Rectangle, x:int, y:int):DisplayObject
         {
-            if (!(source))
+            if (!source)
             {
                 return (null);
             };
@@ -727,10 +826,9 @@
             return (part);
         }
 
-        [Untrusted]
         public function getTextSize(pText:String, pCss:Uri, pCssClass:String):Rectangle
         {
-            if (!(_label))
+            if (!_label)
             {
                 _label = (this.createComponent("Label") as Label);
             };
@@ -741,16 +839,15 @@
             return (new Rectangle(0, 0, _label.textWidth, _label.textHeight));
         }
 
-        [Trusted]
         public function setComponentMinMaxSize(component:GraphicContainer, minSize:Point, maxSize:Point):void
         {
-            if (!(component.minSize))
+            if (!component.minSize)
             {
                 component.minSize = new GraphicSize();
             };
             component.minSize.x = minSize.x;
             component.minSize.y = minSize.y;
-            if (!(component.maxSize))
+            if (!component.maxSize)
             {
                 component.maxSize = new GraphicSize();
             };
@@ -758,37 +855,41 @@
             component.maxSize.y = maxSize.y;
         }
 
-        [Untrusted]
+        public function isUiLoading(pUiName:String):Boolean
+        {
+            return (Berilia.getInstance().loadingUi[pUiName]);
+        }
+
+        public function getColor(pColor:String):Color
+        {
+            return ((pColor.length == 10) ? new ARGBColor(parseInt(pColor, 16)) : new Color(parseInt(pColor, 16)));
+        }
+
         public function replaceParams(text:String, params:Array, replace:String="%"):String
         {
             return (I18n.replaceParams(text, params, replace));
         }
 
-        [Untrusted]
         public function replaceKey(text:String):String
         {
             return (LangManager.getInstance().replaceKey(text, true));
         }
 
-        [Untrusted]
         public function getText(key:String, ... params):String
         {
             return (I18n.getUiText(key, params));
         }
 
-        [Untrusted]
         public function getTextFromKey(key:uint, replace:String="%", ... params):String
         {
             return (I18n.getText(key, params, replace));
         }
 
-        [Untrusted]
-        public function processText(str:String, gender:String, singular:Boolean=true):String
+        public function processText(str:String, gender:String, singular:Boolean=true, zero:Boolean=false):String
         {
-            return (PatternDecoder.combine(str, gender, singular));
+            return (PatternDecoder.combine(str, gender, singular, zero));
         }
 
-        [Untrusted]
         public function decodeText(str:String, params:Array):String
         {
             return (PatternDecoder.decode(str, params));
@@ -796,5 +897,5 @@
 
 
     }
-}//package com.ankamagames.berilia.api
+} com.ankamagames.berilia.api
 

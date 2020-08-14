@@ -1,4 +1,4 @@
-﻿package com.ankamagames.tiphon.types
+package com.ankamagames.tiphon.types
 {
     import com.ankamagames.tiphon.types.look.TiphonEntityLook;
     import flash.display.DisplayObjectContainer;
@@ -33,7 +33,7 @@
                         }
                         else
                         {
-                            if ((((((boneId == 1575)) || ((boneId == 1576)))) || ((boneId == 2))))
+                            if ((((boneId == 1575) || (boneId == 1576)) || (boneId == 2)))
                             {
                                 ridderLook.setBone(1);
                             }
@@ -59,7 +59,7 @@
                 return (null);
             };
             var rider:DisplayObjectContainer = ent.getSubEntitySlot(2, 0);
-            return ((((rider == null)) ? ent : rider));
+            return ((rider == null) ? ent : rider);
         }
 
         public static function getFlipDirection(direction:int):uint
@@ -93,5 +93,5 @@
 
 
     }
-}//package com.ankamagames.tiphon.types
+} com.ankamagames.tiphon.types
 

@@ -1,12 +1,12 @@
-﻿package com.ankamagames.dofus.network.messages.game.actions.fight
+package com.ankamagames.dofus.network.messages.game.actions.fight
 {
     import com.ankamagames.jerakine.network.INetworkMessage;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class GameActionFightLifeAndShieldPointsLostMessage extends GameActionFightLifePointsLostMessage implements INetworkMessage 
     {
 
@@ -18,7 +18,7 @@
 
         override public function get isInitialized():Boolean
         {
-            return (((super.isInitialized) && (this._isInitialized)));
+            return ((super.isInitialized) && (this._isInitialized));
         }
 
         override public function getMessageId():uint
@@ -26,9 +26,9 @@
             return (6310);
         }
 
-        public function initGameActionFightLifeAndShieldPointsLostMessage(actionId:uint=0, sourceId:int=0, targetId:int=0, loss:uint=0, permanentDamages:uint=0, shieldLoss:uint=0):GameActionFightLifeAndShieldPointsLostMessage
+        public function initGameActionFightLifeAndShieldPointsLostMessage(actionId:uint=0, sourceId:Number=0, targetId:Number=0, loss:uint=0, permanentDamages:uint=0, elementId:int=0, shieldLoss:uint=0):GameActionFightLifeAndShieldPointsLostMessage
         {
-            super.initGameActionFightLifePointsLostMessage(actionId, sourceId, targetId, loss, permanentDamages);
+            super.initGameActionFightLifePointsLostMessage(actionId, sourceId, targetId, loss, permanentDamages, elementId);
             this.shieldLoss = shieldLoss;
             this._isInitialized = true;
             return (this);
@@ -51,6 +51,14 @@
         override public function unpack(input:ICustomDataInput, length:uint):void
         {
             this.deserialize(input);
+        }
+
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
         }
 
         override public function serialize(output:ICustomDataOutput):void
@@ -76,6 +84,22 @@
         public function deserializeAs_GameActionFightLifeAndShieldPointsLostMessage(input:ICustomDataInput):void
         {
             super.deserialize(input);
+            this._shieldLossFunc(input);
+        }
+
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GameActionFightLifeAndShieldPointsLostMessage(tree);
+        }
+
+        public function deserializeAsyncAs_GameActionFightLifeAndShieldPointsLostMessage(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            tree.addChild(this._shieldLossFunc);
+        }
+
+        private function _shieldLossFunc(input:ICustomDataInput):void
+        {
             this.shieldLoss = input.readVarUhShort();
             if (this.shieldLoss < 0)
             {
@@ -85,5 +109,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.actions.fight
+} com.ankamagames.dofus.network.messages.game.actions.fight
 

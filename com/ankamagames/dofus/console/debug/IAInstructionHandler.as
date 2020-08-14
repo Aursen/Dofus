@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.console.debug
+package com.ankamagames.dofus.console.debug
 {
     import com.ankamagames.jerakine.console.ConsoleInstructionHandler;
     import com.ankamagames.atouin.types.Selection;
@@ -13,8 +13,8 @@
     import com.ankamagames.jerakine.types.zones.Custom;
     import com.ankamagames.jerakine.map.LosDetector;
     import com.ankamagames.jerakine.pathfinding.Pathfinding;
-    import com.ankamagames.jerakine.utils.display.Dofus1Line;
     import com.ankamagames.jerakine.utils.display.Dofus2Line;
+    import mapTools.MapTools;
     import com.ankamagames.jerakine.console.ConsoleHandler;
     import __AS3__.vec.*;
 
@@ -34,14 +34,14 @@
             var start:uint;
             var end:uint;
             var endPoint:MapPoint;
-            var _local_15:MapPoint;
-            var _local_16:Vector.<uint>;
-            var _local_17:Selection;
+            var startPoint:MapPoint;
+            var cellsPath:Vector.<uint>;
+            var cellsPathSelection:Selection;
             var fromCell:uint;
             var fromPoint:MapPoint;
             var toCell:uint;
             var toPoint:MapPoint;
-            var cellsInLine:*;
+            var cellsInLine:Array;
             var i:int;
             var map:IDataMapProvider = DataMapProvider.getInstance();
             switch (cmd)
@@ -77,7 +77,7 @@
                             SelectionManager.getInstance().update("CellsFreeForLOS");
                         };
                     };
-                    return;
+                    break;
                 case "calculatepath":
                 case "tracepath":
                     if (args.length != 2)
@@ -100,29 +100,29 @@
                             start = uint(args[0]);
                             end = uint(args[1]);
                             endPoint = MapPoint.fromCellId(end);
-                            if ((((((map.height == 0)) || ((map.width == 0)))) || (!(map.pointMov(endPoint.x, endPoint.y, true)))))
+                            if ((((map.height == 0) || (map.width == 0)) || (!(map.pointMov(endPoint.x, endPoint.y, true)))))
                             {
                                 console.output("Problem with the map or the end.");
                             }
                             else
                             {
-                                _local_15 = MapPoint.fromCellId(start);
-                                _local_16 = Pathfinding.findPath(map, _local_15, endPoint).getCells();
+                                startPoint = MapPoint.fromCellId(start);
+                                cellsPath = Pathfinding.findPath(map, startPoint, endPoint).getCells();
                                 if (cmd == "calculatepath")
                                 {
-                                    console.output(("Path: " + _local_16.join(",")));
-                                    return;
+                                    console.output(("Path: " + cellsPath.join(",")));
+                                    break;
                                 };
-                                _local_17 = new Selection();
-                                _local_17.renderer = new ZoneDARenderer();
-                                _local_17.color = new Color(0x6600);
-                                _local_17.zone = new Custom(_local_16);
-                                SelectionManager.getInstance().addSelection(_local_17, "CellsForPath");
+                                cellsPathSelection = new Selection();
+                                cellsPathSelection.renderer = new ZoneDARenderer();
+                                cellsPathSelection.color = new Color(0x6600);
+                                cellsPathSelection.zone = new Custom(cellsPath);
+                                SelectionManager.getInstance().addSelection(cellsPathSelection, "CellsForPath");
                                 SelectionManager.getInstance().update("CellsForPath");
                             };
                         };
                     };
-                    return;
+                    break;
                 case "debugcellsinline":
                     if (args.length != 2)
                     {
@@ -145,13 +145,13 @@
                             fromPoint = MapPoint.fromCellId(fromCell);
                             toCell = uint(args[1]);
                             toPoint = MapPoint.fromCellId(toCell);
-                            cellsInLine = ((Dofus1Line.useDofus2Line) ? Dofus2Line.getLine(fromPoint.cellId, toPoint.cellId) : Dofus1Line.getLine(fromPoint.x, fromPoint.y, 0, toPoint.x, toPoint.y, 0));
+                            cellsInLine = Dofus2Line.getLine(fromPoint.cellId, toPoint.cellId);
                             cellsSelection = new Selection();
                             cells = new Vector.<uint>();
                             i = 0;
                             while (i < cellsInLine.length)
                             {
-                                cells.push(MapPoint.fromCoords(cellsInLine[i].x, cellsInLine[i].y).cellId);
+                                cells.push(MapTools.getCellIdByCoord(cellsInLine[i].x, cellsInLine[i].y));
                                 i++;
                             };
                             cellsSelection.renderer = new ZoneDARenderer();
@@ -161,7 +161,7 @@
                             SelectionManager.getInstance().update("CellsFreeForLOS");
                         };
                     };
-                    return;
+                    break;
             };
         }
 
@@ -188,5 +188,5 @@
 
 
     }
-}//package com.ankamagames.dofus.console.debug
+} com.ankamagames.dofus.console.debug
 

@@ -1,8 +1,9 @@
-﻿package com.ankamagames.dofus.network.types.game.character.alignment
+package com.ankamagames.dofus.network.types.game.character.alignment
 {
     import com.ankamagames.jerakine.network.INetworkType;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
     public class ActorAlignmentInformations implements INetworkType 
     {
@@ -12,7 +13,7 @@
         public var alignmentSide:int = 0;
         public var alignmentValue:uint = 0;
         public var alignmentGrade:uint = 0;
-        public var characterPower:uint = 0;
+        public var characterPower:Number = 0;
 
 
         public function getTypeId():uint
@@ -20,7 +21,7 @@
             return (201);
         }
 
-        public function initActorAlignmentInformations(alignmentSide:int=0, alignmentValue:uint=0, alignmentGrade:uint=0, characterPower:uint=0):ActorAlignmentInformations
+        public function initActorAlignmentInformations(alignmentSide:int=0, alignmentValue:uint=0, alignmentGrade:uint=0, characterPower:Number=0):ActorAlignmentInformations
         {
             this.alignmentSide = alignmentSide;
             this.alignmentValue = alignmentValue;
@@ -55,11 +56,11 @@
                 throw (new Error((("Forbidden value (" + this.alignmentGrade) + ") on element alignmentGrade.")));
             };
             output.writeByte(this.alignmentGrade);
-            if (this.characterPower < 0)
+            if (((this.characterPower < -9007199254740992) || (this.characterPower > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.characterPower) + ") on element characterPower.")));
             };
-            output.writeVarInt(this.characterPower);
+            output.writeDouble(this.characterPower);
         }
 
         public function deserialize(input:ICustomDataInput):void
@@ -69,19 +70,52 @@
 
         public function deserializeAs_ActorAlignmentInformations(input:ICustomDataInput):void
         {
+            this._alignmentSideFunc(input);
+            this._alignmentValueFunc(input);
+            this._alignmentGradeFunc(input);
+            this._characterPowerFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_ActorAlignmentInformations(tree);
+        }
+
+        public function deserializeAsyncAs_ActorAlignmentInformations(tree:FuncTree):void
+        {
+            tree.addChild(this._alignmentSideFunc);
+            tree.addChild(this._alignmentValueFunc);
+            tree.addChild(this._alignmentGradeFunc);
+            tree.addChild(this._characterPowerFunc);
+        }
+
+        private function _alignmentSideFunc(input:ICustomDataInput):void
+        {
             this.alignmentSide = input.readByte();
+        }
+
+        private function _alignmentValueFunc(input:ICustomDataInput):void
+        {
             this.alignmentValue = input.readByte();
             if (this.alignmentValue < 0)
             {
                 throw (new Error((("Forbidden value (" + this.alignmentValue) + ") on element of ActorAlignmentInformations.alignmentValue.")));
             };
+        }
+
+        private function _alignmentGradeFunc(input:ICustomDataInput):void
+        {
             this.alignmentGrade = input.readByte();
             if (this.alignmentGrade < 0)
             {
                 throw (new Error((("Forbidden value (" + this.alignmentGrade) + ") on element of ActorAlignmentInformations.alignmentGrade.")));
             };
-            this.characterPower = input.readVarUhInt();
-            if (this.characterPower < 0)
+        }
+
+        private function _characterPowerFunc(input:ICustomDataInput):void
+        {
+            this.characterPower = input.readDouble();
+            if (((this.characterPower < -9007199254740992) || (this.characterPower > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.characterPower) + ") on element of ActorAlignmentInformations.characterPower.")));
             };
@@ -89,5 +123,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.types.game.character.alignment
+} com.ankamagames.dofus.network.types.game.character.alignment
 

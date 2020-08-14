@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.scripts.spells
+package com.ankamagames.dofus.scripts.spells
 {
     import com.ankamagames.jerakine.types.positions.MapPoint;
     import com.ankamagames.jerakine.sequencer.ISequencable;
@@ -20,7 +20,7 @@
             var targetCell:MapPoint = FxApi.GetCurrentTargetedCell(runner);
             var casterCell:MapPoint = FxApi.GetEntityCell(caster);
             var portalsCells:Vector.<MapPoint> = SpellFxApi.GetPortalCells(runner);
-            if (((portalsCells) && ((portalsCells.length > 1))))
+            if (((portalsCells) && (portalsCells.length > 1)))
             {
                 entryPortalCell = portalsCells[0];
                 exitPortalCell = portalsCells[(portalsCells.length - 1)];
@@ -33,10 +33,10 @@
             {
                 addPortalAnimationSteps(SpellFxApi.GetPortalIds(runner));
             };
-            if (((SpellFxApi.HasSpellParam(spell, "glyphGfxId")) && ((spell.silentCast == false))))
+            if (((((SpellFxApi.HasSpellParam(spell, "glyphGfxId")) && (spell.silentCast == false)) && (targetCell)) && (spell.markId)))
             {
                 glyphGfxStep = SequenceApi.CreateAddGlyphGfxStep(runner, SpellFxApi.GetSpellParam(spell, "glyphGfxId"), targetCell, spell.markId);
-                if (!(latestStep))
+                if (!latestStep)
                 {
                     SpellFxApi.AddFrontStep(runner, glyphGfxStep);
                 }
@@ -48,16 +48,17 @@
             };
             if (SpellFxApi.HasSpellParam(spell, "casterGfxId"))
             {
-                addGfxEntityStep(casterCell, tmpCasterCell, targetCell, PREFIX_CASTER);
+                addNewGfxEntityStep(casterCell, tmpCasterCell, targetCell, PREFIX_CASTER, "", caster);
             };
             if (SpellFxApi.HasSpellParam(spell, "targetGfxId"))
             {
-                addGfxEntityStep(targetCell, tmpCasterCell, targetCell, PREFIX_TARGET);
+                addNewGfxEntityStep(targetCell, tmpCasterCell, targetCell, PREFIX_TARGET);
             };
             addAnimHitSteps();
+            addFBackgroundSteps();
             destroy();
         }
 
     }
-}//package com.ankamagames.dofus.scripts.spells
+} com.ankamagames.dofus.scripts.spells
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.context.mount
+package com.ankamagames.dofus.network.messages.game.context.mount
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,8 +6,8 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class PaddockMoveItemRequestMessage extends NetworkMessage implements INetworkMessage 
     {
 
@@ -55,6 +55,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_PaddockMoveItemRequestMessage(output);
@@ -62,12 +70,12 @@
 
         public function serializeAs_PaddockMoveItemRequestMessage(output:ICustomDataOutput):void
         {
-            if ((((this.oldCellId < 0)) || ((this.oldCellId > 559))))
+            if (((this.oldCellId < 0) || (this.oldCellId > 559)))
             {
                 throw (new Error((("Forbidden value (" + this.oldCellId) + ") on element oldCellId.")));
             };
             output.writeVarShort(this.oldCellId);
-            if ((((this.newCellId < 0)) || ((this.newCellId > 559))))
+            if (((this.newCellId < 0) || (this.newCellId > 559)))
             {
                 throw (new Error((("Forbidden value (" + this.newCellId) + ") on element newCellId.")));
             };
@@ -81,13 +89,34 @@
 
         public function deserializeAs_PaddockMoveItemRequestMessage(input:ICustomDataInput):void
         {
+            this._oldCellIdFunc(input);
+            this._newCellIdFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_PaddockMoveItemRequestMessage(tree);
+        }
+
+        public function deserializeAsyncAs_PaddockMoveItemRequestMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._oldCellIdFunc);
+            tree.addChild(this._newCellIdFunc);
+        }
+
+        private function _oldCellIdFunc(input:ICustomDataInput):void
+        {
             this.oldCellId = input.readVarUhShort();
-            if ((((this.oldCellId < 0)) || ((this.oldCellId > 559))))
+            if (((this.oldCellId < 0) || (this.oldCellId > 559)))
             {
                 throw (new Error((("Forbidden value (" + this.oldCellId) + ") on element of PaddockMoveItemRequestMessage.oldCellId.")));
             };
+        }
+
+        private function _newCellIdFunc(input:ICustomDataInput):void
+        {
             this.newCellId = input.readVarUhShort();
-            if ((((this.newCellId < 0)) || ((this.newCellId > 559))))
+            if (((this.newCellId < 0) || (this.newCellId > 559)))
             {
                 throw (new Error((("Forbidden value (" + this.newCellId) + ") on element of PaddockMoveItemRequestMessage.newCellId.")));
             };
@@ -95,5 +124,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.context.mount
+} com.ankamagames.dofus.network.messages.game.context.mount
 

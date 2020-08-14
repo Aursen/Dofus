@@ -1,7 +1,6 @@
-﻿package com.ankamagames.dofus.console.debug
+package com.ankamagames.dofus.console.debug
 {
     import com.ankamagames.jerakine.console.ConsoleInstructionHandler;
-    import com.ankamagames.jerakine.utils.system.AirScanner;
     import com.ankamagames.jerakine.utils.display.StageShareManager;
     import flash.display.StageDisplayState;
     import flash.geom.Rectangle;
@@ -20,32 +19,26 @@
                 case "fullscreen":
                     if (args.length == 0)
                     {
-                        if (AirScanner.hasAir())
+                        if (StageShareManager.stage.displayState == StageDisplayState["FULL_SCREEN_INTERACTIVE"])
                         {
-                            if (StageShareManager.stage.displayState == StageDisplayState["FULL_SCREEN_INTERACTIVE"])
-                            {
-                                StageShareManager.stage.displayState = StageDisplayState["NORMAL"];
-                            }
-                            else
-                            {
-                                console.output("Resolution needed.");
-                            };
+                            StageShareManager.stage.displayState = StageDisplayState["NORMAL"];
+                        }
+                        else
+                        {
+                            console.output("Resolution needed.");
                         };
                     }
                     else
                     {
                         if (args.length == 2)
                         {
-                            if (AirScanner.hasAir())
-                            {
-                                resX = uint(args[0]);
-                                resY = uint(args[1]);
-                                StageShareManager.stage.fullScreenSourceRect = new Rectangle(0, 0, resX, resY);
-                                StageShareManager.stage.displayState = StageDisplayState["FULL_SCREEN_INTERACTIVE"];
-                            };
+                            resX = uint(args[0]);
+                            resY = uint(args[1]);
+                            StageShareManager.stage.fullScreenSourceRect = new Rectangle(0, 0, resX, resY);
+                            StageShareManager.stage.displayState = StageDisplayState["FULL_SCREEN_INTERACTIVE"];
                         };
                     };
-                    return;
+                    break;
             };
         }
 
@@ -66,5 +59,5 @@
 
 
     }
-}//package com.ankamagames.dofus.console.debug
+} com.ankamagames.dofus.console.debug
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.utils.errors
+package com.ankamagames.jerakine.utils.errors
 {
     public class SignatureError extends Error 
     {
@@ -12,5 +12,5 @@
         }
 
     }
-}//package com.ankamagames.jerakine.utils.errors
+} com.ankamagames.jerakine.utils.errors
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.datacenter.items
+package com.ankamagames.dofus.datacenter.items
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.dofus.internalDatacenter.items.ItemWrapper;
@@ -18,13 +18,13 @@
 
         public static function getAllVeteranRewards():Array
         {
-            return ((GameData.getObjects(MODULE) as Array));
+            return (GameData.getObjects(MODULE) as Array);
         }
 
 
         public function get item():ItemWrapper
         {
-            if (!(this._itemWrapper))
+            if (!this._itemWrapper)
             {
                 this._itemWrapper = ItemWrapper.create(0, 0, this.itemGID, this.itemQuantity, null, false);
             };
@@ -33,5 +33,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.items
+} com.ankamagames.dofus.datacenter.items
 

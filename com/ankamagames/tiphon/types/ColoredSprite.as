@@ -1,4 +1,4 @@
-﻿package com.ankamagames.tiphon.types
+package com.ankamagames.tiphon.types
 {
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
@@ -15,7 +15,11 @@
         override public function init(handler:IAnimationSpriteHandler):void
         {
             var colorT:ColorTransform;
-            var nColorIndex:uint = parseInt(getQualifiedClassName(this).split("_")[1]);
+            var qualifiedClassName:String = getQualifiedClassName(this);
+            var firstIndexOf:int = qualifiedClassName.indexOf("_");
+            var secondIndexOf:int = qualifiedClassName.indexOf("_", (firstIndexOf + 1));
+            var colorIndex:String = ((secondIndexOf < 0) ? qualifiedClassName.substring((firstIndexOf + 1)) : qualifiedClassName.substring((firstIndexOf + 1), secondIndexOf));
+            var nColorIndex:uint = parseInt(colorIndex);
             colorT = handler.getColorTransform(nColorIndex);
             if (colorT)
             {
@@ -38,5 +42,5 @@
 
 
     }
-}//package com.ankamagames.tiphon.types
+} com.ankamagames.tiphon.types
 

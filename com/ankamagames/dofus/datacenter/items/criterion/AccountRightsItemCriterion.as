@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.datacenter.items.criterion
+package com.ankamagames.dofus.datacenter.items.criterion
 {
     import com.ankamagames.jerakine.interfaces.IDataCenter;
     import com.ankamagames.dofus.logic.common.managers.PlayerManager;
@@ -20,7 +20,7 @@
             {
                 readableCriterionValue = _criterionValue.toString();
                 readableCriterionRef = I18n.getUiText("ui.social.guildHouseRights");
-                return (((((readableCriterionRef + " ") + _operator.text) + " ") + readableCriterionValue));
+                return ((((readableCriterionRef + " ") + _operator.text) + " ") + readableCriterionValue);
             };
             return ("");
         }
@@ -38,5 +38,5 @@
 
 
     }
-}//package com.ankamagames.dofus.datacenter.items.criterion
+} com.ankamagames.dofus.datacenter.items.criterion
 

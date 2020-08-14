@@ -1,15 +1,15 @@
-﻿package com.ankamagames.berilia.components.gridRenderer
+package com.ankamagames.berilia.components.gridRenderer
 {
     import com.ankamagames.berilia.interfaces.IGridRenderer;
     import com.ankamagames.jerakine.logger.Logger;
+    import com.ankamagames.jerakine.logger.Log;
+    import flash.utils.getQualifiedClassName;
     import com.ankamagames.berilia.components.Grid;
     import flash.geom.ColorTransform;
     import com.ankamagames.jerakine.types.Uri;
     import flash.utils.Dictionary;
-    import com.ankamagames.jerakine.logger.Log;
-    import flash.utils.getQualifiedClassName;
-    import com.ankamagames.berilia.types.data.TreeData;
     import flash.display.Sprite;
+    import com.ankamagames.berilia.types.data.TreeData;
     import com.ankamagames.berilia.components.Texture;
     import com.ankamagames.berilia.components.Label;
     import flash.events.MouseEvent;
@@ -22,11 +22,10 @@
     import com.ankamagames.berilia.components.Tree;
     import com.ankamagames.berilia.Berilia;
 
-    [RendererArgs(fontCss="String", eventLineColor="uint", oddLineColor="uint", overLineColor="uint", selectedLineColor="uint", expandableBtnUri="com.ankamagames.jerakine.types::Uri", simpleItemUri="com.ankamagames.jerakine.types::Uri", endItemUri="com.ankamagames.jerakine.types::Uri")]
     public class TreeGridRenderer implements IGridRenderer 
     {
 
-        protected var _log:Logger;
+        protected var _log:Logger = Log.getLogger(getQualifiedClassName(TreeGridRenderer));
         private var _grid:Grid;
         private var _bgColor1:ColorTransform;
         private var _bgColor2:ColorTransform;
@@ -36,17 +35,13 @@
         private var _expendBtnUri:Uri;
         private var _simpleItemUri:Uri;
         private var _endItemUri:Uri;
-        private var _shapeIndex:Dictionary;
-        private var _indexRef:Dictionary;
-        private var _uriRef:Array;
+        private var _shapeIndex:Dictionary = new Dictionary(true);
+        private var _indexRef:Dictionary = new Dictionary(true);
+        private var _uriRef:Array = new Array();
 
         public function TreeGridRenderer(strParams:String)
         {
             var params:Array;
-            this._log = Log.getLogger(getQualifiedClassName(TreeGridRenderer));
-            this._shapeIndex = new Dictionary(true);
-            this._indexRef = new Dictionary(true);
-            this._uriRef = new Array();
             super();
             if (strParams)
             {
@@ -59,21 +54,37 @@
                 {
                     this._bgColor1 = new ColorTransform();
                     this._bgColor1.color = parseInt(params[1], 16);
+                    if (params[1].length > 8)
+                    {
+                        this._bgColor1.alphaMultiplier = (((parseInt(params[1], 16) & 0xFF000000) >> 24) / 0xFF);
+                    };
                 };
                 if (((params[2]) && (params[2].length)))
                 {
                     this._bgColor2 = new ColorTransform();
                     this._bgColor2.color = parseInt(params[2], 16);
+                    if (params[2].length > 8)
+                    {
+                        this._bgColor2.alphaMultiplier = (((parseInt(params[2], 16) & 0xFF000000) >> 24) / 0xFF);
+                    };
                 };
                 if (((params[3]) && (params[3].length)))
                 {
                     this._overColor = new ColorTransform();
                     this._overColor.color = parseInt(params[3], 16);
+                    if (params[3].length > 8)
+                    {
+                        this._overColor.alphaMultiplier = (((parseInt(params[3], 16) & 0xFF000000) >> 24) / 0xFF);
+                    };
                 };
                 if (((params[4]) && (params[4].length)))
                 {
                     this._selectedColor = new ColorTransform();
                     this._selectedColor.color = parseInt(params[4], 16);
+                    if (params[4].length > 8)
+                    {
+                        this._selectedColor.alphaMultiplier = (((parseInt(params[4], 16) & 0xFF000000) >> 24) / 0xFF);
+                    };
                 };
                 if (((params[5]) && (params[5].length)))
                 {
@@ -97,11 +108,10 @@
 
         public function render(data:*, index:uint, selected:Boolean, subIndex:uint=0):DisplayObject
         {
-            var treeData:TreeData;
             var raw:Sprite = new Sprite();
             raw.mouseEnabled = false;
             this._indexRef[raw] = data;
-            treeData = data;
+            var treeData:TreeData = data;
             var texture:Texture = new Texture();
             texture.mouseEnabled = true;
             texture.width = 10;
@@ -146,7 +156,7 @@
             {
                 if ((data.css is String))
                 {
-                    if (!(this._uriRef[data.value.css]))
+                    if (!this._uriRef[data.value.css])
                     {
                         this._uriRef[data.value.css] = new Uri(data.value.css);
                     };
@@ -161,7 +171,7 @@
                     label.cssClass = data.value.cssClass;
                 };
             };
-            if ((((data is String)) || ((data == null))))
+            if (((data is String) || (data == null)))
             {
                 label.text = data;
             }
@@ -233,7 +243,7 @@
                     {
                         if ((data.value.css is String))
                         {
-                            if (!(this._uriRef[data.value.css]))
+                            if (!this._uriRef[data.value.css])
                             {
                                 this._uriRef[data.value.css] = new Uri(data.value.css);
                             };
@@ -299,7 +309,7 @@
         private function updateBackground(raw:Sprite, index:uint, selected:Boolean):void
         {
             var shape:Shape;
-            if (!(this._shapeIndex[raw]))
+            if (!this._shapeIndex[raw])
             {
                 shape = new Shape();
                 shape.graphics.beginFill(0xFFFFFF);
@@ -310,13 +320,13 @@
                     "shape":shape
                 };
             };
-            var t:ColorTransform = (((index % 2)) ? this._bgColor1 : this._bgColor2);
+            var t:ColorTransform = ((index % 2) ? this._bgColor1 : this._bgColor2);
             if (((selected) && (this._selectedColor)))
             {
                 t = this._selectedColor;
             };
             this._shapeIndex[raw].currentColor = t;
-            DisplayObject(this._shapeIndex[raw].shape).visible = !((t == null));
+            DisplayObject(this._shapeIndex[raw].shape).visible = (!(t == null));
             if (t)
             {
                 Transform(this._shapeIndex[raw].trans).colorTransform = t;
@@ -326,7 +336,7 @@
         private function onRollOver(e:MouseEvent):void
         {
             var raw:Sprite;
-            if ((((e.target.name.indexOf("extension") == -1)) && (e.target.text.length)))
+            if (((e.target.name.indexOf("extension") == -1) && (e.target.text.length)))
             {
                 raw = (e.target.parent as Sprite);
                 if (this._overColor)
@@ -349,7 +359,7 @@
                     {
                         Transform(this._shapeIndex[raw].trans).colorTransform = this._shapeIndex[raw].currentColor;
                     };
-                    DisplayObject(this._shapeIndex[raw].shape).visible = !((this._shapeIndex[raw].currentColor == null));
+                    DisplayObject(this._shapeIndex[raw].shape).visible = (!(this._shapeIndex[raw].currentColor == null));
                 };
             };
         }
@@ -358,7 +368,7 @@
         {
             var listener:IInterfaceListener;
             var data:TreeData = this._indexRef[e.target.parent];
-            data.expend = !(data.expend);
+            data.expend = (!(data.expend));
             Tree(this._grid).rerender();
             for each (listener in Berilia.getInstance().UISoundListeners)
             {
@@ -368,5 +378,5 @@
 
 
     }
-}//package com.ankamagames.berilia.components.gridRenderer
+} com.ankamagames.berilia.components.gridRenderer
 

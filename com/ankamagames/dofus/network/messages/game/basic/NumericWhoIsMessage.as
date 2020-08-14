@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.basic
+package com.ankamagames.dofus.network.messages.game.basic
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,15 +6,15 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class NumericWhoIsMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 6297;
 
         private var _isInitialized:Boolean = false;
-        public var playerId:uint = 0;
+        public var playerId:Number = 0;
         public var accountId:uint = 0;
 
 
@@ -28,7 +28,7 @@
             return (6297);
         }
 
-        public function initNumericWhoIsMessage(playerId:uint=0, accountId:uint=0):NumericWhoIsMessage
+        public function initNumericWhoIsMessage(playerId:Number=0, accountId:uint=0):NumericWhoIsMessage
         {
             this.playerId = playerId;
             this.accountId = accountId;
@@ -55,6 +55,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_NumericWhoIsMessage(output);
@@ -62,11 +70,11 @@
 
         public function serializeAs_NumericWhoIsMessage(output:ICustomDataOutput):void
         {
-            if (this.playerId < 0)
+            if (((this.playerId < 0) || (this.playerId > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.playerId) + ") on element playerId.")));
             };
-            output.writeVarInt(this.playerId);
+            output.writeVarLong(this.playerId);
             if (this.accountId < 0)
             {
                 throw (new Error((("Forbidden value (" + this.accountId) + ") on element accountId.")));
@@ -81,11 +89,32 @@
 
         public function deserializeAs_NumericWhoIsMessage(input:ICustomDataInput):void
         {
-            this.playerId = input.readVarUhInt();
-            if (this.playerId < 0)
+            this._playerIdFunc(input);
+            this._accountIdFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_NumericWhoIsMessage(tree);
+        }
+
+        public function deserializeAsyncAs_NumericWhoIsMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._playerIdFunc);
+            tree.addChild(this._accountIdFunc);
+        }
+
+        private function _playerIdFunc(input:ICustomDataInput):void
+        {
+            this.playerId = input.readVarUhLong();
+            if (((this.playerId < 0) || (this.playerId > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.playerId) + ") on element of NumericWhoIsMessage.playerId.")));
             };
+        }
+
+        private function _accountIdFunc(input:ICustomDataInput):void
+        {
             this.accountId = input.readInt();
             if (this.accountId < 0)
             {
@@ -95,5 +124,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.basic
+} com.ankamagames.dofus.network.messages.game.basic
 

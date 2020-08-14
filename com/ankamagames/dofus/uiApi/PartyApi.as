@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.uiApi
+package com.ankamagames.dofus.uiApi
 {
     import com.ankamagames.berilia.interfaces.IApi;
     import com.ankamagames.berilia.types.data.UiModule;
@@ -8,23 +8,20 @@
     import com.ankamagames.dofus.kernel.Kernel;
     import com.ankamagames.dofus.logic.game.common.frames.PartyManagementFrame;
     import __AS3__.vec.Vector;
+    import com.ankamagames.dofus.internalDatacenter.people.PartyMemberWrapper;
+    import com.ankamagames.dofus.internalDatacenter.arena.ArenaRankInfosWrapper;
 
     [InstanciedApi]
     public class PartyApi implements IApi 
     {
 
         private var _module:UiModule;
-        protected var _log:Logger;
+        protected var _log:Logger = Log.getLogger(getQualifiedClassName(PartyApi));
 
-        public function PartyApi()
-        {
-            this._log = Log.getLogger(getQualifiedClassName(PartyApi));
-            super();
-        }
 
         private function get partyManagementFrame():PartyManagementFrame
         {
-            return ((Kernel.getWorker().getFrame(PartyManagementFrame) as PartyManagementFrame));
+            return (Kernel.getWorker().getFrame(PartyManagementFrame) as PartyManagementFrame);
         }
 
         [ApiData(name="module")]
@@ -33,14 +30,12 @@
             this._module = value;
         }
 
-        [Trusted]
         public function destroy():void
         {
             this._module = null;
         }
 
-        [Untrusted]
-        public function getPartyMembers(typeId:int=0):Object
+        public function getPartyMembers(typeId:int=0):Vector.<PartyMemberWrapper>
         {
             if (typeId == 1)
             {
@@ -49,8 +44,7 @@
             return (this.partyManagementFrame.partyMembers);
         }
 
-        [Untrusted]
-        public function getPartyLeaderId(partyId:int):int
+        public function getPartyLeaderId(partyId:int):Number
         {
             var pMember:Object;
             if (partyId == this.partyManagementFrame.arenaPartyId)
@@ -79,8 +73,7 @@
             return (-1);
         }
 
-        [Untrusted]
-        public function isInParty(pPlayerId:uint):Boolean
+        public function isInParty(pPlayerId:Number):Boolean
         {
             var pMember:Object;
             for each (pMember in this.partyManagementFrame.partyMembers)
@@ -100,79 +93,66 @@
             return (false);
         }
 
-        [Untrusted]
         public function getPartyId():int
         {
             return (this.partyManagementFrame.partyId);
         }
 
-        [Untrusted]
         public function isArenaRegistered():Boolean
         {
             return (this.partyManagementFrame.isArenaRegistered);
         }
 
-        [Untrusted]
         public function getArenaCurrentStatus():int
         {
             return (this.partyManagementFrame.arenaCurrentStatus);
         }
 
-        [Untrusted]
         public function getArenaPartyId():int
         {
             return (this.partyManagementFrame.arenaPartyId);
         }
 
-        [Untrusted]
         public function getArenaLeader():Object
         {
             return (this.partyManagementFrame.arenaLeader);
         }
 
-        [Untrusted]
         public function getArenaReadyPartyMemberIds():Object
         {
             return (this.partyManagementFrame.arenaReadyPartyMemberIds);
         }
 
-        [Untrusted]
         public function getArenaAlliesIds():Object
         {
             return (this.partyManagementFrame.arenaAlliesIds);
         }
 
-        [Untrusted]
-        public function getArenaRanks():Object
+        public function getArenaRankSoloInfos():ArenaRankInfosWrapper
         {
-            return (this.partyManagementFrame.arenaRanks);
+            return (this.partyManagementFrame.arenaRankSoloInfos);
         }
 
-        [Untrusted]
-        public function getTodaysArenaFights():int
+        public function getArenaRankGroupInfos():ArenaRankInfosWrapper
         {
-            return (this.partyManagementFrame.todaysArenaFights);
+            return (this.partyManagementFrame.arenaRankGroupInfos);
         }
 
-        [Untrusted]
-        public function getTodaysWonArenaFights():int
+        public function getArenaRankDuelInfos():ArenaRankInfosWrapper
         {
-            return (this.partyManagementFrame.todaysWonArenaFights);
+            return (this.partyManagementFrame.arenaRankDuelInfos);
         }
 
-        [Untrusted]
-        public function getAllMemberFollowPlayerId(partyId:int):uint
+        public function getAllMemberFollowPlayerId(partyId:int):Number
         {
             return (this.partyManagementFrame.allMemberFollowPlayerId);
         }
 
-        [Untrusted]
         public function getPartyLoyalty(partyId:int):Boolean
         {
             return (this.partyManagementFrame.partyLoyalty);
         }
 
-        [Untrusted]
         public function getAllSubscribedDungeons():Vector.<uint>
         {
             return (this.partyManagementFrame.subscribedDungeons);
@@ -180,5 +160,5 @@
 
 
     }
-}//package com.ankamagames.dofus.uiApi
+} com.ankamagames.dofus.uiApi
 

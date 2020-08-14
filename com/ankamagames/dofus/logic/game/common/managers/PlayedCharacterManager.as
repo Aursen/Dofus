@@ -1,27 +1,36 @@
-﻿package com.ankamagames.dofus.logic.game.common.managers
+package com.ankamagames.dofus.logic.game.common.managers
 {
     import com.ankamagames.jerakine.interfaces.IDestroyable;
     import com.ankamagames.jerakine.logger.Logger;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
+    import __AS3__.vec.Vector;
+    import com.ankamagames.dofus.internalDatacenter.items.IdolsPresetWrapper;
+    import com.ankamagames.jerakine.types.Callback;
     import com.ankamagames.dofus.network.types.game.character.choice.CharacterBaseInformations;
     import com.ankamagames.dofus.network.types.game.character.restriction.ActorRestrictionsInformations;
     import com.ankamagames.dofus.network.types.game.look.EntityLook;
     import com.ankamagames.dofus.network.types.game.character.characteristic.CharacterCharacteristicsInformations;
-    import __AS3__.vec.Vector;
+    import flash.utils.Dictionary;
     import com.ankamagames.dofus.internalDatacenter.items.ItemWrapper;
     import com.ankamagames.dofus.internalDatacenter.items.WeaponWrapper;
     import com.ankamagames.dofus.internalDatacenter.world.WorldPointWrapper;
     import com.ankamagames.dofus.datacenter.world.SubArea;
+    import com.ankamagames.dofus.network.types.game.havenbag.HavenBagRoomPreviewInformation;
     import flash.geom.Point;
     import com.ankamagames.dofus.internalDatacenter.mount.MountData;
     import com.ankamagames.jerakine.utils.errors.SingletonError;
+    import com.ankamagames.dofus.network.ProtocolConstantsEnum;
     import com.ankamagames.dofus.datacenter.world.WorldMap;
     import com.ankamagames.dofus.network.enums.CharacterInventoryPositionEnum;
-    import com.ankamagames.dofus.datacenter.breeds.Breed;
+    import com.ankamagames.dofus.internalDatacenter.DataEnum;
+    import com.ankamagames.dofus.network.enums.PlayerLifeStatusEnum;
+    import com.ankamagames.dofus.misc.utils.CharacterIdConverter;
+    import com.ankamagames.dofus.misc.stats.StatisticsManager;
     import com.ankamagames.dofus.misc.EntityLookAdapter;
     import com.ankamagames.tiphon.types.look.TiphonEntityLook;
-    import com.ankamagames.dofus.network.enums.SubEntityBindingPointCategoryEnum;
+    import com.ankamagames.dofus.internalDatacenter.jobs.KnownJobWrapper;
+    import __AS3__.vec.*;
 
     public class PlayedCharacterManager implements IDestroyable 
     {
@@ -30,25 +39,41 @@
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(PlayedCharacterManager));
 
         private var _isPartyLeader:Boolean = false;
-        private var _followingPlayerId:int = -1;
-        public var infos:CharacterBaseInformations;
+        private var _followingPlayerIds:Vector.<Number> = new Vector.<Number>();
+        private var _soloIdols:Vector.<uint> = new Vector.<uint>();
+        private var _partyIdols:Vector.<uint> = new Vector.<uint>();
+        private var _idolsPresets:Vector.<IdolsPresetWrapper> = new Vector.<IdolsPresetWrapper>(0);
+        private var _infosAvailableCallbacks:Vector.<Callback> = new Vector.<Callback>(0);
+        private var _infos:CharacterBaseInformations;
         public var restrictions:ActorRestrictionsInformations;
         public var realEntityLook:EntityLook;
         public var characteristics:CharacterCharacteristicsInformations;
         public var spellsInventory:Array;
         public var playerSpellList:Array;
+        public var playerTemporisSpellDictionary:Dictionary = new Dictionary();
+        public var playerMaxTemporisSpellsNumber:int = -1;
         public var playerShortcutList:Array;
         public var inventory:Vector.<ItemWrapper>;
         public var currentWeapon:WeaponWrapper;
         public var inventoryWeight:uint;
+        public var shopWeight:uint;
         public var inventoryWeightMax:uint;
-        public var currentMap:WorldPointWrapper;
-        public var currentSubArea:SubArea;
+        private var _currentMap:WorldPointWrapper;
+        public var previousMap:WorldPointWrapper;
+        private var _currentSubArea:SubArea;
+        public var previousSubArea:SubArea;
+        public var previousWorldMapId:int;
         public var jobs:Array;
         public var isInExchange:Boolean = false;
         public var isInHisHouse:Boolean = false;
         public var isInHouse:Boolean = false;
-        public var lastCoord:Point;
+        public var isIndoor:Boolean = false;
+        public var isInHisHavenbag:Boolean = false;
+        public var isInHavenbag:Boolean = false;
+        public var currentHavenbagRooms:Vector.<HavenBagRoomPreviewInformation>;
+        public var isInBreach:Boolean = false;
+        public var isInAnomaly:Boolean = false;
+        public var lastCoord:Point = new Point(0, 0);
         public var isInParty:Boolean = false;
         public var state:uint;
         public var publicMode:Boolean = false;
@@ -57,18 +82,16 @@
         public var hasCompanion:Boolean = false;
         public var mount:MountData;
         public var isFighting:Boolean = false;
+        public var fightId:int = -1;
         public var teamId:int = 0;
         public var isSpectator:Boolean = false;
         public var experiencePercent:int = 0;
         public var achievementPoints:int = 0;
         public var achievementPercent:int = 0;
-        public var waitingGifts:Array;
+        public var waitingGifts:Array = new Array();
 
         public function PlayedCharacterManager()
         {
-            this.lastCoord = new Point(0, 0);
-            this.waitingGifts = new Array();
-            super();
             if (_self != null)
             {
                 throw (new SingletonError("PlayedCharacterManager is a singleton and should not be instanciated directly."));
@@ -85,7 +108,7 @@
         }
 
 
-        public function get id():int
+        public function get id():Number
         {
             if (this.infos)
             {
@@ -94,11 +117,26 @@
             return (0);
         }
 
-        public function set id(id:int):void
+        public function set id(id:Number):void
         {
             if (this.infos)
             {
                 this.infos.id = id;
+            };
+        }
+
+        public function get infos():CharacterBaseInformations
+        {
+            return (this._infos);
+        }
+
+        public function set infos(pInfos:CharacterBaseInformations):void
+        {
+            var callback:Callback;
+            this._infos = pInfos;
+            for each (callback in this._infosAvailableCallbacks)
+            {
+                callback.exec();
             };
         }
 
@@ -207,6 +245,19 @@
             return (this.restrictions.cantWalk8Directions);
         }
 
+        public function get limitedLevel():uint
+        {
+            if (this.infos)
+            {
+                if (this.infos.level > ProtocolConstantsEnum.MAX_LEVEL)
+                {
+                    return (ProtocolConstantsEnum.MAX_LEVEL);
+                };
+                return (this.infos.level);
+            };
+            return (0);
+        }
+
         public function get currentWorldMap():WorldMap
         {
             if (this.currentSubArea)
@@ -214,6 +265,25 @@
                 return (this.currentSubArea.worldmap);
             };
             return (null);
+        }
+
+        public function get currentMap():WorldPointWrapper
+        {
+            return (this._currentMap);
+        }
+
+        public function get currentSubArea():SubArea
+        {
+            return (this._currentSubArea);
+        }
+
+        public function get currentWorldMapId():int
+        {
+            if (((this.currentSubArea) && (this.currentSubArea.worldmap)))
+            {
+                return (this.currentSubArea.worldmap.id);
+            };
+            return (-1);
         }
 
         public function get isIncarnation():Boolean
@@ -232,7 +302,7 @@
                 i = 0;
                 while (i < l)
                 {
-                    if (((((rpBuffs[i]) && ((rpBuffs[i].typeId == 27)))) && ((rpBuffs[i].position == CharacterInventoryPositionEnum.INVENTORY_POSITION_MUTATION))))
+                    if ((((rpBuffs[i]) && (rpBuffs[i].typeId == DataEnum.ITEM_TYPE_MUTATIONS)) && (rpBuffs[i].position == CharacterInventoryPositionEnum.INVENTORY_POSITION_MUTATION)))
                     {
                         return (true);
                     };
@@ -244,7 +314,7 @@
 
         public function set isPartyLeader(b:Boolean):void
         {
-            if (!(this.isInParty))
+            if (!this.isInParty)
             {
                 this._isPartyLeader = false;
             }
@@ -261,40 +331,116 @@
 
         public function get isGhost():Boolean
         {
-            var isGhost:Boolean;
-            var breed:Breed;
-            var look:TiphonEntityLook = EntityLookAdapter.fromNetwork(this.infos.entityLook);
-            var isCreature:Boolean;
-            var breeds:Array = Breed.getBreeds();
-            for each (breed in breeds)
-            {
-                if (breed.creatureBonesId == look.getBone())
-                {
-                    isCreature = true;
-                    break;
-                };
-            };
-            return (((((((!(look.getSubEntity(SubEntityBindingPointCategoryEnum.HOOK_POINT_CATEGORY_MOUNT_DRIVER, 0))) && (!(isCreature)))) && (!((look.getBone() == 1))))) && (!(this.isIncarnation))));
+            return (this.state == PlayerLifeStatusEnum.STATUS_PHANTOM);
         }
 
         public function get artworkId():uint
         {
-            return ((((this.infos.entityLook.bonesId == 1)) ? this.infos.entityLook.skins[0] : this.infos.entityLook.bonesId));
+            return ((this.infos.entityLook.bonesId == 1) ? this.infos.entityLook.skins[0] : this.infos.entityLook.bonesId);
         }
 
-        public function get followingPlayerId():int
+        public function get followingPlayerIds():Vector.<Number>
         {
-            return (this._followingPlayerId);
+            return (this._followingPlayerIds);
         }
 
-        public function set followingPlayerId(pPlayerId:int):void
+        public function set currentMap(map:WorldPointWrapper):void
         {
-            this._followingPlayerId = pPlayerId;
+            if (this._currentMap)
+            {
+                if (map.mapId != this._currentMap.mapId)
+                {
+                    this.previousMap = this._currentMap;
+                    this._currentMap = map;
+                }
+                else
+                {
+                    if (!this.isInHavenbag)
+                    {
+                        this._currentMap.setOutdoorCoords(map.outdoorX, map.outdoorY);
+                    }
+                    else
+                    {
+                        this._currentMap.setOutdoorCoords(this.previousMap.outdoorX, this.previousMap.outdoorY);
+                    };
+                };
+            }
+            else
+            {
+                this._currentMap = map;
+            };
+        }
+
+        public function set currentSubArea(area:SubArea):void
+        {
+            if (((!(this._currentSubArea)) || (!(area == this._currentSubArea))))
+            {
+                if (((this.currentSubArea) && (this.currentSubArea.worldmap)))
+                {
+                    this.previousWorldMapId = this._currentSubArea.worldmap.id;
+                    this.previousSubArea = this.currentSubArea;
+                };
+                this._currentSubArea = area;
+            };
+        }
+
+        public function set followingPlayerIds(pPlayerIds:Vector.<Number>):void
+        {
+            this._followingPlayerIds = pPlayerIds;
+        }
+
+        public function get soloIdols():Vector.<uint>
+        {
+            return (this._soloIdols);
+        }
+
+        public function set soloIdols(pIdols:Vector.<uint>):void
+        {
+            this._soloIdols = pIdols;
+        }
+
+        public function get partyIdols():Vector.<uint>
+        {
+            return (this._partyIdols);
+        }
+
+        public function set partyIdols(pIdols:Vector.<uint>):void
+        {
+            this._partyIdols = pIdols;
+        }
+
+        public function get idolsPresets():Vector.<IdolsPresetWrapper>
+        {
+            return (this._idolsPresets);
+        }
+
+        public function set idolsPresets(pIdolsPresets:Vector.<IdolsPresetWrapper>):void
+        {
+            this._idolsPresets = pIdolsPresets;
+        }
+
+        public function get extractedServerCharacterIdFromInterserverCharacterId():Number
+        {
+            return (CharacterIdConverter.extractServerCharacterIdFromInterserverCharacterId(this.id));
+        }
+
+        public function get canBeAggressedByMonsters():Boolean
+        {
+            if (this.characteristics.energyPoints == 0)
+            {
+                return (false);
+            };
+            if (this.restrictions.cantAttackMonster)
+            {
+                return (false);
+            };
+            return (true);
         }
 
         public function destroy():void
         {
             _self = null;
+            StatisticsManager.getInstance().removeStats("shortcuts");
         }
 
         public function get tiphonEntityLook():TiphonEntityLook
@@ -305,19 +451,23 @@
         public function levelDiff(targetLevel:uint):int
         {
             var diff:int;
-            var playerLevel:int = this.infos.level;
-            var type:int = 1;
+            var playerLevel:int = this.limitedLevel;
+            if (targetLevel > ProtocolConstantsEnum.MAX_LEVEL)
+            {
+                targetLevel = ProtocolConstantsEnum.MAX_LEVEL;
+            };
+            var _local_4:int = 1;
             if (targetLevel < playerLevel)
             {
-                type = -1;
+                _local_4 = -1;
             };
             if (Math.abs((targetLevel - playerLevel)) > 20)
             {
-                diff = (1 * type);
+                diff = (1 * _local_4);
             }
             else
             {
-                if (targetLevel < playerLevel)
+                if (targetLevel > playerLevel)
                 {
                     if ((targetLevel / playerLevel) < 1.2)
                     {
@@ -325,7 +475,7 @@
                     }
                     else
                     {
-                        diff = (1 * type);
+                        diff = (1 * _local_4);
                     };
                 }
                 else
@@ -336,14 +486,47 @@
                     }
                     else
                     {
-                        diff = (1 * type);
+                        diff = (1 * _local_4);
                     };
                 };
             };
             return (diff);
         }
 
+        public function addInfosAvailableCallback(pCallback:Callback):void
+        {
+            this._infosAvailableCallbacks.push(pCallback);
+        }
+
+        public function jobsLevel():int
+        {
+            var job:KnownJobWrapper;
+            var jobsLevel:int;
+            for each (job in this.jobs)
+            {
+                jobsLevel = (jobsLevel + job.jobLevel);
+            };
+            return (jobsLevel);
+        }
+
+        public function jobsNumber(onlyLevelOne:Boolean=false):int
+        {
+            var job:KnownJobWrapper;
+            var length:int;
+            for each (job in this.jobs)
+            {
+                if (((!(job.jobLevel == 1)) && (onlyLevelOne)))
+                {
+                }
+                else
+                {
+                    length++;
+                };
+            };
+            return (length);
+        }
+
 
     }
-}//package com.ankamagames.dofus.logic.game.common.managers
+} com.ankamagames.dofus.logic.game.common.managers
 

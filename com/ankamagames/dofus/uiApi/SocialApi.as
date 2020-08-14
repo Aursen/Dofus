@@ -1,20 +1,21 @@
-﻿package com.ankamagames.dofus.uiApi
+package com.ankamagames.dofus.uiApi
 {
     import com.ankamagames.berilia.interfaces.IApi;
+    import com.ankamagames.jerakine.types.DataStoreType;
+    import com.ankamagames.jerakine.types.enums.DataStoreEnum;
     import com.ankamagames.jerakine.logger.Logger;
-    import com.ankamagames.berilia.types.data.UiModule;
     import com.ankamagames.jerakine.logger.Log;
     import flash.utils.getQualifiedClassName;
-    import com.ankamagames.dofus.kernel.Kernel;
+    import com.ankamagames.berilia.types.data.UiModule;
+    import com.ankamagames.dofus.logic.game.common.frames.DareFrame;
     import com.ankamagames.dofus.logic.game.common.frames.SocialFrame;
     import com.ankamagames.dofus.logic.game.common.frames.AllianceFrame;
-    import com.ankamagames.dofus.internalDatacenter.people.FriendWrapper;
-    import com.ankamagames.dofus.internalDatacenter.people.EnemyWrapper;
-    import com.ankamagames.dofus.internalDatacenter.people.IgnoredWrapper;
+    import __AS3__.vec.Vector;
+    import com.ankamagames.dofus.internalDatacenter.people.SocialCharacterWrapper;
     import com.ankamagames.dofus.internalDatacenter.people.SpouseWrapper;
+    import com.ankamagames.dofus.kernel.Kernel;
     import com.ankamagames.dofus.logic.game.common.frames.PlayedCharacterUpdatesFrame;
     import com.ankamagames.dofus.internalDatacenter.guild.GuildWrapper;
-    import __AS3__.vec.Vector;
     import com.ankamagames.dofus.network.types.game.guild.GuildMember;
     import com.ankamagames.dofus.internalDatacenter.guild.GuildFactSheetWrapper;
     import com.ankamagames.dofus.logic.game.common.managers.PlayedCharacterManager;
@@ -24,22 +25,34 @@
     import com.ankamagames.dofus.internalDatacenter.guild.SocialEntityInFightWrapper;
     import com.ankamagames.dofus.internalDatacenter.guild.SocialFightersWrapper;
     import com.ankamagames.dofus.internalDatacenter.guild.AllianceWrapper;
+    import com.ankamagames.dofus.network.types.game.prism.AlliancePrismInformation;
+    import com.ankamagames.jerakine.data.I18n;
+    import com.ankamagames.dofus.network.types.game.prism.AllianceInsiderPrismInformation;
+    import com.ankamagames.dofus.network.types.game.prism.PrismInformation;
     import com.ankamagames.dofus.internalDatacenter.conquest.PrismSubAreaWrapper;
     import com.ankamagames.dofus.internalDatacenter.communication.BasicChatSentence;
     import com.ankamagames.dofus.logic.game.common.frames.ChatFrame;
+    import com.ankamagames.dofus.internalDatacenter.dare.DareWrapper;
+    import com.ankamagames.jerakine.utils.misc.StringUtils;
+    import com.ankamagames.dofus.logic.game.common.actions.dare.DareInformationsRequestAction;
+    import com.ankamagames.jerakine.managers.StoreDataManager;
+    import com.ankamagames.dofus.network.types.game.dare.DareReward;
 
     [InstanciedApi]
     public class SocialApi implements IApi 
     {
 
-        protected var _log:Logger;
+        private static var _datastoreType:DataStoreType = new DataStoreType("Module_Ankama_Social", true, DataStoreEnum.LOCATION_LOCAL, DataStoreEnum.BIND_CHARACTER);
+
+        protected var _log:Logger = Log.getLogger(getQualifiedClassName(SocialApi));
         private var _module:UiModule;
 
-        public function SocialApi()
+
+        public static function get dareFrame():DareFrame
         {
-            this._log = Log.getLogger(getQualifiedClassName(SocialApi));
-            super();
+            return (DareFrame.getInstance());
         }
+
 
         [ApiData(name="module")]
         public function set module(value:UiModule):void
@@ -49,186 +62,150 @@
 
         public function get socialFrame():SocialFrame
         {
-            return ((Kernel.getWorker().getFrame(SocialFrame) as SocialFrame));
+            return (SocialFrame.getInstance());
         }
 
         public function get allianceFrame():AllianceFrame
         {
-            return ((Kernel.getWorker().getFrame(AllianceFrame) as AllianceFrame));
+            return (AllianceFrame.getInstance());
         }
 
-        [Trusted]
         public function destroy():void
         {
             this._module = null;
         }
 
-        [Untrusted]
-        public function getFriendsList():Array
+        public function hasSocialFrame():Boolean
         {
-            var friend:FriendWrapper;
-            var fl:Array = new Array();
-            var friendsList:Array = this.socialFrame.friendsList;
-            for each (friend in friendsList)
-            {
-                fl.push(friend);
-            };
-            fl.sortOn("name", Array.CASEINSENSITIVE);
-            return (fl);
+            return (!(this.socialFrame == null));
         }
 
-        [Untrusted]
+        public function getFriendsList():Vector.<SocialCharacterWrapper>
+        {
+            return (this.socialFrame.friendsList);
+        }
+
+        public function getContactsList():Vector.<SocialCharacterWrapper>
+        {
+            return (this.socialFrame.contactsList);
+        }
+
         public function isFriend(playerName:String):Boolean
         {
-            var friend:*;
-            var friendsList:Array = this.socialFrame.friendsList;
-            for each (friend in friendsList)
-            {
-                if (friend.playerName == playerName)
-                {
-                    return (true);
-                };
-            };
-            return (false);
+            return (this.socialFrame.isFriend(playerName));
         }
 
-        [Untrusted]
-        public function getEnemiesList():Array
+        public function isContact(playerName:String):Boolean
         {
-            var enemy:EnemyWrapper;
-            var el:Array = new Array();
-            for each (enemy in this.socialFrame.enemiesList)
-            {
-                el.push(enemy);
-            };
-            el.sortOn("name", Array.CASEINSENSITIVE);
-            return (el);
+            return (this.socialFrame.isContact(playerName));
         }
 
-        [Untrusted]
+        public function isFriendOrContact(playerName:String):Boolean
+        {
+            return (this.socialFrame.isFriendOrContact(playerName));
+        }
+
+        public function getEnemiesList():Vector.<SocialCharacterWrapper>
+        {
+            return (this.socialFrame.enemiesList);
+        }
+
         public function isEnemy(playerName:String):Boolean
         {
-            var enemy:*;
-            for each (enemy in this.socialFrame.enemiesList)
-            {
-                if (enemy.playerName == playerName)
-                {
-                    return (true);
-                };
-            };
-            return (false);
+            return (this.socialFrame.isEnemy(playerName));
         }
 
-        [Untrusted]
-        public function getIgnoredList():Array
+        public function getIgnoredList():Vector.<SocialCharacterWrapper>
         {
-            var ignored:IgnoredWrapper;
-            var il:Array = new Array();
-            for each (ignored in this.socialFrame.ignoredList)
-            {
-                il.push(ignored);
-            };
-            il.sortOn("name", Array.CASEINSENSITIVE);
-            return (il);
+            return (this.socialFrame.ignoredList);
         }
 
-        [Untrusted]
         public function isIgnored(name:String, accountId:int=0):Boolean
         {
             return (this.socialFrame.isIgnored(name, accountId));
         }
 
-        [Trusted]
         public function getAccountName(name:String):String
         {
             return (name);
         }
 
-        [Untrusted]
         public function getWarnOnFriendConnec():Boolean
         {
             return (this.socialFrame.warnFriendConnec);
         }
 
-        [Untrusted]
+        public function getShareStatus():Boolean
+        {
+            return (this.socialFrame.shareStatus);
+        }
+
         public function getWarnOnMemberConnec():Boolean
         {
             return (this.socialFrame.warnMemberConnec);
         }
 
-        [Untrusted]
         public function getWarnWhenFriendOrGuildMemberLvlUp():Boolean
         {
             return (this.socialFrame.warnWhenFriendOrGuildMemberLvlUp);
         }
 
-        [Untrusted]
         public function getWarnWhenFriendOrGuildMemberAchieve():Boolean
         {
             return (this.socialFrame.warnWhenFriendOrGuildMemberAchieve);
         }
 
-        [Untrusted]
         public function getWarnOnHardcoreDeath():Boolean
         {
             return (this.socialFrame.warnOnHardcoreDeath);
         }
 
-        [Untrusted]
         public function getSpouse():SpouseWrapper
         {
             return (this.socialFrame.spouse);
         }
 
-        [Untrusted]
         public function hasSpouse():Boolean
         {
             return (this.socialFrame.hasSpouse);
         }
 
-        [Untrusted]
         public function getAllowedGuildEmblemSymbolCategories():int
         {
             var playerFrame:PlayedCharacterUpdatesFrame = (Kernel.getWorker().getFrame(PlayedCharacterUpdatesFrame) as PlayedCharacterUpdatesFrame);
             return (playerFrame.guildEmblemSymbolCategories);
         }
 
-        [Untrusted]
         public function hasGuild():Boolean
         {
             return (this.socialFrame.hasGuild);
         }
 
-        [Untrusted]
         public function getGuild():GuildWrapper
         {
             return (this.socialFrame.guild);
         }
 
-        [Untrusted]
         public function getGuildMembers():Vector.<GuildMember>
         {
             return (this.socialFrame.guildmembers);
         }
 
-        [Untrusted]
         public function getGuildRights():Array
         {
             return (GuildWrapper.guildRights);
         }
 
-        [Untrusted]
         public function getGuildByid(id:int):GuildFactSheetWrapper
         {
             return (this.socialFrame.getGuildById(id));
         }
 
-        [Untrusted]
-        public function hasGuildRight(pPlayerId:uint, pRightId:String):Boolean
+        public function hasGuildRight(pPlayerId:Number, pRightId:String):Boolean
         {
             var member:GuildMember;
             var temporaryWrapper:GuildWrapper;
-            if (!(this.socialFrame.hasGuild))
+            if (!this.socialFrame.hasGuild)
             {
                 return (false);
             };
@@ -240,100 +217,104 @@
             {
                 if (member.id == pPlayerId)
                 {
-                    temporaryWrapper = GuildWrapper.create(0, "", null, member.rights, true);
+                    temporaryWrapper = GuildWrapper.create(0, "", null, member.rights);
                     return (temporaryWrapper.hasRight(pRightId));
                 };
             };
             return (false);
         }
 
-        [Untrusted]
+        public function hasGuildRank(pPlayerId:Number, rankId:int):Boolean
+        {
+            var member:GuildMember;
+            if (!this.socialFrame.hasGuild)
+            {
+                return (false);
+            };
+            for each (member in this.socialFrame.guildmembers)
+            {
+                if (member.id == pPlayerId)
+                {
+                    return (member.rank == rankId);
+                };
+            };
+            return (false);
+        }
+
         public function getGuildHouses():Object
         {
             return (this.socialFrame.guildHouses);
         }
 
-        [Untrusted]
         public function guildHousesUpdateNeeded():Boolean
         {
             return (this.socialFrame.guildHousesUpdateNeeded);
         }
 
-        [Untrusted]
         public function getGuildPaddocks():Object
         {
             return (this.socialFrame.guildPaddocks);
         }
 
-        [Untrusted]
         public function getMaxGuildPaddocks():int
         {
             return (this.socialFrame.maxGuildPaddocks);
         }
 
-        [Untrusted]
         public function isGuildNameInvalid():Boolean
         {
             if (this.socialFrame.guild)
             {
-                return ((this.socialFrame.guild.realGuildName == "#NONAME#"));
+                return (this.socialFrame.guild.realGuildName == "#NONAME#");
             };
             return (false);
         }
 
-        [Untrusted]
         public function getMaxCollectorCount():uint
         {
             return (TaxCollectorsManager.getInstance().maxTaxCollectorsCount);
         }
 
-        [Untrusted]
         public function getTaxCollectors():Dictionary
         {
             return (TaxCollectorsManager.getInstance().taxCollectors);
         }
 
-        [Untrusted]
-        public function getTaxCollector(id:int):TaxCollectorWrapper
+        public function getTaxCollector(id:Number):TaxCollectorWrapper
         {
             return (TaxCollectorsManager.getInstance().taxCollectors[id]);
         }
 
-        [Untrusted]
         public function getGuildFightingTaxCollectors():Dictionary
         {
             return (TaxCollectorsManager.getInstance().guildTaxCollectorsFighters);
         }
 
-        [Untrusted]
-        public function getGuildFightingTaxCollector(pFightId:uint):SocialEntityInFightWrapper
+        public function getGuildFightingTaxCollector(pFightId:Number):SocialEntityInFightWrapper
         {
             return (TaxCollectorsManager.getInstance().guildTaxCollectorsFighters[pFightId]);
         }
 
-        [Untrusted]
         public function getAllFightingTaxCollectors():Dictionary
         {
-            return (TaxCollectorsManager.getInstance().allTaxCollectorsInPreFight);
+            return (TaxCollectorsManager.getInstance().allTaxCollectorsInFight);
         }
 
-        [Untrusted]
-        public function getAllFightingTaxCollector(pFightId:uint):SocialEntityInFightWrapper
+        public function getAllFightingTaxCollector(pFightId:Number):SocialEntityInFightWrapper
         {
-            return (TaxCollectorsManager.getInstance().allTaxCollectorsInPreFight[pFightId]);
+            return (TaxCollectorsManager.getInstance().allTaxCollectorsInFight[pFightId]);
         }
 
-        [Untrusted]
-        public function isPlayerDefender(pType:int, pPlayerId:uint, pSocialFightId:int):Boolean
+        public function isPlayerDefender(pType:int, pPlayerId:Number, pSocialFightId:Number):Boolean
         {
             var seifw:SocialEntityInFightWrapper;
             var defender:SocialFightersWrapper;
             if (pType == 0)
             {
                 seifw = TaxCollectorsManager.getInstance().guildTaxCollectorsFighters[pSocialFightId];
-                if (!(seifw))
+                if (!seifw)
                 {
-                    seifw = TaxCollectorsManager.getInstance().allTaxCollectorsInPreFight[pSocialFightId];
+                    seifw = TaxCollectorsManager.getInstance().allTaxCollectorsInFight[pSocialFightId];
                 };
             }
             else
@@ -356,70 +337,95 @@
             return (false);
         }
 
-        [Untrusted]
         public function hasAlliance():Boolean
         {
             return (this.allianceFrame.hasAlliance);
         }
 
-        [Untrusted]
         public function getAlliance():AllianceWrapper
         {
             return (this.allianceFrame.alliance);
         }
 
-        [Untrusted]
         public function getAllianceById(id:int):AllianceWrapper
         {
             return (this.allianceFrame.getAllianceById(id));
         }
 
-        [Untrusted]
         public function getAllianceGuilds():Vector.<GuildFactSheetWrapper>
         {
             return (this.allianceFrame.alliance.guilds);
         }
 
-        [Untrusted]
         public function isAllianceNameInvalid():Boolean
         {
             if (this.allianceFrame.alliance)
             {
-                return ((this.allianceFrame.alliance.realAllianceName == "#NONAME#"));
+                return (this.allianceFrame.alliance.realAllianceName == "#NONAME#");
             };
             return (false);
         }
 
-        [Untrusted]
         public function isAllianceTagInvalid():Boolean
         {
             if (this.allianceFrame.alliance)
             {
-                return ((this.allianceFrame.alliance.realAllianceTag == "#TAG#"));
+                return (this.allianceFrame.alliance.realAllianceTag == "#TAG#");
             };
             return (false);
         }
 
-        [Untrusted]
+        public function getAllianceNameAndTag(pPrismInfo:PrismInformation):String
+        {
+            var name:String;
+            var alPrismInfos:AlliancePrismInformation;
+            var allianceName:String;
+            var allianceTag:String;
+            var tag:String;
+            var myAllianceInfos:AllianceWrapper;
+            if ((pPrismInfo is AlliancePrismInformation))
+            {
+                alPrismInfos = (pPrismInfo as AlliancePrismInformation);
+                allianceName = alPrismInfos.alliance.allianceName;
+                if (allianceName == "#NONAME#")
+                {
+                    allianceName = I18n.getUiText("ui.guild.noName");
+                };
+                allianceTag = alPrismInfos.alliance.allianceTag;
+                if (allianceTag == "#TAG#")
+                {
+                    allianceTag = I18n.getUiText("ui.alliance.noTag");
+                };
+                tag = ((" \\[" + allianceTag) + "]");
+                name = (allianceName + tag);
+            }
+            else
+            {
+                if ((pPrismInfo is AllianceInsiderPrismInformation))
+                {
+                    myAllianceInfos = this.getAlliance();
+                    name = (((myAllianceInfos.allianceName + " \\[") + myAllianceInfos.allianceTag) + "]");
+                };
+            };
+            return (name);
+        }
+
         public function getPrismSubAreaById(id:int):PrismSubAreaWrapper
         {
             return (this.allianceFrame.getPrismSubAreaById(id));
         }
 
-        [Untrusted]
         public function getFightingPrisms():Dictionary
         {
             return (TaxCollectorsManager.getInstance().prismsFighters);
         }
 
-        [Untrusted]
         public function getFightingPrism(pFightId:uint):SocialEntityInFightWrapper
         {
             return (TaxCollectorsManager.getInstance().prismsFighters[pFightId]);
         }
 
-        [Untrusted]
-        public function isPlayerPrismDefender(pPlayerId:uint, pSubAreaId:int):Boolean
+        public function isPlayerPrismDefender(pPlayerId:Number, pSubAreaId:int):Boolean
         {
             var defender:SocialFightersWrapper;
             var p:SocialEntityInFightWrapper = TaxCollectorsManager.getInstance().prismsFighters[pSubAreaId];
@@ -436,7 +442,6 @@
             return (false);
         }
 
-        [Trusted]
         public function getChatSentence(timestamp:Number, fingerprint:String):BasicChatSentence
         {
             var channel:Array;
@@ -448,7 +453,7 @@
             {
                 for each (sentence in channel)
                 {
-                    if ((((sentence.fingerprint == fingerprint)) && ((sentence.timestamp == timestamp))))
+                    if (((sentence.fingerprint == fingerprint) && (sentence.timestamp == timestamp)))
                     {
                         se = sentence;
                         found = true;
@@ -463,7 +468,222 @@
             return (se);
         }
 
+        public function getDareList():Vector.<DareWrapper>
+        {
+            return (dareFrame.dareList);
+        }
+
+        public function getDareById(dareId:Number):DareWrapper
+        {
+            return (dareFrame.getDareById(dareId));
+        }
+
+        public function getTotalGuildDares():uint
+        {
+            return (dareFrame.getTotalGuildDares());
+        }
+
+        public function getTotalAllianceDares():uint
+        {
+            return (dareFrame.getTotalAllianceDares());
+        }
+
+        public function getTotalDaresInSubArea(subAreaId:uint):uint
+        {
+            return (dareFrame.getTotalDaresInSubArea(subAreaId));
+        }
+
+        public function getTargetedMonsterIdsInSubArea(subAreaId:uint):Vector.<int>
+        {
+            return (dareFrame.getTargetedMonsterIdsInSubArea(subAreaId));
+        }
+
+        public function getFilteredDareList(subscribableByPlayer:Boolean=true, createdByPlayer:Boolean=false, subscribedByPlayer:Boolean=false, searchQuery:String="", searchOnId:Boolean=false, searchOnCreatorName:Boolean=false, searchOnMonsterName:Boolean=false, searchOnCriteria:Boolean=false, searchOnSubArea:Boolean=false, searchOnGuildName:Boolean=false, searchOnAllianceName:Boolean=false):Array
+        {
+            var dare:DareWrapper;
+            var idDate:String;
+            var i:uint;
+            var l:uint;
+            var canAddDareToList:Boolean;
+            var dareId:Number;
+            var startDate:Date;
+            if (searchQuery)
+            {
+                searchQuery = StringUtils.noAccent(searchQuery.toLocaleLowerCase());
+            };
+            var result:Array = new Array();
+            var currentDate:Date = new Date();
+            var currentTime:Number = currentDate.time;
+            var onlyOngoingDares:Boolean = ((!(createdByPlayer)) && (!(subscribedByPlayer)));
+            if (((searchQuery) && (searchOnId)))
+            {
+                dareId = parseInt(searchQuery);
+                if (isNaN(dareId) == false)
+                {
+                    dare = dareFrame.getDareById(dareId);
+                    if (dare)
+                    {
+                        if (((createdByPlayer) && (!(dare.isMyCreation))))
+                        {
+                            return (result);
+                        };
+                        if (((subscribedByPlayer) && (!(dare.subscribed))))
+                        {
+                            return (result);
+                        };
+                        if (((!(onlyOngoingDares)) || ((onlyOngoingDares) && (dare.isOngoing(currentTime)))))
+                        {
+                            result.push(dare);
+                        };
+                    }
+                    else
+                    {
+                        Kernel.getWorker().processImmediately(DareInformationsRequestAction.create(dareId));
+                    };
+                    return (result);
+                };
+            };
+            var source:Vector.<DareWrapper> = dareFrame.dareList;
+            var playedCharacterManager:PlayedCharacterManager = PlayedCharacterManager.getInstance();
+            var playerInfo:Object = {
+                "playerId":playedCharacterManager.id,
+                "playerBreed":playedCharacterManager.infos.breed,
+                "playerLevel":playedCharacterManager.infos.level,
+                "playerKamas":playedCharacterManager.characteristics.kamas,
+                "playerGuildId":((this.socialFrame.hasGuild) ? this.socialFrame.guild.guildId : 0),
+                "playerAllianceId":((this.allianceFrame.hasAlliance) ? this.allianceFrame.alliance.allianceId : 0),
+                "currentTime":currentTime
+            };
+            var fightableByPlayer:Boolean;
+            if (createdByPlayer)
+            {
+                subscribableByPlayer = false;
+            }
+            else
+            {
+                if (subscribedByPlayer)
+                {
+                    fightableByPlayer = subscribableByPlayer;
+                    subscribableByPlayer = false;
+                };
+            };
+            var hiddenIdsDates:Array = StoreDataManager.getInstance().getData(_datastoreType, "HiddenDaresIds");
+            var hiddenIds:Array = new Array();
+            for each (idDate in hiddenIdsDates)
+            {
+                hiddenIds.push(Number(idDate.split("_")[0]));
+            };
+            l = source.length;
+            i = 0;
+            while (i < l)
+            {
+                dare = source[i];
+                canAddDareToList = false;
+                startDate = new Date(dare.startDate);
+                DareFrame.getInstance().setDareSubscribable(dare, playerInfo);
+                if (((subscribableByPlayer) && ((!(dare.subscribable)) || ((hiddenIds) && (!(hiddenIds.indexOf(dare.dareId) == -1))))))
+                {
+                }
+                else
+                {
+                    if (((createdByPlayer) && (!(dare.isMyCreation))))
+                    {
+                    }
+                    else
+                    {
+                        if (((subscribedByPlayer) && (!(dare.subscribed))))
+                        {
+                        }
+                        else
+                        {
+                            if (((onlyOngoingDares) && (!(dare.isOngoing(currentTime)))))
+                            {
+                            }
+                            else
+                            {
+                                if (((fightableByPlayer) && (!(dare.isFightable(currentTime)))))
+                                {
+                                }
+                                else
+                                {
+                                    if (!searchQuery)
+                                    {
+                                        canAddDareToList = true;
+                                    }
+                                    else
+                                    {
+                                        if (((searchOnId) && (!(dare.dareId.toString().indexOf(searchQuery) == -1))))
+                                        {
+                                            canAddDareToList = true;
+                                        }
+                                        else
+                                        {
+                                            if (((searchOnCreatorName) && (!(dare.undiatricalCreatorName.indexOf(searchQuery) == -1))))
+                                            {
+                                                canAddDareToList = true;
+                                            }
+                                            else
+                                            {
+                                                if (((searchOnMonsterName) && (!(dare.monster.undiatricalName.indexOf(searchQuery) == -1))))
+                                                {
+                                                    canAddDareToList = true;
+                                                }
+                                                else
+                                                {
+                                                    if (((searchOnCriteria) && (!(dare.criteriaSearchString.indexOf(searchQuery) == -1))))
+                                                    {
+                                                        canAddDareToList = true;
+                                                    }
+                                                    else
+                                                    {
+                                                        if (((searchOnSubArea) && (!(dare.subAreasSearchString.indexOf(searchQuery) == -1))))
+                                                        {
+                                                            canAddDareToList = true;
+                                                        }
+                                                        else
+                                                        {
+                                                            if ((((searchOnGuildName) && (dare.undiatricalGuildName)) && (!(dare.undiatricalGuildName.indexOf(searchQuery) == -1))))
+                                                            {
+                                                                canAddDareToList = true;
+                                                            }
+                                                            else
+                                                            {
+                                                                if ((((searchOnAllianceName) && (dare.undiatricalAllianceName)) && (!(dare.undiatricalAllianceName.indexOf(searchQuery) == -1))))
+                                                                {
+                                                                    canAddDareToList = true;
+                                                                };
+                                                            };
+                                                        };
+                                                    };
+                                                };
+                                            };
+                                        };
+                                    };
+                                    if (canAddDareToList)
+                                    {
+                                        result.push(dare);
+                                    };
+                                };
+                            };
+                        };
+                    };
+                };
+                i++;
+            };
+            return (result);
+        }
+
+        public function getDareRewards():Vector.<DareReward>
+        {
+            return ((this.getDareFrame()) ? this.getDareFrame().dareRewardsWon : null);
+        }
+
+        private function getDareFrame():DareFrame
+        {
+            return (DareFrame.getInstance());
+        }
+
 
     }
-}//package com.ankamagames.dofus.uiApi
+} com.ankamagames.dofus.uiApi
 

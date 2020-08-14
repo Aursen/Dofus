@@ -1,4 +1,4 @@
-﻿package com.ankamagames.jerakine.utils.misc
+package com.ankamagames.jerakine.utils.misc
 {
     public final class PriorityComparer 
     {
@@ -19,5 +19,5 @@
 
 
     }
-}//package com.ankamagames.jerakine.utils.misc
+} com.ankamagames.jerakine.utils.misc
 

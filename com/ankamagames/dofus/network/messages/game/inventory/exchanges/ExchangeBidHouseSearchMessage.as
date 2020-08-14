@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.inventory.exchanges
+package com.ankamagames.dofus.network.messages.game.inventory.exchanges
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,16 +6,16 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class ExchangeBidHouseSearchMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 5806;
 
         private var _isInitialized:Boolean = false;
-        public var type:uint = 0;
         public var genId:uint = 0;
+        public var follow:Boolean = false;
 
 
         override public function get isInitialized():Boolean
@@ -28,18 +28,18 @@
             return (5806);
         }
 
-        public function initExchangeBidHouseSearchMessage(type:uint=0, genId:uint=0):ExchangeBidHouseSearchMessage
+        public function initExchangeBidHouseSearchMessage(genId:uint=0, follow:Boolean=false):ExchangeBidHouseSearchMessage
         {
-            this.type = type;
             this.genId = genId;
+            this.follow = follow;
             this._isInitialized = true;
             return (this);
         }
 
         override public function reset():void
         {
-            this.type = 0;
             this.genId = 0;
+            this.follow = false;
             this._isInitialized = false;
         }
 
@@ -55,6 +55,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_ExchangeBidHouseSearchMessage(output);
@@ -62,16 +70,12 @@
 
         public function serializeAs_ExchangeBidHouseSearchMessage(output:ICustomDataOutput):void
         {
-            if (this.type < 0)
-            {
-                throw (new Error((("Forbidden value (" + this.type) + ") on element type.")));
-            };
-            output.writeVarInt(this.type);
             if (this.genId < 0)
             {
                 throw (new Error((("Forbidden value (" + this.genId) + ") on element genId.")));
             };
             output.writeVarShort(this.genId);
+            output.writeBoolean(this.follow);
         }
 
         public function deserialize(input:ICustomDataInput):void
@@ -81,11 +85,23 @@
 
         public function deserializeAs_ExchangeBidHouseSearchMessage(input:ICustomDataInput):void
         {
-            this.type = input.readVarUhInt();
-            if (this.type < 0)
-            {
-                throw (new Error((("Forbidden value (" + this.type) + ") on element of ExchangeBidHouseSearchMessage.type.")));
-            };
+            this._genIdFunc(input);
+            this._followFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_ExchangeBidHouseSearchMessage(tree);
+        }
+
+        public function deserializeAsyncAs_ExchangeBidHouseSearchMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._genIdFunc);
+            tree.addChild(this._followFunc);
+        }
+
+        private function _genIdFunc(input:ICustomDataInput):void
+        {
             this.genId = input.readVarUhShort();
             if (this.genId < 0)
             {
@@ -93,7 +109,12 @@
             };
         }
 
+        private function _followFunc(input:ICustomDataInput):void
+        {
+            this.follow = input.readBoolean();
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.inventory.exchanges
+} com.ankamagames.dofus.network.messages.game.inventory.exchanges
 

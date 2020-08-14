@@ -1,33 +1,29 @@
-﻿package com.ankamagames.dofus.network.messages.game.guild
+package com.ankamagames.dofus.network.messages.game.guild
 {
     import com.ankamagames.jerakine.network.INetworkMessage;
     import com.ankamagames.dofus.network.types.game.context.roleplay.BasicNamedAllianceInformations;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
     import com.ankamagames.dofus.network.types.game.social.GuildFactSheetInformations;
     import __AS3__.vec.Vector;
-    import com.ankamagames.dofus.network.types.game.character.CharacterMinimalInformations;
+    import com.ankamagames.dofus.network.types.game.character.CharacterMinimalGuildPublicInformations;
     import flash.utils.ByteArray;
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
 
-    [Trusted]
     public class GuildInAllianceFactsMessage extends GuildFactsMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 6422;
 
         private var _isInitialized:Boolean = false;
-        public var allianceInfos:BasicNamedAllianceInformations;
+        public var allianceInfos:BasicNamedAllianceInformations = new BasicNamedAllianceInformations();
+        private var _allianceInfostree:FuncTree;
 
-        public function GuildInAllianceFactsMessage()
-        {
-            this.allianceInfos = new BasicNamedAllianceInformations();
-            super();
-        }
 
         override public function get isInitialized():Boolean
         {
-            return (((super.isInitialized) && (this._isInitialized)));
+            return ((super.isInitialized) && (this._isInitialized));
         }
 
         override public function getMessageId():uint
@@ -35,9 +31,9 @@
             return (6422);
         }
 
-        public function initGuildInAllianceFactsMessage(infos:GuildFactSheetInformations=null, creationDate:uint=0, nbTaxCollectors:uint=0, enabled:Boolean=false, members:Vector.<CharacterMinimalInformations>=null, allianceInfos:BasicNamedAllianceInformations=null):GuildInAllianceFactsMessage
+        public function initGuildInAllianceFactsMessage(infos:GuildFactSheetInformations=null, creationDate:uint=0, nbTaxCollectors:uint=0, members:Vector.<CharacterMinimalGuildPublicInformations>=null, allianceInfos:BasicNamedAllianceInformations=null):GuildInAllianceFactsMessage
         {
-            super.initGuildFactsMessage(infos, creationDate, nbTaxCollectors, enabled, members);
+            super.initGuildFactsMessage(infos, creationDate, nbTaxCollectors, members);
             this.allianceInfos = allianceInfos;
             this._isInitialized = true;
             return (this);
@@ -60,6 +56,14 @@
         override public function unpack(input:ICustomDataInput, length:uint):void
         {
             this.deserialize(input);
+        }
+
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
         }
 
         override public function serialize(output:ICustomDataOutput):void
@@ -85,7 +89,24 @@
             this.allianceInfos.deserialize(input);
         }
 
+        override public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_GuildInAllianceFactsMessage(tree);
+        }
+
+        public function deserializeAsyncAs_GuildInAllianceFactsMessage(tree:FuncTree):void
+        {
+            super.deserializeAsync(tree);
+            this._allianceInfostree = tree.addChild(this._allianceInfostreeFunc);
+        }
+
+        private function _allianceInfostreeFunc(input:ICustomDataInput):void
+        {
+            this.allianceInfos = new BasicNamedAllianceInformations();
+            this.allianceInfos.deserializeAsync(this._allianceInfostree);
+        }
+
 
     }
-}//package com.ankamagames.dofus.network.messages.game.guild
+} com.ankamagames.dofus.network.messages.game.guild
 

@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.network.messages.game.context.mount
+package com.ankamagames.dofus.network.messages.game.context.mount
 {
     import com.ankamagames.jerakine.network.NetworkMessage;
     import com.ankamagames.jerakine.network.INetworkMessage;
@@ -6,17 +6,17 @@
     import com.ankamagames.jerakine.network.CustomDataWrapper;
     import com.ankamagames.jerakine.network.ICustomDataOutput;
     import com.ankamagames.jerakine.network.ICustomDataInput;
+    import com.ankamagames.jerakine.network.utils.FuncTree;
 
-    [Trusted]
     public class PaddockBuyResultMessage extends NetworkMessage implements INetworkMessage 
     {
 
         public static const protocolId:uint = 6516;
 
         private var _isInitialized:Boolean = false;
-        public var paddockId:int = 0;
+        public var paddockId:Number = 0;
         public var bought:Boolean = false;
-        public var realPrice:uint = 0;
+        public var realPrice:Number = 0;
 
 
         override public function get isInitialized():Boolean
@@ -29,7 +29,7 @@
             return (6516);
         }
 
-        public function initPaddockBuyResultMessage(paddockId:int=0, bought:Boolean=false, realPrice:uint=0):PaddockBuyResultMessage
+        public function initPaddockBuyResultMessage(paddockId:Number=0, bought:Boolean=false, realPrice:Number=0):PaddockBuyResultMessage
         {
             this.paddockId = paddockId;
             this.bought = bought;
@@ -58,6 +58,14 @@
             this.deserialize(input);
         }
 
+        override public function unpackAsync(input:ICustomDataInput, length:uint):FuncTree
+        {
+            var tree:FuncTree = new FuncTree();
+            tree.setRoot(input);
+            this.deserializeAsync(tree);
+            return (tree);
+        }
+
         public function serialize(output:ICustomDataOutput):void
         {
             this.serializeAs_PaddockBuyResultMessage(output);
@@ -65,13 +73,17 @@
 
         public function serializeAs_PaddockBuyResultMessage(output:ICustomDataOutput):void
         {
-            output.writeInt(this.paddockId);
+            if (((this.paddockId < 0) || (this.paddockId > 9007199254740992)))
+            {
+                throw (new Error((("Forbidden value (" + this.paddockId) + ") on element paddockId.")));
+            };
+            output.writeDouble(this.paddockId);
             output.writeBoolean(this.bought);
-            if (this.realPrice < 0)
+            if (((this.realPrice < 0) || (this.realPrice > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.realPrice) + ") on element realPrice.")));
             };
-            output.writeVarInt(this.realPrice);
+            output.writeVarLong(this.realPrice);
         }
 
         public function deserialize(input:ICustomDataInput):void
@@ -81,10 +93,41 @@
 
         public function deserializeAs_PaddockBuyResultMessage(input:ICustomDataInput):void
         {
-            this.paddockId = input.readInt();
+            this._paddockIdFunc(input);
+            this._boughtFunc(input);
+            this._realPriceFunc(input);
+        }
+
+        public function deserializeAsync(tree:FuncTree):void
+        {
+            this.deserializeAsyncAs_PaddockBuyResultMessage(tree);
+        }
+
+        public function deserializeAsyncAs_PaddockBuyResultMessage(tree:FuncTree):void
+        {
+            tree.addChild(this._paddockIdFunc);
+            tree.addChild(this._boughtFunc);
+            tree.addChild(this._realPriceFunc);
+        }
+
+        private function _paddockIdFunc(input:ICustomDataInput):void
+        {
+            this.paddockId = input.readDouble();
+            if (((this.paddockId < 0) || (this.paddockId > 9007199254740992)))
+            {
+                throw (new Error((("Forbidden value (" + this.paddockId) + ") on element of PaddockBuyResultMessage.paddockId.")));
+            };
+        }
+
+        private function _boughtFunc(input:ICustomDataInput):void
+        {
             this.bought = input.readBoolean();
-            this.realPrice = input.readVarUhInt();
-            if (this.realPrice < 0)
+        }
+
+        private function _realPriceFunc(input:ICustomDataInput):void
+        {
+            this.realPrice = input.readVarUhLong();
+            if (((this.realPrice < 0) || (this.realPrice > 9007199254740992)))
             {
                 throw (new Error((("Forbidden value (" + this.realPrice) + ") on element of PaddockBuyResultMessage.realPrice.")));
             };
@@ -92,5 +135,5 @@
 
 
     }
-}//package com.ankamagames.dofus.network.messages.game.context.mount
+} com.ankamagames.dofus.network.messages.game.context.mount
 

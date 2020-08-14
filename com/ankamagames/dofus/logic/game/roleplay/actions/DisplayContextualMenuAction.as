@@ -1,14 +1,14 @@
-﻿package com.ankamagames.dofus.logic.game.roleplay.actions
+package com.ankamagames.dofus.logic.game.roleplay.actions
 {
     import com.ankamagames.jerakine.handlers.messages.Action;
 
     public class DisplayContextualMenuAction implements Action 
     {
 
-        public var playerId:uint;
+        public var playerId:Number;
 
 
-        public static function create(playerId:uint):DisplayContextualMenuAction
+        public static function create(playerId:Number):DisplayContextualMenuAction
         {
             var o:DisplayContextualMenuAction = new (DisplayContextualMenuAction)();
             o.playerId = playerId;
@@ -17,5 +17,5 @@
 
 
     }
-}//package com.ankamagames.dofus.logic.game.roleplay.actions
+} com.ankamagames.dofus.logic.game.roleplay.actions
 

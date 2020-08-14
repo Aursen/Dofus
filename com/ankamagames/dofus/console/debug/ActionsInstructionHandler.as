@@ -1,4 +1,4 @@
-﻿package com.ankamagames.dofus.console.debug
+package com.ankamagames.dofus.console.debug
 {
     import com.ankamagames.jerakine.console.ConsoleInstructionHandler;
     import com.ankamagames.jerakine.logger.Logger;
@@ -7,11 +7,10 @@
     import com.ankamagames.dofus.misc.utils.DofusApiAction;
     import com.ankamagames.berilia.types.data.Hook;
     import com.ankamagames.jerakine.handlers.messages.Action;
-    import flash.utils.describeType;
     import com.ankamagames.jerakine.utils.misc.CallWithParameters;
+    import com.ankamagames.jerakine.utils.misc.DescribeTypeCache;
     import com.ankamagames.dofus.kernel.Kernel;
     import com.ankamagames.berilia.utils.errors.ApiError;
-    import com.ankamagames.berilia.utils.errors.UntrustedApiCallError;
     import com.ankamagames.berilia.managers.KernelEventsManager;
     import com.ankamagames.jerakine.console.ConsoleHandler;
 
@@ -21,15 +20,37 @@
         protected static const _log:Logger = Log.getLogger(getQualifiedClassName(ActionsInstructionHandler));
 
 
+        private static function getParams(data:Array):Array
+        {
+            var params:Array = [];
+            var i:uint;
+            while (i < data.length)
+            {
+                params[i] = getParam(data[i]);
+                i++;
+            };
+            return (params);
+        }
+
+        private static function getParam(value:String):*
+        {
+            var intParam:Number = parseInt(value);
+            if (!isNaN(intParam))
+            {
+                return (intParam);
+            };
+            if (((value == "true") || (value == "false")))
+            {
+                return (value == "true");
+            };
+            return (value);
+        }
+
+
         public function handle(console:ConsoleHandler, cmd:String, args:Array):void
         {
             var actionName:String;
             var apiAction:DofusApiAction;
-            var actionClass:Class;
-            var actionDesc:XML;
-            var neededParams:uint;
-            var maxParams:uint;
-            var paramsTypes:Array;
             var params:Array;
             var accessors:Array;
             var longestAccessor:uint;
@@ -39,17 +60,12 @@
             var lookFor:String;
             var actionsList:Array;
             var foundCount:uint;
-            var param:* = undefined;
             var action:Action;
-            var acc:* = undefined;
-            var accName:String;
+            var acc:String;
             var prop:String;
             var padding:String;
             var i:uint;
             var a:String;
-            var aDesc:XML;
-            var aParams:Array;
-            var p:* = undefined;
             switch (cmd)
             {
                 case "sendaction":
@@ -60,37 +76,17 @@
                     };
                     actionName = args[0];
                     apiAction = DofusApiAction.getApiActionByName(actionName);
-                    if (!(apiAction))
+                    if (!apiAction)
                     {
                         console.output((("The action '<i>" + actionName) + "</i>' does not exists."));
                         return;
                     };
-                    actionClass = apiAction.actionClass;
-                    actionDesc = describeType(actionClass);
-                    neededParams = 0;
-                    maxParams = 0;
-                    paramsTypes = [];
-                    for each (param in actionDesc..method.(@name == "create").parameter)
-                    {
-                        if (param.@optional == "false")
-                        {
-                            neededParams++;
-                        };
-                        paramsTypes.push(param.@type);
-                        maxParams++;
-                    };
-                    if ((((args.length < (neededParams + 1))) || ((args.length > (maxParams + 1)))))
-                    {
-                        console.output((((("This action needs at least <b>" + neededParams) + "</b> and a maximum of <b>") + maxParams) + "</b> parameters."));
-                        console.output(("Parameters types : " + paramsTypes));
-                        return;
-                    };
                     args.shift();
-                    params = this.getParams(args, paramsTypes);
+                    params = getParams(args);
                     try
                     {
                         action = CallWithParameters.callR(apiAction.actionClass["create"], params);
-                        if (!(action))
+                        if (!action)
                         {
                             throw (new Error());
                         };
@@ -102,19 +98,18 @@
                     };
                     accessors = [];
                     longestAccessor = 0;
-                    for each (acc in actionDesc..accessor)
+                    for each (acc in DescribeTypeCache.getAccessors(apiAction.actionClass))
                     {
-                        accName = acc.@name;
-                        if (accName == "prototype")
+                        if (acc == "prototype")
                         {
                         }
                         else
                         {
-                            if (accName.length > longestAccessor)
+                            if (acc.length > longestAccessor)
                             {
-                                longestAccessor = accName.length;
+                                longestAccessor = acc.length;
                             };
-                            accessors.push(accName);
+                            accessors.push(acc);
                         };
                     };
                     accessors.sort();
@@ -131,7 +126,7 @@
                         console.output((((("    <b>" + padding) + prop) + "</b> : ") + action[prop]));
                     };
                     Kernel.getWorker().process(action);
-                    return;
+                    break;
                 case "sendhook":
                     if (args.length == 0)
                     {
@@ -141,16 +136,12 @@
                     hookName = args[0];
                     hparams = args.slice(1);
                     targetedHook = Hook.getHookByName(hookName);
-                    if (!(targetedHook))
+                    if (!targetedHook)
                     {
                         throw (new ApiError((("Hook [" + hookName) + "] does not exist")));
                     };
-                    if (targetedHook.nativeHook)
-                    {
-                        throw (new UntrustedApiCallError((("Hook " + hookName) + " is a native hook. Native hooks cannot be dispatch by module")));
-                    };
                     CallWithParameters.call(KernelEventsManager.getInstance().processCallback, new Array(targetedHook).concat(hparams));
-                    return;
+                    break;
                 case "listactions":
                     lookFor = "";
                     if (args.length > 0)
@@ -166,22 +157,12 @@
                     foundCount = 0;
                     for (a in actionsList)
                     {
-                        if ((((lookFor.length > 0)) && ((a.toLowerCase().indexOf(lookFor) == -1))))
+                        if (((lookFor.length > 0) && (a.toLowerCase().indexOf(lookFor) == -1)))
                         {
                         }
                         else
                         {
                             console.output((("    <b>" + a) + "</b>"));
-                            aDesc = describeType(actionsList[a].actionClass);
-                            aParams = [];
-                            for each (p in aDesc..method.(@name == "create").parameter)
-                            {
-                                aParams.push(p.@type);
-                            };
-                            if (aParams.length > 0)
-                            {
-                                console.output(("        " + aParams));
-                            };
                             foundCount++;
                         };
                     };
@@ -189,7 +170,7 @@
                     {
                         console.output("   No match.");
                     };
-                    return;
+                    break;
             };
         }
 
@@ -204,41 +185,7 @@
                 case "listactions":
                     return ("List all valid actions.");
             };
-            return ((("Unknown command '" + cmd) + "'."));
-        }
-
-        private function getParams(data:Array, types:Array):Array
-        {
-            var iStr:String;
-            var i:uint;
-            var v:String;
-            var t:String;
-            var params:Array = [];
-            for (iStr in data)
-            {
-                i = parseInt(iStr);
-                v = data[i];
-                t = types[i];
-                params[i] = this.getParam(v, t);
-            };
-            return (params);
-        }
-
-        private function getParam(value:String, type:String)
-        {
-            switch (type)
-            {
-                case "String":
-                    return (value);
-                case "Boolean":
-                    return ((((value == "true")) || ((value == "1"))));
-                case "int":
-                case "uint":
-                    return (parseInt(value));
-                default:
-                    _log.warn((("Unsupported parameter type '" + type) + "'."));
-                    return (value);
-            };
+            return (("Unknown command '" + cmd) + "'.");
         }
 
         public function getParamPossibilities(cmd:String, paramIndex:uint=0, currentParams:Array=null):Array
@@ -264,5 +211,5 @@
 
 
     }
-}//package com.ankamagames.dofus.console.debug
+} com.ankamagames.dofus.console.debug
 
