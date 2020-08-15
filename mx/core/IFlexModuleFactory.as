@@ -22,5 +22,5 @@ package mx.core
         function registerImplementation(_arg_1:String, _arg_2:Object):void;
 
     }
-} mx.core
+}
 

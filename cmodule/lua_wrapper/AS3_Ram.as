@@ -8,5 +8,5 @@ package cmodule.lua_wrapper
         return (gstate.ds);
     }
 
-} cmodule.lua_wrapper
+}
 

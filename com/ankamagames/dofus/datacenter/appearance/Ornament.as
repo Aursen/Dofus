@@ -43,5 +43,5 @@ package com.ankamagames.dofus.datacenter.appearance
 
 
     }
-} com.ankamagames.dofus.datacenter.appearance
+}
 

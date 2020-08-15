@@ -1254,5 +1254,5 @@ package Ankama_Storage.ui
 
 
     }
-} Ankama_Storage.ui
+}
 

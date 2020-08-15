@@ -25,5 +25,5 @@ package com.ankamagames.jerakine.resources.adapters.impl
 
 
     }
-} com.ankamagames.jerakine.resources.adapters.impl
+}
 

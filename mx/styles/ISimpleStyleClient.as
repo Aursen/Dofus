@@ -8,5 +8,5 @@ package mx.styles
         function styleChanged(_arg_1:String):void;
 
     }
-} mx.styles
+}
 

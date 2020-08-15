@@ -9,5 +9,5 @@ package com.ankamagames.jerakine.data
         function get newValue():int;
 
     }
-} com.ankamagames.jerakine.data
+}
 

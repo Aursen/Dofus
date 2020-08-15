@@ -19,5 +19,5 @@ package com.ankamagames.dofus.logic.game.common.actions.livingObject
 
 
     }
-} com.ankamagames.dofus.logic.game.common.actions.livingObject
+}
 

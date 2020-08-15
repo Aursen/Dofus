@@ -348,7 +348,7 @@ package com.ankamagames.dofus.misc.utils
 
 
     }
-} com.ankamagames.dofus.misc.utils
+}
 
 import flash.display.Shape;
 import flash.geom.ColorTransform;

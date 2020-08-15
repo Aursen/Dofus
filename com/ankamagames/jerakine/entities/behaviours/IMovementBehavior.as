@@ -15,5 +15,5 @@ package com.ankamagames.jerakine.entities.behaviours
         function synchroniseSubEntitiesPosition(_arg_1:IMovable, _arg_2:DisplayObject=null):void;
 
     }
-} com.ankamagames.jerakine.entities.behaviours
+}
 

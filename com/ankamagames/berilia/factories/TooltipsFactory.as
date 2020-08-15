@@ -86,7 +86,7 @@ package com.ankamagames.berilia.factories
 
 
     }
-} com.ankamagames.berilia.factories
+}
 
 class TooltipData 
 {

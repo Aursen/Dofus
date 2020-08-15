@@ -71,5 +71,5 @@ package com.ankamagames.jerakine
 
 
     }
-} com.ankamagames.jerakine
+}
 

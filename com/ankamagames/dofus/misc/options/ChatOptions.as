@@ -78,5 +78,5 @@ package com.ankamagames.dofus.misc.options
 
 
     }
-} com.ankamagames.dofus.misc.options
+}
 

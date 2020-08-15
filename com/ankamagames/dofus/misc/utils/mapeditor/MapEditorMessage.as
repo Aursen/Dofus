@@ -37,5 +37,5 @@ package com.ankamagames.dofus.misc.utils.mapeditor
 
 
     }
-} com.ankamagames.dofus.misc.utils.mapeditor
+}
 

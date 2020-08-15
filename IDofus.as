@@ -32,5 +32,5 @@ package
         function get stage():Stage;
 
     }
-} 
+}
 

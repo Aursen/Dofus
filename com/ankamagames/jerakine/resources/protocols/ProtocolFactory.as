@@ -60,5 +60,5 @@ package com.ankamagames.jerakine.resources.protocols
 
 
     }
-} com.ankamagames.jerakine.resources.protocols
+}
 

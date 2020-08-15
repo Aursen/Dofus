@@ -11,5 +11,5 @@ package org.flintparticles.common.counters
         function resume():void;
 
     }
-} org.flintparticles.common.counters
+}
 

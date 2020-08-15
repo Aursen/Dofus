@@ -551,5 +551,5 @@ package Ankama_Document.ui
 
 
     }
-} Ankama_Document.ui
+}
 

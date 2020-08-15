@@ -1458,7 +1458,7 @@ package flashx.textLayout.elements
 
 
     }
-} flashx.textLayout.elements
+}
 
 class CellCoords 
 {

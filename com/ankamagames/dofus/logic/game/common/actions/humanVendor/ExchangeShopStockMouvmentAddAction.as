@@ -21,5 +21,5 @@ package com.ankamagames.dofus.logic.game.common.actions.humanVendor
 
 
     }
-} com.ankamagames.dofus.logic.game.common.actions.humanVendor
+}
 

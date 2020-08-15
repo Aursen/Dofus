@@ -32,5 +32,5 @@ package com.hurlant.math
 
 
     }
-} com.hurlant.math
+}
 

@@ -116,5 +116,5 @@ package com.ankamagames.dofus.network.messages.game.character.deletion
 
 
     }
-} com.ankamagames.dofus.network.messages.game.character.deletion
+}
 

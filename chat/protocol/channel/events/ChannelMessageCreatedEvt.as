@@ -14,5 +14,5 @@ package chat.protocol.channel.events
         }
 
     }
-} chat.protocol.channel.events
+}
 

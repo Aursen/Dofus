@@ -28,5 +28,5 @@ package com.ankamagames.jerakine.resources.events
 
 
     }
-} com.ankamagames.jerakine.resources.events
+}
 

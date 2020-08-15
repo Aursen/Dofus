@@ -140,5 +140,5 @@ package com.ankamagames.dofus.network.messages.game.inventory.spells
 
 
     }
-} com.ankamagames.dofus.network.messages.game.inventory.spells
+}
 

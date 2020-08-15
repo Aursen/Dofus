@@ -181,5 +181,5 @@ package Ankama_Social.ui.data
 
 
     }
-} Ankama_Social.ui.data
+}
 

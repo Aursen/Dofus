@@ -252,5 +252,5 @@ package com.ankamagames.jerakine.utils.pattern
 
 
     }
-} com.ankamagames.jerakine.utils.pattern
+}
 

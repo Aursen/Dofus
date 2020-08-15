@@ -6,5 +6,5 @@ package mx.messaging.messages
         function getSmallMessage():IMessage;
 
     }
-} mx.messaging.messages
+}
 

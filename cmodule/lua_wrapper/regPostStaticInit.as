@@ -9,5 +9,5 @@ package cmodule.lua_wrapper
         gpostStaticInits.push(_arg_1);
     }
 
-} cmodule.lua_wrapper
+}
 

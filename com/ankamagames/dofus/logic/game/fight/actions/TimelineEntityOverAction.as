@@ -24,5 +24,5 @@ package com.ankamagames.dofus.logic.game.fight.actions
 
 
     }
-} com.ankamagames.dofus.logic.game.fight.actions
+}
 

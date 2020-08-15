@@ -1261,5 +1261,5 @@ package com.ankamagames.dofus.logic.connection.frames
 
 
     }
-} com.ankamagames.dofus.logic.connection.frames
+}
 

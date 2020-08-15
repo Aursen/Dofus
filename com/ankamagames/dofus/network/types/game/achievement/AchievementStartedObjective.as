@@ -79,5 +79,5 @@ package com.ankamagames.dofus.network.types.game.achievement
 
 
     }
-} com.ankamagames.dofus.network.types.game.achievement
+}
 

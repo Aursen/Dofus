@@ -162,5 +162,5 @@ package flashx.textLayout.operations
 
 
     }
-} flashx.textLayout.operations
+}
 

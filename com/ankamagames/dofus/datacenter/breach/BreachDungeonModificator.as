@@ -31,5 +31,5 @@ package com.ankamagames.dofus.datacenter.breach
 
 
     }
-} com.ankamagames.dofus.datacenter.breach
+}
 

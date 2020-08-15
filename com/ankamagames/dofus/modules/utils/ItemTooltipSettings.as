@@ -128,5 +128,5 @@ package com.ankamagames.dofus.modules.utils
 
 
     }
-} com.ankamagames.dofus.modules.utils
+}
 

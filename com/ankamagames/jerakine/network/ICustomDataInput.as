@@ -13,5 +13,5 @@ package com.ankamagames.jerakine.network
         function readVarUhLong():Number;
 
     }
-} com.ankamagames.jerakine.network
+}
 

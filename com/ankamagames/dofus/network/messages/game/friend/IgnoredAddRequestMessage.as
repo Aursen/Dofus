@@ -112,5 +112,5 @@ package com.ankamagames.dofus.network.messages.game.friend
 
 
     }
-} com.ankamagames.dofus.network.messages.game.friend
+}
 

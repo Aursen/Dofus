@@ -52,5 +52,5 @@ package com.ankamagames.dofus.datacenter.arena
 
 
     }
-} com.ankamagames.dofus.datacenter.arena
+}
 

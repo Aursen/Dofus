@@ -456,7 +456,7 @@ package com.ankamagames.berilia.components
 
 
     }
-} com.ankamagames.berilia.components
+}
 
 import __AS3__.vec.Vector;
 

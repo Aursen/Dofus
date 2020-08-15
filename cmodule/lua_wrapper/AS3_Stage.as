@@ -7,5 +7,5 @@ package cmodule.lua_wrapper
         return ((gsprite) ? gsprite.stage : null);
     }
 
-} cmodule.lua_wrapper
+}
 

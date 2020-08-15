@@ -154,5 +154,5 @@ package Ankama_Storage.ui.behavior.temporis
 
 
     }
-} Ankama_Storage.ui.behavior.temporis
+}
 

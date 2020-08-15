@@ -25,5 +25,5 @@ package com.ankamagames.dofus.kernel.sound.type
         }
 
     }
-} com.ankamagames.dofus.kernel.sound.type
+}
 

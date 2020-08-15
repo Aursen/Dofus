@@ -59,5 +59,5 @@ package mx.collections
 
 
     }
-} mx.collections
+}
 

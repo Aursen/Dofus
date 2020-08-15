@@ -26,5 +26,5 @@ package com.ankamagames.atouin.types
         function addFakeChild(_arg_1:Object, _arg_2:Object, _arg_3:Object):void;
 
     }
-} com.ankamagames.atouin.types
+}
 

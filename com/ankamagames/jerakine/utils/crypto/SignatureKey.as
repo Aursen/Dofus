@@ -44,5 +44,5 @@ package com.ankamagames.jerakine.utils.crypto
 
 
     }
-} com.ankamagames.jerakine.utils.crypto
+}
 

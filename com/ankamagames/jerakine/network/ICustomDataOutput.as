@@ -10,5 +10,5 @@ package com.ankamagames.jerakine.network
         function writeVarLong(_arg_1:Number):void;
 
     }
-} com.ankamagames.jerakine.network
+}
 

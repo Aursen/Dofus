@@ -97,5 +97,5 @@ package com.ankamagames.dofus.network.messages.game.almanach
 
 
     }
-} com.ankamagames.dofus.network.messages.game.almanach
+}
 

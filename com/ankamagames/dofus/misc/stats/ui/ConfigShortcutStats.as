@@ -78,5 +78,5 @@ package com.ankamagames.dofus.misc.stats.ui
 
 
     }
-} com.ankamagames.dofus.misc.stats.ui
+}
 

@@ -75,5 +75,5 @@ package com.ankamagames.dofus.internalDatacenter.connection
 
 
     }
-} com.ankamagames.dofus.internalDatacenter.connection
+}
 

@@ -182,5 +182,5 @@ package flashx.textLayout.property
 
 
     }
-} flashx.textLayout.property
+}
 

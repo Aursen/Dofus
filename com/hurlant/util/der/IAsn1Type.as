@@ -10,5 +10,5 @@ package com.hurlant.util.der
         function toDER():ByteArray;
 
     }
-} com.hurlant.util.der
+}
 

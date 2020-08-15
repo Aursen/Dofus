@@ -87,5 +87,5 @@ package com.ankamagames.dofus.datacenter.effects.instances
 
 
     }
-} com.ankamagames.dofus.datacenter.effects.instances
+}
 

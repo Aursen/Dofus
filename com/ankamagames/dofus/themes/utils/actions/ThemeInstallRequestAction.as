@@ -17,5 +17,5 @@ package com.ankamagames.dofus.themes.utils.actions
 
 
     }
-} com.ankamagames.dofus.themes.utils.actions
+}
 

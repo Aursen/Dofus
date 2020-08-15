@@ -37,5 +37,5 @@ package haxe.ds._ObjectMap
 
 
     }
-} haxe.ds._ObjectMap
+}
 

@@ -12,5 +12,5 @@ package com.ankamagames.dofus.internalDatacenter.almanax
 
 
     }
-} com.ankamagames.dofus.internalDatacenter.almanax
+}
 

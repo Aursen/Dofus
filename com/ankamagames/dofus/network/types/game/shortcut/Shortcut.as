@@ -74,5 +74,5 @@ package com.ankamagames.dofus.network.types.game.shortcut
 
 
     }
-} com.ankamagames.dofus.network.types.game.shortcut
+}
 

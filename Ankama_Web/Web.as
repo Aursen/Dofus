@@ -93,5 +93,5 @@ package Ankama_Web
 
 
     }
-} Ankama_Web
+}
 

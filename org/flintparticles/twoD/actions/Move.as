@@ -25,5 +25,5 @@ package org.flintparticles.twoD.actions
 
 
     }
-} org.flintparticles.twoD.actions
+}
 

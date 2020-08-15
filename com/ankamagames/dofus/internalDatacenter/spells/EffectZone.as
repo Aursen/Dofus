@@ -34,5 +34,5 @@ package com.ankamagames.dofus.internalDatacenter.spells
 
 
     }
-} com.ankamagames.dofus.internalDatacenter.spells
+}
 

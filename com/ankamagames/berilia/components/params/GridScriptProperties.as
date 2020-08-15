@@ -19,5 +19,5 @@ package com.ankamagames.berilia.components.params
         }
 
     }
-} com.ankamagames.berilia.components.params
+}
 

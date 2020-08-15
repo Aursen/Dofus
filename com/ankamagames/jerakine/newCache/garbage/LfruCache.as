@@ -201,7 +201,7 @@ package com.ankamagames.jerakine.newCache.garbage
 
 
     }
-} com.ankamagames.jerakine.newCache.garbage
+}
 
 class CacheObject 
 {

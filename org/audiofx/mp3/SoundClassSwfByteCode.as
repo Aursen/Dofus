@@ -10,5 +10,5 @@ package org.audiofx.mp3
 
 
     }
-} org.audiofx.mp3
+}
 

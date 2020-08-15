@@ -18,5 +18,5 @@ package mx.collections
         function toArray():Array;
 
     }
-} mx.collections
+}
 

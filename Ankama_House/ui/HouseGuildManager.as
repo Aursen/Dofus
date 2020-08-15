@@ -324,5 +324,5 @@ package Ankama_House.ui
 
 
     }
-} Ankama_House.ui
+}
 

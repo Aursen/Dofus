@@ -11,5 +11,5 @@ package com.ankamagames.berilia.interfaces
         function get size():Point;
 
     }
-} com.ankamagames.berilia.interfaces
+}
 

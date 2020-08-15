@@ -188,5 +188,5 @@ package haxe.ds
 
 
     }
-} haxe.ds
+}
 

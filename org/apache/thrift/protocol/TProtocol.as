@@ -48,5 +48,5 @@ package org.apache.thrift.protocol
         function readBinary():ByteArray;
 
     }
-} org.apache.thrift.protocol
+}
 

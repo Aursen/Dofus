@@ -16,5 +16,5 @@ package Ankama_ContextMenu.behaviors
 
 
     }
-} Ankama_ContextMenu.behaviors
+}
 

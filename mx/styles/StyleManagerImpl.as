@@ -1118,7 +1118,7 @@ package mx.styles
 
 
     }
-} mx.styles
+}
 
 import flash.events.EventDispatcher;
 import mx.events.ModuleEvent;

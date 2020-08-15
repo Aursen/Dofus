@@ -168,5 +168,5 @@ package com.ankamagames.dofus.logic.common.managers
 
 
     }
-} com.ankamagames.dofus.logic.common.managers
+}
 

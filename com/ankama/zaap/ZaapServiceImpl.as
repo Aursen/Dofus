@@ -663,7 +663,7 @@ package com.ankama.zaap
 
 
     }
-} com.ankama.zaap
+}
 
 import org.apache.thrift.TBase;
 import org.apache.thrift.protocol.TStruct;

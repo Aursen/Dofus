@@ -1519,5 +1519,5 @@ package mapTools
 
 
     }
-} mapTools
+}
 

@@ -108,5 +108,5 @@ package com.ankamagames.jerakine.map
 
 
     }
-} com.ankamagames.jerakine.map
+}
 

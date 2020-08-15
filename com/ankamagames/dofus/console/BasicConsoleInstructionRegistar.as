@@ -27,5 +27,5 @@ package com.ankamagames.dofus.console
 
 
     }
-} com.ankamagames.dofus.console
+}
 

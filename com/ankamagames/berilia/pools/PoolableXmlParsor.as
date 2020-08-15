@@ -18,5 +18,5 @@ package com.ankamagames.berilia.pools
 
 
     }
-} com.ankamagames.berilia.pools
+}
 

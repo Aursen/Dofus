@@ -284,5 +284,5 @@ package com.ankamagames.dofus.network.messages.game.context.roleplay.quest
 
 
     }
-} com.ankamagames.dofus.network.messages.game.context.roleplay.quest
+}
 

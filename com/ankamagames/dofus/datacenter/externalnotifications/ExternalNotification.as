@@ -61,5 +61,5 @@ package com.ankamagames.dofus.datacenter.externalnotifications
 
 
     }
-} com.ankamagames.dofus.datacenter.externalnotifications
+}
 

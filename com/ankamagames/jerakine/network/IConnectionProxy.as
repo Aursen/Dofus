@@ -10,5 +10,5 @@ package com.ankamagames.jerakine.network
         function processAndReceive(_arg_1:IDataInput):INetworkMessage;
 
     }
-} com.ankamagames.jerakine.network
+}
 

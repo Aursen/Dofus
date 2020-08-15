@@ -111,5 +111,5 @@ package com.ankamagames.dofus.network.messages.game.interactive.zaap
 
 
     }
-} com.ankamagames.dofus.network.messages.game.interactive.zaap
+}
 

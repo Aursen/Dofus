@@ -1971,5 +1971,5 @@ package mx.managers
 
 
     }
-} mx.managers
+}
 

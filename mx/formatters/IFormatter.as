@@ -6,5 +6,5 @@ package mx.formatters
         function format(_arg_1:Object):String;
 
     }
-} mx.formatters
+}
 

@@ -130,7 +130,7 @@ package mx.resources
 
 
     }
-} mx.resources
+}
 
 class LocaleID 
 {

@@ -16,5 +16,5 @@ package com.ankamagames.jerakine.scrambling
 
 
     }
-} com.ankamagames.jerakine.scrambling
+}
 

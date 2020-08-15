@@ -19,5 +19,5 @@ package com.ankamagames.tiphon.types
         function getDirection():uint;
 
     }
-} com.ankamagames.tiphon.types
+}
 

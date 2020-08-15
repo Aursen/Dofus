@@ -687,5 +687,5 @@ package com.ankamagames.dofus.network.types.game.mount
 
 
     }
-} com.ankamagames.dofus.network.types.game.mount
+}
 

@@ -329,7 +329,7 @@ package flash
 
 
     }
-} flash
+}
 var _local_1:* = Array.prototype;
 _local_1.copy = function ():*
 {

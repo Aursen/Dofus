@@ -89,5 +89,5 @@ package com.ankamagames.dofus.logic.game.fight.steps
 
 
     }
-} com.ankamagames.dofus.logic.game.fight.steps
+}
 

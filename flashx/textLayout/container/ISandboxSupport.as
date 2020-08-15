@@ -11,5 +11,5 @@ package flashx.textLayout.container
         function mouseMoveSomewhere(_arg_1:Event):void;
 
     }
-} flashx.textLayout.container
+}
 

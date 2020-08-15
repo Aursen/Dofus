@@ -56,5 +56,5 @@ package com.ankamagames.dofus.datacenter.notifications
 
 
     }
-} com.ankamagames.dofus.datacenter.notifications
+}
 

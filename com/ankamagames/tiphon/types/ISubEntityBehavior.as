@@ -9,5 +9,5 @@ package com.ankamagames.tiphon.types
         function remove():void;
 
     }
-} com.ankamagames.tiphon.types
+}
 

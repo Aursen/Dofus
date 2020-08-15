@@ -25,5 +25,5 @@ package Ankama_Storage.ui.enum
 
 
     }
-} Ankama_Storage.ui.enum
+}
 

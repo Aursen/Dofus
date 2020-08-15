@@ -17,5 +17,5 @@ package tools.enumeration
         }
 
     }
-} tools.enumeration
+}
 

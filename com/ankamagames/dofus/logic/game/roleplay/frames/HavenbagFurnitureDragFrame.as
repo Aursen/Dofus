@@ -346,5 +346,5 @@ package com.ankamagames.dofus.logic.game.roleplay.frames
 
 
     }
-} com.ankamagames.dofus.logic.game.roleplay.frames
+}
 

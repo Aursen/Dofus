@@ -907,5 +907,5 @@ package Ankama_ContextMenu.ui
 
 
     }
-} Ankama_ContextMenu.ui
+}
 

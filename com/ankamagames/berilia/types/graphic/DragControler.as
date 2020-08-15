@@ -576,7 +576,7 @@ package com.ankamagames.berilia.types.graphic
 
 
     }
-} com.ankamagames.berilia.types.graphic
+}
 
 import flash.geom.Rectangle;
 

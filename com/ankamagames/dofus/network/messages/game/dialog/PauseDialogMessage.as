@@ -101,5 +101,5 @@ package com.ankamagames.dofus.network.messages.game.dialog
 
 
     }
-} com.ankamagames.dofus.network.messages.game.dialog
+}
 

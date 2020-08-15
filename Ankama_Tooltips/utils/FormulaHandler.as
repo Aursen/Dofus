@@ -194,7 +194,7 @@ package Ankama_Tooltips.utils
 
 
     }
-} Ankama_Tooltips.utils
+}
 
 class MonsterData 
 {

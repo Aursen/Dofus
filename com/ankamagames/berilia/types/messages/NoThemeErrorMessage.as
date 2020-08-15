@@ -7,5 +7,5 @@ package com.ankamagames.berilia.types.messages
 
 
     }
-} com.ankamagames.berilia.types.messages
+}
 

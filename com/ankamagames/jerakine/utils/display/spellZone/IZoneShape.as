@@ -9,5 +9,5 @@ package com.ankamagames.jerakine.utils.display.spellZone
         function get zoneShape():uint;
 
     }
-} com.ankamagames.jerakine.utils.display.spellZone
+}
 

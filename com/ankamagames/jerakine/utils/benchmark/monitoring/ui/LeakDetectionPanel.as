@@ -188,5 +188,5 @@ package com.ankamagames.jerakine.utils.benchmark.monitoring.ui
 
 
     }
-} com.ankamagames.jerakine.utils.benchmark.monitoring.ui
+}
 

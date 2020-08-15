@@ -24,5 +24,5 @@ package com.ankamagames.dofus.datacenter.bonus
 
 
     }
-} com.ankamagames.dofus.datacenter.bonus
+}
 

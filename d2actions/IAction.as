@@ -6,5 +6,5 @@ package d2actions
         function get parameters():Array;
 
     }
-} d2actions
+}
 

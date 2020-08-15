@@ -337,5 +337,5 @@ package com.ankamagames.dofus.logic.game.fight.managers
 
 
     }
-} com.ankamagames.dofus.logic.game.fight.managers
+}
 

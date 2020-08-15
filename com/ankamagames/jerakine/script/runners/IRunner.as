@@ -6,5 +6,5 @@ package com.ankamagames.jerakine.script.runners
         function run(_arg_1:Class):uint;
 
     }
-} com.ankamagames.jerakine.script.runners
+}
 

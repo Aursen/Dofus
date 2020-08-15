@@ -25,5 +25,5 @@ package mx.collections
         function seek(_arg_1:CursorBookmark, _arg_2:int=0, _arg_3:int=0):void;
 
     }
-} mx.collections
+}
 

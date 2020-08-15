@@ -28,5 +28,5 @@ package com.ankamagames.tiphon.events
 
 
     }
-} com.ankamagames.tiphon.events
+}
 

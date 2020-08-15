@@ -111,5 +111,5 @@ package nochump.util.zip
 
 
     }
-} nochump.util.zip
+}
 

@@ -39,5 +39,5 @@ package com.ankamagames.jerakine.utils.memory
 
 
     }
-} com.ankamagames.jerakine.utils.memory
+}
 

@@ -188,5 +188,5 @@ package com.ankamagames.dofus.network.messages.game.context.dungeon
 
 
     }
-} com.ankamagames.dofus.network.messages.game.context.dungeon
+}
 

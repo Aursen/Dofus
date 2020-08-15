@@ -139,5 +139,5 @@ package org.flintparticles.common.renderers
 
 
     }
-} org.flintparticles.common.renderers
+}
 

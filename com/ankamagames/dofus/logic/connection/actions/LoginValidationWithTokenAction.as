@@ -16,5 +16,5 @@ package com.ankamagames.dofus.logic.connection.actions
 
 
     }
-} com.ankamagames.dofus.logic.connection.actions
+}
 

@@ -166,5 +166,5 @@ package com.somerandomdude.colortoolkit.spaces
 
 
     }
-} com.somerandomdude.colortoolkit.spaces
+}
 

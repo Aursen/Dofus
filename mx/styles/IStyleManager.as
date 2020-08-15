@@ -36,5 +36,5 @@ package mx.styles
         function styleDeclarationsChanged():void;
 
     }
-} mx.styles
+}
 

@@ -60,5 +60,5 @@ package com.ankamagames.jerakine.types.enums
 
 
     }
-} com.ankamagames.jerakine.types.enums
+}
 

@@ -166,5 +166,5 @@ package com.ankamagames.dofus.misc.interClient
 
 
     }
-} com.ankamagames.dofus.misc.interClient
+}
 

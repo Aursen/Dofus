@@ -2367,7 +2367,7 @@ package com.ankamagames.dofus.logic.game.common.frames
 
 
     }
-} com.ankamagames.dofus.logic.game.common.frames
+}
 
 import com.ankamagames.dofus.network.types.game.context.roleplay.party.PartyMemberInformations;
 import com.ankamagames.tiphon.types.look.TiphonEntityLook;

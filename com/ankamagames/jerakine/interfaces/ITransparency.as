@@ -6,5 +6,5 @@ package com.ankamagames.jerakine.interfaces
         function getIsTransparencyAllowed():Boolean;
 
     }
-} com.ankamagames.jerakine.interfaces
+}
 

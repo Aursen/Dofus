@@ -11,5 +11,5 @@ package com.ankamagames.dofus.console.moduleLUA
 
 
     }
-} com.ankamagames.dofus.console.moduleLUA
+}
 

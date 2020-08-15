@@ -213,5 +213,5 @@ package Ankama_Tooltips.ui
 
 
     }
-} Ankama_Tooltips.ui
+}
 

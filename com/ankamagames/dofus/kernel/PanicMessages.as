@@ -51,5 +51,5 @@ package com.ankamagames.dofus.kernel
 
 
     }
-} com.ankamagames.dofus.kernel
+}
 

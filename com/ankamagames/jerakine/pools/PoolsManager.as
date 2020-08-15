@@ -113,5 +113,5 @@ package com.ankamagames.jerakine.pools
 
 
     }
-} com.ankamagames.jerakine.pools
+}
 

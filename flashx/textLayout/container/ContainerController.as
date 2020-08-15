@@ -4579,7 +4579,7 @@ package flashx.textLayout.container
 
 
     }
-} flashx.textLayout.container
+}
 
 import flash.events.MouseEvent;
 import flash.display.InteractiveObject;

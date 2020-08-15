@@ -12,5 +12,5 @@ package com.ankamagames.dofus.datacenter.items.criterion
         function clone():IItemCriterion;
 
     }
-} com.ankamagames.dofus.datacenter.items.criterion
+}
 

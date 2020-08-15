@@ -17,5 +17,5 @@ package com.ankamagames.tubul.interfaces
         function set volumeMax(_arg_1:Number):void;
 
     }
-} com.ankamagames.tubul.interfaces
+}
 

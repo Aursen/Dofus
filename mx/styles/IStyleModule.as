@@ -7,5 +7,5 @@ package mx.styles
         function unload():void;
 
     }
-} mx.styles
+}
 

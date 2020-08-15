@@ -25,5 +25,5 @@ package mx.rpc.xml
 
 
     }
-} mx.rpc.xml
+}
 

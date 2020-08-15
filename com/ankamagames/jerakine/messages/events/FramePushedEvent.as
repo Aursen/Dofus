@@ -23,5 +23,5 @@ package com.ankamagames.jerakine.messages.events
 
 
     }
-} com.ankamagames.jerakine.messages.events
+}
 

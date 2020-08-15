@@ -6,5 +6,5 @@ package cmodule.lua_wrapper
     {
         return (undefined);
     })[0]);
-} cmodule.lua_wrapper
+}
 

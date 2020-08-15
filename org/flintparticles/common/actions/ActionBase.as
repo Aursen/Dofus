@@ -26,5 +26,5 @@ package org.flintparticles.common.actions
 
 
     }
-} org.flintparticles.common.actions
+}
 

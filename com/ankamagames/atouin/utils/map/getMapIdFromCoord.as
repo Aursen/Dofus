@@ -22,5 +22,5 @@ package com.ankamagames.atouin.utils.map
         return ((newWorldId << 18) | ((newX << 9) | newY));
     }
 
-} com.ankamagames.atouin.utils.map
+}
 

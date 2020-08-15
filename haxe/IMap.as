@@ -4,5 +4,5 @@ package haxe
     {
 
     }
-} haxe
+}
 

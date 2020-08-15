@@ -95,5 +95,5 @@ package com.ankamagames.dofus.logic.common.utils
 
 
     }
-} com.ankamagames.dofus.logic.common.utils
+}
 

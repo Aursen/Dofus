@@ -109,5 +109,5 @@ package mx.binding
 
 
     }
-} mx.binding
+}
 

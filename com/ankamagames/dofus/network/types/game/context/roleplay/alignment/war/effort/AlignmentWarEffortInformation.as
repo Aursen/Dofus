@@ -85,5 +85,5 @@ package com.ankamagames.dofus.network.types.game.context.roleplay.alignment.war.
 
 
     }
-} com.ankamagames.dofus.network.types.game.context.roleplay.alignment.war.effort
+}
 

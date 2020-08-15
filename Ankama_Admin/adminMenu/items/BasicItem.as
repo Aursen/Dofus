@@ -37,5 +37,5 @@ package Ankama_Admin.adminMenu.items
 
 
     }
-} Ankama_Admin.adminMenu.items
+}
 

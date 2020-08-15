@@ -11,5 +11,5 @@ package mx.logging
         function removeLogger(_arg_1:ILogger):void;
 
     }
-} mx.logging
+}
 

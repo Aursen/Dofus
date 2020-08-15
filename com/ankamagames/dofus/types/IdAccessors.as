@@ -24,5 +24,5 @@ package com.ankamagames.dofus.types
 
 
     }
-} com.ankamagames.dofus.types
+}
 

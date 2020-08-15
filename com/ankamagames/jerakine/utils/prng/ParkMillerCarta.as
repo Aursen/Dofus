@@ -46,5 +46,5 @@ package com.ankamagames.jerakine.utils.prng
 
 
     }
-} com.ankamagames.jerakine.utils.prng
+}
 

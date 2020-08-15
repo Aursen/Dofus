@@ -180,5 +180,5 @@ package com.ankamagames.dofus.network.messages.game.chat.channel
 
 
     }
-} com.ankamagames.dofus.network.messages.game.chat.channel
+}
 

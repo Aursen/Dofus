@@ -674,5 +674,5 @@ package Ankama_Party.ui
 
 
     }
-} Ankama_Party.ui
+}
 

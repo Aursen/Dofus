@@ -13,5 +13,5 @@ package com.ankamagames.berilia.types.tooltip.event
         }
 
     }
-} com.ankamagames.berilia.types.tooltip.event
+}
 

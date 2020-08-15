@@ -26,5 +26,5 @@ package org.flintparticles.common.initializers
 
 
     }
-} org.flintparticles.common.initializers
+}
 

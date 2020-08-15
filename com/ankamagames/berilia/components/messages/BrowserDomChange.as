@@ -11,5 +11,5 @@ package com.ankamagames.berilia.components.messages
         }
 
     }
-} com.ankamagames.berilia.components.messages
+}
 

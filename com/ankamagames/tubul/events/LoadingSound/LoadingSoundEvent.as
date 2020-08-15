@@ -25,5 +25,5 @@ package com.ankamagames.tubul.events.LoadingSound
 
 
     }
-} com.ankamagames.tubul.events.LoadingSound
+}
 

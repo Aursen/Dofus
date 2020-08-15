@@ -22,5 +22,5 @@ package Ankama_Storage.ui.behavior
         function doubleClickGridItem(_arg_1:Object):void;
 
     }
-} Ankama_Storage.ui.behavior
+}
 

@@ -9,5 +9,5 @@ package com.ankamagames.tiphon.error
         }
 
     }
-} com.ankamagames.tiphon.error
+}
 

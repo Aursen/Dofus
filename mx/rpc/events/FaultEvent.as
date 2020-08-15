@@ -82,5 +82,5 @@ package mx.rpc.events
 
 
     }
-} mx.rpc.events
+}
 

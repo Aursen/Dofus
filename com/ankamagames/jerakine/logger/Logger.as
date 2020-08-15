@@ -15,5 +15,5 @@ package com.ankamagames.jerakine.logger
         function clear():void;
 
     }
-} com.ankamagames.jerakine.logger
+}
 

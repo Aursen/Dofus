@@ -5,5 +5,5 @@ package cmodule.lua_wrapper
         return (gstate.funcs.push(_arg_1) - 1);
     }
 
-} cmodule.lua_wrapper
+}
 

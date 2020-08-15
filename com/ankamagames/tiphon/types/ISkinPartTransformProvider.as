@@ -6,5 +6,5 @@ package com.ankamagames.tiphon.types
         function init(_arg_1:Skin):void;
 
     }
-} com.ankamagames.tiphon.types
+}
 

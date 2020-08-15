@@ -48,5 +48,5 @@ package mx.core
         function get computedMatrix3D():Matrix3D;
 
     }
-} mx.core
+}
 

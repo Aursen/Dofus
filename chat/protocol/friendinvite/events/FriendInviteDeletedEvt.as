@@ -16,5 +16,5 @@ package chat.protocol.friendinvite.events
         }
 
     }
-} chat.protocol.friendinvite.events
+}
 

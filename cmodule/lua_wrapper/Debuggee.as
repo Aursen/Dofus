@@ -9,5 +9,5 @@ package cmodule.lua_wrapper
         function get isRunning():Boolean;
 
     }
-} cmodule.lua_wrapper
+}
 

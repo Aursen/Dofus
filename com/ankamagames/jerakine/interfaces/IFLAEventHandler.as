@@ -9,5 +9,5 @@ package com.ankamagames.jerakine.interfaces
         function removeEntitySound(_arg_1:IEntity):void;
 
     }
-} com.ankamagames.jerakine.interfaces
+}
 

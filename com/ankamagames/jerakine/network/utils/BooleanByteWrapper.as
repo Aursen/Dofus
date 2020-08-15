@@ -121,5 +121,5 @@ package com.ankamagames.jerakine.network.utils
 
 
     }
-} com.ankamagames.jerakine.network.utils
+}
 

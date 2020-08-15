@@ -8,5 +8,5 @@ package com.ankamagames.dofus
 
 
     }
-} com.ankamagames.dofus
+}
 

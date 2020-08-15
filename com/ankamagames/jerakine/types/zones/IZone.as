@@ -15,5 +15,5 @@ package com.ankamagames.jerakine.types.zones
         function getCells(_arg_1:uint=0):Vector.<uint>;
 
     }
-} com.ankamagames.jerakine.types.zones
+}
 

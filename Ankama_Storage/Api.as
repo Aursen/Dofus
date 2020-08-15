@@ -25,5 +25,5 @@ package Ankama_Storage
 
 
     }
-} Ankama_Storage
+}
 

@@ -125,5 +125,5 @@ package com.ankama.haapi.client.api
 
 
     }
-} com.ankama.haapi.client.api
+}
 

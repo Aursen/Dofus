@@ -9,5 +9,5 @@ package org.apache.thrift
         }
 
     }
-} org.apache.thrift
+}
 

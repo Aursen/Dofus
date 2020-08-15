@@ -58,5 +58,5 @@ package damageCalculation.damageManagement
 
 
     }
-} damageCalculation.damageManagement
+}
 

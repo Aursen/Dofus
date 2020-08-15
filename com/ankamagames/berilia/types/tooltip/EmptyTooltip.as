@@ -9,5 +9,5 @@ package com.ankamagames.berilia.types.tooltip
         }
 
     }
-} com.ankamagames.berilia.types.tooltip
+}
 

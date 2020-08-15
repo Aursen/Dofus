@@ -14,5 +14,5 @@ package damageCalculation.tools
         }
 
     }
-} damageCalculation.tools
+}
 

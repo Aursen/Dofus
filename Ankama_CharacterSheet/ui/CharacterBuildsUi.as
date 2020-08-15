@@ -3040,7 +3040,7 @@ package Ankama_CharacterSheet.ui
 
 
     }
-} Ankama_CharacterSheet.ui
+}
 
 class CharacteristicGridItem 
 {

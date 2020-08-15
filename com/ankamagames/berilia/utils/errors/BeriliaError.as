@@ -9,5 +9,5 @@ package com.ankamagames.berilia.utils.errors
         }
 
     }
-} com.ankamagames.berilia.utils.errors
+}
 

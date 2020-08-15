@@ -101,5 +101,5 @@ package com.ankamagames.dofus.network.messages.connection.register
 
 
     }
-} com.ankamagames.dofus.network.messages.connection.register
+}
 

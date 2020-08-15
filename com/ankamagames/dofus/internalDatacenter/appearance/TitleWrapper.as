@@ -178,5 +178,5 @@ package com.ankamagames.dofus.internalDatacenter.appearance
 
 
     }
-} com.ankamagames.dofus.internalDatacenter.appearance
+}
 

@@ -32,5 +32,5 @@ package com.ankama.haapi.client
 
 
     }
-} com.ankama.haapi.client
+}
 

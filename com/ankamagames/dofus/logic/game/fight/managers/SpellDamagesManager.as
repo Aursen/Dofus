@@ -45,7 +45,7 @@ package com.ankamagames.dofus.logic.game.fight.managers
 
 
     }
-} com.ankamagames.dofus.logic.game.fight.managers
+}
 
 import com.ankamagames.dofus.logic.game.fight.types.SpellDamage;
 

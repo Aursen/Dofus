@@ -47,5 +47,5 @@ package com.ankamagames.dofus.datacenter.spells
 
 
     }
-} com.ankamagames.dofus.datacenter.spells
+}
 

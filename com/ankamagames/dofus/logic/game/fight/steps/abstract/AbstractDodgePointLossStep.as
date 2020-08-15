@@ -22,5 +22,5 @@ package com.ankamagames.dofus.logic.game.fight.steps.abstract
 
 
     }
-} com.ankamagames.dofus.logic.game.fight.steps.abstract
+}
 

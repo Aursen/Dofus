@@ -21,5 +21,5 @@ package Ankama_Fight
 
 
     }
-} Ankama_Fight
+}
 

@@ -12,5 +12,5 @@ package com.ankamagames.jerakine.resources.protocols
         function cancel():void;
 
     }
-} com.ankamagames.jerakine.resources.protocols
+}
 

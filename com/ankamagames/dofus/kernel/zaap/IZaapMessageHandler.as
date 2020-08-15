@@ -10,5 +10,5 @@ package com.ankamagames.dofus.kernel.zaap
         function handleConnectionClosed():void;
 
     }
-} com.ankamagames.dofus.kernel.zaap
+}
 

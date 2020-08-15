@@ -6,5 +6,5 @@ package com.ankamagames.jerakine.pools
         function free():void;
 
     }
-} com.ankamagames.jerakine.pools
+}
 

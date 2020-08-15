@@ -17,5 +17,5 @@ package com.ankamagames.dofus.internalDatacenter.communication
         }
 
     }
-} com.ankamagames.dofus.internalDatacenter.communication
+}
 

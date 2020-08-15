@@ -101,5 +101,5 @@ package com.ankamagames.dofus.network.messages.game.shortcut
 
 
     }
-} com.ankamagames.dofus.network.messages.game.shortcut
+}
 

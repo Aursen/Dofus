@@ -156,5 +156,5 @@ package com.adobe.serialization.json
 
 
     }
-} com.adobe.serialization.json
+}
 

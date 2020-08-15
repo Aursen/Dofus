@@ -17,5 +17,5 @@ package com.ankamagames.dofus.logic.game.common.misc
         function empty():void;
 
     }
-} com.ankamagames.dofus.logic.game.common.misc
+}
 

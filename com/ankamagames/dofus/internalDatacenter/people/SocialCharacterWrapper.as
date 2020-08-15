@@ -27,5 +27,5 @@ package com.ankamagames.dofus.internalDatacenter.people
         }
 
     }
-} com.ankamagames.dofus.internalDatacenter.people
+}
 

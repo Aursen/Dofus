@@ -226,5 +226,5 @@ package com.ankamagames.dofus.network.types.game.context.fight
 
 
     }
-} com.ankamagames.dofus.network.types.game.context.fight
+}
 

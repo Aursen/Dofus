@@ -5,5 +5,5 @@ package cmodule.lua_wrapper
         return (int((_arg_1 === Number.NaN)));
     }
 
-} cmodule.lua_wrapper
+}
 

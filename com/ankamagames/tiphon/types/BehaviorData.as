@@ -56,5 +56,5 @@ package com.ankamagames.tiphon.types
 
 
     }
-} com.ankamagames.tiphon.types
+}
 

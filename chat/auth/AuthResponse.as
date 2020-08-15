@@ -26,5 +26,5 @@ package chat.auth
 
 
     }
-} chat.auth
+}
 

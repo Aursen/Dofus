@@ -105,5 +105,5 @@ package com.ankamagames.dofus.network.messages.game.idol
 
 
     }
-} com.ankamagames.dofus.network.messages.game.idol
+}
 

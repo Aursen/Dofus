@@ -7,5 +7,5 @@ package com.ankamagames.atouin.utils.map
         return ((((Atouin.getInstance().options.getOption("mapsPath") + (mapId % 10)) + "/") + mapId) + ".dlm");
     }
 
-} com.ankamagames.atouin.utils.map
+}
 

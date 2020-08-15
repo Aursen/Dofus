@@ -81,5 +81,5 @@ package com.ankamagames.dofus.network.types.game.context.roleplay.breach
 
 
     }
-} com.ankamagames.dofus.network.types.game.context.roleplay.breach
+}
 

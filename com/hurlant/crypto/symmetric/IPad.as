@@ -10,5 +10,5 @@ package com.hurlant.crypto.symmetric
         function setBlockSize(_arg_1:uint):void;
 
     }
-} com.hurlant.crypto.symmetric
+}
 

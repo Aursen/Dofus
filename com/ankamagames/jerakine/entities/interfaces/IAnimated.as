@@ -10,5 +10,5 @@ package com.ankamagames.jerakine.entities.interfaces
         function setAnimationAndDirection(_arg_1:String, _arg_2:uint, _arg_3:Boolean=false):void;
 
     }
-} com.ankamagames.jerakine.entities.interfaces
+}
 

@@ -32,5 +32,5 @@ package com.ankamagames.atouin.types.events
 
 
     }
-} com.ankamagames.atouin.types.events
+}
 

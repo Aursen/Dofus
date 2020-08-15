@@ -610,5 +610,5 @@ package flashx.textLayout.conversion
 
 
     }
-} flashx.textLayout.conversion
+}
 

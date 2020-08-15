@@ -2026,5 +2026,5 @@ package com.ankamagames.tiphon.display
 
 
     }
-} com.ankamagames.tiphon.display
+}
 

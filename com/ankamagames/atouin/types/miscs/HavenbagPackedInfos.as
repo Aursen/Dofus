@@ -22,5 +22,5 @@ package com.ankamagames.atouin.types.miscs
 
 
     }
-} com.ankamagames.atouin.types.miscs
+}
 

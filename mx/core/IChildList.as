@@ -19,5 +19,5 @@ package mx.core
         function contains(_arg_1:DisplayObject):Boolean;
 
     }
-} mx.core
+}
 

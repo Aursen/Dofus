@@ -375,7 +375,7 @@ package com.ankamagames.atouin.types
 
 
     }
-} com.ankamagames.atouin.types
+}
 
 import com.ankamagames.jerakine.logger.Logger;
 import com.ankamagames.jerakine.logger.Log;

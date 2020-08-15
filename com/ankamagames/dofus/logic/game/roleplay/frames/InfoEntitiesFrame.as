@@ -843,7 +843,7 @@ package com.ankamagames.dofus.logic.game.roleplay.frames
 
 
     }
-} com.ankamagames.dofus.logic.game.roleplay.frames
+}
 
 import com.ankamagames.berilia.components.Label;
 import com.ankamagames.jerakine.interfaces.IRectangle;

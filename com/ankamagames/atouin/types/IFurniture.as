@@ -28,5 +28,5 @@ package com.ankamagames.atouin.types
         function get offsetPosition():MapPoint;
 
     }
-} com.ankamagames.atouin.types
+}
 

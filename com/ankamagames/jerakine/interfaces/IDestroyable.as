@@ -6,5 +6,5 @@ package com.ankamagames.jerakine.interfaces
         function destroy():void;
 
     }
-} com.ankamagames.jerakine.interfaces
+}
 

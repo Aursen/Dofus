@@ -13,5 +13,5 @@ package cmodule.lua_wrapper
         _arg_1[_arg_2] = _arg_3;
     }
 
-} cmodule.lua_wrapper
+}
 

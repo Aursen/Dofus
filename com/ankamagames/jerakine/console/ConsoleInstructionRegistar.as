@@ -6,5 +6,5 @@ package com.ankamagames.jerakine.console
         function registerInstructions(_arg_1:ConsoleHandler):void;
 
     }
-} com.ankamagames.jerakine.console
+}
 

@@ -262,5 +262,5 @@ package Ankama_Job
 
 
     }
-} Ankama_Job
+}
 

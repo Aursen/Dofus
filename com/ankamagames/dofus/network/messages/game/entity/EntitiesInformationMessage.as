@@ -129,5 +129,5 @@ package com.ankamagames.dofus.network.messages.game.entity
 
 
     }
-} com.ankamagames.dofus.network.messages.game.entity
+}
 

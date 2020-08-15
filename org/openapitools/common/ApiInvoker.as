@@ -222,7 +222,7 @@ package org.openapitools.common
 
 
     }
-} org.openapitools.common
+}
 
 import flash.system.ApplicationDomain;
 import flash.utils.getDefinitionByName;

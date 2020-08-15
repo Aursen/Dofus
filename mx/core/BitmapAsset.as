@@ -460,5 +460,5 @@ package mx.core
 
 
     }
-} mx.core
+}
 

@@ -120,5 +120,5 @@ package luaAlchemy
 
 
     }
-} luaAlchemy
+}
 

@@ -9,5 +9,5 @@ package chat.protocol.user.data
 
 
     }
-} chat.protocol.user.data
+}
 

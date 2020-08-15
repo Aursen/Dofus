@@ -897,5 +897,5 @@ package com.ankamagames.berilia.api
 
 
     }
-} com.ankamagames.berilia.api
+}
 

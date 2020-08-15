@@ -149,5 +149,5 @@ package com.ankamagames.dofus.internalDatacenter.house
 
 
     }
-} com.ankamagames.dofus.internalDatacenter.house
+}
 

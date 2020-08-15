@@ -41,5 +41,5 @@ package Ankama_ContextMenu.contextMenu
 
 
     }
-} Ankama_ContextMenu.contextMenu
+}
 

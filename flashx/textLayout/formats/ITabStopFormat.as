@@ -9,5 +9,5 @@ package flashx.textLayout.formats
         function get decimalAlignmentToken():*;
 
     }
-} flashx.textLayout.formats
+}
 

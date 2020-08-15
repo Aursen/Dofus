@@ -123,5 +123,5 @@ package com.ankamagames.atouin.managers
 
 
     }
-} com.ankamagames.atouin.managers
+}
 

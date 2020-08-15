@@ -24,7 +24,7 @@ package
 
 
     }
-} 
+}
 var _local_1:* = Date;
 _local_1.now = function ():*
 {

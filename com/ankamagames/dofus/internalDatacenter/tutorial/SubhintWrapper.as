@@ -242,5 +242,5 @@ package com.ankamagames.dofus.internalDatacenter.tutorial
 
 
     }
-} com.ankamagames.dofus.internalDatacenter.tutorial
+}
 

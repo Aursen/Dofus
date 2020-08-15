@@ -64,5 +64,5 @@ package flashx.textLayout.edit
         function updateAllControllers():void;
 
     }
-} flashx.textLayout.edit
+}
 

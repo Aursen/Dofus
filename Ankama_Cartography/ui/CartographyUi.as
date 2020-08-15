@@ -2417,5 +2417,5 @@ package Ankama_Cartography.ui
 
 
     }
-} Ankama_Cartography.ui
+}
 

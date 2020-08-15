@@ -226,5 +226,5 @@ package com.ankamagames.dofus.modules.utils.pathfinding.astar
 
 
     }
-} com.ankamagames.dofus.modules.utils.pathfinding.astar
+}
 

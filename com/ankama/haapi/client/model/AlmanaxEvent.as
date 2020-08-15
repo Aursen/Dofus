@@ -55,5 +55,5 @@ package com.ankama.haapi.client.model
 
 
     }
-} com.ankama.haapi.client.model
+}
 

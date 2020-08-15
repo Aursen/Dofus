@@ -12,5 +12,5 @@ package com.hurlant.crypto.prng
         function toString():String;
 
     }
-} com.hurlant.crypto.prng
+}
 

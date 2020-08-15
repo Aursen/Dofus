@@ -132,5 +132,5 @@ package com.ankamagames.dofus.network.types.game.character.alignment
 
 
     }
-} com.ankamagames.dofus.network.types.game.character.alignment
+}
 

@@ -9,5 +9,5 @@ package com.ankamagames.jerakine.messages
         function pulled():Boolean;
 
     }
-} com.ankamagames.jerakine.messages
+}
 

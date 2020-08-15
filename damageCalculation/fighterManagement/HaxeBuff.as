@@ -515,5 +515,5 @@ package damageCalculation.fighterManagement
 
 
     }
-} damageCalculation.fighterManagement
+}
 

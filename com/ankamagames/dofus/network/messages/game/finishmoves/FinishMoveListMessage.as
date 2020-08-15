@@ -129,5 +129,5 @@ package com.ankamagames.dofus.network.messages.game.finishmoves
 
 
     }
-} com.ankamagames.dofus.network.messages.game.finishmoves
+}
 

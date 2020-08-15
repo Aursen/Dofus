@@ -97,5 +97,5 @@ package org.flintparticles.twoD.emitters
 
 
     }
-} org.flintparticles.twoD.emitters
+}
 

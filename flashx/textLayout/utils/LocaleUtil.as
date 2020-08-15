@@ -93,7 +93,7 @@ package flashx.textLayout.utils
 
 
     }
-} flashx.textLayout.utils
+}
 
 import flashx.textLayout.formats.TextLayoutFormat;
 

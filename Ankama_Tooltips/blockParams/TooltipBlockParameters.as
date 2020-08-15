@@ -7,5 +7,5 @@ package Ankama_Tooltips.blockParams
 
 
     }
-} Ankama_Tooltips.blockParams
+}
 

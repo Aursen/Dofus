@@ -89,5 +89,5 @@ package com.ankamagames.berilia.utils.web
 
 
     }
-} com.ankamagames.berilia.utils.web
+}
 

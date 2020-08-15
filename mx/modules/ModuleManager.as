@@ -32,7 +32,7 @@ package mx.modules
 
 
     }
-} mx.modules
+}
 
 import flash.events.EventDispatcher;
 import flash.utils.Dictionary;

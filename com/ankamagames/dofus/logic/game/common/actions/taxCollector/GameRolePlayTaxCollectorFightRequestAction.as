@@ -14,5 +14,5 @@ package com.ankamagames.dofus.logic.game.common.actions.taxCollector
 
 
     }
-} com.ankamagames.dofus.logic.game.common.actions.taxCollector
+}
 

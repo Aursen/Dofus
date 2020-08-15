@@ -15,5 +15,5 @@ package com.ankamagames.jerakine.utils.misc.classInfo
         }
 
     }
-} com.ankamagames.jerakine.utils.misc.classInfo
+}
 

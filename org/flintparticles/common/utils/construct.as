@@ -31,5 +31,5 @@ package org.flintparticles.common.utils
         };
     }
 
-} org.flintparticles.common.utils
+}
 

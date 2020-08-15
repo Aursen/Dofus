@@ -416,5 +416,5 @@ package Ankama_Grimoire.ui
 
 
     }
-} Ankama_Grimoire.ui
+}
 

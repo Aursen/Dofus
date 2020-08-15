@@ -330,5 +330,5 @@ package mx.preloaders
 
 
     }
-} mx.preloaders
+}
 

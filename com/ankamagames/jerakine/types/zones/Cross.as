@@ -181,5 +181,5 @@ package com.ankamagames.jerakine.types.zones
 
 
     }
-} com.ankamagames.jerakine.types.zones
+}
 

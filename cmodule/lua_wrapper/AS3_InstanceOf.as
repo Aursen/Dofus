@@ -5,5 +5,5 @@ package cmodule.lua_wrapper
         return (_arg_1 instanceof _arg_2);
     }
 
-} cmodule.lua_wrapper
+}
 

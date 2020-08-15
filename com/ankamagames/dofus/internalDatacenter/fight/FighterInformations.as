@@ -281,5 +281,5 @@ package com.ankamagames.dofus.internalDatacenter.fight
 
 
     }
-} com.ankamagames.dofus.internalDatacenter.fight
+}
 

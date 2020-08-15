@@ -105,5 +105,5 @@ package com.ankamagames.dofus.network.messages.game.character.replay
 
 
     }
-} com.ankamagames.dofus.network.messages.game.character.replay
+}
 

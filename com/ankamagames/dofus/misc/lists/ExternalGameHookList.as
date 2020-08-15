@@ -48,5 +48,5 @@ package com.ankamagames.dofus.misc.lists
 
 
     }
-} com.ankamagames.dofus.misc.lists
+}
 

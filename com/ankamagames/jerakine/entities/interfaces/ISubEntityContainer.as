@@ -10,5 +10,5 @@ package com.ankamagames.jerakine.entities.interfaces
         function getSubEntitySlot(_arg_1:uint, _arg_2:uint):DisplayObjectContainer;
 
     }
-} com.ankamagames.jerakine.entities.interfaces
+}
 

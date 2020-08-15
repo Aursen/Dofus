@@ -18,5 +18,5 @@ package com.ankamagames.jerakine.interfaces
         function removeHolder(_arg_1:ISlotDataHolder):void;
 
     }
-} com.ankamagames.jerakine.interfaces
+}
 

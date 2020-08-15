@@ -12,5 +12,5 @@ package com.ankamagames.dofus.logic.game.fight.steps
         function get targets():Vector.<Number>;
 
     }
-} com.ankamagames.dofus.logic.game.fight.steps
+}
 

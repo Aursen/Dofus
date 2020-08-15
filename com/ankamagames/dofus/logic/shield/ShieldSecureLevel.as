@@ -9,5 +9,5 @@ package com.ankamagames.dofus.logic.shield
 
 
     }
-} com.ankamagames.dofus.logic.shield
+}
 

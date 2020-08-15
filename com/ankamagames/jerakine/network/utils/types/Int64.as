@@ -230,5 +230,5 @@ package com.ankamagames.jerakine.network.utils.types
 
 
     }
-} com.ankamagames.jerakine.network.utils.types
+}
 

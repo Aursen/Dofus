@@ -58,5 +58,5 @@ package com.ankamagames.dofus.console.common
 
 
     }
-} com.ankamagames.dofus.console.common
+}
 

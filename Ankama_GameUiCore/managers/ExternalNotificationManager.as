@@ -547,5 +547,5 @@ package Ankama_GameUiCore.managers
 
 
     }
-} Ankama_GameUiCore.managers
+}
 

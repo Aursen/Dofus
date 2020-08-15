@@ -124,5 +124,5 @@ package com.ankamagames.dofus.network.messages.handshake
 
 
     }
-} com.ankamagames.dofus.network.messages.handshake
+}
 

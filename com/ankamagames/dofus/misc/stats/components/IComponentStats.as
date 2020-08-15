@@ -9,5 +9,5 @@ package com.ankamagames.dofus.misc.stats.components
         function get component():GraphicContainer;
 
     }
-} com.ankamagames.dofus.misc.stats.components
+}
 

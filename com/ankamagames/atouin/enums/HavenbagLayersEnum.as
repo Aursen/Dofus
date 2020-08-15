@@ -9,5 +9,5 @@ package com.ankamagames.atouin.enums
 
 
     }
-} com.ankamagames.atouin.enums
+}
 

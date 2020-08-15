@@ -31,5 +31,5 @@ package flashx.textLayout.elements
         function get cursorFunction():Function;
 
     }
-} flashx.textLayout.elements
+}
 

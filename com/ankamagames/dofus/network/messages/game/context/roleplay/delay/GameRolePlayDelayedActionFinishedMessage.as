@@ -120,5 +120,5 @@ package com.ankamagames.dofus.network.messages.game.context.roleplay.delay
 
 
     }
-} com.ankamagames.dofus.network.messages.game.context.roleplay.delay
+}
 

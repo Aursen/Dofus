@@ -22,5 +22,5 @@ package mx.preloaders
         function initialize():void;
 
     }
-} mx.preloaders
+}
 

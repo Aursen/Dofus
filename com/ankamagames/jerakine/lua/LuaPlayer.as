@@ -164,5 +164,5 @@ package com.ankamagames.jerakine.lua
 
 
     }
-} com.ankamagames.jerakine.lua
+}
 

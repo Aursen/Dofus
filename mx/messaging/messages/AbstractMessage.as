@@ -377,5 +377,5 @@ package mx.messaging.messages
 
 
     }
-} mx.messaging.messages
+}
 

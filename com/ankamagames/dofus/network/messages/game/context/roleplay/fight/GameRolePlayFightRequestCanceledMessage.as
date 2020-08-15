@@ -143,5 +143,5 @@ package com.ankamagames.dofus.network.messages.game.context.roleplay.fight
 
 
     }
-} com.ankamagames.dofus.network.messages.game.context.roleplay.fight
+}
 

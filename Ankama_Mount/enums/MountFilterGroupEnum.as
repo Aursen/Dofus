@@ -18,5 +18,5 @@ package Ankama_Mount.enums
 
 
     }
-} Ankama_Mount.enums
+}
 

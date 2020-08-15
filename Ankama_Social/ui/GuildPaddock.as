@@ -242,5 +242,5 @@ package Ankama_Social.ui
 
 
     }
-} Ankama_Social.ui
+}
 

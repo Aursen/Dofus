@@ -139,5 +139,5 @@ package com.ankamagames.dofus.scripts.api
 
 
     }
-} com.ankamagames.dofus.scripts.api
+}
 

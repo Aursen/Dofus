@@ -326,7 +326,7 @@ package com.ankamagames.berilia.components
 
 
     }
-} com.ankamagames.berilia.components
+}
 
 import flash.geom.ColorTransform;
 

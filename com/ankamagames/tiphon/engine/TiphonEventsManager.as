@@ -307,5 +307,5 @@ package com.ankamagames.tiphon.engine
 
 
     }
-} com.ankamagames.tiphon.engine
+}
 

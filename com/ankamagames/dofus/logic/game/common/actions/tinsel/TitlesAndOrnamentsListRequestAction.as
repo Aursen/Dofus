@@ -14,5 +14,5 @@ package com.ankamagames.dofus.logic.game.common.actions.tinsel
 
 
     }
-} com.ankamagames.dofus.logic.game.common.actions.tinsel
+}
 

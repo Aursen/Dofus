@@ -43,5 +43,5 @@ package com.ankamagames.dofus.datacenter.abuse
 
 
     }
-} com.ankamagames.dofus.datacenter.abuse
+}
 

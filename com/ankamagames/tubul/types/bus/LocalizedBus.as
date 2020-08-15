@@ -26,5 +26,5 @@ package com.ankamagames.tubul.types.bus
 
 
     }
-} com.ankamagames.tubul.types.bus
+}
 

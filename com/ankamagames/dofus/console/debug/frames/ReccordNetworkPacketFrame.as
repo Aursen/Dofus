@@ -77,5 +77,5 @@ package com.ankamagames.dofus.console.debug.frames
 
 
     }
-} com.ankamagames.dofus.console.debug.frames
+}
 

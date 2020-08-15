@@ -6,5 +6,5 @@ package com.ankamagames.jerakine.network
         function getConnectionId(_arg_1:INetworkMessage):String;
 
     }
-} com.ankamagames.jerakine.network
+}
 

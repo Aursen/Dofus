@@ -192,5 +192,5 @@ package com.ankamagames.dofus.network.types.connection
 
 
     }
-} com.ankamagames.dofus.network.types.connection
+}
 

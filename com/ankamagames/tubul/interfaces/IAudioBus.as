@@ -20,5 +20,5 @@ package com.ankamagames.tubul.interfaces
         function clearCache():void;
 
     }
-} com.ankamagames.tubul.interfaces
+}
 

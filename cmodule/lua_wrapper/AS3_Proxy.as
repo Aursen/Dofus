@@ -7,5 +7,5 @@ package cmodule.lua_wrapper
         return (new DynamicProxy());
     }
 
-} cmodule.lua_wrapper
+}
 

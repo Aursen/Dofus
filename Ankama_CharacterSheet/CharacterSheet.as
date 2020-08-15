@@ -110,5 +110,5 @@ package Ankama_CharacterSheet
 
 
     }
-} Ankama_CharacterSheet
+}
 

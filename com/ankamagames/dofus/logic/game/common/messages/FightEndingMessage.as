@@ -13,5 +13,5 @@ package com.ankamagames.dofus.logic.game.common.messages
 
 
     }
-} com.ankamagames.dofus.logic.game.common.messages
+}
 

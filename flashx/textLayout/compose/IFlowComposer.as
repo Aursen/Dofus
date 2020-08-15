@@ -39,5 +39,5 @@ package flashx.textLayout.compose
         function damage(_arg_1:int, _arg_2:int, _arg_3:String):void;
 
     }
-} flashx.textLayout.compose
+}
 

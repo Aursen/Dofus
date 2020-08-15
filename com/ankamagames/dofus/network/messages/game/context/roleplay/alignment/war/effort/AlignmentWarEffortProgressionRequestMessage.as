@@ -79,5 +79,5 @@ package com.ankamagames.dofus.network.messages.game.context.roleplay.alignment.w
 
 
     }
-} com.ankamagames.dofus.network.messages.game.context.roleplay.alignment.war.effort
+}
 

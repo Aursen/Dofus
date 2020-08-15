@@ -16,5 +16,5 @@ package com.ankamagames.jerakine.entities.messages
         }
 
     }
-} com.ankamagames.jerakine.entities.messages
+}
 

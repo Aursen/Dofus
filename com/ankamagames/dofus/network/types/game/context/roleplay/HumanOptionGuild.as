@@ -72,5 +72,5 @@ package com.ankamagames.dofus.network.types.game.context.roleplay
 
 
     }
-} com.ankamagames.dofus.network.types.game.context.roleplay
+}
 

@@ -70,5 +70,5 @@ package com.ankamagames.dofus.network.types.game.character.status
 
 
     }
-} com.ankamagames.dofus.network.types.game.character.status
+}
 

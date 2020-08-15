@@ -81,5 +81,5 @@ package com.ankamagames.dofus.internalDatacenter.conquest
 
 
     }
-} com.ankamagames.dofus.internalDatacenter.conquest
+}
 

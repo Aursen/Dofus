@@ -116,5 +116,5 @@ package com.ankamagames.dofus.internalDatacenter.world
 
 
     }
-} com.ankamagames.dofus.internalDatacenter.world
+}
 

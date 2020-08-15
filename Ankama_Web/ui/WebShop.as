@@ -1972,7 +1972,7 @@ package Ankama_Web.ui
 
 
     }
-} Ankama_Web.ui
+}
 
 import Ankama_Web.enum.ShopArticleTypeEnum;
 import com.ankamagames.dofus.logic.game.common.types.DofusShopArticle;

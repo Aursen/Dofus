@@ -18,5 +18,5 @@ package com.ankamagames.atouin.utils.map
         return (WorldPoint.fromCoords(worldId, x, y));
     }
 
-} com.ankamagames.atouin.utils.map
+}
 

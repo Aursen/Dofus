@@ -86,5 +86,5 @@ package com.ankamagames.berilia.types.data
 
 
     }
-} com.ankamagames.berilia.types.data
+}
 

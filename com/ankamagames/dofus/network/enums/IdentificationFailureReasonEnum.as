@@ -23,5 +23,5 @@ package com.ankamagames.dofus.network.enums
 
 
     }
-} com.ankamagames.dofus.network.enums
+}
 

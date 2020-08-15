@@ -17,5 +17,5 @@ package com.ankamagames.jerakine.BalanceManager.events
         }
 
     }
-} com.ankamagames.jerakine.BalanceManager.events
+}
 

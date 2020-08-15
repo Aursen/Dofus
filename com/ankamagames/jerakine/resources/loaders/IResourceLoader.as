@@ -12,5 +12,5 @@ package com.ankamagames.jerakine.resources.loaders
         function isInCache(_arg_1:Uri):Boolean;
 
     }
-} com.ankamagames.jerakine.resources.loaders
+}
 

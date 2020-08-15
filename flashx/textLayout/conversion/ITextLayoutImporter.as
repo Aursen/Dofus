@@ -7,5 +7,5 @@ package flashx.textLayout.conversion
         function set imageSourceResolveFunction(_arg_1:Function):void;
 
     }
-} flashx.textLayout.conversion
+}
 

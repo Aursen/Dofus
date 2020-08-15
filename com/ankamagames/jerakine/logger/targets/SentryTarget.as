@@ -26,5 +26,5 @@ package com.ankamagames.jerakine.logger.targets
 
 
     }
-} com.ankamagames.jerakine.logger.targets
+}
 

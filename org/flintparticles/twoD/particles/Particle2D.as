@@ -50,5 +50,5 @@ package org.flintparticles.twoD.particles
 
 
     }
-} org.flintparticles.twoD.particles
+}
 

@@ -6,5 +6,5 @@ package com.ankamagames.jerakine.sequencer
         function stepFinished(_arg_1:ISequencable, _arg_2:Boolean=false):void;
 
     }
-} com.ankamagames.jerakine.sequencer
+}
 

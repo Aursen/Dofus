@@ -7,5 +7,5 @@ package mx.core
         function set uid(_arg_1:String):void;
 
     }
-} mx.core
+}
 

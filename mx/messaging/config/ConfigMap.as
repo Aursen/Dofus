@@ -103,5 +103,5 @@ package mx.messaging.config
 
 
     }
-} mx.messaging.config
+}
 

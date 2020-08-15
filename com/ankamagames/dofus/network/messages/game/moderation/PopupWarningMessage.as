@@ -127,5 +127,5 @@ package com.ankamagames.dofus.network.messages.game.moderation
 
 
     }
-} com.ankamagames.dofus.network.messages.game.moderation
+}
 

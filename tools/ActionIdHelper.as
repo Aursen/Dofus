@@ -1413,7 +1413,7 @@ package tools
 
 
     }
-} tools
+}
 import haxe.ds.IntMap;
 import haxe.IMap;
 

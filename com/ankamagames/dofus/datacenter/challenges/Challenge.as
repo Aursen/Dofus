@@ -56,5 +56,5 @@ package com.ankamagames.dofus.datacenter.challenges
 
 
     }
-} com.ankamagames.dofus.datacenter.challenges
+}
 

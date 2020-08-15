@@ -33,5 +33,5 @@ package com.ankamagames.dofus.kernel.zaap.messages.impl
 
 
     }
-} com.ankamagames.dofus.kernel.zaap.messages.impl
+}
 

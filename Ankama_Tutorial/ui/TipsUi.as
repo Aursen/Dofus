@@ -1143,7 +1143,7 @@ package Ankama_Tutorial.ui
 
 
     }
-} Ankama_Tutorial.ui
+}
 
 import com.ankamagames.berilia.components.Texture;
 import flash.display.Shape;

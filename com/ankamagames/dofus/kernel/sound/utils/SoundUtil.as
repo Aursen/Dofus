@@ -70,5 +70,5 @@ package com.ankamagames.dofus.kernel.sound.utils
 
 
     }
-} com.ankamagames.dofus.kernel.sound.utils
+}
 

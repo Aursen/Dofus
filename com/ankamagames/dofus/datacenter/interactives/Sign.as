@@ -56,5 +56,5 @@ package com.ankamagames.dofus.datacenter.interactives
 
 
     }
-} com.ankamagames.dofus.datacenter.interactives
+}
 

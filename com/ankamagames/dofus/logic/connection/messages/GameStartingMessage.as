@@ -7,5 +7,5 @@ package com.ankamagames.dofus.logic.connection.messages
 
 
     }
-} com.ankamagames.dofus.logic.connection.messages
+}
 

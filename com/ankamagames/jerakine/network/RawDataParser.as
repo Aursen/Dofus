@@ -8,5 +8,5 @@ package com.ankamagames.jerakine.network
         function getUnpackMode(_arg_1:uint):uint;
 
     }
-} com.ankamagames.jerakine.network
+}
 

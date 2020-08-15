@@ -24,5 +24,5 @@ package Ankama_Cartography.ui.type
         }
 
     }
-} Ankama_Cartography.ui.type
+}
 

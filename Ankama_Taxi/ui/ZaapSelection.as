@@ -1039,5 +1039,5 @@ package Ankama_Taxi.ui
 
 
     }
-} Ankama_Taxi.ui
+}
 

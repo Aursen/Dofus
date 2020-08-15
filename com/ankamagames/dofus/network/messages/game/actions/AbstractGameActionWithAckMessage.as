@@ -101,5 +101,5 @@ package com.ankamagames.dofus.network.messages.game.actions
 
 
     }
-} com.ankamagames.dofus.network.messages.game.actions
+}
 

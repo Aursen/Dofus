@@ -7,5 +7,5 @@ package com.ankamagames.berilia.types.uiDefinition
 
 
     }
-} com.ankamagames.berilia.types.uiDefinition
+}
 

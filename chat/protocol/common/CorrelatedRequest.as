@@ -15,5 +15,5 @@ package chat.protocol.common
         }
 
     }
-} chat.protocol.common
+}
 

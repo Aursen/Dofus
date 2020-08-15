@@ -98,5 +98,5 @@ package com.ankamagames.dofus.kernel.sound.enum
 
 
     }
-} com.ankamagames.dofus.kernel.sound.enum
+}
 

@@ -68,5 +68,5 @@ package com.ankamagames.atouin.data.map.elements
 
 
     }
-} com.ankamagames.atouin.data.map.elements
+}
 

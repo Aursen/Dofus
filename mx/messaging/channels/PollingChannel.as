@@ -367,7 +367,7 @@ package mx.messaging.channels
 
 
     }
-} mx.messaging.channels
+}
 
 import mx.messaging.MessageResponder;
 import mx.logging.ILogger;

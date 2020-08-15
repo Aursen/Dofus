@@ -4,5 +4,5 @@ package com.ankamagames.berilia.interfaces
     {
 
     }
-} com.ankamagames.berilia.interfaces
+}
 

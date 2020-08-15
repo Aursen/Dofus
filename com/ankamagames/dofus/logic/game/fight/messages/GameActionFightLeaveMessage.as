@@ -15,5 +15,5 @@ package com.ankamagames.dofus.logic.game.fight.messages
 
 
     }
-} com.ankamagames.dofus.logic.game.fight.messages
+}
 

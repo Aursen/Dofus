@@ -63,5 +63,5 @@ package mx.messaging
 
 
     }
-} mx.messaging
+}
 

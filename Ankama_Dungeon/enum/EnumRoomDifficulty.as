@@ -9,5 +9,5 @@ package Ankama_Dungeon.enum
 
 
     }
-} Ankama_Dungeon.enum
+}
 

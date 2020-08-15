@@ -25,5 +25,5 @@ package com.ankamagames.dofus.datacenter.idols
 
 
     }
-} com.ankamagames.dofus.datacenter.idols
+}
 

@@ -6,5 +6,5 @@ package com.ankamagames.jerakine.logger.targets
         function configure(_arg_1:XML):void;
 
     }
-} com.ankamagames.jerakine.logger.targets
+}
 

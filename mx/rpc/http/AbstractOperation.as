@@ -634,5 +634,5 @@ package mx.rpc.http
 
 
     }
-} mx.rpc.http
+}
 

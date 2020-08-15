@@ -163,5 +163,5 @@ package com.ankamagames.dofus.logic.game.fight.types
 
 
     }
-} com.ankamagames.dofus.logic.game.fight.types
+}
 

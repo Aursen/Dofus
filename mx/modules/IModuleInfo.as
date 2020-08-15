@@ -28,5 +28,5 @@ package mx.modules
         function publish(_arg_1:IFlexModuleFactory):void;
 
     }
-} mx.modules
+}
 

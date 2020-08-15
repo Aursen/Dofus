@@ -17,5 +17,5 @@ package flashx.textLayout.conversion
         function set configuration(_arg_1:IConfiguration):void;
 
     }
-} flashx.textLayout.conversion
+}
 

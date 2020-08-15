@@ -16,5 +16,5 @@ package com.ankamagames.jerakine.sequencer
         function get hasDefaultTimeout():Boolean;
 
     }
-} com.ankamagames.jerakine.sequencer
+}
 

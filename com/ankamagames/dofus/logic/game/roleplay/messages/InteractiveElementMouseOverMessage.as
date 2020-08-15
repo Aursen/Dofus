@@ -27,5 +27,5 @@ package com.ankamagames.dofus.logic.game.roleplay.messages
 
 
     }
-} com.ankamagames.dofus.logic.game.roleplay.messages
+}
 

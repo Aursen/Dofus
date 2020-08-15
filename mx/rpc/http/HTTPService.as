@@ -317,7 +317,7 @@ package mx.rpc.http
 
 
     }
-} mx.rpc.http
+}
 
 import mx.rpc.http.AbstractOperation;
 import mx.rpc.http.HTTPService;

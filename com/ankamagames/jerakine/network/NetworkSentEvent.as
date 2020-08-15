@@ -22,5 +22,5 @@ package com.ankamagames.jerakine.network
 
 
     }
-} com.ankamagames.jerakine.network
+}
 

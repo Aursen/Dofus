@@ -8,5 +8,5 @@ package com.ankamagames.dofus.misc.stats
         function onHook(_arg_1:Hook, _arg_2:Array):void;
 
     }
-} com.ankamagames.dofus.misc.stats
+}
 

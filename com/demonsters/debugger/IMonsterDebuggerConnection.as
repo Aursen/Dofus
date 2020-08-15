@@ -10,5 +10,5 @@ package com.demonsters.debugger
         function send(_arg_1:String, _arg_2:Object, _arg_3:Boolean=false):void;
 
     }
-} com.demonsters.debugger
+}
 

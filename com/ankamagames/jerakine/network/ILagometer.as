@@ -8,5 +8,5 @@ package com.ankamagames.jerakine.network
         function stop():void;
 
     }
-} com.ankamagames.jerakine.network
+}
 

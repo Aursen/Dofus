@@ -73,7 +73,7 @@ package gs.plugins
 
 
     }
-} gs.plugins
+}
 
 class ArrayTweenInfo 
 {

@@ -258,5 +258,5 @@ package com.ankamagames.dofus.network.types.game.guild.tax
 
 
     }
-} com.ankamagames.dofus.network.types.game.guild.tax
+}
 

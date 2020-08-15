@@ -24,5 +24,5 @@ package com.ankamagames.dofus.datacenter.items
 
 
     }
-} com.ankamagames.dofus.datacenter.items
+}
 

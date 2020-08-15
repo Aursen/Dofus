@@ -1798,7 +1798,7 @@ package Ankama_Social.ui
 
 
     }
-} Ankama_Social.ui
+}
 
 final class Friends_Category_Item 
 {

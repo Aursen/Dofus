@@ -8,5 +8,5 @@ package com.ankamagames.dofus.logic.game.common.behaviours
         function entityDeleted(_arg_1:AnimatedCharacter):void;
 
     }
-} com.ankamagames.dofus.logic.game.common.behaviours
+}
 

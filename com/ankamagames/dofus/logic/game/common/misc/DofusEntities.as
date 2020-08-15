@@ -63,5 +63,5 @@ package com.ankamagames.dofus.logic.game.common.misc
 
 
     }
-} com.ankamagames.dofus.logic.game.common.misc
+}
 

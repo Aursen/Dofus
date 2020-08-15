@@ -55,5 +55,5 @@ package com.ankamagames.dofus.logic.game.spin2.chat.data
 
 
     }
-} com.ankamagames.dofus.logic.game.spin2.chat.data
+}
 

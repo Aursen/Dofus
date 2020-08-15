@@ -9,5 +9,5 @@ package com.ankamagames.atouin.resources
 
 
     }
-} com.ankamagames.atouin.resources
+}
 

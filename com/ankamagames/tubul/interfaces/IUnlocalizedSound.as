@@ -4,5 +4,5 @@ package com.ankamagames.tubul.interfaces
     {
 
     }
-} com.ankamagames.tubul.interfaces
+}
 

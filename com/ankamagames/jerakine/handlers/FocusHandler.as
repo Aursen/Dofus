@@ -74,5 +74,5 @@ package com.ankamagames.jerakine.handlers
 
 
     }
-} com.ankamagames.jerakine.handlers
+}
 

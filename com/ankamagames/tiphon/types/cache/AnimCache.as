@@ -47,5 +47,5 @@ package com.ankamagames.tiphon.types.cache
 
 
     }
-} com.ankamagames.tiphon.types.cache
+}
 

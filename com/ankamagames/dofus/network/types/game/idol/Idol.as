@@ -112,5 +112,5 @@ package com.ankamagames.dofus.network.types.game.idol
 
 
     }
-} com.ankamagames.dofus.network.types.game.idol
+}
 

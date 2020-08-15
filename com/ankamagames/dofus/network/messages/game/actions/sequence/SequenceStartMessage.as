@@ -116,5 +116,5 @@ package com.ankamagames.dofus.network.messages.game.actions.sequence
 
 
     }
-} com.ankamagames.dofus.network.messages.game.actions.sequence
+}
 

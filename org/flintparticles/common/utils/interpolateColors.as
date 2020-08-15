@@ -10,5 +10,5 @@ package org.flintparticles.common.utils
         return ((((alpha << 24) | (red << 16)) | (green << 8)) | blue);
     }
 
-} org.flintparticles.common.utils
+}
 

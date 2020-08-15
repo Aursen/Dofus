@@ -13,5 +13,5 @@ package mx.core
         function initializeRepeaterArrays(_arg_1:IRepeaterClient):void;
 
     }
-} mx.core
+}
 

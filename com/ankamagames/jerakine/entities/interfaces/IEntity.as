@@ -11,5 +11,5 @@ package com.ankamagames.jerakine.entities.interfaces
         function set position(_arg_1:MapPoint):void;
 
     }
-} com.ankamagames.jerakine.entities.interfaces
+}
 

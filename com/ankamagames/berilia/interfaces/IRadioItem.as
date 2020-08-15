@@ -12,5 +12,5 @@ package com.ankamagames.berilia.interfaces
         function get selected():Boolean;
 
     }
-} com.ankamagames.berilia.interfaces
+}
 

@@ -13,5 +13,5 @@ package cmodule.lua_wrapper
         return (_arg_1.apply(_arg_2, AS3_Array(_arg_3, _arg_4)));
     }
 
-} cmodule.lua_wrapper
+}
 

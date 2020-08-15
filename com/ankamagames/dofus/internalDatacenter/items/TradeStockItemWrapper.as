@@ -38,5 +38,5 @@ package com.ankamagames.dofus.internalDatacenter.items
 
 
     }
-} com.ankamagames.dofus.internalDatacenter.items
+}
 

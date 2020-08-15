@@ -127,5 +127,5 @@ package com.ankamagames.performance
 
 
     }
-} com.ankamagames.performance
+}
 

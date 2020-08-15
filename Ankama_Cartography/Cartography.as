@@ -631,5 +631,5 @@ package Ankama_Cartography
 
 
     }
-} Ankama_Cartography
+}
 

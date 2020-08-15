@@ -120,5 +120,5 @@ package com.ankamagames.dofus.network.messages.game.context.roleplay.death
 
 
     }
-} com.ankamagames.dofus.network.messages.game.context.roleplay.death
+}
 

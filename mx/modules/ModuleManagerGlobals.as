@@ -7,5 +7,5 @@ package mx.modules
 
 
     }
-} mx.modules
+}
 

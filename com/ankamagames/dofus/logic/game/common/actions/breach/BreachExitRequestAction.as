@@ -13,5 +13,5 @@ package com.ankamagames.dofus.logic.game.common.actions.breach
 
 
     }
-} com.ankamagames.dofus.logic.game.common.actions.breach
+}
 

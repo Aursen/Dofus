@@ -66,5 +66,5 @@ package com.ankama.zaap
 
 
     }
-} com.ankama.zaap
+}
 

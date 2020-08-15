@@ -8,5 +8,5 @@ package com.ankamagames.tubul.resources
 
 
     }
-} com.ankamagames.tubul.resources
+}
 

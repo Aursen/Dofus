@@ -74,5 +74,5 @@ package com.ankamagames.dofus.network.types.game.data.items.effects
 
 
     }
-} com.ankamagames.dofus.network.types.game.data.items.effects
+}
 

@@ -53,5 +53,5 @@ package com.ankamagames.dofus.misc.stats.custom
 
 
     }
-} com.ankamagames.dofus.misc.stats.custom
+}
 

@@ -138,5 +138,5 @@ package com.ankamagames.dofus.network.messages.game.context.roleplay.breach.meet
 
 
     }
-} com.ankamagames.dofus.network.messages.game.context.roleplay.breach.meeting
+}
 

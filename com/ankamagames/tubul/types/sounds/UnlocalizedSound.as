@@ -12,5 +12,5 @@ package com.ankamagames.tubul.types.sounds
         }
 
     }
-} com.ankamagames.tubul.types.sounds
+}
 

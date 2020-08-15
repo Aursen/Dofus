@@ -8,5 +8,5 @@ package com.ankamagames.tiphon.types
         function getModifiedSkin(_arg_1:Skin, _arg_2:String, _arg_3:TiphonEntityLook):String;
 
     }
-} com.ankamagames.tiphon.types
+}
 

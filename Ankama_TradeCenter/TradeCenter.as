@@ -387,5 +387,5 @@ package Ankama_TradeCenter
 
 
     }
-} Ankama_TradeCenter
+}
 

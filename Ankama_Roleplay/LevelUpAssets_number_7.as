@@ -8,5 +8,5 @@ package Ankama_Roleplay
 
 
     }
-} Ankama_Roleplay
+}
 

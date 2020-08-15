@@ -9,5 +9,5 @@ package flashx.textLayout.conversion
         function importOneFormat(_arg_1:String, _arg_2:String):Boolean;
 
     }
-} flashx.textLayout.conversion
+}
 

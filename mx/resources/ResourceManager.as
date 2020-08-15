@@ -39,5 +39,5 @@ package mx.resources
 
 
     }
-} mx.resources
+}
 

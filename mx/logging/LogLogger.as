@@ -123,5 +123,5 @@ package mx.logging
 
 
     }
-} mx.logging
+}
 

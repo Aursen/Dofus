@@ -68,5 +68,5 @@ package Ankama_Config.ui.item
 
 
     }
-} Ankama_Config.ui.item
+}
 

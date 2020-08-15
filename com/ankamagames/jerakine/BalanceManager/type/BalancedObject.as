@@ -41,5 +41,5 @@ package com.ankamagames.jerakine.BalanceManager.type
 
 
     }
-} com.ankamagames.jerakine.BalanceManager.type
+}
 

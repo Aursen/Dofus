@@ -25,5 +25,5 @@ package Ankama_Common.options
 
 
     }
-} Ankama_Common.options
+}
 

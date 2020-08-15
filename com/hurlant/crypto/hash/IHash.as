@@ -12,5 +12,5 @@ package com.hurlant.crypto.hash
         function getPadSize():int;
 
     }
-} com.hurlant.crypto.hash
+}
 

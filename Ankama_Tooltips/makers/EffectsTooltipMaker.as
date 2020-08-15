@@ -34,5 +34,5 @@ package Ankama_Tooltips.makers
 
 
     }
-} Ankama_Tooltips.makers
+}
 

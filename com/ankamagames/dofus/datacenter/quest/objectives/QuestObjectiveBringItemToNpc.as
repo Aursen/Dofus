@@ -70,5 +70,5 @@ package com.ankamagames.dofus.datacenter.quest.objectives
 
 
     }
-} com.ankamagames.dofus.datacenter.quest.objectives
+}
 

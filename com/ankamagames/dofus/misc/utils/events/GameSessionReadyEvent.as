@@ -22,5 +22,5 @@ package com.ankamagames.dofus.misc.utils.events
 
 
     }
-} com.ankamagames.dofus.misc.utils.events
+}
 

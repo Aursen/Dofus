@@ -9,5 +9,5 @@ package com.ankamagames.jerakine.resources.loaders
 
 
     }
-} com.ankamagames.jerakine.resources.loaders
+}
 

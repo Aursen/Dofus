@@ -93,5 +93,5 @@ package Ankama_Fight.ui
 
 
     }
-} Ankama_Fight.ui
+}
 

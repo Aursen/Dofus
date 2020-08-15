@@ -272,5 +272,5 @@ package com.ankamagames.dofus.logic.game.roleplay.managers
 
 
     }
-} com.ankamagames.dofus.logic.game.roleplay.managers
+}
 

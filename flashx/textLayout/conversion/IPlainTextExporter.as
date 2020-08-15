@@ -9,5 +9,5 @@ package flashx.textLayout.conversion
         function set stripDiscretionaryHyphens(_arg_1:Boolean):void;
 
     }
-} flashx.textLayout.conversion
+}
 

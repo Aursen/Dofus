@@ -7,5 +7,5 @@ package mx.resources
         function get resourceBundles():Array;
 
     }
-} mx.resources
+}
 

@@ -74,5 +74,5 @@ package com.ankamagames.dofus.network.types.game.interactive.skill
 
 
     }
-} com.ankamagames.dofus.network.types.game.interactive.skill
+}
 

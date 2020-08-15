@@ -6,5 +6,5 @@ package com.ankamagames.dofus.kernel.zaap.messages
     {
 
     }
-} com.ankamagames.dofus.kernel.zaap.messages
+}
 

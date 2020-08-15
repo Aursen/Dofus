@@ -6,5 +6,5 @@ package com.ankamagames.jerakine.interfaces
         function playUISound(_arg_1:String, _arg_2:Boolean=false):void;
 
     }
-} com.ankamagames.jerakine.interfaces
+}
 

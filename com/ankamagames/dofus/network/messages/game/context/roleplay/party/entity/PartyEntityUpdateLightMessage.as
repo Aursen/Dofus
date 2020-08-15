@@ -110,5 +110,5 @@ package com.ankamagames.dofus.network.messages.game.context.roleplay.party.entit
 
 
     }
-} com.ankamagames.dofus.network.messages.game.context.roleplay.party.entity
+}
 

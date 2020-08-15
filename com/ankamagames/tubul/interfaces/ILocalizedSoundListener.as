@@ -11,5 +11,5 @@ package com.ankamagames.tubul.interfaces
         function removeSoundEntity(_arg_1:ISound):void;
 
     }
-} com.ankamagames.tubul.interfaces
+}
 

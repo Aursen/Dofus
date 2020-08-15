@@ -49,5 +49,5 @@ package org.openapitools.event
 
 
     }
-} org.openapitools.event
+}
 

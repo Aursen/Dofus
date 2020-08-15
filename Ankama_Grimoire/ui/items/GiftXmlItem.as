@@ -80,5 +80,5 @@ package Ankama_Grimoire.ui.items
 
 
     }
-} Ankama_Grimoire.ui.items
+}
 

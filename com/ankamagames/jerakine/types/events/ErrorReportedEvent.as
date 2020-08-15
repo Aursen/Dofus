@@ -53,5 +53,5 @@ package com.ankamagames.jerakine.types.events
 
 
     }
-} com.ankamagames.jerakine.types.events
+}
 

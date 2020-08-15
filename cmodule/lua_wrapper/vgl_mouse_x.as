@@ -10,5 +10,5 @@ package cmodule.lua_wrapper
         return (_local_1.mouseX);
     }
 
-} cmodule.lua_wrapper
+}
 

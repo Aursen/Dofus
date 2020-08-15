@@ -422,5 +422,5 @@ package com.somerandomdude.colortoolkit
 
 
     }
-} com.somerandomdude.colortoolkit
+}
 

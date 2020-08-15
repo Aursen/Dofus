@@ -12,5 +12,5 @@ package com.ankamagames.dofus.types.entities
         function set subExplosion(_arg_1:Boolean):void;
 
     }
-} com.ankamagames.dofus.types.entities
+}
 

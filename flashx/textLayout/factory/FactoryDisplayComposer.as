@@ -34,7 +34,7 @@ package flashx.textLayout.factory
 
 
     }
-} flashx.textLayout.factory
+}
 
 import flashx.textLayout.elements.BackgroundManager;
 import flash.text.engine.TextLine;

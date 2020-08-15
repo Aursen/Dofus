@@ -44,5 +44,5 @@ package com.ankamagames.dofus.modules.utils.pathfinding.world
 
 
     }
-} com.ankamagames.dofus.modules.utils.pathfinding.world
+}
 

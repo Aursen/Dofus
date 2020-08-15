@@ -8,5 +8,5 @@ package com.ankamagames.jerakine.script
 
 
     }
-} com.ankamagames.jerakine.script
+}
 

@@ -171,5 +171,5 @@ package org.flintparticles.twoD.renderers
 
 
     }
-} org.flintparticles.twoD.renderers
+}
 

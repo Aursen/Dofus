@@ -114,5 +114,5 @@ package com.ankamagames.dofus.network.types.game.character.choice
 
 
     }
-} com.ankamagames.dofus.network.types.game.character.choice
+}
 

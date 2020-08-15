@@ -19,5 +19,5 @@ package com.ankamagames.jerakine.json
 
 
     }
-} com.ankamagames.jerakine.json
+}
 

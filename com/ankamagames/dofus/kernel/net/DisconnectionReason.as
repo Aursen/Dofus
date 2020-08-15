@@ -24,5 +24,5 @@ package com.ankamagames.dofus.kernel.net
 
 
     }
-} com.ankamagames.dofus.kernel.net
+}
 

@@ -8,5 +8,5 @@ package flashx.textLayout.edit
         function redo():*;
 
     }
-} flashx.textLayout.edit
+}
 

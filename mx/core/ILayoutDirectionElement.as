@@ -8,5 +8,5 @@ package mx.core
         function invalidateLayoutDirection():void;
 
     }
-} mx.core
+}
 

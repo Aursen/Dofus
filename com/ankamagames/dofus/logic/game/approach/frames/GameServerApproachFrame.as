@@ -1161,5 +1161,5 @@ package com.ankamagames.dofus.logic.game.approach.frames
 
 
     }
-} com.ankamagames.dofus.logic.game.approach.frames
+}
 

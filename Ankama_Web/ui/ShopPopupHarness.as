@@ -144,5 +144,5 @@ package Ankama_Web.ui
 
 
     }
-} Ankama_Web.ui
+}
 

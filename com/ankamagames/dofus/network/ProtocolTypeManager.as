@@ -780,5 +780,5 @@ package com.ankamagames.dofus.network
 
 
     }
-} com.ankamagames.dofus.network
+}
 

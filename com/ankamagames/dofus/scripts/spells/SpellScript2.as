@@ -113,5 +113,5 @@ package com.ankamagames.dofus.scripts.spells
         }
 
     }
-} com.ankamagames.dofus.scripts.spells
+}
 

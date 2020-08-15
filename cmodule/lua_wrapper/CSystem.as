@@ -19,5 +19,5 @@ package cmodule.lua_wrapper
         function write(_arg_1:int, _arg_2:int, _arg_3:int):int;
 
     }
-} cmodule.lua_wrapper
+}
 

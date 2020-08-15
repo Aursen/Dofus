@@ -79,5 +79,5 @@ package com.ankamagames.dofus.network.messages.game.character.choice
 
 
     }
-} com.ankamagames.dofus.network.messages.game.character.choice
+}
 

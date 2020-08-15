@@ -68,5 +68,5 @@ package flashx.textLayout.edit
         function set superManager(_arg_1:ISelectionManager):void;
 
     }
-} flashx.textLayout.edit
+}
 

@@ -127,5 +127,5 @@ package com.ankamagames.dofus.network.types.game.dare
 
 
     }
-} com.ankamagames.dofus.network.types.game.dare
+}
 

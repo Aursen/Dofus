@@ -134,5 +134,5 @@ package com.ankamagames.dofus.network.messages.game.context.roleplay.breach.bran
 
 
     }
-} com.ankamagames.dofus.network.messages.game.context.roleplay.breach.branch
+}
 

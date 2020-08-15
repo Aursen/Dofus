@@ -6,5 +6,5 @@ package com.ankamagames.berilia.interfaces
         function createMenu(_arg_1:*, _arg_2:Object):Array;
 
     }
-} com.ankamagames.berilia.interfaces
+}
 

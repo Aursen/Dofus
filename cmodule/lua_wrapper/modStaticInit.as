@@ -3617,5 +3617,5 @@ package cmodule.lua_wrapper
         modPostStaticInit();
     }
 
-} cmodule.lua_wrapper
+}
 

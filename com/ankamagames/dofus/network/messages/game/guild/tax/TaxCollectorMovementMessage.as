@@ -145,5 +145,5 @@ package com.ankamagames.dofus.network.messages.game.guild.tax
 
 
     }
-} com.ankamagames.dofus.network.messages.game.guild.tax
+}
 

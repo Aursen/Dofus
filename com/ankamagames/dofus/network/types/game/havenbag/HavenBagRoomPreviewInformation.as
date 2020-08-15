@@ -85,5 +85,5 @@ package com.ankamagames.dofus.network.types.game.havenbag
 
 
     }
-} com.ankamagames.dofus.network.types.game.havenbag
+}
 

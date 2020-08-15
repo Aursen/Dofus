@@ -9,5 +9,5 @@ package com.ankamagames.atouin.data
         }
 
     }
-} com.ankamagames.atouin.data
+}
 

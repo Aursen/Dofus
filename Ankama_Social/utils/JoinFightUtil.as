@@ -69,5 +69,5 @@ package Ankama_Social.utils
 
 
     }
-} Ankama_Social.utils
+}
 

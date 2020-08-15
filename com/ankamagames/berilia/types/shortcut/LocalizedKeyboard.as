@@ -33,5 +33,5 @@ package com.ankamagames.berilia.types.shortcut
 
 
     }
-} com.ankamagames.berilia.types.shortcut
+}
 

@@ -10,5 +10,5 @@ package org.flintparticles.common.renderers
         function get emitters():Array;
 
     }
-} org.flintparticles.common.renderers
+}
 

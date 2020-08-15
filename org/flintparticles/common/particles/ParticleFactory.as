@@ -7,5 +7,5 @@ package org.flintparticles.common.particles
         function disposeParticle(_arg_1:Particle):void;
 
     }
-} org.flintparticles.common.particles
+}
 

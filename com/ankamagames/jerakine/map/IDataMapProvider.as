@@ -19,5 +19,5 @@ package com.ankamagames.jerakine.map
         function fillEntityOnCellArray(_arg_1:Vector.<Boolean>, _arg_2:Boolean):Vector.<Boolean>;
 
     }
-} com.ankamagames.jerakine.map
+}
 

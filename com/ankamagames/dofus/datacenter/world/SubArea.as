@@ -188,5 +188,5 @@ package com.ankamagames.dofus.datacenter.world
 
 
     }
-} com.ankamagames.dofus.datacenter.world
+}
 

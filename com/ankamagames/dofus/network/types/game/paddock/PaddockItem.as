@@ -76,5 +76,5 @@ package com.ankamagames.dofus.network.types.game.paddock
 
 
     }
-} com.ankamagames.dofus.network.types.game.paddock
+}
 

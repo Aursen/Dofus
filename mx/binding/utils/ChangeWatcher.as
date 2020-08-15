@@ -182,5 +182,5 @@ package mx.binding.utils
 
 
     }
-} mx.binding.utils
+}
 

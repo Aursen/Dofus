@@ -11,5 +11,5 @@ package com.ankamagames.jerakine.utils.display.spellZone
         function get spellZoneEffects():Vector.<IZoneShape>;
 
     }
-} com.ankamagames.jerakine.utils.display.spellZone
+}
 

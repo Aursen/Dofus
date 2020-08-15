@@ -232,7 +232,7 @@ package Ankama_Config
 
 
     }
-} Ankama_Config
+}
 
 import com.ankamagames.berilia.api.UiApi;
 

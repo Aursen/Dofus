@@ -24,5 +24,5 @@ package chat.protocol.transport
 
 
     }
-} chat.protocol.transport
+}
 

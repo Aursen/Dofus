@@ -68,5 +68,5 @@ package by.blooddy.crypto.serialization
 
 
     }
-} by.blooddy.crypto.serialization
+}
 

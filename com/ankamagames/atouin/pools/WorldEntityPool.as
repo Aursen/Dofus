@@ -75,5 +75,5 @@ package com.ankamagames.atouin.pools
 
 
     }
-} com.ankamagames.atouin.pools
+}
 

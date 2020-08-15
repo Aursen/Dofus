@@ -275,5 +275,5 @@ package com.ankamagames.dofus.network.types.game.house
 
 
     }
-} com.ankamagames.dofus.network.types.game.house
+}
 

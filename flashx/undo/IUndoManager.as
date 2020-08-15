@@ -19,5 +19,5 @@ package flashx.undo
         function redo():void;
 
     }
-} flashx.undo
+}
 

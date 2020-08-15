@@ -212,5 +212,5 @@ package com.ankamagames.dofus.internalDatacenter
 
 
     }
-} com.ankamagames.dofus.internalDatacenter
+}
 

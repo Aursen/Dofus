@@ -28,5 +28,5 @@ package chat.protocol.channel.data
 
 
     }
-} chat.protocol.channel.data
+}
 

@@ -11,5 +11,5 @@ package flashx.textLayout.formats
         function get suffix():*;
 
     }
-} flashx.textLayout.formats
+}
 

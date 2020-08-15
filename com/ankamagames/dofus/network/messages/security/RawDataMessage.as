@@ -99,5 +99,5 @@ package com.ankamagames.dofus.network.messages.security
 
 
     }
-} com.ankamagames.dofus.network.messages.security
+}
 

@@ -10,5 +10,5 @@ package clientspecs
 
 
     }
-} clientspecs
+}
 

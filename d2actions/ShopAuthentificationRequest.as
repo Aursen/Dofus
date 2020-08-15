@@ -22,5 +22,5 @@ package d2actions
 
 
     }
-} d2actions
+}
 

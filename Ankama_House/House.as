@@ -301,5 +301,5 @@ package Ankama_House
 
 
     }
-} Ankama_House
+}
 

@@ -739,5 +739,5 @@ package Ankama_Dungeon.ui
 
 
     }
-} Ankama_Dungeon.ui
+}
 

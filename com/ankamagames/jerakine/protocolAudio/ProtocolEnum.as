@@ -47,5 +47,5 @@ package com.ankamagames.jerakine.protocolAudio
 
 
     }
-} com.ankamagames.jerakine.protocolAudio
+}
 

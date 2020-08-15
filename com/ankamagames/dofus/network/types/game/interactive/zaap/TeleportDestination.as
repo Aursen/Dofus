@@ -146,5 +146,5 @@ package com.ankamagames.dofus.network.types.game.interactive.zaap
 
 
     }
-} com.ankamagames.dofus.network.types.game.interactive.zaap
+}
 

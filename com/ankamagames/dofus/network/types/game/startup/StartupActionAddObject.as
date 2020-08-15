@@ -161,5 +161,5 @@ package com.ankamagames.dofus.network.types.game.startup
 
 
     }
-} com.ankamagames.dofus.network.types.game.startup
+}
 

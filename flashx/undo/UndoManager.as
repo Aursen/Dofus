@@ -119,5 +119,5 @@ package flashx.undo
 
 
     }
-} flashx.undo
+}
 

@@ -688,7 +688,7 @@ package mx.resources
 
 
     }
-} mx.resources
+}
 
 import mx.modules.IModuleInfo;
 import mx.resources.IResourceModule;

@@ -153,5 +153,5 @@ package com.ankamagames.jerakine.resources.adapters
 
 
     }
-} com.ankamagames.jerakine.resources.adapters
+}
 

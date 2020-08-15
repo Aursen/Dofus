@@ -89,5 +89,5 @@ package com.ankamagames.dofus.network.types.game.interactive
 
 
     }
-} com.ankamagames.dofus.network.types.game.interactive
+}
 

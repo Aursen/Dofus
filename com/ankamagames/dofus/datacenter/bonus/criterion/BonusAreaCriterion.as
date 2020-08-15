@@ -5,5 +5,5 @@ package com.ankamagames.dofus.datacenter.bonus.criterion
 
 
     }
-} com.ankamagames.dofus.datacenter.bonus.criterion
+}
 

@@ -11,5 +11,5 @@ package org.apache.thrift.protocol
         }
 
     }
-} org.apache.thrift.protocol
+}
 

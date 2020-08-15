@@ -43,5 +43,5 @@ package com.ankamagames.dofus.kernel.sound.manager
         function endOfSound(_arg_1:int):void;
 
     }
-} com.ankamagames.dofus.kernel.sound.manager
+}
 

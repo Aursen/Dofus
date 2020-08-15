@@ -19,5 +19,5 @@ package mx.collections
         function refresh():Boolean;
 
     }
-} mx.collections
+}
 

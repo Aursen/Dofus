@@ -4,5 +4,5 @@ package com.ankamagames.berilia.eventInterface
     {
 
     }
-} com.ankamagames.berilia.eventInterface
+}
 

@@ -154,5 +154,5 @@ package com.ankamagames.dofus.internalDatacenter.jobs
 
 
     }
-} com.ankamagames.dofus.internalDatacenter.jobs
+}
 

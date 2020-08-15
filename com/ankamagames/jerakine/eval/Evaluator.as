@@ -457,5 +457,5 @@ package com.ankamagames.jerakine.eval
 
 
     }
-} com.ankamagames.jerakine.eval
+}
 

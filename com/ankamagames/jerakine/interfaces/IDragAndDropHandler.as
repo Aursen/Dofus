@@ -11,5 +11,5 @@ package com.ankamagames.jerakine.interfaces
         function get processDrop():Function;
 
     }
-} com.ankamagames.jerakine.interfaces
+}
 

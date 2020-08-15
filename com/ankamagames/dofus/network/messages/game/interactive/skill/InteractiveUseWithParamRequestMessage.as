@@ -106,5 +106,5 @@ package com.ankamagames.dofus.network.messages.game.interactive.skill
 
 
     }
-} com.ankamagames.dofus.network.messages.game.interactive.skill
+}
 

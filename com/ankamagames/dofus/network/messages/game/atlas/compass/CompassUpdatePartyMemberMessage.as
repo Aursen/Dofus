@@ -121,5 +121,5 @@ package com.ankamagames.dofus.network.messages.game.atlas.compass
 
 
     }
-} com.ankamagames.dofus.network.messages.game.atlas.compass
+}
 

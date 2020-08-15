@@ -96,5 +96,5 @@ package com.ankamagames.dofus.types.characteristicContextual
 
 
     }
-} com.ankamagames.dofus.types.characteristicContextual
+}
 

@@ -218,5 +218,5 @@ package com.ankamagames.dofus.logic.game.fight.types.castSpellManager
 
 
     }
-} com.ankamagames.dofus.logic.game.fight.types.castSpellManager
+}
 

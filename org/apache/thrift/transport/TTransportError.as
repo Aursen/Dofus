@@ -17,5 +17,5 @@ package org.apache.thrift.transport
         }
 
     }
-} org.apache.thrift.transport
+}
 

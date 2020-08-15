@@ -101,5 +101,5 @@ package com.ankamagames.dofus.network.messages.game.context.fight.arena
 
 
     }
-} com.ankamagames.dofus.network.messages.game.context.fight.arena
+}
 

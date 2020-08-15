@@ -105,5 +105,5 @@ package com.ankamagames.dofus.network.messages.game.script
 
 
     }
-} com.ankamagames.dofus.network.messages.game.script
+}
 

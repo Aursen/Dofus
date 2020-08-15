@@ -97,5 +97,5 @@ package com.ankamagames.dofus.network.messages.game.character.alignment.war.effo
 
 
     }
-} com.ankamagames.dofus.network.messages.game.character.alignment.war.effort
+}
 

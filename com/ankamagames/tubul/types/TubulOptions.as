@@ -22,5 +22,5 @@ package com.ankamagames.tubul.types
         }
 
     }
-} com.ankamagames.tubul.types
+}
 

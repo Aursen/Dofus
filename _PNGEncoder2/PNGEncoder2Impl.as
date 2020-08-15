@@ -8769,5 +8769,5 @@ package _PNGEncoder2
 
 
     }
-} _PNGEncoder2
+}
 

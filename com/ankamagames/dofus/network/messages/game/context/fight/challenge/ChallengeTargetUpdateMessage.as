@@ -124,5 +124,5 @@ package com.ankamagames.dofus.network.messages.game.context.fight.challenge
 
 
     }
-} com.ankamagames.dofus.network.messages.game.context.fight.challenge
+}
 

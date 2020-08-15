@@ -114,5 +114,5 @@ package Ankama_Config.ui
 
 
     }
-} Ankama_Config.ui
+}
 

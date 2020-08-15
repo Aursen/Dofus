@@ -7,5 +7,5 @@ package cmodule.lua_wrapper
         return (AS3_Function(_arg_1, _local_6.fromC([_arg_2])));
     }
 
-} cmodule.lua_wrapper
+}
 

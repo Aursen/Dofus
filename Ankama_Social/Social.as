@@ -549,5 +549,5 @@ package Ankama_Social
 
 
     }
-} Ankama_Social
+}
 

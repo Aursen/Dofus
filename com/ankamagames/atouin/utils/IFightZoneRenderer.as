@@ -9,5 +9,5 @@ package com.ankamagames.atouin.utils
         function set showFarmCell(_arg_1:Boolean):void;
 
     }
-} com.ankamagames.atouin.utils
+}
 

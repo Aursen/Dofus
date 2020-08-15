@@ -468,5 +468,5 @@ package com.ankamagames.tubul
 
 
     }
-} com.ankamagames.tubul
+}
 

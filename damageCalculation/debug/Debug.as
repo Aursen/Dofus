@@ -371,5 +371,5 @@ package damageCalculation.debug
 
 
     }
-} damageCalculation.debug
+}
 

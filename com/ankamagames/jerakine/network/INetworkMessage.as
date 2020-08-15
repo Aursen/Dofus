@@ -15,5 +15,5 @@ package com.ankamagames.jerakine.network
         function set unpacked(_arg_1:Boolean):void;
 
     }
-} com.ankamagames.jerakine.network
+}
 

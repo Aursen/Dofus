@@ -324,5 +324,5 @@ package com.ankamagames.berilia.managers
 
 
     }
-} com.ankamagames.berilia.managers
+}
 

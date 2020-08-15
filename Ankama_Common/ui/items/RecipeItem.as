@@ -313,5 +313,5 @@ package Ankama_Common.ui.items
 
 
     }
-} Ankama_Common.ui.items
+}
 

@@ -8,5 +8,5 @@ package com.ankamagames.jerakine.interfaces
         function addApi(_arg_1:String, _arg_2:*):void;
 
     }
-} com.ankamagames.jerakine.interfaces
+}
 

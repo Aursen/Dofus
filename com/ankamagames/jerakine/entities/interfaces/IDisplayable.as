@@ -14,5 +14,5 @@ package com.ankamagames.jerakine.entities.interfaces
         function remove():void;
 
     }
-} com.ankamagames.jerakine.entities.interfaces
+}
 

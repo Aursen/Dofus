@@ -8,5 +8,5 @@ package Ankama_ContextMenu.behaviors
         function canDestroyItem(_arg_1:ItemWrapper):Boolean;
 
     }
-} Ankama_ContextMenu.behaviors
+}
 

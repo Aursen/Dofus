@@ -11,5 +11,5 @@ package com.hurlant.crypto.hash
         function toString():String;
 
     }
-} com.hurlant.crypto.hash
+}
 

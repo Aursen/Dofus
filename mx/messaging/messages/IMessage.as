@@ -20,5 +20,5 @@ package mx.messaging.messages
         function toString():String;
 
     }
-} mx.messaging.messages
+}
 

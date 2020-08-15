@@ -12,5 +12,5 @@ package org.flintparticles.common.activities
         function update(_arg_1:Emitter, _arg_2:Number):void;
 
     }
-} org.flintparticles.common.activities
+}
 

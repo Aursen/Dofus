@@ -33,5 +33,5 @@ package com.ankamagames.jerakine.console
 
 
     }
-} com.ankamagames.jerakine.console
+}
 

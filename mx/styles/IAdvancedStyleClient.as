@@ -12,5 +12,5 @@ package mx.styles
         function hasCSSState():Boolean;
 
     }
-} mx.styles
+}
 

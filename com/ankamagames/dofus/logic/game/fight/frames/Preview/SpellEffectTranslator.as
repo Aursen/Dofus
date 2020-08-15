@@ -93,5 +93,5 @@ package com.ankamagames.dofus.logic.game.fight.frames.Preview
 
 
     }
-} com.ankamagames.dofus.logic.game.fight.frames.Preview
+}
 

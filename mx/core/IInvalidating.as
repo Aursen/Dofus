@@ -9,5 +9,5 @@ package mx.core
         function validateNow():void;
 
     }
-} mx.core
+}
 

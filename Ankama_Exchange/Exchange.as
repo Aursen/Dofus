@@ -196,5 +196,5 @@ package Ankama_Exchange
 
 
     }
-} Ankama_Exchange
+}
 

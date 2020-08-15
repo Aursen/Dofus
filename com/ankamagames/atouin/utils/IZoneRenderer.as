@@ -11,5 +11,5 @@ package com.ankamagames.atouin.utils
         function remove(_arg_1:Vector.<uint>, _arg_2:DataMapContainer):void;
 
     }
-} com.ankamagames.atouin.utils
+}
 

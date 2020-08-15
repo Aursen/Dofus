@@ -9,5 +9,5 @@ package com.ankamagames.jerakine.network
         function set content(_arg_1:ByteArray):void;
 
     }
-} com.ankamagames.jerakine.network
+}
 

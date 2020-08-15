@@ -468,7 +468,7 @@ package com.ankamagames.berilia.frames
 
 
     }
-} com.ankamagames.berilia.frames
+}
 
 import flash.text.TextField;
 import flash.text.TextFieldAutoSize;

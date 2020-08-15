@@ -87,5 +87,5 @@ package com.ankamagames.dofus.network.types.game.look
 
 
     }
-} com.ankamagames.dofus.network.types.game.look
+}
 

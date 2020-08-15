@@ -203,5 +203,5 @@ package com.ankamagames.dofus.network.messages.game.context.fight
 
 
     }
-} com.ankamagames.dofus.network.messages.game.context.fight
+}
 

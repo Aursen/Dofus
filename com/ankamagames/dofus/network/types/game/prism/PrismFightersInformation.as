@@ -180,5 +180,5 @@ package com.ankamagames.dofus.network.types.game.prism
 
 
     }
-} com.ankamagames.dofus.network.types.game.prism
+}
 

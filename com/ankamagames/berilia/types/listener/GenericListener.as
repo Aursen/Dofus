@@ -107,5 +107,5 @@ package com.ankamagames.berilia.types.listener
 
 
     }
-} com.ankamagames.berilia.types.listener
+}
 

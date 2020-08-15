@@ -657,5 +657,5 @@ package Ankama_Fight.ui.timeline
 
 
     }
-} Ankama_Fight.ui.timeline
+}
 

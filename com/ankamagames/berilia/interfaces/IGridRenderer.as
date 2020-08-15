@@ -18,5 +18,5 @@ package com.ankamagames.berilia.interfaces
         function getDataLength(_arg_1:*, _arg_2:Boolean):uint;
 
     }
-} com.ankamagames.berilia.interfaces
+}
 

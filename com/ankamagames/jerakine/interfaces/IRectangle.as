@@ -17,5 +17,5 @@ package com.ankamagames.jerakine.interfaces
         function globalToLocal(_arg_1:Point):Point;
 
     }
-} com.ankamagames.jerakine.interfaces
+}
 

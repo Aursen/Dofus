@@ -301,7 +301,7 @@ package com.ankamagames.jerakine.network
 
 
     }
-} com.ankamagames.jerakine.network
+}
 
 import com.ankamagames.jerakine.messages.MessageHandler;
 import com.ankamagames.jerakine.network.IServerConnection;

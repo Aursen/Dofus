@@ -11,5 +11,5 @@ package flashx.textLayout.conversion
         function set preserveHTMLElement(_arg_1:Boolean):void;
 
     }
-} flashx.textLayout.conversion
+}
 

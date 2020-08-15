@@ -61,5 +61,5 @@ package com.ankamagames.dofus.types.entities
 
 
     }
-} com.ankamagames.dofus.types.entities
+}
 

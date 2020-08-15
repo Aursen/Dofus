@@ -431,5 +431,5 @@ package org.flintparticles.common.emitters
 
 
     }
-} org.flintparticles.common.emitters
+}
 

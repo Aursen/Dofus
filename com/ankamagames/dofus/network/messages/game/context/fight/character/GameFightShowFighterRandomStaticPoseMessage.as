@@ -91,5 +91,5 @@ package com.ankamagames.dofus.network.messages.game.context.fight.character
 
 
     }
-} com.ankamagames.dofus.network.messages.game.context.fight.character
+}
 

@@ -40,7 +40,7 @@ package com.ankamagames.dofus.logic.game.common.misc
 
 
     }
-} com.ankamagames.dofus.logic.game.common.misc
+}
 
 import com.ankamagames.berilia.types.data.Hook;
 import com.ankamagames.berilia.managers.KernelEventsManager;

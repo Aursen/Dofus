@@ -106,5 +106,5 @@ package com.ankamagames.dofus.network.messages.secure
 
 
     }
-} com.ankamagames.dofus.network.messages.secure
+}
 

@@ -8,5 +8,5 @@ package mx.resources
         function get locale():String;
 
     }
-} mx.resources
+}
 

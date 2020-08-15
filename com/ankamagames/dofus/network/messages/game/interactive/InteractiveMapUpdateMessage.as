@@ -134,5 +134,5 @@ package com.ankamagames.dofus.network.messages.game.interactive
 
 
     }
-} com.ankamagames.dofus.network.messages.game.interactive
+}
 

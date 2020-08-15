@@ -9,5 +9,5 @@ package com.ankamagames.tiphon.types
         function getModifiedAnimation(_arg_1:String, _arg_2:TiphonEntityLook):String;
 
     }
-} com.ankamagames.tiphon.types
+}
 

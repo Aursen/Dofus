@@ -8,5 +8,5 @@ package flashx.textLayout.elements
         function resolveExplicitFormat(_arg_1:Object):ITextLayoutFormat;
 
     }
-} flashx.textLayout.elements
+}
 

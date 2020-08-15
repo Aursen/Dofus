@@ -330,5 +330,5 @@ package gs.core
 
 
     }
-} gs.core
+}
 

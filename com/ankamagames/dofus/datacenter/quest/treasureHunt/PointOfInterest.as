@@ -49,5 +49,5 @@ package com.ankamagames.dofus.datacenter.quest.treasureHunt
 
 
     }
-} com.ankamagames.dofus.datacenter.quest.treasureHunt
+}
 

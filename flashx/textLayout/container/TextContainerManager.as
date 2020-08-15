@@ -1757,7 +1757,7 @@ package flashx.textLayout.container
 
 
     }
-} flashx.textLayout.container
+}
 
 import flashx.textLayout.container.ContainerController;
 import flashx.textLayout.container.TextContainerManager;

@@ -51,5 +51,5 @@ package com.ankamagames.dofus.network.types.game.context.roleplay.treasureHunt
 
 
     }
-} com.ankamagames.dofus.network.types.game.context.roleplay.treasureHunt
+}
 

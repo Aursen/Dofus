@@ -13,5 +13,5 @@ package com.ankamagames.jerakine.resources.adapters
         function getResourceType():uint;
 
     }
-} com.ankamagames.jerakine.resources.adapters
+}
 

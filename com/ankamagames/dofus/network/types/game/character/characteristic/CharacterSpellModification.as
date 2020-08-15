@@ -103,5 +103,5 @@ package com.ankamagames.dofus.network.types.game.character.characteristic
 
 
     }
-} com.ankamagames.dofus.network.types.game.character.characteristic
+}
 

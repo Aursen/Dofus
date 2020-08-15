@@ -21,5 +21,5 @@ package mx.managers
         function unRegisterToUseBusyCursor(_arg_1:Object):void;
 
     }
-} mx.managers
+}
 

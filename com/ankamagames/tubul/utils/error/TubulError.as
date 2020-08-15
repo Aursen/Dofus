@@ -9,5 +9,5 @@ package com.ankamagames.tubul.utils.error
         }
 
     }
-} com.ankamagames.tubul.utils.error
+}
 

@@ -1212,5 +1212,5 @@ package Ankama_Roleplay.ui
 
 
     }
-} Ankama_Roleplay.ui
+}
 

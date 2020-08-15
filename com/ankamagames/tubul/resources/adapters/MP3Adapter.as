@@ -96,5 +96,5 @@ package com.ankamagames.tubul.resources.adapters
 
 
     }
-} com.ankamagames.tubul.resources.adapters
+}
 

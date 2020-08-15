@@ -2483,5 +2483,5 @@ package _DeflateStream
 
 
     }
-} _DeflateStream
+}
 

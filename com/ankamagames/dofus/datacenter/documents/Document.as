@@ -91,5 +91,5 @@ package com.ankamagames.dofus.datacenter.documents
 
 
     }
-} com.ankamagames.dofus.datacenter.documents
+}
 

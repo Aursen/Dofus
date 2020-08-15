@@ -93,5 +93,5 @@ package com.ankamagames.dofus.network.types.game.inventory.exchanges
 
 
     }
-} com.ankamagames.dofus.network.types.game.inventory.exchanges
+}
 

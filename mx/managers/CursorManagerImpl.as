@@ -577,7 +577,7 @@ package mx.managers
 
 
     }
-} mx.managers
+}
 
 import mx.core.mx_internal;
 import mx.managers.ISystemManager;

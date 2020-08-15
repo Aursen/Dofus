@@ -34,5 +34,5 @@ package com.ankamagames.dofus.datacenter.playlists
 
 
     }
-} com.ankamagames.dofus.datacenter.playlists
+}
 

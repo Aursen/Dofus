@@ -120,5 +120,5 @@ package com.ankamagames.dofus.network.messages.common.basic
 
 
     }
-} com.ankamagames.dofus.network.messages.common.basic
+}
 

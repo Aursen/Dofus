@@ -8,5 +8,5 @@ package com.ankamagames.performance
         function getResults():String;
 
     }
-} com.ankamagames.performance
+}
 

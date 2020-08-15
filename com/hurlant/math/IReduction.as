@@ -12,5 +12,5 @@ package com.hurlant.math
         function sqrTo(_arg_1:BigInteger, _arg_2:BigInteger):void;
 
     }
-} com.hurlant.math
+}
 

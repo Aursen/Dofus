@@ -9,5 +9,5 @@ package org.openapitools.exception
         }
 
     }
-} org.openapitools.exception
+}
 

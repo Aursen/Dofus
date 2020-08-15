@@ -9,5 +9,5 @@ package com.ankamagames.dofus.logic.game.common.misc
         function unregistered():void;
 
     }
-} com.ankamagames.dofus.logic.game.common.misc
+}
 

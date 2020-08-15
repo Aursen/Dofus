@@ -1949,7 +1949,7 @@ package flashx.textLayout.compose
 
 
     }
-} flashx.textLayout.compose
+}
 
 import flash.geom.Rectangle;
 import flashx.textLayout.formats.ITextLayoutFormat;

@@ -10,5 +10,5 @@ package com.ankamagames.jerakine.resources
         function onProgress(_arg_1:Uri, _arg_2:uint, _arg_3:uint):void;
 
     }
-} com.ankamagames.jerakine.resources
+}
 

@@ -6,5 +6,5 @@ package com.ankamagames.jerakine.messages
         function process(_arg_1:Message):Boolean;
 
     }
-} com.ankamagames.jerakine.messages
+}
 

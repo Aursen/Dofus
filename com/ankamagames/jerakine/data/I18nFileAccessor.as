@@ -288,5 +288,5 @@ package com.ankamagames.jerakine.data
 
 
     }
-} com.ankamagames.jerakine.data
+}
 

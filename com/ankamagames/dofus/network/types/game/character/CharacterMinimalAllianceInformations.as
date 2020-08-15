@@ -77,5 +77,5 @@ package com.ankamagames.dofus.network.types.game.character
 
 
     }
-} com.ankamagames.dofus.network.types.game.character
+}
 

@@ -53,5 +53,5 @@ package mx.core
         function owns(_arg_1:DisplayObject):Boolean;
 
     }
-} mx.core
+}
 

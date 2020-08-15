@@ -316,7 +316,7 @@ package com.ankamagames.dofus.types.characteristicContextual
 
 
     }
-} com.ankamagames.dofus.types.characteristicContextual
+}
 
 import com.ankamagames.jerakine.entities.interfaces.IEntity;
 import com.ankamagames.dofus.types.characteristicContextual.CharacteristicContextual;

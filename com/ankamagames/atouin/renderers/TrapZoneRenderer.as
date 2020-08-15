@@ -172,5 +172,5 @@ package com.ankamagames.atouin.renderers
 
 
     }
-} com.ankamagames.atouin.renderers
+}
 

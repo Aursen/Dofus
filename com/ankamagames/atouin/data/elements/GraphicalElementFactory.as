@@ -35,5 +35,5 @@ package com.ankamagames.atouin.data.elements
 
 
     }
-} com.ankamagames.atouin.data.elements
+}
 

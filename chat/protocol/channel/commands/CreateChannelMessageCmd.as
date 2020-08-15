@@ -17,5 +17,5 @@ package chat.protocol.channel.commands
         }
 
     }
-} chat.protocol.channel.commands
+}
 

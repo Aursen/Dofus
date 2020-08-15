@@ -14,5 +14,5 @@ package mx.logging
         function warn(_arg_1:String, ... _args):void;
 
     }
-} mx.logging
+}
 

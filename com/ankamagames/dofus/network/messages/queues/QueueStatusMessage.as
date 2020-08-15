@@ -124,5 +124,5 @@ package com.ankamagames.dofus.network.messages.queues
 
 
     }
-} com.ankamagames.dofus.network.messages.queues
+}
 

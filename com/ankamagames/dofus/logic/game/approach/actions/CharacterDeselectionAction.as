@@ -14,5 +14,5 @@ package com.ankamagames.dofus.logic.game.approach.actions
 
 
     }
-} com.ankamagames.dofus.logic.game.approach.actions
+}
 

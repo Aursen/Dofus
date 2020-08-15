@@ -1326,5 +1326,5 @@ package flashx.textLayout.elements
 
 
     }
-} flashx.textLayout.elements
+}
 

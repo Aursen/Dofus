@@ -1311,5 +1311,5 @@ package Ankama_Tutorial.managers
 
 
     }
-} Ankama_Tutorial.managers
+}
 

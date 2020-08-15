@@ -9,5 +9,5 @@ package chat.protocol.friendinvite.data
 
 
     }
-} chat.protocol.friendinvite.data
+}
 

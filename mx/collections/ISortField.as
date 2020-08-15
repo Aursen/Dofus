@@ -21,5 +21,5 @@ package mx.collections
         function objectHasSortField(_arg_1:Object):Boolean;
 
     }
-} mx.collections
+}
 

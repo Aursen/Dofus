@@ -1316,5 +1316,5 @@ package Ankama_Exchange.ui
 
 
     }
-} Ankama_Exchange.ui
+}
 

@@ -129,5 +129,5 @@ package com.ankamagames.dofus.network.messages.game.context.roleplay.breach.rewa
 
 
     }
-} com.ankamagames.dofus.network.messages.game.context.roleplay.breach.reward
+}
 

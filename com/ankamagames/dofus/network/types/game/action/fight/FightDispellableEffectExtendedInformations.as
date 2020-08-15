@@ -112,5 +112,5 @@ package com.ankamagames.dofus.network.types.game.action.fight
 
 
     }
-} com.ankamagames.dofus.network.types.game.action.fight
+}
 

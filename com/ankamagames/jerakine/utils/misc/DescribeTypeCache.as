@@ -344,5 +344,5 @@ package com.ankamagames.jerakine.utils.misc
 
 
     }
-} com.ankamagames.jerakine.utils.misc
+}
 

@@ -85,5 +85,5 @@ package com.ankamagames.dofus.datacenter.jobs
 
 
     }
-} com.ankamagames.dofus.datacenter.jobs
+}
 

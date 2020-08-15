@@ -99,5 +99,5 @@ package com.ankamagames.dofus.network.types.game.context.roleplay.quest
 
 
     }
-} com.ankamagames.dofus.network.types.game.context.roleplay.quest
+}
 

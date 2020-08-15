@@ -17,5 +17,5 @@ package chat.protocol.friendinvite.commands
         }
 
     }
-} chat.protocol.friendinvite.commands
+}
 

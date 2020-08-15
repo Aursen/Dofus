@@ -988,5 +988,5 @@ package com.ankamagames.dofus.datacenter.effects
 
 
     }
-} com.ankamagames.dofus.datacenter.effects
+}
 

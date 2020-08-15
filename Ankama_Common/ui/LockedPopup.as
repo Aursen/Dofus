@@ -187,5 +187,5 @@ package Ankama_Common.ui
 
 
     }
-} Ankama_Common.ui
+}
 

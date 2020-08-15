@@ -620,5 +620,5 @@ package com.ankamagames.berilia.uiRender
 
 
     }
-} com.ankamagames.berilia.uiRender
+}
 

@@ -46,5 +46,5 @@ package com.ankamagames.dofus.datacenter.livingObjects
 
 
     }
-} com.ankamagames.dofus.datacenter.livingObjects
+}
 

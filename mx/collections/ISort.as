@@ -15,5 +15,5 @@ package mx.collections
         function sort(_arg_1:Array):void;
 
     }
-} mx.collections
+}
 

@@ -14,5 +14,5 @@ package com.ankamagames.dofus.logic.game.common.actions.exchange
 
 
     }
-} com.ankamagames.dofus.logic.game.common.actions.exchange
+}
 

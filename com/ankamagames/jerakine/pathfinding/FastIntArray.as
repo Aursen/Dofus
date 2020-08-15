@@ -61,5 +61,5 @@ package com.ankamagames.jerakine.pathfinding
 
 
     }
-} com.ankamagames.jerakine.pathfinding
+}
 

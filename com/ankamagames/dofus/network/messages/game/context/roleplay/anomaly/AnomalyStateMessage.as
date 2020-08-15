@@ -135,5 +135,5 @@ package com.ankamagames.dofus.network.messages.game.context.roleplay.anomaly
 
 
     }
-} com.ankamagames.dofus.network.messages.game.context.roleplay.anomaly
+}
 

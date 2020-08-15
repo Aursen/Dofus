@@ -9,5 +9,5 @@ package com.ankamagames.tiphon.types
         function onSubEntityAdded(_arg_1:TiphonSprite, _arg_2:TiphonEntityLook, _arg_3:uint, _arg_4:uint):Boolean;
 
     }
-} com.ankamagames.tiphon.types
+}
 

@@ -120,5 +120,5 @@ package com.ankamagames.dofus.internalDatacenter.quest
 
 
     }
-} com.ankamagames.dofus.internalDatacenter.quest
+}
 

@@ -25,5 +25,5 @@ package cmodule.lua_wrapper
         return (vglMouseButtons);
     }
 
-} cmodule.lua_wrapper
+}
 

@@ -189,5 +189,5 @@ package Ankama_Console
 
 
     }
-} Ankama_Console
+}
 

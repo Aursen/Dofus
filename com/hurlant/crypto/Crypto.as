@@ -225,5 +225,5 @@ package com.hurlant.crypto
 
 
     }
-} com.hurlant.crypto
+}
 

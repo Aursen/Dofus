@@ -111,7 +111,7 @@ package mx.utils
 
 
     }
-} mx.utils
+}
 
 class XMLNotifierSingleton 
 {

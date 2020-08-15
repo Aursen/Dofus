@@ -105,5 +105,5 @@ package com.ankamagames.dofus.network.messages.game.context.roleplay.spell
 
 
     }
-} com.ankamagames.dofus.network.messages.game.context.roleplay.spell
+}
 

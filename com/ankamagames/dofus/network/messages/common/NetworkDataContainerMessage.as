@@ -108,5 +108,5 @@ package com.ankamagames.dofus.network.messages.common
 
 
     }
-} com.ankamagames.dofus.network.messages.common
+}
 

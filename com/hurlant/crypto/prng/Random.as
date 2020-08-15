@@ -129,5 +129,5 @@ package com.hurlant.crypto.prng
 
 
     }
-} com.hurlant.crypto.prng
+}
 

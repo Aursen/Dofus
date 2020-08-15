@@ -61,5 +61,5 @@ package com.ankamagames.dofus.datacenter.quest
 
 
     }
-} com.ankamagames.dofus.datacenter.quest
+}
 

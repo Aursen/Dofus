@@ -12,5 +12,5 @@ package flashx.textLayout.elements
         function getResolverForNewFlow(_arg_1:TextFlow, _arg_2:TextFlow):IFormatResolver;
 
     }
-} flashx.textLayout.elements
+}
 

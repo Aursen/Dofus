@@ -11,5 +11,5 @@ package com.ankamagames.dofusModuleLibrary.enum
 
 
     }
-} com.ankamagames.dofusModuleLibrary.enum
+}
 

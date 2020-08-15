@@ -226,5 +226,5 @@ package com.ankamagames.dofus.network.messages.game.tinsel
 
 
     }
-} com.ankamagames.dofus.network.messages.game.tinsel
+}
 

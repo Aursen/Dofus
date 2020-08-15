@@ -70,5 +70,5 @@ package mx.core
         function setActualSize(_arg_1:Number, _arg_2:Number):void;
 
     }
-} mx.core
+}
 

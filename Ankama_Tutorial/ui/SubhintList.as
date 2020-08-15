@@ -534,5 +534,5 @@ package Ankama_Tutorial.ui
 
 
     }
-} Ankama_Tutorial.ui
+}
 

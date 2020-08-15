@@ -95,5 +95,5 @@ package Ankama_GameUiCore.ui
 
 
     }
-} Ankama_GameUiCore.ui
+}
 

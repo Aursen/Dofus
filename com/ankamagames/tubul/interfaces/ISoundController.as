@@ -17,5 +17,5 @@ package com.ankamagames.tubul.interfaces
         function applyDynamicMix(_arg_1:VolumeFadeEffect, _arg_2:uint, _arg_3:VolumeFadeEffect):void;
 
     }
-} com.ankamagames.tubul.interfaces
+}
 

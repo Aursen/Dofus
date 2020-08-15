@@ -1200,5 +1200,5 @@ package com.ankamagames.dofus.externalnotification
 
 
     }
-} com.ankamagames.dofus.externalnotification
+}
 

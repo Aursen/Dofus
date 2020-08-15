@@ -20,5 +20,5 @@ package damageCalculation.fighterManagement
         function canBreedBeCarried():Boolean;
 
     }
-} damageCalculation.fighterManagement
+}
 

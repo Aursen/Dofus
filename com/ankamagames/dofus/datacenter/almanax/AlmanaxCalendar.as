@@ -56,5 +56,5 @@ package com.ankamagames.dofus.datacenter.almanax
 
 
     }
-} com.ankamagames.dofus.datacenter.almanax
+}
 

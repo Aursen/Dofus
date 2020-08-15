@@ -484,5 +484,5 @@ package com.ankamagames.dofus.console.moduleLogger
 
 
     }
-} com.ankamagames.dofus.console.moduleLogger
+}
 

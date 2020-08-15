@@ -697,7 +697,7 @@ package flashx.textLayout.elements
 
 
     }
-} flashx.textLayout.elements
+}
 
 import flashx.textLayout.formats.ITextLayoutFormat;
 import flashx.textLayout.formats.TextLayoutFormat;

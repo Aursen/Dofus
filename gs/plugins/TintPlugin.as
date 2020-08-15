@@ -72,5 +72,5 @@ package gs.plugins
 
 
     }
-} gs.plugins
+}
 

@@ -1165,7 +1165,7 @@ package com.ankamagames.berilia.components
 
 
     }
-} com.ankamagames.berilia.components
+}
 
 import flash.display.Sprite;
 import flash.display.Bitmap;

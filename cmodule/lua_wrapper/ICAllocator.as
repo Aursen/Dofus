@@ -7,5 +7,5 @@ package cmodule.lua_wrapper
         function alloc(_arg_1:int):int;
 
     }
-} cmodule.lua_wrapper
+}
 

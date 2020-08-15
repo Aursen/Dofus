@@ -98,5 +98,5 @@ package damageCalculation.spellManagement
 
 
     }
-} damageCalculation.spellManagement
+}
 

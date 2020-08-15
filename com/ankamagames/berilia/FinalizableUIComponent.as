@@ -8,5 +8,5 @@ package com.ankamagames.berilia
         function finalize():void;
 
     }
-} com.ankamagames.berilia
+}
 

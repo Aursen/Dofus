@@ -6,5 +6,5 @@ package mx.collections
         function get nameParts():Array;
 
     }
-} mx.collections
+}
 

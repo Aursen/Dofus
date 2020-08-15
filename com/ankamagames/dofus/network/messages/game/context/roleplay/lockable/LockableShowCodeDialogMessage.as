@@ -116,5 +116,5 @@ package com.ankamagames.dofus.network.messages.game.context.roleplay.lockable
 
 
     }
-} com.ankamagames.dofus.network.messages.game.context.roleplay.lockable
+}
 

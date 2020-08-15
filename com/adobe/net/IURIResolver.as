@@ -6,5 +6,5 @@ package com.adobe.net
         function resolve(_arg_1:URI):URI;
 
     }
-} com.adobe.net
+}
 

@@ -38,5 +38,5 @@ package com.ankamagames.dofus.internalDatacenter.guild
 
 
     }
-} com.ankamagames.dofus.internalDatacenter.guild
+}
 

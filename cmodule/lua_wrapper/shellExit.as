@@ -32,5 +32,5 @@ package cmodule.lua_wrapper
         throw (new AlchemyExit(res));
     }
 
-} cmodule.lua_wrapper
+}
 

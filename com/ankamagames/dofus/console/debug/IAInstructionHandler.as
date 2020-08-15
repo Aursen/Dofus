@@ -188,5 +188,5 @@ package com.ankamagames.dofus.console.debug
 
 
     }
-} com.ankamagames.dofus.console.debug
+}
 

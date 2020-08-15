@@ -4,5 +4,5 @@ package cmodule.lua_wrapper
         "LANG":"en_US.UTF-8",
         "TERM":"ansi"
     };
-} cmodule.lua_wrapper
+}
 

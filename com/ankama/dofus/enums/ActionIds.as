@@ -666,5 +666,5 @@ package com.ankama.dofus.enums
         }
 
     }
-} com.ankama.dofus.enums
+}
 

@@ -17,5 +17,5 @@ package com.ankamagames.berilia.events
         }
 
     }
-} com.ankamagames.berilia.events
+}
 

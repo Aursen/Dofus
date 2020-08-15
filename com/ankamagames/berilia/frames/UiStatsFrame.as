@@ -208,5 +208,5 @@ package com.ankamagames.berilia.frames
 
 
     }
-} com.ankamagames.berilia.frames
+}
 

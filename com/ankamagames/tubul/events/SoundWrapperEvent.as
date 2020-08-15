@@ -20,5 +20,5 @@ package com.ankamagames.tubul.events
 
 
     }
-} com.ankamagames.tubul.events
+}
 

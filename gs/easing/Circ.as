@@ -25,5 +25,5 @@ package gs.easing
 
 
     }
-} gs.easing
+}
 

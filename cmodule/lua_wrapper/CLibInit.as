@@ -76,7 +76,7 @@ package cmodule.lua_wrapper
 
 
     }
-} cmodule.lua_wrapper
+}
 import cmodule.lua_wrapper.gshell;
 import cmodule.lua_wrapper.establishEnv;
 import cmodule.lua_wrapper.glogLvl;

@@ -32,5 +32,5 @@ package Ankama_Tooltips.blocks
 
 
     }
-} Ankama_Tooltips.blocks
+}
 

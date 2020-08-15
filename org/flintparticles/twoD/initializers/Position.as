@@ -49,5 +49,5 @@ package org.flintparticles.twoD.initializers
 
 
     }
-} org.flintparticles.twoD.initializers
+}
 

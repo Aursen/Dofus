@@ -14,5 +14,5 @@ package com.ankamagames.dofus.logic.game.common.actions.dare
 
 
     }
-} com.ankamagames.dofus.logic.game.common.actions.dare
+}
 

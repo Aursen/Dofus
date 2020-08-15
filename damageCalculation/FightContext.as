@@ -480,5 +480,5 @@ package damageCalculation
 
 
     }
-} damageCalculation
+}
 

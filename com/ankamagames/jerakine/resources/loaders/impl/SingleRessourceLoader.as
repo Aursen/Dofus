@@ -67,5 +67,5 @@ package com.ankamagames.jerakine.resources.loaders.impl
 
 
     }
-} com.ankamagames.jerakine.resources.loaders.impl
+}
 

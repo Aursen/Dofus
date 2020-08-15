@@ -48,5 +48,5 @@ package com.ankamagames.jerakine.utils.benchmark.monitoring
 
 
     }
-} com.ankamagames.jerakine.utils.benchmark.monitoring
+}
 

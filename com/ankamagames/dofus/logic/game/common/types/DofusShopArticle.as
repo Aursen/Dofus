@@ -319,5 +319,5 @@ package com.ankamagames.dofus.logic.game.common.types
 
 
     }
-} com.ankamagames.dofus.logic.game.common.types
+}
 

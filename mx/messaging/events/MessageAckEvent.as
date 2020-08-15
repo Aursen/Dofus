@@ -49,5 +49,5 @@ package mx.messaging.events
 
 
     }
-} mx.messaging.events
+}
 

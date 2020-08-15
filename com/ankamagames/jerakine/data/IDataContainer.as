@@ -11,5 +11,5 @@ package com.ankamagames.jerakine.data
         function create():void;
 
     }
-} com.ankamagames.jerakine.data
+}
 

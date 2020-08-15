@@ -23,5 +23,5 @@ package com.ankamagames.dofus.datacenter.ambientSounds
 
 
     }
-} com.ankamagames.dofus.datacenter.ambientSounds
+}
 

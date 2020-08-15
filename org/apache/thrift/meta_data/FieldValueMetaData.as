@@ -24,5 +24,5 @@ package org.apache.thrift.meta_data
 
 
     }
-} org.apache.thrift.meta_data
+}
 

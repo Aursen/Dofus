@@ -262,7 +262,7 @@ package com.ankamagames.berilia.managers
 
 
     }
-} com.ankamagames.berilia.managers
+}
 
 import com.ankamagames.berilia.types.graphic.UiRootContainer;
 import com.ankamagames.berilia.types.data.UiData;

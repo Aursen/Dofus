@@ -55,5 +55,5 @@ package com.ankamagames.dofus.internalDatacenter.breach
         }
 
     }
-} com.ankamagames.dofus.internalDatacenter.breach
+}
 

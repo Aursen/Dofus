@@ -472,7 +472,7 @@ package com.ankamagames.atouin.managers
 
 
     }
-} com.ankamagames.atouin.managers
+}
 
 import com.ankamagames.jerakine.types.positions.WorldPoint;
 import flash.utils.ByteArray;

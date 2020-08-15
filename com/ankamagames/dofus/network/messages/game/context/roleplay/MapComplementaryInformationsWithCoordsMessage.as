@@ -136,5 +136,5 @@ package com.ankamagames.dofus.network.messages.game.context.roleplay
 
 
     }
-} com.ankamagames.dofus.network.messages.game.context.roleplay
+}
 

@@ -79,5 +79,5 @@ package com.ankamagames.dofus.network.messages.debug
 
 
     }
-} com.ankamagames.dofus.network.messages.debug
+}
 

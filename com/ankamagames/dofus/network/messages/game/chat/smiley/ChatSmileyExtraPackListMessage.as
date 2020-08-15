@@ -138,5 +138,5 @@ package com.ankamagames.dofus.network.messages.game.chat.smiley
 
 
     }
-} com.ankamagames.dofus.network.messages.game.chat.smiley
+}
 

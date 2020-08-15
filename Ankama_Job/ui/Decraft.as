@@ -25,5 +25,5 @@ package Ankama_Job.ui
 
 
     }
-} Ankama_Job.ui
+}
 

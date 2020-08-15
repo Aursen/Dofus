@@ -1519,7 +1519,7 @@ package Ankama_Cartography.ui
 
 
     }
-} Ankama_Cartography.ui
+}
 
 import flash.geom.Point;
 

@@ -114,5 +114,5 @@ package com.ankamagames.dofus.console.chat
 
 
     }
-} com.ankamagames.dofus.console.chat
+}
 

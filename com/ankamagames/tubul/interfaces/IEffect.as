@@ -8,5 +8,5 @@ package com.ankamagames.tubul.interfaces
         function duplicate():IEffect;
 
     }
-} com.ankamagames.tubul.interfaces
+}
 

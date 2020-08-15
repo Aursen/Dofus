@@ -15,5 +15,5 @@ package mx.collections.errors
         }
 
     }
-} mx.collections.errors
+}
 

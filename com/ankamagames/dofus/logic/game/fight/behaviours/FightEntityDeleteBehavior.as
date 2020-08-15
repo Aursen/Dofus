@@ -58,5 +58,5 @@ package com.ankamagames.dofus.logic.game.fight.behaviours
 
 
     }
-} com.ankamagames.dofus.logic.game.fight.behaviours
+}
 

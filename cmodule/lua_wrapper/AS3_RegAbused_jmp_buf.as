@@ -8,5 +8,5 @@ package cmodule.lua_wrapper
         log(1, "Can't RegAbused -- abuse support disabled");
     }
 
-} cmodule.lua_wrapper
+}
 

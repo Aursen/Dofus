@@ -15,5 +15,5 @@ package Ankama_Common
 
 
     }
-} Ankama_Common
+}
 

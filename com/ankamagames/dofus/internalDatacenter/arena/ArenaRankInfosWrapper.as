@@ -67,5 +67,5 @@ package com.ankamagames.dofus.internalDatacenter.arena
 
 
     }
-} com.ankamagames.dofus.internalDatacenter.arena
+}
 

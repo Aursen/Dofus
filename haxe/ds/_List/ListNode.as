@@ -13,5 +13,5 @@ package haxe.ds._List
         }
 
     }
-} haxe.ds._List
+}
 

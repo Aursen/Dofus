@@ -489,5 +489,5 @@ package com.ankamagames.dofus.themes.utils
 
 
     }
-} com.ankamagames.dofus.themes.utils
+}
 

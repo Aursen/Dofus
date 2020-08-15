@@ -102,5 +102,5 @@ package com.ankamagames.dofus.logic.game.common.misc.inventoryView.temporis
 
 
     }
-} com.ankamagames.dofus.logic.game.common.misc.inventoryView.temporis
+}
 

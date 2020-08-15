@@ -193,5 +193,5 @@ package Ankama_Admin
 
 
     }
-} Ankama_Admin
+}
 

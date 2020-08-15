@@ -340,5 +340,5 @@ package Ankama_Fight.ui.items
 
 
     }
-} Ankama_Fight.ui.items
+}
 

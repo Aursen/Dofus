@@ -11,5 +11,5 @@ package com.ankamagames.jerakine.newCache
         function store(_arg_1:*, _arg_2:*):Boolean;
 
     }
-} com.ankamagames.jerakine.newCache
+}
 

@@ -17,5 +17,5 @@ package Ankama_GameUiCore.ui.params
         }
 
     }
-} Ankama_GameUiCore.ui.params
+}
 

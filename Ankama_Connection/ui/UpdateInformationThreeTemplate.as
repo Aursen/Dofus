@@ -253,5 +253,5 @@ package Ankama_Connection.ui
 
 
     }
-} Ankama_Connection.ui
+}
 

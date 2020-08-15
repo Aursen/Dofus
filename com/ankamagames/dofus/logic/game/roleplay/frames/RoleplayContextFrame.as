@@ -1779,7 +1779,7 @@ package com.ankamagames.dofus.logic.game.roleplay.frames
 
 
     }
-} com.ankamagames.dofus.logic.game.roleplay.frames
+}
 
 import __AS3__.vec.Vector;
 

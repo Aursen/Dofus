@@ -19,5 +19,5 @@ package com.ankamagames.dofus.logic.game.common.actions.prism
 
 
     }
-} com.ankamagames.dofus.logic.game.common.actions.prism
+}
 

@@ -13,5 +13,5 @@ package chat.protocol.user.commands
         }
 
     }
-} chat.protocol.user.commands
+}
 

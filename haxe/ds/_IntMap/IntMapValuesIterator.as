@@ -48,5 +48,5 @@ package haxe.ds._IntMap
 
 
     }
-} haxe.ds._IntMap
+}
 

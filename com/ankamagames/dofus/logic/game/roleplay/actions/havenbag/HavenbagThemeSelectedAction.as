@@ -17,5 +17,5 @@ package com.ankamagames.dofus.logic.game.roleplay.actions.havenbag
 
 
     }
-} com.ankamagames.dofus.logic.game.roleplay.actions.havenbag
+}
 

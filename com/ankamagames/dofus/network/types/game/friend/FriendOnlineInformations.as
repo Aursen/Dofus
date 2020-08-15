@@ -207,5 +207,5 @@ package com.ankamagames.dofus.network.types.game.friend
 
 
     }
-} com.ankamagames.dofus.network.types.game.friend
+}
 

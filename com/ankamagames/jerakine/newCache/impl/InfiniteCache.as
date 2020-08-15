@@ -48,5 +48,5 @@ package com.ankamagames.jerakine.newCache.impl
 
 
     }
-} com.ankamagames.jerakine.newCache.impl
+}
 

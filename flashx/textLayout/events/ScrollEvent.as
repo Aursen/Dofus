@@ -22,5 +22,5 @@ package flashx.textLayout.events
 
 
     }
-} flashx.textLayout.events
+}
 

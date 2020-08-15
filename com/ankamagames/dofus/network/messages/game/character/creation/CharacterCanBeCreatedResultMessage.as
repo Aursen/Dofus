@@ -97,5 +97,5 @@ package com.ankamagames.dofus.network.messages.game.character.creation
 
 
     }
-} com.ankamagames.dofus.network.messages.game.character.creation
+}
 

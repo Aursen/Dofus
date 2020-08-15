@@ -10,5 +10,5 @@ package org.flintparticles.twoD.zones
         function getArea():Number;
 
     }
-} org.flintparticles.twoD.zones
+}
 

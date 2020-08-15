@@ -46,5 +46,5 @@ package com.ankamagames.dofus.datacenter.dare
 
 
     }
-} com.ankamagames.dofus.datacenter.dare
+}
 

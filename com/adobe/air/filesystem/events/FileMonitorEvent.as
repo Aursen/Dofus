@@ -28,5 +28,5 @@ package com.adobe.air.filesystem.events
 
 
     }
-} com.adobe.air.filesystem.events
+}
 

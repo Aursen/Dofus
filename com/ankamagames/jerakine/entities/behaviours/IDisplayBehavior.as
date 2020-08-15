@@ -11,5 +11,5 @@ package com.ankamagames.jerakine.entities.behaviours
         function remove(_arg_1:IDisplayable):void;
 
     }
-} com.ankamagames.jerakine.entities.behaviours
+}
 

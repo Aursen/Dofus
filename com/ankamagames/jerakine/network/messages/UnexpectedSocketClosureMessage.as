@@ -7,5 +7,5 @@ package com.ankamagames.jerakine.network.messages
 
 
     }
-} com.ankamagames.jerakine.network.messages
+}
 

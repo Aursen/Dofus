@@ -25,5 +25,5 @@ package com.hurlant.util.der
 
 
     }
-} com.hurlant.util.der
+}
 

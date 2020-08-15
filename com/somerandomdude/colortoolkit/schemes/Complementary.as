@@ -54,5 +54,5 @@ package com.somerandomdude.colortoolkit.schemes
 
 
     }
-} com.somerandomdude.colortoolkit.schemes
+}
 

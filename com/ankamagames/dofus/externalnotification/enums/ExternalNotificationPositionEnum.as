@@ -10,5 +10,5 @@ package com.ankamagames.dofus.externalnotification.enums
 
 
     }
-} com.ankamagames.dofus.externalnotification.enums
+}
 

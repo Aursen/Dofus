@@ -3109,7 +3109,7 @@ package Ankama_GameUiCore.ui
 
 
     }
-} Ankama_GameUiCore.ui
+}
 
 import __AS3__.vec.Vector;
 import __AS3__.vec.*;

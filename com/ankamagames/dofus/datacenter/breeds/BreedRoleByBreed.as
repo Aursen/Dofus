@@ -31,5 +31,5 @@ package com.ankamagames.dofus.datacenter.breeds
 
 
     }
-} com.ankamagames.dofus.datacenter.breeds
+}
 

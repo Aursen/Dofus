@@ -120,5 +120,5 @@ package com.ankamagames.dofus.network.messages.game.pvp
 
 
     }
-} com.ankamagames.dofus.network.messages.game.pvp
+}
 

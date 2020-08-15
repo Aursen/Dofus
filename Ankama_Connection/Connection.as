@@ -822,5 +822,5 @@ package Ankama_Connection
 
 
     }
-} Ankama_Connection
+}
 

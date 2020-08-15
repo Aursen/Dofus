@@ -14,5 +14,5 @@ package org.flintparticles.common.displayObjects
         }
 
     }
-} org.flintparticles.common.displayObjects
+}
 

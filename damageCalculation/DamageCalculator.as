@@ -1492,5 +1492,5 @@ package damageCalculation
 
 
     }
-} damageCalculation
+}
 

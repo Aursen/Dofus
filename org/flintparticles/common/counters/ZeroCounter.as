@@ -26,5 +26,5 @@ package org.flintparticles.common.counters
 
 
     }
-} org.flintparticles.common.counters
+}
 

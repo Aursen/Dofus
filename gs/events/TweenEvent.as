@@ -25,5 +25,5 @@ package gs.events
 
 
     }
-} gs.events
+}
 

@@ -397,5 +397,5 @@ package com.ankamagames.dofus.kernel.zaap
 
 
     }
-} com.ankamagames.dofus.kernel.zaap
+}
 

@@ -63,5 +63,5 @@ package org.flintparticles.twoD.zones
 
 
     }
-} org.flintparticles.twoD.zones
+}
 

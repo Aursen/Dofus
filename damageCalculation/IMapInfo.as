@@ -18,5 +18,5 @@ package damageCalculation
         function dispellIllusionOnCell(_arg_1:int):void;
 
     }
-} damageCalculation
+}
 

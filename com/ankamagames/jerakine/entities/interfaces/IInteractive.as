@@ -11,5 +11,5 @@ package com.ankamagames.jerakine.entities.interfaces
         function get enabledInteractions():uint;
 
     }
-} com.ankamagames.jerakine.entities.interfaces
+}
 

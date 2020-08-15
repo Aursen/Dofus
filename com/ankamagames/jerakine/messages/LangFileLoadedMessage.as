@@ -31,5 +31,5 @@ package com.ankamagames.jerakine.messages
 
 
     }
-} com.ankamagames.jerakine.messages
+}
 

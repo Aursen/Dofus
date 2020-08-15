@@ -156,5 +156,5 @@ package com.ankamagames.dofus.network.messages.server.basic
 
 
     }
-} com.ankamagames.dofus.network.messages.server.basic
+}
 

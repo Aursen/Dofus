@@ -169,5 +169,5 @@ package flashx.textLayout.accessibility
 
 
     }
-} flashx.textLayout.accessibility
+}
 

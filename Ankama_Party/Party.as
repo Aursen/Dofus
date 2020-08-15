@@ -197,5 +197,5 @@ package Ankama_Party
 
 
     }
-} Ankama_Party
+}
 

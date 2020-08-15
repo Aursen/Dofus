@@ -57,5 +57,5 @@ package com.ankamagames.dofus.datacenter.monsters
 
 
     }
-} com.ankamagames.dofus.datacenter.monsters
+}
 

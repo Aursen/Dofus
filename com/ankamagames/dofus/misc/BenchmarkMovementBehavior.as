@@ -118,5 +118,5 @@ package com.ankamagames.dofus.misc
 
 
     }
-} com.ankamagames.dofus.misc
+}
 

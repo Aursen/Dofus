@@ -108,5 +108,5 @@ package com.ankamagames.dofus.network.types.game.presets
 
 
     }
-} com.ankamagames.dofus.network.types.game.presets
+}
 

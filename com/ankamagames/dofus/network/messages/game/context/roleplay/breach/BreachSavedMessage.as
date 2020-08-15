@@ -97,5 +97,5 @@ package com.ankamagames.dofus.network.messages.game.context.roleplay.breach
 
 
     }
-} com.ankamagames.dofus.network.messages.game.context.roleplay.breach
+}
 

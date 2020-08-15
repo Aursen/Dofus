@@ -707,5 +707,5 @@ package com.ankamagames.dofus.misc.utils.errormanager
 
 
     }
-} com.ankamagames.dofus.misc.utils.errormanager
+}
 

@@ -14,5 +14,5 @@ package com.ankamagames.jerakine.enum
 
 
     }
-} com.ankamagames.jerakine.enum
+}
 

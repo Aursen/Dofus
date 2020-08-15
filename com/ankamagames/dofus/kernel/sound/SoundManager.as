@@ -198,5 +198,5 @@ package com.ankamagames.dofus.kernel.sound
 
 
     }
-} com.ankamagames.dofus.kernel.sound
+}
 

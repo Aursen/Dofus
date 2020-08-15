@@ -53,5 +53,5 @@ package com.ankamagames.atouin.entities.behaviours.display
 
 
     }
-} com.ankamagames.atouin.entities.behaviours.display
+}
 

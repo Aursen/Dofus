@@ -33,5 +33,5 @@ package com.ankamagames.tubul.interfaces
         function clone():ISound;
 
     }
-} com.ankamagames.tubul.interfaces
+}
 

@@ -9,5 +9,5 @@ package com.ankamagames.jerakine.scrambling
         function unscramble(_arg_1:ByteArray):void;
 
     }
-} com.ankamagames.jerakine.scrambling
+}
 

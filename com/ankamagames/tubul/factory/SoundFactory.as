@@ -58,5 +58,5 @@ package com.ankamagames.tubul.factory
 
 
     }
-} com.ankamagames.tubul.factory
+}
 

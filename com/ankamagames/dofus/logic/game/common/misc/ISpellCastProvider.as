@@ -11,5 +11,5 @@ package com.ankamagames.dofus.logic.game.common.misc
         function get stepsBuffer():Vector.<ISequencable>;
 
     }
-} com.ankamagames.dofus.logic.game.common.misc
+}
 

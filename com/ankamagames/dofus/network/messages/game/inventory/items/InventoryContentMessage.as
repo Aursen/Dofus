@@ -148,5 +148,5 @@ package com.ankamagames.dofus.network.messages.game.inventory.items
 
 
     }
-} com.ankamagames.dofus.network.messages.game.inventory.items
+}
 

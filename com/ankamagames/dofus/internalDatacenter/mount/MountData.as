@@ -190,5 +190,5 @@ package com.ankamagames.dofus.internalDatacenter.mount
 
 
     }
-} com.ankamagames.dofus.internalDatacenter.mount
+}
 

@@ -51,5 +51,5 @@ package com.ankamagames.atouin.entities.behaviours.movements
 
 
     }
-} com.ankamagames.atouin.entities.behaviours.movements
+}
 

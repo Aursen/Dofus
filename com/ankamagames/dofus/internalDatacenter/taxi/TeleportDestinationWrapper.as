@@ -122,5 +122,5 @@ package com.ankamagames.dofus.internalDatacenter.taxi
 
 
     }
-} com.ankamagames.dofus.internalDatacenter.taxi
+}
 

@@ -87,5 +87,5 @@ package com.ankamagames.dofus.datacenter.feature
 
 
     }
-} com.ankamagames.dofus.datacenter.feature
+}
 

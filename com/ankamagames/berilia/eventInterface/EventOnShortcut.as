@@ -6,5 +6,5 @@ package com.ankamagames.berilia.eventInterface
         function eventOnShortcut(_arg_1:String):Boolean;
 
     }
-} com.ankamagames.berilia.eventInterface
+}
 

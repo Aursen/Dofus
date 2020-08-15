@@ -26,5 +26,5 @@ package org.flintparticles.common.energyEasing
 
 
     }
-} org.flintparticles.common.energyEasing
+}
 

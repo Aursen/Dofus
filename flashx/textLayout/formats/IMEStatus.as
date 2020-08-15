@@ -14,5 +14,5 @@ package flashx.textLayout.formats
 
 
     }
-} flashx.textLayout.formats
+}
 

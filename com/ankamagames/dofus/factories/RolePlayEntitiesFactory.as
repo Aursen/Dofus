@@ -140,5 +140,5 @@ package com.ankamagames.dofus.factories
 
 
     }
-} com.ankamagames.dofus.factories
+}
 

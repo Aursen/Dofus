@@ -912,7 +912,7 @@ package flashx.textLayout.conversion
 
 
     }
-} flashx.textLayout.conversion
+}
 
 import flashx.textLayout.conversion.TLFormatImporter;
 

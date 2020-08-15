@@ -91,5 +91,5 @@ package com.ankamagames.dofus.network.messages.wtf
 
 
     }
-} com.ankamagames.dofus.network.messages.wtf
+}
 

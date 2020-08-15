@@ -272,5 +272,5 @@ package com.ankamagames.dofus.logic.connection.managers
 
 
     }
-} com.ankamagames.dofus.logic.connection.managers
+}
 

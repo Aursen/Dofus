@@ -40,5 +40,5 @@ package mx.resources
         function initializeLocaleChain(_arg_1:Array):void;
 
     }
-} mx.resources
+}
 

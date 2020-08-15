@@ -166,5 +166,5 @@ package Ankama_Storage.ui.behavior
 
 
     }
-} Ankama_Storage.ui.behavior
+}
 

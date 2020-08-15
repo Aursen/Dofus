@@ -65,5 +65,5 @@ package com.ankamagames.atouin.utils
 
 
     }
-} com.ankamagames.atouin.utils
+}
 

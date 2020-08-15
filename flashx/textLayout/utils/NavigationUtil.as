@@ -1248,5 +1248,5 @@ package flashx.textLayout.utils
 
 
     }
-} flashx.textLayout.utils
+}
 

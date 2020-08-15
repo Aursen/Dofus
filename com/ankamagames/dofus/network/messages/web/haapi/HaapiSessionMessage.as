@@ -112,5 +112,5 @@ package com.ankamagames.dofus.network.messages.web.haapi
 
 
     }
-} com.ankamagames.dofus.network.messages.web.haapi
+}
 

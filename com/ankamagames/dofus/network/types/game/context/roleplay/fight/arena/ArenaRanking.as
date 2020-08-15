@@ -93,5 +93,5 @@ package com.ankamagames.dofus.network.types.game.context.roleplay.fight.arena
 
 
     }
-} com.ankamagames.dofus.network.types.game.context.roleplay.fight.arena
+}
 

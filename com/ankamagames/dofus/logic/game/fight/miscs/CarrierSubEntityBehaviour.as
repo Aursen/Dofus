@@ -41,5 +41,5 @@ package com.ankamagames.dofus.logic.game.fight.miscs
 
 
     }
-} com.ankamagames.dofus.logic.game.fight.miscs
+}
 

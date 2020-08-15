@@ -77,5 +77,5 @@ package com.ankamagames.performance.tests
 
 
     }
-} com.ankamagames.performance.tests
+}
 

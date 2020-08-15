@@ -411,7 +411,7 @@ package com.ankamagames.dofus.logic.game.common.misc
 
 
     }
-} com.ankamagames.dofus.logic.game.common.misc
+}
 
 import com.ankamagames.dofus.internalDatacenter.items.ItemWrapper;
 import flash.utils.Dictionary;

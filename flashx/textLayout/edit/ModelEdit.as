@@ -128,7 +128,7 @@ package flashx.textLayout.edit
 
 
     }
-} flashx.textLayout.edit
+}
 
 import flashx.textLayout.elements.TextFlow;
 import flashx.textLayout.edit.IMemento;

@@ -53,5 +53,5 @@ package Ankama_Document
 
 
     }
-} Ankama_Document
+}
 

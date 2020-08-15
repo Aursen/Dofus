@@ -12,5 +12,5 @@ package org.flintparticles.common.initializers
         function initialize(_arg_1:Emitter, _arg_2:Particle):void;
 
     }
-} org.flintparticles.common.initializers
+}
 

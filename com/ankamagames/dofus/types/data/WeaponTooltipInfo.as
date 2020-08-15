@@ -18,5 +18,5 @@ package com.ankamagames.dofus.types.data
         }
 
     }
-} com.ankamagames.dofus.types.data
+}
 

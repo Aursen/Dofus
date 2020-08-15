@@ -68,5 +68,5 @@ package com.ankamagames.dofus.datacenter.items.criterion
 
 
     }
-} com.ankamagames.dofus.datacenter.items.criterion
+}
 

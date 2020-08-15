@@ -862,7 +862,7 @@ package mx.messaging
 
 
     }
-} mx.messaging
+}
 
 import mx.messaging.MessageResponder;
 import mx.logging.ILogger;

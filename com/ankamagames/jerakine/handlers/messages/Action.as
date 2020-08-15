@@ -6,5 +6,5 @@ package com.ankamagames.jerakine.handlers.messages
     {
 
     }
-} com.ankamagames.jerakine.handlers.messages
+}
 

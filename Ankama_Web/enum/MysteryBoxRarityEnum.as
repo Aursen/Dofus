@@ -17,5 +17,5 @@ package Ankama_Web.enum
 
 
     }
-} Ankama_Web.enum
+}
 

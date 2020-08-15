@@ -142,5 +142,5 @@ package com.ankamagames.dofus.network.messages.web.ankabox
 
 
     }
-} com.ankamagames.dofus.network.messages.web.ankabox
+}
 

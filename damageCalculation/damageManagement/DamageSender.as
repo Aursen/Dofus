@@ -268,7 +268,7 @@ package damageCalculation.damageManagement
 
 
     }
-} damageCalculation.damageManagement
+}
 var _local_3:int;
 var _local_4:Number;
 var _local_1:Array = [];

@@ -92,5 +92,5 @@ package org.openapitools.common
 
 
     }
-} org.openapitools.common
+}
 

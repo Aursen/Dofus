@@ -8,5 +8,5 @@ package com.ankamagames.dofus.logic.game.common.misc
         function get types():Dictionary;
 
     }
-} com.ankamagames.dofus.logic.game.common.misc
+}
 

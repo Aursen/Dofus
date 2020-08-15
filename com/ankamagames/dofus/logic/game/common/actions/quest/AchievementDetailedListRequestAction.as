@@ -17,5 +17,5 @@ package com.ankamagames.dofus.logic.game.common.actions.quest
 
 
     }
-} com.ankamagames.dofus.logic.game.common.actions.quest
+}
 

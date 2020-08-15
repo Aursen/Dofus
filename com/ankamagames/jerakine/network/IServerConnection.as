@@ -24,5 +24,5 @@ package com.ankamagames.jerakine.network
         function send(_arg_1:INetworkMessage, _arg_2:String=""):void;
 
     }
-} com.ankamagames.jerakine.network
+}
 

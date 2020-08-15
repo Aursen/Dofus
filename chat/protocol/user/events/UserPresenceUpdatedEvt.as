@@ -15,5 +15,5 @@ package chat.protocol.user.events
         }
 
     }
-} chat.protocol.user.events
+}
 

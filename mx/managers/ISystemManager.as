@@ -40,5 +40,5 @@ package mx.managers
         function invalidateParentSizeAndDisplayList():void;
 
     }
-} mx.managers
+}
 

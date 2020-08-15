@@ -17,5 +17,5 @@ package com.ankamagames.dofus.logic.game.common.actions.chat
 
 
     }
-} com.ankamagames.dofus.logic.game.common.actions.chat
+}
 

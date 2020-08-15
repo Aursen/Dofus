@@ -124,5 +124,5 @@ package com.ankamagames.dofus.network.messages.game.context.roleplay.objects
 
 
     }
-} com.ankamagames.dofus.network.messages.game.context.roleplay.objects
+}
 

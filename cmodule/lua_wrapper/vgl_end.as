@@ -8,5 +8,5 @@ package cmodule.lua_wrapper
         return (_local_2);
     }
 
-} cmodule.lua_wrapper
+}
 

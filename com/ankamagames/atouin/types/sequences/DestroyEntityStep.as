@@ -90,5 +90,5 @@ package com.ankamagames.atouin.types.sequences
 
 
     }
-} com.ankamagames.atouin.types.sequences
+}
 

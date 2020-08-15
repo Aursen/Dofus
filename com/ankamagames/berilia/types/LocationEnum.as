@@ -15,5 +15,5 @@ package com.ankamagames.berilia.types
 
 
     }
-} com.ankamagames.berilia.types
+}
 

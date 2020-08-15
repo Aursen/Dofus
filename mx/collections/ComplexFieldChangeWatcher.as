@@ -200,7 +200,7 @@ package mx.collections
 
 
     }
-} mx.collections
+}
 
 import flash.events.Event;
 

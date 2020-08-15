@@ -69,5 +69,5 @@ package com.ankamagames.dofus.network.types.common.basic
 
 
     }
-} com.ankamagames.dofus.network.types.common.basic
+}
 

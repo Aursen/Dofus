@@ -116,5 +116,5 @@ package com.ankamagames.dofus.network.messages.game.dare
 
 
     }
-} com.ankamagames.dofus.network.messages.game.dare
+}
 

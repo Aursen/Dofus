@@ -231,5 +231,5 @@ package com.ankamagames.tiphon.sequence
 
 
     }
-} com.ankamagames.tiphon.sequence
+}
 

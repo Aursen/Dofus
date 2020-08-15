@@ -2493,7 +2493,7 @@ package flashx.textLayout.compose
 
 
     }
-} flashx.textLayout.compose
+}
 
 import flashx.textLayout.compose.TextFlowLine;
 import flash.text.engine.TextLine;

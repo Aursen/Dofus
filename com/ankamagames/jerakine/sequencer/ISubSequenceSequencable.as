@@ -6,5 +6,5 @@ package com.ankamagames.jerakine.sequencer
     {
 
     }
-} com.ankamagames.jerakine.sequencer
+}
 

@@ -19,5 +19,5 @@ package com.ankamagames.dofus.logic.game.roleplay.types
         }
 
     }
-} com.ankamagames.dofus.logic.game.roleplay.types
+}
 

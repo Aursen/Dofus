@@ -41,5 +41,5 @@ package Ankama_Taxi
 
 
     }
-} Ankama_Taxi
+}
 

@@ -21,5 +21,5 @@ package mx.styles
         function acceptMediaList(_arg_1:String):Boolean;
 
     }
-} mx.styles
+}
 

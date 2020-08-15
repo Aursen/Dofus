@@ -253,5 +253,5 @@ package com.ankamagames.dofus.misc.stats
 
 
     }
-} com.ankamagames.dofus.misc.stats
+}
 

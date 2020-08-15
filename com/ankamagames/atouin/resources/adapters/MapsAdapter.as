@@ -53,5 +53,5 @@ package com.ankamagames.atouin.resources.adapters
 
 
     }
-} com.ankamagames.atouin.resources.adapters
+}
 

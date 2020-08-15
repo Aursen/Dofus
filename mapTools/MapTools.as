@@ -611,7 +611,7 @@ package mapTools
 
 
     }
-} mapTools
+}
 import mapTools.Point;
 
 var _local_1:Array = [];

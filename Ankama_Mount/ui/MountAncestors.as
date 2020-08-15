@@ -147,5 +147,5 @@ package Ankama_Mount.ui
 
 
     }
-} Ankama_Mount.ui
+}
 

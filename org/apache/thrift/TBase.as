@@ -12,5 +12,5 @@ package org.apache.thrift
         function setFieldValue(_arg_1:int, _arg_2:*):void;
 
     }
-} org.apache.thrift
+}
 

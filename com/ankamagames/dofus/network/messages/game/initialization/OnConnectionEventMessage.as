@@ -101,5 +101,5 @@ package com.ankamagames.dofus.network.messages.game.initialization
 
 
     }
-} com.ankamagames.dofus.network.messages.game.initialization
+}
 

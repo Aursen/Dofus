@@ -158,5 +158,5 @@ package com.ankamagames.dofus.network.messages.game.context.roleplay.job
 
 
     }
-} com.ankamagames.dofus.network.messages.game.context.roleplay.job
+}
 

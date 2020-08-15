@@ -19,5 +19,5 @@ package com.ankamagames.dofus.logic.game.common.actions.quest.treasureHunt
 
 
     }
-} com.ankamagames.dofus.logic.game.common.actions.quest.treasureHunt
+}
 

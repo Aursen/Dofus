@@ -19,5 +19,5 @@ package mx.styles
         function registerEffects(_arg_1:Array):void;
 
     }
-} mx.styles
+}
 

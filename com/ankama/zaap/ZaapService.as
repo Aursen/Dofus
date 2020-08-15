@@ -15,5 +15,5 @@ package com.ankama.zaap
         function zaapMustUpdate_get(_arg_1:String, _arg_2:Function, _arg_3:Function):void;
 
     }
-} com.ankama.zaap
+}
 

@@ -10,5 +10,5 @@ package Ankama_GameUiCore.ui.enums
 
 
     }
-} Ankama_GameUiCore.ui.enums
+}
 

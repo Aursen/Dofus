@@ -1236,7 +1236,7 @@ package mx.collections
 
 
     }
-} mx.collections
+}
 
 import flash.events.EventDispatcher;
 import mx.collections.IViewCursor;

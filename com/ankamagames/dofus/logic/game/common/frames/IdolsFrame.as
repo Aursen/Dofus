@@ -203,5 +203,5 @@ package com.ankamagames.dofus.logic.game.common.frames
 
 
     }
-} com.ankamagames.dofus.logic.game.common.frames
+}
 

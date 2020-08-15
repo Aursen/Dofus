@@ -148,7 +148,7 @@ package com.ankamagames.dofus.logic.game.common.managers
 
 
     }
-} com.ankamagames.dofus.logic.game.common.managers
+}
 
 import com.ankamagames.dofus.datacenter.items.criterion.GroupItemCriterion;
 import com.ankamagames.dofus.datacenter.npcs.Npc;

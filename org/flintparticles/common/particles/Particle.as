@@ -65,5 +65,5 @@ package org.flintparticles.common.particles
 
 
     }
-} org.flintparticles.common.particles
+}
 

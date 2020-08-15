@@ -32,5 +32,5 @@ package com.hurlant.crypto.tls
         }
 
     }
-} com.hurlant.crypto.tls
+}
 

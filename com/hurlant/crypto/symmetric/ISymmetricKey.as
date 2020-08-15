@@ -12,5 +12,5 @@ package com.hurlant.crypto.symmetric
         function toString():String;
 
     }
-} com.hurlant.crypto.symmetric
+}
 

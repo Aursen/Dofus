@@ -7,5 +7,5 @@ package flashx.undo
         function performUndo():void;
 
     }
-} flashx.undo
+}
 

@@ -682,5 +682,5 @@ package Ankama_GameUiCore
 
 
     }
-} Ankama_GameUiCore
+}
 

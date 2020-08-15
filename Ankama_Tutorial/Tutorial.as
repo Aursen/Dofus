@@ -304,5 +304,5 @@ package Ankama_Tutorial
 
 
     }
-} Ankama_Tutorial
+}
 

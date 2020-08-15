@@ -300,7 +300,7 @@ package com.ankamagames.atouin.renderers
 
 
     }
-} com.ankamagames.atouin.renderers
+}
 
 import com.ankamagames.atouin.types.CellContainer;
 import com.ankamagames.jerakine.entities.interfaces.IDisplayable;

@@ -13,5 +13,5 @@ package com.ankamagames.dofus.logic.game.common.actions.externalGame
 
 
     }
-} com.ankamagames.dofus.logic.game.common.actions.externalGame
+}
 

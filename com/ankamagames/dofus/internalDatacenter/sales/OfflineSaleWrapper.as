@@ -37,5 +37,5 @@ package com.ankamagames.dofus.internalDatacenter.sales
 
 
     }
-} com.ankamagames.dofus.internalDatacenter.sales
+}
 

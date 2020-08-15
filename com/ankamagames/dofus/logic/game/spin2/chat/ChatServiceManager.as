@@ -72,5 +72,5 @@ package com.ankamagames.dofus.logic.game.spin2.chat
 
 
     }
-} com.ankamagames.dofus.logic.game.spin2.chat
+}
 

@@ -123,5 +123,5 @@ package com.ankamagames.jerakine.types.positions
 
 
     }
-} com.ankamagames.jerakine.types.positions
+}
 

@@ -51,5 +51,5 @@ package com.ankamagames.dofus.modules.utils.pathfinding.tools
 
 
     }
-} com.ankamagames.dofus.modules.utils.pathfinding.tools
+}
 

@@ -15,5 +15,5 @@ package flashx.textLayout.container
 
 
     }
-} flashx.textLayout.container
+}
 

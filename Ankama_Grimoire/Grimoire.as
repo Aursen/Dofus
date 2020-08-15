@@ -866,5 +866,5 @@ package Ankama_Grimoire
 
 
     }
-} Ankama_Grimoire
+}
 

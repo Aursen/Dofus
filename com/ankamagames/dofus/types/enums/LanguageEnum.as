@@ -15,5 +15,5 @@ package com.ankamagames.dofus.types.enums
 
 
     }
-} com.ankamagames.dofus.types.enums
+}
 

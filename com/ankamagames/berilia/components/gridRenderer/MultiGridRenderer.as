@@ -344,5 +344,5 @@ package com.ankamagames.berilia.components.gridRenderer
 
 
     }
-} com.ankamagames.berilia.components.gridRenderer
+}
 

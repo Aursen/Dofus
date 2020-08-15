@@ -41,5 +41,5 @@ package cmodule.lua_wrapper
         return (_local_3);
     }
 
-} cmodule.lua_wrapper
+}
 

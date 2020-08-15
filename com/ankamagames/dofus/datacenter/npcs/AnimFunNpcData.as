@@ -10,5 +10,5 @@ package com.ankamagames.dofus.datacenter.npcs
 
 
     }
-} com.ankamagames.dofus.datacenter.npcs
+}
 

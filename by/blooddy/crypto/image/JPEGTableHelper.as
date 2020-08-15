@@ -264,5 +264,5 @@ package by.blooddy.crypto.image
 
 
     }
-} by.blooddy.crypto.image
+}
 

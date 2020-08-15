@@ -52,5 +52,5 @@ package com.ankamagames.dofus.datacenter.feature.criterion
 
 
     }
-} com.ankamagames.dofus.datacenter.feature.criterion
+}
 

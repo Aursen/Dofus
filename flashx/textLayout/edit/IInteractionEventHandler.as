@@ -33,5 +33,5 @@ package flashx.textLayout.edit
         function mouseWheelHandler(_arg_1:MouseEvent):void;
 
     }
-} flashx.textLayout.edit
+}
 

@@ -93,5 +93,5 @@ package Ankama_ContextMenu.makers
 
 
     }
-} Ankama_ContextMenu.makers
+}
 

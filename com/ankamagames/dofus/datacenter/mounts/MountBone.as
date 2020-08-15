@@ -25,5 +25,5 @@ package com.ankamagames.dofus.datacenter.mounts
 
 
     }
-} com.ankamagames.dofus.datacenter.mounts
+}
 

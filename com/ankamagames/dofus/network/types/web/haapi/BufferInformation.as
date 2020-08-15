@@ -93,5 +93,5 @@ package com.ankamagames.dofus.network.types.web.haapi
 
 
     }
-} com.ankamagames.dofus.network.types.web.haapi
+}
 

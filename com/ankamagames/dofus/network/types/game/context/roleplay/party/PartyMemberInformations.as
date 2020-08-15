@@ -309,5 +309,5 @@ package com.ankamagames.dofus.network.types.game.context.roleplay.party
 
 
     }
-} com.ankamagames.dofus.network.types.game.context.roleplay.party
+}
 

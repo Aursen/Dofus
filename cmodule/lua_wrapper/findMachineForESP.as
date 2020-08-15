@@ -23,5 +23,5 @@ package cmodule.lua_wrapper
         return (null);
     }
 
-} cmodule.lua_wrapper
+}
 

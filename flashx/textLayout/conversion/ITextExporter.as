@@ -16,5 +16,5 @@ package flashx.textLayout.conversion
         function set config(_arg_1:ImportExportConfiguration):void;
 
     }
-} flashx.textLayout.conversion
+}
 

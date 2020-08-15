@@ -6,5 +6,5 @@ package mx.core
         function get borderMetrics():EdgeMetrics;
 
     }
-} mx.core
+}
 

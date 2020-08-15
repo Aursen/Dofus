@@ -752,7 +752,7 @@ package Ankama_Roleplay.ui
 
 
     }
-} Ankama_Roleplay.ui
+}
 
 import com.ankamagames.berilia.types.graphic.GraphicContainer;
 import com.ankamagames.berilia.api.UiApi;

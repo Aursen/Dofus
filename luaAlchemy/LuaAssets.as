@@ -46,5 +46,5 @@ package luaAlchemy
 
 
     }
-} luaAlchemy
+}
 

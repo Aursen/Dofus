@@ -105,5 +105,5 @@ package com.ankamagames.dofus.network.messages.game.context.roleplay.paddock
 
 
     }
-} com.ankamagames.dofus.network.messages.game.context.roleplay.paddock
+}
 

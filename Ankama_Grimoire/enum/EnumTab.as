@@ -29,5 +29,5 @@ package Ankama_Grimoire.enum
 
 
     }
-} Ankama_Grimoire.enum
+}
 

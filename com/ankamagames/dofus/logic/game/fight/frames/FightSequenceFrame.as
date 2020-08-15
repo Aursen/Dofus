@@ -2030,5 +2030,5 @@ package com.ankamagames.dofus.logic.game.fight.frames
 
 
     }
-} com.ankamagames.dofus.logic.game.fight.frames
+}
 

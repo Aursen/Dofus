@@ -19,5 +19,5 @@ package com.ankamagames.berilia.enums
 
 
     }
-} com.ankamagames.berilia.enums
+}
 

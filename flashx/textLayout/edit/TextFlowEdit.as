@@ -887,5 +887,5 @@ package flashx.textLayout.edit
 
 
     }
-} flashx.textLayout.edit
+}
 

@@ -12,5 +12,5 @@ package flash
         }
 
     }
-} flash
+}
 

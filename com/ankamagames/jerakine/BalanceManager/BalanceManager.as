@@ -200,5 +200,5 @@ package com.ankamagames.jerakine.BalanceManager
 
 
     }
-} com.ankamagames.jerakine.BalanceManager
+}
 

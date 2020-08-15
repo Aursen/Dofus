@@ -68,5 +68,5 @@ package com.ankamagames.dofus.logic.game.common.steps
 
 
     }
-} com.ankamagames.dofus.logic.game.common.steps
+}
 

@@ -11,5 +11,5 @@ package com.ankamagames.dofus.misc.utils.enums
 
 
     }
-} com.ankamagames.dofus.misc.utils.enums
+}
 

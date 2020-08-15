@@ -8,5 +8,5 @@ package com.ankamagames.jerakine.console
         function getParamPossibilities(_arg_1:String, _arg_2:uint=0, _arg_3:Array=null):Array;
 
     }
-} com.ankamagames.jerakine.console
+}
 

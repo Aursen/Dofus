@@ -44,5 +44,5 @@ package mx.events
 
 
     }
-} mx.events
+}
 

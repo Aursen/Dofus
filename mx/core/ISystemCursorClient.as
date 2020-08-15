@@ -7,5 +7,5 @@ package mx.core
         function get showSystemCursor():Boolean;
 
     }
-} mx.core
+}
 

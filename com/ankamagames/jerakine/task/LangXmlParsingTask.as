@@ -85,5 +85,5 @@ package com.ankamagames.jerakine.task
 
 
     }
-} com.ankamagames.jerakine.task
+}
 

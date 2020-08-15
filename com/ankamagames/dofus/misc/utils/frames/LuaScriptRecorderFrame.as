@@ -427,5 +427,5 @@ package com.ankamagames.dofus.misc.utils.frames
 
 
     }
-} com.ankamagames.dofus.misc.utils.frames
+}
 

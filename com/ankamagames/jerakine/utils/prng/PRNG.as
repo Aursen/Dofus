@@ -10,5 +10,5 @@ package com.ankamagames.jerakine.utils.prng
         function nextDoubleR(_arg_1:Number, _arg_2:Number):Number;
 
     }
-} com.ankamagames.jerakine.utils.prng
+}
 

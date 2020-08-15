@@ -240,5 +240,5 @@ package com.ankamagames.dofus.uiApi
 
 
     }
-} com.ankamagames.dofus.uiApi
+}
 

@@ -13,5 +13,5 @@ package com.ankamagames.dofus.misc.stats.events
         }
 
     }
-} com.ankamagames.dofus.misc.stats.events
+}
 

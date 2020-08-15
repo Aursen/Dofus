@@ -176,5 +176,5 @@ package com.ankamagames.dofus.network.types.game.character.restriction
 
 
     }
-} com.ankamagames.dofus.network.types.game.character.restriction
+}
 

@@ -40,7 +40,7 @@ package haxe
 
 
     }
-} haxe
+}
 import haxe.Log;
 
 [OP_NEWCLASS ClassInfo:6458 base:Object].trace = function (_arg_1:*, _arg_2:Object=undefined):void

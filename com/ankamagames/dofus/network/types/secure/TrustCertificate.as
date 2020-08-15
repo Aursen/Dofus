@@ -85,5 +85,5 @@ package com.ankamagames.dofus.network.types.secure
 
 
     }
-} com.ankamagames.dofus.network.types.secure
+}
 

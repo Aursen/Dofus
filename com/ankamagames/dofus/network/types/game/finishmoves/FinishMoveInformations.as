@@ -85,5 +85,5 @@ package com.ankamagames.dofus.network.types.game.finishmoves
 
 
     }
-} com.ankamagames.dofus.network.types.game.finishmoves
+}
 

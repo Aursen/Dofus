@@ -757,5 +757,5 @@ package com.ankamagames.dofus.logic.game.fight.fightEvents
 
 
     }
-} com.ankamagames.dofus.logic.game.fight.fightEvents
+}
 

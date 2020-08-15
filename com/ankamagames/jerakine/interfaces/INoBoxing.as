@@ -4,5 +4,5 @@ package com.ankamagames.jerakine.interfaces
     {
 
     }
-} com.ankamagames.jerakine.interfaces
+}
 

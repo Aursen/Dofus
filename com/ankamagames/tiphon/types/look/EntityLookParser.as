@@ -266,5 +266,5 @@ package com.ankamagames.tiphon.types.look
 
 
     }
-} com.ankamagames.tiphon.types.look
+}
 

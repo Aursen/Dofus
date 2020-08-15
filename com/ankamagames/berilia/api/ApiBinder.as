@@ -161,7 +161,7 @@ package com.ankamagames.berilia.api
 
 
     }
-} com.ankamagames.berilia.api
+}
 
 import __AS3__.vec.Vector;
 import com.ankamagames.jerakine.utils.misc.classInfo.MetadataInfo;

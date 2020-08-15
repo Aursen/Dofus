@@ -79,5 +79,5 @@ package com.ankamagames.dofus.network.types.game.approach
 
 
     }
-} com.ankamagames.dofus.network.types.game.approach
+}
 

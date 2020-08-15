@@ -146,5 +146,5 @@ package com.ankamagames.dofus.network.types.version
 
 
     }
-} com.ankamagames.dofus.network.types.version
+}
 

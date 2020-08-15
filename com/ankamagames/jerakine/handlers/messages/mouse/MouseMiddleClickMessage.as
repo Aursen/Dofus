@@ -18,5 +18,5 @@ package com.ankamagames.jerakine.handlers.messages.mouse
 
 
     }
-} com.ankamagames.jerakine.handlers.messages.mouse
+}
 

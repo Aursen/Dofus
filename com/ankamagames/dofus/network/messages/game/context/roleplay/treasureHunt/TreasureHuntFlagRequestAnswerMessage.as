@@ -135,5 +135,5 @@ package com.ankamagames.dofus.network.messages.game.context.roleplay.treasureHun
 
 
     }
-} com.ankamagames.dofus.network.messages.game.context.roleplay.treasureHunt
+}
 

@@ -79,5 +79,5 @@ package com.ankamagames.dofus.network.messages.game.context.mount
 
 
     }
-} com.ankamagames.dofus.network.messages.game.context.mount
+}
 

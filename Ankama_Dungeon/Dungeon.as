@@ -114,5 +114,5 @@ package Ankama_Dungeon
 
 
     }
-} Ankama_Dungeon
+}
 

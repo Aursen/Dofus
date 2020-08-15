@@ -354,5 +354,5 @@ package Ankama_Admin.ui
 
 
     }
-} Ankama_Admin.ui
+}
 

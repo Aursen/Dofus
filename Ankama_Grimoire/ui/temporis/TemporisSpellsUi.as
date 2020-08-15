@@ -2806,5 +2806,5 @@ package Ankama_Grimoire.ui.temporis
 
 
     }
-} Ankama_Grimoire.ui.temporis
+}
 

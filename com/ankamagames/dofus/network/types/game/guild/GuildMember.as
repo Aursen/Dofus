@@ -280,5 +280,5 @@ package com.ankamagames.dofus.network.types.game.guild
 
 
     }
-} com.ankamagames.dofus.network.types.game.guild
+}
 

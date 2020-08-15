@@ -17,5 +17,5 @@ package com.ankamagames.dofus.logic.game.roleplay.actions.estate
 
 
     }
-} com.ankamagames.dofus.logic.game.roleplay.actions.estate
+}
 

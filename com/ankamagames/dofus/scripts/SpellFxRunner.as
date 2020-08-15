@@ -47,5 +47,5 @@ package com.ankamagames.dofus.scripts
 
 
     }
-} com.ankamagames.dofus.scripts
+}
 

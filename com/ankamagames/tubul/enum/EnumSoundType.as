@@ -8,5 +8,5 @@ package com.ankamagames.tubul.enum
 
 
     }
-} com.ankamagames.tubul.enum
+}
 

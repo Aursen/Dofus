@@ -13,5 +13,5 @@ package com.ankamagames.jerakine.logger.targets
         function onLog(_arg_1:LogEvent):void;
 
     }
-} com.ankamagames.jerakine.logger.targets
+}
 

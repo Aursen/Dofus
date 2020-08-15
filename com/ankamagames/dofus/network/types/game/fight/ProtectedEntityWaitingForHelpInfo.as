@@ -96,5 +96,5 @@ package com.ankamagames.dofus.network.types.game.fight
 
 
     }
-} com.ankamagames.dofus.network.types.game.fight
+}
 

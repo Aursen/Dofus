@@ -34,5 +34,5 @@ package Ankama_Tooltips.blocks.mount
 
 
     }
-} Ankama_Tooltips.blocks.mount
+}
 

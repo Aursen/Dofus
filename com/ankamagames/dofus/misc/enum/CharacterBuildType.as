@@ -9,5 +9,5 @@ package com.ankamagames.dofus.misc.enum
 
 
     }
-} com.ankamagames.dofus.misc.enum
+}
 

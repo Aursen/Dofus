@@ -34,5 +34,5 @@ package com.ankamagames.dofus.logic.common.managers.temporis
 
 
     }
-} com.ankamagames.dofus.logic.common.managers.temporis
+}
 

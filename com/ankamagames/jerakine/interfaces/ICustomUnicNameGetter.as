@@ -6,5 +6,5 @@ package com.ankamagames.jerakine.interfaces
         function get customUnicName():String;
 
     }
-} com.ankamagames.jerakine.interfaces
+}
 

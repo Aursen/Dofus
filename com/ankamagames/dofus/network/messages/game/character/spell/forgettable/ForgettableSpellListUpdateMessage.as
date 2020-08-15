@@ -144,5 +144,5 @@ package com.ankamagames.dofus.network.messages.game.character.spell.forgettable
 
 
     }
-} com.ankamagames.dofus.network.messages.game.character.spell.forgettable
+}
 

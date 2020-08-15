@@ -400,5 +400,5 @@ package flashx.textLayout.compose
 
 
     }
-} flashx.textLayout.compose
+}
 

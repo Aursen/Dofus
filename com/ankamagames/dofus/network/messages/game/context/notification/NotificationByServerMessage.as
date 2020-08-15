@@ -156,5 +156,5 @@ package com.ankamagames.dofus.network.messages.game.context.notification
 
 
     }
-} com.ankamagames.dofus.network.messages.game.context.notification
+}
 

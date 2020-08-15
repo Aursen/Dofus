@@ -148,5 +148,5 @@ package com.ankamagames.dofus.network.messages.game.feed
 
 
     }
-} com.ankamagames.dofus.network.messages.game.feed
+}
 

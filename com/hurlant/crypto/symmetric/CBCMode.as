@@ -62,5 +62,5 @@ package com.hurlant.crypto.symmetric
 
 
     }
-} com.hurlant.crypto.symmetric
+}
 

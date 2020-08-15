@@ -112,5 +112,5 @@ package com.ankamagames.dofus.network.messages.game.context.roleplay.havenbag
 
 
     }
-} com.ankamagames.dofus.network.messages.game.context.roleplay.havenbag
+}
 

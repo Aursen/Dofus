@@ -138,5 +138,5 @@ package com.ankamagames.jerakine.utils.parser
 
 
     }
-} com.ankamagames.jerakine.utils.parser
+}
 

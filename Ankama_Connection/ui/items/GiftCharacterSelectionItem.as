@@ -150,5 +150,5 @@ package Ankama_Connection.ui.items
 
 
     }
-} Ankama_Connection.ui.items
+}
 

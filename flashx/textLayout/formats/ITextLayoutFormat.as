@@ -96,5 +96,5 @@ package flashx.textLayout.formats
         function get rules():*;
 
     }
-} flashx.textLayout.formats
+}
 

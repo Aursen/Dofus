@@ -97,5 +97,5 @@ package com.ankamagames.dofus.network.messages.game.chat.community
 
 
     }
-} com.ankamagames.dofus.network.messages.game.chat.community
+}
 

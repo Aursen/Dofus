@@ -8,5 +8,5 @@ package com.ankamagames.tubul.interfaces
         function get eventDispatcher():EventDispatcher;
 
     }
-} com.ankamagames.tubul.interfaces
+}
 

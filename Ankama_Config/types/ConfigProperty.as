@@ -15,5 +15,5 @@ package Ankama_Config.types
         }
 
     }
-} Ankama_Config.types
+}
 

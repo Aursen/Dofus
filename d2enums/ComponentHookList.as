@@ -29,5 +29,5 @@ package d2enums
 
 
     }
-} d2enums
+}
 

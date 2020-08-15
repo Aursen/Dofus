@@ -116,5 +116,5 @@ package com.ankamagames.jerakine.resources.protocols.impl
 
 
     }
-} com.ankamagames.jerakine.resources.protocols.impl
+}
 

@@ -43,5 +43,5 @@ package com.ankamagames.dofus.datacenter.communication
 
 
     }
-} com.ankamagames.dofus.datacenter.communication
+}
 

@@ -183,5 +183,5 @@ package Ankama_TradeCenter.ui
 
 
     }
-} Ankama_TradeCenter.ui
+}
 

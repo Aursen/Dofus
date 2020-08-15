@@ -9,5 +9,5 @@ package com.ankamagames.tiphon.types
         function get animationName():String;
 
     }
-} com.ankamagames.tiphon.types
+}
 

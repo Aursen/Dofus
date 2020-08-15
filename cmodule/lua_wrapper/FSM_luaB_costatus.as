@@ -184,5 +184,5 @@ package cmodule.lua_wrapper
 
 
     }
-} cmodule.lua_wrapper
+}
 

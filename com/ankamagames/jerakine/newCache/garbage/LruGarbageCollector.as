@@ -77,7 +77,7 @@ package com.ankamagames.jerakine.newCache.garbage
 
 
     }
-} com.ankamagames.jerakine.newCache.garbage
+}
 
 import com.ankamagames.jerakine.pools.Poolable;
 

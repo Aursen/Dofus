@@ -128,5 +128,5 @@ package com.ankamagames.dofus.network.messages.game.context.roleplay.emote
 
 
     }
-} com.ankamagames.dofus.network.messages.game.context.roleplay.emote
+}
 

@@ -36,5 +36,5 @@ package com.ankamagames.dofus.logic.game.common.misc.inventoryView
 
 
     }
-} com.ankamagames.dofus.logic.game.common.misc.inventoryView
+}
 

@@ -6,5 +6,5 @@ package mx.core
         function get rawChildren():IChildList;
 
     }
-} mx.core
+}
 

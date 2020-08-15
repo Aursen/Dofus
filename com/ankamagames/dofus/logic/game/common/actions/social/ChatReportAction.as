@@ -29,5 +29,5 @@ package com.ankamagames.dofus.logic.game.common.actions.social
 
 
     }
-} com.ankamagames.dofus.logic.game.common.actions.social
+}
 

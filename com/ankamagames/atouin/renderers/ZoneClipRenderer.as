@@ -349,7 +349,7 @@ package com.ankamagames.atouin.renderers
 
 
     }
-} com.ankamagames.atouin.renderers
+}
 
 import com.ankamagames.jerakine.logger.Logger;
 import com.ankamagames.jerakine.logger.Log;

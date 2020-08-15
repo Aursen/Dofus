@@ -792,5 +792,5 @@ package Ankama_Console.ui
 
 
     }
-} Ankama_Console.ui
+}
 

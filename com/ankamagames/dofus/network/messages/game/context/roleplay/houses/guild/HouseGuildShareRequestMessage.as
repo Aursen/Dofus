@@ -154,5 +154,5 @@ package com.ankamagames.dofus.network.messages.game.context.roleplay.houses.guil
 
 
     }
-} com.ankamagames.dofus.network.messages.game.context.roleplay.houses.guild
+}
 

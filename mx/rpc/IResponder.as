@@ -7,5 +7,5 @@ package mx.rpc
         function fault(_arg_1:Object):void;
 
     }
-} mx.rpc
+}
 

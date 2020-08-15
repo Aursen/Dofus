@@ -316,5 +316,5 @@ package flashx.textLayout.factory
 
 
     }
-} flashx.textLayout.factory
+}
 

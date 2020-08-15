@@ -63,7 +63,7 @@ package flashx.textLayout.compose
 
 
     }
-} flashx.textLayout.compose
+}
 
 import flashx.textLayout.compose.IVerticalJustificationLine;
 import flashx.textLayout.container.ContainerController;

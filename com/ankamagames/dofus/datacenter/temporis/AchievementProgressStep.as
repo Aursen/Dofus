@@ -44,5 +44,5 @@ package com.ankamagames.dofus.datacenter.temporis
 
 
     }
-} com.ankamagames.dofus.datacenter.temporis
+}
 

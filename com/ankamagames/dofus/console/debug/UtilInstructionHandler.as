@@ -609,7 +609,7 @@ package com.ankamagames.dofus.console.debug
 
 
     }
-} com.ankamagames.dofus.console.debug
+}
 
 class EmptyError extends Error 
 {

@@ -266,7 +266,7 @@ package flashx.textLayout.compose
 
 
     }
-} flashx.textLayout.compose
+}
 
 import __AS3__.vec.Vector;
 import __AS3__.vec.*;

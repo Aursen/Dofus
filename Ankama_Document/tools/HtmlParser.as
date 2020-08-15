@@ -25,5 +25,5 @@ package Ankama_Document.tools
 
 
     }
-} Ankama_Document.tools
+}
 

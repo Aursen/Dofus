@@ -29,5 +29,5 @@ package cmodule.lua_wrapper
         return (_arg_1.position);
     }
 
-} cmodule.lua_wrapper
+}
 

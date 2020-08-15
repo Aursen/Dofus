@@ -99,5 +99,5 @@ package com.hurlant.crypto.hash
 
 
     }
-} com.hurlant.crypto.hash
+}
 

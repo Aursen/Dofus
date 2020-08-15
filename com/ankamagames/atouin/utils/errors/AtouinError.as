@@ -9,5 +9,5 @@ package com.ankamagames.atouin.utils.errors
         }
 
     }
-} com.ankamagames.atouin.utils.errors
+}
 

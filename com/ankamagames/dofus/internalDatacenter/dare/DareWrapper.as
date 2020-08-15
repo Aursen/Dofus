@@ -415,5 +415,5 @@ package com.ankamagames.dofus.internalDatacenter.dare
 
 
     }
-} com.ankamagames.dofus.internalDatacenter.dare
+}
 

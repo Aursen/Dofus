@@ -423,5 +423,5 @@ package Ankama_Admin.adminMenu
 
 
     }
-} Ankama_Admin.adminMenu
+}
 

@@ -5,5 +5,5 @@ package d2hooks
 
 
     }
-} d2hooks
+}
 

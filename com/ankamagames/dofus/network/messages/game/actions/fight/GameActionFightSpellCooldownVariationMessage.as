@@ -140,5 +140,5 @@ package com.ankamagames.dofus.network.messages.game.actions.fight
 
 
     }
-} com.ankamagames.dofus.network.messages.game.actions.fight
+}
 

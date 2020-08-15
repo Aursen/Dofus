@@ -622,5 +622,5 @@ package com.ankamagames.atouin
 
 
     }
-} com.ankamagames.atouin
+}
 

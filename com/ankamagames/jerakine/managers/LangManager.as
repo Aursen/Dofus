@@ -549,5 +549,5 @@ package com.ankamagames.jerakine.managers
 
 
     }
-} com.ankamagames.jerakine.managers
+}
 

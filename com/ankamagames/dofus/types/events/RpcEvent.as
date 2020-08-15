@@ -30,5 +30,5 @@ package com.ankamagames.dofus.types.events
 
 
     }
-} com.ankamagames.dofus.types.events
+}
 

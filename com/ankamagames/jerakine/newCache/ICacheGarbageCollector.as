@@ -8,5 +8,5 @@ package com.ankamagames.jerakine.newCache
         function purge(_arg_1:uint):void;
 
     }
-} com.ankamagames.jerakine.newCache
+}
 

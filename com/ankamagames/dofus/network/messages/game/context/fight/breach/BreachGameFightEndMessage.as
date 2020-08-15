@@ -105,5 +105,5 @@ package com.ankamagames.dofus.network.messages.game.context.fight.breach
 
 
     }
-} com.ankamagames.dofus.network.messages.game.context.fight.breach
+}
 

@@ -71,5 +71,5 @@ package com.ankamagames.dofus.datacenter.houses
 
 
     }
-} com.ankamagames.dofus.datacenter.houses
+}
 

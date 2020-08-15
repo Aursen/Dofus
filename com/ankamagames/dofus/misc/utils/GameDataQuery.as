@@ -334,5 +334,5 @@ package com.ankamagames.dofus.misc.utils
 
 
     }
-} com.ankamagames.dofus.misc.utils
+}
 

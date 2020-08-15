@@ -21,5 +21,5 @@ package mx.logging.errors
 
 
     }
-} mx.logging.errors
+}
 

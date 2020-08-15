@@ -8,5 +8,5 @@ package com.ankamagames.jerakine.interfaces
         function canWalkTo():Boolean;
 
     }
-} com.ankamagames.jerakine.interfaces
+}
 

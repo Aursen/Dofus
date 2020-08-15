@@ -344,5 +344,5 @@ package Ankama_Party.ui.items
 
 
     }
-} Ankama_Party.ui.items
+}
 

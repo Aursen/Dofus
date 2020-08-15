@@ -85,5 +85,5 @@ package com.ankamagames.jerakine.utils.display
 
 
     }
-} com.ankamagames.jerakine.utils.display
+}
 

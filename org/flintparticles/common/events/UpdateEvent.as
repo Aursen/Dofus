@@ -16,5 +16,5 @@ package org.flintparticles.common.events
         }
 
     }
-} org.flintparticles.common.events
+}
 

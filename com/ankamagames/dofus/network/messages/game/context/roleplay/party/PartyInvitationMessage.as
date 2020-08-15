@@ -184,5 +184,5 @@ package com.ankamagames.dofus.network.messages.game.context.roleplay.party
 
 
     }
-} com.ankamagames.dofus.network.messages.game.context.roleplay.party
+}
 

@@ -6,5 +6,5 @@ package tools
         function logError(_arg_1:String):void;
 
     }
-} tools
+}
 

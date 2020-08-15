@@ -18,5 +18,5 @@ package com.ankamagames.jerakine.handlers.messages.keyboard
 
 
     }
-} com.ankamagames.jerakine.handlers.messages.keyboard
+}
 

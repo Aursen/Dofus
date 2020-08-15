@@ -7,5 +7,5 @@ package com.ankamagames.jerakine.sequencer
         function resume():void;
 
     }
-} com.ankamagames.jerakine.sequencer
+}
 

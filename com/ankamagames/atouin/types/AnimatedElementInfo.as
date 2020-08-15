@@ -26,5 +26,5 @@ package com.ankamagames.atouin.types
 
 
     }
-} com.ankamagames.atouin.types
+}
 

@@ -34,5 +34,5 @@ package com.ankamagames.jerakine.utils.display.spellZone
 
 
     }
-} com.ankamagames.jerakine.utils.display.spellZone
+}
 

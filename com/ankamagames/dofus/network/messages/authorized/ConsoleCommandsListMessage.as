@@ -202,5 +202,5 @@ package com.ankamagames.dofus.network.messages.authorized
 
 
     }
-} com.ankamagames.dofus.network.messages.authorized
+}
 

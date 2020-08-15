@@ -75,5 +75,5 @@ package Ankama_Storage.util
 
 
     }
-} Ankama_Storage.util
+}
 

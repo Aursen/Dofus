@@ -688,5 +688,5 @@ package com.ankamagames.berilia.components
 
 
     }
-} com.ankamagames.berilia.components
+}
 

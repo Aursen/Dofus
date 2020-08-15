@@ -247,5 +247,5 @@ package com.ankamagames.dofus.network.types.game.data.items
 
 
     }
-} com.ankamagames.dofus.network.types.game.data.items
+}
 

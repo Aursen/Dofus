@@ -12,5 +12,5 @@ package flashx.textLayout.compose
         function get height():Number;
 
     }
-} flashx.textLayout.compose
+}
 

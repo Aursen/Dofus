@@ -6,5 +6,5 @@ package com.ankamagames.jerakine.utils.misc
         function get priority():int;
 
     }
-} com.ankamagames.jerakine.utils.misc
+}
 

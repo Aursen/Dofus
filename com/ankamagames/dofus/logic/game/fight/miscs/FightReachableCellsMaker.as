@@ -215,7 +215,7 @@ package com.ankamagames.dofus.logic.game.fight.miscs
 
 
     }
-} com.ankamagames.dofus.logic.game.fight.miscs
+}
 
 import com.ankamagames.jerakine.types.positions.MapPoint;
 import __AS3__.vec.Vector;

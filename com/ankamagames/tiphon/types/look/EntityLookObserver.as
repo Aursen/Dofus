@@ -10,5 +10,5 @@ package com.ankamagames.tiphon.types.look
         function subEntitiesChanged(_arg_1:TiphonEntityLook):void;
 
     }
-} com.ankamagames.tiphon.types.look
+}
 

@@ -6,5 +6,5 @@ package com.ankamagames.berilia.interfaces
         function clone():*;
 
     }
-} com.ankamagames.berilia.interfaces
+}
 

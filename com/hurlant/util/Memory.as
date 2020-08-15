@@ -26,5 +26,5 @@ package com.hurlant.util
 
 
     }
-} com.hurlant.util
+}
 

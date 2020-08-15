@@ -340,5 +340,5 @@ package mx.formatters
 
 
     }
-} mx.formatters
+}
 

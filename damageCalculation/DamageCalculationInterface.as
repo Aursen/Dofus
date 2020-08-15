@@ -16,5 +16,5 @@ package damageCalculation
         function createSpellFromId(_arg_1:uint, _arg_2:int):HaxeSpell;
 
     }
-} damageCalculation
+}
 

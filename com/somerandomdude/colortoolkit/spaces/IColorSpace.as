@@ -13,5 +13,5 @@ package com.somerandomdude.colortoolkit.spaces
         function clone():IColorSpace;
 
     }
-} com.somerandomdude.colortoolkit.spaces
+}
 

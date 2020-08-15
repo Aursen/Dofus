@@ -48,5 +48,5 @@ package com.ankamagames.dofus.types.sequences
 
 
     }
-} com.ankamagames.dofus.types.sequences
+}
 

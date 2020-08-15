@@ -43,5 +43,5 @@ package com.ankamagames.dofus.datacenter.alignments
 
 
     }
-} com.ankamagames.dofus.datacenter.alignments
+}
 

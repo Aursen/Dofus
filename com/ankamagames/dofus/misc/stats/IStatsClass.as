@@ -9,5 +9,5 @@ package com.ankamagames.dofus.misc.stats
         function remove():void;
 
     }
-} com.ankamagames.dofus.misc.stats
+}
 

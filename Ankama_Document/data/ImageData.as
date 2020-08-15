@@ -15,5 +15,5 @@ package Ankama_Document.data
 
 
     }
-} Ankama_Document.data
+}
 

@@ -9,5 +9,5 @@ package mx.messaging.errors
         }
 
     }
-} mx.messaging.errors
+}
 

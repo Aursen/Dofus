@@ -43,5 +43,5 @@ package com.ankamagames.dofus.datacenter.servers
 
 
     }
-} com.ankamagames.dofus.datacenter.servers
+}
 

@@ -217,5 +217,5 @@ package mx.styles
 
 
     }
-} mx.styles
+}
 

@@ -93,5 +93,5 @@ package com.ankamagames.dofus.network.messages.game.inventory.storage
 
 
     }
-} com.ankamagames.dofus.network.messages.game.inventory.storage
+}
 

@@ -81,5 +81,5 @@ package com.ankamagames.dofus.network.types.game.social
 
 
     }
-} com.ankamagames.dofus.network.types.game.social
+}
 

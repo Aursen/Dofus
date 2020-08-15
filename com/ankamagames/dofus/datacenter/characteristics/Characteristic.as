@@ -49,5 +49,5 @@ package com.ankamagames.dofus.datacenter.characteristics
 
 
     }
-} com.ankamagames.dofus.datacenter.characteristics
+}
 

@@ -85,5 +85,5 @@ package com.ankamagames.dofus.logic.game.common.misc.stackedMessages
 
 
     }
-} com.ankamagames.dofus.logic.game.common.misc.stackedMessages
+}
 

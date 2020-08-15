@@ -226,5 +226,5 @@ package com.ankamagames.dofus.kernel.sound.manager
 
 
     }
-} com.ankamagames.dofus.kernel.sound.manager
+}
 

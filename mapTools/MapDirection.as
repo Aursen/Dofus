@@ -51,5 +51,5 @@ package mapTools
 
 
     }
-} mapTools
+}
 
